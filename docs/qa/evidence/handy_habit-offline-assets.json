@@ -1,5 +1,5 @@
 {
-  "version": "75b89b152fe90c85",
+  "version": "69c47b9b9243c740",
   "files": [
     "assets/AssetManifest.bin",
     "assets/AssetManifest.bin.json",
@@ -50,6 +50,6 @@
     "manifest.json",
     "version.json"
   ],
-  "bytes": 48716740,
+  "bytes": 49008046,
   "scope": "static assets only; no user files, API responses or tokens cached"
 }

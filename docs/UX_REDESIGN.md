@@ -953,3 +953,22 @@ chạy luôn. `insights/`, `settings/`, `shell/`. Quảng cáo chỉ ở trang g
 **Loại bỏ:** tiêu đề "Handy Habit · tab"; danh sách nút viền xếp chồng; form chung gõ
 `HH:mm`, thứ `1,2,3`, màu hex; thanh tiến độ dưới mỗi dòng; lưới 35 nút số ngày; menu ba
 chấm cho việc chính; chữ dài giải thích quy tắc trên mọi màn.
+
+
+## Handy Trip design contract - 2026-11-02
+
+Achromatic-ledger, seed 1189929496. Face: travel daybook, actual user photos only.
+Signature: a date spine separates planned stops from explicit confirmed visits; cyan
+#0284C7 marks confirmed progress, never assumed geography. Trips asks what is next;
+Explore what is saved vs visited; Journal what happened when; Passport only real unique
+confirmed places/known geography until richer P1 passes its gate. Primary trip action:
+add a stop/check in. No fake KPI, map backdrop, stock travel photos or sample visits.
+Mobile four bottom destinations per brief; within-trip seven scrollable sections.
+At >=1024: sidebar and 300px trip list + 1px divider + remaining detail column, 24px
+outer margins, no horizontal page scrolling. At 768 use one content column with inline
+section selector; 320 mobile keeps labels and contextual add. Desktop reorder supports
+mouse/keyboard; file drop only on an explicit import surface. Web named areas and back.
+Use kit fonts/neutral light/dark, labels above inputs, native date picker, >=48px targets,
+clear empty/load/error/permission/unsupported/offline states. No permission at onboarding.
+Screenshot critique uses app-screens 2.7; widget/emulator evidence distinguished from
+browser/physical runtime. Never clone another app's UI or whole UI framework.
