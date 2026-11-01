@@ -1,0 +1,10 @@
+﻿{
+    "app":  "tools",
+    "artifact":  "C:\\Users\\Winka\\Projects\\Handy-Suite\\artifacts\\flutter\\handy-tools-20261101113524-unsigned.msix",
+    "sha256":  "0ca28ad63d3736a639a443cb8d40e26fad0d1a6bb0d4ba8d2dde0981fd8f9cfa",
+    "sourceSha256":  "4a28e16d8f44a2ee589d1a222d7f06e0b948f70c69ae2273db4c6e1b00139393",
+    "makeAppxValidated":  true,
+    "signed":  false,
+    "installed":  false,
+    "storeApproved":  false
+}

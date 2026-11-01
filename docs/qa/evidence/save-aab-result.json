@@ -1,0 +1,10 @@
+﻿{
+    "app":  "save",
+    "exitCode":  0,
+    "sourceSha256":  "4a28e16d8f44a2ee589d1a222d7f06e0b948f70c69ae2273db4c6e1b00139393",
+    "sourceUnchanged":  true,
+    "artifact":  "apps/handy_save/build/app/outputs/bundle/release/app-release.aab",
+    "artifactSha256":  "72f6fb07f11accc272ea3f6282a49dc8182b838880238c3a7148ed93b7e8b6c0",
+    "signed":  false,
+    "storeReady":  false
+}

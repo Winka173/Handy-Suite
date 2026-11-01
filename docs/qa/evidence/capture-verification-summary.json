@@ -1,0 +1,52 @@
+{
+  "date": "2026-10-31",
+  "overallMigration": "IN_PROGRESS",
+  "flutterPassed": 446,
+  "reactNativePassed": 601,
+  "mediaBuilds": [
+    {
+      "app": "media",
+      "target": "apk",
+      "exitCode": 0,
+      "sourceSha256": "91c8274d8d6fb8fbdbdfbee69e713ea63c72fec923e545b0c1eb97bb9664efcc",
+      "sourceUnchanged": true,
+      "startedAt": "2026-10-31T04:42:00.3657948Z",
+      "elapsedSeconds": 16.43
+    },
+    {
+      "app": "media",
+      "target": "windows",
+      "exitCode": 0,
+      "sourceSha256": "91c8274d8d6fb8fbdbdfbee69e713ea63c72fec923e545b0c1eb97bb9664efcc",
+      "sourceUnchanged": true,
+      "startedAt": "2026-10-31T04:41:12.0114733Z",
+      "elapsedSeconds": 49.88
+    },
+    {
+      "app": "media",
+      "target": "web",
+      "exitCode": 0,
+      "sourceSha256": "91c8274d8d6fb8fbdbdfbee69e713ea63c72fec923e545b0c1eb97bb9664efcc",
+      "sourceUnchanged": true,
+      "startedAt": "2026-10-31T04:41:12.0114733Z",
+      "elapsedSeconds": 59.51
+    }
+  ],
+  "androidEmulatorIntegration": {
+    "app": "media",
+    "exitCode": 0,
+    "device": "emulator-5556",
+    "physicalDevice": false,
+    "finishedAt": "2026-10-31T04:41:59.4571370Z"
+  },
+  "interoperability": "actual TypeScript -> Dart -> TypeScript fixture roundtrip passed",
+  "realDeviceVerified": false,
+  "iosNativeVerified": false,
+  "webRuntimeVerified": false,
+  "screenshots": [
+    "media-annotation-editor.png",
+    "media-capture-dark-vi.png",
+    "media-capture-projects.png",
+    "media-interactive-crop.png"
+  ]
+}

@@ -1,0 +1,5 @@
+[
+  { "id": 1, "name": "An", "active": true, "note": "" },
+  { "id": 2, "name": "Bình", "active": false },
+  { "id": 3, "name": "Chi", "note": null }
+]

@@ -1,0 +1,14 @@
+{
+  "generator": "Pillow/libwebp independent of Dart",
+  "webpVersion": "1.3.2",
+  "width": 24,
+  "height": 16,
+  "files": {
+    "animated.webp": "9604b05e7ea4db99cd7de064e6f4be48f7afa2814601f35a1e5ec02cdb609345",
+    "lossless.rgba": "6a06ee6b3bfc7de2551e98a52261ace8708262e96ee710e483c4e1381e61adcf",
+    "lossless.webp": "9b5765b6c30ab859f162da109430cbfb563a98a839d3c80c854652917a503c52",
+    "lossy.rgba": "cd8210fed06f6808a82c880b2c1a3823a729ecb18f5aef07c4b181ac05ddc2f1",
+    "lossy.webp": "0440674fc3074f8991576a47feeb8137e6fc3f2630499c22aa51765bf95bd416",
+    "source.png": "89b44d3ecdb6bb91cf7973b61558ccdab3eb98dd5c39e1b8079847b78534de31"
+  }
+}

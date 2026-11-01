@@ -1,0 +1,17 @@
+name: handy_pdf
+version: 0.1.0
+publish_to: none
+resolution: workspace
+environment:
+  sdk: ^3.12.0
+dependencies:
+  flutter:
+    sdk: flutter
+  pdfrx: 2.4.8
+  pdfium_dart: 0.2.5
+  ffi: 2.2.0
+  handy_core: any
+  handy_ui: any
+dev_dependencies:
+  flutter_test:
+    sdk: flutter

@@ -1,0 +1,28 @@
+name: handy_docs
+description: Handy Docs local document scanner.
+publish_to: none
+version: 0.1.0+1
+resolution: workspace
+environment:
+  sdk: ^3.12.0
+dependencies:
+  flutter:
+    sdk: flutter
+  handy_core: any
+  handy_docs_engine: any
+  handy_files: any
+  handy_storage: any
+  handy_ui: any
+  handy_workflow: any
+  image_picker: 1.2.4
+  flutter_markdown_plus: 1.0.12
+  handy_pdf: any
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  integration_test:
+    sdk: flutter
+flutter:
+  uses-material-design: true
+  assets:
+    - assets/icon.png

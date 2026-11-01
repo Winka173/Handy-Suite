@@ -1,0 +1,14 @@
+00:00 +0: loading C:/Users/Winka/Projects/Handy-Suite/apps/handy_save/test/store_test.dart
+00:00 +0: native SQLite schema, indexes, FTS and integrity are real
+00:00 +1: CRUD tags and collection snapshot survive close and reopen exactly
+00:00 +2: failed multi-row replace rolls back original payload and thumbnail bytes
+00:00 +3: malicious search and filters remain parameterized and cannot modify schema
+00:00 +4: future schema version is refused without modifying original file bytes
+00:00 +5: cache is bounded, reads refresh LRU, and deleting bookmark cascades
+00:00 +6: worker exit fails pending request promptly with uncertain commit warning
+00:00 +7: operation deadline invalidates connection and reopening reloads committed data
+00:00 +8: FTS mapping from older writes is rebuilt without losing bookmarks
+00:00 +9: worker protocol failure completes pending request instead of hanging
+00:00 +10: recentlyOpened sort uses open history with stable page ties
+00:00 +11: 50,000 native rows support indexed text search and bounded pagination
+00:03 +12: All tests passed!

@@ -1,0 +1,14 @@
+﻿{
+    "app":  "media",
+    "scenario":  "editor",
+    "device":  "emulator-5558",
+    "physicalDevice":  false,
+    "exitCode":  0,
+    "originalTransportExitCode":  1,
+    "originalTestProcess":  10582,
+    "sourceSha256":  "e4cfd662dec0036843a68526c5281f2f09c7dc180f44633f00b8af810f6522c7",
+    "logSha256":  "29f96131d571e86c03fc89271c84c79273502016b90897b2c5301378bf67afa5",
+    "existingProcessResultsRetrieved":  true,
+    "finishedAt":  "2026-10-31T17:08:03.6883809Z",
+    "appTestsAlreadyFinishedBeforeReconnect":  false
+}

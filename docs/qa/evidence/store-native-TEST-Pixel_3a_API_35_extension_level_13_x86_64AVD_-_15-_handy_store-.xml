@@ -1,0 +1,9 @@
+<?xml version='1.0' encoding='UTF-8' ?>
+<testsuite name="com.handysuite.handy_store.VerifiedCacheDeviceTest" tests="1" failures="0" errors="0" skipped="0" time="0.624" timestamp="2026-10-31T05:21:49" hostname="localhost">
+  <properties>
+    <property name="device" value="Pixel_3a_API_35_extension_level_13_x86_64(AVD) - 15" />
+    <property name="flavor" value="" />
+    <property name="project" value=":handy_store" />
+  </properties>
+  <testcase name="encryptsWithNonExportableKeyAndRejectsTampering" classname="com.handysuite.handy_store.VerifiedCacheDeviceTest" time="0.115" />
+</testsuite>

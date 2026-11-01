@@ -1,0 +1,42 @@
+name: handy_ui
+version: 0.1.0
+publish_to: none
+resolution: workspace
+environment:
+  sdk: ^3.12.0
+dependencies:
+  handy_core: any
+  handy_files: any
+  handy_storage: any
+  handy_workflow: any
+  handy_monetization: any
+  flutter:
+    sdk: flutter
+  flutter_localizations:
+    sdk: flutter
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+flutter:
+  assets:
+    - assets/fonts/
+  # Geist (fonts/Geist-OFL.txt) for text, Bricolage Grotesque (fonts/Bricolage-OFL.txt;
+  # static opsz 16/32 instances of the variable font) for titles and figures.
+  # Both SIL OFL 1.1 with full Vietnamese coverage and tabular figures.
+  fonts:
+    - family: Bricolage
+      fonts:
+        - asset: fonts/BricolageGrotesque-Medium.ttf
+          weight: 500
+        - asset: fonts/BricolageGrotesque-Display.ttf
+          weight: 600
+    - family: Geist
+      fonts:
+        - asset: fonts/Geist-Regular.ttf
+        - asset: fonts/Geist-Medium.ttf
+          weight: 500
+        - asset: fonts/Geist-Bold.ttf
+          weight: 700
+    - family: GeistMono
+      fonts:
+        - asset: fonts/GeistMono-Regular.ttf

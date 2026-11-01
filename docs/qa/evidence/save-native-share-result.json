@@ -1,0 +1,15 @@
+{
+  "passed": true,
+  "sourceSha256": "4a28e16d8f44a2ee589d1a222d7f06e0b948f70c69ae2273db4c6e1b00139393",
+  "device": "emulator-5558",
+  "physicalDevice": false,
+  "actualShareIntents": 3,
+  "coldAndWarm": true,
+  "warmProcessReused": true,
+  "multipleUrls": true,
+  "duplicatePreserved": true,
+  "databaseRecordsVerified": 3,
+  "ackQueueEmpty": true,
+  "socialApplicationsInstalledAndVerified": false,
+  "artifactSha256": "31c7fabe5c2ea49000b189b199c690cb542ecc5b77a0e5f46527530cf660d19e"
+}

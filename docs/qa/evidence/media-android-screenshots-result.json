@@ -1,0 +1,8 @@
+﻿{
+    "app":  "media",
+    "scenario":  "native",
+    "exitCode":  0,
+    "device":  "emulator-5556",
+    "physicalDevice":  false,
+    "finishedAt":  "2026-10-31T12:38:27.0972475Z"
+}

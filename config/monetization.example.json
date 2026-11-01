@@ -1,0 +1,130 @@
+{
+  "docs": {
+    "android": {
+      "productId": "",
+      "androidPublicKey": "",
+      "bannerAdUnitId": "",
+      "adsEnabled": false
+    },
+    "ios": {
+      "productId": "",
+      "bannerAdUnitId": "",
+      "adsEnabled": false
+    },
+    "windows": {
+      "productId": ""
+    }
+  },
+  "media": {
+    "android": {
+      "productId": "",
+      "androidPublicKey": "",
+      "bannerAdUnitId": "",
+      "adsEnabled": false
+    },
+    "ios": {
+      "productId": "",
+      "bannerAdUnitId": "",
+      "adsEnabled": false
+    },
+    "windows": {
+      "productId": ""
+    }
+  },
+  "tools": {
+    "android": {
+      "productId": "",
+      "androidPublicKey": "",
+      "bannerAdUnitId": "",
+      "adsEnabled": false
+    },
+    "ios": {
+      "productId": "",
+      "bannerAdUnitId": "",
+      "adsEnabled": false
+    },
+    "windows": {
+      "productId": ""
+    }
+  },
+  "dev": {
+    "android": {
+      "productId": "",
+      "androidPublicKey": "",
+      "bannerAdUnitId": "",
+      "adsEnabled": false
+    },
+    "ios": {
+      "productId": "",
+      "bannerAdUnitId": "",
+      "adsEnabled": false
+    },
+    "windows": {
+      "productId": ""
+    }
+  },
+  "keep": {
+    "android": {
+      "productId": "",
+      "androidPublicKey": "",
+      "bannerAdUnitId": "",
+      "adsEnabled": false
+    },
+    "ios": {
+      "productId": "",
+      "bannerAdUnitId": "",
+      "adsEnabled": false
+    },
+    "windows": {
+      "productId": ""
+    }
+  },
+  "recall": {
+    "android": {
+      "productId": "",
+      "androidPublicKey": "",
+      "bannerAdUnitId": "",
+      "adsEnabled": false
+    },
+    "ios": {
+      "productId": "",
+      "bannerAdUnitId": "",
+      "adsEnabled": false
+    },
+    "windows": {
+      "productId": ""
+    }
+  },
+  "save": {
+    "android": {
+      "productId": "",
+      "androidPublicKey": "",
+      "bannerAdUnitId": "",
+      "adsEnabled": false
+    },
+    "ios": {
+      "productId": "",
+      "bannerAdUnitId": "",
+      "adsEnabled": false
+    },
+    "windows": {
+      "productId": ""
+    }
+  },
+  "spend": {
+    "android": {
+      "productId": "",
+      "androidPublicKey": "",
+      "bannerAdUnitId": "",
+      "adsEnabled": false
+    },
+    "ios": {
+      "productId": "",
+      "bannerAdUnitId": "",
+      "adsEnabled": false
+    },
+    "windows": {
+      "productId": ""
+    }
+  }
+}

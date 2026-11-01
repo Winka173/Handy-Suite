@@ -1,0 +1,10 @@
+﻿{
+    "app":  "media",
+    "scenario":  "editor",
+    "exitCode":  1,
+    "device":  "emulator-5558",
+    "sourceSha256":  "e4cfd662dec0036843a68526c5281f2f09c7dc180f44633f00b8af810f6522c7",
+    "sourceUnchanged":  true,
+    "physicalDevice":  false,
+    "finishedAt":  "2026-10-31T17:04:26.3659962Z"
+}

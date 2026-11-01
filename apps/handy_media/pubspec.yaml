@@ -1,0 +1,31 @@
+name: handy_media
+description: Handy Media quick tools and capture annotation.
+publish_to: none
+version: 0.1.0+1
+resolution: workspace
+environment:
+  sdk: ^3.12.0
+dependencies:
+  handy_capture: any
+  flutter:
+    sdk: flutter
+  handy_core: any
+  handy_docs_engine: any
+  handy_media_engine: any
+  handy_files: any
+  handy_pdf: any
+  handy_storage: any
+  handy_ui: any
+  image: 4.12.0
+  archive: 4.5.2
+  crypto: 3.0.8
+  video_player: 2.11.1
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  integration_test:
+    sdk: flutter
+flutter:
+  uses-material-design: true
+  assets:
+    - assets/icon.png

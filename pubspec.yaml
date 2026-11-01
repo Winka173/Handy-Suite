@@ -1,0 +1,47 @@
+name: handy_suite
+publish_to: none
+environment:
+  sdk: ^3.12.0
+workspace:
+  - apps/handy_spend
+  - packages/handy_spend_engine
+  - apps/handy_tools
+  - apps/handy_keep
+  - apps/handy_recall
+  - apps/handy_dev
+  - apps/handy_docs
+  - apps/handy_media
+  - apps/handy_save
+  - packages/handy_save_engine
+  - packages/handy_core
+  - packages/handy_files
+  - packages/handy_storage
+  - packages/handy_ui
+  - packages/handy_workflow
+  - packages/handy_tools_engine
+  - packages/handy_inventory
+  - packages/handy_recall
+  - packages/handy_notifications
+  - packages/handy_dev_engine
+  - packages/handy_docs_engine
+  - packages/handy_media_engine
+  - packages/handy_store
+  - packages/handy_monetization
+  - packages/handy_scan
+  - packages/handy_pdf
+  - packages/handy_capture
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  melos: 8.10.0
+dependency_overrides:
+  re2:
+    path: third_party/re2
+  json_schema:
+    path: third_party/json_schema
+melos:
+  scripts:
+    analyze:
+      run: dart run melos exec -- dart analyze .
+    test:
+      run: dart run melos exec --concurrency=1 --dir-exists=test -- flutter test --no-pub

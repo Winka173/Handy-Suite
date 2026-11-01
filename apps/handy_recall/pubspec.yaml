@@ -1,0 +1,27 @@
+﻿name: handy_recall_app
+description: Handy Recall Flutter migration.
+publish_to: none
+version: 0.1.0+1
+resolution: workspace
+environment:
+  sdk: ^3.12.0
+dependencies:
+  flutter:
+    sdk: flutter
+  handy_ui: any
+  handy_core: any
+  handy_files: any
+  handy_storage: any
+  handy_recall: any
+  handy_notifications: any
+  crypto: 3.0.8
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  integration_test:
+    sdk: flutter
+flutter:
+  uses-material-design: true
+  assets:
+    - assets/icon.png
+

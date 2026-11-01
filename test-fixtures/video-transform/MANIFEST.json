@@ -1,0 +1,10 @@
+{
+  "file": "h264-aac.mp4",
+  "bytes": 46952,
+  "sha256": "f7000afe30ce87e67b7f0ab2edad0f2a8837dc482efb8227593baa52b1526ed2",
+  "generator": "local FFmpeg via isolated imageio-ffmpeg 0.6.0; QA only",
+  "video": "H.264 320x240 10fps color test pattern",
+  "audio": "AAC 440Hz sine wave",
+  "productionAsset": false,
+  "inputSubset": "No B-frames: the existing owned-import remux requires monotonically increasing PTS"
+}

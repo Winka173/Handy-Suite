@@ -1,0 +1,13 @@
+name: handy_dev_engine
+version: 0.1.0
+publish_to: none
+resolution: workspace
+environment:
+  sdk: ^3.12.0
+dependencies:
+  crypto: 3.0.8
+  yaml: 3.1.4
+  xml: 7.0.1
+  toml: 0.18.0
+  re2: 1.1.5
+  json_schema: 5.2.2

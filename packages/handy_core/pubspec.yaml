@@ -1,0 +1,11 @@
+name: handy_core
+version: 0.1.0
+publish_to: none
+resolution: workspace
+environment:
+  sdk: ^3.12.0
+dependencies:
+  archive: 4.5.2
+dev_dependencies:
+  flutter_test:
+    sdk: flutter

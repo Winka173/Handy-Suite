@@ -1,0 +1,18 @@
+﻿[
+    {
+        "app":  "recall",
+        "permission":  false,
+        "exitCode":  0,
+        "device":  "emulator-5556",
+        "physicalDevice":  false,
+        "scheduledDeliveryTimingVerified":  false
+    },
+    {
+        "app":  "recall",
+        "permission":  true,
+        "exitCode":  0,
+        "device":  "emulator-5556",
+        "physicalDevice":  false,
+        "scheduledDeliveryTimingVerified":  false
+    }
+]

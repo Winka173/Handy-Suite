@@ -1,0 +1,20 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "strict": true,
+    "noUncheckedIndexedAccess": true,
+    "skipLibCheck": true,
+    "noEmit": true,
+    "types": ["node", "vitest/globals"]
+  },
+  "include": [
+    "tooling/pwa-assets.test.ts",
+    "tooling/re2-web-bridge.test.ts",
+    "tooling/vitest.flutter.config.ts",
+    "tooling/vitest.pwa.config.ts",
+    "tooling/vitest.re2.config.ts",
+    "tooling/save-share-worker.test.ts"
+  ]
+}

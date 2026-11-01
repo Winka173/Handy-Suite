@@ -1,0 +1,10 @@
+{
+  "passed": true,
+  "size": [
+    4000,
+    8000
+  ],
+  "sourceSha256": "2892eb7df8893553f4f0f9a7aeec71bdf4c9e64e0e251f355e84b15f9bfc5ffe",
+  "zipAssetExact": true,
+  "decoder": "independent Pillow"
+}

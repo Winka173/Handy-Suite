@@ -1,0 +1,10 @@
+﻿{
+    "app":  "tools",
+    "exitCode":  0,
+    "device":  "emulator-5556",
+    "physicalDevice":  false,
+    "cameraPermissionDeniedTest":  true,
+    "bundledImageDecoderTest":  true,
+    "opticalCameraScanVerified":  false,
+    "finishedAt":  "2026-10-31T09:17:12.1350735Z"
+}

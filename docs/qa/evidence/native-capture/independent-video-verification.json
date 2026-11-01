@@ -1,0 +1,50 @@
+{
+  "decoder": "OpenCV 4.8.0",
+  "numpy": "1.26.4",
+  "passed": true,
+  "physicalDeviceVerified": false,
+  "artifacts": {
+    "recording.mp4": {
+      "bytes": 631368,
+      "sha256": "f13e37a33ec010b12cd1fb1520d364201470cb682c44a7d122b242c3540d9a1c",
+      "width": 622,
+      "height": 1280,
+      "fps": 9.30073340158177,
+      "decodedFrames": 64,
+      "distinctSampledColors": 4,
+      "maximumRightEdgeColorError": 2
+    },
+    "trimmed.mp4": {
+      "bytes": 484440,
+      "sha256": "566646a71976432d25266c12d96cdcf1e14ca186122f1adee862594804140230",
+      "width": 622,
+      "height": 1280,
+      "fps": 9.438135968146291,
+      "decodedFrames": 64,
+      "distinctSampledColors": 4,
+      "maximumRightEdgeColorError": 2
+    },
+    "joined.mp4": {
+      "bytes": 965648,
+      "sha256": "e4859c9f7ddff5b3faf41e56ab3db2abe64e905d0d5ae6c796a96ae254bb4106",
+      "width": 622,
+      "height": 1280,
+      "fps": 9.300973695683767,
+      "decodedFrames": 128,
+      "distinctSampledColors": 4,
+      "maximumRightEdgeColorError": 2
+    },
+    "frame.png": {
+      "bytes": 31261,
+      "sha256": "4c83eb1646d76c7b68e4ccee2f8e1437e2e68235f5bdddc8e2295b0ee0e4ccef",
+      "width": 622,
+      "height": 1280
+    },
+    "screenshot.png": {
+      "bytes": 36574,
+      "sha256": "6d7ff6732d7ee08bd5d945860a8747928f917a1b46dedb6a68bc7284d1026541",
+      "width": 1080,
+      "height": 2220
+    }
+  }
+}

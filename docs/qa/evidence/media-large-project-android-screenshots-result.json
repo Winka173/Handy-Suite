@@ -1,0 +1,8 @@
+﻿{
+    "app":  "media",
+    "scenario":  "large-project",
+    "exitCode":  0,
+    "device":  "emulator-5556",
+    "physicalDevice":  false,
+    "finishedAt":  "2026-10-31T14:03:48.0960341Z"
+}

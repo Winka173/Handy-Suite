@@ -1,0 +1,17 @@
+name: handy_notifications
+version: 0.1.0
+publish_to: none
+resolution: workspace
+environment:
+  sdk: ^3.12.0
+dependencies:
+  flutter:
+    sdk: flutter
+  flutter_local_notifications: 22.3.3
+  flutter_timezone: 5.1.1
+  timezone: 0.11.2
+  handy_ui: any
+  shared_preferences: 2.5.6
+dev_dependencies:
+  flutter_test:
+    sdk: flutter

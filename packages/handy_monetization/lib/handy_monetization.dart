@@ -1,0 +1,408 @@
+import 'dart:async';
+import 'dart:convert';
+import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
+import 'package:google_mobile_ads/google_mobile_ads.dart';
+import 'package:handy_store/handy_store.dart';
+
+String get monetizationPlatform => kIsWeb
+    ? 'web'
+    : switch (defaultTargetPlatform) {
+        TargetPlatform.android => 'android',
+        TargetPlatform.iOS => 'ios',
+        TargetPlatform.windows => 'windows',
+        _ => 'unsupported',
+      };
+
+class MonetizationConfig {
+  final String productId, androidPublicKey, adUnitId;
+  final bool adsEnabled;
+  const MonetizationConfig({
+    this.productId = '',
+    this.androidPublicKey = '',
+    this.adUnitId = '',
+    this.adsEnabled = false,
+  });
+  factory MonetizationConfig.parse(String source, String app, String platform) {
+    if (source.length > 30000)
+      throw const FormatException('Store config limit');
+    final root = jsonDecode(source),
+        value = root is Map && root[app] is Map ? root[app][platform] : null;
+    if (value == null) return const MonetizationConfig();
+    if (value is! Map) throw const FormatException('Invalid store config');
+    String field(String key, int max) {
+      final v = value[key] ?? '';
+      if (v is! String || v.length > max)
+        throw const FormatException('Invalid store config field');
+      return v;
+    }
+
+    final product = field('productId', 200),
+        publicKey = field('androidPublicKey', 2048),
+        unit = field('bannerAdUnitId', 100);
+    if (product.isNotEmpty && !RegExp(r'^[A-Za-z0-9_.-]+$').hasMatch(product) ||
+        unit.isNotEmpty &&
+            !RegExp(r'^ca-app-pub-\d{16}/\d{10}$').hasMatch(unit))
+      throw const FormatException('Invalid product/ad identifier');
+    return MonetizationConfig(
+      productId: product,
+      androidPublicKey: publicKey,
+      adUnitId: unit,
+      adsEnabled:
+          value['adsEnabled'] == true &&
+          unit.isNotEmpty &&
+          ['android', 'ios'].contains(platform),
+    );
+  }
+  static MonetizationConfig forApp(String app) {
+    const raw = String.fromEnvironment(
+      'HANDY_MONETIZATION_CONFIG',
+      defaultValue: '{}',
+    );
+    try {
+      final config = MonetizationConfig.parse(raw, app, monetizationPlatform);
+      if (kDebugMode && const bool.fromEnvironment('HANDY_TEST_ADS'))
+        return MonetizationConfig(
+          productId: config.productId,
+          androidPublicKey: config.androidPublicKey,
+          adsEnabled: ['android', 'ios'].contains(monetizationPlatform),
+          adUnitId: monetizationPlatform == 'ios'
+              ? 'ca-app-pub-3940256099942544/2934735716'
+              : 'ca-app-pub-3940256099942544/6300978111',
+        );
+      return config;
+    } on FormatException {
+      return const MonetizationConfig();
+    }
+  }
+}
+
+class LifetimeController extends ChangeNotifier {
+  final MonetizationConfig config;
+  final LifetimeStorePort store;
+  StoreSnapshot? snapshot;
+  bool busy = false, disposed = false;
+  int adRevision = 0;
+  void privacyChanged() {
+    if (!disposed) {
+      adRevision++;
+      notifyListeners();
+    }
+  }
+
+  LifetimeController(this.config, this.store) {
+    store.listen(accept);
+  }
+  bool get pro => snapshot?.isPro ?? false;
+  bool get pending => snapshot?.status == 'pending';
+  bool get configured =>
+      config.productId.isNotEmpty &&
+      ['android', 'ios', 'windows'].contains(monetizationPlatform) &&
+      (monetizationPlatform != 'android' || config.androidPublicKey.isNotEmpty);
+  void accept(StoreSnapshot value) {
+    if (disposed || value.productId != config.productId) return;
+    snapshot = value;
+    notifyListeners();
+  }
+
+  Future<void> action(String action) async {
+    if (busy || !configured) return;
+    busy = true;
+    notifyListeners();
+    try {
+      final result =
+          await (action == 'buy'
+                  ? store.purchase()
+                  : action == 'restore'
+                  ? store.restore()
+                  : store.read())
+              .timeout(const Duration(seconds: 40));
+      accept(result);
+    } catch (_) {
+      if (!disposed) {
+        snapshot = StoreSnapshot(
+          status: 'unavailable',
+          productId: config.productId,
+          reason: 'store_unavailable',
+          owned: pro,
+          verified: pro,
+        );
+      }
+    } finally {
+      if (!disposed) {
+        busy = false;
+        notifyListeners();
+      }
+    }
+  }
+
+  @override
+  void dispose() {
+    disposed = true;
+    unawaited(store.dispose());
+    super.dispose();
+  }
+}
+
+class MonetizationHost extends StatefulWidget {
+  final String app;
+  final Widget child;
+  const MonetizationHost({super.key, required this.app, required this.child});
+  @override
+  State<MonetizationHost> createState() => _MonetizationHostState();
+}
+
+class _MonetizationHostState extends State<MonetizationHost>
+    with WidgetsBindingObserver {
+  late final config = MonetizationConfig.forApp(widget.app);
+  late final controller = LifetimeController(
+    config,
+    NativeLifetimeStore(
+      productId: config.productId,
+      androidPublicKey: config.androidPublicKey,
+    ),
+  );
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+    controller.action('read');
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) controller.action('read');
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) =>
+      LifetimeScope(notifier: controller, child: widget.child);
+}
+
+class LifetimeScope extends InheritedNotifier<LifetimeController> {
+  const LifetimeScope({
+    super.key,
+    required super.notifier,
+    required super.child,
+  });
+  static LifetimeController? maybeOf(BuildContext context) =>
+      context.dependOnInheritedWidgetOfExactType<LifetimeScope>()?.notifier;
+}
+
+String _tr(BuildContext context, String en, String vi) =>
+    Localizations.localeOf(context).languageCode == 'vi' ? vi : en;
+
+class LifetimeSettings extends StatelessWidget {
+  const LifetimeSettings({super.key});
+  @override
+  Widget build(BuildContext context) {
+    final model = LifetimeScope.maybeOf(context);
+    if (model == null) return const SizedBox.shrink();
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          model.pro
+              ? 'Pro Lifetime'
+              : _tr(context, 'Free + Pro Lifetime', 'Free + Pro Lifetime'),
+          style: Theme.of(context).textTheme.titleMedium,
+        ),
+        Text(
+          _tr(
+            context,
+            'One-time purchase removes supported advertisements in this app. Ownership belongs to this store account and does not transfer between stores. Core tools remain available for free.',
+            'Mua một lần để bỏ quảng cáo được hỗ trợ trong app này. Quyền sở hữu thuộc tài khoản cửa hàng này, không chuyển giữa các cửa hàng. Các công cụ chính vẫn dùng miễn phí.',
+          ),
+        ),
+        if (!model.configured)
+          Text(
+            _tr(
+              context,
+              'Pro Lifetime is not on sale in this build.',
+              'Bản này chưa mở bán Pro Lifetime.',
+            ),
+          ),
+        if (model.pending)
+          Text(
+            _tr(
+              context,
+              'Purchase is pending. Pro unlocks after store verification.',
+              'Giao dịch đang chờ. Pro chỉ mở sau khi cửa hàng xác minh.',
+            ),
+          ),
+        if (model.snapshot?.status == 'canceled')
+          Text(_tr(context, 'Purchase canceled.', 'Đã hủy mua.')),
+        if (model.snapshot?.status == 'error' ||
+            model.snapshot?.status == 'unavailable')
+          Text(
+            _tr(
+              context,
+              'Store verification is unavailable. You can retry or restore purchases.',
+              'Chưa thể xác minh qua cửa hàng. Bạn có thể thử lại hoặc khôi phục giao dịch.',
+            ),
+          ),
+        if (model.configured)
+          Wrap(
+            spacing: 8,
+            children: [
+              if (!model.pro)
+                FilledButton(
+                  onPressed: model.busy || model.pending
+                      ? null
+                      : () => model.action('buy'),
+                  child: Text(
+                    _tr(context, 'Buy Pro Lifetime', 'Mua Pro Lifetime'),
+                  ),
+                ),
+              OutlinedButton(
+                onPressed: model.busy ? null : () => model.action('restore'),
+                child: Text(
+                  _tr(context, 'Restore purchases', 'Khôi phục giao dịch'),
+                ),
+              ),
+              TextButton(
+                onPressed: model.busy ? null : () => model.action('read'),
+                child: Text(
+                  _tr(context, 'Check ownership', 'Kiểm tra quyền sở hữu'),
+                ),
+              ),
+            ],
+          ),
+        if (model.busy) const LinearProgressIndicator(),
+        if (model.config.adsEnabled)
+          TextButton(
+            onPressed: () => ConsentForm.showPrivacyOptionsForm((error) {
+              model.privacyChanged();
+            }),
+            child: Text(
+              _tr(
+                context,
+                'Advertising privacy choices',
+                'Lựa chọn quyền riêng tư quảng cáo',
+              ),
+            ),
+          ),
+      ],
+    );
+  }
+}
+
+/// Opens the UMP privacy options form; ads reload with the new choice.
+void showAdPrivacyChoices(LifetimeController model) =>
+    ConsentForm.showPrivacyOptionsForm((error) => model.privacyChanged());
+
+/// No ad request happens before UMP permits it; no app/user document content is sent.
+class LifetimeBanner extends StatefulWidget {
+  const LifetimeBanner({super.key});
+  @override
+  State<LifetimeBanner> createState() => _LifetimeBannerState();
+}
+
+class _LifetimeBannerState extends State<LifetimeBanner> {
+  BannerAd? ad;
+  bool loading = false, loaded = false;
+  LifetimeController? model;
+  int seenRevision = -1;
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    model = LifetimeScope.maybeOf(context);
+    if (model != null && seenRevision != model!.adRevision) {
+      seenRevision = model!.adRevision;
+      ad?.dispose();
+      ad = null;
+      loaded = false;
+    }
+    if (model == null || model!.pro || !model!.config.adsEnabled) {
+      ad?.dispose();
+      ad = null;
+      loaded = false;
+      return;
+    }
+    if (!loading && ad == null) {
+      loading = true;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) load();
+      });
+    }
+  }
+
+  Future<void> load() async {
+    try {
+      final completer = Completer<void>();
+      ConsentInformation.instance.requestConsentInfoUpdate(
+        ConsentRequestParameters(),
+        () => completer.complete(),
+        (error) => completer.complete(),
+      );
+      await completer.future.timeout(const Duration(seconds: 15));
+      final form = Completer<void>();
+      ConsentForm.loadAndShowConsentFormIfRequired((error) => form.complete());
+      await form.future.timeout(const Duration(seconds: 20));
+      if (!await ConsentInformation.instance.canRequestAds() ||
+          !mounted ||
+          model!.pro)
+        return;
+      await MobileAds.instance.initialize();
+      if (!mounted || model!.pro) return;
+      ad = BannerAd(
+        adUnitId: model!.config.adUnitId,
+        size: AdSize.banner,
+        request: const AdRequest(nonPersonalizedAds: true),
+        listener: BannerAdListener(
+          onAdLoaded: (value) {
+            if (!mounted || model!.pro) {
+              value.dispose();
+              return;
+            }
+            setState(() => loaded = true);
+          },
+          onAdFailedToLoad: (value, error) {
+            value.dispose();
+            if (mounted)
+              setState(() {
+                ad = null;
+                loaded = false;
+              });
+          },
+        ),
+      );
+      await ad!.load();
+    } catch (_) {
+      /* Core offline tools remain usable when consent/ads are unavailable. */
+    } finally {
+      loading = false;
+    }
+  }
+
+  @override
+  void dispose() {
+    ad?.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final state = LifetimeScope.maybeOf(context);
+    if (state == null || state.pro || !loaded || ad == null)
+      return const SizedBox.shrink();
+    return SafeArea(
+      top: false,
+      child: Center(
+        heightFactor: 1,
+        child: SizedBox(
+          width: ad!.size.width.toDouble(),
+          height: ad!.size.height.toDouble(),
+          child: AdWidget(ad: ad!),
+        ),
+      ),
+    );
+  }
+}

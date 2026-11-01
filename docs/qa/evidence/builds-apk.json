@@ -1,0 +1,90 @@
+﻿[
+    {
+        "app":  "tools",
+        "target":  "apk",
+        "exitCode":  0,
+        "sourceSha256":  "4a28e16d8f44a2ee589d1a222d7f06e0b948f70c69ae2273db4c6e1b00139393",
+        "sourceUnchanged":  true,
+        "artifact":  "artifacts/flutter/handy_tools/android/handy-tools-pilot-debug.apk",
+        "artifactSha256":  "686efb7c59184927dcb60a485398a268fb69e1680c2e7980eaff868577eb0f72",
+        "startedAt":  "2026-11-01T04:32:39.9926812Z",
+        "elapsedSeconds":  11.72
+    },
+    {
+        "app":  "docs",
+        "target":  "apk",
+        "exitCode":  0,
+        "sourceSha256":  "4a28e16d8f44a2ee589d1a222d7f06e0b948f70c69ae2273db4c6e1b00139393",
+        "sourceUnchanged":  true,
+        "artifact":  "artifacts/flutter/handy_docs/android/handy-docs-pilot-debug.apk",
+        "artifactSha256":  "1d792a71ebeb0ed7c2e4b2edb10df9ffb8c8652eafdab7fde919280ef947e5db",
+        "startedAt":  "2026-11-01T04:32:51.7242653Z",
+        "elapsedSeconds":  10.01
+    },
+    {
+        "app":  "media",
+        "target":  "apk",
+        "exitCode":  0,
+        "sourceSha256":  "4a28e16d8f44a2ee589d1a222d7f06e0b948f70c69ae2273db4c6e1b00139393",
+        "sourceUnchanged":  true,
+        "artifact":  "artifacts/flutter/handy_media/android/handy-media-pilot-debug.apk",
+        "artifactSha256":  "f119c3b90b7343a739a8df4f7ab35aee313a8c66901f0b42e9b9bdae8eeccb6c",
+        "startedAt":  "2026-11-01T04:33:01.7383220Z",
+        "elapsedSeconds":  9.96
+    },
+    {
+        "app":  "dev",
+        "target":  "apk",
+        "exitCode":  0,
+        "sourceSha256":  "4a28e16d8f44a2ee589d1a222d7f06e0b948f70c69ae2273db4c6e1b00139393",
+        "sourceUnchanged":  true,
+        "artifact":  "artifacts/flutter/handy_dev/android/handy-dev-pilot-debug.apk",
+        "artifactSha256":  "b5c901bbabb00dbfb5d80f44f8c2ccefc62038a7ec3d046cc65da6a94f6a625d",
+        "startedAt":  "2026-11-01T04:33:11.6982828Z",
+        "elapsedSeconds":  8.43
+    },
+    {
+        "app":  "keep",
+        "target":  "apk",
+        "exitCode":  0,
+        "sourceSha256":  "4a28e16d8f44a2ee589d1a222d7f06e0b948f70c69ae2273db4c6e1b00139393",
+        "sourceUnchanged":  true,
+        "artifact":  "artifacts/flutter/handy_keep/android/handy-keep-pilot-debug.apk",
+        "artifactSha256":  "99f3c6d608e91835d1e1b4075758666c1f8eae9b4a97b99badbf44515ab203e8",
+        "startedAt":  "2026-11-01T04:33:20.1288351Z",
+        "elapsedSeconds":  10.82
+    },
+    {
+        "app":  "recall",
+        "target":  "apk",
+        "exitCode":  0,
+        "sourceSha256":  "4a28e16d8f44a2ee589d1a222d7f06e0b948f70c69ae2273db4c6e1b00139393",
+        "sourceUnchanged":  true,
+        "artifact":  "artifacts/flutter/handy_recall/android/handy-recall-pilot-debug.apk",
+        "artifactSha256":  "d518b913c2e31b758ce2c971caf5e37652ec7ce82a1743e867ce84235b25f919",
+        "startedAt":  "2026-11-01T04:33:30.9499448Z",
+        "elapsedSeconds":  10.48
+    },
+    {
+        "app":  "save",
+        "target":  "apk",
+        "exitCode":  0,
+        "sourceSha256":  "4a28e16d8f44a2ee589d1a222d7f06e0b948f70c69ae2273db4c6e1b00139393",
+        "sourceUnchanged":  true,
+        "artifact":  "artifacts/flutter/handy_save/android/handy-save-pilot-debug.apk",
+        "artifactSha256":  "31c7fabe5c2ea49000b189b199c690cb542ecc5b77a0e5f46527530cf660d19e",
+        "startedAt":  "2026-11-01T04:33:41.4324411Z",
+        "elapsedSeconds":  23
+    },
+    {
+        "app":  "spend",
+        "target":  "apk",
+        "exitCode":  0,
+        "sourceSha256":  "a0b333b326b24ce17e384ebc2d6b863a2571d7d32f0a78e6b7cdf8e350cf0bda",
+        "sourceUnchanged":  true,
+        "artifact":  "artifacts/flutter/handy_spend/android/handy-spend-pilot-debug.apk",
+        "artifactSha256":  "71d403b4fe111b81f9f9b5c8b4134f1d1a07c5e73a2d336993d6206ba0db8ba0",
+        "startedAt":  "2026-11-01T09:31:58.9840054Z",
+        "elapsedSeconds":  65.05
+    }
+]

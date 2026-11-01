@@ -1,0 +1,14 @@
+﻿{
+    "app":  "docs",
+    "scenario":  "parity",
+    "device":  "emulator-5558",
+    "physicalDevice":  false,
+    "exitCode":  0,
+    "originalTransportExitCode":  1,
+    "originalTestProcess":  10877,
+    "sourceSha256":  "e4cfd662dec0036843a68526c5281f2f09c7dc180f44633f00b8af810f6522c7",
+    "logSha256":  "700e6a08350db13fcc25069239d17eee8dfb146ed9ff1bcddf1179a047eeff1b",
+    "existingProcessResultsRetrieved":  true,
+    "finishedAt":  "2026-10-31T17:09:48.7124486Z",
+    "appTestsAlreadyFinishedBeforeReconnect":  false
+}

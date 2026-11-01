@@ -1,0 +1,363 @@
+{
+  "Handy Tools": [
+    {
+      "id": "calculate",
+      "en": "Calculator",
+      "vi": "Máy tính",
+      "description": "Operators + − * / % ^, parentheses, sqrt/abs/sin/cos/tan/log. Trigonometry uses radians.",
+      "source": "packages/handy_tools_engine/lib/src/tools.dart"
+    },
+    {
+      "id": "units",
+      "en": "Unit converter",
+      "vi": "Đổi đơn vị",
+      "description": "Compatible units; C/F/K supported.",
+      "source": "packages/handy_tools_engine/lib/src/tools.dart"
+    },
+    {
+      "id": "loan",
+      "en": "Loan schedule",
+      "vi": "Lịch trả nợ",
+      "description": "Fixed annual rate, monthly installments; excludes fees and taxes.",
+      "source": "packages/handy_tools_engine/lib/src/tools.dart"
+    },
+    {
+      "id": "compound",
+      "en": "Compound savings",
+      "vi": "Lãi kép",
+      "description": "No additional contributions, tax or fees.",
+      "source": "packages/handy_tools_engine/lib/src/tools.dart"
+    },
+    {
+      "id": "percent",
+      "en": "Percentage",
+      "vi": "Phần trăm",
+      "description": "Percentage value and amount after discount.",
+      "source": "packages/handy_tools_engine/lib/src/tools.dart"
+    },
+    {
+      "id": "dates",
+      "en": "Date difference",
+      "vi": "Khoảng cách ngày",
+      "description": "Calendar days in UTC; end minus start.",
+      "source": "packages/handy_tools_engine/lib/src/tools.dart"
+    },
+    {
+      "id": "normalize",
+      "en": "Normalize whitespace",
+      "vi": "Chuẩn hóa khoảng trắng",
+      "description": "NFC Unicode, trim each line, collapse spaces and tabs.",
+      "source": "packages/handy_tools_engine/lib/src/tools.dart"
+    },
+    {
+      "id": "deduplicate",
+      "en": "Deduplicate lines",
+      "vi": "Lọc dòng trùng",
+      "description": "Keep first exact occurrence.",
+      "source": "packages/handy_tools_engine/lib/src/tools.dart"
+    },
+    {
+      "id": "sort",
+      "en": "Sort lines",
+      "vi": "Sắp xếp dòng",
+      "description": "Unicode code-point order, independent of locale.",
+      "source": "packages/handy_tools_engine/lib/src/tools.dart"
+    },
+    {
+      "id": "uppercase",
+      "en": "Uppercase",
+      "vi": "Viết hoa",
+      "description": "Unicode uppercase.",
+      "source": "packages/handy_tools_engine/lib/src/tools.dart"
+    },
+    {
+      "id": "lowercase",
+      "en": "Lowercase",
+      "vi": "Viết thường",
+      "description": "Unicode lowercase.",
+      "source": "packages/handy_tools_engine/lib/src/tools.dart"
+    },
+    {
+      "id": "accents",
+      "en": "Remove accents",
+      "vi": "Bỏ dấu",
+      "description": "Remove combining marks and map Vietnamese đ/Đ.",
+      "source": "packages/handy_tools_engine/lib/src/tools.dart"
+    },
+    {
+      "id": "count",
+      "en": "Text counts",
+      "vi": "Đếm văn bản",
+      "description": "Code points, UTF-16 units, whitespace-separated words and lines.",
+      "source": "packages/handy_tools_engine/lib/src/tools.dart"
+    },
+    {
+      "id": "contrast",
+      "en": "Color contrast",
+      "vi": "Độ tương phản",
+      "description": "WCAG contrast; normal text AA requires 4.5.",
+      "source": "packages/handy_tools_engine/lib/src/tools.dart"
+    },
+    {
+      "id": "tax",
+      "en": "Tax calculator",
+      "vi": "Tính thuế",
+      "description": "Amounts round half up to two decimals.",
+      "source": "packages/handy_tools_engine/lib/src/tools.dart"
+    },
+    {
+      "id": "split-bill",
+      "en": "Split bill & tip",
+      "vi": "Chia hóa đơn và tiền tip",
+      "description": "Rounded cents are allocated exactly; extra cents go to first shares.",
+      "source": "packages/handy_tools_engine/lib/src/tools.dart"
+    },
+    {
+      "id": "ratio",
+      "en": "Scale a ratio",
+      "vi": "Tính tỷ lệ",
+      "description": "Proportional new second term.",
+      "source": "packages/handy_tools_engine/lib/src/tools.dart"
+    },
+    {
+      "id": "manual-exchange",
+      "en": "Manual exchange rate",
+      "vi": "Đổi tiền theo tỷ giá nhập",
+      "description": "User-provided rate only; no live rate lookup.",
+      "source": "packages/handy_tools_engine/lib/src/tools.dart"
+    },
+    {
+      "id": "business-days",
+      "en": "Business days",
+      "vi": "Số ngày làm việc",
+      "description": "Start inclusive, end exclusive. Weekend indices Sun=0, Sat=6.",
+      "source": "packages/handy_tools_engine/lib/src/tools.dart"
+    },
+    {
+      "id": "title-case",
+      "en": "Title case",
+      "vi": "Viết hoa đầu từ",
+      "description": "Unicode letter groups; not language-specific editorial rules.",
+      "source": "packages/handy_tools_engine/lib/src/tools.dart"
+    },
+    {
+      "id": "sentence-case",
+      "en": "Sentence case",
+      "vi": "Viết hoa đầu câu",
+      "description": "Capitalize first letter and after . ! ?; abbreviations not inferred.",
+      "source": "packages/handy_tools_engine/lib/src/tools.dart"
+    },
+    {
+      "id": "literal-replace",
+      "en": "Find & replace",
+      "vi": "Tìm và thay thế",
+      "description": "Literal replacement, bounded to one million UTF-16 units.",
+      "source": "packages/handy_tools_engine/lib/src/tools.dart"
+    },
+    {
+      "id": "colors",
+      "en": "HEX / RGB / HSL",
+      "vi": "HEX / RGB / HSL",
+      "description": "HEX input, HSL in degrees and percentages.",
+      "source": "packages/handy_tools_engine/lib/src/tools.dart"
+    }
+  ],
+  "Handy Dev": [
+    {
+      "id": "schema",
+      "en": "JSON Schema validate",
+      "vi": "Kiểm tra JSON Schema",
+      "description": "Local draft-07 validation with RE2 patterns. 20 KB schema; external references and format assertions disabled; bounded evaluation.",
+      "source": "packages/handy_dev_engine/lib/src/transforms.dart"
+    },
+    {
+      "id": "regex",
+      "en": "Regex RE2",
+      "vi": "Biểu thức RE2",
+      "description": "Local RE2; no lookaround/backreferences. 100 KB input / 1000-byte pattern / 1000 matches; bounded capture output.",
+      "source": "packages/handy_dev_engine/lib/src/transforms.dart"
+    },
+    {
+      "id": "json-typescript",
+      "en": "JSON → TypeScript",
+      "vi": "JSON → TypeScript",
+      "description": "Infer a sample type; missing array fields optional, no runtime validation.",
+      "source": "packages/handy_dev_engine/lib/src/transforms.dart"
+    },
+    {
+      "id": "json-schema-infer",
+      "en": "Infer JSON Schema",
+      "vi": "Suy luận JSON Schema",
+      "description": "Draft-07 inference from sample only.",
+      "source": "packages/handy_dev_engine/lib/src/transforms.dart"
+    },
+    {
+      "id": "json-toml",
+      "en": "JSON → TOML",
+      "vi": "JSON → TOML",
+      "description": "Reject null/unsafe integers and lossy roundtrip.",
+      "source": "packages/handy_dev_engine/lib/src/transforms.dart"
+    },
+    {
+      "id": "jsonpath",
+      "en": "JSONPath subset",
+      "vi": "JSONPath giới hạn",
+      "description": "Supports $, .name, [index], [*], [\"key\"]; no scripts or filters.",
+      "source": "packages/handy_dev_engine/lib/src/transforms.dart"
+    },
+    {
+      "id": "json-project",
+      "en": "Project JSON fields",
+      "vi": "Chọn trường JSON",
+      "description": "Object array; options are JSON field-name array.",
+      "source": "packages/handy_dev_engine/lib/src/transforms.dart"
+    },
+    {
+      "id": "json",
+      "en": "JSON format",
+      "vi": "Định dạng JSON",
+      "description": "Strict JSON format.",
+      "source": "packages/handy_dev_engine/lib/src/transforms.dart"
+    },
+    {
+      "id": "json-min",
+      "en": "JSON minify",
+      "vi": "Rút gọn JSON",
+      "description": "Validate and minify.",
+      "source": "packages/handy_dev_engine/lib/src/transforms.dart"
+    },
+    {
+      "id": "yaml-json",
+      "en": "YAML → JSON",
+      "vi": "YAML → JSON",
+      "description": "Reject duplicate keys, cycles and excessive aliases.",
+      "source": "packages/handy_dev_engine/lib/src/transforms.dart"
+    },
+    {
+      "id": "json-yaml",
+      "en": "JSON → YAML",
+      "vi": "JSON → YAML",
+      "description": "JSON flow syntax is valid YAML 1.2; preserves scalar types.",
+      "source": "packages/handy_dev_engine/lib/src/transforms.dart"
+    },
+    {
+      "id": "toml-json",
+      "en": "TOML → JSON",
+      "vi": "TOML → JSON",
+      "description": "Parse TOML; dates emitted as ISO strings.",
+      "source": "packages/handy_dev_engine/lib/src/transforms.dart"
+    },
+    {
+      "id": "xml-json",
+      "en": "XML → JSON",
+      "vi": "XML → JSON",
+      "description": "Attributes @_ and #text; mixed-content mapping is partial; DTD disabled.",
+      "source": "packages/handy_dev_engine/lib/src/transforms.dart"
+    },
+    {
+      "id": "json-xml",
+      "en": "JSON → XML",
+      "vi": "JSON → XML",
+      "description": "Exactly one root key; attributes @_ and #text.",
+      "source": "packages/handy_dev_engine/lib/src/transforms.dart"
+    },
+    {
+      "id": "csv-json",
+      "en": "CSV → JSON",
+      "vi": "CSV → JSON",
+      "description": "Auto delimiter; strict header/field count; strings retained.",
+      "source": "packages/handy_dev_engine/lib/src/transforms.dart"
+    },
+    {
+      "id": "json-csv",
+      "en": "JSON → CSV",
+      "vi": "JSON → CSV",
+      "description": "Flat objects only; spreadsheet formulas escaped (lossy).",
+      "source": "packages/handy_dev_engine/lib/src/transforms.dart"
+    },
+    {
+      "id": "jsonl",
+      "en": "JSONL → JSON",
+      "vi": "JSONL → JSON",
+      "description": "Parse nonempty lines as JSON.",
+      "source": "packages/handy_dev_engine/lib/src/transforms.dart"
+    },
+    {
+      "id": "base64-encode",
+      "en": "Base64 encode",
+      "vi": "Mã hóa Base64",
+      "description": "UTF-8 text.",
+      "source": "packages/handy_dev_engine/lib/src/transforms.dart"
+    },
+    {
+      "id": "base64-decode",
+      "en": "Base64 decode",
+      "vi": "Giải mã Base64",
+      "description": "Strict UTF-8 and canonical unused bits.",
+      "source": "packages/handy_dev_engine/lib/src/transforms.dart"
+    },
+    {
+      "id": "url-encode",
+      "en": "URL encode",
+      "vi": "Mã hóa URL",
+      "description": "Encode a UTF-8 component.",
+      "source": "packages/handy_dev_engine/lib/src/transforms.dart"
+    },
+    {
+      "id": "url-decode",
+      "en": "URL decode",
+      "vi": "Giải mã URL",
+      "description": "Reject invalid UTF-8/percent escapes.",
+      "source": "packages/handy_dev_engine/lib/src/transforms.dart"
+    },
+    {
+      "id": "sha256",
+      "en": "SHA-256",
+      "vi": "SHA-256",
+      "description": "Local UTF-8 hash.",
+      "source": "packages/handy_dev_engine/lib/src/transforms.dart"
+    },
+    {
+      "id": "sha512",
+      "en": "SHA-512",
+      "vi": "SHA-512",
+      "description": "Local UTF-8 hash.",
+      "source": "packages/handy_dev_engine/lib/src/transforms.dart"
+    },
+    {
+      "id": "jwt",
+      "en": "JWT decode",
+      "vi": "Giải mã JWT",
+      "description": "Decode only; signature NEVER verified; no saved drafts.",
+      "source": "packages/handy_dev_engine/lib/src/transforms.dart"
+    },
+    {
+      "id": "json-diff",
+      "en": "JSON structural diff",
+      "vi": "So sánh JSON",
+      "description": "Before JSON; options after JSON. JSON Pointer paths.",
+      "source": "packages/handy_dev_engine/lib/src/transforms.dart"
+    },
+    {
+      "id": "env-sample",
+      "en": ".env sample",
+      "vi": ".env mẫu",
+      "description": "Export names only; remove all values.",
+      "source": "packages/handy_dev_engine/lib/src/transforms.dart"
+    },
+    {
+      "id": "har",
+      "en": "HAR summary",
+      "vi": "Tóm tắt HAR",
+      "description": "Only method, status, duration; omit URLs/headers/bodies.",
+      "source": "packages/handy_dev_engine/lib/src/transforms.dart"
+    },
+    {
+      "id": "redact",
+      "en": "Redact JSON secrets",
+      "vi": "Ẩn bí mật JSON",
+      "description": "Mask common credential keys recursively; review before sharing.",
+      "source": "packages/handy_dev_engine/lib/src/transforms.dart"
+    }
+  ]
+}

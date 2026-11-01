@@ -1,0 +1,17 @@
+name: handy_tools_engine
+description: Offline Handy Tools business logic, deterministic decimal calculations and structured QR payloads.
+version: 0.1.0
+publish_to: none
+resolution: workspace
+environment:
+  sdk: ^3.12.0
+dependencies:
+  decimal: ^3.2.6
+  rational: ^2.2.3
+  unorm_dart: ^0.3.3
+  qr: 3.0.2
+  image: 4.12.0
+  pdf: 3.13.1
+dev_dependencies:
+  flutter_test:
+    sdk: flutter

@@ -1,0 +1,10 @@
+﻿{
+    "app":  "docs",
+    "artifact":  "C:\\Users\\Winka\\Projects\\Handy-Suite\\artifacts\\flutter\\handy-docs-20261101113529-unsigned.msix",
+    "sha256":  "e444d575047db05d6aea331d8f8f2a0fa38a8b36d8600fdae2c45a0cbfcf4b65",
+    "sourceSha256":  "4a28e16d8f44a2ee589d1a222d7f06e0b948f70c69ae2273db4c6e1b00139393",
+    "makeAppxValidated":  true,
+    "signed":  false,
+    "installed":  false,
+    "storeApproved":  false
+}

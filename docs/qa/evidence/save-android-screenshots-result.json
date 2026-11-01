@@ -1,0 +1,10 @@
+﻿{
+    "app":  "save",
+    "scenario":  "native",
+    "exitCode":  0,
+    "device":  "emulator-5558",
+    "sourceSha256":  "4a28e16d8f44a2ee589d1a222d7f06e0b948f70c69ae2273db4c6e1b00139393",
+    "sourceUnchanged":  true,
+    "physicalDevice":  false,
+    "finishedAt":  "2026-11-01T04:36:04.6837821Z"
+}

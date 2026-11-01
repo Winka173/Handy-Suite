@@ -1,0 +1,4 @@
+#include "Generated.xcconfig"
+
+// Official Google test application ID. Override before production.
+HANDY_ADMOB_APP_ID=ca-app-pub-3940256099942544~1458002511

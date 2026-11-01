@@ -1,0 +1,26 @@
+name: handy_dev
+description: Offline Handy Dev data and API tools.
+publish_to: none
+version: 0.1.0+1
+resolution: workspace
+environment:
+  sdk: ^3.12.0
+dependencies:
+  flutter:
+    sdk: flutter
+  handy_ui: any
+  handy_workflow: any
+  handy_core: any
+  handy_files: any
+  handy_storage: any
+  handy_dev_engine: any
+  http: 1.6.0
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  integration_test:
+    sdk: flutter
+flutter:
+  uses-material-design: true
+  assets:
+    - assets/icon.png

@@ -1,0 +1,7 @@
+{
+  "parser": "pypdf",
+  "pages": 1,
+  "selectableText": "Tiếng Việt\nĐậm và nghiêng.\n- [x] Xong\n- [ ] Chưa\nA B\nMột Hai\nfinal x = 1;",
+  "vietnamesePreserved": true,
+  "checkboxPreserved": true
+}

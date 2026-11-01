@@ -1,0 +1,15 @@
+name: handy_monetization
+version: 0.1.0
+publish_to: none
+resolution: workspace
+environment:
+  sdk: ^3.12.0
+dependencies:
+  flutter:
+    sdk: flutter
+  handy_core: any
+  handy_store: any
+  google_mobile_ads: 9.2.0
+dev_dependencies:
+  flutter_test:
+    sdk: flutter

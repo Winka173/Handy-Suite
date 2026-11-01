@@ -1,0 +1,21 @@
+name: handy_capture
+description: Local native capture and video operations for Handy Media.
+version: 0.1.0
+publish_to: none
+resolution: workspace
+environment:
+  sdk: ^3.12.0
+dependencies:
+  flutter:
+    sdk: flutter
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+flutter:
+  plugin:
+    platforms:
+      android:
+        package: com.handysuite.handy_capture
+        pluginClass: HandyCapturePlugin
+      ios:
+        pluginClass: HandyCapturePlugin

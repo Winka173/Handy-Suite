@@ -1,0 +1,38 @@
+{
+  "passed": true,
+  "source": "actual Android editor exports",
+  "pdfPages": 2,
+  "pdfFlattenedImagePixelsMatchExactly": true,
+  "zipEntries": 6,
+  "longImageSize": [
+    1000,
+    2000
+  ],
+  "artifacts": {
+    "handy-media-guide.html": {
+      "sha256": "e97b96b5c94cf1f5cee8c260b7e45c36e4536343a62ec352cc97c77d75d59f57",
+      "bytes": 2983
+    },
+    "handy-media-guide.pdf": {
+      "sha256": "1f8e434b9ba500fac1f56f38bed51db23d687d64d15cc23bf99bb2d2774565ab",
+      "bytes": 7385
+    },
+    "handy-media-guide.md": {
+      "sha256": "5958ea259d6433df7054db5280240a187c18584b99c57c3dfbc868ea1ccf2119",
+      "bytes": 47
+    },
+    "handy-media-guide.zip": {
+      "sha256": "102c7571cadb28eec03ca9262a60a1ac03049cb6dfd37e69fc5960eea15d92b7",
+      "bytes": 4562
+    },
+    "handy-media-long.png": {
+      "sha256": "f8fd446c40f955a4961b11f6e37e568aed0bac7413eb11f05e8ecbf8f49a6a1c",
+      "bytes": 12246
+    },
+    "handy-media-change-map.png": {
+      "sha256": "69bfcb28f4bc42468c747dad06a05369ee3144d557a4e81097e6eaf96a73528a",
+      "bytes": 347
+    }
+  },
+  "physicalDeviceVerified": false
+}

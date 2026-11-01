@@ -1,0 +1,15 @@
+README.md 435ms
+FEATURE_MATRIX.md 20ms
+KNOWN_ISSUES.md 7ms (unchanged)
+package.json 93ms
+.github/workflows/flutter.yml 52ms
+docs/DEVELOPMENT.md 19ms (unchanged)
+docs/FUNCTIONS.md 47ms
+docs/STORE_SETUP.md 11ms
+docs/UI_REVIEW.md 5ms
+docs/tool-registry.json 15ms (unchanged)
+tooling/pwa-assets.test.ts 135ms
+tooling/re2-web-bridge.test.ts 12ms
+tooling/vitest.flutter.config.ts 2ms (unchanged)
+tooling/vitest.pwa.config.ts 2ms (unchanged)
+tooling/vitest.re2.config.ts 1ms (unchanged)

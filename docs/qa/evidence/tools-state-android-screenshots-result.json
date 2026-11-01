@@ -1,0 +1,8 @@
+﻿{
+    "app":  "tools",
+    "scenario":  "state",
+    "exitCode":  0,
+    "device":  "emulator-5556",
+    "physicalDevice":  false,
+    "finishedAt":  "2026-10-31T14:17:23.6126396Z"
+}

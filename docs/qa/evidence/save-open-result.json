@@ -1,0 +1,11 @@
+{
+  "passed": true,
+  "sourceSha256": "4a28e16d8f44a2ee589d1a222d7f06e0b948f70c69ae2273db4c6e1b00139393",
+  "device": "emulator-5558",
+  "physicalDevice": false,
+  "actualCardTap": true,
+  "dispatchedOutsideApp": true,
+  "resumedActivity": "topResumedActivity=ActivityRecord{57d0c8e u0 com.android.chrome/org.chromium.chrome.browser.firstrun.FirstRunActivity t23}",
+  "websiteLoaded": false,
+  "installedSocialAppVerified": false
+}

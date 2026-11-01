@@ -1,0 +1,41 @@
+{
+  "passed": true,
+  "source": "actual Android Media3 exports",
+  "decoder": "independent FFmpeg/OpenCV",
+  "physicalDeviceVerified": false,
+  "iosVerified": false,
+  "artifacts": {
+    "source.mp4": {
+      "sha256": "891d0b8946d13616da1c41a09957bd27d34c1c3cf141e70715fbeaf3f3a7581d",
+      "bytes": 47918,
+      "size": [
+        320,
+        240
+      ],
+      "decodedFrames": 15,
+      "aacAudio": true
+    },
+    "muted-rotated.mp4": {
+      "sha256": "e38e1453a3ce3f73ca1739751f9417778e2684c041e2a52b44328c70522731e3",
+      "bytes": 417311,
+      "size": [
+        180,
+        240
+      ],
+      "decodedFrames": 15,
+      "aacAudio": false,
+      "meanPixelErrorAgainstExpectedTransform": 10.1428861618042
+    },
+    "resized-audio.mp4": {
+      "sha256": "4a0a69bdd44ec39335c163420d2a7c2b5c7c4c846d40efd37511ab6ae6f7034b",
+      "bytes": 429486,
+      "size": [
+        240,
+        180
+      ],
+      "decodedFrames": 15,
+      "aacAudio": true,
+      "meanPixelErrorAgainstExpectedTransform": 10.141766548156738
+    }
+  }
+}

@@ -1,0 +1,23 @@
+{
+  "scope": "Current seven-app builds and workspace tests; Handy Save emulator integration. Older six-app native integration records remain historical, not rerun here.",
+  "sourceSha256": "4a28e16d8f44a2ee589d1a222d7f06e0b948f70c69ae2273db4c6e1b00139393",
+  "unitWidgetPassed": 1567,
+  "unitWidgetSkipped": 28,
+  "currentSuccessfulBuilds": 21,
+  "validatedUnsignedMsix": 7,
+  "saveAndroidEmulatorIntegration": true,
+  "saveColdWarmShare": true,
+  "browserVmTestsPassed": 11,
+  "saveNotificationsDenyGrant": true,
+  "windowsNativeDropParserTests": 9,
+  "unsignedAndroidReleaseBundle": true,
+  "saveActualCardOpenDispatch": true,
+  "externalMetadataFetchVerified": false,
+  "physicalDeviceVerified": false,
+  "iosBuilt": false,
+  "browserRuntimeVerified": false,
+  "realStoreTransactionsVerified": false,
+  "releaseReady": false,
+  "errors": [],
+  "passed": true
+}

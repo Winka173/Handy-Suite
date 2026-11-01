@@ -1,0 +1,8 @@
+{
+  "users": [
+    { "id": 1, "name": "An" },
+    { "id": 2, "name": "Bình" }
+  ],
+  "meta": { "version": 1 },
+  "a/b": { "~key": "xin chào" }
+}

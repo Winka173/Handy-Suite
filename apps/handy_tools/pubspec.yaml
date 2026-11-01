@@ -1,0 +1,30 @@
+﻿name: handy_tools
+description: Handy Tools Flutter migration pilot.
+publish_to: none
+version: 0.1.0+1
+resolution: workspace
+environment:
+  sdk: ^3.12.0
+dependencies:
+  flutter:
+    sdk: flutter
+  flutter_localizations:
+    sdk: flutter
+  handy_core: any
+  handy_tools_engine: any
+  handy_files: any
+  handy_storage: any
+  handy_workflow: any
+  handy_ui: any
+  handy_monetization: any
+  handy_scan: any
+dev_dependencies:
+  mobile_scanner: 7.4.2
+  flutter_test:
+    sdk: flutter
+  integration_test:
+    sdk: flutter
+flutter:
+  uses-material-design: true
+  assets:
+    - assets/icon.png

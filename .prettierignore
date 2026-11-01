@@ -1,0 +1,16 @@
+node_modules/
+.tooling/
+logs/
+artifacts/
+.dart_tool/
+**/build/
+**/android/
+**/ios/
+apps/handy_*/
+packages/handy_*/
+third_party/
+test-fixtures/
+docs/qa/evidence/
+pubspec.lock
+package-lock.json
+.taste-skill/

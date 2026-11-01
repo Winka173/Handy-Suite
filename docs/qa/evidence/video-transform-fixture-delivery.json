@@ -1,0 +1,9 @@
+{
+  "device": "emulator-5558",
+  "pid": 11231,
+  "path": "app-private/files/handy-video-qa-fixture.mp4",
+  "bytes": 46952,
+  "debugSandboxOnly": true,
+  "physicalDevice": false,
+  "passed": true
+}

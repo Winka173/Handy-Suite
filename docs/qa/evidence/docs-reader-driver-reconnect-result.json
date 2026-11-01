@@ -1,0 +1,14 @@
+﻿{
+    "app":  "docs",
+    "scenario":  "reader",
+    "device":  "emulator-5558",
+    "physicalDevice":  false,
+    "exitCode":  0,
+    "originalTransportExitCode":  1,
+    "originalTestProcess":  10739,
+    "sourceSha256":  "e4cfd662dec0036843a68526c5281f2f09c7dc180f44633f00b8af810f6522c7",
+    "logSha256":  "177608f5f2ac1c4ed72870574215fbf7588f77ce8e2cf10451473c654d9c4c96",
+    "existingProcessResultsRetrieved":  true,
+    "finishedAt":  "2026-10-31T17:08:42.5464242Z",
+    "appTestsAlreadyFinishedBeforeReconnect":  false
+}

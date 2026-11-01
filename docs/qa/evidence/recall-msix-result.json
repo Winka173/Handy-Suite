@@ -1,0 +1,10 @@
+﻿{
+    "app":  "recall",
+    "artifact":  "C:\\Users\\Winka\\Projects\\Handy-Suite\\artifacts\\flutter\\handy-recall-20261101113541-unsigned.msix",
+    "sha256":  "6c60f412991a8be387a2a3d8c0a7aa8a43636b58aa906cda5f70870f0cc4539c",
+    "sourceSha256":  "4a28e16d8f44a2ee589d1a222d7f06e0b948f70c69ae2273db4c6e1b00139393",
+    "makeAppxValidated":  true,
+    "signed":  false,
+    "installed":  false,
+    "storeApproved":  false
+}

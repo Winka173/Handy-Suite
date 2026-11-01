@@ -1,0 +1,25 @@
+{
+  "device": "emulator-5556",
+  "physicalDevice": false,
+  "complete": true,
+  "actions": [
+    {
+      "marker": "HANDY_CAMERA_SYSTEM_CANCEL",
+      "activity": "topResumedActivity=ActivityRecord{32692f2 u0 com.android.camera2/com.android.camera.CaptureActivity t473}",
+      "action": "system Back",
+      "realSystemUi": true
+    },
+    {
+      "marker": "HANDY_CAMERA_SYSTEM_CAPTURE",
+      "activity": "topResumedActivity=ActivityRecord{ac354ba u0 com.android.camera2/com.android.camera.CaptureActivity t473}",
+      "action": "camera shutter and confirm",
+      "realSystemUi": true
+    },
+    {
+      "marker": "HANDY_SHARE_SYSTEM_DISMISS",
+      "activity": "topResumedActivity=ActivityRecord{2857d19 u0 com.android.intentresolver/.ChooserActivityLauncher t473}",
+      "action": "system Back",
+      "realSystemUi": true
+    }
+  ]
+}

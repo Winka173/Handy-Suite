@@ -1,0 +1,8 @@
+﻿{
+    "app":  "keep",
+    "scenario":  "recovery",
+    "exitCode":  0,
+    "device":  "emulator-5556",
+    "physicalDevice":  false,
+    "finishedAt":  "2026-10-31T13:12:41.6549864Z"
+}

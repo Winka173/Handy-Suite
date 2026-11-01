@@ -1,0 +1,14 @@
+[
+  {
+    "suite": "com.handysuite.handy_store.PlaySignatureTest",
+    "tests": "2",
+    "failures": "0",
+    "errors": "0"
+  },
+  {
+    "suite": "com.handysuite.handy_store.VerifiedCacheDeviceTest",
+    "tests": "1",
+    "failures": "0",
+    "errors": "0"
+  }
+]

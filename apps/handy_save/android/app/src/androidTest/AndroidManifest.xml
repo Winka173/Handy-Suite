@@ -1,0 +1,9 @@
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+  <!-- Flutter's integration runner resolves AndroidX core 1.3; these test-only
+       activities need an explicit Android 12+ export policy. Never in main APK. -->
+  <application>
+    <activity android:name="androidx.test.core.app.InstrumentationActivityInvoker$BootstrapActivity" android:exported="false" />
+    <activity android:name="androidx.test.core.app.InstrumentationActivityInvoker$EmptyActivity" android:exported="false" />
+    <activity android:name="androidx.test.core.app.InstrumentationActivityInvoker$EmptyFloatingActivity" android:exported="false" />
+  </application>
+</manifest>

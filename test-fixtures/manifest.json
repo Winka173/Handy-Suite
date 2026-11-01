@@ -1,0 +1,88 @@
+{
+  "files": [
+    {
+      "path": "test-fixtures/document-pack/legacy-source.md",
+      "sha256": "4639b943a3ede6c29a6cb1ff682ad1ab50fd54d19838e64c0804b0212a0c5c17"
+    },
+    {
+      "path": "test-fixtures/document-pack/legacy.zip",
+      "sha256": "c8d888e628812c5b759010005c48829c4e3e05a12aa8f8aea128e33925676945"
+    },
+    {
+      "path": "test-fixtures/flutter-snap/dart-project.zip",
+      "sha256": "94a6cfcc2769f84c70c9846cef3e72daea3c3b2b891e3070eb4440a1598cb6f9"
+    },
+    {
+      "path": "test-fixtures/flutter-snap/legacy-project.json",
+      "sha256": "858d26b9756b7c9a71cf95dc6306c376e628c781093a684a128d8011f8f7400d"
+    },
+    {
+      "path": "test-fixtures/flutter-snap/legacy-project.zip",
+      "sha256": "3c371f6af3257306654c68ec4c72a0cf524180356668587da70c1625e8c7986f"
+    },
+    {
+      "path": "test-fixtures/flutter-snap/original.png",
+      "sha256": "9688c3dea9d88447f3e77409097eead42da2bb6b0b5af3a7e027ecbda9d684e3"
+    },
+    {
+      "path": "test-fixtures/guide-export/flattened-1.png",
+      "sha256": "f8bfdd2ed3767959b9b207ed64108300889a80e9920bf1c509a3dab62474912f"
+    },
+    {
+      "path": "test-fixtures/guide-export/flattened-2.png",
+      "sha256": "78605b75b9055a15b435208d4c03be824ef42af08a22a9b9edd58621bcaa28f2"
+    },
+    {
+      "path": "test-fixtures/guide-export/legacy-change-map.png",
+      "sha256": "69bfcb28f4bc42468c747dad06a05369ee3144d557a4e81097e6eaf96a73528a"
+    },
+    {
+      "path": "test-fixtures/guide-export/legacy-parity.json",
+      "sha256": "cd7ec12a86881c782b268ce9f3936935d5922fcb1fdc43fff974a9f6c2a6e509"
+    },
+    {
+      "path": "test-fixtures/guide-export/README.md",
+      "sha256": "f40c644bc611ba1d52379e9384f64e63a82825d6ef65b99effeed16d4ce41308"
+    },
+    {
+      "path": "test-fixtures/re2/legacy-matches.json",
+      "sha256": "78499639cf61e6f456b9dbdb4ce01e5b6baa083a38d69a9da310aa299b6e93e6"
+    },
+    {
+      "path": "test-fixtures/webp/animated.webp",
+      "sha256": "9604b05e7ea4db99cd7de064e6f4be48f7afa2814601f35a1e5ec02cdb609345"
+    },
+    {
+      "path": "test-fixtures/webp/lossless.rgba",
+      "sha256": "6a06ee6b3bfc7de2551e98a52261ace8708262e96ee710e483c4e1381e61adcf"
+    },
+    {
+      "path": "test-fixtures/webp/lossless.webp",
+      "sha256": "9b5765b6c30ab859f162da109430cbfb563a98a839d3c80c854652917a503c52"
+    },
+    {
+      "path": "test-fixtures/webp/lossy.rgba",
+      "sha256": "cd8210fed06f6808a82c880b2c1a3823a729ecb18f5aef07c4b181ac05ddc2f1"
+    },
+    {
+      "path": "test-fixtures/webp/lossy.webp",
+      "sha256": "0440674fc3074f8991576a47feeb8137e6fc3f2630499c22aa51765bf95bd416"
+    },
+    {
+      "path": "test-fixtures/webp/MANIFEST.json",
+      "sha256": "21b63b63f1da50cb87165f088b3c8b9bad7035e00b4e5594068d474b1dbcdc00"
+    },
+    {
+      "path": "test-fixtures/webp/source.png",
+      "sha256": "89b44d3ecdb6bb91cf7973b61558ccdab3eb98dd5c39e1b8079847b78534de31"
+    },
+    {
+      "path": "test-fixtures/video-transform/h264-aac.mp4",
+      "sha256": "f7000afe30ce87e67b7f0ab2edad0f2a8837dc482efb8227593baa52b1526ed2"
+    },
+    {
+      "path": "test-fixtures/video-transform/MANIFEST.json",
+      "sha256": "a6418d71459c367aae37c5c1641c7c98df5c7bb77bf06af6dfdb4710bbdd4d2e"
+    }
+  ]
+}

@@ -1,0 +1,117 @@
+{
+  "recordedAtUtc": "2026-11-01T02:14:58.700533Z",
+  "platform": "windows",
+  "osVersion": "\"Windows 11 Pro\" 10.0 (Build 26200)",
+  "dartVersion": "3.12.2 (stable) (Tue Jun 9 01:11:39 2026 -0700) on \"windows_x64\"",
+  "sqliteVersion": "3.53.4",
+  "runner": "flutter test --no-pub tool/store_benchmark.dart --reporter expanded",
+  "mode": "Flutter test VM; actual native SQLite library; synthetic local records",
+  "samplesPerQuery": 12,
+  "limitations": "Single Windows host; warm repeated queries; no UI scrolling, frame timing, mobile performance, or release-mode claims. RSS includes the entire test process and earlier samples; JSON measures serialization only, not complete portable archive import/export.",
+  "results": [
+    {
+      "bookmarks": 100,
+      "emptyStartupMs": 49.09,
+      "populatedStartupMs": 2.302,
+      "seedTransactionMs": 17.178,
+      "searchMs": {
+        "min": 0.466,
+        "median": 0.519,
+        "p95": 1.21,
+        "max": 1.21
+      },
+      "lastPageMs": {
+        "min": 0.913,
+        "median": 1.07,
+        "p95": 2.051,
+        "max": 2.051
+      },
+      "readAllMs": 1.184,
+      "jsonEncodeMs": 0.867,
+      "jsonDecodeMs": 0.329,
+      "jsonCharacters": 55789,
+      "sqliteFileBytesAfterClose": 241664,
+      "processRssBytesAfterRun": 141615104,
+      "ftsAvailable": true,
+      "integrity": "ok"
+    },
+    {
+      "bookmarks": 1000,
+      "emptyStartupMs": 8.209,
+      "populatedStartupMs": 1.933,
+      "seedTransactionMs": 74.02,
+      "searchMs": {
+        "min": 1.763,
+        "median": 1.941,
+        "p95": 2.056,
+        "max": 2.056
+      },
+      "lastPageMs": {
+        "min": 1.399,
+        "median": 1.593,
+        "p95": 2.248,
+        "max": 2.248
+      },
+      "readAllMs": 5.096,
+      "jsonEncodeMs": 2.304,
+      "jsonDecodeMs": 2.906,
+      "jsonCharacters": 561911,
+      "sqliteFileBytesAfterClose": 1552384,
+      "processRssBytesAfterRun": 149622784,
+      "ftsAvailable": true,
+      "integrity": "ok"
+    },
+    {
+      "bookmarks": 10000,
+      "emptyStartupMs": 24.464,
+      "populatedStartupMs": 8.068,
+      "seedTransactionMs": 373.705,
+      "searchMs": {
+        "min": 22.821,
+        "median": 23.031,
+        "p95": 23.447,
+        "max": 23.447
+      },
+      "lastPageMs": {
+        "min": 17.38,
+        "median": 18.104,
+        "p95": 18.25,
+        "max": 18.25
+      },
+      "readAllMs": 79.081,
+      "jsonEncodeMs": 24.886,
+      "jsonDecodeMs": 42.038,
+      "jsonCharacters": 5668125,
+      "sqliteFileBytesAfterClose": 14516224,
+      "processRssBytesAfterRun": 232300544,
+      "ftsAvailable": true,
+      "integrity": "ok"
+    },
+    {
+      "bookmarks": 50000,
+      "emptyStartupMs": 25.333,
+      "populatedStartupMs": 38.278,
+      "seedTransactionMs": 1902.533,
+      "searchMs": {
+        "min": 147.597,
+        "median": 170.116,
+        "p95": 199.926,
+        "max": 199.926
+      },
+      "lastPageMs": {
+        "min": 106.374,
+        "median": 114.719,
+        "p95": 128.272,
+        "max": 128.272
+      },
+      "readAllMs": 510.621,
+      "jsonEncodeMs": 130.396,
+      "jsonDecodeMs": 240.518,
+      "jsonCharacters": 28562411,
+      "sqliteFileBytesAfterClose": 73289728,
+      "processRssBytesAfterRun": 544043008,
+      "ftsAvailable": true,
+      "integrity": "ok"
+    }
+  ]
+}

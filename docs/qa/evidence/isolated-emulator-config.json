@@ -1,0 +1,18 @@
+{
+  "device": "emulator-5558",
+  "avd": "HandySuite_QA_API_35",
+  "dedicatedFor": "Handy Suite integration",
+  "freshIsolatedData": true,
+  "existingAvdDataDeleted": false,
+  "hardwareDecoderFeature": false,
+  "gpu": "host",
+  "vulkanFeature": false,
+  "properties": {
+    "ro.build.version.sdk": "35",
+    "ro.product.model": "sdk_gphone64_x86_64",
+    "ro.boot.qemu.hwcodec.avcdec": "",
+    "sys.boot_completed": "1"
+  },
+  "physicalDevice": false,
+  "note": "Actual Android software decoder; no hardware/physical-codec certification"
+}

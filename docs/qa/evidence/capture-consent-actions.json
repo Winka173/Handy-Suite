@@ -1,0 +1,25 @@
+{
+  "device": "emulator-5558",
+  "physicalDevice": false,
+  "actions": [
+    {
+      "marker": "HANDY_CAPTURE_CONSENT_CANCEL",
+      "button": "Cancel",
+      "resourceId": "android:id/button2",
+      "realSystemDialog": true
+    },
+    {
+      "marker": "HANDY_CAPTURE_CONSENT_IMAGE",
+      "button": "Start",
+      "resourceId": "android:id/button1",
+      "realSystemDialog": true
+    },
+    {
+      "marker": "HANDY_CAPTURE_CONSENT_VIDEO",
+      "button": "Start",
+      "resourceId": "android:id/button1",
+      "realSystemDialog": true
+    }
+  ],
+  "complete": true
+}

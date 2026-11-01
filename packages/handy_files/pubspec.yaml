@@ -1,0 +1,17 @@
+name: handy_files
+version: 0.1.0
+publish_to: none
+resolution: workspace
+environment:
+  sdk: ^3.12.0
+dependencies:
+  flutter:
+    sdk: flutter
+  file_picker: 13.3.0
+  image_picker: 1.2.4
+  share_plus: 13.3.0
+  handy_core: any
+dev_dependencies:
+  share_plus_platform_interface: 7.2.0
+  flutter_test:
+    sdk: flutter

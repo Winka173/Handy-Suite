@@ -1,0 +1,83 @@
+name: Flutter
+on: [push, pull_request, workflow_dispatch]
+jobs:
+  analyze-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.44.9'
+          cache: true
+      - run: flutter pub get
+      - run: dart run melos analyze
+      - run: dart run melos test
+      - run: dart run melos exec --dir-exists=lib -- dart format --output=none --set-exit-if-changed lib
+      - run: dart run melos exec --dir-exists=test -- dart format --output=none --set-exit-if-changed test
+  browser-tools:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: npm ci --ignore-scripts
+      - run: npm run typecheck
+      - run: npm run format:check
+      - run: npx vitest run --config tooling/vitest.re2.config.ts
+      - run: python tooling/verify-fixtures.py
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        app:
+          [
+            handy_tools,
+            handy_docs,
+            handy_media,
+            handy_dev,
+            handy_keep,
+            handy_recall,
+            handy_save,
+            handy_spend,
+          ]
+        platform:
+          - {
+              os: ubuntu-latest,
+              target: web,
+              arguments: '--no-web-resources-cdn',
+            }
+          - { os: windows-latest, target: windows, arguments: '' }
+          - { os: ubuntu-latest, target: apk, arguments: '--debug' }
+    runs-on: ${{ matrix.platform.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.44.9'
+          cache: true
+      - run: flutter pub get
+      - run: flutter build ${{ matrix.platform.target }} --no-pub ${{ matrix.platform.arguments }}
+        working-directory: apps/${{ matrix.app }}
+      - uses: actions/setup-node@v4
+        if: matrix.platform.target == 'web'
+        with:
+          node-version: '22'
+      - run: node tooling/flutter-offline.mjs ${{ matrix.app }}
+        if: matrix.platform.target == 'web'
+      - run: npm ci --ignore-scripts
+        if: matrix.platform.target == 'web'
+      - run: npx vitest run --config tooling/vitest.pwa.config.ts -t '${{ matrix.app }} worker'
+        if: matrix.platform.target == 'web'
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.app }}-${{ matrix.platform.target }}
+          path: apps/${{ matrix.app }}/build
