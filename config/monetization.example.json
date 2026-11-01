@@ -126,5 +126,21 @@
     "windows": {
       "productId": ""
     }
+  },
+  "habit": {
+    "android": {
+      "productId": "",
+      "androidPublicKey": "",
+      "bannerAdUnitId": "",
+      "adsEnabled": false
+    },
+    "ios": {
+      "productId": "",
+      "bannerAdUnitId": "",
+      "adsEnabled": false
+    },
+    "windows": {
+      "productId": ""
+    }
   }
 }

@@ -33,10 +33,33 @@ giữ bảng màu và font của bộ:
   | Tools  | `#E8590C` | Save  | `#0E7490` |
   | Keep   | `#B7791F` | Docs  | `#1D5FBF` |
   | Recall | `#4D7C0F` | Media | `#C2255C` |
-  | Dev    | `#0F8A5F` |       |           |
+  | Dev    | `#0F8A5F` | Spend | `#2E7D32` |
+  | Habit  | `#B42318` |       |           |
 
   Không dùng tím hoặc chàm.
 
+- **Màu cho dữ liệu** (thêm 2026-11-01, theo yêu cầu "mỗi app một màu làm màu sắc bị hạn
+  chế"): màu riêng của app chỉ ở nút chính, dấu đang chọn và logo. Thêm **bảng 8 màu nhận
+  diện dùng chung cả bộ** (`HandyPalette`, `kit/palette.dart`) cho chính đồ vật của người
+  dùng: bộ sưu tập (Save), nơi để đồ (Keep), bộ thẻ (Recall), thư mục đọc (Docs), hướng dẫn
+  (Media), phương thức HTTP (Dev). Nhóm công cụ của Tools **không** có màu: đó là danh mục
+  của app, không phải đồ của người dùng (soát lại 2026-11-01).
+  - Mỗi màu có hai vai: **chấm** đậm (8–14 px) cạnh tên, và **nền nhạt** cho vùng nhỏ (chữ
+    cái đầu của món đồ, nhãn phương thức). Chữ luôn là mực trung tính nên luôn đủ 4.5:1; màu
+    không bao giờ là cách duy nhất để phân biệt (luôn đi kèm tên). **Không tô màu icon theo
+    nhóm** (dấu hiệu giao diện máy tạo): icon luôn xám, màu nằm ở chấm.
+  - Thứ tự 8 màu, hai vị trí liền nhau cách nhau khoảng 60° trở lên: lam 220°, hổ phách 42°,
+    lá 128°, hồng 338°, mòng két 173°, cà chua 8°, da trời 202°, ô liu 68°. Lam đứng đầu,
+    cà chua xếp sau vì nhóm đầu màu đỏ dễ bị đọc thành "quá hạn". Không tím, không chàm.
+  - Trong mỗi app, bỏ mọi màu cách màu của app dưới 25° (luôn bỏ ít nhất màu gần nhất), để
+    màu của đồ vật không lẫn với màu hành động; còn 6–7 màu dùng theo vòng.
+  - Một đồ vật **giữ một màu ở mọi màn và mọi bộ lọc**. Gán theo thứ tự ổn định: bộ sưu
+    tập theo vị trí gốc, bộ thẻ và thư mục theo tên, nơi để đồ theo thứ tự toàn bộ nơi của
+    nhà (không theo nhóm đang hiện), hướng dẫn theo thứ tự tạo, phương thức HTTP theo nghĩa
+    (GET lá, POST lam, PUT hổ phách, PATCH da trời, DELETE cà chua). Thư mục con dùng màu
+    của thư mục cha. Món đồ trong Keep mang nền nhạt của nơi nó đang ở.
+  - Tối: chấm sáng thêm 18% về phía trắng, nền nhạt là nền tối trộn 22% màu.
+  - Loại bỏ: chữ màu, nền màu đậm diện lớn, cầu vồng không mang nghĩa, màu trên chrome.
 - **Chữ:** Bricolage Grotesque cho tiêu đề và con số trả lời, Geist cho chữ thường.
   Cả hai đều OFL, được đóng gói sẵn, có đủ tiếng Việt và tabular figures. Số hiển
   thị dùng `formatFigure` (vi `1.385.000,5`); sao chép và xuất giữ giá trị gốc.
@@ -239,6 +262,9 @@ bảng chữ cái hay form 11 ô YYYY-MM-DD):
 2. Gõ là lọc ngay theo tên, chỗ để, thùng, người mượn, serial, ghi chú, không cần dấu.
    Không thấy gì thì có nút "Thêm 'máy khoan'" điền sẵn tên.
 3. Chạm một món: desktop từ 900px mở hồ sơ ở cột phải, điện thoại mở trang riêng.
+   Desktop chưa chọn món thì cột phải không để trống: nó liệt kê mọi mốc **Cần để ý**
+   (Quá hạn, Trong 30 ngày, Sau đó), nên danh sách bên trái bỏ dải "Cần để ý". Đang
+   xem một món thì có nút "← Cần để ý" quay về (soát lại 2026-11-01).
    Hồ sơ có một hành động chính theo ngữ cảnh: **Cho mượn** hoặc **Đã trả lại**; sau
    đó là Sửa, Nhãn QR, Hồ sơ để chia sẻ (xem lại trước khi chia sẻ), Xóa.
 4. **Thêm đồ** (hành động chính): tên và chỗ để trước, chỗ để có gợi ý từ những chỗ
@@ -259,7 +285,8 @@ ghi chỗ. Danh sách chia nhóm theo chỗ đó; đầu nhóm là tên chỗ b�
 món. Trong hồ sơ, dòng này là con số lớn nhất: "Ở chỗ Lan · từ 12/10, hẹn trả 20/10".
 
 **Khuôn mặt:** đồ vật của chính người dùng. Mỗi dòng có ảnh 40px của món đó, hoặc ô
-chữ cái đầu trên nền nhạt của màu app khi chưa có ảnh. Màu app (#B7791F) chỉ ở nút
+chữ cái đầu trên nền nhạt của màu nơi nó đang ở khi chưa có ảnh (chấm màu ở đầu nhóm
+cùng màu đó, giữ nguyên dù đổi bộ lọc). Màu app (#B7791F) chỉ ở nút
 chính, nhóm đang chọn, ô ảnh trống và dải "Cần để ý".
 
 **Bố cục:** thanh trên (logo, tên app, Quét nhãn, cài đặt), không sidebar, không tab
@@ -664,6 +691,129 @@ ngay dưới), `subtitles/` (xem trước các câu đầu trước/sau khi dờ
 chụp, tạo bản mới của video). Xóa hướng dẫn giờ xóa cả bản nháp. Bỏ Ctrl K, ghim và
 "đầu vào đã lưu" của phụ đề.
 
+## Hợp đồng: Handy Spend
+
+**Dữ liệu và việc** (skill §2.1)
+
+- Đối tượng: **tài khoản** (tiền mặt, ngân hàng, ví điện tử, tiết kiệm, thẻ tín dụng,
+  khoản vay; loại tiền; số dư đầu kỳ và ngày; có tính là tiền tiêu được không), **giao
+  dịch** (chi, thu, chuyển khoản, hoàn tiền, điều chỉnh; đã ghi sổ hoặc dự kiến; đối tác,
+  danh mục, nhãn, ghi chú; số tiền nguyên theo đơn vị nhỏ nhất, không làm tròn), danh mục
+  (chi/thu, có cha), **khoản định kỳ** (tiền nhà, điện, mạng, lương; tần suất; chắc chắn
+  hay không; nhắc), **mục tiêu để dành**, ngân sách, **thử trước** (kịch bản trên bản chụp
+  sổ, không đụng sổ thật), quy tắc phân loại, lịch sử nhập sao kê.
+- Quy mô thật (VND): lương 15–25 triệu/tháng; tiêu mỗi ngày 30.000–300.000; 2–6 tài
+  khoản; 3–12 khoản định kỳ; 60–150 giao dịch/tháng; một sao kê 30–300 dòng (tối đa
+  100.000).
+- Người dùng: một người, ưu tiên tiếng Việt. Mỗi ngày mở điện thoại vài lần, mỗi lần
+  5–20 giây (ghi một ly cà phê, xem còn tiêu được bao nhiêu); mỗi tháng một buổi trên
+  Windows hoặc web để nhập sao kê, đối chiếu, xem tiền đi đâu.
+- Việc, theo thứ tự hay gặp: **ghi một khoản chi**; xem **còn tiêu được bao nhiêu đến
+  cuối kỳ**; ghi một hóa đơn đã trả khi đến hạn; xem tháng này tiền đi đâu; nhập sao kê
+  và đối chiếu số dư; thử một khoản mua ("trả góp 6 tháng có ổn không"); thiết lập tài
+  khoản, khoản định kỳ, mục tiêu, ngân sách; sao lưu, xuất file.
+
+**Câu hỏi của màn hình** (skill §2.2)
+
+- **Hôm nay** (`/`): "Từ giờ đến cuối kỳ mình còn tiêu được bao nhiêu, và sắp phải trả
+  gì?" Số lớn nhất là **Có thể chi** (kèm mỗi ngày bao nhiêu). Phát hiện đọc đầu tiên là
+  dòng dưới con số: khoản sắp đến hạn gần nhất, hoặc **thiếu bao nhiêu** khi âm (không
+  bao giờ che bằng số 0). Nút chính **Ghi khoản chi**.
+- **Sổ** (`/ledger`): "Tháng này tiền đi đâu?" Khối lớn nhất là danh sách giao dịch theo
+  ngày; bên cạnh (desktop) hoặc phía trên (điện thoại): thu, chi, còn lại của tháng; cột 6
+  tháng (cũng là bộ chọn tháng); chi theo danh mục (chạm để lọc); ngân sách. Báo cáo cũ
+  gộp vào đây.
+- **Kế hoạch** (`/plan`): "Tiền có đủ đến cuối kỳ không, và đã hứa trả những gì?" Khối
+  lớn nhất là đường số dư dự báo với **điểm thấp nhất** được ghi chú. Rồi: khoản định kỳ,
+  mục tiêu để dành, thử trước.
+- **Tài khoản** (`/accounts`): "Mình có gì và nợ gì?" Số lớn nhất là tài sản ròng theo
+  từng loại tiền (không tự quy đổi). Tài khoản xếp thành Tiền tiêu được, Tiết kiệm, Nợ.
+  Mở một tài khoản (`/account/<id>`): số dư, Đối chiếu, Nhập sao kê, giao dịch gần đây,
+  các lần nhập (hoàn tác).
+
+**Flow mới**
+
+1. Mở app vào **Hôm nay**. Chưa có tài khoản: khung vẫn giữ, chỗ con số là câu "Bắt đầu
+   bằng số tiền bạn đang có" và nút **Thêm tài khoản**. Có tài khoản nhưng chưa có khoản
+   định kỳ: một dòng gợi ý thêm lương và tiền nhà để ước tính sát hơn.
+2. **Ghi khoản chi** (Ctrl N, ở mọi khu): một tờ nhập riêng thay cho form 11 ô cũ. Ô số
+   tiền to được focus sẵn, gõ kiểu Việt (`45.000`, `45k`); Chi | Thu | Chuyển; chip danh
+   mục (dùng gần đây trước); đối tác có gợi ý, chọn đối tác thì điền sẵn danh mục theo
+   quy tắc hoặc lần trước; chip tài khoản, **ngày chọn bằng lịch** (không gõ), "Dự kiến";
+   chuyển khoản thêm tài khoản nhận, tỷ giá khi khác tiền, phí. Ghi chú và nhãn nằm trong
+   "Thêm chi tiết". Lưu xong báo "Đã ghi" kèm **Hoàn tác**.
+3. Chạm một giao dịch thì mở lại tờ đó để sửa; menu của tờ: Ghi hoàn tiền, Ghi lại như
+   khoản mới, Xóa. Giữ lâu (điện thoại) hoặc ô chọn (desktop) để chọn nhiều: Xuất, Xóa.
+4. Hóa đơn đến hạn: ngay trên Hôm nay, mỗi dòng có **Đã trả** (ghi thành giao dịch hôm
+   nay, có Hoàn tác).
+5. **Nhập sao kê** từ một tài khoản hoặc kéo thả file (Windows/web): bốn bước Chọn file →
+   Ghép cột → Soát dòng → Xong (đối chiếu số dư cuối, Hoàn tác lần nhập).
+6. **Thử trước**: Thử một khoản mua hoặc Kịch bản mới → trang kịch bản (`/whatif/<id>`):
+   gốc và giả định cạnh nhau, ảnh hưởng ngân sách, giả định chạm để sửa; "Ghi thành giao
+   dịch thật" chỉ một lần.
+7. **Cài đặt** (`/settings`): tiền và ngày, riêng tư (ẩn số tiền, khóa thiết bị), nhắc,
+   danh mục, quy tắc, dữ liệu (sao lưu, khôi phục, lịch sử nhập, kiểm tra, hoàn tác), Pro.
+   Nút ẩn số tiền còn có ở thanh trên để dùng nhanh nơi đông người.
+
+**Yếu tố đặc trưng:** **thanh tiền đã hứa**. Một thanh dài bằng số tiền đang có (cộng
+thu nhập chắc chắn khi bật). Thanh chia thành từng hóa đơn sắp tới (xám, có tên khi đủ
+chỗ), tiền để dành mục tiêu, dự phòng, và phần còn lại **màu xanh của app**: chính là
+"Có thể chi". Thiếu tiền thì phần vượt ra ngoài cuối thanh màu đỏ. Ngay dưới là bảng
+cộng trừ khớp từng đoạn của thanh: đó là bằng chứng nằm cạnh đáp án.
+
+**Khuôn mặt:** màu của app chỉ nằm trên phần tiền còn tiêu được (thanh, đường dự báo
+tháng này, cột tháng đang xem) và nút chính. Mọi con số khác là mực đen, dấu +/− nằm
+trong chữ chứ không ở màu. Chỉ khoản thu mới có màu xanh dương tính kèm dấu "+".
+
+**Màu:** Spend nhận `#2E7D32` (xanh lá tiền, 123°). Màu tím cũ `#7C3AED` bị loại vì bộ
+cấm tím và chàm. Khoảng màu còn trống duy nhất đủ xa các app khác: cách Recall 39°, cách
+Dev 34°. Tài khoản và danh mục là đồ của người dùng nên mang chấm `HandyPalette` theo thứ
+tự tạo. Trường màu cũ của danh mục được giữ trong dữ liệu nhưng không dùng để vẽ.
+
+**Bố cục và nền tảng**
+
+- Điện thoại (< 840 px): thanh dưới 4 khu Hôm nay, Sổ, Kế hoạch, Tài khoản. Nút **Ghi**
+  nổi ở Hôm nay và Sổ, không che dòng nào. Tờ nhập mở toàn màn hình. Back đóng tờ, rồi
+  về khu trước.
+- Desktop/tablet (≥ 840 px): công tắc 4 khu đặt trên thanh trên (như Dev), nút chính ở
+  thanh trên. Hôm nay hai cột (con số, thanh và bảng cộng trừ | sắp tới và gần đây). Sổ
+  hai cột (tháng 360 px | danh sách). Kế hoạch hai cột. Tài khoản: danh sách | chi tiết.
+  Tờ nhập là hộp thoại 560 px.
+- Phím tắt: Ctrl N ghi, Ctrl I nhập sao kê, Ctrl F tìm trong sổ, Ctrl Z hoàn tác, Ctrl 1–4
+  đổi khu, Esc đóng.
+- Web: `/account/<id>`, `/whatif/<id>`, `/import`, `/import/<tài khoản>`, `/settings`,
+  `/settings/categories`, `/settings/rules`, `/imports`; bốn khu nằm trong `/` (đổi khu
+  không đổi URL, như công tắc của Dev); kéo thả sao kê.
+- Android/iOS: khóa sinh trắc hoặc PIN (Windows Hello); nhắc hóa đơn qua thông báo không
+  có số tiền hay đối tác; che màn hình khi app chạy nền.
+
+**Trạng thái:** tải: khung cuối cùng, con số thay bằng thanh xám đúng cỡ. Lỗi mở dữ
+liệu: một câu, Thử lại, không đặt lại gì. Tháng trống: khung giữ nguyên, một câu và nút
+ghi. Số 0 in là 0; thiếu dữ liệu in là "—". Ẩn số tiền: mọi con số là "••••" (thanh vẫn
+đúng tỷ lệ nhưng không có nhãn số). Lưu lỗi: tờ nhập giữ nguyên, một câu dưới nút Lưu.
+Kịch bản cũ hơn sổ hiện tại: một thông báo "Sổ đã đổi, kịch bản vẫn dùng bản gốc".
+
+**An toàn (giữ từ bản cũ):** mọi thay đổi qua `SpendController.change` (kiểm tra
+revision, ghi nguyên tử, nhật ký); hủy tờ nhập không đổi sổ; "ghi lại như khoản mới" tạo
+ID mới và bỏ dấu lô nhập, dấu kỳ định kỳ. Xuất file hỏi trước vì chứa dữ liệu riêng tư.
+Khôi phục kiểm tra toàn bộ rồi hỏi hai lần. Nhập sao kê: soát xong mới ghi, dòng trùng
+bỏ chọn sẵn, không tự xóa, chênh lệch đối chiếu không tự sửa, hoàn tác từ chối dòng đã
+sửa. Thử trước không bao giờ ghi vào sổ trừ khi bấm ghi thật. Kỳ dự báo trên 30 ngày,
+kịch bản thứ hai, so sánh, nhân bản và lưu hồ sơ ghép cột cần Pro.
+
+**Loại bỏ:** bốn tab cũ kèm icon tài khoản và menu 8 mục; tab Báo cáo riêng; form chung
+11 ô với ngày gõ tay `YYYY-MM-DD` và màu `#RRGGBB` gõ tay; thẻ bọc mọi khối; ExpansionTile
+chứa tính năng chính; chữ hoa "ƯỚC TÍNH", "MÔ PHỎNG", "QUÁ HẠN"; màu đỏ trên mọi khoản
+chi; icon màu theo danh mục.
+
+**Tiến độ:** xong. `today/` (con số, `promised_logic.dart` tách từng khoản đã hứa theo
+đúng cách engine tính, thanh và bảng cộng trừ, sắp tới với Đã trả), `entry/` (tờ ghi:
+`entry_logic.dart` thuần Dart, `parseAmount` đọc `45.000`/`45k`/`1,5tr`), `ledger/` (bộ
+lọc thuần Dart, tháng, cột 6 tháng, danh mục, ngân sách, xuất), `plan/` (dự báo nét đứt
+có điểm thấp nhất, khoản định kỳ, để dành, thử trước), `accounts/`, `import/` (bốn bước),
+`settings/`, `shell/`. Quảng cáo chỉ hiện ở trang gốc, không ở Kế hoạch, form hay trang
+con (`NavigatorObserver`). Đồng ghi là "đ" vì Geist và Bricolage không có ký tự ₫.
+
 ## Lộ trình
 
 | Bước | Phạm vi                                              | Trạng thái |
@@ -676,8 +826,10 @@ chụp, tạo bản mới của video). Xóa hướng dẫn giờ xóa cả bả
 | 6    | Docs                                                 | Xong       |
 | 7    | Media                                                | Xong       |
 | 8    | Xóa widget UI cũ trong `handy_ui`, ảnh review mới    | Xong       |
+| 9    | Spend                                                | Xong       |
+| 10   | Habit                                                | Xong       |
 
-Bước 8 giữ lại `handy_ui.dart` + `local_app.dart` (app `handy_spend`, ngoài phạm vi làm lại, vẫn dùng) và `workflows.dart` (quy trình văn bản của Docs); các widget cũ khác đã xóa, khung ảnh chung chuyển vào kit (`HandyPictureFrame`).
+Bước 8 giữ lại `handy_ui.dart` + `local_app.dart` (khi đó Spend còn dùng; nay vẫn dùng trong `handy_pdf`, `handy_scan` và vài integration test) và `workflows.dart` (quy trình văn bản của Docs); các widget cũ khác đã xóa, khung ảnh chung chuyển vào kit (`HandyPictureFrame`).
 
 Ảnh review của mọi app đã làm lại (kèm GIF chuyển động) gom vào `review-shots/`
 (không commit): `python tooling/review-shots.py [app…]`, mở `review-shots/index.html`.
@@ -687,3 +839,117 @@ Icon của cả 7 app (Android, iOS, Web/PWA, Windows) sinh từ một nguồn:
 
 Mỗi bước: hợp đồng → dựng → widget test theo flow mới (giữ mọi kiểm tra an toàn dữ
 liệu) → `melos analyze` + `melos test` xanh → chụp ảnh và soát theo skill.
+
+## Hợp đồng: Handy Habit
+
+Làm lại từ đầu ngày 2026-11-02, thay cho bản dựng trước (teal `#0D9488`, hợp đồng tiếng
+Anh; ảnh soát cũ trong `docs/qa/evidence/habit-ui-review.pdf` thuộc bản đó).
+
+**Dữ liệu và việc** (skill §2.1)
+
+- Đối tượng: **thói quen** (có/chưa, số lần, phút, số lượng có đơn vị; mục tiêu tới 3 số
+  lẻ; lịch hằng ngày, các thứ đã chọn, N ngày mỗi tuần, mỗi N ngày; lịch có lịch sử hiệu
+  lực; nhóm; ưu tiên; lưu trữ theo kỳ), **lần ghi** (tổng theo ngày, bỏ qua có lý do, ghi
+  bù trong khoảng cho phép, nguồn tay hoặc từ quy trình), **quy trình** (các bước có thứ tự,
+  giây dự kiến và tối thiểu, bắt buộc, được bỏ, liên kết thói quen; thứ trong tuần, giờ gợi
+  ý), **phiên chạy** (bản chụp các bước, thời gian thực, ghi chú bước, kết thúc hoặc hủy),
+  nhắc (giờ, thứ, giờ yên lặng, nhắc lại sau 10 phút).
+- Quy mô thật: 3–12 thói quen, 1–5 quy trình 3–8 bước (5–40 phút); vài lần ghi mỗi ngày;
+  lịch sử 1–3 năm.
+- Người dùng: một người, mở điện thoại vài lần mỗi ngày, mỗi lần dưới 10 giây (đánh dấu
+  một việc), sáng và tối chạy một quy trình 10–30 phút với màn hình mở; thỉnh thoảng xem
+  lại tuần trên máy tính.
+- Việc, theo thứ tự hay gặp: **đánh dấu việc hôm nay** (một chạm; số lượng thì cộng
+  nhanh); **chạy quy trình** và đi từng bước; xem chuỗi ngày của một thói quen; sửa ngày
+  quên ghi; tạo hoặc sửa thói quen, quy trình; xem lại tuần, tháng; đặt nhắc; sao lưu.
+
+**Câu hỏi của màn hình** (skill §2.2)
+
+- **Hôm nay** (`/`): "Hôm nay còn việc gì, và bắt đầu quy trình nào?" Tiêu đề là lời chào
+  kèm sự thật của ngày ("Chào buổi sáng. Còn 3 việc, Buổi sáng lúc 6:30"). Khối lớn nhất
+  là danh sách việc hôm nay, mỗi việc một **tràng hạt**. Phát hiện đọc đầu tiên: phiên
+  quy trình còn dở (nếu có) với nút Tiếp tục, đặt trên cùng.
+- **Thói quen**: "Mình đang theo những thói quen nào, và cái nào đều nhất?" Danh sách theo
+  nhóm, mỗi dòng kèm chuỗi hiện tại. Mở một thói quen: lưới tháng (chạm ngày để sửa trong
+  khoảng cho phép), chuỗi hiện tại/dài nhất, hoàn thành trên số kỳ hợp lệ, lịch sử lịch.
+- **Quy trình**: "Quy trình nào, dài bao lâu, gồm bước gì?" Mở một quy trình: các bước
+  thành một **dải thời lượng** (mỗi bước dài theo số phút), nút chính **Bắt đầu**, bản
+  rút gọn (chọn số phút, thấy bước nào rút, bước nào bỏ).
+- **Chạy quy trình**: "Bước này là gì, còn bao lâu?" Tên bước và đồng hồ là khối lớn
+  nhất; nút chính **Xong bước**.
+- **Thống kê**: "Thực tế mình đã làm được bao nhiêu?" Không chấm điểm: mỗi thói quen là
+  "hoàn thành trên số ngày (tuần) hợp lệ"; cột số ngày có ghi mỗi tuần; phiên quy trình
+  dự kiến và thực tế. Xuất CSV, Markdown, PDF.
+
+Bốn khu Hôm nay, Thói quen, Quy trình, Thống kê được giữ vì bản mô tả sản phẩm yêu cầu,
+và vì mỗi khu trả lời một câu hỏi khác nhau. Nội dung và luồng bên trong làm lại hết.
+
+**Flow mới**
+
+1. Lần đầu: một màn ngắn với ba lựa chọn: **Tạo thói quen đầu tiên** (nút chính), thêm ví
+   dụ có thể sửa, bắt đầu trống. Không quảng cáo cho tới khi xong.
+2. **Đánh dấu**: chạm hạt hôm nay. Có/chưa thì xong ngay; số lần thì mỗi chạm cộng 1;
+   phút và số lượng thì mở một tờ cộng nhanh (bằng mục tiêu, nửa mục tiêu, số tự nhập).
+   Chạm hạt đã đầy, hoặc giữ lâu, thì mở **Sửa ngày** (tổng của ngày, bỏ qua có lý do, ghi
+   chú). Mỗi lần ghi có **Hoàn tác**.
+3. **Ghi bù**: trong lưới tháng của thói quen, chạm một ngày trong khoảng cho phép.
+4. **Chạy quy trình**: Bắt đầu thì vào màn chạy toàn màn hình; ra nền thì tạm dừng; mở lại
+   thì khôi phục và báo; bước có liên kết thì ghi vào thói quen đúng một lần, hoàn tác bước
+   gỡ đúng lần ghi đó nếu chưa bị sửa. Kết thúc thì xem tổng kết phiên.
+5. **Bản rút gọn**: kéo số phút (5–90), thấy ngay kết quả; chạy một lần, hoặc lưu thành
+   quy trình riêng (Pro).
+6. **Thêm** (Ctrl N): menu Thói quen mới / Quy trình mới. Giờ chọn bằng đồng hồ, ngày bằng
+   lịch, thứ trong tuần bằng 7 chip; không gõ `HH:mm`, `1,2,3` hay `YYYY-MM-DD`.
+7. **Cài đặt** (`/settings`): ngôn ngữ, giao diện; lịch (múi giờ, đầu tuần, khoảng ghi bù);
+   nhắc (bật, giờ yên lặng, từng lịch nhắc, nhắc tiếp theo); dữ liệu (xuất, nhập hợp nhất
+   hoặc thay thế, kiểm tra); Pro; xóa toàn bộ ở cuối.
+
+**Yếu tố đặc trưng:** **tràng hạt**, vật đếm của việc tu tập lặp lại. Mỗi thói quen là một
+chuỗi hạt cho 6 ngày có lịch gần nhất và một hạt lớn cho hôm nay ở cuối. Hạt đặc là xong,
+hạt nửa là làm dở, vòng rỗng xám là ngày có lịch chưa làm, gạch ngang là bỏ qua có lý do;
+ngày không có lịch thì không có hạt. Hạt hôm nay vừa là trạng thái vừa là nút đánh dấu,
+đầy dần theo phần trăm mục tiêu.
+
+**Khuôn mặt:** lời chào là tiêu đề, kèm sự thật của ngày lấy từ dữ liệu. Màu của app chỉ
+nằm trên hạt hôm nay, bước đang chạy và nút chính. Hạt các ngày trước màu mực.
+
+**Màu:** Habit nhận **đỏ son `#B42318`** (4°), màu duy nhất khác hẳn tám app còn lại; teal
+cũ trùng Dev và Save. Vì đỏ là màu của app, Habit **không bao giờ tô đỏ ngày lỡ**: ngày lỡ
+là vòng rỗng xám có chữ. Thói quen và quy trình mang chấm `HandyPalette` theo thứ tự tạo;
+trường màu và icon cũ vẫn giữ trong dữ liệu nhưng không còn sửa trong app.
+
+**Bố cục và nền tảng**
+
+- Điện thoại (< 840 px): thanh dưới 4 khu; nút Thêm ở thanh trên. Màn chạy toàn màn hình,
+  nút Xong bước trong tầm ngón cái.
+- Desktop/tablet (≥ 840 px): công tắc 4 khu ở thanh trên (như Spend, Dev), nút Thêm; Hôm
+  nay hai cột (việc | quy trình và nhắc); Thói quen và Quy trình: danh sách | chi tiết từ
+  1000 px.
+- Phím: Ctrl N thêm, Ctrl 1–4 đổi khu, Space tạm dừng hoặc tiếp tục khi chạy, Enter xong
+  bước, Esc đóng.
+- Web: `/settings`, `/habit/<id>`, `/routine/<id>`, `/run/<phiên>`; bốn khu trong `/`.
+- Android/iOS: thông báo nhắc nội dung chung, không tên việc; Windows/Web: không có nhắc
+  nền, Hôm nay hiện nhắc tiếp theo trong app.
+
+**Trạng thái:** tải: khung cuối cùng. Lỗi mở dữ liệu: một câu, Thử lại, không đặt lại gì.
+Hôm nay không có lịch: một câu và lối sang Thói quen. Chưa có quy trình: một câu và mẫu.
+Lưu lỗi: tờ giữ nguyên, một câu dưới nút. Phiên khôi phục: thông báo rằng thời gian chỉ là
+ước tính.
+
+**An toàn (giữ từ bản cũ):** mọi thay đổi qua `HabitController.change` (revision, ghi
+nguyên tử); hủy tờ không đổi gì; đánh dấu ghi đúng một lần (không vượt mục tiêu nếu chưa
+chọn cộng thêm); sửa lịch chỉ có hiệu lực từ ngày tới, không viết lại quá khứ; loại ghi
+nhận và đơn vị đã có lịch sử thì không đổi; xóa thói quen gỡ liên kết ở quy trình và nhắc;
+xóa quy trình giữ lịch sử phiên; ra nền thì tạm dừng phiên; hoàn tác bước không gỡ lần ghi
+đã bị sửa; nhập kiểm tra toàn bộ rồi hỏi, hợp nhất đổi ID, nhắc nhập vào không tự bật.
+
+**Tiến độ:** xong. `today/` (lời chào và sự thật của ngày; `beads.dart` là tràng hạt;
+`check_in.dart` đánh dấu một chạm, cộng nhanh, sửa ngày), `habits/` (danh sách theo
+nhóm, chi tiết có lưới tháng, trình sửa lịch có hiệu lực từ ngày tới), `routines/` (dải
+thời lượng, các bước kéo hoặc lên/xuống, bản rút gọn, tổng kết phiên), `runner.dart` giữ
+nguyên logic thời gian, `runner_view.dart` là giao diện mới; xong một bước thì bước kế
+chạy luôn. `insights/`, `settings/`, `shell/`. Quảng cáo chỉ ở trang gốc sau màn mở đầu.
+
+**Loại bỏ:** tiêu đề "Handy Habit · tab"; danh sách nút viền xếp chồng; form chung gõ
+`HH:mm`, thứ `1,2,3`, màu hex; thanh tiến độ dưới mỗi dòng; lưới 35 nút số ngày; menu ba
+chấm cho việc chính; chữ dài giải thích quy tắc trên mọi màn.

@@ -37,3 +37,41 @@ Giới hạn đã biết, gồm preview video emulator: [KNOWN_ISSUES](../KNOWN_
 Test widget có màn hình hẹp 360px và text scale 1.6; editor còn có test 320px,
 text scale 2.0. Đây là các mẫu kiểm tra cụ thể, chưa phải chứng nhận accessibility
 hoặc mọi kích thước. Luồng Ads/Pro cần cấu hình store thật trước review phát hành.
+
+## Handy Spend
+
+Ảnh Android emulator HandySpend_QA_API35, dữ liệu QA riêng, giao diện tiếng Anh:
+
+[Mở bản PDF gồm 11 màn hình](qa/evidence/spend-ui-review.pdf).
+
+Snapshot `8655b2af2608`; [audit](qa/evidence/spend-checkpoint-audit.json).
+Dấu chạm màu xanh trong ảnh là overlay của môi trường QA.
+
+- [Home](qa/evidence/spend-candidate-8655b2af2608/screenshots/spend-home.png), [Giao dịch](qa/evidence/spend-candidate-8655b2af2608/screenshots/spend-transactions.png), [Báo cáo](qa/evidence/spend-candidate-8655b2af2608/screenshots/spend-reports.png).
+- [Kế hoạch](qa/evidence/spend-candidate-8655b2af2608/screenshots/spend-plan.png), [Sandbox](qa/evidence/spend-candidate-8655b2af2608/screenshots/spend-sandbox.png), [Thêm giao dịch](qa/evidence/spend-candidate-8655b2af2608/screenshots/spend-add-transaction.png).
+- [Ánh xạ sao kê](qa/evidence/spend-candidate-8655b2af2608/screenshots/spend-import-map.png), [Duyệt dòng nhập](qa/evidence/spend-candidate-8655b2af2608/screenshots/spend-import-review.png), [Đối chiếu và Undo](qa/evidence/spend-candidate-8655b2af2608/screenshots/spend-import-result.png).
+- [Tài khoản](qa/evidence/spend-candidate-8655b2af2608/screenshots/spend-accounts.png), [Cài đặt](qa/evidence/spend-candidate-8655b2af2608/screenshots/spend-settings.png).
+
+Spend bật nhãn luôn hiển thị trên trường nhập/chọn để nhận biết chức năng cả khi
+đã có giá trị. Theme mặc định của các app khác được giữ nguyên.
+
+Luồng CSV kiểm tra số dư sau nhập và sau Undo, mở lại SQLite để xác nhận dữ liệu.
+File đầu vào đi qua wizard thật; chưa kiểm tra thao tác chọn file bằng OS provider.
+Ảnh đang cuộn có thể chỉ hiện một phần trang. Không dùng ảnh làm bằng chứng cho
+thiết bị thật, iOS, browser hoặc giao dịch Ads/Pro.
+
+## Handy Habit
+
+[Complete PDF](qa/evidence/habit-ui-review.pdf) /
+[HTML gallery](qa/evidence/habit-ui-review.html). Actual bundled-font widget renders
+cover Today, Habits, Routines, Insights, builder, Lite, running/paused states, settings,
+habit history/editor and dark/empty onboarding. Android captures include the routine
+flow, recovery and the production notification-denied UI. Captions distinguish widget
+renders from emulator screenshots; neither is physical-device, iOS or browser proof.
+
+Review against the app-screen skill: the daily action and runner completion button
+remain primary; teal marks progress without coloring every row; titles, units and
+notes wrap, modal actions stay reachable by scroll. Four automated accessibility cases
+pass contrast, tap targets and labels in all main areas at mobile/desktop widths.
+Long habit forms/history remain scrollable; extreme text scaling and assistive-tech
+runtime still require device review. The PDF is evidence for review, not a UI approval.

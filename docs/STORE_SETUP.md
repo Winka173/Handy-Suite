@@ -11,7 +11,7 @@ official Google test IDs and ads default off. Windows/Web Free is ad-free.
 
 ## Public identifiers and app identity
 
-Copy `config/monetization.example.json` to a local config and fill the seven app keys
+Copy `config/monetization.example.json` to a local config and fill the eight app keys
 independently. Run:
 
 ```
@@ -98,3 +98,16 @@ Keystore AES-GCM, random IVs, non-exportable key and tamper rejection. Native
 Android/Windows compilation is verified separately from real store ownership.
 Logs/XML: `docs/qa/evidence/store-native-*`. Test ports exist only in tests.
 Actual sales, store privacy flows and release certification remain CONFIG_REQUIRED.
+
+## Handy Habit
+
+Public config has a ninth `habit` entry (empty/ads disabled until publisher setup).
+App namespace `com.example.handysuite.habit`, debug suffix `.flutterpilot`; iOS bundle
+`com.example.handysuite.habit`. Android/iOS currently use official test AdMob app IDs;
+replace through public build configuration before distribution. Pro uses the same
+non-consumable official adapters/restore flow as the suite. Concrete benefits are ad
+removal where supported and reusable Routine Lite variants. Core tracking, Lite
+preview, reports and full backups remain free. No fake price, purchase or Web payment.
+Needed: publisher-owned final bundle/package IDs, product IDs/public license key,
+AdMob IDs/UMP configuration, release signing, privacy forms and official sandbox QA.
+iOS also needs macOS/Xcode. No credentials should be pasted into docs/source.

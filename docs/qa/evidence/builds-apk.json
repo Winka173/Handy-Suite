@@ -80,11 +80,22 @@
         "app":  "spend",
         "target":  "apk",
         "exitCode":  0,
-        "sourceSha256":  "a0b333b326b24ce17e384ebc2d6b863a2571d7d32f0a78e6b7cdf8e350cf0bda",
+        "sourceSha256":  "5844653bf4b517eb6ce7e8032883a83a568e209fb27133214563da95f5487902",
         "sourceUnchanged":  true,
         "artifact":  "artifacts/flutter/handy_spend/android/handy-spend-pilot-debug.apk",
-        "artifactSha256":  "71d403b4fe111b81f9f9b5c8b4134f1d1a07c5e73a2d336993d6206ba0db8ba0",
-        "startedAt":  "2026-11-01T09:31:58.9840054Z",
-        "elapsedSeconds":  65.05
+        "artifactSha256":  "3ebefbd84e12bfc8da1ba19b1d497e45f33d0099cb11082fa6c86cb3b81e1442",
+        "startedAt":  "2026-11-01T10:43:10.1305369Z",
+        "elapsedSeconds":  21.96
+    },
+    {
+        "app":  "habit",
+        "target":  "apk",
+        "exitCode":  0,
+        "sourceSha256":  "8fdddea05ac1124d94285f6649e89ccfe59c4cb761738d6b4d5b9a2d8a55b5c0",
+        "sourceUnchanged":  true,
+        "artifact":  "artifacts/flutter/handy_habit/android/handy-habit-pilot-debug.apk",
+        "artifactSha256":  "009d7e5f8b5dd86d29a239dc80c555775a62d2d6e33eb0e386816961c6054ddf",
+        "startedAt":  "2026-11-01T16:34:41.3437755Z",
+        "elapsedSeconds":  22.37
     }
 ]

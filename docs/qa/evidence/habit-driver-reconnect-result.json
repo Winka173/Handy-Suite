@@ -1,0 +1,14 @@
+﻿{
+    "app":  "habit",
+    "scenario":  "native",
+    "device":  "emulator-5570",
+    "physicalDevice":  false,
+    "exitCode":  0,
+    "originalTransportExitCode":  1,
+    "originalTestProcess":  9009,
+    "sourceSha256":  "8fdddea05ac1124d94285f6649e89ccfe59c4cb761738d6b4d5b9a2d8a55b5c0",
+    "logSha256":  "c6c8b6e67901e93d81c3eedfcb2615fa57fa14bdcde7db277f520efdb23a439e",
+    "existingProcessResultsRetrieved":  true,
+    "finishedAt":  "2026-11-01T16:33:00.5916501Z",
+    "appTestsAlreadyFinishedBeforeReconnect":  true
+}

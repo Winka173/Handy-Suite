@@ -21,6 +21,13 @@
   calendar date, shows daily end balance, minimum and first negative day. No salary
   is invented. Overdue unpaid occurrences within 366 days are charged on start day;
   older unpaid schedules need manual review. Horizon limit: 3660 days.
+  UI offers 7/30/90 days and custom 1–3660 days; above 30 days requires verified Pro.
+- Balance-review warnings use the latest opening-as-of or posted effective date,
+  including either side of a transfer. At least 30 calendar days without a newer
+  local record triggers a review hint. Pending/future entries cannot refresh it.
+  This does not verify a bank balance or assert that inactivity is an error.
+- Last recurring payment is derived from linked posted occurrence entries through
+  the reporting day; pending/future payments never count as completed payments.
 - Monthly/yearly rules retain their original anchor and clamp shorter months.
   Weekends are not shifted automatically. DST uses IANA calendar dates, not 24-hour
   division. Historical anchors are fast-forwarded before bounded expansion.
@@ -30,6 +37,10 @@
 - Installments divide the entered total exactly, remainder minor units assigned
   to early payments. No lender interest/fees are assumed. Sandbox keeps its saved
   baseline; explicit conversion is once per scenario, future payments stay pending.
+  Separate income/expense assumptions can be added, edited and removed. Moving one
+  unpaid occurrence excludes only its original occurrence ID and stages the replacement
+  date; later recurrences remain. Saving a scenario alone does not make its financial
+  baseline stale. Assumptions never change actual balances without explicit conversion.
 - Recurring weekly/yearly equivalents use 52/12/1 payments; monthly run-rate is a
   rounded annual estimate divided by 12, not an issuer statement. Goal completion
   date is not inferred without a contribution schedule (P1 reverse planner).

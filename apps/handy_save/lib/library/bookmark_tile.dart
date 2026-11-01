@@ -1,6 +1,7 @@
 import 'package:handy_save_engine/handy_save_engine.dart';
 import 'package:handy_ui/kit.dart';
 import '../controller.dart';
+import '../ui/collection_picker.dart';
 import '../ui/words.dart';
 
 /// One saved link: its picture, title, where it is from and when. Tapping
@@ -57,8 +58,15 @@ class BookmarkTile extends StatelessWidget {
             fontWeight: b.isRead ? FontWeight.w400 : FontWeight.w500,
           ),
         ),
-        subtitle: Text(
-          meta,
+        subtitle: Text.rich(
+          TextSpan(
+            children: [
+              if (collectionOf(controller.library, b.collectionId)
+                  case final of?)
+                collectionSpan(context, of),
+              TextSpan(text: meta),
+            ],
+          ),
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
           style: TextStyle(color: c.muted),

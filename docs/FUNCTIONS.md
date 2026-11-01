@@ -1,7 +1,96 @@
 # Handy Suite Flutter functions
 
-Seven independent local-first Flutter apps. Current code/test status: [FEATURE_MATRIX](../FEATURE_MATRIX.md).
+## Handy Habit
+
+Theo dõi hành vi lặp lại và chạy quy trình cá nhân nhiều bước; không thay Recall,
+Keep, Spend hoặc timer đa dụng. [Trạng thái kiểm chứng](handy_habit/FEATURE_MATRIX.md).
+
+- Thói quen: tạo/sửa, sắp xếp, tìm/lọc/nhóm, nhân bản, archive/unarchive, xác nhận
+  xóa. Binary, count, thời lượng và lượng có đơn vị; mục tiêu, ghi chú, icon/màu/ưu tiên.
+- Lịch hằng ngày, chọn thứ, số ngày/tuần, mỗi N ngày; ngày bắt đầu/kết thúc, phiên
+  bản lịch có ngày hiệu lực. Đổi lịch không xóa hoặc dời check-in cũ.
+- Check-in nhanh, sửa tổng ngày và backfill có giới hạn, ghi chú/bỏ qua, Undo.
+  Streak hiện tại/dài nhất theo ngày có lịch hoặc tuần đạt quota; không tính ngày
+  bỏ qua thành thành công hoặc coi kỳ còn mở là thất bại. Lịch sử, calendar, xu
+  hướng tuần/tháng và ngày có lịch tiếp theo.
+- Quy trình: template offline có thể sửa, builder kéo/sắp bước, thời lượng/tối
+  thiểu/ưu tiên, bước bắt buộc/tùy chọn, liên kết lượng vào habit. Phiên lưu bản
+  kế hoạch riêng; sửa template không làm đổi lịch sử.
+- Runner: timer tiền cảnh, hoàn thành thủ công, pause/resume, bước trước/sau,
+  skip, thêm thời gian, ghi chú, auto-next tùy chọn, kết thúc/dừng và tổng kết.
+  Mở lại phiên sẽ khôi phục ở trạng thái tạm dừng; không hứa timer chính xác khi tắt app.
+- Hoàn thành bước liên kết ghi tiến độ cùng transaction, không ghi hai lần do
+  thao tác cũ. Undo chỉ gỡ event còn nguyên của bước; dừng phiên giữ check-in đã hoàn thành.
+- Routine Lite: chọn 5–90 phút, preview bước giữ/rút/bỏ và tổng thời gian; không
+  bỏ bước bắt buộc, báo rõ nếu không thể rút đủ. Chạy một lần không đổi template.
+- Insights: khoảng ngày, habit, nhóm, routine; mẫu số cơ hội hợp lệ, phiên hoàn
+  thành và thời gian dự kiến/thực tế, không chấm điểm năng suất tùy tiện.
+- Nhắc cục bộ Android/iOS: quyền chỉ xin khi bật, giờ yên lặng, chọn thứ, snooze,
+  preview, hủy khi tắt/xóa. Windows/Web dùng danh sách đến hạn trong app.
+- SQLite native/IndexedDB Web, integrity check, schema version, bảo vệ ghi đồng
+  thời. JSON/ZIP full backup miễn phí, preview merge/replace, đổi ID khi merge,
+  checksum và rollback. CSV log nhập/xuất; Markdown/PDF báo cáo EN/VI có khoảng ngày.
+- EN/VI, sáng/tối, bốn tab mobile/rail màn hình rộng, bàn phím và UI kit dùng chung.
+  Ads + Pro Lifetime dùng adapter thật; Pro bỏ ads được hỗ trợ và lưu biến thể Lite.
+
+Schema/CSV và chính sách dữ liệu: [DATA_SCHEMA](handy_habit/DATA_SCHEMA.md).
+Giới hạn nền tảng: [PLATFORM_CAPABILITIES](handy_habit/PLATFORM_CAPABILITIES.md).
+
+Eight independent local-first Flutter apps. Current code/test status: [FEATURE_MATRIX](../FEATURE_MATRIX.md).
 Known limits: [KNOWN_ISSUES](../KNOWN_ISSUES.md). Screenshots: [UI_REVIEW](UI_REVIEW.md).
+
+## Handy Spend
+
+Theo dõi tài chính offline và thử quyết định trong Financial Sandbox. Trạng thái
+kiểm chứng từng nhóm nằm trong [matrix riêng](handy_spend/FEATURE_MATRIX.md).
+
+- Tài khoản tiền mặt, ngân hàng, ví, tiết kiệm, thẻ tín dụng, khoản vay và loại khác;
+  số dư đầu kỳ/ngày hiệu lực, đối chiếu bằng giao dịch điều chỉnh, lưu trữ tài khoản.
+- Thu, chi, chuyển khoản liên kết nguyên tử, điều chỉnh và hoàn tiền có tham chiếu;
+  posted/pending tách biệt, ghi chú, tags, đối tác, sửa/xóa và Undo có audit.
+- Tiền dùng BigInt theo đơn vị nhỏ nhất; hỗ trợ VND/JPY không có số lẻ, các loại tiền
+  hai hoặc ba số lẻ. Chuyển khác tiền cần tỷ giá nhập tay và quy tắc làm tròn rõ ràng.
+- Lịch sử tìm kiếm/lọc theo kỳ, tài khoản, danh mục, loại, trạng thái, nhãn và số tiền;
+  chọn nhiều để xóa/xuất. Desktop có bảng kéo đổi độ rộng cột và Ctrl+N/F/I/Z.
+  Giao dịch thu/chi/chuyển khoản có thể dùng làm mẫu mới qua menu lịch sử; phải duyệt
+  và lưu, không sửa bản gốc hay sao chép liên kết import/lịch định kỳ. Danh mục gần
+  đây được đưa lên đầu danh sách chọn.
+- Danh mục cha/con, màu/biểu tượng và lưu trữ; ngân sách kỳ tháng/tùy chỉnh,
+  tùy chọn chuyển số dư một kỳ; báo cáo thu/chi, danh mục, xu hướng, biến động tài khoản,
+  chênh lệch ngân sách và tài sản ròng tách theo tiền tệ.
+- Safe to Spend: số dư thanh khoản được chọn, khoản vào/ra dự kiến, khoản dành mục tiêu,
+  dự phòng tối thiểu, mức mỗi ngày và thiếu hụt; có chế độ thận trọng và bảng giải thích.
+- Forecast theo ngày có biểu đồ/bảng chính xác, số dư thấp nhất và ngày thiếu đầu tiên;
+  giữ mốc cuối tháng, năm nhuận, múi giờ/DST, tránh cộng lại khoản đã ghi sổ.
+  Có mốc 7/30/90 ngày và khoảng tùy chọn 1–3660 ngày; trên 30 ngày cần Pro.
+  Home/Kế hoạch nhắc đối chiếu tài khoản chưa có ghi nhận mới ít nhất 30 ngày,
+  không khẳng định số dư đã được ngân hàng xác minh.
+- Sandbox giữ dữ liệu gốc bất biến: thử mua tiền mặt/trả góp, thêm thu/chi giả định,
+  đổi một lần đến hạn, đổi tên, bỏ kịch bản và chủ động xác nhận khi ghi vào sổ thật.
+  Free có một kịch bản; Pro hỗ trợ nhiều kịch bản, nhân bản, so sánh và forecast dài hơn.
+- Sao kê CSV/TXT/XLSX xử lý tại máy: preview, ánh xạ cột, ngày/múi giờ/dấu số,
+  quy tắc phân loại, rà trùng/khả năng đảo giao dịch, sửa từng hàng, nhập phần hợp lệ
+  có xác nhận, lịch sử và Undo batch khi hàng chưa thay đổi/không có phụ thuộc.
+  Có cột số dư để đối chiếu sau nhập; không tự điều chỉnh chênh lệch.
+  Rà gần trùng/đảo giao dịch với sai lệch tối đa một ngày lịch, số tiền chính xác
+  và tên đối tác chuẩn hóa; luôn để người dùng quyết định.
+- Khoản định kỳ, hóa đơn sắp đến/quá hạn, ước tính chi phí tháng/năm; chỉ ghi thanh toán
+  khi được duyệt. Local notifications có quyền, giới hạn 50 lịch; Web/Windows dùng
+  danh sách trong app.
+  Ngày thanh toán gần nhất lấy từ giao dịch liên kết đã ghi sổ, không tính khoản dự
+  kiến hoặc tương lai. Xu hướng báo cáo tháng có chi tiết theo danh mục và bộ lọc.
+- Mục tiêu và khoản dành riêng; xuất CSV/XLSX/JSON/PDF có lọc, backup ZIP có manifest/
+  checksum, restore có hai lần xác nhận. Chưa có receipt attachments hay backup mã hóa.
+- EN/VI, theme, tiền báo cáo/múi giờ/dạng ngày, ẩn số tiền, khóa bằng xác thực OS/PIN
+  trên nền tảng hỗ trợ và che giao diện khi ra nền. Khóa không mã hóa database.
+- Giữ Ads + Pro Lifetime qua adapter thật; ẩn ads trong capture/import/sandbox và
+  hộp thoại nhạy cảm. Chưa có publisher IDs/signing/giao dịch store thật.
+
+Không kết nối ngân hàng, đọc SMS/thông báo, cloud sync, tài khoản hay AI. Chưa chứng
+nhận iOS, thiết bị vật lý, browser runtime, Windows Hello/Explorer drop và giao dịch
+store. P1 planner nâng cao, receipt/OCR và mô hình lãi theo ngân hàng được để riêng.
+Xem [công thức](handy_spend/FORMULAS_AND_ASSUMPTIONS.md) và
+[bằng chứng/giới hạn kiểm thử](handy_spend/QA_MATRIX.md).
 
 ## Handy Save
 

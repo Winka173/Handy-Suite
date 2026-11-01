@@ -44,6 +44,15 @@ void main() {
       await tester.tap(find.byKey(const Key('spend-unlock')));
       await tester.pumpAndSettle();
       expect(find.text('Private ledger'), findsOneWidget);
+      tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.inactive);
+      await tester.pumpAndSettle();
+      expect(find.text('Private ledger'), findsNothing);
+      tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.resumed);
+      await tester.pumpAndSettle();
+      expect(find.byKey(const Key('spend-unlock')), findsOneWidget);
+      await tester.tap(find.byKey(const Key('spend-unlock')));
+      await tester.pumpAndSettle();
+      expect(find.text('Private ledger'), findsOneWidget);
       await tester.pumpWidget(const SizedBox());
       controller.dispose();
     },

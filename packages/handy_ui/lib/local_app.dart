@@ -6,6 +6,7 @@ import 'package:handy_monetization/handy_monetization.dart';
 class LocalApp extends StatefulWidget {
   final String title;
   final Color accent;
+  final FloatingLabelBehavior? floatingLabelBehavior;
   final ValueNotifier<bool>? adsVisible;
   final Future<Map<String, String>> Function() loadPreferences;
   final Future<void> Function(Map<String, String>) savePreferences;
@@ -16,6 +17,7 @@ class LocalApp extends StatefulWidget {
     super.key,
     required this.title,
     required this.accent,
+    this.floatingLabelBehavior,
     this.adsVisible,
     required this.loadPreferences,
     required this.savePreferences,
@@ -30,6 +32,17 @@ class _LocalAppState extends State<LocalApp> {
   Map<String, String>? prefs;
   String error = '';
   bool busy = false;
+  ThemeData appTheme(Brightness brightness) {
+    final theme = handyTheme(widget.accent, brightness);
+    return widget.floatingLabelBehavior == null
+        ? theme
+        : theme.copyWith(
+            inputDecorationTheme: theme.inputDecorationTheme.copyWith(
+              floatingLabelBehavior: widget.floatingLabelBehavior,
+            ),
+          );
+  }
+
   @override
   void initState() {
     super.initState();
@@ -78,8 +91,8 @@ class _LocalAppState extends State<LocalApp> {
         ],
       ),
       debugShowCheckedModeBanner: false,
-      theme: handyTheme(widget.accent, Brightness.light),
-      darkTheme: handyTheme(widget.accent, Brightness.dark),
+      theme: appTheme(Brightness.light),
+      darkTheme: appTheme(Brightness.dark),
       themeMode: prefs?['theme'] == 'dark'
           ? ThemeMode.dark
           : prefs?['theme'] == 'light'

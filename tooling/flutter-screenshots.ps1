@@ -1,5 +1,6 @@
-param([ValidateSet('tools','docs','media','dev','keep','recall','save','spend')][string]$App,[ValidateSet('native','pdf','capture','guide','recovery','conversion','camera-share','large-project','state','reader','parity','video-transform','editor')][string]$Scenario='native',[ValidateSet('emulator-5556','emulator-5558')][string]$Device='emulator-5556')
+param([ValidateSet('tools','docs','media','dev','keep','recall','save','spend','habit')][string]$App,[ValidateSet('native','pdf','capture','guide','recovery','conversion','camera-share','large-project','state','reader','parity','video-transform','editor')][string]$Scenario='native',[ValidateSet('emulator-5556','emulator-5558')][string]$Device='emulator-5556')
 $ErrorActionPreference='Stop'
+$fingerprintArgs=if($App -eq 'habit'){@('--app','habit')}else{@()}
 $root=Split-Path -Parent $PSScriptRoot
 . (Join-Path $PSScriptRoot 'flutter-android-lock.ps1')
 $mutex=Enter-HandyAndroidBuild
@@ -56,13 +57,13 @@ if($Scenario -eq 'video-transform') {
 }
 Push-Location (Join-Path $root "apps/handy_$App")
 try {
-  $sourceBefore=(& python (Join-Path $root 'tooling/flutter-source-fingerprint.py')).Trim()
+  $sourceBefore=(& python (Join-Path $root 'tooling/flutter-source-fingerprint.py') @fingerprintArgs).Trim()
   $ErrorActionPreference='Continue'
   # Regenerate debug-only plugin registration after any release build.
   & flutter drive --no-dds --driver=test_driver/screenshots.dart "--target=$target" -d $Device --dart-define=HANDY_SCREENSHOTS=true *> $log
   $result=$LASTEXITCODE
   $ErrorActionPreference='Stop'
-  $sourceAfter=(& python (Join-Path $root 'tooling/flutter-source-fingerprint.py')).Trim()
+  $sourceAfter=(& python (Join-Path $root 'tooling/flutter-source-fingerprint.py') @fingerprintArgs).Trim()
   [pscustomobject]@{app=$App;scenario=$Scenario;exitCode=$result;device=$Device;sourceSha256=$sourceBefore;sourceUnchanged=($sourceBefore -eq $sourceAfter);physicalDevice=$false;finishedAt=(Get-Date).ToUniversalTime().ToString('o')} | ConvertTo-Json | Set-Content -LiteralPath (Join-Path $root "docs/qa/evidence/$evidenceName-android-screenshots-result.json") -Encoding utf8
   exit $result
 } finally { Pop-Location; $mutex.ReleaseMutex(); $mutex.Dispose() }

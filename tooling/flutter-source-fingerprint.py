@@ -3,9 +3,15 @@ from pathlib import Path
 import hashlib
 import os
 import re
+import argparse
 
 root = Path(__file__).resolve().parent.parent
 workspace = re.findall(r"^  - ((?:apps|packages)/handy_[a-z_]+)$", (root / "pubspec.yaml").read_text(encoding="utf-8"), re.M)
+parser = argparse.ArgumentParser()
+parser.add_argument('--app', choices=[p.removeprefix('apps/handy_') for p in workspace if p.startswith('apps/')])
+selected = parser.parse_args().app
+if selected:
+    workspace = [p for p in workspace if not p.startswith('apps/') or p == f'apps/handy_{selected}']
 if (root / 'third_party/re2').is_dir():
     workspace.append('third_party/re2')
 if (root / 'third_party/json_schema').is_dir():

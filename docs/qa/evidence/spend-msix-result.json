@@ -1,0 +1,10 @@
+﻿{
+    "app":  "spend",
+    "artifact":  "C:\\Users\\Winka\\Projects\\Handy-Suite\\artifacts\\flutter\\handy-spend-20261101174138-unsigned.msix",
+    "sha256":  "b7c1db316a0920f8ecf839022c6b5206483bf3ce3a97a079230eda93aec2f5f7",
+    "sourceSha256":  "5844653bf4b517eb6ce7e8032883a83a568e209fb27133214563da95f5487902",
+    "makeAppxValidated":  true,
+    "signed":  false,
+    "installed":  false,
+    "storeApproved":  false
+}

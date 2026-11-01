@@ -14,6 +14,15 @@ import 'quick_tools_test.dart' show Files, png;
 ProjectStep step(WidgetTester tester) =>
     tester.widget<AnnotationCanvas>(find.byType(AnnotationCanvas)).step;
 
+// Decorative WidgetSpans must not become part of the guide's title assertion.
+Finder guideTitle(String title) => find.byWidgetPredicate(
+  (widget) =>
+      widget is Text &&
+      (widget.data ??
+              widget.textSpan?.toPlainText(includePlaceholders: false)) ==
+          title,
+);
+
 void main() {
   testWidgets(
     'a new guide opens the picker; leaving without saving leaves no empty guide',
@@ -22,7 +31,7 @@ void main() {
       final files = Files()..next = ImportedBytes('First.png', png());
       final drafts = <String, DocumentRepository>{};
       await start(tester, documents: store, files: files, drafts: drafts);
-      expect(find.text('Project'), findsOneWidget);
+      expect(guideTitle('Project'), findsOneWidget);
       await tapKey(tester, 'capture-new');
       // The picker opened by itself and its picture is step 1.
       expect(step(tester).title, 'First.png');
@@ -54,8 +63,8 @@ void main() {
     final guides = CaptureLibrary.parse(store.text!).projects;
     expect(guides.last.project.title, 'Nộp đơn');
     expect(
-      tester.getTopLeft(find.text('Nộp đơn')).dy,
-      lessThan(tester.getTopLeft(find.text('Project')).dy),
+      tester.getTopLeft(guideTitle('Nộp đơn')).dy,
+      lessThan(tester.getTopLeft(guideTitle('Project')).dy),
     );
   });
 
@@ -153,6 +162,8 @@ void main() {
       await tester.pumpAndSettle();
       expect(step(tester).annotations, hasLength(2));
       // Delete in a text field deletes text, not the note.
+      await tester.ensureVisible(find.byKey(const Key('capture-step-title')));
+      await tester.pumpAndSettle();
       await tester.tap(find.byKey(const Key('capture-step-title')));
       await tester.pumpAndSettle();
       await tester.sendKeyEvent(LogicalKeyboardKey.delete);

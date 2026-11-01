@@ -57,6 +57,7 @@ class PlacesList extends StatelessWidget {
       double indent = 0,
       Widget? menu,
       VoidCallback? onTap,
+      int? hue,
     }) {
       final on = marking && place != null && v.place == place && v.id == id;
       return ListTile(
@@ -68,7 +69,14 @@ class PlacesList extends StatelessWidget {
           left: HandySpace.l + indent,
           right: menu == null ? HandySpace.l : HandySpace.xs,
         ),
-        leading: Icon(icon, size: 20, color: on ? c.selectInk : c.muted),
+        // A collection shows its colour as a dot where the icon would be;
+        // the fixed places keep their grey icons.
+        leading: hue == null
+            ? Icon(icon, size: 20, color: on ? c.selectInk : c.muted)
+            : SizedBox(
+                width: 20,
+                child: Center(child: HandyDot(hue, size: 10)),
+              ),
         title: Text(title, maxLines: 1, overflow: TextOverflow.ellipsis),
         trailing: Row(
           mainAxisSize: MainAxisSize.min,
@@ -144,8 +152,9 @@ class PlacesList extends StatelessWidget {
               for (final (col, depth) in collectionTree(l))
                 row(
                   Key('collection-${col.id}'),
-                  Icons.folder_outlined,
+                  Icons.folder,
                   col.name,
+                  hue: collectionHue(l, col.id),
                   n: inCollection[col.id] ?? 0,
                   id: col.id,
                   place: Place.collection,

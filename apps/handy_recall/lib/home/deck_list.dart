@@ -59,6 +59,8 @@ class DeckList extends StatelessWidget {
                     return ListTile(
                       key: Key('deck-${d.id}'),
                       onTap: () => scope.openDeck(context, d.id),
+                      leading: HandyDot(deckHue(s.decks, d.id), size: 12),
+                      minLeadingWidth: 12,
                       title: Text(
                         d.name,
                         maxLines: 1,
@@ -72,9 +74,10 @@ class DeckList extends StatelessWidget {
                         ),
                         style: TextStyle(color: c.muted, fontFeatures: tabular),
                       ),
+                      // A bare 0 left the reader asking zero of what.
                       trailing: due == 0
                           ? Text(
-                              '0',
+                              tr(context, 'none due', 'chưa đến hạn'),
                               style: theme.textTheme.bodyMedium?.copyWith(
                                 color: c.muted,
                               ),

@@ -1,6 +1,6 @@
 import 'capabilities.dart';
 import 'package:local_auth/local_auth.dart';
-import 'package:flutter/material.dart';
+import 'package:handy_ui/kit.dart';
 import 'controller.dart';
 
 /// Device authentication is access control, not database encryption.
@@ -36,11 +36,15 @@ class SpendPrivacyGate extends StatefulWidget {
   final SpendController controller;
   final Widget child;
   final SpendPrivacy? authentication;
+
+  /// The app's hue, for the lock screen's mark and button.
+  final Color accent;
   const SpendPrivacyGate({
     super.key,
     required this.controller,
     required this.child,
     this.authentication,
+    this.accent = const Color(0xFF2E7D32),
   });
   @override
   State<SpendPrivacyGate> createState() => _SpendPrivacyGateState();
@@ -126,25 +130,38 @@ class _SpendPrivacyGateState extends State<SpendPrivacyGate>
         if (locked || obscured)
           MaterialApp(
             debugShowCheckedModeBanner: false,
+            theme: buildHandyTheme(widget.accent, Brightness.light),
+            darkTheme: buildHandyTheme(widget.accent, Brightness.dark),
             home: Scaffold(
               body: SafeArea(
                 child: Center(
                   child: Padding(
-                    padding: const EdgeInsets.all(24),
+                    padding: const EdgeInsets.all(HandySpace.xl),
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        const Icon(Icons.lock_outline, size: 48),
-                        const Text('Handy Spend'),
+                        const HandyMark(Icons.lock_outline, size: 56),
+                        const SizedBox(height: HandySpace.l),
+                        Builder(
+                          builder: (context) => Text(
+                            'Handy Spend',
+                            style: Theme.of(context).textTheme.headlineSmall,
+                          ),
+                        ),
+                        const SizedBox(height: HandySpace.s),
+                        // The lock knows no language yet: it shows both.
+                        const Text(
+                          'Locked with this device · Đã khóa bằng máy này',
+                          textAlign: TextAlign.center,
+                        ),
+                        const SizedBox(height: HandySpace.xl),
                         if (locked)
-                          FilledButton(
+                          FilledButton.icon(
                             key: const Key('spend-unlock'),
                             onPressed: authenticating ? null : unlock,
-                            child: const Text('Unlock / Mở khóa'),
+                            icon: const Icon(Icons.fingerprint),
+                            label: const Text('Unlock · Mở khóa'),
                           ),
-                        const Text(
-                          'Device biometrics or PIN / Sinh trắc hoặc PIN thiết bị',
-                        ),
                       ],
                     ),
                   ),

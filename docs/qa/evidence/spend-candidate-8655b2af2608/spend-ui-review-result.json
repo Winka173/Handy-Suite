@@ -1,0 +1,8 @@
+{
+  "sourceSha256": "8655b2af2608ef3d887a13250d845ca9685684b7039058a5b17598ccfe4b4f59",
+  "artifact": "docs/qa/evidence/spend-ui-review.pdf",
+  "pages": 11,
+  "sha256": "a856738296bf99acbf209ccbccc9eb2469bfe3f29bd52cd1dee733bfb8e65654",
+  "actualAndroidEmulatorScreenshots": true,
+  "physicalDevice": false
+}

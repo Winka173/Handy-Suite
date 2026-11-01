@@ -11,6 +11,7 @@ export 'kit/files.dart';
 export 'kit/l10n.dart';
 export 'kit/load_error.dart';
 export 'kit/motion.dart';
+export 'kit/palette.dart';
 export 'kit/picture_frame.dart';
 export 'kit/settings.dart';
 export 'kit/theme.dart';

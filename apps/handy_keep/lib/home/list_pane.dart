@@ -142,7 +142,8 @@ class ListPane extends StatelessWidget {
           ),
         ],
         HandyReveal(
-          child: due.isEmpty
+          // Wide screens show every date in the empty pane instead.
+          child: due.isEmpty || wide
               ? const SizedBox(width: double.infinity)
               : AttentionStrip(
                   due: due,
@@ -164,6 +165,7 @@ class ListPane extends StatelessWidget {
                 PlaceSection(
                   key: ValueKey(p.key),
                   place: p,
+                  hue: placeHue(s, p.key),
                   blobs: scope.store.library!.blobs,
                   selected: selected,
                   onOpen: (a) => onOpen(a.id),

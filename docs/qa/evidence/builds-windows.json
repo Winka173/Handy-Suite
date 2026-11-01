@@ -80,11 +80,22 @@
         "app":  "spend",
         "target":  "windows",
         "exitCode":  0,
-        "sourceSha256":  "a0b333b326b24ce17e384ebc2d6b863a2571d7d32f0a78e6b7cdf8e350cf0bda",
+        "sourceSha256":  "5844653bf4b517eb6ce7e8032883a83a568e209fb27133214563da95f5487902",
         "sourceUnchanged":  true,
         "artifact":  null,
         "artifactSha256":  null,
-        "startedAt":  "2026-11-01T09:31:58.9745867Z",
-        "elapsedSeconds":  68.73
+        "startedAt":  "2026-11-01T10:40:55.5508928Z",
+        "elapsedSeconds":  42.86
+    },
+    {
+        "app":  "habit",
+        "target":  "windows",
+        "exitCode":  0,
+        "sourceSha256":  "8fdddea05ac1124d94285f6649e89ccfe59c4cb761738d6b4d5b9a2d8a55b5c0",
+        "sourceUnchanged":  true,
+        "artifact":  null,
+        "artifactSha256":  null,
+        "startedAt":  "2026-11-01T16:34:01.3788237Z",
+        "elapsedSeconds":  37.83
     }
 ]

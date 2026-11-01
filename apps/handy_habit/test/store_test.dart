@@ -1,0 +1,200 @@
+import 'dart:io';
+import 'package:flutter/foundation.dart' show debugPrint;
+import 'dart:convert';
+import 'package:flutter_test/flutter_test.dart';
+import 'package:sqlite3/sqlite3.dart';
+import 'package:handy_habit/data/store_native.dart';
+import 'package:handy_habit/controller.dart';
+import 'package:handy_habit_engine/handy_habit_engine.dart';
+
+void main() {
+  late Directory directory;
+  late String path;
+  late NativeHabitStore store;
+  setUp(() {
+    directory = Directory.systemTemp.createTempSync('handy-habit-test-');
+    path = '${directory.path}/habit.sqlite';
+    store = NativeHabitStore(path);
+  });
+  tearDown(() => directory.deleteSync(recursive: true));
+  Habit h() => Habit(
+    id: 'h',
+    title: 'Read',
+    created: '2024-01-01',
+    schedules: [Schedule(id: 'v', from: '2024-01-01')],
+  );
+  test(
+    'schema0 migration, FK/WAL, persisted reopening and stale revision guard',
+    () async {
+      final first = await store.read();
+      expect(first.revision, 0);
+      final db = sqlite3.open(path);
+      expect(db.userVersion, 1);
+      expect(db.select('PRAGMA journal_mode').single.values.first, 'wal');
+      expect(
+        db.select("SELECT name FROM sqlite_master WHERE type='index'").length,
+        greaterThan(4),
+      );
+      db.close();
+      final next = HabitState(
+        revision: 1,
+        habits: [h()],
+        settings: {'onboarded': true},
+      );
+      await store.commit(next, expectedRevision: 0);
+      expect((await NativeHabitStore(path).read()).toJson(), next.toJson());
+      expect(await store.integrity(), 'ok');
+      await expectLater(
+        store.commit(next, expectedRevision: 0),
+        throwsStateError,
+      );
+      expect((await store.read()).revision, 1);
+    },
+  );
+  test(
+    'actual SQL failure rolls back linked session and event atomically',
+    () async {
+      await store.read();
+      final initial = HabitState(revision: 1, habits: [h()]);
+      await store.commit(initial, expectedRevision: 0);
+      final db = sqlite3.open(path);
+      db.execute(
+        "CREATE TRIGGER abort_event BEFORE INSERT ON events BEGIN SELECT RAISE(ABORT,'test storage failure'); END",
+      );
+      db.close();
+      final session = startSession(
+        Routine(
+          id: 'r',
+          title: 'Read',
+          steps: [RoutineStep(id: 'step', title: 'Read', habit: 'h')],
+        ),
+        '2024-01-01',
+        DateTime.utc(2024),
+      );
+      final staged = completeStep(
+        putSession(initial, session),
+        session.id,
+        expectedStep: 'step',
+        today: '2024-01-01',
+        now: DateTime.utc(2024),
+      ).copy({'revision': 2});
+      await expectLater(
+        store.commit(staged, expectedRevision: 1),
+        throwsA(anything),
+      );
+      expect((await store.read()).toJson(), initial.toJson());
+    },
+  );
+  test('corruption and unknown future schema preserve original bytes', () async {
+    final corrupt = File(path)..writeAsStringSync('not a SQLite database');
+    final before = corrupt.readAsBytesSync();
+    await expectLater(store.read(), throwsA(anything));
+    expect(corrupt.readAsBytesSync(), before);
+    final future = '${directory.path}/future.sqlite', db = sqlite3.open(future);
+    db.execute(
+      'CREATE TABLE preserve(value TEXT); INSERT INTO preserve VALUES(\'important\'); PRAGMA user_version=99;',
+    );
+    db.close();
+    final bytes = File(future).readAsBytesSync();
+    await expectLater(NativeHabitStore(future).read(), throwsFormatException);
+    expect(File(future).readAsBytesSync(), bytes);
+  });
+  test(
+    '100 habits,100 routines,10k events,1k sessions persist and aggregate',
+    () async {
+      await store.read();
+      final habits = List.generate(
+            100,
+            (i) => Habit(
+              id: 'h$i',
+              title: 'Practice $i',
+              created: '2024-01-01',
+              type: 'count',
+              schedules: [Schedule(id: 'v$i', from: '2024-01-01')],
+            ),
+          ),
+          routines = List.generate(
+            100,
+            (i) => Routine(
+              id: 'r$i',
+              title: 'Sequence $i',
+              steps: [
+                RoutineStep(id: 'step$i', title: 'Practice', habit: 'h$i'),
+              ],
+            ),
+          );
+      final next = HabitState(
+        revision: 1,
+        habits: habits,
+        routines: routines,
+        events: List.generate(
+          10000,
+          (i) => HabitEvent(
+            id: 'e$i',
+            habit: 'h${i % 100}',
+            day: addDays('2024-01-01', i ~/ 100),
+            value: 1000,
+          ),
+        ),
+        sessions: List.generate(
+          1000,
+          (i) =>
+              startSession(
+                routines[i % 100],
+                '2024-01-01',
+                DateTime.utc(2024),
+              ).copy({
+                'status': 'finished',
+                'anchor': null,
+                'ended': '2024-01-01T00:01:00Z',
+                'steps': [
+                  StepRun(
+                    plan: routines[i % 100].steps.first,
+                    status: 'completed',
+                    elapsed: 60,
+                  ).toJson(),
+                ],
+              }),
+        ),
+      );
+      final watch = Stopwatch()..start();
+      await store.commit(next, expectedRevision: 0);
+      final write = watch.elapsedMilliseconds;
+      watch.reset();
+      final loaded = await store.read();
+      debugPrint(
+        'Habit SQLite 10k events/1k sessions writeMs=$write readMs=${watch.elapsedMilliseconds}',
+      );
+      expect(loaded.events.length, 10000);
+      expect(loaded.sessions.length, 1000);
+      expect(HabitIndex(loaded.events).value('h0', '2024-01-01'), 1000);
+      expect(jsonEncode(loaded.toJson()), jsonEncode(next.toJson()));
+      expect(await store.integrity(), 'ok');
+    },
+  );
+  test(
+    'controller publishes only after commit and Undo survives an unrelated error',
+    () async {
+      final controller = HabitController(open: () async => store);
+      await controller.load();
+      await controller.change(
+        (s) => s.copy({
+          'habits': [h().toJson()],
+        }),
+      );
+      expect(controller.state!.habits.length, 1);
+      await expectLater(
+        controller.change(
+          (s) => s.copy({
+            'habits': [h().toJson(), h().toJson()],
+          }),
+        ),
+        throwsFormatException,
+      );
+      expect(controller.state!.habits.length, 1);
+      await controller.undo();
+      expect(controller.state!.habits, isEmpty);
+      controller.dispose();
+    },
+  );
+}

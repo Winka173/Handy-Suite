@@ -1,0 +1,46 @@
+# Handy Habit feature matrix
+
+Updated 2026-11-01. Source and tests exist; release certification is separate.
+No row below claims physical-device or real-store verification.
+
+| P0 area                                                                       | Code                                       | Host evidence                                                                                                 | Platform evidence / remaining gap                                                        |
+| ----------------------------------------------------------------------------- | ------------------------------------------ | ------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------- |
+| Habit CRUD, types, targets, sorting, grouping, archive/backfill/Undo          | IMPLEMENTED                                | UNIT_TESTED: engine + UI creation/check-in/cancel                                                             | Native UI integration tracked below                                                      |
+| Effective recurrence, strict/weekly streaks, DST, skip/current periods        | IMPLEMENTED                                | UNIT_TESTED: recurrence, immutable versions, weekly/day boundaries, filtered partial week, quantities         | Physical timezone/clock changes not verified                                             |
+| Routine CRUD, templates, builder and ordered step controls                    | IMPLEMENTED                                | UNIT_TESTED: UI builder/Lite; engine snapshots                                                                | Drag accessibility and device assistive tech not certified                               |
+| Runner, pause/recovery, exactly-once links, compensation                      | IMPLEMENTED                                | UNIT_TESTED: expected-step retry, edited-event protection, SQL-trigger rollback, background pause, long timer | Native integration log/result records actual outcome; no exact background autoplay       |
+| Routine Lite 5-90m, preview, required/minima/priority/order                   | IMPLEMENTED                                | UNIT_TESTED: feasible/infeasible/untimed/original unchanged                                                   | Reusable variant requires verified Pro                                                   |
+| Calendar, history, weekly/monthly trends, date/habit/category/routine filters | IMPLEMENTED                                | UNIT_TESTED: metric denominators and responsive tabs                                                          | Charts disclose max 52 visible periods; reports keep range                               |
+| Local reminders, quiet/DST/weekdays, snooze/preview/cancel                    | IMPLEMENTED                                | UNIT_TESTED: pure schedule/cap/DST                                                                            | Android deny/grant run recorded separately; iOS source only, Windows/Web in-app due list |
+| SQLite, CAS, indexes, migration, integrity/corruption handling                | IMPLEMENTED                                | INTEGRATION_TESTED on host: real SQLite, stale write, rollback, future/corrupt preservation, 10k events       | Power loss/physical low-memory not verified                                              |
+| Web IndexedDB atomic persistence                                              | IMPLEMENTED                                | Analyzer + Web compilation                                                                                    | Browser eviction/quota/offline runtime NOT VERIFIED                                      |
+| JSON/ZIP full backup, merge/replace and CSV log import/export                 | IMPLEMENTED                                | UNIT_TESTED: roundtrips, ID/hash remap, duplicate/conflict/path/checksum/truncation/size refusal              | Real OS document providers need QA                                                       |
+| EN/VI PDF/Markdown/CSV reports and cancellation                               | IMPLEMENTED                                | UNIT_TESTED: real export bytes, cancel preserves state; PDF independently decoded                             | Not a backup format; PDF limited to 10k events                                           |
+| EN/VI, dark/light, 4 mobile tabs/rail, keyboard and web named areas           | IMPLEMENTED                                | UNIT_TESTED: 320/768/1024/1440; real-font widget screenshots                                                  | Screen reader/text scaling/browser back needs runtime QA                                 |
+| Ads consent + Pro Lifetime purchase/restore + Lite variants                   | IMPLEMENTED using shared official adapters | Shared adapter tests; no fake purchase switch in production                                                   | BLOCKED: publisher IDs, signing, consent accounts, official sandbox transactions         |
+| Android / Windows / Web builds                                                | IMPLEMENTED                                | See current build records, not old console output                                                             | Must have exitCode=0 AND unchanged source; emulator != hardware                          |
+| iOS / real stores / physical devices                                          | Source/config implemented                  | NOT VERIFIED                                                                                                  | BLOCKED: macOS/Xcode, physical devices and publisher accounts unavailable                |
+
+Evidence: [engine](../qa/evidence/habit-engine-tests.log),
+[app](../qa/evidence/habit-app-tests.log), [analysis](../qa/evidence/habit-analyze.log),
+[UI renderer](../qa/evidence/habit-ui-shots.log), [QA plan](QA_PLAN.md),
+[release checklist](RELEASE_CHECKLIST.md). Platform/build results are summarized in QA_PLAN.
+P1 vacations/widgets/challenges/advanced dependencies remain deferred.
+
+## Final local candidate
+
+Current source fingerprint: `8fdddea05ac1124d94285f6649e89ccfe59c4cb761738d6b4d5b9a2d8a55b5c0`.
+[Audit](../qa/evidence/habit-qa-audit.json): success=true, releaseReady=false.
+1,775 host tests passed / 28 platform-conditional skipped, 29/29 test packages;
+Habit contributes 38 engine + 20 app tests. Five additional UI-render tests pass.
+Android native core, two-process recovery and notification deny/grant have real driver
+responses on this source; failed transport logs remain recorded. APK, unsigned AAB,
+Windows EXE/MakeAppx-validated unsigned MSIX and Web compile with unchanged source.
+Browser worker is Node-VM tested; browser runtime, iOS, hardware and real stores are
+not verified. [35 UI captures / 36-page PDF](../qa/evidence/habit-ui-review.pdf).
+
+Implementation does not mean every editor gesture has independent device evidence.
+Creation/check-in/cancel/Lite/recovery and main-area accessibility are automated;
+archive semantics, mapping validation, reorder preservation and import safety have
+engine coverage. Physical drag/keyboard/assistive-tech/file-provider QA remains in
+the release checklist. Source uses real adapters; test file sinks are test-only.

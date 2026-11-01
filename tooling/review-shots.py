@@ -27,6 +27,8 @@ NAMES = {
     'save': 'Handy Save',
     'docs': 'Handy Docs',
     'media': 'Handy Media',
+    'spend': 'Handy Spend',
+    'habit': 'Handy Habit',
 }
 FILM = re.compile(r'^(?P<name>.+)-film-(?P<n>\d{3})\.png$')
 

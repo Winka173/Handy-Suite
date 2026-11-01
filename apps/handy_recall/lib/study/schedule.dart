@@ -63,3 +63,12 @@ enum DueState { fresh, due, later }
 
 /// About ten seconds a card, rounded up to whole minutes.
 int minutesFor(int cards) => cards == 0 ? 0 : ((cards * 10) / 60).ceil();
+
+/// A deck's identity colour: its place in the name-sorted deck list, so
+/// decks listed together never share a colour.
+int deckHue(List<RecallDeck> decks, String id) {
+  final sorted = [...decks]
+    ..sort((a, b) => a.name.toLowerCase().compareTo(b.name.toLowerCase()));
+  final at = sorted.indexWhere((d) => d.id == id);
+  return at < 0 ? 0 : at;
+}

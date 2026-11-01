@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:io';
 import 'dart:typed_data';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:archive/archive.dart';
@@ -49,10 +50,240 @@ SpendState library({
 );
 
 void main() {
-  test('saved account selection is honored by sandbox and archived/debt accounts stay excluded',(){
-    final original=library(),s=original.copy({'settings':{'eligibleAccounts':['card']}});expect(eligible(s,'VND'),isEmpty);expect(forecast(s,'2024-02-01','2024-02-02').opening,BigInt.zero);
-    final renamed=original.copy({'revision':1,'audit':[{'id':'audit'}]});expect(financialFingerprint(renamed),financialFingerprint(original));expect(financialFingerprint(original.copy({'entries':[expense('changed',5).toJson()]})),isNot(financialFingerprint(original)));
+  test(
+    'real VI CSV and independently generated EN XLSX bank fixtures reconcile',
+    () {
+      final vietnamese = File('test/fixtures/bank-vi.csv').readAsBytesSync();
+      final vi = previewStatement(
+        library().copy({
+          'accounts': [account('cash', opening: 1000000).toJson()],
+        }),
+        csvParse(utf8.decode(vietnamese), delimiter: ';'),
+        const StatementMapping(
+          account: 'cash',
+          amount: -1,
+          debit: 2,
+          credit: 3,
+          balance: 4,
+          dateFormat: 'dmy',
+          decimal: ',',
+          group: '.',
+        ),
+        vietnamese,
+      );
+      expect(vi.rows.map((row) => row.status), ['new', 'new']);
+      final viState = vi.commit(
+        library().copy({
+          'accounts': [account('cash', opening: 1000000).toJson()],
+        }),
+        {2, 3},
+      );
+      expect(
+        (viState.imports.single['reconciliation'] as Map)['difference'],
+        '0',
+      );
+      expect(viState.entries.first.payee, matches(r'^Ăn uống\r?\nCà phê$'));
+      final english = File('test/fixtures/bank-en.xlsx').readAsBytesSync(),
+          state = SpendState(
+            accounts: [account('usd', currency: 'USD', opening: 10000)],
+          ),
+          en = previewStatement(
+            state,
+            xlsxParse(english),
+            const StatementMapping(
+              account: 'usd',
+              amount: -1,
+              debit: 2,
+              credit: 3,
+              balance: 4,
+              dateFormat: 'excel',
+            ),
+            english,
+          ),
+          restored = en.commit(state, {2, 3});
+      expect(restored.entries.map((entry) => entry.amount), [
+        BigInt.from(-1234),
+        BigInt.from(5000),
+      ]);
+      expect(
+        (restored.imports.single['reconciliation'] as Map)['difference'],
+        '0',
+      );
+    },
+  );
+  test(
+    'statement date tolerance flags near matches without removing or changing them',
+    () {
+      final state = library(entries: [expense('existing', 100)]);
+      final rows = [
+        ['date', 'payee', 'amount'],
+        ['2024-02-02', '  CAFE  ', '-100'],
+        ['2024-01-31', 'Cafe', '100'],
+        ['2024-02-03', 'Cafe', '-101'],
+      ];
+      final preview = previewStatement(
+        state,
+        rows,
+        const StatementMapping(account: 'cash'),
+        Uint8List.fromList(
+          utf8.encode(rows.map((row) => row.join(',')).join('\n')),
+        ),
+      );
+      expect(preview.rows.map((row) => row.status), [
+        'possible duplicate (date tolerance)',
+        'possible reversal (date tolerance)',
+        'new',
+      ]);
+      expect(state.entries, hasLength(1));
+      final result = preview.commit(state, {4});
+      expect(result.entries, hasLength(2));
+      expect(result.entries.first.toJson(), state.entries.first.toJson());
+    },
+  );
+  test(
+    'freshness and last bill payment use posted effective reporting days only',
+    () {
+      final bill = Bill(
+        id: 'rent',
+        name: 'Rent',
+        account: 'cash',
+        amount: -BigInt.from(100),
+        due: '2024-02-01',
+        frequency: 'monthly',
+      );
+      final state = library(
+        bills: [bill],
+        entries: [
+          expense(
+            'paid',
+            100,
+            date: '2024-02-02',
+            occurrence: 'rent@2024-02-01',
+          ),
+          expense(
+            'pending',
+            100,
+            date: '2024-03-01',
+            occurrence: 'rent@2024-03-01',
+          ).copy({'status': 'pending'}),
+          expense(
+            'future',
+            100,
+            date: '2024-04-01',
+            occurrence: 'rent@2024-04-01',
+          ),
+          Entry(
+            id: 'transfer',
+            account: 'cash',
+            kind: 'transfer',
+            amount: -BigInt.from(50),
+            target: BigInt.from(50),
+            toAccount: 'card',
+            when: '2024-02-29T17:30:00Z',
+          ),
+        ],
+      );
+      state.validate();
+      expect(lastBillPaymentDays(state, '2024-03-02'), {'rent': '2024-02-02'});
+      expect(lastRecordedDays(state, '2024-03-02'), {
+        'cash': '2024-03-01',
+        'card': '2024-03-01',
+      });
+      expect(lastRecordedDays(library(), '2024-03-02'), {
+        'cash': '2024-01-01',
+        'card': '2024-01-01',
+      });
+      expect(lastBillPaymentDays(state, '2024-01-31'), isEmpty);
+    },
+  );
+  test(
+    'one due-date move preserves other recurrences and explicit income stays hypothetical',
+    () {
+      final s = library(
+            bills: [
+              Bill(
+                id: 'rent',
+                name: 'Rent',
+                account: 'cash',
+                amount: BigInt.from(-100),
+                due: '2024-02-10',
+              ),
+            ],
+          ),
+          before = jsonEncode(s.toJson()),
+          staged = [
+            Entry(
+              id: 'moved',
+              account: 'cash',
+              kind: 'expense',
+              amount: BigInt.from(-100),
+              when: localTimestamp('2024-02-20', s.zone),
+              status: 'pending',
+            ),
+            Entry(
+              id: 'income',
+              account: 'cash',
+              kind: 'income',
+              amount: BigInt.from(500),
+              when: localTimestamp('2024-02-21', s.zone),
+              status: 'pending',
+            ),
+          ],
+          p = forecast(
+            s,
+            '2024-02-01',
+            '2024-03-31',
+            staged: staged,
+            skipBills: {'rent@2024-02-10'},
+          );
+      expect(
+        p.points.firstWhere((p) => p.date == '2024-02-10').outflow,
+        BigInt.zero,
+      );
+      expect(
+        p.points.firstWhere((p) => p.date == '2024-03-10').outflow,
+        BigInt.from(100),
+      );
+      expect(p.ending, BigInt.from(100300));
+      expect(jsonEncode(s.toJson()), before);
+    },
+  );
+  test('UTC alias works for reporting, validation and scheduled plans', () {
+    expect(localTimestamp('2024-02-01', 'UTC'), '2024-02-01T12:00:00.000Z');
+    final s = library().copy({
+      'settings': {'zone': 'UTC', 'currency': 'VND'},
+    });
+    expect(reportDay('2024-02-01T00:00:00Z', s.zone), '2024-02-01');
+    expect(safeToSpend(s, '2024-02-01', '2024-02-02').days, 2);
   });
+  test(
+    'saved account selection is honored by sandbox and archived/debt accounts stay excluded',
+    () {
+      final original = library(),
+          s = original.copy({
+            'settings': {
+              'eligibleAccounts': ['card'],
+            },
+          });
+      expect(eligible(s, 'VND'), isEmpty);
+      expect(forecast(s, '2024-02-01', '2024-02-02').opening, BigInt.zero);
+      final renamed = original.copy({
+        'revision': 1,
+        'audit': [
+          {'id': 'audit'},
+        ],
+      });
+      expect(financialFingerprint(renamed), financialFingerprint(original));
+      expect(
+        financialFingerprint(
+          original.copy({
+            'entries': [expense('changed', 5).toJson()],
+          }),
+        ),
+        isNot(financialFingerprint(original)),
+      );
+    },
+  );
   test(
     'statement closing balance reconciles; liability credits require manual classification',
     () {

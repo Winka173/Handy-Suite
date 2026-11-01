@@ -21,6 +21,45 @@ List<(SaveCollection, int)> collectionTree(SaveLibrary l) {
   return out;
 }
 
+/// The identity colour of a collection: its top-level collection's place
+/// among the top-level ones, so neighbours differ and children match their
+/// parent.
+int collectionHue(SaveLibrary l, String id) {
+  final byId = {for (final c in l.collections) c.id: c};
+  var root = byId[id];
+  for (var i = 0; root?.parentId != null && i < 32; i++) {
+    root = byId[root!.parentId];
+  }
+  final roots = [
+    for (final c in l.collections)
+      if (c.parentId == null) c,
+  ]..sort((a, b) => a.position.compareTo(b.position));
+  final at = roots.indexWhere((c) => c.id == root?.id);
+  return at < 0 ? HandyPalette.forKey(id) : at;
+}
+
+/// The collection a link is in, with its colour, or null.
+(SaveCollection, int)? collectionOf(SaveLibrary? l, String? id) {
+  if (l == null || id == null) return null;
+  final c = l.collections.where((c) => c.id == id).firstOrNull;
+  return c == null ? null : (c, collectionHue(l, c.id));
+}
+
+/// A collection's name after its colour, for a link's meta line.
+InlineSpan collectionSpan(BuildContext context, (SaveCollection, int) of) =>
+    TextSpan(
+      children: [
+        WidgetSpan(
+          alignment: PlaceholderAlignment.middle,
+          child: Padding(
+            padding: const EdgeInsets.only(right: HandySpace.xs),
+            child: HandyDot(of.$2, size: 8),
+          ),
+        ),
+        TextSpan(text: '${of.$1.name} · '),
+      ],
+    );
+
 /// The collections a link most likely belongs to: the most used first.
 List<SaveCollection> usualCollections(SaveLibrary l, {int take = 4}) {
   final count = <String, int>{};

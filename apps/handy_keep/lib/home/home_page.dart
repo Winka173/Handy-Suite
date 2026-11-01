@@ -170,6 +170,7 @@ class _KeepHomeState extends State<KeepHome> {
                         scope: scope,
                         item: item,
                         onClosed: () => setState(() => selected = null),
+                        onOpen: (id) => setState(() => selected = id),
                       ),
                     ),
                   ],

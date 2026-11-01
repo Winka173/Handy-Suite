@@ -3,6 +3,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'l10n.dart';
+import 'palette.dart';
 import 'theme.dart';
 
 /// One readable column, centred on wide screens; the child takes its full
@@ -215,6 +216,10 @@ class HandyTile extends StatelessWidget {
   final VoidCallback? onTap;
   final bool navigates, destructive;
   final int subtitleLines;
+
+  /// The identity colour (`HandyPalette`) of what this row belongs to, as a
+  /// dot before the subtitle, which names it. The icon stays grey.
+  final int? hue;
   const HandyTile({
     super.key,
     this.icon,
@@ -225,6 +230,7 @@ class HandyTile extends StatelessWidget {
     this.onTap,
     this.navigates = false,
     this.destructive = false,
+    this.hue,
   });
   @override
   Widget build(BuildContext context) {
@@ -235,8 +241,19 @@ class HandyTile extends StatelessWidget {
       title: Text(title, style: TextStyle(color: color)),
       subtitle: subtitle == null
           ? null
-          : Text(
-              subtitle!,
+          : Text.rich(
+              TextSpan(
+                children: [
+                  if (hue != null) ...[
+                    WidgetSpan(
+                      alignment: PlaceholderAlignment.middle,
+                      child: HandyDot(hue!, size: 8),
+                    ),
+                    const TextSpan(text: ' '),
+                  ],
+                  TextSpan(text: subtitle),
+                ],
+              ),
               maxLines: subtitleLines,
               overflow: TextOverflow.ellipsis,
             ),

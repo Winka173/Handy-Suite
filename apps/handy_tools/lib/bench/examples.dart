@@ -58,13 +58,21 @@ class BenchExamples extends StatelessWidget {
               if (specById[id] != null)
                 ActionChip(
                   key: Key('pinned-$id'),
-                  avatar: Icon(specById[id]!.icon, size: 18),
+                  avatar: Icon(
+                    specById[id]!.icon,
+                    size: 18,
+                    color: HandyColors.of(context).muted,
+                  ),
                   label: Text(specById[id]!.title(context)),
                   onPressed: () => onOpenTool(id),
                 ),
             ActionChip(
               key: const Key('examples-all-tools'),
-              avatar: const Icon(Icons.apps, size: 18),
+              avatar: Icon(
+                Icons.apps,
+                size: 18,
+                color: HandyColors.of(context).muted,
+              ),
               label: Text(tr(context, 'All tools', 'Tất cả công cụ')),
               onPressed: onOpenCatalog,
             ),

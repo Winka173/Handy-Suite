@@ -1,24 +1,45 @@
 # Handy Spend feature matrix
 
-Implementation in progress. Results below cover specific executed tests, not every flow.
-No release, physical-device, iOS or browser-runtime verification is claimed.
+Updated 2026-11-01. Status applies to the stated evidence, never every platform.
+Build/runtime proof is tied to the frozen Spend candidate identified in
+`docs/qa/evidence/spend-checkpoint-audit.json`. Live workspace edits after that
+snapshot are not covered. The earlier full workspace regression is a separate baseline.
+Physical-device, iOS, browser runtime and real store verification remain open.
+The app is not certified launch-ready. See [QA details](QA_MATRIX.md).
 
-| Area | Status | Evidence / remaining work |
-| --- | --- | --- |
-| Exact money, accounts, ledger, transfers, refunds | UNIT_TESTED | 17 initial engine tests passed; additional strict timestamp/grouping cases being added |
-| Native SQLite, revision guard, atomic writes | INTEGRATION_TESTED | Actual SQLite rollback trigger, reopen, stale revision, corrupt/future schema preservation, 1k/10k/100k records |
-| Web IndexedDB | IMPLEMENTED | Per-record atomic transaction/revision guard; browser runtime and quota QA pending |
-| Transaction/account/category/budget UI and reports | UNIT_TESTED | Create account/expense/cancel/report and 320/1000px large-text tests passed; more flows remain |
-| Safe to Spend / forecast / sandbox | UNIT_TESTED | Exact breakdown, minima/shortfall, month-end/leap/DST, immutable baseline; scenario UI/device coverage pending |
-| Statement CSV/XLSX mapping / review / undo | UNIT_TESTED | Local parser, duplicate/reversal statuses, explicit partial commit, unchanged-batch Undo, malformed files/formulas refusal |
-| Recurring radar / goals / reminders | IMPLEMENTED | Anchor recurrence tested; no implicit posting; native notification adapter/permissions not yet exercised for Spend |
-| JSON/ZIP/CSV/XLSX portability | UNIT_TESTED | Exact engine roundtrips; filtered UI export and picker flows still need integration |
-| PDF export | IMPLEMENTED | Embedded shared Unicode font, real paginated document; independent decode/OS export pending |
-| Ads / Pro Lifetime | IMPLEMENTED | Existing verified adapters; no ads in editors/import/sandbox; real publisher configuration absent |
-| Device authentication / privacy cover | IMPLEMENTED | Real local_auth integration, OS PIN fallback, timeout and background cover; tests/device execution pending |
-| Windows/Web statement drop | IMPLEMENTED | Bounded file stream into same import wizard; native/browser drop interaction pending |
-| Android / Windows / Web builds | NOT_STARTED | Execute supported builds |
-| iOS, store transactions, physical-device QA | BLOCKED | macOS/Xcode, publisher accounts/devices unavailable |
+| Area                                                 | Status             | Evidence / remaining work                                                                                                                                                                                                                  |
+| ---------------------------------------------------- | ------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Exact money, ledger, transfers, refunds, liabilities | INTEGRATION_TESTED | BigInt/rational engine tests; Android SQLite purchase, repayment, partial refund, balances and expense totals                                                                                                                              |
+| Native SQLite, revision guard, atomic writes         | INTEGRATION_TESTED | Real trigger rollback, reopen, stale revision, corrupt/future schema preservation, 1k/10k/100k records; subprocess killed with uncommitted WAL writes                                                                                      |
+| Web IndexedDB                                        | IMPLEMENTED        | Atomic stores/revision guard; browser runtime, quota/eviction and multi-tab QA pending                                                                                                                                                     |
+| Transaction/account/category/budget UI, reports      | INTEGRATION_TESTED | UI rebuilt 2026-11-01 on the shared kit; widget flows at 320/1000/1440px, text 1.5; BlueStacks (emulator) tour and native test incl. import/Undo; not physical devices                                                                     |
+| Safe to Spend / forecast / sandbox                   | INTEGRATION_TESTED | Exact breakdown, month-end/leap/DST, selected accounts, immutable baseline, explicit income/expense/date assumptions and one-occurrence due shifts; Android opening sandbox cannot mutate ledger                                           |
+| Statement CSV/XLSX mapping / review / undo           | INTEGRATION_TESTED | Parser, duplicates/reversals, explicit liability-credit classification, selected/partial commit, stale preview; Android CSV mapping/review/commit, zero reconciliation difference and Undo with SQLite reopen; XLSX UI/provider QA remains |
+| Recurring radar / goals / reminders                  | INTEGRATION_TESTED | Anchor recurrence and reserves; Android OS deny/grant, 50-schedule cap, immediate delivery/cancel; delayed/background/reboot/tap unverified                                                                                                |
+| JSON/ZIP/CSV/XLSX portability                        | INTEGRATION_TESTED | Exact engine roundtrips; actual EN/VI UI-generated bytes independently read with Python csv/OpenXML/ZIP; restore/cancel tests; OS provider QA pending                                                                                      |
+| PDF export                                           | INTEGRATION_TESTED | Noto Sans regular/bold; EN/VI output independently decoded with PyMuPDF, exact amount/reporting-zone date checked                                                                                                                          |
+| Ads / Pro Lifetime                                   | IMPLEMENTED        | Shared native adapters, sensitive-route ads suppression; real publisher accounts/IDs and purchase/restore/refund tests unavailable                                                                                                         |
+| Device authentication / privacy cover                | UNIT_TESTED        | Real local_auth; injected OS cancel/success tests, cold lock/background cover/resume; Android plugin binding and unavailable-device refusal; successful hardware authentication unverified                                                 |
+| Windows/Web drop and desktop table                   | UNIT_TESTED        | Bounded stream, cancel/malformed refusal; resizable table, shortcuts; actual Explorer/browser drop interaction pending                                                                                                                     |
+| Android / Windows / Web builds                       | INTEGRATION_TESTED | Three successful unchanged-source builds; unsigned AAB and MakeAppx-validated MSIX; compile/package success does not certify all runtime behavior                                                                                          |
+| iOS, real store transactions, physical-device QA     | BLOCKED            | Requires macOS/Xcode, publisher configuration and physical devices                                                                                                                                                                         |
 
-P1 planners/detective/OCR/advanced issuer interest are deferred. Continuation and
-executed commands belong in QA_MATRIX.md; never upgrade status from code alone.
+P1 receipt/OCR, reverse goal planner, advanced issuer interest and encrypted backups
+are deferred. Existing seven Handy apps are retained; their older native/build
+records are historical, while workspace unit/widget regression includes all apps.
+
+Planning includes custom 1–3660-day horizons (above 30 requires Pro), a 30-day
+local-record freshness review hint, and the last linked posted recurring payment.
+Local record dates do not verify bank balances. Pending/future rows never mark a
+payment completed or refresh the current-balance hint.
+
+Manual capture offers recently used categories and a reviewed new-transaction
+preset from history. A preset gets a new ID and drops import/occurrence provenance;
+cancel/save tests preserve the original entry. Monthly category trend details honor
+account/category filters. Import review includes explicit adjacent-day tolerances
+with exact minor-unit amounts; matches are never deleted automatically.
+
+The UI was rebuilt on 2026-11-01 (contract in `docs/UX_REDESIGN.md`, "Hợp đồng: Handy
+Spend"): Today, Ledger (reports folded in), Plan, Accounts, a dedicated entry sheet and a
+four-step statement import. Engine, storage and data-safety rules are unchanged; the
+frozen checkpoint audit above predates this UI.

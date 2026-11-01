@@ -1,6 +1,7 @@
 import 'package:handy_save_engine/handy_save_engine.dart';
 import 'package:handy_ui/kit.dart';
 import '../controller.dart';
+import '../ui/collection_picker.dart';
 import '../ui/words.dart';
 
 /// A link as a card: its picture large, for collections of videos,
@@ -72,8 +73,18 @@ class LinkCard extends StatelessWidget {
                           style: theme.textTheme.titleSmall,
                         ),
                         const SizedBox(height: 2),
-                        Text(
-                          sourceLine(b),
+                        Text.rich(
+                          TextSpan(
+                            children: [
+                              if (collectionOf(
+                                    controller.library,
+                                    b.collectionId,
+                                  )
+                                  case final of?)
+                                collectionSpan(context, of),
+                              TextSpan(text: sourceLine(b)),
+                            ],
+                          ),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                           style: theme.textTheme.bodySmall?.copyWith(

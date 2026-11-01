@@ -1,0 +1,10 @@
+﻿{
+    "app":  "spend",
+    "exitCode":  0,
+    "sourceSha256":  "8be9e236af24aa61d842a8adb2c84f64a2f9339d76d30c36391f92dcc4c298f7",
+    "sourceUnchanged":  true,
+    "artifact":  "apps/handy_spend/build/app/outputs/bundle/release/app-release.aab",
+    "artifactSha256":  "07dceeb6ace267b397ab4c3420233c724f229cb449863bd267c35e628f8aa8eb",
+    "signed":  false,
+    "storeReady":  false
+}

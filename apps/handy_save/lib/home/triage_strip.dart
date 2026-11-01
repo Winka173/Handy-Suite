@@ -92,10 +92,11 @@ class TriageStrip extends StatelessWidget {
             )
           else
             SizedBox(
-              // Grows with the reader's text size so chips never clip.
+              // Room for two rows of chips (long collection names wrap on
+              // real devices), growing with the reader's text size.
               height:
-                  212 +
-                  (MediaQuery.textScalerOf(context).scale(14) / 14 - 1) * 140,
+                  264 +
+                  (MediaQuery.textScalerOf(context).scale(14) / 14 - 1) * 170,
               child: ListView.separated(
                 key: const Key('triage'),
                 scrollDirection: Axis.horizontal,
@@ -224,6 +225,9 @@ class _TriageCardState extends State<_TriageCard> {
                       for (final col in widget.usual)
                         ActionChip(
                           key: Key('file-${b.id}-${col.id}'),
+                          avatar: HandyDot(
+                            collectionHue(widget.controller.library!, col.id),
+                          ),
                           label: Text(
                             col.name,
                             maxLines: 1,

@@ -1,0 +1,13 @@
+﻿[
+    {
+        "app":  "spend",
+        "target":  "windows",
+        "exitCode":  0,
+        "sourceSha256":  "8655b2af2608ef3d887a13250d845ca9685684b7039058a5b17598ccfe4b4f59",
+        "sourceUnchanged":  true,
+        "artifact":  null,
+        "artifactSha256":  null,
+        "startedAt":  "2026-11-01T10:57:04.6060327Z",
+        "elapsedSeconds":  109.94
+    }
+]

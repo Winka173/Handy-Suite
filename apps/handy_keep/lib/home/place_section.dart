@@ -14,7 +14,11 @@ class PlaceSection extends StatelessWidget {
   final ValueChanged<InventoryBox>? onFocusBox;
   final List<HandyMenuItem> Function(InventoryBox)? boxActions;
   final bool hero;
+
+  /// The place's identity colour, by its order on screen.
+  final int? hue;
   const PlaceSection({
+    this.hue,
     this.hero = false,
     super.key,
     required this.place,
@@ -35,6 +39,10 @@ class PlaceSection extends StatelessWidget {
       padding: const EdgeInsets.fromLTRB(0, HandySpace.xl, 0, HandySpace.s),
       child: Row(
         children: [
+          if (hue != null) ...[
+            HandyDot(hue!, size: 12),
+            const SizedBox(width: HandySpace.m),
+          ],
           Expanded(
             child: Semantics(
               header: true,
@@ -91,6 +99,7 @@ class PlaceSection extends StatelessWidget {
                   blobs: blobs,
                   selected: a.id == selected,
                   hero: hero,
+                  hue: hue,
                   onTap: () => onOpen(a),
                 ),
             ],
@@ -104,9 +113,11 @@ class _ItemRow extends StatelessWidget {
   final InventoryAsset item;
   final Map<String, Uint8List> blobs;
   final bool selected, hero;
+  final int? hue;
   final VoidCallback onTap;
   const _ItemRow({
     required this.hero,
+    required this.hue,
     required this.item,
     required this.blobs,
     required this.selected,
@@ -128,7 +139,7 @@ class _ItemRow extends StatelessWidget {
       selected: selected,
       selectedTileColor: c.select,
       selectedColor: c.selectInk,
-      leading: ItemThumb(a, blobs, hero: hero),
+      leading: ItemThumb(a, blobs, hero: hero, hue: hue),
       title: Text(a.name, maxLines: 1, overflow: TextOverflow.ellipsis),
       subtitle: note == null ? null : Text(note),
       onTap: onTap,

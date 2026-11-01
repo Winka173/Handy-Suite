@@ -376,10 +376,15 @@ class StatementMapping {
   );
 }
 
-String fingerprint(Entry e, String zone, {bool absolute = false}) => sha256
+String fingerprint(
+  Entry e,
+  String zone, {
+  bool absolute = false,
+  String? reportingDay,
+}) => sha256
     .convert(
       utf8.encode(
-        '${e.account}|${reportDay(e.when, zone)}|${absolute ? e.amount.abs() : e.amount}|${e.payee.trim().toLowerCase().replaceAll(RegExp(r'\s+'), ' ')}',
+        '${e.account}|${reportingDay ?? reportDay(e.when, zone)}|${absolute ? e.amount.abs() : e.amount}|${e.payee.trim().toLowerCase().replaceAll(RegExp(r'\s+'), ' ')}',
       ),
     )
     .toString();
@@ -585,10 +590,36 @@ StatementPreview previewStatement(
           ),
           key = fingerprint(e, mapping.zone),
           potential = fingerprint(e, mapping.zone, absolute: true),
+          adjacentDays = [-1, 1]
+              .map(
+                (offset) => day(
+                  calendar(
+                    reportDay(e.when, mapping.zone),
+                  ).add(Duration(days: offset)),
+                ),
+              )
+              .toList(),
           status = known.contains(key)
               ? 'duplicate'
               : similar.contains(potential)
               ? 'possible reversal'
+              : adjacentDays.any(
+                  (date) => known.contains(
+                    fingerprint(e, mapping.zone, reportingDay: date),
+                  ),
+                )
+              ? 'possible duplicate (date tolerance)'
+              : adjacentDays.any(
+                  (date) => similar.contains(
+                    fingerprint(
+                      e,
+                      mapping.zone,
+                      absolute: true,
+                      reportingDay: date,
+                    ),
+                  ),
+                )
+              ? 'possible reversal (date tolerance)'
               : ac.liability && amount > BigInt.zero
               ? 'needs classification'
               : 'new';

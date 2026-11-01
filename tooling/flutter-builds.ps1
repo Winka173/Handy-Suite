@@ -7,12 +7,13 @@ if ($Target -eq 'apk') { $androidMutex = Enter-HandyAndroidBuild }
 try {
 $results=@()
 foreach($app in $Apps){
-  if($app -notin @('tools','keep','recall','docs','media','dev','save','spend')){throw 'Unknown app'}
+  $fingerprintArgs=if($app -eq 'habit'){@('--app','habit')}else{@()}
+  if($app -notin @('tools','keep','recall','docs','media','dev','save','spend','habit')){throw 'Unknown app'}
   $log=Join-Path $root "docs/qa/evidence/$app-$Target-build.log"
   Push-Location (Join-Path $root "apps/handy_$app")
   try{
     $started=Get-Date
-    $sourceBefore = (& python (Join-Path $root 'tooling/flutter-source-fingerprint.py')).Trim()
+    $sourceBefore = (& python (Join-Path $root 'tooling/flutter-source-fingerprint.py') @fingerprintArgs).Trim()
     if ($LASTEXITCODE -ne 0) { throw 'Could not fingerprint Flutter source.' }
     $arguments=@('build',$Target,'--no-pub')
     if($Target -eq 'apk'){$arguments+='--debug'}else{$arguments+='--release'}
@@ -28,7 +29,7 @@ foreach($app in $Apps){
       finally { Pop-Location }
     }
     $ErrorActionPreference='Stop'
-    $sourceAfter = (& python (Join-Path $root 'tooling/flutter-source-fingerprint.py')).Trim()
+    $sourceAfter = (& python (Join-Path $root 'tooling/flutter-source-fingerprint.py') @fingerprintArgs).Trim()
     $artifactPath=$null
     $artifactSha256=$null
     if($result -eq 0 -and $sourceBefore -eq $sourceAfter -and $Target -eq 'apk') {

@@ -1,0 +1,51 @@
+{
+  "passed": true,
+  "scope": "Actual UI export bytes via test-only file sink; independent Python csv/OpenXML/PDF/ZIP readers. System file-provider interaction not claimed.",
+  "locales": [
+    "en",
+    "vi"
+  ],
+  "reportTimezoneDateVerified": true,
+  "artifacts": {
+    "report-en.csv": {
+      "bytes": 640,
+      "sha256": "dfa3ce44bcb4c4873ef578e906028373dd7cb90763c29c764130d23e13b84294"
+    },
+    "report-en.xlsx": {
+      "bytes": 1952,
+      "sha256": "013fffb22d660e5418cb1791b12564765f4cfe0837d81f7c22ab1ce8652752ae"
+    },
+    "report-en.json": {
+      "bytes": 661,
+      "sha256": "16f92bfae622467c6c209bdfff7a818cd6624eb0d8fe65f10ec47b398957c75c"
+    },
+    "report-en.pdf": {
+      "bytes": 7452,
+      "sha256": "99d30dc6ae8bbd701cf35e71d79325eed84e754ac4fc70abb6f22dc5abf42fab"
+    },
+    "report-en.zip": {
+      "bytes": 722,
+      "sha256": "40459e232023f499ac261d47db3ee412ae57f80bdf4e20556541788e1b06ef90"
+    },
+    "report-vi.csv": {
+      "bytes": 640,
+      "sha256": "cc55a16dbcae5786777e76f438ebb52a2252187f52f4687af0d7b2e55cdcaec6"
+    },
+    "report-vi.xlsx": {
+      "bytes": 1953,
+      "sha256": "37b8265b8270245a26c23aaabd3d99de22a1c535a257ccfc3372769535bc83af"
+    },
+    "report-vi.json": {
+      "bytes": 661,
+      "sha256": "e2206fe74407cc2bd73fdd20193d6e15b8b488ade9d5689bd2621f1a5066f119"
+    },
+    "report-vi.pdf": {
+      "bytes": 9205,
+      "sha256": "04a8d4ab9c4fd78d36d47edd27836850e33e3bb22f73e627c050d0dae4c7cd09"
+    },
+    "report-vi.zip": {
+      "bytes": 723,
+      "sha256": "80c5d94f0c8e4baf1eb6057ef0f8ca373abae633d5d9b2540a8b826d85f18d96"
+    }
+  }
+}

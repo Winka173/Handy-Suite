@@ -44,5 +44,36 @@ chưa xác nhận. Backup không chứa thumbnail cache, tối đa 30MB.
     Chụp màn hình chỉ kiểm tra được bằng widget test với kênh native giả; bố cục mới
     chưa chạy trên thiết bị Android/iOS thật.
 
+15. Handy Spend đã có SQLite và các luồng tài chính/import trên Android emulator;
+    chưa chứng nhận IndexedDB trong browser, Windows Hello/Explorer drop hoặc khóa
+    bằng sinh trắc/PIN thành công trên thiết bị thật. Notification mới kiểm tra
+    schedule/immediate/cancel, chưa delayed/reboot. Database và backup không mã hóa.
+    CSV/XLSX/PDF xuất có giải mã độc lập EN/VI; OS file provider và nhiều định dạng
+    sao kê thực tế còn cần QA. Receipt/OCR và lãi suất theo ngân hàng thuộc P1.
+16. Giao diện mới của chín app đã chạy tour có quay phim trên BlueStacks (Android 11,
+    x86_64, màn ngang 960×540 dp) bằng `tooling/device-tour.py`. Đó là máy giả lập,
+    không phải điện thoại thật; chưa chạy trên iOS. Chia sẻ từ Facebook, YouTube và
+    TikTok vào Save chưa thử trên máy này.
+17. Giao diện mới của Handy Spend (2026-11-01): đồng hiển thị là "đ" vì Geist và
+    Bricolage không có ký tự ₫ (nhập vẫn nhận ₫, đ, k, tr). Màu `#RRGGBB` và icon của
+    danh mục cũ vẫn giữ trong dữ liệu nhưng app vẽ chấm theo thứ tự danh mục và không
+    còn sửa màu/icon. Bốn khu không có URL web riêng; trang con thì có. Bản sửa nhập
+    sao kê, tour và `native_test` mới chạy trên BlueStacks, chưa trên điện thoại thật
+    hay emulator QA; bằng chứng trong `docs/qa/evidence` thuộc giao diện cũ.
+18. Giao diện mới của Handy Habit (2026-11-02): màu đổi từ teal sang đỏ son `#B42318`,
+    nên ngày lỡ luôn là vòng rỗng xám có chữ, không bao giờ tô đỏ. Màu và icon riêng của
+    thói quen, quy trình vẫn giữ trong dữ liệu nhưng không còn sửa trong app; chấm màu lấy
+    theo thứ tự tạo. Xong một bước thì bước kế tự chạy (tạm dừng vẫn do bạn bấm; ra nền vẫn
+    dừng). Bốn khu không có URL web riêng; trang con thì có. Tour và `native_test` mới chạy
+    trên BlueStacks (máy giả lập); ảnh `habit-ui-review.pdf` và bằng chứng UI cũ thuộc bản
+    trước.
+
 Chi tiết chức năng và giới hạn: [FUNCTIONS](docs/FUNCTIONS.md).
+
+Handy Habit: xem [QA riêng](docs/handy_habit/QA_PLAN.md). iOS cần Mac/Xcode; chưa
+kiểm chứng thiết bị thật, screen reader, browser eviction/quota/offline runtime,
+OS file provider, nhắc sau reboot hoặc giao dịch/consent trên store thật.
+Windows/Web dùng danh sách đến hạn trong app, không hứa nhắc nền. SQLite/backup
+không mã hóa. Timer chỉ auto-next ở tiền cảnh; khôi phục sẽ tạm dừng và cảnh báo
+ước tính thời gian. P1 vacation/widget/challenge chưa triển khai.
 Trạng thái kiểm thử: [FEATURE_MATRIX](FEATURE_MATRIX.md).

@@ -105,12 +105,20 @@ class _DeckPageState extends State<DeckPage> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  Semantics(
-                    header: true,
-                    child: Text(
-                      deck.name,
-                      style: theme.textTheme.headlineSmall,
-                    ),
+                  Row(
+                    children: [
+                      HandyDot(deckHue(s.decks, deck.id), size: 14),
+                      const SizedBox(width: HandySpace.m),
+                      Expanded(
+                        child: Semantics(
+                          header: true,
+                          child: Text(
+                            deck.name,
+                            style: theme.textTheme.headlineSmall,
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
                   const SizedBox(height: HandySpace.xs),
                   Text(

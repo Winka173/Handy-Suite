@@ -188,6 +188,7 @@ class _StudioPageState extends State<StudioPage> {
                       child: GuideCard(
                         key: ValueKey(g.project.id),
                         guide: g,
+                        hue: GuideCard.hueOf(all, g.project.id),
                         onOpen: busy ? null : () => open(g),
                         onDelete: busy ? null : () => delete(g),
                       ),

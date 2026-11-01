@@ -13,9 +13,15 @@ class ToolShelf extends StatelessWidget {
     final muted = theme.textTheme.titleSmall?.copyWith(
       color: HandyColors.of(context).muted,
     );
+    // Grey icons: a colour per kind would be a colour per category, and
+    // the bench keeps its one colour for the answer.
     Widget chip(String id) => ActionChip(
       key: Key('shelf-$id'),
-      avatar: Icon(toolIcon(id), size: 18),
+      avatar: Icon(
+        toolIcon(id),
+        size: 18,
+        color: HandyColors.of(context).muted,
+      ),
       label: Text(toolTitle(context, id)),
       onPressed: () => onOpen(id),
     );

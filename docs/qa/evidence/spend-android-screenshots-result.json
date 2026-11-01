@@ -2,9 +2,9 @@
     "app":  "spend",
     "scenario":  "native",
     "exitCode":  0,
-    "device":  "emulator-5558",
-    "sourceSha256":  "72aaee47283618fc813c43d0b503c25e8bd5dc56759d2d4ab9b8aad1a53ff81d",
+    "device":  "emulator-5556",
+    "sourceSha256":  "5844653bf4b517eb6ce7e8032883a83a568e209fb27133214563da95f5487902",
     "sourceUnchanged":  true,
     "physicalDevice":  false,
-    "finishedAt":  "2026-11-01T06:15:06.8002966Z"
+    "finishedAt":  "2026-11-01T10:45:22.0070936Z"
 }

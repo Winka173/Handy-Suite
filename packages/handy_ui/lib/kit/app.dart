@@ -34,6 +34,9 @@ class HandyApp extends StatelessWidget {
 
   /// For opening a screen from outside the widget tree (a notification).
   final GlobalKey<NavigatorState>? navigatorKey;
+
+  /// Watches the app's routes (for example to hide ads above the home).
+  final List<NavigatorObserver> navigatorObservers;
   const HandyApp({
     super.key,
     required this.app,
@@ -45,6 +48,7 @@ class HandyApp extends StatelessWidget {
     required this.home,
     this.onGenerateRoute,
     this.navigatorKey,
+    this.navigatorObservers = const [],
   });
   @override
   Widget build(BuildContext context) {
@@ -53,6 +57,7 @@ class HandyApp extends StatelessWidget {
       app: app,
       child: MaterialApp(
         navigatorKey: navigatorKey,
+        navigatorObservers: navigatorObservers,
         title: title,
         debugShowCheckedModeBanner: false,
         theme: buildHandyTheme(accent, Brightness.light),

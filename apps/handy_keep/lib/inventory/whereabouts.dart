@@ -90,6 +90,28 @@ List<Place> whereabouts(
   return result;
 }
 
+/// A place's identity colour (`HandyPalette` index). It comes from every
+/// place the household has, in the list's own order, so a place keeps its
+/// colour whatever the filter or the search shows.
+int placeHue(KeepState state, String key) {
+  final keys = <String>{
+    for (final byBox in [false, true])
+      for (final p in whereabouts(
+        state,
+        state.assets,
+        emptyBoxes: true,
+        byBox: byBox,
+      ))
+        p.key,
+  }.toList();
+  final index = keys.indexOf(key);
+  return index < 0 ? 0 : index;
+}
+
+/// The colour of where [a] is right now.
+int itemHue(KeepState state, InventoryAsset a) =>
+    placeHue(state, placeOf(a, {for (final b in state.boxes) b.id: b}).key);
+
 /// Every word of [query] appears in the item, its box or its borrower;
 /// accents and case are ignored, so "may khoan" finds "Máy khoan".
 List<InventoryAsset> findItems(KeepState state, String query) {

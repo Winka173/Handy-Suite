@@ -1,9 +1,10 @@
 param(
-  [Parameter(Mandatory=$true)][ValidateSet('tools','docs','media','dev','keep','recall','save','spend')][string]$App,
+  [Parameter(Mandatory=$true)][ValidateSet('tools','docs','media','dev','keep','recall','save','spend','habit')][string]$App,
   [Parameter(Mandatory=$true)][string]$Scenario,
-  [ValidateSet('emulator-5556','emulator-5558')][string]$Device='emulator-5558'
+  [ValidateSet('emulator-5556','emulator-5558','emulator-5570')][string]$Device='emulator-5558'
 )
 $ErrorActionPreference='Stop'
+$fingerprintArgs=if($App -eq 'habit'){@('--app','habit')}else{@()}
 $root=Split-Path -Parent $PSScriptRoot
 if ($Scenario -notmatch '^[a-z-]+$') { throw 'Invalid integration scenario' }
 . (Join-Path $PSScriptRoot 'flutter-android-lock.ps1')
@@ -16,7 +17,7 @@ $forwardPort=$null
 try {
   $original=Get-Content -LiteralPath (Join-Path $evidence "$name-android-screenshots-result.json") -Raw -Encoding utf8 | ConvertFrom-Json
   $originalLog=Get-Content -LiteralPath (Join-Path $evidence "$name-android-screenshots.log") -Raw
-  $sourceHash=(& python (Join-Path $root 'tooling/flutter-source-fingerprint.py')).Trim()
+  $sourceHash=(& python (Join-Path $root 'tooling/flutter-source-fingerprint.py') @fingerprintArgs).Trim()
   if($original.sourceSha256 -and ($original.sourceSha256 -ne $sourceHash -or !$original.sourceUnchanged)) {
     throw 'Source changed since this test launch. Run a fresh integration instead of relabeling old results.'
   }

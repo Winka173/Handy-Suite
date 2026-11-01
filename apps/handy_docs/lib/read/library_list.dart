@@ -67,6 +67,9 @@ class _LibraryListState extends State<LibraryList> {
                     padding: const EdgeInsets.only(right: HandySpace.s),
                     child: ChoiceChip(
                       key: Key('reader-filter-$value'),
+                      avatar: folders.contains(value)
+                          ? HandyDot(folders.indexOf(value))
+                          : null,
                       label: Text(label),
                       selected: filter == value,
                       onSelected: (_) => setState(() => filter = value),
@@ -81,6 +84,7 @@ class _LibraryListState extends State<LibraryList> {
             child: HandyTile(
               key: Key('reader-open-${d.id}'),
               icon: icon(d.kind),
+              hue: d.folder.isEmpty ? null : folders.indexOf(d.folder),
               title: d.name,
               subtitle: [
                 if (d.folder.isNotEmpty) d.folder,

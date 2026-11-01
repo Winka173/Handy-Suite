@@ -214,9 +214,9 @@ void main() {
     await tapKey(t, 'box-label');
     await shot(t, 'phone-5-label');
   });
+  // Nothing chosen on a wide screen: the pane lists every date.
   testWidgets('desktop dates', (t) async {
     await boot(t, const Size(1440, 900));
-    await tapKey(t, 'due-all');
     await shot(t, 'desktop-6-dates');
   });
   testWidgets('desktop settings', (t) async {

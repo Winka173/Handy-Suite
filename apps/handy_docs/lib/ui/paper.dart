@@ -108,7 +108,6 @@ class PaperSheet extends StatelessWidget {
   const PaperSheet({super.key, required this.child});
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
     const ink = Color(0xFF1F1F1F);
     return Center(
       child: ConstrainedBox(
@@ -133,17 +132,12 @@ class PaperSheet extends StatelessWidget {
                   : HandySpace.xxl,
               vertical: HandySpace.xl,
             ),
+            // The whole light theme, not a patched dark one: quotes, code
+            // and tables read their fills from it.
             child: Theme(
-              data: theme.copyWith(
-                brightness: Brightness.light,
-                colorScheme: theme.colorScheme.copyWith(
-                  brightness: Brightness.light,
-                  onSurface: ink,
-                ),
-                textTheme: theme.textTheme.apply(
-                  bodyColor: ink,
-                  displayColor: ink,
-                ),
+              data: buildHandyTheme(
+                HandyColors.of(context).accent,
+                Brightness.light,
               ),
               child: DefaultTextStyle.merge(
                 style: const TextStyle(color: ink),

@@ -6,12 +6,27 @@ import '../guide/film_frame.dart';
 class GuideCard extends StatelessWidget {
   final PortableCapture guide;
   final VoidCallback? onOpen, onDelete;
+
+  /// Its identity colour, from [hueOf].
+  final int hue;
   const GuideCard({
     super.key,
     required this.guide,
+    required this.hue,
     required this.onOpen,
     required this.onDelete,
   });
+
+  /// A guide's colour is its place in the order the guides were made, so
+  /// guides side by side never share one and editing one never moves it.
+  static int hueOf(List<PortableCapture> all, String id) {
+    final made = [...all]
+      ..sort((a, b) {
+        final at = a.project.createdAt.compareTo(b.project.createdAt);
+        return at != 0 ? at : a.project.id.compareTo(b.project.id);
+      });
+    return made.indexWhere((g) => g.project.id == id).clamp(0, 1 << 20);
+  }
 
   static String kindName(BuildContext context, String kind) => switch (kind) {
     'bug' => tr(context, 'Bug report', 'Báo lỗi'),
@@ -72,14 +87,29 @@ class GuideCard extends StatelessWidget {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(
-                          p.title.isEmpty
-                              ? tr(
-                                  context,
-                                  'Untitled guide',
-                                  'Hướng dẫn chưa đặt tên',
-                                )
-                              : p.title,
+                        Text.rich(
+                          TextSpan(
+                            children: [
+                              WidgetSpan(
+                                alignment: PlaceholderAlignment.middle,
+                                child: Padding(
+                                  padding: const EdgeInsets.only(
+                                    right: HandySpace.s,
+                                  ),
+                                  child: HandyDot(hue),
+                                ),
+                              ),
+                              TextSpan(
+                                text: p.title.isEmpty
+                                    ? tr(
+                                        context,
+                                        'Untitled guide',
+                                        'Hướng dẫn chưa đặt tên',
+                                      )
+                                    : p.title,
+                              ),
+                            ],
+                          ),
                           style: theme.textTheme.titleMedium,
                           maxLines: 2,
                           overflow: TextOverflow.ellipsis,

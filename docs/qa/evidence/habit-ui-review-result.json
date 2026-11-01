@@ -1,0 +1,253 @@
+{
+  "captures": [
+    {
+      "path": "docs/qa/evidence/habit-ui/1440-builder.png",
+      "origin": "Widget renderer (not OS runtime)",
+      "width": 2160,
+      "height": 1350,
+      "sha256": "9df6d05b108e275f7c1eb3fa3ec76e6d89675b010bff4d006c276d6714a39c18"
+    },
+    {
+      "path": "docs/qa/evidence/habit-ui/1440-habits.png",
+      "origin": "Widget renderer (not OS runtime)",
+      "width": 2160,
+      "height": 1350,
+      "sha256": "34963d40f60238b59531a38508e784a5c91e879b6d12a461b2fe1d7df6c36450"
+    },
+    {
+      "path": "docs/qa/evidence/habit-ui/1440-insights.png",
+      "origin": "Widget renderer (not OS runtime)",
+      "width": 2160,
+      "height": 1350,
+      "sha256": "2534c54fbe53c8e16bf2a767ae8f0066fc2f9aad41621d9e5eceb0cfc409a8fe"
+    },
+    {
+      "path": "docs/qa/evidence/habit-ui/1440-lite.png",
+      "origin": "Widget renderer (not OS runtime)",
+      "width": 2160,
+      "height": 1350,
+      "sha256": "995a3613aa1b6cc3209e3773f2e4a3ec89687d9de98d14d28a3bcbe409e3eab8"
+    },
+    {
+      "path": "docs/qa/evidence/habit-ui/1440-routines.png",
+      "origin": "Widget renderer (not OS runtime)",
+      "width": 2160,
+      "height": 1350,
+      "sha256": "e8c28f8ffa422835aad841d6e9429dcff3b0b76b0538f59f7643015492e7f26a"
+    },
+    {
+      "path": "docs/qa/evidence/habit-ui/1440-runner-paused.png",
+      "origin": "Widget renderer (not OS runtime)",
+      "width": 2160,
+      "height": 1350,
+      "sha256": "9795e9df6b03d8dba3e52f3dd004d9eb5f648f243d4dc2d85ed3f29e45502b40"
+    },
+    {
+      "path": "docs/qa/evidence/habit-ui/1440-runner.png",
+      "origin": "Widget renderer (not OS runtime)",
+      "width": 2160,
+      "height": 1350,
+      "sha256": "f67b0659c064fadd956eac1c92420ad9dde90e8c3504e93f4945f8e8958ddcae"
+    },
+    {
+      "path": "docs/qa/evidence/habit-ui/1440-today.png",
+      "origin": "Widget renderer (not OS runtime)",
+      "width": 2160,
+      "height": 1350,
+      "sha256": "f3f6dabd961335a70b1c01adfdf78ac2fadf79126d85afb4286f920460dca6cd"
+    },
+    {
+      "path": "docs/qa/evidence/habit-ui/390-builder.png",
+      "origin": "Widget renderer (not OS runtime)",
+      "width": 585,
+      "height": 1350,
+      "sha256": "131c65a66bf5cf629006ec357580e98bf42aa17ae2a11e4a354a9e3e8afe8390"
+    },
+    {
+      "path": "docs/qa/evidence/habit-ui/390-dark-empty-today.png",
+      "origin": "Widget renderer (not OS runtime)",
+      "width": 585,
+      "height": 1350,
+      "sha256": "9393fa38cc11c5e61c39e7a22f1d3d4fa82ae34bfb7d630da37ea08960395238"
+    },
+    {
+      "path": "docs/qa/evidence/habit-ui/390-habit-detail.png",
+      "origin": "Widget renderer (not OS runtime)",
+      "width": 585,
+      "height": 1350,
+      "sha256": "c27f129f70d43bc2407fad8447b9934ac6ccf0e0bc85a5dd737bd71f3c3e214b"
+    },
+    {
+      "path": "docs/qa/evidence/habit-ui/390-habit-editor.png",
+      "origin": "Widget renderer (not OS runtime)",
+      "width": 585,
+      "height": 1350,
+      "sha256": "346c96b82786fb6b323fc17872b1abc5347c7aa1f88f22e902044a5bf473277b"
+    },
+    {
+      "path": "docs/qa/evidence/habit-ui/390-habits.png",
+      "origin": "Widget renderer (not OS runtime)",
+      "width": 585,
+      "height": 1350,
+      "sha256": "f1d9c7e0bbbc7b34a64b9c68ce93ba55cf13b469feedfcfe122cf5cff6ebc23e"
+    },
+    {
+      "path": "docs/qa/evidence/habit-ui/390-insights.png",
+      "origin": "Widget renderer (not OS runtime)",
+      "width": 585,
+      "height": 1350,
+      "sha256": "fd465454d5f671a158a955f9057a4ccb0352b9c3e725b5d2b971ea180cb9689c"
+    },
+    {
+      "path": "docs/qa/evidence/habit-ui/390-lite.png",
+      "origin": "Widget renderer (not OS runtime)",
+      "width": 585,
+      "height": 1350,
+      "sha256": "15e60f5502d890b538197d9edb34d5660c7af129e0043f32c8850dfd906ab89b"
+    },
+    {
+      "path": "docs/qa/evidence/habit-ui/390-routines.png",
+      "origin": "Widget renderer (not OS runtime)",
+      "width": 585,
+      "height": 1350,
+      "sha256": "bd8e7606736ec163efe6ee055c64e72d5c90c59c9585f482d06c37e1e95140af"
+    },
+    {
+      "path": "docs/qa/evidence/habit-ui/390-runner-paused.png",
+      "origin": "Widget renderer (not OS runtime)",
+      "width": 585,
+      "height": 1350,
+      "sha256": "94ca0c83dc5f43ebd970757597ae97f546895f1e6c3228498005f1b2379c52bf"
+    },
+    {
+      "path": "docs/qa/evidence/habit-ui/390-runner.png",
+      "origin": "Widget renderer (not OS runtime)",
+      "width": 585,
+      "height": 1350,
+      "sha256": "60e6c29092d822a9b978de8949cd4eeab2a9efb2ad9c6a6237eebb50676f81a4"
+    },
+    {
+      "path": "docs/qa/evidence/habit-ui/390-settings.png",
+      "origin": "Widget renderer (not OS runtime)",
+      "width": 585,
+      "height": 1350,
+      "sha256": "7a5efb2ea2fb3e378104ff926751ca88104af34209c64075e5a95ec4dd02d33a"
+    },
+    {
+      "path": "docs/qa/evidence/habit-ui/390-today.png",
+      "origin": "Widget renderer (not OS runtime)",
+      "width": 585,
+      "height": 1350,
+      "sha256": "143bd94923cdcf6c8f390123c4e66f7056cb7ce3883cb7aa3d57583f9ae2e407"
+    },
+    {
+      "path": "docs/qa/evidence/habit-ui/768-builder.png",
+      "origin": "Widget renderer (not OS runtime)",
+      "width": 1152,
+      "height": 1350,
+      "sha256": "9be377898a5f2a2d4e68749aaadbb7497ee7a5d53c770d61099a5a8b735c8327"
+    },
+    {
+      "path": "docs/qa/evidence/habit-ui/768-habits.png",
+      "origin": "Widget renderer (not OS runtime)",
+      "width": 1152,
+      "height": 1350,
+      "sha256": "00d7bcd38247d311e8e1451c7ebfdab513695f96a5e9475984d4be4691a459da"
+    },
+    {
+      "path": "docs/qa/evidence/habit-ui/768-insights.png",
+      "origin": "Widget renderer (not OS runtime)",
+      "width": 1152,
+      "height": 1350,
+      "sha256": "b1b72b95fcee88a0711f7e61fae2a2b65a5a970bc54453f7f98e6a20c157d7a7"
+    },
+    {
+      "path": "docs/qa/evidence/habit-ui/768-lite.png",
+      "origin": "Widget renderer (not OS runtime)",
+      "width": 1152,
+      "height": 1350,
+      "sha256": "64811e2b52e7801322a7929654fdc8e0cfac925c06f52cd0a5bd97a84148e305"
+    },
+    {
+      "path": "docs/qa/evidence/habit-ui/768-routines.png",
+      "origin": "Widget renderer (not OS runtime)",
+      "width": 1152,
+      "height": 1350,
+      "sha256": "92a3e6a0514a610ba7096646adeb14802e8fb83d3e901705de3d6775f2c6e0be"
+    },
+    {
+      "path": "docs/qa/evidence/habit-ui/768-runner-paused.png",
+      "origin": "Widget renderer (not OS runtime)",
+      "width": 1152,
+      "height": 1350,
+      "sha256": "ae72abe7aaf45ba73a0da41b58e8a7559db94fe570733752f4998af31d9a2fd7"
+    },
+    {
+      "path": "docs/qa/evidence/habit-ui/768-runner.png",
+      "origin": "Widget renderer (not OS runtime)",
+      "width": 1152,
+      "height": 1350,
+      "sha256": "9a2c9c0ffdfb939354c000337d4a3bf44fe4cf1cffcc1a36b17211c4db47f10f"
+    },
+    {
+      "path": "docs/qa/evidence/habit-ui/768-today.png",
+      "origin": "Widget renderer (not OS runtime)",
+      "width": 1152,
+      "height": 1350,
+      "sha256": "19688c256bf746f6c0702fcf6bec5a191f35224a6c75e3832b66ccc5b37bac5d"
+    },
+    {
+      "path": "docs/qa/evidence/habit-ui/dark-onboarding.png",
+      "origin": "Widget renderer (not OS runtime)",
+      "width": 1200,
+      "height": 900,
+      "sha256": "763eeddc0bc42f74f7665d171e910295f4b78e113467e1a1d31fe142713068a9"
+    },
+    {
+      "path": "docs/qa/evidence/screenshots/habit-native-builder.png",
+      "origin": "Android API35 emulator (not physical device)",
+      "width": 1080,
+      "height": 2220,
+      "sha256": "860a769d636bfabaf3af7cab360cafcc8fc9b26f754cb18197e97429db426bc7"
+    },
+    {
+      "path": "docs/qa/evidence/screenshots/habit-native-lite.png",
+      "origin": "Android API35 emulator (not physical device)",
+      "width": 1080,
+      "height": 2220,
+      "sha256": "3e71681b4140804284e4dccbf349bd1658f04465713536f1c371e663b49a22a9"
+    },
+    {
+      "path": "docs/qa/evidence/screenshots/habit-native-notifications-denied.png",
+      "origin": "Android API35 emulator (not physical device)",
+      "width": 1080,
+      "height": 2220,
+      "sha256": "70199cbe8f9cc1b24c08a0d42b0340109a6ea3b8a12118e88e1a527af604949c"
+    },
+    {
+      "path": "docs/qa/evidence/screenshots/habit-native-recovery.png",
+      "origin": "Android API35 emulator (not physical device)",
+      "width": 1080,
+      "height": 2220,
+      "sha256": "32cbefc0313962148803bead791aa70214cd5bd2c68d586570d57d6a55daf626"
+    },
+    {
+      "path": "docs/qa/evidence/screenshots/habit-native-runner.png",
+      "origin": "Android API35 emulator (not physical device)",
+      "width": 1080,
+      "height": 2220,
+      "sha256": "2a598db1c5a0f6a2fdab2dd8395d8d46dd6d51c4dcd35f377446837650157132"
+    },
+    {
+      "path": "docs/qa/evidence/screenshots/habit-native-today.png",
+      "origin": "Android API35 emulator (not physical device)",
+      "width": 1080,
+      "height": 2220,
+      "sha256": "9f531b0f08d5085aa7ca7de92ce05cf64a744f589bd7c75bb7cb7e8332abe03f"
+    }
+  ],
+  "pdfPages": 36,
+  "pdfSha256": "fd86856b3cc71574db27ef1af32bb7d74cf63daec84182a409ba76b3f1109f86",
+  "physicalDevice": false,
+  "browserRuntime": false
+}

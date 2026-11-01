@@ -96,6 +96,9 @@ class DeskPage extends StatelessWidget {
                           HandyTile(
                             key: Key('desk-recent-${d.id}'),
                             icon: Icons.description_outlined,
+                            hue: d.folder.isEmpty
+                                ? null
+                                : scope.reader.store.folders.indexOf(d.folder),
                             title: d.name,
                             subtitle: d.folder.isEmpty ? null : d.folder,
                             navigates: true,

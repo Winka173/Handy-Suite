@@ -17,7 +17,8 @@ from PIL import Image, ImageDraw, ImageFont
 
 ROOT = Path(__file__).resolve().parent.parent
 APPS = {
-    'spend': ('#7C3AED', 0xE850),  # account_balance_wallet
+    'habit': ('#B42318', 0xE86C),
+    'spend': ('#2E7D32', 0xE850),  # account_balance_wallet
     'tools': ('#E8590C', 0xE2F2),   # handyman
     'dev': ('#0F8A5F', 0xF0589),    # terminal
     'keep': ('#B7791F', 0xE34A),    # inventory_2

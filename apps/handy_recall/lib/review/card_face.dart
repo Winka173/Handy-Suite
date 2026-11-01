@@ -35,7 +35,10 @@ class CardFace extends StatelessWidget {
                 child: SelectableText(
                   card.front,
                   key: const Key('review-front'),
-                  style: theme.textTheme.headlineSmall,
+                  // A word or a short phrase is the biggest thing on screen.
+                  style: card.front.characters.length <= 24
+                      ? theme.textTheme.headlineMedium
+                      : theme.textTheme.headlineSmall,
                 ),
               ),
               if (card.image != null) ...[

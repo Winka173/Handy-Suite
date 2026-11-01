@@ -1,0 +1,18 @@
+﻿[
+    {
+        "permission":  false,
+        "exitCode":  0,
+        "sourceSha256":  "5844653bf4b517eb6ce7e8032883a83a568e209fb27133214563da95f5487902",
+        "sourceUnchanged":  true,
+        "device":  "emulator-5556",
+        "physicalDevice":  false
+    },
+    {
+        "permission":  true,
+        "exitCode":  0,
+        "sourceSha256":  "5844653bf4b517eb6ce7e8032883a83a568e209fb27133214563da95f5487902",
+        "sourceUnchanged":  false,
+        "device":  "emulator-5556",
+        "physicalDevice":  false
+    }
+]

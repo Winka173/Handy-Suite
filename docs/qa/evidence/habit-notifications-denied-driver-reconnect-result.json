@@ -1,0 +1,14 @@
+﻿{
+    "app":  "habit",
+    "scenario":  "notifications-denied",
+    "device":  "emulator-5570",
+    "physicalDevice":  false,
+    "exitCode":  0,
+    "originalTransportExitCode":  1,
+    "originalTestProcess":  8466,
+    "sourceSha256":  "8fdddea05ac1124d94285f6649e89ccfe59c4cb761738d6b4d5b9a2d8a55b5c0",
+    "logSha256":  "0a2bc7e07b4e5a2d7cb20c0225b8b99a87f7e7c2b05c08f6f7a3d063831d59b5",
+    "existingProcessResultsRetrieved":  true,
+    "finishedAt":  "2026-11-01T16:28:14.4162175Z",
+    "appTestsAlreadyFinishedBeforeReconnect":  false
+}

@@ -26,6 +26,8 @@ dependencies:
   local_auth: 3.0.2
   desktop_drop: 0.8.0
 dev_dependencies:
+  flutter_localizations:
+    sdk: flutter
   flutter_test:
     sdk: flutter
   integration_test:

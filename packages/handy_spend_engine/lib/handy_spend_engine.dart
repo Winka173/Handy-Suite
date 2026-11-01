@@ -130,6 +130,7 @@ DateTime calendar(String text) {
 
 bool _ready = false;
 tz.Location location(String name) {
+  if (name == 'UTC' || name == 'Etc/UTC') return tz.UTC;
   if (!_ready) {
     zones.initializeTimeZones();
     _ready = true;

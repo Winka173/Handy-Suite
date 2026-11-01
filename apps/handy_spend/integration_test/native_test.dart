@@ -1,12 +1,15 @@
 import 'dart:convert';
+import 'dart:typed_data';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:integration_test/integration_test.dart';
 import 'package:path_provider/path_provider.dart';
-import 'package:handy_ui/handy_ui.dart';
+import 'package:handy_core/handy_core.dart';
+import 'package:handy_ui/kit.dart';
 import 'package:handy_spend/app.dart';
 import 'package:handy_spend/controller.dart';
 import 'package:handy_spend/data/store_native.dart';
 import 'package:handy_spend_engine/handy_spend_engine.dart';
+import 'package:handy_files/handy_files.dart';
 
 void main() {
   final binding = IntegrationTestWidgetsFlutterBinding.ensureInitialized();
@@ -143,31 +146,61 @@ void main() {
         expect(controller.state!.toJson(), seeded.toJson());
         expect(await controller.store!.integrity(), 'ok');
       });
-      await tester.pumpWidget(SpendApp(controller: controller));
-      await tester.runAsync(
-        () => Future<void>.delayed(const Duration(milliseconds: 400)),
+      final files = _StatementFiles(
+        ImportedBytes(
+          'native-statement.csv',
+          Uint8List.fromList(
+            utf8.encode(
+              'date,payee,amount,balance\n$date,CSV expense,-100,944900\n',
+            ),
+          ),
+        ),
       );
-      await tester.pumpAndSettle();
+      await tester.pumpWidget(SpendApp(controller: controller, files: files));
+      Future<void> waitForIo() async {
+        await tester.runAsync(
+          () => Future<void>.delayed(const Duration(milliseconds: 700)),
+        );
+        await tester.pumpAndSettle();
+      }
+
+      Future<void> tap(String key) async {
+        final f = find.byKey(Key(key));
+        if (f.evaluate().isEmpty)
+          await tester.scrollUntilVisible(
+            f,
+            300,
+            scrollable: find
+                .byWidgetPredicate(
+                  (w) =>
+                      w is Scrollable && w.axisDirection == AxisDirection.down,
+                )
+                .hitTestable()
+                .first,
+            maxScrolls: 40,
+          );
+        await tester.ensureVisible(f.first);
+        await tester.pumpAndSettle();
+        await tester.tap(f.first);
+        await tester.pumpAndSettle();
+      }
+
+      // Phones use the bottom bar; wide screens the switch in the top bar.
+      Future<void> go(int area) => tap(
+        find.byKey(Key('nav-$area')).evaluate().isEmpty
+            ? 'area-$area'
+            : 'nav-$area',
+      );
+
+      await waitForIo();
       await binding.convertFlutterSurfaceToImage();
       await tester.pumpAndSettle();
       await binding.takeScreenshot('spend-home');
-      await tester.tap(find.text('Transactions').last);
-      await tester.pumpAndSettle();
+      await go(1);
       await binding.takeScreenshot('spend-transactions');
-      await tester.tap(find.text('Reports').last);
-      await tester.pumpAndSettle();
-      await binding.takeScreenshot('spend-reports');
-      await tester.tap(find.text('Plan').last);
-      await tester.pumpAndSettle();
+      await go(2);
       await binding.takeScreenshot('spend-plan');
-      await tester.scrollUntilVisible(
-        find.text('Phone what-if'),
-        400,
-        scrollable: find.byType(Scrollable).first,
-        maxScrolls: 30,
-      );
-      await tester.tap(find.text('Phone what-if'));
-      await tester.pumpAndSettle();
+      await tap('whatif-qa-scenario');
       await binding.takeScreenshot('spend-sandbox');
       expect(
         jsonEncode(controller.state!.toJson()),
@@ -176,15 +209,22 @@ void main() {
       );
       await tester.pageBack();
       await tester.pumpAndSettle();
-      await tester.tap(find.byKey(const Key('spend-add')));
-      await tester.pumpAndSettle();
+      await go(0);
+      await tap('spend-add');
       await binding.takeScreenshot('spend-add-transaction');
       await tester.enterText(find.byKey(const Key('field-amount')), '5000');
-      await tester.tap(find.byKey(const Key('editor-save')));
-      await tester.runAsync(
-        () => Future<void>.delayed(const Duration(milliseconds: 500)),
-      );
+      // Close the keyboard, then open the account list and wait for it.
+      FocusManager.instance.primaryFocus?.unfocus();
       await tester.pumpAndSettle();
+      final cashItem = find.byKey(const Key('pick-account-qa-cash'));
+      for (var i = 0; i < 5 && cashItem.evaluate().isEmpty; i++) {
+        await tap('entry-account');
+        await waitForIo();
+      }
+      await tester.tap(cashItem.last);
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const Key('editor-save')));
+      await waitForIo();
       expect(controller.state!.entries, hasLength(4));
       await tester.runAsync(() async {
         await controller.load();
@@ -194,9 +234,69 @@ void main() {
           BigInt.from(945000),
         );
       });
+      await tester.pumpAndSettle();
+
+      // A statement into the cash account: columns, review, commit, undo.
+      await go(3);
+      await binding.takeScreenshot('spend-accounts');
+      await tap('account-qa-cash');
+      await tap('account-import');
+      await tap('import-pick');
+      await waitForIo();
+      await binding.takeScreenshot('spend-import-map');
+      await tap('map-balance');
+      await tester.tap(find.text('4. balance').last);
+      await tester.pumpAndSettle();
+      await tap('import-validate');
+      await waitForIo();
+      expect(controller.state!.entries, hasLength(4));
+      await binding.takeScreenshot('spend-import-review');
+      await tap('import-commit');
+      await tap('confirm-action');
+      await waitForIo();
+      expect(controller.state!.entries, hasLength(5));
+      expect(balances(controller.state!, date)['qa-cash'], BigInt.from(944900));
+      expect(
+        (controller.state!.imports.last['reconciliation'] as Map)['difference'],
+        '0',
+      );
+      await binding.takeScreenshot('spend-import-result');
+      await tap('import-undo');
+      await waitForIo();
+      expect(controller.state!.entries, hasLength(4));
+      await tester.runAsync(() async {
+        await controller.load();
+        expect(
+          balances(controller.state!, date)['qa-cash'],
+          BigInt.from(945000),
+        );
+        expect(await controller.store!.integrity(), 'ok');
+      });
+      await tester.pumpAndSettle();
+      // Back from the account page to the home, which holds settings.
+      while (find.byType(BackButton).hitTestable().evaluate().isNotEmpty) {
+        await tester.tap(find.byType(BackButton).hitTestable().first);
+        await tester.pumpAndSettle();
+      }
+      await tap('open-settings');
+      await binding.takeScreenshot('spend-settings');
+      await tester.pageBack();
+      await tester.pumpAndSettle();
       await tester.pumpWidget(const SizedBox());
       controller.dispose();
     },
-    timeout: const Timeout(Duration(minutes: 4)),
+    timeout: const Timeout(Duration(minutes: 6)),
   );
+}
+
+/// The statement the import picks; exports go to the real system dialog.
+class _StatementFiles extends SystemHandyFiles {
+  final ImportedBytes statement;
+  const _StatementFiles(this.statement);
+  @override
+  Future<ImportedBytes?> importBytes({
+    required List<String> extensions,
+    int maxBytes = 30000000,
+    CancellationToken? cancellation,
+  }) async => statement;
 }

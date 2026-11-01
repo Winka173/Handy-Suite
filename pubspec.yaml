@@ -3,6 +3,8 @@ publish_to: none
 environment:
   sdk: ^3.12.0
 workspace:
+  - apps/handy_habit
+  - packages/handy_habit_engine
   - apps/handy_spend
   - packages/handy_spend_engine
   - apps/handy_tools

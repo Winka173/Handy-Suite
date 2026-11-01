@@ -1,5 +1,43 @@
 part of '../handy_spend_engine.dart';
 
+/// Local record dates are a review aid, never proof of current bank balances.
+Map<String, String> lastRecordedDays(SpendState s, String asOf) {
+  calendar(asOf);
+  final result = <String, String>{
+    for (final a in s.accounts)
+      if (a.asOf.compareTo(asOf) <= 0) a.id: a.asOf,
+  };
+  for (final e in s.entries) {
+    if (e.status != 'posted') continue;
+    final date = reportDay(e.when, s.zone);
+    if (date.compareTo(asOf) > 0) continue;
+    for (final id in [e.account, if (e.toAccount != null) e.toAccount!]) {
+      if (!result.containsKey(id) || date.compareTo(result[id]!) > 0) {
+        result[id] = date;
+      }
+    }
+  }
+  return result;
+}
+
+Map<String, String> lastBillPaymentDays(SpendState s, String asOf) {
+  calendar(asOf);
+  final ids = s.bills.map((b) => b.id).toSet(), result = <String, String>{};
+  for (final e in s.entries) {
+    if (e.status != 'posted' || e.occurrence == null) continue;
+    final separator = e.occurrence!.lastIndexOf('@');
+    if (separator < 1) continue;
+    final id = e.occurrence!.substring(0, separator);
+    if (!ids.contains(id)) continue;
+    final date = reportDay(e.when, s.zone);
+    if (date.compareTo(asOf) <= 0 &&
+        (!result.containsKey(id) || date.compareTo(result[id]!) > 0)) {
+      result[id] = date;
+    }
+  }
+  return result;
+}
+
 String financialFingerprint(SpendState s) => sha256
     .convert(
       utf8.encode(
@@ -187,6 +225,7 @@ Projection forecast(
 
   for (final o in upcoming(s, start, end)) {
     if (skipBills.contains(o.bill.id) ||
+        skipBills.contains(o.id) ||
         o.bill.amount > BigInt.zero && !(includeIncome && o.bill.reliable))
       continue;
     final flow = _flow(s, o.post(s.zone), ids, c);

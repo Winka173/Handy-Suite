@@ -1,7 +1,8 @@
-param([ValidateSet('tools','keep','recall','docs','media','dev','save','spend')][string]$App = 'tools')
+param([ValidateSet('tools','keep','recall','docs','media','dev','save','spend','habit')][string]$App = 'tools')
 $ErrorActionPreference = 'Stop'
+$fingerprintArgs=if($App -eq 'habit'){@('--app','habit')}else{@()}
 $repoRoot = Split-Path -Parent $PSScriptRoot
-$sourceHash=(& python (Join-Path $repoRoot 'tooling/flutter-source-fingerprint.py')).Trim()
+$sourceHash=(& python (Join-Path $repoRoot 'tooling/flutter-source-fingerprint.py') @fingerprintArgs).Trim()
 $builds=Get-Content -LiteralPath (Join-Path $repoRoot 'docs/qa/evidence/builds-windows.json') -Raw -Encoding utf8 | ConvertFrom-Json
 $verifiedBuild=@($builds | Where-Object { $_.app -eq $App -and $_.exitCode -eq 0 -and $_.sourceUnchanged -and $_.sourceSha256 -eq $sourceHash })
 if ($verifiedBuild.Count -ne 1) { throw 'A successful unchanged-source Windows build of the current revision is required before packaging.' }

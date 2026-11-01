@@ -68,7 +68,6 @@ class StartGrid extends StatelessWidget {
               SizedBox(
                 width: width,
                 child: _Start(
-                  row: columns == 1,
                   id: id,
                   icon: icon,
                   title: title,
@@ -87,11 +86,7 @@ class _Start extends StatelessWidget {
   final String id, title, hint;
   final IconData icon;
   final VoidCallback onTap;
-
-  /// One line per start on phones: the icon beside the words.
-  final bool row;
   const _Start({
-    required this.row,
     required this.id,
     required this.icon,
     required this.title,
@@ -122,23 +117,15 @@ class _Start extends StatelessWidget {
         key: Key('desk-$id'),
         onTap: onTap,
         child: Padding(
-          padding: EdgeInsets.all(row ? HandySpace.m : HandySpace.l),
-          child: row
-              ? Row(
-                  children: [
-                    Icon(icon, color: theme.colorScheme.primary, size: 26),
-                    const SizedBox(width: HandySpace.l),
-                    Expanded(child: words),
-                  ],
-                )
-              : Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Icon(icon, color: theme.colorScheme.primary, size: 28),
-                    const SizedBox(height: HandySpace.m),
-                    words,
-                  ],
-                ),
+          padding: const EdgeInsets.all(HandySpace.m),
+          // A plain grey icon beside the words: the words say what it does.
+          child: Row(
+            children: [
+              Icon(icon, color: c.muted, size: 22),
+              const SizedBox(width: HandySpace.m),
+              Expanded(child: words),
+            ],
+          ),
         ),
       ),
     );

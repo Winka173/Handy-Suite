@@ -3,7 +3,17 @@ import { readFileSync } from 'node:fs';
 import vm from 'node:vm';
 import { expect, test } from 'vitest';
 
-test.each(['tools', 'docs', 'media', 'dev', 'keep', 'recall', 'save', 'spend'])(
+test.each([
+  'tools',
+  'docs',
+  'media',
+  'dev',
+  'keep',
+  'recall',
+  'save',
+  'spend',
+  'habit',
+])(
   'handy_%s worker isolates assets, excludes API data and requires explicit update',
   async (app) => {
     const name = `handy_${app}`;

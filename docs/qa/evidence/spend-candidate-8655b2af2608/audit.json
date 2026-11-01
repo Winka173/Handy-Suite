@@ -1,0 +1,47 @@
+{
+  "scope": "Frozen Spend candidate and shared UI; live workspace receives concurrent edits. Earlier full-workspace regression is a separate baseline.",
+  "snapshotRoot": ".tooling/spend-qa",
+  "snapshotSourceSha256": "8655b2af2608ef3d887a13250d845ca9685684b7039058a5b17598ccfe4b4f59",
+  "liveWorkspaceSha256AtPublication": "ed56708602ac4208499717e33340f7678e46347b4e3a935cbe072a54ef3e87a6",
+  "currentLiveWorkspaceCertified": false,
+  "snapshotPackages": [
+    {
+      "package": "handy_spend",
+      "passed": 16,
+      "skipped": 0
+    },
+    {
+      "package": "handy_spend_engine",
+      "passed": 26,
+      "skipped": 0
+    },
+    {
+      "package": "handy_ui",
+      "passed": 3,
+      "skipped": 0
+    }
+  ],
+  "snapshotTestsPassed": 45,
+  "baselineWorkspaceTestsPassed": 1698,
+  "baselineWorkspaceTestsSkipped": 28,
+  "baselineWorkspaceSourceSha256": "5844653bf4b517eb6ce7e8032883a83a568e209fb27133214563da95f5487902",
+  "baselineWorkspaceTestLogSha256": "493aa9ef256bc0161817d7b57c85f9a11d273417c5bd1fe5ba668e04df9b30c2",
+  "candidateBuildsPassed": 3,
+  "androidEmulatorImportUndoPassed": true,
+  "androidNotificationDenyGrantPassed": true,
+  "scopedWorkerVmTestsPassed": 5,
+  "independentExportFiles": 10,
+  "uiReviewScreenshots": 11,
+  "evidenceDirectory": "docs/qa/evidence/spend-candidate-8655b2af2608",
+  "artifactDirectory": "artifacts/flutter/handy_spend/candidate-8655b2af2608",
+  "unsignedAab": true,
+  "unsignedMsix": true,
+  "physicalDeviceVerified": false,
+  "iosBuilt": false,
+  "browserRuntimeVerified": false,
+  "realStoreTransactionsVerified": false,
+  "successfulOsDeviceAuthenticationVerified": false,
+  "releaseReady": false,
+  "errors": [],
+  "passed": true
+}

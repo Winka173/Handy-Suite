@@ -1,0 +1,10 @@
+﻿{
+    "app":  "habit",
+    "exitCode":  0,
+    "sourceSha256":  "8fdddea05ac1124d94285f6649e89ccfe59c4cb761738d6b4d5b9a2d8a55b5c0",
+    "sourceUnchanged":  true,
+    "artifact":  "apps/handy_habit/build/app/outputs/bundle/release/app-release.aab",
+    "artifactSha256":  "869bfaacbf6c59d00ecc2e8c27f49ae6b55ca15eab1ddb16f0913cd75804e401",
+    "signed":  false,
+    "storeReady":  false
+}

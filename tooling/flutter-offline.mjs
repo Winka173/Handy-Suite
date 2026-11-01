@@ -2,7 +2,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { createHash } from 'node:crypto';
 const app = process.argv[2] ?? 'handy_tools';
-if (!/^handy_(tools|docs|media|dev|keep|recall|save|spend)$/.test(app))
+if (!/^handy_(tools|docs|media|dev|keep|recall|save|spend|habit)$/.test(app))
   throw new Error('Unknown Flutter app');
 const root = path.resolve(`apps/${app}/build/web`);
 if (app === 'handy_save')

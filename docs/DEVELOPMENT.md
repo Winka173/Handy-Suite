@@ -1,6 +1,6 @@
 # Phát triển Handy Suite
 
-Flutter 3.44.9 / Dart 3.12.2. Bảy app trong `apps/handy_*`, 18 package dùng chung
+Flutter 3.44.9 / Dart 3.12.2. Chín app trong `apps/handy_*`, 20 package dùng chung
 trong `packages/handy_*`; khai báo workspace tại `pubspec.yaml`.
 
 - Engines xử lý dữ liệu thuần Dart; UI nằm trong app/shared UI package.
@@ -24,9 +24,9 @@ Từ thư mục app: `flutter run -d windows` hoặc chọn device Android/iOS p
 Từ root, build cả suite:
 
 ```powershell
-./tooling/flutter-builds.ps1 -Apps @('tools','docs','media','dev','keep','recall') -Target apk
-./tooling/flutter-builds.ps1 -Apps @('tools','docs','media','dev','keep','recall') -Target windows
-./tooling/flutter-builds.ps1 -Apps @('tools','docs','media','dev','keep','recall') -Target web
+./tooling/flutter-builds.ps1 -Apps @('tools','docs','media','dev','keep','recall','save','spend','habit') -Target apk
+./tooling/flutter-builds.ps1 -Apps @('tools','docs','media','dev','keep','recall','save','spend','habit') -Target windows
+./tooling/flutter-builds.ps1 -Apps @('tools','docs','media','dev','keep','recall','save','spend','habit') -Target web
 ```
 
 Trên macOS, từ thư mục app dùng `flutter build ios --simulator --no-codesign` để
@@ -34,7 +34,7 @@ kiểm tra simulator build; chưa có bằng chứng local cho lệnh này trên
 
 ## Kiểm thử
 
-Kết quả unit/widget hiện tại nằm trong `docs/qa/evidence/flutter-tests-summary.json`;
+Kết quả unit/widget hiện tại nằm trong `docs/qa/evidence/spend-workspace-tests-summary.json`;
 28 skip: 27 remote-schema case theo offline policy
 và một host PDFium test cần DLL thật đã được chạy riêng trên Windows.
 
@@ -45,8 +45,8 @@ npm run format:check
 python tooling/verify-fixtures.py
 ```
 
-Sau khi build Web cả bảy app: `npm test` chạy RE2 bridge, bảy PWA worker tests và
-ba Web Share Target protocol tests (11 test trong Node VM).
+Sau khi build Web cả chín app: `npm test` chạy RE2 bridge, chín PWA worker tests và
+ba Web Share Target protocol tests (12 test trong Node VM).
 Chỉ chạy RE2: `npx vitest run --config tooling/vitest.re2.config.ts`.
 
 Android integration/screenshot runner:
@@ -80,3 +80,25 @@ không sửa layer. Share PNG phải review ảnh flatten, không dùng editable
 pixel nhạy cảm. Chi tiết giới hạn nằm trong [FUNCTIONS](FUNCTIONS.md).
 
 Cấu hình phát hành: [STORE_SETUP](STORE_SETUP.md). Không commit secrets/khóa ký.
+
+Handy Spend: `python tooling/verify-spend-checkpoint.py` audits current Spend builds,
+Android ledger/import/Undo, permissions and independent EN/VI exports together with
+full workspace unit/widget tests. Earlier app native/build records remain historical.
+
+Spend independent export/PDF review tools require
+`python -m pip install -r tooling/spend-qa-requirements.txt`.
+After the export widget tests emit actual files, run
+`python tooling/verify-spend-exports.py`. After a successful Android screenshot run,
+`python tooling/spend-ui-review.py` creates the 11-page review PDF.
+
+When the workspace is edited concurrently, the frozen candidate in
+`.tooling/spend-qa` is separate from live-source certification. Recheck it with
+`python tooling/publish-spend-snapshot.py --verify-only`; the published audit records
+its source hash and artifact directory. `verify-spend-checkpoint.py` instead checks
+live workspace records and writes `spend-live-workspace-audit.json`.
+
+Handy Habit: run `flutter test --no-pub` separately in `packages/handy_habit_engine`
+and `apps/handy_habit` (native assets require app package context). UI review renderer:
+`flutter test --no-pub tool/screens_test.dart`; set FLUTTER_ROOT to the SDK.
+See [Habit QA](handy_habit/QA_PLAN.md). Build fingerprints can use `--app habit`
+to exclude unrelated app edits while including shared packages and root config.

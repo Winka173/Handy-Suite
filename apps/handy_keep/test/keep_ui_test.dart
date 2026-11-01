@@ -154,7 +154,10 @@ void main() {
     tester,
   ) async {
     await start(tester, store: stored(sample()), size: const Size(1280, 900));
-    expect(find.text('Pick a thing to see where it is'), findsOneWidget);
+    // Nothing chosen: the pane lists the dates, and the list drops its strip.
+    expect(find.text('Dates to watch'), findsOneWidget);
+    expect(find.byKey(const Key('pane-due-drill-loan')), findsOneWidget);
+    expect(find.byKey(const Key('due-all')), findsNothing);
     await tapKey(tester, 'item-lamp');
     expect(
       tester.widget<Text>(find.byKey(const Key('item-where'))).data,
@@ -163,6 +166,11 @@ void main() {
     await tester.sendKeyEvent(LogicalKeyboardKey.escape);
     await tester.pumpAndSettle();
     expect(find.byKey(const Key('item-view')), findsNothing);
+    // A date opens its item beside the list; the arrow goes back.
+    await tapKey(tester, 'pane-due-drill-loan');
+    expect(find.byKey(const Key('item-view')), findsOneWidget);
+    await tapKey(tester, 'pane-dates');
+    expect(find.byKey(const Key('pane-due-drill-loan')), findsOneWidget);
   });
 
   testWidgets('deleting a box keeps its things, out of any box', (

@@ -49,11 +49,13 @@ String whereNow(BuildContext c, InventoryAsset a, KeepState s) {
 String itemCount(BuildContext c, int n) =>
     tr(c, n == 1 ? '1 item' : '$n items', '$n món');
 
-/// The item's own photo at [size], or its initial on the app's pale tint.
+/// The item's own photo at [size], or its initial on the pale tint of
+/// where it is ([hue], a `HandyPalette` index), or of the app.
 class ItemThumb extends StatelessWidget {
   final InventoryAsset item;
   final Map<String, Uint8List> blobs;
   final double size;
+  final int? hue;
 
   /// Flies between the list row and the item page (phones only: on wide
   /// screens both are on one page, where a tag may appear once).
@@ -64,6 +66,7 @@ class ItemThumb extends StatelessWidget {
     super.key,
     this.size = 40,
     this.hero = false,
+    this.hue,
   });
   @override
   Widget build(BuildContext context) => hero
@@ -91,20 +94,24 @@ class ItemThumb extends StatelessWidget {
     return _initial(context, c, radius);
   }
 
-  Widget _initial(BuildContext context, HandyColors c, BorderRadius radius) =>
-      Container(
-        width: size,
-        height: size,
-        alignment: Alignment.center,
-        decoration: BoxDecoration(color: c.select, borderRadius: radius),
-        child: ExcludeSemantics(
-          child: Text(
-            item.name.characters.first.toUpperCase(),
-            style: Theme.of(context).textTheme.titleLarge?.copyWith(
-              color: c.selectInk,
-              fontSize: size * .45,
-            ),
+  Widget _initial(BuildContext context, HandyColors c, BorderRadius radius) {
+    final tint = hue == null ? null : HandyPalette.of(context, hue!).tint;
+    return Container(
+      width: size,
+      height: size,
+      alignment: Alignment.center,
+      decoration: BoxDecoration(color: tint ?? c.select, borderRadius: radius),
+      child: ExcludeSemantics(
+        child: Text(
+          item.name.characters.first.toUpperCase(),
+          style: Theme.of(context).textTheme.titleLarge?.copyWith(
+            color: tint == null
+                ? c.selectInk
+                : Theme.of(context).colorScheme.onSurface,
+            fontSize: size * .45,
           ),
         ),
-      );
+      ),
+    );
+  }
 }

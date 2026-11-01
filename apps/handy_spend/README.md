@@ -1,17 +1,16 @@
-# handy_spend
+# Handy Spend
 
-A new Flutter project.
+Offline personal finance in the Handy Suite Flutter workspace.
 
-## Getting Started
+Run `flutter run -d windows` from this directory after
+`../../tooling/flutter-bootstrap.ps1` resolves the workspace.
+Use `flutter test --no-pub` for this app; engine tests live in
+`packages/handy_spend_engine`.
 
-This project is a starting point for a Flutter application.
+Product functions and actual verification status:
+[feature matrix](../../docs/handy_spend/FEATURE_MATRIX.md),
+[formulas](../../docs/handy_spend/FORMULAS_AND_ASSUMPTIONS.md),
+[QA evidence and limits](../../docs/handy_spend/QA_MATRIX.md).
 
-A few resources to get you started if this is your first Flutter project:
-
-- [Learn Flutter](https://docs.flutter.dev/get-started/learn-flutter)
-- [Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Flutter learning resources](https://docs.flutter.dev/reference/learning-resources)
-
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+No bank connection, cloud account or AI. Ads and verified Pro Lifetime reuse
+shared adapters; real publisher provisioning and release verification remain open.

@@ -30,3 +30,5 @@ artifacts/
 **/Pods/
 **/ephemeral/
 review-shots/
+device-tours/
+__pycache__/

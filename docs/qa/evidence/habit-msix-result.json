@@ -1,0 +1,10 @@
+﻿{
+    "app":  "habit",
+    "artifact":  "C:\\Users\\Winka\\Projects\\Handy-Suite\\artifacts\\flutter\\handy-habit-20261101233439-unsigned.msix",
+    "sha256":  "e100075c9e591854c15fbe0399e9410676e719a2b9ad98ef594bebdced35286b",
+    "sourceSha256":  "8fdddea05ac1124d94285f6649e89ccfe59c4cb761738d6b4d5b9a2d8a55b5c0",
+    "makeAppxValidated":  true,
+    "signed":  false,
+    "installed":  false,
+    "storeApproved":  false
+}

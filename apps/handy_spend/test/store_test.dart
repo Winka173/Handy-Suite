@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'dart:convert';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:handy_spend_engine/handy_spend_engine.dart';
 import 'package:handy_spend/data/store_native.dart';
@@ -38,6 +39,55 @@ void main() {
   tearDown(() async {
     await directory.delete(recursive: true);
   });
+  test(
+    'real killed writer leaves uncommitted WAL data invisible after recovery',
+    () async {
+      final original = sample(2);
+      await store.commit(original, expectedRevision: 0);
+      final writer = await Process.start('python', [
+        '-u',
+        '-c',
+        r'''
+import json, sqlite3, sys, time
+db=sqlite3.connect(sys.argv[1])
+db.execute('PRAGMA journal_mode=WAL')
+db.execute('PRAGMA cache_size=1')
+db.execute('PRAGMA cache_spill=ON')
+db.execute('BEGIN IMMEDIATE')
+db.execute('UPDATE state SET revision=999 WHERE id=1')
+for i in range(2000):
+    db.execute('INSERT INTO entries VALUES(?,?,?,?,?,?,?,?)',('uncommitted-'+str(i),'cash',None,'2024-02-01T00:00:00Z','expense','posted','-1',json.dumps({'uncommitted':True,'padding':'x'*512})))
+print('UNCOMMITTED',flush=True)
+while True: time.sleep(1)
+''',
+        path,
+      ]);
+      final diagnostic = writer.stderr.transform(utf8.decoder).join();
+      try {
+        expect(
+          await writer.stdout
+              .transform(utf8.decoder)
+              .transform(const LineSplitter())
+              .first
+              .timeout(const Duration(seconds: 20)),
+          'UNCOMMITTED',
+        );
+        expect(await File('$path-wal').length(), greaterThan(0));
+        expect(writer.kill(ProcessSignal.sigkill), isTrue);
+        expect(await writer.exitCode, isNot(0));
+        expect(await diagnostic, isEmpty);
+        expect(
+          (await NativeSpendStore(path).read()).toJson(),
+          original.toJson(),
+        );
+        expect(await store.integrity(), 'ok');
+      } finally {
+        writer.kill(ProcessSignal.sigkill);
+        await writer.exitCode;
+      }
+    },
+    timeout: const Timeout(Duration(seconds: 45)),
+  );
   test(
     'actual SQLite schema, reopen and exact metadata/BigInt roundtrip',
     () async {

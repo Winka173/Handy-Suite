@@ -1,6 +1,7 @@
 import 'package:handy_inventory/handy_inventory.dart';
 import 'package:handy_ui/kit.dart';
 import '../inventory/keep_store.dart' show today;
+import '../inventory/whereabouts.dart' show itemHue;
 import '../scope.dart';
 import '../ui/words.dart';
 import 'receipts_view.dart';
@@ -55,7 +56,13 @@ class ItemView extends StatelessWidget {
       children: [
         Row(
           children: [
-            ItemThumb(a, scope.store.library!.blobs, size: 56, hero: hero),
+            ItemThumb(
+              a,
+              scope.store.library!.blobs,
+              size: 56,
+              hero: hero,
+              hue: itemHue(scope.state, a),
+            ),
             const SizedBox(width: HandySpace.l),
             Expanded(
               child: Semantics(
