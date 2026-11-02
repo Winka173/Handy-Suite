@@ -6,7 +6,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 Flutter 3.44.9 / Dart 3.12.2 monorepo (Dart pub workspace + melos) of independent, local-first apps: no backend, no cloud AI. Business model is Free + Ads + Pro Lifetime. Project docs are mostly in Vietnamese. Targets: Android, iOS, Windows, Web (PWA).
 
-Apps in `apps/handy_*`: `tools`, `docs`, `media`, `dev`, `keep`, `recall`, `bookmark`, `spend`, `habit` (README says "six apps"; `handy_bookmark` (named Handy Save until 2026-11-02), `handy_spend` and `handy_habit` were added later and are in the workspace).
+Apps in `apps/handy_*`: `tools`, `docs`, `media`, `dev`, `keep`, `recall`, `bookmark`, `spend`, `habit`, `trip`, `boards` (README says "six apps"; `handy_bookmark` (named Handy Save until 2026-11-02), `handy_spend`, `handy_habit`, `handy_trip` and `handy_boards` were added later and are in the workspace; `handy_trip_engine` and `handy_boards_engine` are their engines).
 
 ## Commands
 
