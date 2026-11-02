@@ -660,6 +660,41 @@ void main() {
     });
   }
 
+  for (final (label, size) in const [
+    ('phone', Size(390, 844)),
+    ('desktop', Size(1440, 900)),
+  ]) {
+    testWidgets('$label frame', (t) async {
+      final files = await boot(t, size);
+      final pic = await t.runAsync(
+        () => screen(
+          'Đăng ký',
+          [('Họ và tên', 'Trần Thị Mai'), ('Email', 'mai.tran@example.com')],
+          button: 'Tạo tài khoản',
+          hue: 0xFF7A4B2A,
+        ),
+      );
+      files.next = ImportedBytes('Ảnh đăng ký.png', pic!);
+      await go(t, '/frame');
+      await t.runAsync(() async {
+        await t.tap(find.byKey(const Key('frame-pick')));
+        for (
+          var i = 0;
+          i < 60 && find.byKey(const Key('frame-preview')).evaluate().isEmpty;
+          i++
+        ) {
+          await Future<void>.delayed(const Duration(milliseconds: 50));
+          await t.pump();
+        }
+        await t.tap(find.byKey(const Key('frame-ground-2')));
+        await Future<void>.delayed(const Duration(milliseconds: 1800));
+        await t.pump();
+      });
+      await t.pump();
+      await shot(t, '$label-22-frame');
+    });
+  }
+
   testWidgets('phone stitch empty', (t) async {
     await boot(t, const Size(390, 844));
     // Mid-screen, clear of the bar pinned at the foot.

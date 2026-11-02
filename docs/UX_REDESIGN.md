@@ -1810,8 +1810,8 @@ primary action, states, accessibility, patterns to reject).
 - Controls under the preview, one row each: background (6 flat swatches, the
   photo's own average colour, transparent), padding (0-25% of the short side),
   corner radius (0-48 px at export scale), shadow (off/soft), frame (none,
-  phone, browser bar drawn flat). Export PNG at the source resolution; share
-  goes through the existing reviewed-PNG path.
+  phone, browser bar drawn flat). Save PNG at the source resolution; the
+  preview frames a 900 px copy the same way, so what is seen is what is saved.
 - States: no image (pick or paste), working (the preview stays, export
   disabled), export error. Limits as the image tools: 16 Mpx output.
 - Reject: gradient backgrounds, glass, mock devices with brand marks.

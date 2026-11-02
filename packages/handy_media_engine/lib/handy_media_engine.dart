@@ -9,3 +9,4 @@ export 'src/guide.dart';
 export 'src/guide_gif.dart';
 export 'src/sensitive_text.dart';
 export 'src/stitch.dart';
+export 'src/frame_shot.dart';

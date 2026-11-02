@@ -229,6 +229,22 @@ class _StudioPageState extends State<StudioPage> {
                         navigates: true,
                         onTap: () => Navigator.pushNamed(context, '/stitch'),
                       ),
+                      HandyTile(
+                        key: const Key('studio-frame'),
+                        icon: Icons.crop_original,
+                        title: tr(
+                          context,
+                          'Frame a screenshot',
+                          'Khung ảnh chụp màn hình',
+                        ),
+                        subtitle: tr(
+                          context,
+                          'Ground, corners and shadow, ready to share',
+                          'Nền, bo góc và bóng, sẵn sàng chia sẻ',
+                        ),
+                        navigates: true,
+                        onTap: () => Navigator.pushNamed(context, '/frame'),
+                      ),
                       if (nativeCaptureAvailable)
                         HandyTile(
                           key: const Key('capture-native'),
