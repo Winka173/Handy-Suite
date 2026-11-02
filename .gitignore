@@ -34,3 +34,6 @@ device-tours/
 __pycache__/
 .taste-skill/**/shots/
 .taste-skill/**/*.png
+
+# Crawled community posts used for feature research; personal data, never commit
+data_crawl/
