@@ -254,6 +254,24 @@ void main() {
       await openTool(t, 'password');
       await shot(t, '$label-6-password');
     });
+    testWidgets('$label draw', (t) async {
+      await boot(t, size);
+      await openTool(t, 'draw');
+      await t.tap(find.byKey(const Key('draw-mode-teams')));
+      await t.pumpAndSettle();
+      await type(t, 'draw-list', 'An\nBình\nChi\nDũng\nEm\nGiang\nHà');
+      await t.ensureVisible(find.byKey(const Key('draw-go')));
+      await t.tap(find.byKey(const Key('draw-go')));
+      await t.pumpAndSettle();
+      await t.tap(find.byKey(const Key('draw-go')));
+      await t.pumpAndSettle();
+      await t.scrollUntilVisible(
+        find.byKey(const Key('draw-result')),
+        -200,
+        scrollable: find.byType(Scrollable).first,
+      );
+      await shot(t, '$label-6b-draw');
+    });
     testWidgets('$label catalog', (t) async {
       await boot(t, size);
       await t.tap(find.byKey(const Key('open-catalog')));

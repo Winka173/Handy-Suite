@@ -414,6 +414,10 @@ Source: `apps/handy_tools/lib`, `packages/handy_tools_engine`.
   "15% của 2.400.000" trên bàn vẫn ra số bằng máy tính. Đổi tiền theo tỷ giá
   nhập tay đã bỏ. Màu (HEX/RGB/HSL, độ tương phản) chuyển sang Handy Dev. Ghim cũ
   của các tool này được bỏ qua, không làm hỏng cài đặt.
+- **Bốc thăm** (`#/tool/draw`, nhóm Tạo mới): chọn N mục từ danh sách (mỗi dòng một
+  mục, hoặc phân cách bằng dấu phẩy; tối đa 500, mục trùng giữ nguyên), chia đội đều
+  (chênh nhau tối đa một người), tung xu, xúc xắc `NdM` (1-20 viên, 2-100 mặt).
+  `Random.secure`; kết quả cũ hiện bên dưới khi panel còn mở, không lưu.
 - `case` gộp bốn công cụ cũ (viết hoa, viết thường, đầu từ, đầu câu) thành một form
   có 4 chế độ; kết quả từng chế độ giữ nguyên như công cụ cũ. Id cũ vẫn mở được
   (`#/tool/title-case` mở `case` ở chế độ đó), ghim cũ hiện thành `case`, chuỗi xử lý

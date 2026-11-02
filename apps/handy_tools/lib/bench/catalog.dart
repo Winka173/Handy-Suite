@@ -20,6 +20,14 @@ const generators = [
     'Mạnh, ngẫu nhiên, không lưu lại',
   ),
   (
+    'draw',
+    Icons.casino_outlined,
+    'Draw lots',
+    'Bốc thăm',
+    'Pick from a list, split teams, coin, dice',
+    'Chọn từ danh sách, chia đội, tung xu, xúc xắc',
+  ),
+  (
     'subtitles',
     Icons.subtitles_outlined,
     'Subtitles',

@@ -6,6 +6,7 @@ import 'package:handy_storage/handy_storage.dart';
 import 'package:handy_ui/kit.dart';
 import 'notebook_page.dart';
 import 'package:handy_workflow/handy_workflow.dart';
+import '../draw_page.dart';
 import '../password_page.dart';
 import '../qr_page.dart';
 import '../specs.dart';
@@ -204,6 +205,7 @@ class _BenchPageState extends State<BenchPage> {
         header: header,
       ),
       'password' => PasswordPage(header: header),
+      'draw' => DrawPage(header: header),
       'subtitles' => SubtitlePanel(
         files: scope.files,
         history: scope.exportHistory,

@@ -22,6 +22,7 @@ part 'src/number_words.dart';
 part 'src/lunar.dart';
 part 'src/vietqr.dart';
 part 'src/vietqr_banks.dart';
+part 'src/draw.dart';
 
 typedef ToolRunner = String Function(String input, String options);
 

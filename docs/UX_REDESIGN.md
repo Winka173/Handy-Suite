@@ -1756,3 +1756,101 @@ studio, the export sheet or anything that shares.
 Patterns rejected: a tutorial wall, coloured chrome or tinted tool tiles, a
 form that edits a static preview (the canvas is the editor), fake buttons for
 NFC or Wallet (not built; marked not started in the matrix).
+
+## Feature round 3 contracts - 2026-11-03
+
+Ideas filtered from a community survey (J2TEAM posts with the most interest in
+tools people built or asked for); each lives inside its app's existing face,
+hue and signature, adds no tab, and works offline. Skill runs:
+design-taste-frontend app-screen run (§2.1 inventory, §2.2 one question, §2.7
+check on widget shots at 320/390/768/1440) and frontend-ui-engineering (job,
+primary action, states, accessibility, patterns to reject).
+
+### Tools: Bốc thăm (draw lots)
+
+- Question: "who (or what) did chance pick?" The result is the largest thing
+  on the panel, in the ledger face, with the list it came from beside it.
+- Data: a list typed or pasted one per line (2-500 entries, duplicates kept as
+  written), a count to pick (1..n), a team count (2..n), coin, dice `NdM`
+  (1-20 dice, 2-100 sides). Randomness from `Random.secure`.
+- Modes as one chip row: Pick, Teams, Coin, Dice. Primary action: Draw again
+  (also Enter). Each draw is appended to the session tape so a draw can be
+  shown as made, not redone quietly; nothing is stored after the panel closes.
+- States: empty list (the chip row still works for coin and dice), fewer
+  entries than asked (inline message, button disabled), result.
+- Teams are balanced by count (sizes differ by at most one); order inside a
+  team is the draw order.
+- Reject: wheel spin animation, confetti, sounds, emoji dice.
+
+### Tools and Keep: Đo bằng ảnh (measure from a photo)
+
+- Question: "how long is this, in mm/cm?" The answer label sits on the line
+  that was measured; the list of measurements is the second block.
+- Flow: choose a photo (camera on phones, file elsewhere), drag the two
+  reference handles onto a known edge (bank card long edge 85.60 mm by
+  default; card short edge 53.98 mm, A4 297/210 mm, or typed mm), then tap two
+  points per measurement. Handles drag; Undo removes the last measurement.
+- Honesty: one line under the picture says the result holds only when the
+  object and the reference lie flat in the same plane, photographed square on;
+  results are rounded to 1 mm and shown as estimates ("≈ 42 mm").
+- Keep: from an item, "Measure from photo" uses the item's photo when it has
+  one; "Add to notes" appends "Đo: 42 × 18 cm" to the item's notes after a
+  confirm; nothing else changes.
+- States: no photo, reference not set (measuring disabled, the reference line
+  pulses once), reference shorter than 20 px on screen (warn: too small to be
+  accurate), result.
+- Keyboard: arrow keys nudge the selected handle by 1 px (Shift 10 px).
+- Reject: AR or depth claims, automatic edge detection presented as exact.
+
+### Media: Khung ảnh chụp màn hình (screenshot frame)
+
+- Question: "does this screenshot look ready to share?" The framed preview is
+  the whole first block, true black around it as Media's face.
+- Controls under the preview, one row each: background (6 flat swatches, the
+  photo's own average colour, transparent), padding (0-25% of the short side),
+  corner radius (0-48 px at export scale), shadow (off/soft), frame (none,
+  phone, browser bar drawn flat). Export PNG at the source resolution; share
+  goes through the existing reviewed-PNG path.
+- States: no image (pick or paste), working (the preview stays, export
+  disabled), export error. Limits as the image tools: 16 Mpx output.
+- Reject: gradient backgrounds, glass, mock devices with brand marks.
+
+### Docs: Word từ chữ nhận dạng (OCR to DOCX) and in hai mặt (manual duplex)
+
+- OCR result sheet gets "Save as Word (.docx)": paragraphs as recognised,
+  one page break between scanned pages, the document title from the scan's
+  name. A minimal Office Open XML package written by Docs, no layout claims.
+- PDF actions get "Print both sides by hand": two PDFs (odd pages; even pages
+  reversed, padded with a blank page when the count is odd) and the three
+  steps shown with the page numbers in each file. And "Number the pages":
+  position (bottom centre/right), start number, skip first page; written as a
+  new PDF, the source kept.
+- States: no OCR text (action hidden), PDF without pages, a one-page PDF
+  (duplex not offered).
+- Reject: a print preview mock, claims about printer driver behaviour.
+
+### Recall: Chép chính tả (dictation)
+
+- Question: "did I write it right?" The comparison (correct words in ink,
+  wrong in the hue's error tone with the expected word beside it) is the
+  largest block after answering.
+- From a deck: "Dictation" plays the answer side with the deck's voice
+  (existing TTS), the learner types, Check shows the word-level diff; Play
+  again and slower (0.6x) stay available. Grading maps to the existing
+  review buttons: all correct → Good, otherwise the learner chooses.
+- Accents and case ignored by a toggle (default: case ignored, accents
+  counted, since Vietnamese marks matter). Punctuation ignored.
+- States: no voice for the deck's language (explain, offer the typed prompt
+  instead), empty answer, all correct.
+- Reject: a score percentage as the headline, streak confetti.
+
+### Card: thiệp mời, A4 and CV
+
+- New sizes: A4 portrait (210 × 297 mm) and A5 (148 × 210 mm) in the size
+  presets, kind "invitation" and "document".
+- New original templates: wedding invitation (two sides, QR to the venue map
+  link, RSVP line), birthday or housewarming invitation (A5), one-page CV
+  (A4: name, role, contact block bound to the profile, experience, skills).
+  Every text uses the existing bindings, so a profile fills the CV.
+- Same editor; no new screen. The template strip shows them with the rest.
+- Reject: stock photos, ornament clip art, script faces not bundled.
