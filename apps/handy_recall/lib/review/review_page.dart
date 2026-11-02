@@ -6,6 +6,7 @@ import '../scope.dart';
 import '../study/card_text.dart';
 import '../study/schedule.dart';
 import 'card_face.dart';
+import 'dictation_panel.dart';
 import 'grade_bar.dart';
 import 'review_done.dart';
 
@@ -28,11 +29,18 @@ class _ReviewPageState extends State<ReviewPage> {
   /// Notes already seen this session: their sibling cards wait their turn.
   final seen = <String>{};
   String error = '';
+
+  /// Dictation: hear the answer, type it, check it word by word.
+  bool dictation = false, ignoreAccents = false;
+  final typed = TextEditingController();
+  DictationCheck? checked;
+  String? spokenFor;
   RecallScope get scope => widget.scope;
 
   @override
   void dispose() {
     focus.dispose();
+    typed.dispose();
     super.dispose();
   }
 
@@ -48,8 +56,8 @@ class _ReviewPageState extends State<ReviewPage> {
   }
 
   /// Reads [text] aloud; says so plainly when the device has no voice.
-  Future<void> speak(String text, String language) async {
-    final ok = await scope.speaker.speak(text, language);
+  Future<void> speak(String text, String language, {double rate = 1}) async {
+    final ok = await scope.speaker.speak(text, language, rate: rate);
     if (!ok && mounted) {
       showHandyMessage(
         context,
@@ -60,6 +68,24 @@ class _ReviewPageState extends State<ReviewPage> {
         ),
       );
     }
+  }
+
+  /// The answer to write down and its voice, for a card that has both
+  /// (cloze and picture cards are reviewed the usual way).
+  (String, String)? dictationOf(RecallCard card, RecallDeck? deck) {
+    if (card.cloze > 0) return null;
+    final t = cardText(card, deck, revealed: true);
+    return t.answer.trim().isEmpty || t.answerLanguage.isEmpty
+        ? null
+        : (t.answer, t.answerLanguage);
+  }
+
+  void checkTyped((String, String) d) {
+    if (revealed) return;
+    setState(() {
+      checked = checkDictation(d.$1, typed.text, ignoreAccents: ignoreAccents);
+      revealed = true;
+    });
   }
 
   Future<void> grade(RecallCard card, String rating) async {
@@ -81,6 +107,8 @@ class _ReviewPageState extends State<ReviewPage> {
         done++;
         if (rating == 'again') forgot++;
         revealed = false;
+        typed.clear();
+        checked = null;
       });
     } catch (e) {
       if (mounted) setState(() => error = errorText(context, e));
@@ -106,6 +134,18 @@ class _ReviewPageState extends State<ReviewPage> {
         if (card != null && !revealed) setState(() => revealed = true);
       }
 
+      final dict = dictation && card != null
+          ? dictationOf(card, cardDeck)
+          : null;
+      // Each new card is read once on arrival; Play again repeats it.
+      if (dict != null && spokenFor != card!.id) {
+        spokenFor = card.id;
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (mounted) speak(dict.$1, dict.$2);
+        });
+      }
+      final writing = dict != null && !revealed;
+
       // R reads the side in front of the reader: the answer once shown.
       void readAloud() {
         if (card == null) return;
@@ -118,19 +158,25 @@ class _ReviewPageState extends State<ReviewPage> {
       }
 
       return CallbackShortcuts(
-        bindings: {
-          const SingleActivator(LogicalKeyboardKey.space): show,
-          const SingleActivator(LogicalKeyboardKey.enter): show,
-          const SingleActivator(LogicalKeyboardKey.keyR): readAloud,
-          const SingleActivator(LogicalKeyboardKey.escape): () =>
-              Navigator.maybePop(context),
-          for (final (i, r) in ratings.indexed)
-            SingleActivator(
-              LogicalKeyboardKey(LogicalKeyboardKey.digit1.keyId + i),
-            ): () {
-              if (card != null) grade(card, r);
-            },
-        },
+        // While writing, keys belong to the answer field.
+        bindings: writing
+            ? {
+                const SingleActivator(LogicalKeyboardKey.escape): () =>
+                    Navigator.maybePop(context),
+              }
+            : {
+                const SingleActivator(LogicalKeyboardKey.space): show,
+                const SingleActivator(LogicalKeyboardKey.enter): show,
+                const SingleActivator(LogicalKeyboardKey.keyR): readAloud,
+                const SingleActivator(LogicalKeyboardKey.escape): () =>
+                    Navigator.maybePop(context),
+                for (final (i, r) in ratings.indexed)
+                  SingleActivator(
+                    LogicalKeyboardKey(LogicalKeyboardKey.digit1.keyId + i),
+                  ): () {
+                    if (card != null) grade(card, r);
+                  },
+              },
         child: Focus(
           focusNode: focus,
           autofocus: true,
@@ -157,6 +203,22 @@ class _ReviewPageState extends State<ReviewPage> {
                 ),
               ),
               actions: [
+                if (card != null && dictationOf(card, cardDeck) != null)
+                  IconButton(
+                    key: const Key('review-dictation'),
+                    tooltip: tr(context, 'Dictation', 'Chép chính tả'),
+                    isSelected: dictation,
+                    icon: const Icon(Icons.keyboard_outlined),
+                    selectedIcon: const Icon(Icons.keyboard),
+                    onPressed: revealed
+                        ? null
+                        : () => setState(() {
+                            dictation = !dictation;
+                            spokenFor = null;
+                            typed.clear();
+                            checked = null;
+                          }),
+                  ),
                 if (card != null)
                   Padding(
                     padding: const EdgeInsets.only(right: HandySpace.l),
@@ -176,7 +238,16 @@ class _ReviewPageState extends State<ReviewPage> {
                 ? null
                 : HandyBottomBar(
                     child: HandySwap(
-                      child: revealed
+                      child: writing
+                          ? FilledButton(
+                              key: const Key('dictation-check'),
+                              style: FilledButton.styleFrom(
+                                minimumSize: const Size.fromHeight(64),
+                              ),
+                              onPressed: () => checkTyped(dict),
+                              child: Text(tr(context, 'Check', 'Kiểm tra')),
+                            )
+                          : revealed
                           ? GradeBar(
                               key: const ValueKey('grades'),
                               card: card,
@@ -257,13 +328,32 @@ class _ReviewPageState extends State<ReviewPage> {
                                     deck: cardDeck,
                                     onSpeak: speak,
                                     revealed: revealed,
-                                    minHeight: (box.maxHeight * .62).clamp(
-                                      0,
-                                      560,
-                                    ),
+                                    // In dictation the writing and the
+                                    // check matter most: a shorter card.
+                                    minHeight:
+                                        (box.maxHeight *
+                                                (dict != null ? .28 : .62))
+                                            .clamp(0, 560),
                                   ),
                                 ),
                               ),
+                              if (dict != null)
+                                Padding(
+                                  padding: const EdgeInsets.only(
+                                    top: HandySpace.l,
+                                  ),
+                                  child: DictationPanel(
+                                    typed: typed,
+                                    checked: checked,
+                                    ignoreAccents: ignoreAccents,
+                                    onPlay: () => speak(dict.$1, dict.$2),
+                                    onSlower: () =>
+                                        speak(dict.$1, dict.$2, rate: .6),
+                                    onCheck: () => checkTyped(dict),
+                                    onIgnoreAccents: (v) =>
+                                        setState(() => ignoreAccents = v),
+                                  ),
+                                ),
                               HandyReveal(
                                 child: error.isEmpty
                                     ? const SizedBox(width: double.infinity)

@@ -580,6 +580,11 @@ Source: `apps/handy_keep/lib`, `packages/handy_inventory`.
 
 ## Handy Recall
 
+- **Chép chính tả** (nút bàn phím khi ôn, cho thẻ thường của bộ có giọng đọc mặt đáp):
+  đọc mặt đáp một lần khi thẻ hiện, "Nghe lại" và "Chậm hơn" (0,6×); gõ rồi Kiểm tra để
+  so từng từ (LCS theo từ: đúng, sai kèm từ đúng, thiếu, thừa). Hoa thường và dấu câu
+  không tính; dấu tiếng Việt tính trừ khi bật "Bỏ qua dấu". Chấm vẫn bằng bốn nút cũ.
+  Khi đang gõ, phím tắt ôn tập (Space, Enter, R, 1-4) tạm tắt.
 - **Dán ghi chú** (menu bộ thẻ): dán văn bản, xem trước từng thẻ rồi thêm một lần. Tự nhận: dòng "câu hỏi – đáp án" (gạch ngang, dấu hai chấm, dấu bằng hoặc tab) thành thẻ hỏi-đáp; câu có chữ đánh dấu bằng [ngoặc vuông], {ngoặc nhọn}, **đậm** hoặc **gạch** thành thẻ điền khuyết (mỗi chữ một ô). Bỏ gạch đầu dòng và số thứ tự; báo số dòng bỏ qua. Thêm qua đúng đường nhập CSV nên được kiểm tra như file.
 
 Source: `apps/handy_recall/lib`, `packages/handy_recall`.

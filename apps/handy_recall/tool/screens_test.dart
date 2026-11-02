@@ -344,6 +344,35 @@ void main() {
       await tapKey(t, 'review-show');
       await shot(t, '$label-3-answer');
     });
+    testWidgets('$label dictation', (t) async {
+      await boot(
+        t,
+        size,
+        state: saveCard(
+          saveDeck(
+            emptyRecallState(),
+            const RecallDeck(id: 'en', name: 'Tiếng Anh', speakBack: 'en-US'),
+          ),
+          createCard(
+            id: 'c1',
+            deckId: 'en',
+            front: 'Tôi đã từng đến Hà Nội hai lần',
+            back: 'I have been to Hanoi twice',
+            now: at(now.subtract(const Duration(hours: 1))),
+          ),
+        ),
+      );
+      await tapKey(t, 'study-start');
+      await tapKey(t, 'review-dictation');
+      await t.enterText(
+        find.byKey(const Key('dictation-input')),
+        'I have bean to Hanoi',
+      );
+      await t.pumpAndSettle();
+      await shot(t, '$label-2b-dictation');
+      await tapKey(t, 'dictation-check');
+      await shot(t, '$label-2c-dictation-checked');
+    });
     testWidgets('$label deck', (t) async {
       await boot(t, size);
       await tapKey(t, 'deck-n3');

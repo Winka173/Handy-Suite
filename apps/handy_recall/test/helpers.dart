@@ -110,13 +110,15 @@ ReminderController testReminders() => ReminderController(
 class FakeSpeaker implements Speaker {
   List<String> voices;
   final spoken = <(String, String)>[];
+  final rates = <double>[];
   FakeSpeaker([this.voices = const ['en-US', 'ja-JP', 'vi-VN']]);
   @override
   Future<List<String>> languages() async => voices;
   @override
-  Future<bool> speak(String text, String language) async {
+  Future<bool> speak(String text, String language, {double rate = 1}) async {
     if (matchLanguage(language, voices) == null) return false;
     spoken.add((text, language));
+    rates.add(rate);
     return true;
   }
 

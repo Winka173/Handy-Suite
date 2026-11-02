@@ -7,6 +7,7 @@ part 'src/csv.dart';
 part 'src/cloze.dart';
 part 'src/notes.dart';
 part 'src/paste.dart';
+part 'src/dictation.dart';
 
 String _now() => DateTime.fromMillisecondsSinceEpoch(
   DateTime.now().millisecondsSinceEpoch,

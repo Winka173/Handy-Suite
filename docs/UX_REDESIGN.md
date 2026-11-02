@@ -1822,8 +1822,9 @@ primary action, states, accessibility, patterns to reject).
   one page break between scanned pages, the document title from the scan's
   name. A minimal Office Open XML package written by Docs, no layout claims.
 - PDF actions get "Print both sides by hand": two PDFs (odd pages; even pages
-  reversed, padded with a blank page when the count is odd) and the three
-  steps shown with the page numbers in each file. And "Number the pages":
+  last first) and the three steps with the page numbers in each file; with
+  an odd count the steps say to take the last sheet out, since PDFium here
+  cannot add a blank page. File names follow the reader's language. And "Number the pages":
   position (bottom centre/right), start number, skip first page; written as a
   new PDF, the source kept.
 - States: no OCR text (action hidden), PDF without pages, a one-page PDF
@@ -1837,8 +1838,10 @@ primary action, states, accessibility, patterns to reject).
   largest block after answering.
 - From a deck: "Dictation" plays the answer side with the deck's voice
   (existing TTS), the learner types, Check shows the word-level diff; Play
-  again and slower (0.6x) stay available. Grading maps to the existing
-  review buttons: all correct → Good, otherwise the learner chooses.
+  again and slower (0.6x) stay available. Grading stays on the existing
+  review buttons; "All right" is said plainly above the words. The card
+  shrinks to 28% of the height in dictation so the field and the check
+  stay in view; review shortcuts pause while typing.
 - Accents and case ignored by a toggle (default: case ignored, accents
   counted, since Vietnamese marks matter). Punctuation ignored.
 - States: no voice for the deck's language (explain, offer the typed prompt

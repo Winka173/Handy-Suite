@@ -10,7 +10,8 @@ abstract class Speaker {
   Future<List<String>> languages();
 
   /// Reads [text] in [language]; false when no voice for it is installed.
-  Future<bool> speak(String text, String language);
+  /// [rate] below 1 reads slower (dictation offers 0.6).
+  Future<bool> speak(String text, String language, {double rate = 1});
 
   Future<void> stop();
 }
@@ -65,12 +66,20 @@ class DeviceSpeaker implements Speaker {
   }
 
   @override
-  Future<bool> speak(String text, String language) async {
+  Future<bool> speak(String text, String language, {double rate = 1}) async {
     final voice = matchLanguage(language, await languages());
     if (voice == null || text.trim().isEmpty) return false;
     try {
       await _engine.stop();
       await _engine.setLanguage(voice);
+      // flutter_tts reads 0.5 as the normal pace on phones, 1.0 elsewhere.
+      final normal =
+          !kIsWeb &&
+              (defaultTargetPlatform == TargetPlatform.android ||
+                  defaultTargetPlatform == TargetPlatform.iOS)
+          ? 0.5
+          : 1.0;
+      await _engine.setSpeechRate(normal * rate.clamp(0.3, 1.5));
       await _engine.speak(text);
       return true;
     } catch (_) {
