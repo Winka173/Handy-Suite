@@ -2,10 +2,10 @@
 
 Existing real suite adapters, independent Trip product IDs, Pro Lifetime.
 Planning, check-ins, photos/history, full backup, ledger stamp, daybook Memory
-Book and two-trip comparison work free. No artificial tiny trip limit.
+Book work free (trip comparison was removed on 2026-11-03). No artificial tiny trip limit.
 
 Actual LifetimeScope entitlement gates postcard/custom stamp palette,
-contact-sheet book layout and comparison up to ten trips. No fake local flag.
+contact-sheet book layout. No fake local flag.
 Unconfigured platforms do not advertise unsupported purchase actions.
 Web has no purchase or fabricated cross-store ownership transfer.
 

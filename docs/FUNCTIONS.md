@@ -38,8 +38,8 @@ App độc lập thứ mười: lên lịch, ghi nhận đã ghé và lưu kỷ 
   ghi chú riêng, caption và chi tiêu chỉ xuất khi chọn. Ảnh xuất bỏ EXIF.
 - Gợi ý EXIF đọc cục bộ, hiển thị cảnh báo giờ/GPS, chỉ tạo lượt ghé qua form xác
   nhận hiện có. Replay nối các điểm đã lưu để minh họa, không phải tuyến đã đi.
-- So sánh hai chuyến miễn phí, tiền tệ tính riêng; Pro tối đa mười chuyến, thêm
-  kiểu stamp và contact sheet. Recipe lịch trình JSON không chứa lịch sử/chi tiêu.
+- So sánh chuyến đã bỏ (2026-11-03): ít người dùng; Hộ chiếu đã cho số lượt ghé
+  và địa điểm. Pro thêm kiểu stamp và contact sheet. Recipe lịch trình JSON không chứa lịch sử/chi tiêu.
 
 Các tính năng native iOS là source chưa được build/kiểm thử trên macOS; không coi
 build Android/Windows/Web hay ảnh widget là bằng chứng thiết bị thật.

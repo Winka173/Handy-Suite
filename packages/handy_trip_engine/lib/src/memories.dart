@@ -10,45 +10,6 @@ String redactBookingCodes(TripState s, String value) {
   return value;
 }
 
-List<Json> compareTrips(TripState s, List<String> keys) {
-  if (keys.length < 2 || keys.length > 10 || keys.toSet().length != keys.length)
-    throw const FormatException('Choose 2 to 10 different trips');
-  return [
-    for (final key in keys)
-      (() {
-        final trip = s.trip(key),
-            visits = s.visits
-                .where((v) => v.trip == key && v.confirmed)
-                .toList(),
-            ratings = visits
-                .where((v) => v.data['rating'] != null)
-                .map((v) => v.data['rating'] as int)
-                .toList();
-        return <String, dynamic>{
-          'id': key,
-          'title': redactBookingCodes(s, trip.title),
-          'days': trip.days.length,
-          'visits': visits.length,
-          'uniquePlaces': visits.map((v) => v.place).toSet().length,
-          'budget': {
-            'currency': trip.currency,
-            'minor': trip.budget.toString(),
-          },
-          'expenses': expenseTotals(
-            s,
-            key,
-          ).map((k, v) => MapEntry(k, v.toString())),
-          'estimates': estimateTotals(
-            s,
-            key,
-          ).map((k, v) => MapEntry(k, v.toString())),
-          'ratingCount': ratings.length,
-          'ratingSum': ratings.fold<int>(0, (a, b) => a + b),
-        };
-      })(),
-  ];
-}
-
 Json stampData(TripState s, String visitId) {
   final v = s.visits.firstWhere((v) => v.key == visitId);
   if (!v.confirmed)

@@ -11,7 +11,6 @@ import 'package:handy_trip/platform/location.dart';
 import 'package:handy_trip/platform/reminders.dart';
 import 'package:handy_trip/features/sharing/memory_book.dart';
 import 'package:handy_trip/features/passport/stamp_export.dart';
-import 'package:handy_trip/features/passport/comparison.dart';
 import 'package:handy_trip/features/trips/replay.dart';
 import 'package:handy_trip/features/media/photo_proposal.dart';
 import 'package:handy_trip_engine/handy_trip_engine.dart';
@@ -286,47 +285,17 @@ void main() {
       await t.pumpWidget(const SizedBox());
     },
   );
-  testWidgets(
-    'comparison and replay use actual selected trips and saved pins',
-    (t) async {
-      await t.runAsync(
-        () => c.change(
-          (s) => s.put(
-            'trips',
-            s.trip('t').copy({
-              'id': 't2',
-              'title': 'Second journey',
-              'cover': null,
-            }),
-          ),
-        ),
-      );
-      await fixtures.editorHost(
-        t,
-        scope,
-        (context) => showTripComparison(context, scope),
-      );
-      await fixtures.tap(
-        t,
-        find.widgetWithText(CheckboxListTile, 'Three days by the sea'),
-      );
-      await fixtures.tap(
-        t,
-        find.widgetWithText(CheckboxListTile, 'Second journey'),
-      );
-      expect(find.textContaining('1 confirmed visits'), findsOneWidget);
-      await t.pumpWidget(const SizedBox());
-      await fixtures.editorHost(
-        t,
-        scope,
-        (context) => showTripReplay(context, scope, 't'),
-      );
-      expect(
-        find.textContaining('Straight lines are not driven routes'),
-        findsOneWidget,
-      );
-      expect(find.text('1 / 1 saved pins'), findsOneWidget);
-      await t.pumpWidget(const SizedBox());
-    },
-  );
+  testWidgets('replay uses the actual trip and saved pins', (t) async {
+    await fixtures.editorHost(
+      t,
+      scope,
+      (context) => showTripReplay(context, scope, 't'),
+    );
+    expect(
+      find.textContaining('Straight lines are not driven routes'),
+      findsOneWidget,
+    );
+    expect(find.text('1 / 1 saved pins'), findsOneWidget);
+    await t.pumpWidget(const SizedBox());
+  });
 }

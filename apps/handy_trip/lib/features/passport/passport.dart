@@ -2,7 +2,6 @@ import 'package:handy_trip_engine/handy_trip_engine.dart';
 import 'package:handy_ui/kit.dart';
 import '../../scope.dart';
 import '../places/place_view.dart';
-import 'comparison.dart';
 import 'stamp_studio.dart';
 
 class PassportPage extends StatefulWidget {
@@ -72,17 +71,6 @@ class _PassportState extends State<PassportPage> {
           '$visits ${tr(context, 'visits', 'lượt ghé')} · ${keys.length} ${tr(context, 'unique places', 'địa điểm duy nhất')}',
           style: Theme.of(context).textTheme.titleLarge,
         ),
-        if (s.trips.length >= 2)
-          TextButton.icon(
-            onPressed: () => widget.scope.run(
-              context,
-              () => showTripComparison(context, widget.scope),
-            ),
-            icon: const Icon(Icons.compare_arrows),
-            label: Text(
-              tr(context, 'Compare saved trips', 'So sánh các chuyến đã lưu'),
-            ),
-          ),
         Text(
           tr(
             context,

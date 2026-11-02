@@ -10,7 +10,7 @@ stamps and export a Memory Book. Back up your library with portable JSON/ZIP.
 No account, cloud AI, background location tracking or paid map subscription.
 Maps open externally only when requested. Stamps are personal souvenirs,
 not official travel or immigration documents. Optional Pro Lifetime adds stamp/
-book styles, larger comparisons and removes ads where supported.
+book styles and removes ads where supported.
 
 ## Vietnamese
 

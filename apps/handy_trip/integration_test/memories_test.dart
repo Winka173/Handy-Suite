@@ -23,7 +23,7 @@ import 'photo_fixture.dart';
 void main() {
   final binding = IntegrationTestWidgetsFlutterBinding.ensureInitialized();
   testWidgets(
-    'native signatures: real PNG/PDF/book outputs, EXIF review, comparison and illustrative replay',
+    'native signatures: real PNG/PDF/book outputs, EXIF review, illustrative replay',
     (t) async {
       final dir = (await t.runAsync(getApplicationSupportDirectory))!,
           out = Directory('${dir.path}/trip-memory-qa-exports');
@@ -149,16 +149,6 @@ void main() {
       await t.pumpAndSettle();
       await fixtures.tap(t, find.text('Passport').last);
       await binding.takeScreenshot('trip-native-passport-photos');
-      await fixtures.tap(t, find.text('Compare saved trips'));
-      await fixtures.tap(
-        t,
-        find.widgetWithText(CheckboxListTile, 'Three days by the sea'),
-      );
-      await fixtures.tap(
-        t,
-        find.widgetWithText(CheckboxListTile, 'Second journey'),
-      );
-      await binding.takeScreenshot('trip-native-comparison');
       await t.pumpWidget(const SizedBox());
       await fixtures.editorHost(
         t,

@@ -203,41 +203,6 @@ void main() {
     },
   );
   test(
-    'comparison does not merge currencies, duplicate place counts or missing ratings',
-    () {
-      var s = memories();
-      s = s.put(
-        'trips',
-        s.trip('t').copy({
-          'id': 't2',
-          'title': 'Other trip',
-          'currency': 'VND',
-          'budget': '1000000',
-          'cover': null,
-        }),
-      );
-      s = s.put(
-        'expenses',
-        Expense({
-          'id': 'vnd',
-          'trip': 't',
-          'at': '2026-03-08T00:00:00Z',
-          'currency': 'VND',
-          'minor': '300000',
-        }),
-      );
-      final comparison = compareTrips(s, ['t', 't2']);
-      expect(comparison.first['visits'], 2);
-      expect(comparison.first['uniquePlaces'], 1);
-      expect(comparison.first['expenses'], {'USD': '1250', 'VND': '300000'});
-      expect(comparison.first['ratingSum'], 8);
-      expect(comparison.first['ratingCount'], 2);
-      expect(comparison.last['ratingCount'], 0);
-      expect(comparison.last['expenses'], isEmpty);
-      expect(() => compareTrips(s, ['t', 't']), throwsFormatException);
-    },
-  );
-  test(
     'stamp is unofficial, redacted, requires confirmation and contains no precise position',
     () {
       final s = memories(), stamp = stampData(s, 'first');

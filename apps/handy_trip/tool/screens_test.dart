@@ -10,7 +10,6 @@ import 'package:handy_trip/controller.dart';
 import 'package:handy_trip/features/sharing/memory_book.dart';
 import 'package:handy_trip/features/passport/stamp_export.dart';
 import 'package:handy_trip/features/passport/stamp_studio.dart';
-import 'package:handy_trip/features/passport/comparison.dart';
 import 'package:handy_trip/features/trips/replay.dart';
 import 'package:handy_trip/features/media/photo_proposal.dart';
 import '../test/ui_test.dart' as fixtures;
@@ -127,7 +126,6 @@ void main() {
         ('stamp', (context) => exportPersonalStamp(context, scope, 'v')),
         ('stamp-studio', (context) => openStampStudio(context, scope, 'v')),
         ('memory-book', (context) => exportMemoryBook(context, scope, 't')),
-        ('comparison', (context) => showTripComparison(context, scope)),
         ('replay', (context) => showTripReplay(context, scope, 't')),
         (
           'exif',

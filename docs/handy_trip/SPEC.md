@@ -5,7 +5,7 @@ P0: trips/days/stops, wishlist/place dedupe, confirmed manual/GPS check-in, note
 bookings/packing/exact expenses, reminders, public-safe reports and full backups.
 No map tiles required: pins/coordinates and user-initiated external navigation.
 P1 implemented after the P0 host/native checkpoint: photo passport, personal stamps,
-Memory Book, pin replay/comparison, confirmed EXIF proposals and itinerary recipe.
+Memory Book, pin replay (comparison removed 2026-11-03), confirmed EXIF proposals and itinerary recipe.
 Platform/device/store verification remains separate. P2 GPS surveillance/cloud/social/AI,
 paid APIs, private booking scraping and mass tile downloads are excluded.
 Source brief supplied by user; no fake sample records or successful placeholder actions.
