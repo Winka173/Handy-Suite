@@ -29,6 +29,8 @@ class _NewDesignState extends State<_NewDesign> {
     'social': ('Social card', 'Thẻ mạng xã hội'),
     'event': ('Event badge', 'Thẻ sự kiện'),
     'brand': ('Shop or brand', 'Cửa hàng, thương hiệu'),
+    'invitation': ('Invitation', 'Thiệp mời'),
+    'document': ('CV or one page', 'CV, một trang'),
     'custom': ('Anything else', 'Bất cứ gì khác'),
   };
 
@@ -63,10 +65,19 @@ class _NewDesignState extends State<_NewDesign> {
                       size = switch (e.key) {
                         'social' => 'square',
                         'event' => 'badge',
-                        _ => size == 'square' || size == 'badge' ? 'vn' : size,
+                        'invitation' => 'a5',
+                        'document' => 'a4',
+                        _ =>
+                          const {'square', 'badge', 'a5', 'a4'}.contains(size)
+                              ? 'vn'
+                              : size,
                       };
-                      portrait = e.key == 'event';
-                      sides = e.key == 'social' ? 1 : 2;
+                      portrait = const {
+                        'event',
+                        'invitation',
+                        'document',
+                      }.contains(e.key);
+                      sides = e.key == 'social' || e.key == 'document' ? 1 : 2;
                     }),
                   ),
               ],

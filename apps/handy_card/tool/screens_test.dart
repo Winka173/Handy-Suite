@@ -62,7 +62,15 @@ Future<MemoryCardStore> seeded() async {
     p.id,
     '{"id":"anh","displayName":"Nguyễn Minh Anh","role":"Kiến trúc sư","organization":"Studio Ánh Minh","phones":[{"label":"cell","value":"0912 345 678"}],"emails":[{"label":"","value":"minhanh@example.com"}],"websites":[{"label":"","value":"minhanh.example.com"}],"addresses":[{"label":"","value":"12 Nguyễn Huệ, Quận 1, TP.HCM"}]}',
   );
-  for (final (i, id) in ['minimal', 'gradient', 'elegant', 'badge'].indexed) {
+  for (final (i, id) in [
+    'minimal',
+    'gradient',
+    'elegant',
+    'badge',
+    'wedding',
+    'party',
+    'cv',
+  ].indexed) {
     final t = cardTemplates.firstWhere((x) => x.id == id);
     final d = t
         .build(r, DateTime.utc(2026, 11, 2 - i))
@@ -168,6 +176,27 @@ void main() {
         await shot(t, '$name-5-inspector');
       }
     });
+    for (final (tid, vi) in const [
+      ('wedding', 'Thiệp cưới'),
+      ('party', 'Thiệp tân gia, sinh nhật'),
+      ('cv', 'CV một trang'),
+    ]) {
+      testWidgets('$name template $tid', (t) async {
+        final store = await seeded();
+        await boot(t, size, store);
+        final id = store.records['design']!.entries
+            .firstWhere((e) => e.value.contains('"name":"$vi"'))
+            .key;
+        t
+            .state<NavigatorState>(find.byType(Navigator).first)
+            .pushNamed('/design/$id');
+        await t.runAsync(
+          () => Future<void>.delayed(const Duration(milliseconds: 80)),
+        );
+        await t.pumpAndSettle();
+        await shot(t, '$name-3b-$tid');
+      });
+    }
     testWidgets('$name export', (t) async {
       await boot(t, size, await seeded());
       await t.tap(find.textContaining('Tối giản').first);

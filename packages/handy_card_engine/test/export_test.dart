@@ -363,4 +363,45 @@ void main() {
       );
     }
   });
+
+  test('invitations and the CV come in A5 and A4, with text that fits', () {
+    CardDocument build(String id) =>
+        cardTemplates.firstWhere((t) => t.id == id).build(registry, at);
+    final wedding = build('wedding'), party = build('party'), cv = build('cv');
+    // Points at 72 dpi: A5 is 420 × 595, A4 is 595 × 842, both portrait.
+    for (final (d, w, h) in [
+      (wedding, 420.0, 595.0),
+      (party, 420.0, 595.0),
+      (cv, 595.0, 842.0),
+    ]) {
+      expect(d.width, closeTo(w, 1));
+      expect(d.height, closeTo(h, 1));
+      for (final page in d.pages) {
+        for (final e in page.elements) {
+          expect(
+            e.frame.x + e.frame.width,
+            lessThanOrEqualTo(d.width),
+            reason: e.name,
+          );
+          expect(e.frame.y + e.frame.height, lessThanOrEqualTo(d.height));
+        }
+        final out = exportSvg(d, page.id);
+        expect(
+          out.warnings.where((w) => w.contains('fit')),
+          isEmpty,
+          reason: '${d.name} ${page.name}: ${out.warnings}',
+        );
+      }
+    }
+    expect(wedding.kind, 'invitation');
+    expect(wedding.pages, hasLength(2));
+    expect(party.pages, hasLength(1));
+    expect(cv.pages, hasLength(1));
+    expect(cv.kind, 'document');
+    expect(wedding.pages[1].elements.any((e) => e.type == 'qr'), isTrue);
+    expect(
+      cv.pages.first.elements.map((e) => e.binding?.field).whereType<String>(),
+      containsAll(['name', 'role', 'phone', 'email', 'website']),
+    );
+  });
 }

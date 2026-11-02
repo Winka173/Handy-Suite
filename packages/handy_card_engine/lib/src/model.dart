@@ -334,6 +334,8 @@ class CardDocument {
     'social',
     'event',
     'brand',
+    'invitation',
+    'document',
     'custom',
   };
 

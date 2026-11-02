@@ -30,7 +30,9 @@ made from a blank canvas.
 
 ## Scope of this release (statuses in `HANDY_CARD_TEST_MATRIX.md`)
 
-Built: the editor (all tools below), 8 original templates, 8 size presets
+Built: the editor (all tools below), 11 original templates (wedding and
+party invitations and a one-page CV added 2026-11-03), 10 size presets (A5
+and A4 included)
 plus custom sizes, profiles with live/snapshot bindings, PNG, JPEG, SVG, PDF,
 print sheet, vCard 3.0/4.0, contact QR, HTML profile page, email signature,
 portable project ZIP backup and restore, user templates, Vietnamese and

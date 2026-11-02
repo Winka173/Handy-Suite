@@ -7,7 +7,7 @@
   "schema": 1,
   "id": "a1b2c3…",
   "name": "Minimal",
-  "kind": "business | portfolio | social | event | brand | custom",
+  "kind": "business | portfolio | social | event | brand | invitation | document | custom",
   "unit": "mm | in | px | pt",
   "width": 255.118,
   "height": 153.071,
