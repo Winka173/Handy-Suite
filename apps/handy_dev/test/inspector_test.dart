@@ -101,7 +101,7 @@ void main() {
     final prefs = DevPreferences()
       ..value = HandyPreferences(drafts: {'base64-encode': 'hello'});
     await start(tester, prefs: prefs);
-    await tapKey(tester, 'draft-base64-encode');
+    await tapKey(tester, 'draft-base64');
     expect(
       tester
           .widget<TextField>(find.byKey(const Key('dev-input')))
@@ -110,13 +110,14 @@ void main() {
       'hello',
     );
     await paste(tester, 'Xin chào');
-    await tapKey(tester, 'lens-base64-encode');
+    await tapKey(tester, 'lens-base64');
     prefs.fail = true;
     await tapKey(tester, 'dev-save-draft');
-    expect(prefs.value.drafts['base64-encode'], 'hello');
+    // The failed save leaves the stored file as it was, old id and all.
+    expect(prefs.value.drafts, {'base64-encode': 'hello'});
     prefs.fail = false;
     await tapKey(tester, 'dev-save-draft');
-    expect(prefs.value.drafts['base64-encode'], 'Xin chào');
+    expect(prefs.value.drafts, {'base64': 'Xin chào'});
   });
 
   testWidgets('pins from the finder survive a failed save and a restart', (
@@ -125,20 +126,17 @@ void main() {
     final prefs = DevPreferences();
     await start(tester, prefs: prefs, size: const Size(1280, 900));
     await ctrl(tester, LogicalKeyboardKey.keyK);
-    await tester.enterText(
-      find.byKey(const Key('catalog-search')),
-      'base64 enc',
-    );
+    await tester.enterText(find.byKey(const Key('catalog-search')), 'base64');
     await tester.pumpAndSettle();
     prefs.fail = true;
-    await tapKey(tester, 'catalog-pin-base64-encode');
+    await tapKey(tester, 'catalog-pin-base64');
     expect(prefs.value.favorites, isEmpty);
     prefs.fail = false;
-    await tapKey(tester, 'catalog-pin-base64-encode');
-    expect(prefs.value.favorites, ['base64-encode']);
+    await tapKey(tester, 'catalog-pin-base64');
+    expect(prefs.value.favorites, ['base64']);
     await tester.pumpWidget(const SizedBox());
     await start(tester, prefs: prefs);
-    expect(find.byKey(const Key('pinned-base64-encode')), findsOneWidget);
+    expect(find.byKey(const Key('pinned-base64')), findsOneWidget);
   });
 
   testWidgets(
@@ -147,7 +145,7 @@ void main() {
       final prefs = DevPreferences();
       await start(tester, prefs: prefs);
       await paste(tester, 'Xin chào');
-      await tapKey(tester, 'lens-base64-encode');
+      await tapKey(tester, 'lens-base64');
       await tapKey(tester, 'transform-base64-decode');
       expect(find.text('Xin chào'), findsWidgets);
       prefs.fail = true;

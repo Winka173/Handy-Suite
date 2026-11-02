@@ -407,8 +407,13 @@ chuyển sang Handy Tools (2026-11-02); engine phụ đề vẫn nằm trong `ha
 
 Source: `apps/handy_tools/lib`, `packages/handy_tools_engine`.
 
-- 22 tool đăng ký ở bảng cuối tài liệu; calculator/converter có form chuyên dụng.
-  Phép tính dùng quy tắc rõ ràng; tỷ giá nhập tay, không có feed giá trực tuyến.
+- 17 tool đăng ký ở bảng cuối tài liệu; calculator/converter có form chuyên dụng.
+  Phép tính dùng quy tắc rõ ràng; không có feed giá trực tuyến.
+- Gọn lại (2026-11-03): phần trăm và tỷ lệ nằm trong Sổ tính ("15% của 2tr",
+  "2tr - 15%" bớt 15%, "100 - 5% - 2%" bớt lần lượt, "1920 * 9 / 16"); gõ
+  "15% của 2.400.000" trên bàn vẫn ra số bằng máy tính. Đổi tiền theo tỷ giá
+  nhập tay đã bỏ. Màu (HEX/RGB/HSL, độ tương phản) chuyển sang Handy Dev. Ghim cũ
+  của các tool này được bỏ qua, không làm hỏng cài đặt.
 - `case` gộp bốn công cụ cũ (viết hoa, viết thường, đầu từ, đầu câu) thành một form
   có 4 chế độ; kết quả từng chế độ giữ nguyên như công cụ cũ. Id cũ vẫn mở được
   (`#/tool/title-case` mở `case` ở chế độ đó), ghim cũ hiện thành `case`, chuỗi xử lý
@@ -485,9 +490,16 @@ Source: `apps/handy_dev/lib`, `packages/handy_dev_engine`, `third_party/re2`,
   timeout/cancel và response có giới hạn, collections, environments, biến template,
   import/export các dạng cURL phổ biến. Không phải shell cURL đầy đủ.
 - Secrets ở session; loại khỏi export/lưu mặc định; không log token. JWT chỉ
-  decode, không xác minh chữ ký; HAR summary giữ scheme/host/path, che giá trị query,
-  bỏ header/cookie/body; .env sample chỉ tên biến; redact JSON cần review. Secret
-  tools (cả HMAC) không autosave draft/recipe.
+  decode, không xác minh chữ ký; redact JSON cần review. Secret tools (cả HMAC)
+  không autosave draft/recipe. Tóm tắt HAR và .env mẫu đã bỏ (2026-11-03): file
+  HAR mở như JSON, dòng .env như văn bản.
+- Gộp tool (2026-11-03): `convert` thay tám tool một chiều (JSON ↔ YAML/TOML/XML/
+  CSV, chọn chiều bằng chip; một phía luôn là JSON), `json` gồm cả rút gọn,
+  `base64` và `url` có chip Mã hóa/Giải mã, `hash` có chip SHA-256/SHA-512.
+  Ghim và nháp theo id cũ tự chuyển sang tool mới; chuỗi đã lưu vẫn chạy.
+- Màu (chuyển từ Handy Tools, 2026-11-03): dán `#RRGGBB` để xem HEX/RGB/HSL
+  (`colors`); `contrast` cho tỷ lệ WCAG của màu chữ trên nền, AA 4.5 (chữ lớn 3),
+  AAA 7. Dán cả cặp ("#111111 on #FFFFFF") hoặc nhập màu nền.
 - Mốc thời gian Unix s/ms/µs/ns (tự nhận đơn vị theo độ lớn) ↔ ISO-8601, giờ UTC,
   giờ máy hoặc độ lệch cố định (không có tên múi IANA), kèm "3 ngày trước".
 - UUID v4/v7 và ULID từ nguồn ngẫu nhiên an toàn, 1–1000 mỗi lần (lô v7/ULID đã
@@ -609,70 +621,54 @@ liệt kê theo từng app ở trên.
 
 ### Handy Tools
 
-| ID                | Tool                      | Behavior / limits                                                                                                   |
-| ----------------- | ------------------------- | ------------------------------------------------------------------------------------------------------------------- |
-| `calculate`       | Máy tính                  | Operators + − * / % ^, parentheses, sqrt/abs/sin/cos/tan/log. Trigonometry uses radians.                            |
-| `units`           | Đổi đơn vị                | Compatible units; C/F/K supported.                                                                                  |
-| `loan`            | Lịch trả nợ               | Fixed annual rate, monthly installments; excludes fees and taxes.                                                   |
-| `compound`        | Lãi kép                   | No additional contributions, tax or fees.                                                                           |
-| `percent`         | Phần trăm                 | Percentage value and amount after discount.                                                                         |
-| `dates`           | Khoảng cách ngày          | Calendar days in UTC; end minus start.                                                                              |
-| `normalize`       | Chuẩn hóa khoảng trắng    | NFC Unicode, trim each line, collapse spaces and tabs.                                                              |
-| `deduplicate`     | Lọc dòng trùng            | Keep first exact occurrence.                                                                                        |
-| `sort`            | Sắp xếp dòng              | Unicode code-point order, independent of locale.                                                                    |
-| `case`            | Đổi kiểu chữ              | Unicode upper, lower, title (letter groups) or sentence case (after . ! ?).                                         |
-| `accents`         | Bỏ dấu                    | Remove combining marks and map Vietnamese đ/Đ.                                                                      |
-| `count`           | Đếm văn bản               | Code points, UTF-16 units, whitespace-separated words and lines.                                                    |
-| `contrast`        | Độ tương phản             | WCAG contrast; normal text AA requires 4.5.                                                                         |
-| `salary`          | Tính lương                | Vietnamese employee insurance with caps, family deductions and progressive PIT from a dated rule table; whole đồng. |
-| `split-bill`      | Chia hóa đơn và tiền tip  | Rounded cents are allocated exactly; extra cents go to first shares.                                                |
-| `ratio`           | Tính tỷ lệ                | Proportional new second term.                                                                                       |
-| `manual-exchange` | Đổi tiền theo tỷ giá nhập | User-provided rate only; no live rate lookup.                                                                       |
-| `business-days`   | Số ngày làm việc          | Start inclusive, end exclusive. Weekend indices Sun=0, Sat=6.                                                       |
-| `literal-replace` | Tìm và thay thế           | Literal replacement, bounded to one million UTF-16 units.                                                           |
-| `colors`          | HEX / RGB / HSL           | HEX input, HSL in degrees and percentages.                                                                          |
-| `number-words`    | Đọc số thành chữ          | Vietnamese and English words; đồng amounts end "đồng chẵn". Up to 27 digits, 12 decimals.                           |
-| `lunar`           | Âm lịch                   | Vietnamese lunar date at UTC+7 (Hồ Ngọc Đức), leap months, can-chi, solar term; 1900–2100.                          |
+| ID                | Tool                     | Behavior / limits                                                                                                   |
+| ----------------- | ------------------------ | ------------------------------------------------------------------------------------------------------------------- |
+| `calculate`       | Máy tính                 | Operators + − * / % ^, parentheses, sqrt/abs/sin/cos/tan/log. Trigonometry uses radians.                            |
+| `units`           | Đổi đơn vị               | Compatible units; C/F/K supported.                                                                                  |
+| `loan`            | Lịch trả nợ              | Fixed annual rate, monthly installments; excludes fees and taxes.                                                   |
+| `compound`        | Lãi kép                  | No additional contributions, tax or fees.                                                                           |
+| `dates`           | Khoảng cách ngày         | Calendar days in UTC; end minus start.                                                                              |
+| `normalize`       | Chuẩn hóa khoảng trắng   | NFC Unicode, trim each line, collapse spaces and tabs.                                                              |
+| `deduplicate`     | Lọc dòng trùng           | Keep first exact occurrence.                                                                                        |
+| `sort`            | Sắp xếp dòng             | Unicode code-point order, independent of locale.                                                                    |
+| `case`            | Đổi kiểu chữ             | Unicode upper, lower, title (letter groups) or sentence case (after . ! ?).                                         |
+| `accents`         | Bỏ dấu                   | Remove combining marks and map Vietnamese đ/Đ.                                                                      |
+| `count`           | Đếm văn bản              | Code points, UTF-16 units, whitespace-separated words and lines.                                                    |
+| `salary`          | Tính lương               | Vietnamese employee insurance with caps, family deductions and progressive PIT from a dated rule table; whole đồng. |
+| `split-bill`      | Chia hóa đơn và tiền tip | Rounded cents are allocated exactly; extra cents go to first shares.                                                |
+| `business-days`   | Số ngày làm việc         | Start inclusive, end exclusive. Weekend indices Sun=0, Sat=6.                                                       |
+| `literal-replace` | Tìm và thay thế          | Literal replacement, bounded to one million UTF-16 units.                                                           |
+| `number-words`    | Đọc số thành chữ         | Vietnamese and English words; đồng amounts end "đồng chẵn". Up to 27 digits, 12 decimals.                           |
+| `lunar`           | Âm lịch                  | Vietnamese lunar date at UTC+7 (Hồ Ngọc Đức), leap months, can-chi, solar term; 1900–2100.                          |
 
 ### Handy Dev
 
-| ID                  | Tool                 | Behavior / limits                                                                                                                                           |
-| ------------------- | -------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `schema`            | Kiểm tra JSON Schema | Local draft-07 validation with RE2 patterns. 20 KB schema; external references and format assertions disabled; bounded evaluation.                          |
-| `regex`             | Biểu thức RE2        | Local RE2; no lookaround/backreferences. 100 KB input / 1000-byte pattern / 1000 matches; bounded capture output.                                           |
-| `json-typescript`   | JSON → TypeScript    | Infer a sample type; missing array fields optional, no runtime validation.                                                                                  |
-| `json-schema-infer` | Suy luận JSON Schema | Draft-07 inference from sample only.                                                                                                                        |
-| `json-toml`         | JSON → TOML          | Reject null/unsafe integers and lossy roundtrip.                                                                                                            |
-| `jsonpath`          | JSONPath giới hạn    | Supports $, .name, [index], [*], ["key"]; no scripts or filters.                                                                                            |
-| `json-project`      | Chọn trường JSON     | Object array; options are JSON field-name array.                                                                                                            |
-| `json`              | Định dạng JSON       | Strict JSON format.                                                                                                                                         |
-| `json-min`          | Rút gọn JSON         | Validate and minify.                                                                                                                                        |
-| `yaml-json`         | YAML → JSON          | Reject duplicate keys, cycles and excessive aliases.                                                                                                        |
-| `json-yaml`         | JSON → YAML          | JSON flow syntax is valid YAML 1.2; preserves scalar types.                                                                                                 |
-| `toml-json`         | TOML → JSON          | Parse TOML; dates emitted as ISO strings.                                                                                                                   |
-| `xml-json`          | XML → JSON           | Attributes @_ and #text; mixed-content mapping is partial; DTD disabled.                                                                                    |
-| `json-xml`          | JSON → XML           | Exactly one root key; attributes @_ and #text.                                                                                                              |
-| `csv-json`          | CSV → JSON           | Auto delimiter; strict header/field count; strings retained.                                                                                                |
-| `json-csv`          | JSON → CSV           | Flat objects only; spreadsheet formulas escaped (lossy).                                                                                                    |
-| `jsonl`             | JSONL → JSON         | Parse nonempty lines as JSON.                                                                                                                               |
-| `base64-encode`     | Mã hóa Base64        | UTF-8 text.                                                                                                                                                 |
-| `base64-decode`     | Giải mã Base64       | Strict UTF-8 and canonical unused bits.                                                                                                                     |
-| `url-encode`        | Mã hóa URL           | Encode a UTF-8 component.                                                                                                                                   |
-| `url-decode`        | Giải mã URL          | Reject invalid UTF-8/percent escapes.                                                                                                                       |
-| `sha256`            | SHA-256              | Local UTF-8 hash.                                                                                                                                           |
-| `sha512`            | SHA-512              | Local UTF-8 hash.                                                                                                                                           |
-| `jwt`               | Giải mã JWT          | Decode only; signature NEVER verified; no saved drafts.                                                                                                     |
-| `json-diff`         | So sánh JSON         | Before JSON; options after JSON. JSON Pointer paths.                                                                                                        |
-| `env-sample`        | .env mẫu             | Export names only; remove all values.                                                                                                                       |
-| `har`               | Tóm tắt HAR          | Method, status, duration and URL (scheme, host, path; query values redacted); no headers, cookies or bodies.                                                |
-| `redact`            | Ẩn bí mật JSON       | Mask common credential keys recursively; review before sharing.                                                                                             |
-| `timestamp`         | Mốc thời gian Unix   | Unix s/ms/µs/ns (unit by size) or ISO-8601 to UTC, a zone and relative time. Zones: UTC, device local or a fixed offset; no IANA names.                     |
-| `uuid`              | UUID / ULID          | Inspect pasted IDs (version, variant, v1/v6/v7 and ULID time), or with empty input make 1–1000 v4, v7 or ULID from a secure random source.                  |
-| `text-diff`         | So sánh văn bản      | Line diff (Myers), unified output. Before text; options after text. 20000 lines per side, 2000 changed lines.                                               |
-| `cron`              | Giải thích cron      | 5 fields, or 6 with seconds; ranges, steps, lists, names, @daily-style macros. Explained in EN/VI with the next 1–100 runs in UTC, local or a fixed offset. |
-| `base-convert`      | Đổi hệ cơ số         | BigInt between bases 2/8/10/16 and any 2–36; two’s complement at a bit width. Up to 4096 digits.                                                            |
-| `url-parse`         | Tách URL             | Scheme, user, host, port, path, decoded query table and fragment; rebuilt after editing. Password hidden; nothing fetched.                                  |
-| `hmac`              | HMAC                 | HMAC-SHA256/SHA512 of UTF-8 text, hex or Base64. The key is session-only: never saved in drafts, chains or exports.                                         |
+| ID                  | Tool                 | Behavior / limits                                                                                                                                                                                                                                                              |
+| ------------------- | -------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `schema`            | Kiểm tra JSON Schema | Local draft-07 validation with RE2 patterns. 20 KB schema; external references and format assertions disabled; bounded evaluation.                                                                                                                                             |
+| `regex`             | Biểu thức RE2        | Local RE2; no lookaround/backreferences. 100 KB input / 1000-byte pattern / 1000 matches; bounded capture output.                                                                                                                                                              |
+| `json-typescript`   | JSON → TypeScript    | Infer a sample type; missing array fields optional, no runtime validation.                                                                                                                                                                                                     |
+| `json-schema-infer` | Suy luận JSON Schema | Draft-07 inference from sample only.                                                                                                                                                                                                                                           |
+| `jsonpath`          | JSONPath giới hạn    | Supports $, .name, [index], [*], ["key"]; no scripts or filters.                                                                                                                                                                                                               |
+| `json-project`      | Chọn trường JSON     | Object array; options are JSON field-name array.                                                                                                                                                                                                                               |
+| `json`              | Định dạng JSON       | Strict JSON: pretty (default) or minified. Options: pretty \| min.                                                                                                                                                                                                             |
+| `convert`           | Chuyển đổi dữ liệu   | Between JSON, YAML, TOML, XML and CSV; one side is JSON. Options: from and to, e.g. "json yaml". YAML rejects duplicate keys and alias bombs; TOML rejects null and unsafe integers; XML maps attributes to @_ and text to #text (DTD off); CSV is flat with formulas escaped. |
+| `jsonl`             | JSONL → JSON         | Parse nonempty lines as JSON.                                                                                                                                                                                                                                                  |
+| `base64`            | Base64               | UTF-8 text. Options: encode (default) \| decode; decoding is strict UTF-8 with canonical unused bits.                                                                                                                                                                          |
+| `url`               | Mã hóa URL           | A UTF-8 component. Options: encode (default) \| decode; invalid percent escapes are rejected.                                                                                                                                                                                  |
+| `hash`              | Băm                  | Local UTF-8 hash. Options: sha256 (default) \| sha512.                                                                                                                                                                                                                         |
+| `jwt`               | Giải mã JWT          | Decode only; signature NEVER verified; no saved drafts.                                                                                                                                                                                                                        |
+| `json-diff`         | So sánh JSON         | Before JSON; options after JSON. JSON Pointer paths.                                                                                                                                                                                                                           |
+| `redact`            | Ẩn bí mật JSON       | Mask common credential keys recursively; review before sharing.                                                                                                                                                                                                                |
+| `timestamp`         | Mốc thời gian Unix   | Unix s/ms/µs/ns (unit by size) or ISO-8601 to UTC, a zone and relative time. Zones: UTC, device local or a fixed offset; no IANA names.                                                                                                                                        |
+| `uuid`              | UUID / ULID          | Inspect pasted IDs (version, variant, v1/v6/v7 and ULID time), or with empty input make 1–1000 v4, v7 or ULID from a secure random source.                                                                                                                                     |
+| `text-diff`         | So sánh văn bản      | Line diff (Myers), unified output. Before text; options after text. 20000 lines per side, 2000 changed lines.                                                                                                                                                                  |
+| `cron`              | Giải thích cron      | 5 fields, or 6 with seconds; ranges, steps, lists, names, @daily-style macros. Explained in EN/VI with the next 1–100 runs in UTC, local or a fixed offset.                                                                                                                    |
+| `base-convert`      | Đổi hệ cơ số         | BigInt between bases 2/8/10/16 and any 2–36; two’s complement at a bit width. Up to 4096 digits.                                                                                                                                                                               |
+| `url-parse`         | Tách URL             | Scheme, user, host, port, path, decoded query table and fragment; rebuilt after editing. Password hidden; nothing fetched.                                                                                                                                                     |
+| `hmac`              | HMAC                 | HMAC-SHA256/SHA512 of UTF-8 text, hex or Base64. The key is session-only: never saved in drafts, chains or exports.                                                                                                                                                            |
+| `colors`            | HEX / RGB / HSL      | A #RRGGBB colour as RGB and HSL (degrees and percentages).                                                                                                                                                                                                                     |
+| `contrast`          | Độ tương phản màu    | WCAG 2 ratio of a text colour on a background: AA needs 4.5 for normal text, 3 for large; AAA needs 7. Input: text colour; options: background (or both in the input, "#111111 on #FFFFFF").                                                                                   |
 
 ## Handy Boards
 

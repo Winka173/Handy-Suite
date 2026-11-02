@@ -15,6 +15,30 @@ const devAccent = Color(0xFF0F8A5F);
 
 Set<String> get devPreferenceIds => devTools.map((t) => t.id).toSet();
 
+/// Ids a saved favorite or draft may still carry from before the 2026-11-03
+/// merge; [safeDevPreferences] moves them to the tool they became.
+Set<String> get devStoredIds => {
+  ...devPreferenceIds,
+  ...devToolAliases.keys,
+  ...devRemovedTools,
+};
+
+/// Moves favorites and drafts of merged tools to the merged tool and drops
+/// those of removed tools. A merged tool keeps the first draft it gets.
+HandyPreferences migrateDevPreferences(HandyPreferences p) {
+  String? to(String id) =>
+      devRemovedTools.contains(id) ? null : devToolAliases[id]?.$1 ?? id;
+  final drafts = <String, String>{};
+  for (final e in p.drafts.entries) {
+    final id = to(e.key);
+    if (id != null) drafts.putIfAbsent(id, () => e.value);
+  }
+  return p.copyWith(
+    favorites: {for (final f in p.favorites) ?to(f)},
+    drafts: drafts,
+  );
+}
+
 /// Steps a saved chain may hold; never a sensitive tool.
 const devWorkflowIds = {
   'base64-encode',
@@ -27,26 +51,28 @@ const devWorkflowIds = {
 
 PreferencesRepository devPreferences() => DevicePreferencesRepository(
   'handy-dev',
-  knownTools: devPreferenceIds,
+  knownTools: devStoredIds,
   workflowSteps: devWorkflowIds,
 );
 
 /// Drops drafts of sensitive tools (JWT, .env, HAR, redaction) before any
 /// read or write, so they can never be persisted or restored.
-HandyPreferences safeDevPreferences(HandyPreferences input) =>
-    HandyPreferences.fromJson(
-      input
-          .copyWith(
-            drafts: {
-              for (final e in input.drafts.entries)
-                if (devTools.any((t) => t.id == e.key && !t.sensitive))
-                  e.key: e.value,
-            },
-          )
-          .toJson(),
-      knownTools: devPreferenceIds,
-      workflowSteps: devWorkflowIds,
-    );
+HandyPreferences safeDevPreferences(HandyPreferences input) {
+  input = migrateDevPreferences(input);
+  return HandyPreferences.fromJson(
+    input
+        .copyWith(
+          drafts: {
+            for (final e in input.drafts.entries)
+              if (devTools.any((t) => t.id == e.key && !t.sensitive))
+                e.key: e.value,
+          },
+        )
+        .toJson(),
+    knownTools: devPreferenceIds,
+    workflowSteps: devWorkflowIds,
+  );
+}
 
 class DevApp extends StatefulWidget {
   final HandyFiles files;
@@ -163,22 +189,23 @@ class _DevHomeState extends State<DevHome> {
       tr(context, 'Convert', 'Chuyển đổi'),
       tr(context, 'Encode & hash', 'Mã hóa & băm'),
       tr(context, 'Sensitive', 'Nhạy cảm'),
-      tr(context, 'Time, IDs & text', 'Thời gian, ID & văn bản'),
+      tr(context, 'Time, IDs, text & colour', 'Thời gian, ID, văn bản & màu'),
     );
     String group(DevTool t) => t.sensitive
         ? groups.$4
         : t.id.startsWith('json') || ['schema', 'regex'].contains(t.id)
         ? groups.$1
-        : ['timestamp', 'uuid', 'cron', 'text-diff', 'url-parse'].contains(t.id)
-        ? groups.$5
         : [
-            'base64-encode',
-            'base64-decode',
-            'url-encode',
-            'url-decode',
-            'sha256',
-            'sha512',
+            'timestamp',
+            'uuid',
+            'cron',
+            'text-diff',
+            'url-parse',
+            'colors',
+            'contrast',
           ].contains(t.id)
+        ? groups.$5
+        : ['base64', 'url', 'hash'].contains(t.id)
         ? groups.$3
         : groups.$2;
     final id = await showHandyCatalog(

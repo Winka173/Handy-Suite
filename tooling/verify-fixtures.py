@@ -16,7 +16,7 @@ for entry in manifest['files']:
         errors.append('Fixture mismatch: ' + entry['path'])
 catalogue = (root / 'docs/FUNCTIONS.md').read_text(encoding='utf-8')
 registry = json.loads((root / 'docs/tool-registry.json').read_text(encoding='utf-8'))
-for app, function, expected in [('Handy Tools', '_tool', 22), ('Handy Dev', 'DevTool', 35)]:
+for app, function, expected in [('Handy Tools', '_tool', 17), ('Handy Dev', 'DevTool', 24)]:
     entries = registry[app]
     source = (root / entries[0]['source']).read_text(encoding='utf-8')
     ids = re.findall(rf"{function}\(\s*'([^']+)'", source)

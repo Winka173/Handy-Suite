@@ -91,7 +91,7 @@ Each app is a thin composition (`lib/main.dart` → `app.dart` → screens) wiri
 
 `python tooling/verify-fixtures.py` fails unless:
 
-- `docs/tool-registry.json` lists exactly 22 Handy Tools and 35 Handy Dev tools, **in the same order** as `_tool('id'…)` calls in `packages/handy_tools_engine/lib/src/tools.dart` and `DevTool('id'…)` calls in the Dev engine source named in the registry;
+- `docs/tool-registry.json` lists exactly 17 Handy Tools and 24 Handy Dev tools, **in the same order** as `_tool('id'…)` calls in `packages/handy_tools_engine/lib/src/tools.dart` and `DevTool('id'…)` calls in the Dev engine source named in the registry;
 - every tool id appears in backticks in `docs/FUNCTIONS.md`;
 - every file in `test-fixtures/manifest.json` matches its sha256.
 

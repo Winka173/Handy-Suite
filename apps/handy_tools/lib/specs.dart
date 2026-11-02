@@ -46,14 +46,13 @@ class FieldSpec {
   bool visible(Map<String, String> values) => visibleWhen?.call(values) ?? true;
 }
 
-enum Category { numbers, money, dates, text, color }
+enum Category { numbers, money, dates, text }
 
 String categoryLabel(BuildContext c, Category k) => switch (k) {
   Category.numbers => tr(c, 'Numbers', 'Số'),
   Category.money => tr(c, 'Money', 'Tiền'),
   Category.dates => tr(c, 'Dates', 'Ngày'),
   Category.text => tr(c, 'Text', 'Văn bản'),
-  Category.color => tr(c, 'Colour', 'Màu sắc'),
 };
 
 /// How a computed output is shown.
@@ -159,7 +158,6 @@ String copyRows(List<(String, String)> rows, [String note = '']) => [
 RowsOutput _rows(List<(String, String)> rows, {int lead = 0}) =>
     RowsOutput(rows, copyRows(rows), lead: lead);
 
-const _amount = FieldSpec('amount', 'Amount', 'Số tiền', FieldType.decimal);
 const _text = FieldSpec('text', 'Text', 'Văn bản', FieldType.longText);
 
 ToolSpec _textTool(String id, IconData icon, String en, String vi) => ToolSpec(
@@ -231,52 +229,6 @@ final List<ToolSpec> specs = [
     present: (c, raw, v) => ValueOutput(
       '$raw ${unitName(v['to']!)}',
       caption: '${v['value']} ${unitName(v['from']!)} =',
-    ),
-  ),
-  ToolSpec(
-    'percent',
-    Icons.percent,
-    Category.numbers,
-    'A percentage of an amount, and the amount after that discount.',
-    'Phần trăm của một số và số còn lại sau khi giảm.',
-    fields: const [
-      _amount,
-      FieldSpec(
-        'percent',
-        'Percent',
-        'Phần trăm',
-        FieldType.decimal,
-        hint: '%',
-      ),
-    ],
-    encode: (v) => ('${v['amount']},${v['percent']}', ''),
-    present: (c, raw, v) {
-      final j = _json(raw), p = v['percent'];
-      return _rows([
-        (tr(c, '$p% of amount', '$p% của số tiền'), '${j['percent']}'),
-        (tr(c, 'After $p% off', 'Sau khi giảm $p%'), '${j['afterDiscount']}'),
-      ]);
-    },
-  ),
-  ToolSpec(
-    'ratio',
-    Icons.aspect_ratio,
-    Category.numbers,
-    'Keep a ratio a : b when a changes.',
-    'Giữ tỷ lệ a : b khi a thay đổi.',
-    fields: const [
-      FieldSpec('a', 'a', 'a', FieldType.decimal, initial: '16'),
-      FieldSpec('b', 'b', 'b', FieldType.decimal, initial: '9'),
-      FieldSpec('next', 'New a', 'a mới', FieldType.decimal),
-    ],
-    encode: (v) => ('${v['a']},${v['b']},${v['next']}', ''),
-    present: (c, raw, v) => ValueOutput(
-      raw,
-      caption: tr(
-        c,
-        'New b for ${v['a']} : ${v['b']}',
-        'b mới cho ${v['a']} : ${v['b']}',
-      ),
     ),
   ),
   numberWordsSpec,
@@ -391,33 +343,6 @@ final List<ToolSpec> specs = [
         if (!even)
           for (var i = 0; i < shares.length && i < 50; i++)
             (tr(c, 'Person ${i + 1}', 'Người ${i + 1}'), shares[i]),
-      ]);
-    },
-  ),
-  ToolSpec(
-    'manual-exchange',
-    Icons.currency_exchange,
-    Category.money,
-    'Uses the rate you enter. Nothing is looked up online.',
-    'Dùng tỷ giá bạn nhập. Không tra cứu trực tuyến.',
-    fields: [
-      _amount,
-      const FieldSpec('rate', 'Rate', 'Tỷ giá', FieldType.decimal),
-      FieldSpec(
-        'date',
-        'Rate date',
-        'Ngày tỷ giá',
-        FieldType.date,
-        initial: _today(),
-      ),
-    ],
-    encode: (v) => ('${v['amount']},${v['rate']},${v['date']}', ''),
-    present: (c, raw, v) {
-      final j = _json(raw);
-      return _rows([
-        (tr(c, 'Converted', 'Quy đổi'), '${j['amount']}'),
-        (tr(c, 'Rate', 'Tỷ giá'), '${j['rate']}'),
-        (tr(c, 'Rate date', 'Ngày tỷ giá'), '${j['rateDate']}'),
       ]);
     },
   ),
@@ -552,62 +477,6 @@ final List<ToolSpec> specs = [
       }),
     ),
     present: (c, raw, v) => TextOutput(raw),
-  ),
-  ToolSpec(
-    'contrast',
-    Icons.contrast,
-    Category.color,
-    'WCAG contrast. Normal text needs 4.5 : 1.',
-    'Độ tương phản WCAG. Chữ thường cần 4.5 : 1.',
-    fields: const [
-      FieldSpec(
-        'fg',
-        'Text colour',
-        'Màu chữ',
-        FieldType.color,
-        initial: '#111111',
-      ),
-      FieldSpec(
-        'bg',
-        'Background',
-        'Màu nền',
-        FieldType.color,
-        initial: '#FFFFFF',
-      ),
-    ],
-    encode: (v) => ('${v['fg']},${v['bg']}', ''),
-    present: (c, raw, v) {
-      final j = _json(raw);
-      return _rows([
-        (tr(c, 'Contrast', 'Tương phản'), '${j['ratio']} : 1'),
-        (
-          tr(c, 'Normal text (AA)', 'Chữ thường (AA)'),
-          j['normalAA'] == true
-              ? tr(c, 'Passes', 'Đạt')
-              : tr(c, 'Fails', 'Không đạt'),
-        ),
-      ]);
-    },
-  ),
-  ToolSpec(
-    'colors',
-    Icons.palette_outlined,
-    Category.color,
-    'Converts a HEX colour to RGB and HSL.',
-    'Đổi màu HEX sang RGB và HSL.',
-    fields: const [
-      FieldSpec('hex', 'Colour', 'Màu', FieldType.color, initial: '#1D5FBF'),
-    ],
-    encode: (v) => (v['hex']!, ''),
-    present: (c, raw, v) {
-      final j = _json(raw);
-      final rgb = (j['rgb'] as Map), hsl = (j['hsl'] as Map);
-      return _rows([
-        ('HEX', '${j['hex']}'),
-        ('RGB', '${rgb['r']}, ${rgb['g']}, ${rgb['b']}'),
-        ('HSL', '${hsl['h']}°, ${hsl['s']}%, ${hsl['l']}%'),
-      ]);
-    },
   ),
 ];
 

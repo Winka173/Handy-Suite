@@ -162,7 +162,7 @@ void main() {
     await pause(t, 2000);
 
     // The same order as YAML.
-    await tap(t, 'lens-json-yaml');
+    await tap(t, 'lens-convert');
     await pause(t, 2500);
 
     // A JSONPath query over it.

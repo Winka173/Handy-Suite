@@ -294,7 +294,7 @@ void main() {
       await t.pump();
     });
     await film(t, 'desktop-lens', () async {
-      await t.tap(find.byKey(const Key('lens-json-yaml')));
+      await t.tap(find.byKey(const Key('lens-convert')));
       await t.pump();
     });
     await film(t, 'desktop-send', () async {

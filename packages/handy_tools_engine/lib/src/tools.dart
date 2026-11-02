@@ -88,62 +88,6 @@ Map<String, int> textStats(String text) => {
   'words': text.trim().isEmpty ? 0 : text.trim().split(RegExp(r'\s+')).length,
   'lines': text.isEmpty ? 0 : text.split(RegExp(r'\r\n|\r|\n')).length,
 };
-List<int> _rgb(String hex) {
-  if (!RegExp(r'^#[a-f\d]{6}$', caseSensitive: false).hasMatch(hex))
-    throw const FormatException('Use #RRGGBB');
-  return [
-    1,
-    3,
-    5,
-  ].map((at) => int.parse(hex.substring(at, at + 2), radix: 16)).toList();
-}
-
-double contrast(String a, String b) {
-  double luminance(String hex) {
-    final rgb = _rgb(hex)
-        .map((n) => n / 255)
-        .map(
-          (n) => n <= 0.04045
-              ? n / 12.92
-              : math.pow((n + 0.055) / 1.055, 2.4).toDouble(),
-        )
-        .toList();
-    return rgb[0] * 0.2126 + rgb[1] * 0.7152 + rgb[2] * 0.0722;
-  }
-
-  final left = luminance(a), right = luminance(b);
-  return (math.max(left, right) + 0.05) / (math.min(left, right) + 0.05);
-}
-
-double _two(double n) => double.parse(n.toStringAsFixed(2));
-Map<String, Object> colors(String hex) {
-  final rgb = _rgb(hex),
-      r = rgb[0] / 255,
-      g = rgb[1] / 255,
-      b = rgb[2] / 255,
-      max = math.max(r, math.max(g, b)),
-      min = math.min(r, math.min(g, b)),
-      delta = max - min,
-      light = (max + min) / 2;
-  var hue = delta == 0
-      ? 0.0
-      : max == r
-      ? ((g - b) / delta) % 6
-      : max == g
-      ? (b - r) / delta + 2
-      : (r - g) / delta + 4;
-  hue = (hue * 60 + 360) % 360;
-  return {
-    'hex': hex.toUpperCase(),
-    'rgb': {'r': rgb[0], 'g': rgb[1], 'b': rgb[2]},
-    'hsl': {
-      'h': _two(hue),
-      's': _two(delta == 0 ? 0 : delta / (1 - (2 * light - 1).abs()) * 100),
-      'l': _two(light * 100),
-    },
-  };
-}
-
 String removeAccents(String source) => unorm.nfc(
   unorm
       .nfd(_bounded(source))
@@ -275,20 +219,6 @@ final List<ToolDefinition> tools = List.unmodifiable([
     },
   ),
   _tool(
-    'percent',
-    'Percentage',
-    'Phần trăm',
-    'Percentage value and amount after discount.',
-    'Amount,percentage',
-    (s, o) {
-      final v = _parts(s, 2).map(_d).toList();
-      return _json({
-        'percent': _format(v[0] * v[1] / _hundred),
-        'afterDiscount': _format(v[0] * (_one - v[1] / _hundred)),
-      });
-    },
-  ),
-  _tool(
     'dates',
     'Date difference',
     'Khoảng cách ngày',
@@ -353,20 +283,6 @@ final List<ToolDefinition> tools = List.unmodifiable([
     (s, o) => _json(textStats(s)),
   ),
   _tool(
-    'contrast',
-    'Color contrast',
-    'Độ tương phản',
-    'WCAG contrast; normal text AA requires 4.5.',
-    'HEX,HEX',
-    (s, o) {
-      final v = _parts(s, 2), ratio = contrast(v[0], v[1]);
-      return _json({
-        'ratio': double.parse(ratio.toStringAsFixed(3)),
-        'normalAA': ratio >= 4.5,
-      });
-    },
-  ),
-  _tool(
     'salary',
     'Salary',
     'Tính lương',
@@ -384,38 +300,6 @@ final List<ToolDefinition> tools = List.unmodifiable([
     (s, o) {
       final v = _parts(s, 3);
       return _json(splitBill(v[0], v[1], _integer(v[2])));
-    },
-  ),
-  _tool(
-    'ratio',
-    'Scale a ratio',
-    'Tính tỷ lệ',
-    'Proportional new second term.',
-    'a,b,new a',
-    (s, o) {
-      final v = _parts(s, 3).map(_d).toList();
-      if (v[0] == _zero)
-        throw const FormatException('First ratio term must be nonzero');
-      return _format(v[1] * v[2] / v[0]);
-    },
-  ),
-  _tool(
-    'manual-exchange',
-    'Manual exchange rate',
-    'Đổi tiền theo tỷ giá nhập',
-    'User-provided rate only; no live rate lookup.',
-    'Amount,rate,YYYY-MM-DD',
-    (s, o) {
-      final v = _parts(s, 3);
-      _day(v[2]);
-      final a = _d(v[0]), r = _d(v[1]);
-      if (r <= _zero) throw const FormatException('Rate must be positive');
-      return _json({
-        'amount': _fixed(a * r, 2),
-        'rate': _format(r),
-        'rateDate': v[2],
-        'source': 'user supplied',
-      });
     },
   ),
   _tool(
@@ -461,14 +345,6 @@ final List<ToolDefinition> tools = List.unmodifiable([
       );
     },
     '{"find":"old","replace":"new","all":true}',
-  ),
-  _tool(
-    'colors',
-    'HEX / RGB / HSL',
-    'HEX / RGB / HSL',
-    'HEX input, HSL in degrees and percentages.',
-    '#RRGGBB',
-    (s, o) => _json(colors(s.trim())),
   ),
   _tool(
     'number-words',

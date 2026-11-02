@@ -44,7 +44,8 @@ class DevSettingsPage extends StatelessWidget {
         importPreferences(
           file.text,
           app: 'dev',
-          knownTools: devPreferenceIds,
+          // Files exported before the 2026-11-03 merge name old tool ids.
+          knownTools: devStoredIds,
           workflowSteps: devWorkflowIds,
         ),
       );

@@ -107,8 +107,8 @@ chưa xác nhận. Backup không chứa thumbnail cache, tối đa 30MB.
     là bản chép ngày 2026-11-02, không tự cập nhật, và app không kiểm tra được tên chủ tài khoản.
 24. Handy Dev: timestamp và cron chỉ đọc UTC, múi giờ máy hoặc độ lệch cố định (không có tên
     múi giờ IANA nên độ lệch cố định không theo giờ mùa hè); so sánh văn bản dừng ở 20.000
-    dòng mỗi bên hoặc 2.000 dòng đổi; tóm tắt HAR che giá trị query nhưng không che bí mật
-    nằm trong đường dẫn URL.
+    dòng mỗi bên hoặc 2.000 dòng đổi; `convert` chỉ đổi qua lại với JSON (YAML → TOML
+    phải qua hai bước) để mỗi lần mất mát dữ liệu đều thấy được.
 25. Handy Recall: chữ Nhật/Trung/Hàn trên Web cần mạng lần đầu để tải lát font Noto, sau đó
     giữ trong cache `handy_recall-fonts-v1`. Đọc to dùng giọng của hệ điều hành; bản build
     Windows cần `nuget.exe` trên PATH (máy này chưa có). Nhập Anki chưa thử trên thiết bị;

@@ -43,8 +43,8 @@ void main() {
       'to': 'mi',
     });
     expect(interpret('100 °C to F', vi: false).single.values['from'], 'C');
-    final p = interpret('15% của 2.400.000', vi: true).single;
-    expect(p.values, {'amount': '2400000', 'percent': '15'});
+    final p = interpret('15% của 2.400.000', vi: true);
+    expect(p.single.values, {'expression': '2400000 * 15 / 100'});
     final d = interpret(
       '31/12/2026 đến hôm nay',
       vi: true,
@@ -52,8 +52,8 @@ void main() {
     );
     expect(d.first.values, {'start': '2026-12-31', 'end': '2026-11-01'});
     expect(d[1].toolId, 'business-days');
-    expect(ids('#e8590c'), ['colors']);
-    expect(ids('#111111 trên #ffffff'), ['contrast']);
+    // Colour checks moved to Handy Dev on 2026-11-03.
+    expect(ids('#e8590c'), isNot(contains('colors')));
   });
 
   test('words, lunar dates and salaries from one line', () {

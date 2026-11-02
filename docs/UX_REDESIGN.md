@@ -426,8 +426,13 @@ lại như trước. Ô khóa HMAC tắt gợi ý bàn phím và tự sửa.
 
 **An toàn:** HMAC là lăng kính nhạy cảm: khóa chỉ nằm trong ô của phiên, bị xóa khi đổi
 lăng kính hay loại dữ liệu, không vào nháp, chuỗi, cài đặt xuất ra hay thông báo lỗi.
-Tách URL không hiện mật khẩu. HAR giữ scheme, host, path và tên tham số, che mọi giá trị
-query, vẫn bỏ header, cookie, body.
+Tách URL không hiện mật khẩu.
+
+**Gọn lại 2026-11-03:** tóm tắt HAR và `.env` mẫu đã bỏ (HAR mở như JSON, `.env` như văn
+bản). Một lăng kính cho mỗi việc, chiều là chip: "Đổi sang" YAML/TOML/XML/CSV từ JSON,
+"Sang JSON" cho YAML/TOML/XML/CSV, JSON thụt lề/một dòng, Base64 và URL mã hóa/giải mã,
+băm SHA-256/SHA-512. Dán `#RRGGBB` (chuyển từ Tools) ra HEX/RGB/HSL và độ tương phản
+WCAG. Chuỗi đã lưu giữ tên bước cũ nên vẫn chạy.
 
 **Loại bỏ:** trang riêng cho mỗi tiện ích, form nhiều bước để tạo UUID, màu theo loại
 trường, bảng diff có lưới kẻ.

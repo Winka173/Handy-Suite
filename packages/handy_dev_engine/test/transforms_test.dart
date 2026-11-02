@@ -23,7 +23,7 @@ void main() {
     );
   });
   test('stable IDs; only actual platform implementations are registered', () {
-    expect(devTools.length, regexSupported ? 35 : 33);
+    expect(devTools.length, regexSupported ? 24 : 22);
     expect(devTools.map((t) => t.id).toSet().length, devTools.length);
     expect(devTools.any((t) => t.id == 'regex'), regexSupported);
     expect(devTools.any((t) => t.id == 'schema'), regexSupported);
@@ -33,7 +33,7 @@ void main() {
       'emoji': '🧪',
       'nil': null,
     });
-    expect(tool('json-min').run(' [ 1, true, null ] '), '[1,true,null]');
+    expect(tool('json').run(' [ 1, true, null ] ', 'min'), '[1,true,null]');
   });
   for (final bad in ['{"x":}', '[1,]', 'undefined', 'NaN', '1e999']) {
     test(
@@ -60,7 +60,7 @@ void main() {
       'active': true,
       'items': [1, 2],
     });
-    expect(parseYaml(tool('json-yaml').run(jsonEncode(v))), v);
+    expect(parseYaml(tool('convert').run(jsonEncode(v), 'json yaml')), v);
   });
   for (final bad in ['a: 1\na: 2', 'a: .inf', '? [x,y]\n: z']) {
     test(
@@ -168,7 +168,7 @@ void main() {
   });
   test('Base64 Unicode and URLsafe roundtrip', () {
     for (final s in ['', 'Tiếng Việt 🧪', '\x00']) {
-      expect(decode64(tool('base64-encode').run(s)), s);
+      expect(decode64(tool('base64').run(s)), s);
     }
     expect(decode64('8J-nqg'), '🧪');
   });
@@ -180,18 +180,18 @@ void main() {
   }
   test('URL component roundtrip strict UTF8', () {
     const s = 'Tiếng Việt ?&+=🧪';
-    expect(tool('url-decode').run(tool('url-encode').run(s)), s);
-    expect(tool('url-decode').run('a+b'), 'a+b');
-    expect(() => tool('url-decode').run('%FF'), throwsFormatException);
-    expect(() => tool('url-decode').run('%Q1'), throwsFormatException);
+    expect(tool('url').run(tool('url').run(s), 'decode'), s);
+    expect(tool('url').run('a+b', 'decode'), 'a+b');
+    expect(() => tool('url').run('%FF', 'decode'), throwsFormatException);
+    expect(() => tool('url').run('%Q1', 'decode'), throwsFormatException);
   });
   test('known cryptographic hash fixtures', () {
     expect(
-      tool('sha256').run('abc'),
+      tool('hash').run('abc'),
       'ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad',
     );
     expect(
-      tool('sha512').run('abc'),
+      tool('hash').run('abc', 'sha512'),
       'ddaf35a193617abacc417349ae20413112e6fa4e89a97ea20a9eeee64b55d39a2192992a274fc1a836ba3c23a3feebbd454d4423643ce80e2a9ac94fa54ca49f',
     );
   });
@@ -231,73 +231,6 @@ void main() {
       ],
     );
     expect(diff([1], [1, 2]).single['path'], '/1');
-  });
-  test('env sample strips multiline/comment values and export prefix', () {
-    expect(
-      envSample(
-        'export TOKEN=secret\nURL="https://x?a=b"\n# ignore\nnot a key=x\nA_B=2',
-      ),
-      'TOKEN=\nURL=\nA_B=',
-    );
-  });
-  test('HAR intentionally excludes arbitrary URL/body/header secrets', () {
-    final s = tool('har').run(
-      jsonEncode({
-        'log': {
-          'entries': [
-            {
-              'request': {
-                'method': 'GET',
-                'url': 'TOKEN',
-                'headers': ['TOKEN'],
-              },
-              'response': {'status': 200, 'body': 'TOKEN'},
-              'time': 12,
-            },
-          ],
-        },
-      }),
-    );
-    expect(jsonDecode(s), [
-      {'method': 'GET', 'status': 200, 'durationMs': 12},
-    ]);
-    expect(s, isNot(contains('TOKEN')));
-  });
-  test('HAR keeps scheme, host and path; query values are redacted', () {
-    final s = tool('har').run(
-      jsonEncode({
-        'log': {
-          'entries': [
-            {
-              'request': {
-                'method': 'POST',
-                'url':
-                    'https://ana:pw-SECRET@api.example.com:8443/v1/orders?token=SECRET&page=2&flag#frag-SECRET',
-                'headers': [
-                  {'name': 'Cookie', 'value': 'SECRET'},
-                ],
-                'postData': {'text': 'SECRET'},
-              },
-              'response': {'status': 201},
-            },
-            {
-              'request': {'method': 'GET', 'url': 'not a url'},
-            },
-          ],
-        },
-      }),
-    );
-    expect(jsonDecode(s), [
-      {
-        'method': 'POST',
-        'url':
-            'https://api.example.com:8443/v1/orders?token=[REDACTED]&page=[REDACTED]&flag',
-        'status': 201,
-      },
-      {'method': 'GET'},
-    ]);
-    expect(s, isNot(contains('SECRET')));
-    expect(s, isNot(contains('ana')));
   });
   test('redaction traverses arrays and credential key variants', () {
     expect(
@@ -346,5 +279,58 @@ void main() {
       {'type': 'integer'},
       {'type': 'string'},
     ]);
+  });
+
+  test('convert goes through JSON both ways and refuses other pairs', () {
+    const v = {
+      'a': 1,
+      'b': [true, 'x'],
+    };
+    final yaml = tool('convert').run(jsonEncode(v), 'json yaml');
+    expect(jsonDecode(tool('convert').run(yaml, 'yaml json')), v);
+    final toml = tool('convert').run('{"a":1}', 'json toml');
+    expect(jsonDecode(tool('convert').run(toml, 'toml json')), {'a': 1});
+    expect(jsonDecode(tool('convert').run('a,b\n1,2', 'csv → json')), [
+      {'a': '1', 'b': '2'},
+    ]);
+    for (final bad in ['yaml toml', 'json json', 'json', 'json pdf', '']) {
+      expect(() => tool('convert').run('{}', bad), throwsFormatException);
+    }
+  });
+  test('old tool ids still run as the merged tools', () {
+    expect(runDevTool('sha512', 'abc'), tool('hash').run('abc', 'sha512'));
+    expect(
+      runDevTool('base64-decode', runDevTool('base64-encode', 'Xin chào')),
+      'Xin chào',
+    );
+    expect(runDevTool('json-min', '{ "a" : 1 }'), '{"a":1}');
+    expect(() => runDevTool('har', '{}'), throwsFormatException);
+    for (final a in devToolAliases.values) {
+      expect(devTools.map((t) => t.id), contains(a.$1));
+    }
+  });
+  group('colors', () {
+    test('black white WCAG', () => expect(contrast('#000000', '#ffffff'), 21));
+    for (final v in <String, Map<String, num>>{
+      '#ff0000': {'h': 0, 's': 100, 'l': 50},
+      '#00ff00': {'h': 120, 's': 100, 'l': 50},
+      '#0000ff': {'h': 240, 's': 100, 'l': 50},
+      '#ffffff': {'h': 0, 's': 0, 'l': 100},
+      '#000000': {'h': 0, 's': 0, 'l': 0},
+    }.entries) {
+      test(v.key, () => expect(colors(v.key)['hsl'], v.value));
+    }
+    test(
+      'invalid hex',
+      () => expect(() => colors('#fff'), throwsFormatException),
+    );
+  });
+  test('contrast reads two colours from input and options', () {
+    final r = jsonDecode(tool('contrast').run('#777777', '#FFFFFF'));
+    expect(r['ratio'], 4.48);
+    expect(r['normalTextAA'], false);
+    expect(r['largeTextAA'], true);
+    expect(jsonDecode(tool('contrast').run('#000000 on #ffffff'))['ratio'], 21);
+    expect(() => tool('contrast').run('#000000'), throwsFormatException);
   });
 }

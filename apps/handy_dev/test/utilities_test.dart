@@ -331,7 +331,7 @@ void main() {
           find.textContaining('W9zBRr9gdU5qBCQmCJV1x1oAPwidJzmDnexYuWTsOEM='),
           findsOneWidget,
         );
-        await tapKey(tester, 'lens-sha256');
+        await tapKey(tester, 'lens-hash');
         await tapKey(tester, 'lens-hmac');
         expect(_field(tester, 'lens-option'), isEmpty);
         expect(jsonEncode(prefs.value.toJson()), isNot(contains('Jefe')));

@@ -12,7 +12,7 @@ void main() {
     (tester) async {
       DevicePreferencesRepository repository() => DevicePreferencesRepository(
         'handy-dev-state-integration',
-        knownTools: devPreferenceIds,
+        knownTools: devStoredIds,
         workflowSteps: devWorkflowIds,
       );
       await repository().save(
@@ -31,19 +31,19 @@ void main() {
 
       await show();
       expect(find.byKey(const Key('draft-jwt')), findsNothing);
-      expect(find.byKey(const Key('draft-base64-encode')), findsOneWidget);
+      expect(find.byKey(const Key('draft-base64')), findsOneWidget);
       await tapKey(tester, 'open-catalog');
       await tester.enterText(find.byKey(const Key('catalog-search')), 'Base64');
       await tester.pumpAndSettle();
-      await tapKey(tester, 'catalog-pin-base64-encode');
+      await tapKey(tester, 'catalog-pin-base64');
       final saved = await repository().load();
-      expect(saved.favorites, ['base64-encode']);
-      expect(saved.drafts, {'base64-encode': 'Xin chào'});
+      expect(saved.favorites, ['base64']);
+      expect(saved.drafts, {'base64': 'Xin chào'});
       expect((saved.locale, saved.theme), ('en', 'dark'));
       await tester.pumpWidget(const SizedBox());
       await tester.pumpAndSettle();
       await show();
-      expect(find.byKey(const Key('pinned-base64-encode')), findsOneWidget);
+      expect(find.byKey(const Key('pinned-base64')), findsOneWidget);
       if (const bool.fromEnvironment('HANDY_SCREENSHOTS')) {
         await binding.convertFlutterSurfaceToImage();
         await tester.pumpAndSettle();

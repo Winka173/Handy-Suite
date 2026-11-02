@@ -47,12 +47,17 @@ class Lens {
   /// Builds the engine's option string from the typed option and the
   /// chosen settings, when the plain [LensOption.encode] is not enough.
   final String Function(String typed, String Function(String) pick)? encode;
+
+  /// A title of its own when the engine tool's title says too much (a
+  /// converter fixed to one direction).
+  final (String, String)? name;
   const Lens(
     this.id, {
     this.tool,
     this.option,
     this.choices = const [],
     this.encode,
+    this.name,
   });
   DevTool? get engine =>
       tool == null ? null : devTools.firstWhere((t) => t.id == tool);
@@ -64,6 +69,7 @@ class Lens {
   String title(BuildContext c) => switch (id) {
     'tree' => tr(c, 'Tree', 'Dạng cây'),
     'curl' => tr(c, 'Request', 'Request'),
+    _ when name != null => tr(c, name!.$1, name!.$2),
     _ => tr(c, engine!.titleEn, engine!.titleVi),
   };
 }
@@ -127,6 +133,19 @@ const baseLens = Lens(
   ],
 );
 const idsLens = Lens('uuid', tool: 'uuid');
+
+/// Text colour on a background; the background is asked for unless the
+/// paste already holds both.
+const contrastLens = Lens(
+  'contrast',
+  tool: 'contrast',
+  option: LensOption(
+    'On background',
+    'Trên nền',
+    hint: '#FFFFFF',
+    optional: true,
+  ),
+);
 const urlLens = Lens('url-parse', tool: 'url-parse');
 const textDiffLens = Lens(
   'text-diff',
@@ -167,8 +186,7 @@ String typedFieldsJson(String typed) {
 
 final _json = [
   const Lens('tree'),
-  _t('json'),
-  _t('json-min'),
+  jsonLens,
   _t(
     'jsonpath',
     const LensOption('Path', 'Đường dẫn', hint: r'$.items[*].name'),
@@ -195,10 +213,7 @@ final _json = [
       hint: '{"type": "object"}',
     ),
   ),
-  _t('json-yaml'),
-  _t('json-toml'),
-  _t('json-xml'),
-  _t('json-csv'),
+  fromJsonLens,
   _t(
     'json-typescript',
     const LensOption('Type name', 'Tên kiểu', hint: 'Root', optional: true),
@@ -209,45 +224,171 @@ final _json = [
 
 final _text = [
   _t('regex', const LensOption('Pattern', 'Biểu thức', hint: r'\d+')),
-  _t('base64-encode'),
-  _t('url-encode'),
-  _t('sha256'),
-  _t('sha512'),
+  base64Lens,
+  urlEncodeLens,
+  hashLens,
   hmacLens,
 ];
+
+String _way(String _, String Function(String) pick) => pick('way');
+
+const jsonLens = Lens(
+  'json',
+  tool: 'json',
+  encode: _style,
+  choices: [
+    LensChoice('style', 'Layout', 'Trình bày', [
+      ('pretty', 'Indented', 'Thụt lề'),
+      ('min', 'One line', 'Một dòng'),
+    ]),
+  ],
+);
+String _style(String _, String Function(String) pick) => pick('style');
+
+/// JSON into another format; the target is a chip, not a lens each.
+const fromJsonLens = Lens(
+  'convert',
+  tool: 'convert',
+  encode: _toFormat,
+  choices: [
+    LensChoice('to', 'To', 'Sang', [
+      ('yaml', 'YAML', 'YAML'),
+      ('toml', 'TOML', 'TOML'),
+      ('xml', 'XML', 'XML'),
+      ('csv', 'CSV', 'CSV'),
+    ]),
+  ],
+);
+String _toFormat(String _, String Function(String) pick) =>
+    'json ${pick('to')}';
+
+/// Another format into JSON, the direction fixed by what was detected.
+Lens toJsonLens(String from) => Lens(
+  'convert',
+  tool: 'convert',
+  name: ('To JSON', 'Sang JSON'),
+  encode: (_, _) => '$from json',
+);
+
+/// The converter picked from the catalog, where nothing was detected yet.
+const anyConvertLens = Lens(
+  'convert',
+  tool: 'convert',
+  encode: _fromTo,
+  choices: [
+    LensChoice('from', 'From', 'Từ', [
+      ('yaml', 'YAML', 'YAML'),
+      ('toml', 'TOML', 'TOML'),
+      ('xml', 'XML', 'XML'),
+      ('csv', 'CSV', 'CSV'),
+      ('json', 'JSON', 'JSON'),
+    ]),
+    LensChoice('to', 'To', 'Sang', [
+      ('json', 'JSON', 'JSON'),
+      ('yaml', 'YAML', 'YAML'),
+      ('toml', 'TOML', 'TOML'),
+      ('xml', 'XML', 'XML'),
+      ('csv', 'CSV', 'CSV'),
+    ]),
+  ],
+);
+String _fromTo(String _, String Function(String) pick) =>
+    '${pick('from')} ${pick('to')}';
+
+const _encode = LensChoice('way', 'Direction', 'Chiều', [
+  ('encode', 'Encode', 'Mã hóa'),
+  ('decode', 'Decode', 'Giải mã'),
+]);
+const _decode = LensChoice('way', 'Direction', 'Chiều', [
+  ('decode', 'Decode', 'Giải mã'),
+  ('encode', 'Encode', 'Mã hóa'),
+]);
+const base64Lens = Lens(
+  'base64',
+  tool: 'base64',
+  encode: _way,
+  choices: [_encode],
+);
+const base64DecodeLens = Lens(
+  'base64',
+  tool: 'base64',
+  encode: _way,
+  choices: [_decode],
+);
+const urlEncodeLens = Lens(
+  'url',
+  tool: 'url',
+  encode: _way,
+  choices: [_encode],
+);
+const urlDecodeLens = Lens(
+  'url',
+  tool: 'url',
+  encode: _way,
+  choices: [_decode],
+);
+const hashLens = Lens(
+  'hash',
+  tool: 'hash',
+  encode: _algo,
+  choices: [
+    LensChoice('algo', 'Algorithm', 'Thuật toán', [
+      ('sha256', 'SHA-256', 'SHA-256'),
+      ('sha512', 'SHA-512', 'SHA-512'),
+    ]),
+  ],
+);
+String _algo(String _, String Function(String) pick) => pick('algo');
+
+/// The saved-chain step a lens stands for with these picks, or null when the
+/// lens cannot start a chain.
+String? stepOf(Lens l, Map<String, String> picks) => switch (l.id) {
+  'base64' => 'base64-${l.pick(picks, 'way')}',
+  'url' => 'url-${l.pick(picks, 'way')}',
+  'hash' => l.pick(picks, 'algo'),
+  _ => null,
+};
+
+/// Labels of saved-chain steps.
+String stepLabel(BuildContext c, String step) => switch (step) {
+  'base64-encode' => tr(c, 'Base64 encode', 'Mã hóa Base64'),
+  'base64-decode' => tr(c, 'Base64 decode', 'Giải mã Base64'),
+  'url-encode' => tr(c, 'URL encode', 'Mã hóa URL'),
+  'url-decode' => tr(c, 'URL decode', 'Giải mã URL'),
+  'sha256' => 'SHA-256',
+  'sha512' => 'SHA-512',
+  _ => step,
+};
 
 /// Kinds whose text has versions worth comparing line by line.
 const _documents = {
   DataKind.text,
   DataKind.json,
-  DataKind.har,
   DataKind.jsonl,
   DataKind.xml,
   DataKind.yaml,
   DataKind.toml,
   DataKind.csv,
-  DataKind.env,
 };
 
 /// Lenses for a kind, the default first; text lenses close every list.
 List<Lens> lensesFor(DataKind kind) => [
   ...switch (kind) {
     DataKind.json => _json,
-    DataKind.har => [_t('har'), ..._json],
     DataKind.jsonl => [_t('jsonl')],
-    DataKind.xml => [_t('xml-json')],
-    DataKind.yaml => [_t('yaml-json')],
-    DataKind.toml => [_t('toml-json')],
-    DataKind.csv => [_t('csv-json')],
+    DataKind.xml => [toJsonLens('xml')],
+    DataKind.yaml => [toJsonLens('yaml')],
+    DataKind.toml => [toJsonLens('toml')],
+    DataKind.csv => [toJsonLens('csv')],
     DataKind.jwt => [_t('jwt')],
-    DataKind.env => [_t('env-sample')],
-    DataKind.url => [_t('url-decode')],
+    DataKind.url => [urlDecodeLens],
     DataKind.link => [urlLens],
     DataKind.timestamp => [timestampLens],
     DataKind.number => [baseLens],
     DataKind.ids => [idsLens],
     DataKind.cron => [cronLens],
-    DataKind.base64 => [_t('base64-decode')],
+    DataKind.color => [_t('colors'), contrastLens],
+    DataKind.base64 => [base64DecodeLens],
     DataKind.curl => [const Lens('curl')],
     DataKind.text => <Lens>[],
   },
@@ -258,11 +399,9 @@ List<Lens> lensesFor(DataKind kind) => [
 String kindLabel(BuildContext c, DataKind k) => switch (k) {
   DataKind.curl => tr(c, 'cURL command', 'Lệnh cURL'),
   DataKind.jwt => 'JWT',
-  DataKind.har => 'HAR',
   DataKind.json => 'JSON',
   DataKind.jsonl => 'JSON Lines',
   DataKind.xml => 'XML',
-  DataKind.env => '.env',
   DataKind.toml => 'TOML',
   DataKind.yaml => 'YAML',
   DataKind.csv => 'CSV',
@@ -272,11 +411,14 @@ String kindLabel(BuildContext c, DataKind k) => switch (k) {
   DataKind.number => tr(c, 'Integer', 'Số nguyên'),
   DataKind.ids => 'UUID / ULID',
   DataKind.cron => 'Cron',
+  DataKind.color => tr(c, 'Colour', 'Màu'),
   DataKind.base64 => 'Base64',
   DataKind.text => tr(c, 'Text', 'Văn bản'),
 };
 
 /// Steps that may be chained and saved as a workflow: never a sensitive one.
+/// They are the old one-way tool ids, run through [runDevTool], so chains
+/// saved before the 2026-11-03 merge keep working.
 const chainable = {
   'base64-encode',
   'base64-decode',
@@ -291,23 +433,13 @@ enum LensGroup { view, convert, encode }
 
 LensGroup lensGroup(Lens l) =>
     const {
-      'json-yaml',
-      'json-toml',
-      'json-xml',
-      'json-csv',
+      'convert',
       'json-typescript',
       'json-schema-infer',
       'base-convert',
     }.contains(l.id)
     ? LensGroup.convert
-    : const {
-        'regex',
-        'base64-encode',
-        'url-encode',
-        'sha256',
-        'sha512',
-        'hmac',
-      }.contains(l.id)
+    : const {'regex', 'base64', 'url', 'hash', 'hmac'}.contains(l.id)
     ? LensGroup.encode
     : LensGroup.view;
 

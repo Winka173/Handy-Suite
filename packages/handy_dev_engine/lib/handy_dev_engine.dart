@@ -12,3 +12,4 @@ export 'src/cron.dart';
 export 'src/bases.dart';
 export 'src/url_parts.dart';
 export 'src/hmac.dart';
+export 'src/colors.dart';

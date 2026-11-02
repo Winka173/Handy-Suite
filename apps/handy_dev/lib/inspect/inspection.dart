@@ -11,7 +11,6 @@ const treeLenses = {
   'json-diff',
   'jsonpath',
   'json-project',
-  'har',
 };
 
 /// Inputs above this size wait for an explicit Run so typing never stalls.
@@ -190,7 +189,7 @@ Inspection inspect(
     if (chain.isNotEmpty) {
       var out = input;
       for (final id in chain) {
-        out = devTools.firstWhere((t) => t.id == id).run(out);
+        out = runDevTool(id, out);
       }
       return Inspection(kind: kind, lens: lens, text: out);
     }

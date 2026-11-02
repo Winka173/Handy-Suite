@@ -10,9 +10,11 @@ import 'lenses.dart';
 import 'result_panel.dart';
 import 'source_panel.dart';
 
-Lens lensById(String id) => [
-  for (final k in DataKind.values) ...lensesFor(k),
-].firstWhere((l) => l.id == id, orElse: () => Lens(id, tool: id));
+Lens lensById(String id) => id == 'convert'
+    ? anyConvertLens
+    : [
+        for (final k in DataKind.values) ...lensesFor(k),
+      ].firstWhere((l) => l.id == id, orElse: () => Lens(id, tool: id));
 
 const examples = [
   (
@@ -281,7 +283,8 @@ class InspectorState extends State<Inspector> {
             picks: picks,
             chain: chain,
           );
-    final chainable_ = chainable.contains(l.id) || chain.isNotEmpty;
+    final step = stepOf(l, picks);
+    final chainable_ = step != null || chain.isNotEmpty;
     final source = Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
@@ -336,9 +339,9 @@ class InspectorState extends State<Inspector> {
               chain: chain,
               saved: widget.read().recipes,
               steps: chainable.toList(),
-              label: (c, id) => lensById(id).title(c),
+              label: stepLabel,
               onAdd: (id) => setState(
-                () => chain.isEmpty ? chain.addAll([l.id, id]) : chain.add(id),
+                () => chain.isEmpty ? chain.addAll([step!, id]) : chain.add(id),
               ),
               onRemove: (i) => setState(() => chain.removeAt(i)),
               onUse: (rec) => setState(

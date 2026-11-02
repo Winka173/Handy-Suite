@@ -5,11 +5,9 @@ import 'package:handy_dev_engine/handy_dev_engine.dart';
 enum DataKind {
   curl,
   jwt,
-  har,
   json,
   jsonl,
   xml,
-  env,
   toml,
   yaml,
   csv,
@@ -18,16 +16,18 @@ enum DataKind {
   number,
   ids,
   cron,
+  color,
   url,
   base64,
   text,
 }
 
-DevTool _tool(String id) => devTools.firstWhere((t) => t.id == id);
+/// Old one-way ids (`yaml-json`) still name the merged tools' directions.
+String _run(String id, String input) => runDevTool(id, input);
 
 bool _runs(String id, String input) {
   try {
-    _tool(id).run(input);
+    _run(id, input);
     return true;
   } catch (_) {
     return false;
@@ -61,11 +61,6 @@ List<DataKind> detect(String input) {
     kinds.add(DataKind.jwt);
   }
   final json = (s.startsWith('{') || s.startsWith('[')) ? _json(s) : null;
-  if (json is Map &&
-      json['log'] is Map &&
-      (json['log'] as Map)['entries'] is List) {
-    kinds.add(DataKind.har);
-  }
   if (json is Map || json is List) kinds.add(DataKind.json);
   if (json == null &&
       lines.length > 1 &&
@@ -74,13 +69,6 @@ List<DataKind> detect(String input) {
   }
   if (s.startsWith('<') && s.endsWith('>') && _runs('xml-json', s))
     kinds.add(DataKind.xml);
-  // .env: every line is an UPPER_CASE key, '=', a value (no spaces), or a
-  // comment. Upper case keeps Base64 such as `SGVsbG8=` out.
-  final env = RegExp(r'^\s*(#.*|[A-Z_][A-Z0-9_]*=(?!=)\S*)$');
-  if (lines.every(env.hasMatch) &&
-      lines.any((l) => !l.trim().startsWith('#'))) {
-    kinds.add(DataKind.env);
-  }
   if (json == null &&
       RegExp(
         r'^\s*(\[[^\]]+\]|[A-Za-z0-9_."-]+\s*=)',
@@ -92,13 +80,13 @@ List<DataKind> detect(String input) {
   if (json == null &&
       RegExp(r'^\s*[^\s:#][^:]*:(\s|$)', multiLine: true).hasMatch(s) &&
       _runs('yaml-json', s)) {
-    final out = _json(_tool('yaml-json').run(s));
+    final out = _json(_run('yaml-json', s));
     if (out is Map || out is List) kinds.add(DataKind.yaml);
   }
   if (lines.length > 1 &&
       RegExp('[,;\t|]').hasMatch(lines.first) &&
       _runs('csv-json', s)) {
-    final out = _json(_tool('csv-json').run(s));
+    final out = _json(_run('csv-json', s));
     if (out is List &&
         out.isNotEmpty &&
         out.first is Map &&
@@ -135,6 +123,13 @@ List<DataKind> detect(String input) {
       parseCron(s);
       kinds.add(DataKind.cron);
     } on FormatException catch (_) {}
+  }
+  // A colour, or a text colour on a background ("#111111 on #FFFFFF").
+  if (oneLine &&
+      RegExp(
+        r'^#[0-9a-fA-F]{6}(\s*(on|trên|/|,)?\s*#[0-9a-fA-F]{6})?$',
+      ).hasMatch(s)) {
+    kinds.add(DataKind.color);
   }
   if (RegExp('%[0-9A-Fa-f]{2}').hasMatch(s) && _runs('url-decode', s))
     kinds.add(DataKind.url);

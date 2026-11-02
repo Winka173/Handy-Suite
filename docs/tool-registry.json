@@ -29,13 +29,6 @@
       "source": "packages/handy_tools_engine/lib/src/tools.dart"
     },
     {
-      "id": "percent",
-      "en": "Percentage",
-      "vi": "Phần trăm",
-      "description": "Percentage value and amount after discount.",
-      "source": "packages/handy_tools_engine/lib/src/tools.dart"
-    },
-    {
       "id": "dates",
       "en": "Date difference",
       "vi": "Khoảng cách ngày",
@@ -85,13 +78,6 @@
       "source": "packages/handy_tools_engine/lib/src/tools.dart"
     },
     {
-      "id": "contrast",
-      "en": "Color contrast",
-      "vi": "Độ tương phản",
-      "description": "WCAG contrast; normal text AA requires 4.5.",
-      "source": "packages/handy_tools_engine/lib/src/tools.dart"
-    },
-    {
       "id": "salary",
       "en": "Salary",
       "vi": "Tính lương",
@@ -106,20 +92,6 @@
       "source": "packages/handy_tools_engine/lib/src/tools.dart"
     },
     {
-      "id": "ratio",
-      "en": "Scale a ratio",
-      "vi": "Tính tỷ lệ",
-      "description": "Proportional new second term.",
-      "source": "packages/handy_tools_engine/lib/src/tools.dart"
-    },
-    {
-      "id": "manual-exchange",
-      "en": "Manual exchange rate",
-      "vi": "Đổi tiền theo tỷ giá nhập",
-      "description": "User-provided rate only; no live rate lookup.",
-      "source": "packages/handy_tools_engine/lib/src/tools.dart"
-    },
-    {
       "id": "business-days",
       "en": "Business days",
       "vi": "Số ngày làm việc",
@@ -131,13 +103,6 @@
       "en": "Find & replace",
       "vi": "Tìm và thay thế",
       "description": "Literal replacement, bounded to one million UTF-16 units.",
-      "source": "packages/handy_tools_engine/lib/src/tools.dart"
-    },
-    {
-      "id": "colors",
-      "en": "HEX / RGB / HSL",
-      "vi": "HEX / RGB / HSL",
-      "description": "HEX input, HSL in degrees and percentages.",
       "source": "packages/handy_tools_engine/lib/src/tools.dart"
     },
     {
@@ -185,13 +150,6 @@
       "source": "packages/handy_dev_engine/lib/src/transforms.dart"
     },
     {
-      "id": "json-toml",
-      "en": "JSON → TOML",
-      "vi": "JSON → TOML",
-      "description": "Reject null/unsafe integers and lossy roundtrip.",
-      "source": "packages/handy_dev_engine/lib/src/transforms.dart"
-    },
-    {
       "id": "jsonpath",
       "en": "JSONPath subset",
       "vi": "JSONPath giới hạn",
@@ -209,63 +167,14 @@
       "id": "json",
       "en": "JSON format",
       "vi": "Định dạng JSON",
-      "description": "Strict JSON format.",
+      "description": "Strict JSON: pretty (default) or minified. Options: pretty | min.",
       "source": "packages/handy_dev_engine/lib/src/transforms.dart"
     },
     {
-      "id": "json-min",
-      "en": "JSON minify",
-      "vi": "Rút gọn JSON",
-      "description": "Validate and minify.",
-      "source": "packages/handy_dev_engine/lib/src/transforms.dart"
-    },
-    {
-      "id": "yaml-json",
-      "en": "YAML → JSON",
-      "vi": "YAML → JSON",
-      "description": "Reject duplicate keys, cycles and excessive aliases.",
-      "source": "packages/handy_dev_engine/lib/src/transforms.dart"
-    },
-    {
-      "id": "json-yaml",
-      "en": "JSON → YAML",
-      "vi": "JSON → YAML",
-      "description": "JSON flow syntax is valid YAML 1.2; preserves scalar types.",
-      "source": "packages/handy_dev_engine/lib/src/transforms.dart"
-    },
-    {
-      "id": "toml-json",
-      "en": "TOML → JSON",
-      "vi": "TOML → JSON",
-      "description": "Parse TOML; dates emitted as ISO strings.",
-      "source": "packages/handy_dev_engine/lib/src/transforms.dart"
-    },
-    {
-      "id": "xml-json",
-      "en": "XML → JSON",
-      "vi": "XML → JSON",
-      "description": "Attributes @_ and #text; mixed-content mapping is partial; DTD disabled.",
-      "source": "packages/handy_dev_engine/lib/src/transforms.dart"
-    },
-    {
-      "id": "json-xml",
-      "en": "JSON → XML",
-      "vi": "JSON → XML",
-      "description": "Exactly one root key; attributes @_ and #text.",
-      "source": "packages/handy_dev_engine/lib/src/transforms.dart"
-    },
-    {
-      "id": "csv-json",
-      "en": "CSV → JSON",
-      "vi": "CSV → JSON",
-      "description": "Auto delimiter; strict header/field count; strings retained.",
-      "source": "packages/handy_dev_engine/lib/src/transforms.dart"
-    },
-    {
-      "id": "json-csv",
-      "en": "JSON → CSV",
-      "vi": "JSON → CSV",
-      "description": "Flat objects only; spreadsheet formulas escaped (lossy).",
+      "id": "convert",
+      "en": "Convert data",
+      "vi": "Chuyển đổi dữ liệu",
+      "description": "Between JSON, YAML, TOML, XML and CSV; one side is JSON. Options: from and to, e.g. \"json yaml\". YAML rejects duplicate keys and alias bombs; TOML rejects null and unsafe integers; XML maps attributes to @_ and text to #text (DTD off); CSV is flat with formulas escaped.",
       "source": "packages/handy_dev_engine/lib/src/transforms.dart"
     },
     {
@@ -276,45 +185,24 @@
       "source": "packages/handy_dev_engine/lib/src/transforms.dart"
     },
     {
-      "id": "base64-encode",
-      "en": "Base64 encode",
-      "vi": "Mã hóa Base64",
-      "description": "UTF-8 text.",
+      "id": "base64",
+      "en": "Base64",
+      "vi": "Base64",
+      "description": "UTF-8 text. Options: encode (default) | decode; decoding is strict UTF-8 with canonical unused bits.",
       "source": "packages/handy_dev_engine/lib/src/transforms.dart"
     },
     {
-      "id": "base64-decode",
-      "en": "Base64 decode",
-      "vi": "Giải mã Base64",
-      "description": "Strict UTF-8 and canonical unused bits.",
-      "source": "packages/handy_dev_engine/lib/src/transforms.dart"
-    },
-    {
-      "id": "url-encode",
+      "id": "url",
       "en": "URL encode",
       "vi": "Mã hóa URL",
-      "description": "Encode a UTF-8 component.",
+      "description": "A UTF-8 component. Options: encode (default) | decode; invalid percent escapes are rejected.",
       "source": "packages/handy_dev_engine/lib/src/transforms.dart"
     },
     {
-      "id": "url-decode",
-      "en": "URL decode",
-      "vi": "Giải mã URL",
-      "description": "Reject invalid UTF-8/percent escapes.",
-      "source": "packages/handy_dev_engine/lib/src/transforms.dart"
-    },
-    {
-      "id": "sha256",
-      "en": "SHA-256",
-      "vi": "SHA-256",
-      "description": "Local UTF-8 hash.",
-      "source": "packages/handy_dev_engine/lib/src/transforms.dart"
-    },
-    {
-      "id": "sha512",
-      "en": "SHA-512",
-      "vi": "SHA-512",
-      "description": "Local UTF-8 hash.",
+      "id": "hash",
+      "en": "Hash",
+      "vi": "Băm",
+      "description": "Local UTF-8 hash. Options: sha256 (default) | sha512.",
       "source": "packages/handy_dev_engine/lib/src/transforms.dart"
     },
     {
@@ -329,20 +217,6 @@
       "en": "JSON structural diff",
       "vi": "So sánh JSON",
       "description": "Before JSON; options after JSON. JSON Pointer paths.",
-      "source": "packages/handy_dev_engine/lib/src/transforms.dart"
-    },
-    {
-      "id": "env-sample",
-      "en": ".env sample",
-      "vi": ".env mẫu",
-      "description": "Export names only; remove all values.",
-      "source": "packages/handy_dev_engine/lib/src/transforms.dart"
-    },
-    {
-      "id": "har",
-      "en": "HAR summary",
-      "vi": "Tóm tắt HAR",
-      "description": "Method, status, duration and URL (scheme, host, path; query values redacted); no headers, cookies or bodies.",
       "source": "packages/handy_dev_engine/lib/src/transforms.dart"
     },
     {
@@ -399,6 +273,20 @@
       "en": "HMAC",
       "vi": "HMAC",
       "description": "HMAC-SHA256/SHA512 of UTF-8 text, hex or Base64. The key is session-only: never saved in drafts, chains or exports.",
+      "source": "packages/handy_dev_engine/lib/src/transforms.dart"
+    },
+    {
+      "id": "colors",
+      "en": "HEX / RGB / HSL",
+      "vi": "HEX / RGB / HSL",
+      "description": "A #RRGGBB colour as RGB and HSL (degrees and percentages).",
+      "source": "packages/handy_dev_engine/lib/src/transforms.dart"
+    },
+    {
+      "id": "contrast",
+      "en": "Colour contrast",
+      "vi": "Độ tương phản màu",
+      "description": "WCAG 2 ratio of a text colour on a background: AA needs 4.5 for normal text, 3 for large; AAA needs 7. Input: text colour; options: background (or both in the input, \"#111111 on #FFFFFF\").",
       "source": "packages/handy_dev_engine/lib/src/transforms.dart"
     }
   ]

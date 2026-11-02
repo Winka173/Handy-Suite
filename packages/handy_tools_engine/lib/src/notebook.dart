@@ -29,7 +29,8 @@ const _scales = {
 /// * `Rent: 5tr` or `rent = 5tr` names the line; later lines use `rent`.
 /// * `ans` is the line above; `total` (or `tổng`) adds the lines above it
 ///   up to a blank line.
-/// * `45k`, `1.2tr`, `1.200.000`, `10%`, `3 x 4` read as people write them.
+/// * `45k`, `1.2tr`, `1.200.000`, `10%`, `3 x 4` read as people write them;
+///   `15% of 2tr` is a share and `2tr - 15%` takes 15% off.
 List<NotebookLine> evaluateNotebook(String text) {
   _bounded(text, 50000);
   final lines = text.split('\n');
@@ -119,6 +120,17 @@ String? _prepareLine(
     ),
     (m) => '(${m[1]}*${_scales[m[2]]})',
   );
+  // "15% of 2400000" / "15% của 2tr": a share of an amount.
+  s = s.replaceAllMapped(
+    RegExp(r'(\d+(?:\.\d+)?)%\s*(?:of|của|cua)\s*', unicode: true),
+    (m) => '(${m[1]}/100)*',
+  );
+  // "2400000 - 15%" / "+ 8%": a calculator's percent, of everything before
+  // it; "100 - 5% - 2%" takes 5% off, then 2% off what is left.
+  final off = RegExp(r'^([^%]+?)\s*([+-])\s*(\d+(?:\.\d+)?)%(?!\s*\d)');
+  for (var m = off.firstMatch(s); m != null; m = off.firstMatch(s)) {
+    s = '((${m[1]})*(1${m[2]}${m[3]}/100))${s.substring(m.end)}';
+  }
   s = s.replaceAllMapped(
     RegExp(r'(\d+(?:\.\d+)?)%(?!\s*\d)'),
     (m) => '(${m[1]}/100)',

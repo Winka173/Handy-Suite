@@ -155,34 +155,11 @@ void main() {
       expect(rows[1], '1,1.00,0.00,1.00,1199.00');
       expect(rows.last.endsWith(',0.00'), true);
     });
-    test(
-      'percentage',
-      () => expect(jsonDecode(run('percent', '200,15')), {
-        'percent': '30',
-        'afterDiscount': '170',
-      }),
-    );
-    test('ratio', () => expect(run('ratio', '16,9,1920'), '1080'));
-    test(
-      'manual exchange preserves supplied date',
-      () =>
-          expect(jsonDecode(run('manual-exchange', '12.5,25000,2026-10-31')), {
-            'amount': '312500.00',
-            'rate': '25000',
-            'rateDate': '2026-10-31',
-            'source': 'user supplied',
-          }),
-    );
     test('malformed financial inputs', () {
       for (final input in ['100,-1,12', '100,6,0', '-1,6,12', '1,6,1.5']) {
         expect(() => run('loan', input), throwsFormatException);
       }
-      expect(() => run('ratio', '0,2,3'), throwsFormatException);
       expect(() => run('compound', '100,5,101,12'), throwsFormatException);
-      expect(
-        () => run('manual-exchange', '1,0,2026-10-31'),
-        throwsFormatException,
-      );
     });
   });
   group('calendar dates', () {
@@ -221,9 +198,9 @@ void main() {
     });
   });
   group('Unicode and text bounds', () {
-    test('22 unique tools', () {
-      expect(tools.length, 22);
-      expect(tools.map((t) => t.id).toSet().length, 22);
+    test('17 unique tools', () {
+      expect(tools.length, 17);
+      expect(tools.map((t) => t.id).toSet().length, 17);
     });
     test(
       'NFC whitespace',
@@ -299,22 +276,6 @@ void main() {
         () => run('literal-replace', 'a', '{"find":1,"replace":"b"}'),
         throwsFormatException,
       ),
-    );
-  });
-  group('colors', () {
-    test('black white WCAG', () => expect(contrast('#000000', '#ffffff'), 21));
-    for (final v in <String, Map<String, num>>{
-      '#ff0000': {'h': 0, 's': 100, 'l': 50},
-      '#00ff00': {'h': 120, 's': 100, 'l': 50},
-      '#0000ff': {'h': 240, 's': 100, 'l': 50},
-      '#ffffff': {'h': 0, 's': 0, 'l': 100},
-      '#000000': {'h': 0, 's': 0, 'l': 0},
-    }.entries) {
-      test(v.key, () => expect(colors(v.key)['hsl'], v.value));
-    }
-    test(
-      'invalid hex',
-      () => expect(() => colors('#fff'), throwsFormatException),
     );
   });
   group('secure password generation', () {

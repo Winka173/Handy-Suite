@@ -15,6 +15,7 @@ import 'cron.dart';
 import 'bases.dart';
 import 'url_parts.dart';
 import 'hmac.dart';
+import 'colors.dart';
 export 'inference.dart';
 
 String bounded(String text, [int maxBytes = 1000000]) {
@@ -436,14 +437,6 @@ List<Map<String, dynamic>> diff(
   ];
 }
 
-String envSample(String input) => bounded(input)
-    .split(RegExp(r'\r?\n'))
-    .where((s) => RegExp(r'^\s*(export\s+)?[A-Za-z_][\w]*=').hasMatch(s))
-    .map(
-      (s) =>
-          '${s.split('=').first.trim().replaceFirst(RegExp(r'^export\s+'), '')}=',
-    )
-    .join('\n');
 dynamic redact(dynamic value, [int depth = 0]) {
   if (depth == 0) assertJsonData(value);
   if (depth > 20) return '[depth limit]';
@@ -462,42 +455,41 @@ dynamic redact(dynamic value, [int depth = 0]) {
   return value;
 }
 
-/// Scheme, host, port and path of a HAR request URL, with every query value
-/// replaced; credentials and the fragment are dropped. Null when unreadable.
-String? harUrl(dynamic url) {
-  if (url is! String || url.length > 100000) return null;
-  final u = Uri.tryParse(url.trim());
-  if (u == null || u.scheme.isEmpty || !u.hasAuthority) return null;
-  final b = StringBuffer(
-    '${u.scheme}://${u.host}${u.hasPort ? ':${u.port}' : ''}${u.path}',
-  );
-  final names = [
-    for (final part in u.query.split('&'))
-      if (part.isNotEmpty)
-        part.contains('=')
-            ? '${part.substring(0, part.indexOf('='))}=[REDACTED]'
-            : part,
-  ];
-  if (names.isNotEmpty) b.write('?${names.join('&')}');
-  return b.toString();
-}
+/// Formats [convertData] reads and writes; one side is always JSON.
+const convertFormats = ['json', 'yaml', 'toml', 'xml', 'csv'];
 
-dynamic harSummary(String input) {
-  final v = parseJson(input);
-  if (v is! Map || v['log'] is! Map || v['log']['entries'] is! List)
-    throw const FormatException('Missing HAR log.entries');
-  return (v['log']['entries'] as List).map((e) {
-    if (e is! Map) throw const FormatException('Invalid HAR entry');
-    final url = e['request'] is Map ? harUrl(e['request']['url']) : null;
-    return {
-      if (e['request'] is Map && e['request'].containsKey('method'))
-        'method': e['request']['method'],
-      'url': ?url,
-      if (e['response'] is Map && e['response'].containsKey('status'))
-        'status': e['response']['status'],
-      if (e.containsKey('time')) 'durationMs': e['time'],
-    };
-  }).toList();
+/// `from to` (e.g. `json yaml`) → the converted text. JSON is the hub: a
+/// conversion between two other formats is refused rather than chained,
+/// because each step is lossy in its own way.
+String convertData(String input, String options) {
+  final parts = options.trim().toLowerCase().split(RegExp(r'[\s,>→-]+'))
+    ..removeWhere((p) => p.isEmpty);
+  if (parts.length != 2 ||
+      parts.any((p) => !convertFormats.contains(p)) ||
+      parts[0] == parts[1]) {
+    throw const FormatException(
+      'Options: from and to, one of json yaml toml xml csv',
+    );
+  }
+  final (from, to) = (parts[0], parts[1]);
+  if (from != 'json' && to != 'json') {
+    throw const FormatException(
+      'One side must be JSON / Một phía phải là JSON',
+    );
+  }
+  return switch (from) {
+    'yaml' => pretty(parseYaml(input)),
+    'toml' => pretty(parseToml(input)),
+    'xml' => pretty(parseXml(input)),
+    'csv' => pretty(parseCsv(input)),
+    _ => switch (to) {
+      // JSON flow syntax is valid YAML 1.2 and keeps every scalar type.
+      'yaml' => pretty(parseJson(input)),
+      'toml' => jsonToToml(parseJson(input)),
+      'xml' => jsonToXml(parseJson(input)),
+      _ => jsonCsv(input),
+    },
+  };
 }
 
 class DevTool {
@@ -554,13 +546,6 @@ final List<DevTool> devTools = List.unmodifiable([
     (s, o) => pretty(inferJsonSchema(parseJson(s))),
   ),
   DevTool(
-    'json-toml',
-    'JSON → TOML',
-    'JSON → TOML',
-    'Reject null/unsafe integers and lossy roundtrip.',
-    (s, o) => jsonToToml(parseJson(s)),
-  ),
-  DevTool(
     'jsonpath',
     'JSONPath subset',
     'JSONPath giới hạn',
@@ -580,64 +565,18 @@ final List<DevTool> devTools = List.unmodifiable([
     'json',
     'JSON format',
     'Định dạng JSON',
-    'Strict JSON format.',
-    (s, o) => pretty(parseJson(s)),
+    'Strict JSON: pretty (default) or minified. Options: pretty | min.',
+    (s, o) =>
+        o.trim() == 'min' ? jsonEncode(parseJson(s)) : pretty(parseJson(s)),
+    optionsLabel: 'pretty | min',
   ),
   DevTool(
-    'json-min',
-    'JSON minify',
-    'Rút gọn JSON',
-    'Validate and minify.',
-    (s, o) => jsonEncode(parseJson(s)),
-  ),
-  DevTool(
-    'yaml-json',
-    'YAML → JSON',
-    'YAML → JSON',
-    'Reject duplicate keys, cycles and excessive aliases.',
-    (s, o) => pretty(parseYaml(s)),
-  ),
-  DevTool(
-    'json-yaml',
-    'JSON → YAML',
-    'JSON → YAML',
-    'JSON flow syntax is valid YAML 1.2; preserves scalar types.',
-    (s, o) => pretty(parseJson(s)),
-  ),
-  DevTool(
-    'toml-json',
-    'TOML → JSON',
-    'TOML → JSON',
-    'Parse TOML; dates emitted as ISO strings.',
-    (s, o) => pretty(parseToml(s)),
-  ),
-  DevTool(
-    'xml-json',
-    'XML → JSON',
-    'XML → JSON',
-    'Attributes @_ and #text; mixed-content mapping is partial; DTD disabled.',
-    (s, o) => pretty(parseXml(s)),
-  ),
-  DevTool(
-    'json-xml',
-    'JSON → XML',
-    'JSON → XML',
-    'Exactly one root key; attributes @_ and #text.',
-    (s, o) => jsonToXml(parseJson(s)),
-  ),
-  DevTool(
-    'csv-json',
-    'CSV → JSON',
-    'CSV → JSON',
-    'Auto delimiter; strict header/field count; strings retained.',
-    (s, o) => pretty(parseCsv(s)),
-  ),
-  DevTool(
-    'json-csv',
-    'JSON → CSV',
-    'JSON → CSV',
-    'Flat objects only; spreadsheet formulas escaped (lossy).',
-    (s, o) => jsonCsv(s),
+    'convert',
+    'Convert data',
+    'Chuyển đổi dữ liệu',
+    'Between JSON, YAML, TOML, XML and CSV; one side is JSON. Options: from and to, e.g. "json yaml". YAML rejects duplicate keys and alias bombs; TOML rejects null and unsafe integers; XML maps attributes to @_ and text to #text (DTD off); CSV is flat with formulas escaped.',
+    (s, o) => convertData(s, o),
+    optionsLabel: 'From and to, e.g. json yaml',
   ),
   DevTool(
     'jsonl',
@@ -660,52 +599,38 @@ final List<DevTool> devTools = List.unmodifiable([
     },
   ),
   DevTool(
-    'base64-encode',
-    'Base64 encode',
-    'Mã hóa Base64',
-    'UTF-8 text.',
-    (s, o) => base64.encode(utf8.encode(s)),
+    'base64',
+    'Base64',
+    'Base64',
+    'UTF-8 text. Options: encode (default) | decode; decoding is strict UTF-8 with canonical unused bits.',
+    (s, o) =>
+        o.trim() == 'decode' ? decode64(s) : base64.encode(utf8.encode(s)),
+    optionsLabel: 'encode | decode',
   ),
   DevTool(
-    'base64-decode',
-    'Base64 decode',
-    'Giải mã Base64',
-    'Strict UTF-8 and canonical unused bits.',
-    (s, o) => decode64(s),
-  ),
-  DevTool(
-    'url-encode',
+    'url',
     'URL encode',
     'Mã hóa URL',
-    'Encode a UTF-8 component.',
-    (s, o) => Uri.encodeComponent(s),
-  ),
-  DevTool(
-    'url-decode',
-    'URL decode',
-    'Giải mã URL',
-    'Reject invalid UTF-8/percent escapes.',
+    'A UTF-8 component. Options: encode (default) | decode; invalid percent escapes are rejected.',
     (s, o) {
+      if (o.trim() != 'decode') return Uri.encodeComponent(s);
       try {
         return Uri.decodeComponent(s);
       } catch (_) {
         throw const FormatException('Invalid percent-encoded UTF-8');
       }
     },
+    optionsLabel: 'encode | decode',
   ),
   DevTool(
-    'sha256',
-    'SHA-256',
-    'SHA-256',
-    'Local UTF-8 hash.',
-    (s, o) => crypto.sha256.convert(utf8.encode(s)).toString(),
-  ),
-  DevTool(
-    'sha512',
-    'SHA-512',
-    'SHA-512',
-    'Local UTF-8 hash.',
-    (s, o) => crypto.sha512.convert(utf8.encode(s)).toString(),
+    'hash',
+    'Hash',
+    'Băm',
+    'Local UTF-8 hash. Options: sha256 (default) | sha512.',
+    (s, o) => (o.trim() == 'sha512' ? crypto.sha512 : crypto.sha256)
+        .convert(utf8.encode(s))
+        .toString(),
+    optionsLabel: 'sha256 | sha512',
   ),
   DevTool(
     'jwt',
@@ -722,22 +647,6 @@ final List<DevTool> devTools = List.unmodifiable([
     'Before JSON; options after JSON. JSON Pointer paths.',
     (s, o) => pretty(diff(parseJson(s), parseJson(o))),
     optionsLabel: 'After JSON',
-  ),
-  DevTool(
-    'env-sample',
-    '.env sample',
-    '.env mẫu',
-    'Export names only; remove all values.',
-    (s, o) => envSample(s),
-    sensitive: true,
-  ),
-  DevTool(
-    'har',
-    'HAR summary',
-    'Tóm tắt HAR',
-    'Method, status, duration and URL (scheme, host, path; query values redacted); no headers, cookies or bodies.',
-    (s, o) => pretty(harSummary(s)),
-    sensitive: true,
   ),
   DevTool(
     'redact',
@@ -841,5 +750,64 @@ final List<DevTool> devTools = List.unmodifiable([
     optionsLabel: 'JSON: key, hash, keyFormat, output',
     sensitive: true,
   ),
+  DevTool(
+    'colors',
+    'HEX / RGB / HSL',
+    'HEX / RGB / HSL',
+    'A #RRGGBB colour as RGB and HSL (degrees and percentages).',
+    (s, o) => pretty(colors(s.trim())),
+  ),
+  DevTool(
+    'contrast',
+    'Colour contrast',
+    'Độ tương phản màu',
+    'WCAG 2 ratio of a text colour on a background: AA needs 4.5 for normal text, 3 for large; AAA needs 7. Input: text colour; options: background (or both in the input, "#111111 on #FFFFFF").',
+    (s, o) {
+      final hexes = RegExp(
+        r'#[0-9a-fA-F]{6}\b',
+      ).allMatches('$s ${o.trim()}').map((m) => m[0]!).toList();
+      if (hexes.length != 2) {
+        throw const FormatException(
+          'Two colours: text and background, #RRGGBB',
+        );
+      }
+      return pretty(contrastReport(hexes[0], hexes[1]));
+    },
+    optionsLabel: 'Background #RRGGBB',
+  ),
 ]);
 final tools = devTools;
+
+/// Tools merged on 2026-11-03, each with the tool and options it became.
+/// Saved chains keep these ids as steps; favorites and drafts move over.
+const devToolAliases = <String, (String, String)>{
+  'json-min': ('json', 'min'),
+  'json-yaml': ('convert', 'json yaml'),
+  'json-toml': ('convert', 'json toml'),
+  'json-xml': ('convert', 'json xml'),
+  'json-csv': ('convert', 'json csv'),
+  'yaml-json': ('convert', 'yaml json'),
+  'toml-json': ('convert', 'toml json'),
+  'xml-json': ('convert', 'xml json'),
+  'csv-json': ('convert', 'csv json'),
+  'base64-encode': ('base64', 'encode'),
+  'base64-decode': ('base64', 'decode'),
+  'url-encode': ('url', 'encode'),
+  'url-decode': ('url', 'decode'),
+  'sha256': ('hash', 'sha256'),
+  'sha512': ('hash', 'sha512'),
+};
+
+/// Tools removed on 2026-11-03; their saved favorites and drafts are dropped.
+const devRemovedTools = {'har', 'env-sample'};
+
+/// Runs a tool by id, or a merged tool's old id with the options it implies.
+String runDevTool(String id, String input, [String options = '']) {
+  final alias = devToolAliases[id];
+  final toolId = alias?.$1 ?? id;
+  final tool = devTools.firstWhere(
+    (t) => t.id == toolId,
+    orElse: () => throw FormatException('Unknown tool: $id'),
+  );
+  return tool.run(input, alias?.$2 ?? options);
+}

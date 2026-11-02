@@ -85,7 +85,6 @@ String? _date(String raw, DateTime today) {
 
 const _datePart = r'(\d{4}-\d{2}-\d{2}|\d{1,2}/\d{1,2}/\d{4}|hôm nay|today)';
 const _num = r'(-?\d[\d.,]*)';
-const _hex = r'#?([0-9a-fA-F]{6})';
 
 /// Candidate readings, best first. Empty when nothing useful applies yet.
 List<Reading> interpret(String input, {required bool vi, DateTime? now}) {
@@ -122,8 +121,10 @@ List<Reading> interpret(String input, {required bool vi, DateTime? now}) {
     final p = normalizeNumber(m[1]!, vi: vi),
         a = normalizeNumber(m[2]!, vi: vi);
     if (p != null && a != null) {
+      // The share, worked out exactly by the calculator; "2tr - 15%" (what
+      // is left) belongs to the calc notebook since the percent tool went.
       return [
-        Reading('percent', {'amount': a, 'percent': p}),
+        Reading('calculate', {'expression': '$a * $p / 100'}),
       ];
     }
   }
@@ -145,19 +146,6 @@ List<Reading> interpret(String input, {required bool vi, DateTime? now}) {
         }),
       ];
     }
-  }
-
-  m = RegExp('^$_hex\\s*(?:on|trên|/|,|\\s)\\s*$_hex\$').firstMatch(s);
-  if (m != null) {
-    return [
-      Reading('contrast', {'fg': '#${m[1]}', 'bg': '#${m[2]}'}),
-    ];
-  }
-  m = RegExp('^$_hex\$').firstMatch(s);
-  if (m != null && (s.startsWith('#') || RegExp('[a-fA-F]').hasMatch(s))) {
-    return [
-      Reading('colors', {'hex': '#${m[1]!.toUpperCase()}'}),
-    ];
   }
 
   if (RegExp(r'^https?://\S+$', caseSensitive: false).hasMatch(s)) {

@@ -8,10 +8,11 @@ Lens lens(DataKind k, String id) => lensesFor(k).firstWhere((l) => l.id == id);
 void main() {
   test('pasted payloads are recognised, best guess first', () {
     expect(detect('{"a": [1, 2]}').first, DataKind.json);
-    expect(detect('{"log": {"entries": []}}').first, DataKind.har);
+    // A HAR file is JSON, and .env lines are text, since 2026-11-03.
+    expect(detect('{"log": {"entries": []}}').first, DataKind.json);
     expect(detect('{"a":1}\n{"a":2}').first, DataKind.jsonl);
     expect(detect('<a><b>1</b></a>').first, DataKind.xml);
-    expect(detect('API_KEY=abc\nDEBUG=1').first, DataKind.env);
+    expect(detect('API_KEY=abc\nDEBUG=1').first, DataKind.text);
     expect(detect('name: An\nage: 3').first, DataKind.yaml);
     expect(detect('[server]\nport = 8080').first, DataKind.toml);
     expect(detect('id,name\n1,An\n2,Bình').first, DataKind.csv);
@@ -96,7 +97,7 @@ void main() {
     final r = inspect(
       'Xin chào',
       DataKind.text,
-      lens(DataKind.text, 'base64-encode'),
+      lens(DataKind.text, 'base64'),
       chain: ['base64-encode', 'base64-decode'],
     );
     expect(r.text, 'Xin chào');
@@ -119,5 +120,51 @@ void main() {
       const Lens('curl'),
     );
     expect(r.request!.url, 'https://api.example.com/v1');
+  });
+
+  test('merged tools: one lens each, the direction a chip', () {
+    final json = lensesFor(DataKind.json).map((l) => l.id).toList();
+    expect(json.where((id) => id == 'convert'), hasLength(1));
+    expect(json, isNot(contains('json-min')));
+    final r = inspect(
+      '{"a":1}',
+      DataKind.json,
+      lens(DataKind.json, 'convert'),
+      picks: {'to': 'toml'},
+    );
+    expect(r.text?.trim(), 'a = 1');
+    final yaml = inspect('a: 1', DataKind.yaml, lens(DataKind.yaml, 'convert'));
+    expect(yaml.text?.replaceAll(RegExp(r'\s'), ''), '{"a":1}');
+    final decoded = inspect(
+      'SGk=',
+      DataKind.base64,
+      lens(DataKind.base64, 'base64'),
+    );
+    expect(decoded.text, 'Hi');
+    expect(stepOf(lens(DataKind.text, 'hash'), {'algo': 'sha512'}), 'sha512');
+    expect(stepOf(lens(DataKind.text, 'regex'), {}), isNull);
+  });
+  test('colours moved from Tools: a hex is a colour, a pair a contrast', () {
+    expect(detect('#E8590C').first, DataKind.color);
+    expect(detect('#111111 on #FFFFFF').first, DataKind.color);
+    final hsl = inspect(
+      '#FF0000',
+      DataKind.color,
+      lens(DataKind.color, 'colors'),
+    );
+    expect(hsl.text, contains('"h": 0'));
+    final pair = inspect(
+      '#000000 on #FFFFFF',
+      DataKind.color,
+      lens(DataKind.color, 'contrast'),
+    );
+    expect(pair.text, contains('"ratio": 21'));
+    final asked = inspect(
+      '#777777',
+      DataKind.color,
+      lens(DataKind.color, 'contrast'),
+      option: '#FFFFFF',
+    );
+    expect(asked.text, contains('"normalTextAA": false'));
   });
 }
