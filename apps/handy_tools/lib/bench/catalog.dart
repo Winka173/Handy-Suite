@@ -28,6 +28,14 @@ const generators = [
     'Chọn từ danh sách, chia đội, tung xu, xúc xắc',
   ),
   (
+    'measure',
+    Icons.straighten,
+    'Measure from a photo',
+    'Đo bằng ảnh',
+    'Lengths against a bank card or an A4 sheet',
+    'Đo so với thẻ ngân hàng hoặc tờ A4',
+  ),
+  (
     'subtitles',
     Icons.subtitles_outlined,
     'Subtitles',

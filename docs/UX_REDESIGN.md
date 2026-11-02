@@ -1774,8 +1774,9 @@ primary action, states, accessibility, patterns to reject).
   written), a count to pick (1..n), a team count (2..n), coin, dice `NdM`
   (1-20 dice, 2-100 sides). Randomness from `Random.secure`.
 - Modes as one chip row: Pick, Teams, Coin, Dice. Primary action: Draw again
-  (also Enter). Each draw is appended to the session tape so a draw can be
-  shown as made, not redone quietly; nothing is stored after the panel closes.
+  (also Ctrl Enter). Earlier draws stay listed under the result while the
+  panel is open, so a draw is shown as made, not redone quietly; nothing is
+  stored. Results longer than 60 characters drop a size so teams fit a phone.
 - States: empty list (the chip row still works for coin and dice), fewer
   entries than asked (inline message, button disabled), result.
 - Teams are balanced by count (sizes differ by at most one); order inside a
@@ -1854,3 +1855,17 @@ primary action, states, accessibility, patterns to reject).
   Every text uses the existing bindings, so a profile fills the CV.
 - Same editor; no new screen. The template strip shows them with the rest.
 - Reject: stock photos, ornament clip art, script faces not bundled.
+
+### Forms P0/P1 editor and reporting completion contract (2026-11-03)
+
+- Job: arrange a draft form, collect it clearly, and export only reviewed data.
+- Primary actions: select/reorder a field; undo a draft edit; submit; choose a report.
+- Keep the framed-sheet face, IBM Plex Sans and teal version spine. No new app shell.
+- Layout: half-width fields pair only at >=700px and normal text scale. At 320px
+  or large text every answer uses full width. Sections remain labeled; no hidden required answers.
+- Drag has up/down menu alternatives; Ctrl+Z/Y work on the draft and never mutate
+  published schemas. Conflicting external edits refuse undo instead of overwriting.
+- Report templates use real answer bindings and vector PDF output. Logos are
+  explicitly imported sanitized small PNGs; charts expose missing values and units.
+- Empty/loading/error remain explicit. Native notification prompts occur in Settings,
+  answer contents never appear on the lock screen, and the in-app center always works.

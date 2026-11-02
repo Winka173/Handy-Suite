@@ -11,6 +11,7 @@ export 'kit/dates.dart';
 export 'kit/files.dart';
 export 'kit/l10n.dart';
 export 'kit/load_error.dart';
+export 'kit/measure.dart';
 export 'kit/more_apps.dart';
 export 'kit/motion.dart';
 export 'kit/palette.dart';

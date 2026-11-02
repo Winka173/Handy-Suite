@@ -157,6 +157,69 @@ class KeepScope {
     ),
   );
 
+  /// Lengths of [item] read off a photo (its own photo when it has one);
+  /// "Add to notes" writes them under its notes after a confirmation.
+  Future<void> measure(
+    BuildContext context,
+    InventoryAsset item,
+  ) => Navigator.push<void>(
+    context,
+    MaterialPageRoute(
+      builder: (context) => Scaffold(
+        appBar: AppBar(
+          title: Text(tr(context, 'Measure from a photo', 'Đo bằng ảnh')),
+        ),
+        body: ListView(
+          padding: const EdgeInsets.all(HandySpace.l),
+          children: [
+            HandyMeasurePanel(
+              initial: store.library!.blobs[item.photoUri],
+              pickImage: () async => (await files.importBytes(
+                extensions: const ['png', 'jpg', 'jpeg', 'webp'],
+                maxBytes: 20000000,
+              ))?.bytes,
+              capture: camera?.supported == true
+                  ? () async => (await camera!.capture())?.bytes
+                  : null,
+              actions: (context, lengths) => [
+                FilledButton.icon(
+                  key: const Key('measure-to-notes'),
+                  onPressed: () async {
+                    final line =
+                        '${tr(context, 'Measured', 'Đo bằng ảnh')}: '
+                        '${lengths.map(handyMeasureLabel).join(', ')}';
+                    final ok = await confirmHandy(
+                      context,
+                      title: tr(
+                        context,
+                        "Add to ${item.name}'s notes?",
+                        'Thêm vào ghi chú của ${item.name}?',
+                      ),
+                      message: line,
+                      confirmLabel: tr(context, 'Add', 'Thêm'),
+                    );
+                    if (!ok || !context.mounted) return;
+                    if (await _run(
+                          context,
+                          () => store.appendNote(item.id, line),
+                          (c) =>
+                              tr(c, 'Added to notes.', 'Đã thêm vào ghi chú.'),
+                        ) &&
+                        context.mounted) {
+                      Navigator.pop(context);
+                    }
+                  },
+                  icon: const Icon(Icons.note_add_outlined, size: 18),
+                  label: Text(tr(context, 'Add to notes', 'Thêm vào ghi chú')),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    ),
+  );
+
   Future<void> label(BuildContext context, InventoryLabel target) =>
       Navigator.push<void>(
         context,

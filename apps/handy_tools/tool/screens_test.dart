@@ -10,7 +10,7 @@ import 'package:handy_tools/app.dart';
 import 'package:handy_tools/bench/bench_page.dart';
 import 'package:handy_ui/kit.dart';
 import '../test/pilot_test.dart'
-    show FixtureFiles, MemoryPreferences, QrTestDocuments;
+    show FixtureFiles, MemoryPreferences, QrTestDocuments, fixturePicture;
 
 Future<void> _font(String family, List<String> paths) async {
   final loader = FontLoader(family);
@@ -254,6 +254,39 @@ void main() {
       await openTool(t, 'password');
       await shot(t, '$label-6-password');
     });
+    testWidgets('$label measure', (t) async {
+      fixturePicture = await t.runAsync(_tablePhoto);
+      await boot(t, size);
+      await openTool(t, 'measure');
+      await t.tap(find.byKey(const Key('measure-pick')));
+      // The photo decodes off the test clock; wait for the board, bounded.
+      for (
+        var i = 0;
+        i < 40 && find.byKey(const Key('measure-board')).evaluate().isEmpty;
+        i++
+      ) {
+        await t.runAsync(
+          () => Future<void>.delayed(const Duration(milliseconds: 50)),
+        );
+        await t.pump();
+      }
+      final board = find.byKey(const Key('measure-board'));
+      await t.ensureVisible(board);
+      await t.pumpAndSettle();
+      final origin = t.getTopLeft(board), k = t.getSize(board).width / 1600;
+      for (final p in const [
+        Offset(160, 760),
+        Offset(1016, 760),
+        Offset(1200, 260),
+        Offset(1200, 1100),
+      ]) {
+        await t.tapAt(origin + p * k);
+        await t.pump();
+      }
+      await t.pumpAndSettle();
+      await shot(t, '$label-6c-measure');
+      fixturePicture = null;
+    });
     testWidgets('$label draw', (t) async {
       await boot(t, size);
       await openTool(t, 'draw');
@@ -410,4 +443,36 @@ void main() {
     await t.pumpAndSettle();
     await shot(t, 'phone-22-notebook');
   });
+}
+
+/// A table seen from above: a bank card (85.6 mm, 856 px) beside a remote
+/// control 840 px long, so the remote reads about 84 mm.
+Future<Uint8List> _tablePhoto() async {
+  final rec = ui.PictureRecorder();
+  final c = Canvas(rec);
+  c.drawRect(
+    const Rect.fromLTWH(0, 0, 1600, 1200),
+    Paint()..color = const Color(0xFFB98A5E),
+  );
+  c.drawRRect(
+    RRect.fromRectAndRadius(
+      const Rect.fromLTWH(160, 220, 856, 540),
+      const Radius.circular(32),
+    ),
+    Paint()..color = const Color(0xFF2F6FB0),
+  );
+  c.drawRect(
+    const Rect.fromLTWH(220, 330, 120, 90),
+    Paint()..color = const Color(0xFFE2C46B),
+  );
+  c.drawRRect(
+    RRect.fromRectAndRadius(
+      const Rect.fromLTWH(1140, 260, 120, 840),
+      const Radius.circular(40),
+    ),
+    Paint()..color = const Color(0xFF26282B),
+  );
+  final image = await rec.endRecording().toImage(1600, 1200);
+  final data = await image.toByteData(format: ui.ImageByteFormat.png);
+  return data!.buffer.asUint8List();
 }

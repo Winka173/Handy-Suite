@@ -3,7 +3,7 @@
 <plist version="1.0">
 <dict>
     <key>NSCameraUsageDescription</key>
-    <string>Scan QR codes on this device. Images are not uploaded.</string>
+    <string>Scan QR codes and photograph things to measure, on this device. Images are not uploaded.</string>
 	<key>GADApplicationIdentifier</key>
 	<string>$(HANDY_ADMOB_APP_ID)</string>
 	<key>GADDelayAppMeasurementInit</key>

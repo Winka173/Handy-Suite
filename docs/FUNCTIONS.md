@@ -418,6 +418,11 @@ Source: `apps/handy_tools/lib`, `packages/handy_tools_engine`.
   mục, hoặc phân cách bằng dấu phẩy; tối đa 500, mục trùng giữ nguyên), chia đội đều
   (chênh nhau tối đa một người), tung xu, xúc xắc `NdM` (1-20 viên, 2-100 mặt).
   `Random.secure`; kết quả cũ hiện bên dưới khi panel còn mở, không lưu.
+- **Đo bằng ảnh** (`#/tool/measure`): chụp (điện thoại) hoặc chọn ảnh, kéo hai chấm lên
+  cạnh đã biết (thẻ ngân hàng 85,60/53,98 mm, A4 297/210 mm hoặc tự nhập mm), chạm hai
+  đầu mỗi đoạn; kết quả làm tròn 1 mm, ghi "≈". Chỉ đúng khi vật và tham chiếu nằm
+  phẳng cùng mặt, chụp thẳng góc (ghi ngay dưới ảnh). Phím mũi tên dịch chấm đang chọn
+  1 px (Shift 10 px). Không lưu ảnh. Bảng đo dùng chung trong kit (`kit/measure.dart`).
 - `case` gộp bốn công cụ cũ (viết hoa, viết thường, đầu từ, đầu câu) thành một form
   có 4 chế độ; kết quả từng chế độ giữ nguyên như công cụ cũ. Id cũ vẫn mở được
   (`#/tool/title-case` mở `case` ở chế độ đó), ghim cũ hiện thành `case`, chuỗi xử lý
@@ -522,6 +527,8 @@ Source: `apps/handy_dev/lib`, `packages/handy_dev_engine`, `third_party/re2`,
 
 ## Handy Keep
 
+- **Đo bằng ảnh** (menu của một món): dùng ảnh của món nếu có; "Thêm vào ghi chú"
+  ghi "Đo bằng ảnh: ≈ 84 mm, …" dưới ghi chú sau khi xác nhận, không đổi gì khác.
 - **Sắp hết**: Keep học từ các ngày mua (ngày mua của món, các lần "Vừa mua thêm", và ngày mua của các món cùng tên), lấy khoảng cách ở giữa làm nhịp mua lại; đồ được mua lại trong vòng 180 ngày mới được đoán. Một tuần trước ngày dự đoán, món đó vào "Cần để ý". Người dùng chỉ chạm "Vừa mua thêm" khi mua, không cần mỗi lần dùng. Dữ liệu lên phiên bản 3 (`restocks`); file phiên bản 1 và 2 vẫn mở được.
 
 Source: `apps/handy_keep/lib`, `packages/handy_inventory`.

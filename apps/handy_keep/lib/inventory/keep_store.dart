@@ -84,6 +84,20 @@ class KeepStore extends ChangeNotifier {
   Future<void> giveBack(String id) =>
       commit(returnAsset(state!, id, now: timestamp()));
 
+  /// Adds [line] under the item's notes; nothing else changes.
+  Future<void> appendNote(String id, String line) {
+    final a = state!.assets.firstWhere((a) => a.id == id);
+    return commit(
+      saveAsset(
+        state!,
+        a.copyWith({
+          'notes': a.notes.isEmpty ? line : '${a.notes}\n$line',
+          'updatedAt': timestamp(),
+        }),
+      ),
+    );
+  }
+
   Future<void> restock(String id) =>
       commit(restockAsset(state!, id, today(), now: timestamp()));
 

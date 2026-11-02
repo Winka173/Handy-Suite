@@ -29,13 +29,18 @@ class MemoryPreferences implements PreferencesRepository {
   }
 }
 
+/// The picture the next image import returns (review shots of measuring).
+Uint8List? fixturePicture;
+
 class FixtureFiles implements HandyFiles {
   @override
   Future<ImportedBytes?> importBytes({
     required List<String> extensions,
     int maxBytes = 30000000,
     CancellationToken? cancellation,
-  }) async => null;
+  }) async => fixturePicture == null
+      ? null
+      : ImportedBytes('photo.png', fixturePicture!);
   Uint8List? binary;
   @override
   Future<String?> exportBytes(
