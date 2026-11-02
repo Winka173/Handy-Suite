@@ -168,3 +168,24 @@ WARNING      | adb command 'C:\Users\Winka\AppData\Local\Android\Sdk\platform-to
 WARNING      | adb command 'C:\Users\Winka\AppData\Local\Android\Sdk\platform-tools\adb.exe -e shell am broadcast -a com.android.emulator.multidisplay.START -n com.android.emulator.multidisplay/.MultiDisplayServiceReceiver --user 0 ' failed: 'adb.exe: more than one emulator'
 WARNING      | adb command 'C:\Users\Winka\AppData\Local\Android\Sdk\platform-tools\adb.exe -e shell am broadcast -a com.android.emulator.multidisplay.START -n com.android.emulator.multidisplay/.MultiDisplayServiceReceiver --user 0 ' failed: 'adb.exe: more than one emulator'
 WARNING      | adb command 'C:\Users\Winka\AppData\Local\Android\Sdk\platform-tools\adb.exe -e shell am broadcast -a com.android.emulator.multidisplay.START -n com.android.emulator.multidisplay/.MultiDisplayServiceReceiver --user 0 ' failed: 'adb.exe: more than one emulator'
+INFO         | IPv4 server found: 127.0.2.2
+INFO         | Ignore IPv6 address: 9807:7eb7:b001:0:f0f4:7db7:b001:0
+INFO         | Ignore IPv6 address: 9807:7eb7:b001:0:f0f4:7db7:b001:0
+INFO         | Ignore IPv6 address: 9807:7eb7:b001:0:f0f4:7db7:b001:0
+INFO         | Ignore IPv6 address: 280e:7eb7:b001:0:f0f4:7db7:b001:0
+INFO         | Ignore IPv6 address: 280e:7eb7:b001:0:f0f4:7db7:b001:0
+INFO         | Ignore IPv6 address: 280e:7eb7:b001:0:f0f4:7db7:b001:0
+INFO         | IPv4 server found: 127.0.2.2
+INFO         | Ignore IPv6 address: 9807:7eb7:b001:0:f0f4:7db7:b001:0
+INFO         | Ignore IPv6 address: 9807:7eb7:b001:0:f0f4:7db7:b001:0
+INFO         | Ignore IPv6 address: 9807:7eb7:b001:0:f0f4:7db7:b001:0
+INFO         | Ignore IPv6 address: 280e:7eb7:b001:0:f0f4:7db7:b001:0
+INFO         | Ignore IPv6 address: 280e:7eb7:b001:0:f0f4:7db7:b001:0
+INFO         | Ignore IPv6 address: 280e:7eb7:b001:0:f0f4:7db7:b001:0
+INFO         | IPv4 server found: 127.0.2.2
+INFO         | Ignore IPv6 address: 9807:7eb7:b001:0:f0f4:7db7:b001:0
+INFO         | Ignore IPv6 address: 9807:7eb7:b001:0:f0f4:7db7:b001:0
+INFO         | Ignore IPv6 address: 9807:7eb7:b001:0:f0f4:7db7:b001:0
+INFO         | Ignore IPv6 address: 280e:7eb7:b001:0:f0f4:7db7:b001:0
+INFO         | Ignore IPv6 address: 280e:7eb7:b001:0:f0f4:7db7:b001:0
+INFO         | Ignore IPv6 address: 280e:7eb7:b001:0:f0f4:7db7:b001:0

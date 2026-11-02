@@ -4,8 +4,11 @@ import 'package:handy_storage/export_history.dart';
 import 'package:handy_storage/handy_storage.dart';
 import 'package:handy_storage/recovery.dart';
 import 'package:handy_ui/kit.dart';
+import 'dart:typed_data';
 import 'capture.dart';
 import 'desk/desk_page.dart';
+import 'ocr/ocr_job.dart';
+import 'ocr/ocr_page.dart';
 import 'pdf/pdf_desk.dart';
 import 'pdf/pdf_page.dart';
 import 'read/read_page.dart';
@@ -14,6 +17,9 @@ import 'scan/scan_screen.dart';
 import 'scan/scan_store.dart';
 import 'scope.dart';
 import 'settings_page.dart';
+import 'sign/fill_controller.dart';
+import 'sign/fill_route.dart';
+import 'sign/signature_store.dart';
 import 'write/draft.dart';
 import 'write/write_page.dart';
 
@@ -24,19 +30,35 @@ const docsAccent = Color(0xFF1D5FBF);
 
 class DocsApp extends StatefulWidget {
   final HandyFiles files;
-  final DocumentRepository? documents, markdownDocuments, readerDocuments;
+  final DocumentRepository? documents,
+      markdownDocuments,
+      readerDocuments,
+      signatureDocuments;
   final PreferencesRepository? preferences;
   final ScanCamera? camera;
   final ExportHistory? history;
+
+  /// Opens a PDF's pages for signing; tests pass pages without PDFium.
+  final Future<FillSource> Function(Uint8List bytes)? openFillSource;
+
+  /// The open PDFs; tests pass one that needs no PDFium.
+  final PdfDesk? pdfDesk;
+
+  /// Off in host tests: no folder backups.
+  final bool device;
   const DocsApp({
     super.key,
     this.files = const SystemHandyFiles(),
     this.documents,
     this.markdownDocuments,
     this.readerDocuments,
+    this.signatureDocuments,
     this.preferences,
     this.camera,
     this.history,
+    this.openFillSource,
+    this.pdfDesk,
+    this.device = true,
   });
   @override
   State<DocsApp> createState() => _DocsAppState();
@@ -63,10 +85,14 @@ class _DocsAppState extends State<DocsApp> {
           localDocuments('handy-docs-markdown', maxBytes: 6100000),
       history: widget.history,
     ),
-    pdf: PdfDesk(),
+    pdf: widget.pdfDesk ?? PdfDesk(),
     reader: ReaderStore(
       widget.readerDocuments ??
           localDocuments('handy-docs-reader', maxBytes: 8000000),
+    ),
+    signatures: SignatureStore(
+      widget.signatureDocuments ??
+          localDocuments('handy-docs-signatures', maxBytes: 4000000),
     ),
   );
 
@@ -74,6 +100,19 @@ class _DocsAppState extends State<DocsApp> {
   void initState() {
     super.initState();
     loadPreferences();
+    if (widget.device) {
+      final reader = scope.reader.store;
+      scope.autoBackup = HandyAutoBackup.local(
+        app: 'docs',
+        extension: 'zip',
+        build: () async => reader.backup(),
+      );
+      void ready() {
+        if (reader.library != null) scope.autoBackup?.attach();
+      }
+
+      reader.addListener(ready);
+    }
     scope.load();
   }
 
@@ -154,9 +193,21 @@ class _DocsAppState extends State<DocsApp> {
         draft.documents,
         draft.load,
         (c) => tr(c, 'The draft could not be read', 'Chưa đọc được bản nháp'),
-        () => WritePage(draft: draft, files: widget.files),
+        () =>
+            WritePage(draft: draft, files: widget.files, opener: scope.opener),
       ),
       '/pdf' => () => PdfPage(desk: scope.pdf, files: widget.files),
+      '/pdf/fill' => () => FillRoute(
+        desk: scope.pdf,
+        signatures: scope.signatures,
+        files: widget.files,
+        openSource: widget.openFillSource ?? PdfFillSource.open,
+      ),
+      '/ocr' => () => OcrRoute(
+        source: s.arguments is OcrSource ? s.arguments as OcrSource : null,
+        files: widget.files,
+        opener: scope.opener,
+      ),
       '/read' => () => ReadPage(actions: scope.reader),
       _ => null,
     };
@@ -168,6 +219,7 @@ class _DocsAppState extends State<DocsApp> {
   Widget build(BuildContext context) {
     final p = prefs.value;
     return HandyApp(
+      brand: HandyBrand.docs,
       app: 'docs',
       title: 'Handy Docs',
       accent: docsAccent,

@@ -7,7 +7,7 @@ class Reading {
   final String toolId;
   final Map<String, String> values;
   const Reading(this.toolId, this.values);
-  ToolSpec? get spec => specById[toolId];
+  ToolSpec? get spec => specById[canonicalToolId(toolId)];
   @override
   String toString() => '$toolId $values';
 }
@@ -167,6 +167,56 @@ List<Reading> interpret(String input, {required bool vi, DateTime? now}) {
     ];
   }
 
+  m = RegExp(
+    '^$_num\\s*(?:đ|đồng|vnd)?\\s*(?:bằng chữ|thành chữ|in words|to words)\$',
+    caseSensitive: false,
+  ).firstMatch(s);
+  if (m != null) {
+    final n = normalizeNumber(m[1]!, vi: vi);
+    if (n != null) {
+      return [
+        Reading('number-words', {
+          'number': n,
+          'unit': n.contains('.') ? 'none' : 'dong',
+          'style': 'north',
+        }),
+      ];
+    }
+  }
+
+  m = RegExp(
+    '^$_datePart\\s*(?:âm lịch|âm|lunar)\$',
+    caseSensitive: false,
+  ).firstMatch(lower);
+  if (m != null) {
+    final d = _date(m[1]!, today);
+    if (d != null) {
+      return [
+        Reading('lunar', {'direction': 'solar', 'date': d}),
+      ];
+    }
+  }
+
+  m = RegExp(
+    '^(lương|luong|gross|salary|net|thực nhận|thuc nhan)\\s+$_num\\s*(?:đ|đồng|vnd)?\$',
+    caseSensitive: false,
+  ).firstMatch(s);
+  if (m != null) {
+    final n = normalizeNumber(m[2]!, vi: vi);
+    final net = RegExp('^(net|thực|thuc)').hasMatch(m[1]!.toLowerCase());
+    if (n != null) {
+      return [
+        Reading('salary', {
+          'mode': net ? 'net' : 'gross',
+          'amount': n,
+          'dependants': '0',
+          'region': '1',
+          'date': today.toIso8601String().substring(0, 10),
+        }),
+      ];
+    }
+  }
+
   final expression = _expression(s, vi: vi);
   if (expression != null) {
     return [
@@ -177,7 +227,8 @@ List<Reading> interpret(String input, {required bool vi, DateTime? now}) {
   // Prose: counts first, then every transform as an alternative.
   return [
     Reading('count', {'text': input}),
-    for (final id in textTransforms) Reading(id, {'text': input}),
+    for (final id in textTransforms)
+      Reading(id, {'text': input, ...legacyValues(id)}),
   ];
 }
 

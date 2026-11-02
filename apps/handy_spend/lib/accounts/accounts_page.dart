@@ -278,6 +278,7 @@ class _AccountList extends StatelessWidget {
                     title: title,
                     children: [for (final a in list) row(a)],
                   ),
+              if (s.accounts.isNotEmpty) _People(scope: scope),
               const SizedBox(height: HandySpace.l),
               Wrap(
                 spacing: HandySpace.s,
@@ -302,6 +303,52 @@ class _AccountList extends StatelessWidget {
               ),
             ],
           ),
+        ),
+      ],
+    );
+  }
+}
+
+/// Who owes whom, beside what you own and owe: money people owe you is
+/// not an account, so it stays out of net worth and shows here.
+class _People extends StatelessWidget {
+  final SpendScope scope;
+  const _People({required this.scope});
+  @override
+  Widget build(BuildContext context) {
+    final (them, you) = iouTotals(scope.state, scope.currency);
+    final people = scope.state.people.where((p) => !p.archived).length;
+    return HandySection(
+      title: tr(context, 'Shared costs', 'Chia tiền'),
+      children: [
+        HandyTile(
+          key: const Key('open-people'),
+          icon: Icons.groups_outlined,
+          title: tr(context, 'Who owes whom', 'Ai nợ ai'),
+          subtitle: them == BigInt.zero && you == BigInt.zero
+              ? (people == 0
+                    ? tr(
+                        context,
+                        'Split a bill from any spending entry.',
+                        'Chia hóa đơn từ bất kỳ khoản chi nào.',
+                      )
+                    : tr(context, 'All settled', 'Đã hết nợ'))
+              : [
+                  if (them > BigInt.zero)
+                    tr(
+                      context,
+                      'People owe you ${moneyText(context, scope, them, scope.currency)}',
+                      'Người khác nợ bạn ${moneyText(context, scope, them, scope.currency)}',
+                    ),
+                  if (you > BigInt.zero)
+                    tr(
+                      context,
+                      'You owe ${moneyText(context, scope, you, scope.currency)}',
+                      'Bạn nợ ${moneyText(context, scope, you, scope.currency)}',
+                    ),
+                ].join(' · '),
+          navigates: true,
+          onTap: () => Navigator.pushNamed(context, '/people'),
         ),
       ],
     );

@@ -7,8 +7,8 @@ if ($Target -eq 'apk') { $androidMutex = Enter-HandyAndroidBuild }
 try {
 $results=@()
 foreach($app in $Apps){
-  $fingerprintArgs=if($app -eq 'habit'){@('--app','habit')}else{@()}
-  if($app -notin @('tools','keep','recall','docs','media','dev','save','spend','habit')){throw 'Unknown app'}
+  $fingerprintArgs=if($app -in @('habit','trip')){@('--app',$app)}else{@()}
+  if($app -notin @('tools','keep','recall','docs','media','dev','bookmark','spend','habit','trip')){throw 'Unknown app'}
   $log=Join-Path $root "docs/qa/evidence/$app-$Target-build.log"
   Push-Location (Join-Path $root "apps/handy_$app")
   try{

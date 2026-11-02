@@ -3,6 +3,7 @@ import 'dart:typed_data';
 import 'package:handy_inventory/handy_inventory.dart';
 import 'package:handy_ui/kit.dart';
 import '../library.dart';
+import '../inventory/whereabouts.dart';
 import '../scope.dart';
 import '../ui/words.dart';
 
@@ -47,11 +48,14 @@ class DataSection extends StatelessWidget {
 
   Future<String?> _restoreZip(BuildContext context) async {
     final file = await scope.files.importBytes(
-      extensions: ['zip'],
+      extensions: ['zip', 'hseal'],
       maxBytes: 30000000,
     );
     if (file == null || !context.mounted) return null;
-    final incoming = InventoryLibrary.fromPortable(file.bytes);
+    // A password-locked automatic backup opens to the same ZIP.
+    final bytes = await openSealedBackup(context, file.bytes);
+    if (bytes == null || !context.mounted) return null;
+    final incoming = InventoryLibrary.fromPortable(bytes);
     if (!context.mounted) return null;
     final s = incoming.state;
     final choice = await showDialog<String>(
@@ -167,6 +171,24 @@ class DataSection extends StatelessWidget {
           'Chỉ thông tin, không kèm ảnh',
         ),
         onTap: () => _do(context, () => _exportJson(context)),
+      ),
+      HandyTile(
+        key: const Key('keep-export-csv'),
+        icon: Icons.table_view_outlined,
+        title: tr(
+          context,
+          'Save the list for a spreadsheet',
+          'Lưu danh sách cho bảng tính',
+        ),
+        subtitle: tr(
+          context,
+          'CSV for Excel or Sheets: every item, with place, box, price and warranty',
+          'File CSV mở bằng Excel, Sheets: mọi món, kèm chỗ để, thùng, giá và bảo hành',
+        ),
+        onTap: () => scope.exportCsv(context, [
+          for (final p in whereabouts(scope.state, scope.state.assets))
+            ...p.items,
+        ]),
       ),
       HandyTile(
         key: const Key('keep-restore-json'),

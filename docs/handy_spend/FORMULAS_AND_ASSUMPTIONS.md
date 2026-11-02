@@ -9,7 +9,12 @@
   numerator/denominator and rounds half away from zero to destination minor units.
   A transfer's target must match this calculation; same-currency principal matches.
 - Safe to Spend = selected posted liquid balances + included future inflows - unpaid
-  committed outflows - selected goal reserves - nonnegative minimum cash buffer.
+  committed outflows - selected goal reserves - nonnegative minimum cash buffer - what
+  you owe people from splits (report currency, unsettled).
+  Money people owe you is **not** counted until it is settled: settling records a real
+  posted refund into the account the person chose, and only then is it held money.
+  What you owe is taken out at once, like a reserve, because it is already promised;
+  it has no date, so it is not drawn in the daily forecast.
   Positive per-day display floors to whole minor units over inclusive calendar days;
   actual negative availability and shortfall remain visible. Debts/locked savings
   are excluded by default. No heterogeneous currencies are summed.
@@ -41,6 +46,27 @@
   unpaid occurrence excludes only its original occurrence ID and stages the replacement
   date; later recurrences remain. Saving a scenario alone does not make its financial
   baseline stale. Assumptions never change actual balances without explicit conversion.
+- Splits: equal and by-shares parts are `total * units / sum(units)` rounded down,
+  then the leftover minor units go one each to the largest remainders (earlier share
+  first on a tie), so parts always sum to the total exactly. Exact parts must sum to
+  the total; the gap is shown and saving is refused. Per person, balances net across
+  splits in each currency: positive owes you, negative you owe. Settling a part pays
+  the oldest open items first; when you both owe each other only the whole difference
+  (or one item at a time) can be settled, and each side's items are closed by their
+  own entries, so the account moves by the difference. A refund from a friend lowers
+  the month's spending in the split's category; your share stays spent.
+- Recurring suggestions: posted expenses/income, not from a recurring item and not a
+  settlement, grouped by account, kind and counterparty (lower case, digits and
+  punctuation removed, spaces folded). The newest run of at least 3 entries 26–35 days
+  (monthly) or 6–8 days (weekly) apart, every amount within 10% of the run's median,
+  the last within 45 (monthly) or 11 (weekly) days of today. Hidden when a recurring
+  item on the account names the counterparty, or once dismissed. The suggested amount
+  is the median (upper middle for an even count); the next due date steps the last
+  date by the cadence (monthly keeps its day, clamped) until it is today or later.
+- "Forecast if…" overlays run the what-if's staged entries and skipped occurrences on
+  the live ledger over the plan's window (same accounts and income setting as the
+  plan); assumptions on an account archived or gone since are left out and counted.
+  Lowest day, end of window and first short day are compared with the plan as it is.
 - Recurring weekly/yearly equivalents use 52/12/1 payments; monthly run-rate is a
   rounded annual estimate divided by 12, not an issuer statement. Goal completion
   date is not inferred without a contribution schedule (P1 reverse planner).

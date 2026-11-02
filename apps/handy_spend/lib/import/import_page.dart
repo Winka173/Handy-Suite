@@ -6,6 +6,7 @@ import 'package:flutter/foundation.dart' show compute;
 import 'package:handy_files/handy_files.dart';
 import 'package:handy_spend_engine/handy_spend_engine.dart';
 import 'package:handy_ui/kit.dart';
+import '../plan/suggestions.dart';
 import '../scope.dart';
 import '../ui/figures.dart';
 import 'review_row.dart';
@@ -41,6 +42,10 @@ class ImportPageState extends State<ImportPage> {
   int reviewPage = 0, revision = 0;
   bool newestFirst = false, reverse = false, busy = false;
   bool partial = false, saveProfile = false, finished = false;
+
+  /// The saved template whose headers match this file, once applied.
+  Map<String, dynamic>? template;
+  final templateName = TextEditingController();
   final selected = <int>{};
   String error = '';
 
@@ -66,6 +71,12 @@ class ImportPageState extends State<ImportPage> {
         if (mounted) unawaited(task(parse));
       });
     }
+  }
+
+  @override
+  void dispose() {
+    templateName.dispose();
+    super.dispose();
   }
 
   Future<void> task(Future<void> Function() action) async {
@@ -113,8 +124,71 @@ class ImportPageState extends State<ImportPage> {
     );
     if (next == null) return;
     file = next;
+    fresh = true;
+    template = null;
     await parse();
   }
+
+  /// A new file looks for its template once; reading it again by hand
+  /// (after changing the delimiter or encoding) does not override that.
+  bool fresh = true;
+
+  Future<List<List<String>>> _read(String d, String e) =>
+      compute(parseStatement, {
+        'bytes': file!.bytes,
+        'extension': file!.name.toLowerCase().endsWith('.xlsx')
+            ? 'xlsx'
+            : 'csv',
+        'encoding': e,
+        'delimiter': d,
+      });
+
+  /// Fills every mapping choice from [t]. The account is kept only while
+  /// it is still open; the person can change any of it afterwards.
+  Future<void> _useTemplate(Map<String, dynamic> t) async {
+    if (t['encoding'] != encoding || t['delimiter'] != delimiter) {
+      final again = await _read(
+        t['delimiter'] as String,
+        t['encoding'] as String,
+      );
+      if (headerSignature(again.first) != t['signature']) return;
+      rows = again;
+    }
+    final m = StatementMapping.fromJson(
+      Map<String, dynamic>.from(t['mapping'] as Map),
+    );
+    delimiter = t['delimiter'] as String;
+    encoding = t['encoding'] as String;
+    if (scope.openAccounts.any((a) => a.id == m.account)) account = m.account;
+    date = m.date;
+    payee = m.payee;
+    amount = m.amount;
+    debit = m.debit;
+    credit = m.credit;
+    balance = m.balance;
+    newestFirst = m.newestFirst;
+    dateFormat = m.dateFormat;
+    decimal = m.decimal;
+    group = m.group;
+    zone = m.zone;
+    reverse = m.reverse;
+    template = t;
+    templateName.text = t['name'] as String;
+  }
+
+  /// Back to the plain defaults, for a template that does not fit.
+  void dropTemplate() => setState(() {
+    template = null;
+    date = 0;
+    payee = 1;
+    amount = 2;
+    debit = credit = balance = -1;
+    dateFormat = 'ymd';
+    decimal = '.';
+    group = ',';
+    newestFirst = reverse = false;
+    zone = s.zone;
+  });
 
   Future<void> parse() async {
     final f = file!;
@@ -131,12 +205,27 @@ class ImportPageState extends State<ImportPage> {
           .toList();
       rows = transactionRows(s, entries);
     } else {
-      rows = await compute(parseStatement, {
-        'bytes': f.bytes,
-        'extension': f.name.toLowerCase().endsWith('.xlsx') ? 'xlsx' : 'csv',
-        'encoding': encoding,
-        'delimiter': delimiter,
-      });
+      rows = await _read(delimiter, encoding);
+      if (!fresh) {
+        // A file read by hand keeps the person's choices.
+      } else if (templateFor(s, rows!.first) case final t?) {
+        await _useTemplate(t);
+      } else if (rows!.first.length < 2 &&
+          !f.name.toLowerCase().endsWith('.xlsx')) {
+        // One column: the file is split by something else. Try the others,
+        // a saved layout first.
+        for (final d in [',', ';', '\t'].where((d) => d != delimiter)) {
+          final other = await _read(d, encoding);
+          if (other.first.length < 2) continue;
+          rows = other;
+          delimiter = d;
+          if (templateFor(s, other.first) case final t?) await _useTemplate(t);
+          break;
+        }
+      }
+      fresh = false;
+      if (templateName.text.isEmpty)
+        templateName.text = f.name.replaceFirst(RegExp(r'\.[^.]*$'), '');
     }
     if (rows!.first.length < 2)
       throw const FormatException(
@@ -205,18 +294,20 @@ class ImportPageState extends State<ImportPage> {
       if (current.revision != revision)
         throw StateError('The ledger changed since the check; check again');
       var next = preview!.commit(current, selected, allowPartial: partial);
-      if (saveProfile && scope.pro(context))
-        next = next.copy({
-          'profiles': [
-            ...next.profiles,
-            {
-              'id': newId(),
-              'name': file!.name,
-              'headers': rows!.first,
-              'mapping': mapping.toJson(),
-            },
-          ],
-        });
+      if (saveProfile && scope.pro(context) && canTemplate) {
+        final name = templateName.text.trim();
+        next = saveTemplate(
+          next,
+          statementTemplate(
+            id: templateFor(next, rows!.first)?['id'] as String?,
+            name: name.isEmpty ? file!.name : name,
+            headers: rows!.first,
+            mapping: mapping,
+            delimiter: delimiter,
+            encoding: encoding,
+          ),
+        );
+      }
       return next;
     }, 'statement_import');
     finished = true;
@@ -230,36 +321,8 @@ class ImportPageState extends State<ImportPage> {
     if (mounted) Navigator.pop(context);
   }
 
-  void useProfile(String id) {
-    final p = s.profiles.firstWhere((p) => p['id'] == id);
-    if (jsonEncode(p['headers']) != jsonEncode(rows!.first)) {
-      setState(
-        () => error = tr(
-          context,
-          'That profile has other columns; match them here.',
-          'Hồ sơ đó có cột khác; hãy ghép cột ở đây.',
-        ),
-      );
-      return;
-    }
-    final m = StatementMapping.fromJson(
-      Map<String, dynamic>.from(p['mapping'] as Map),
-    );
-    setState(() {
-      date = m.date;
-      payee = m.payee;
-      amount = m.amount;
-      debit = m.debit;
-      credit = m.credit;
-      balance = m.balance;
-      newestFirst = m.newestFirst;
-      dateFormat = m.dateFormat;
-      decimal = m.decimal;
-      group = m.group;
-      zone = m.zone;
-      reverse = m.reverse;
-    });
-  }
+  /// A Handy export reads itself; only a bank's layout gets a template.
+  bool get canTemplate => rows != null && rows!.first.last != '_handy_entry_v1';
 
   Future<void> review(StatementRow row) async {
     if (busy || row.entry == null) return;

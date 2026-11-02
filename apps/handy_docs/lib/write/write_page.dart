@@ -4,6 +4,7 @@ import 'package:handy_core/handy_core.dart';
 import 'package:handy_docs_engine/handy_docs_engine.dart';
 import 'package:handy_files/handy_files.dart';
 import 'package:handy_ui/kit.dart';
+import '../text/text_opener.dart';
 import 'draft.dart';
 import 'export_sheet.dart';
 import 'find_row.dart';
@@ -17,7 +18,13 @@ import 'write_menu.dart';
 class WritePage extends StatefulWidget {
   final DraftController draft;
   final HandyFiles files;
-  const WritePage({super.key, required this.draft, required this.files});
+  final TextOpener opener;
+  const WritePage({
+    super.key,
+    required this.draft,
+    required this.files,
+    required this.opener,
+  });
   @override
   State<WritePage> createState() => _WritePageState();
 }
@@ -224,6 +231,7 @@ class _WritePageState extends State<WritePage> {
                   run: run,
                   mayReplace: mayReplace,
                   onFind: () => setState(() => finding = true),
+                  opener: widget.opener,
                 ),
               ],
             ),

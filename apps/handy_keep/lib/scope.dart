@@ -1,7 +1,10 @@
+import 'dart:convert';
+import 'dart:typed_data';
 import 'package:handy_files/camera.dart';
 import 'package:handy_files/handy_files.dart';
 import 'package:handy_inventory/handy_inventory.dart';
 import 'package:handy_ui/kit.dart';
+import 'batch/batch_page.dart';
 import 'box/box_dialog.dart';
 import 'inventory/keep_store.dart';
 import 'inventory/whereabouts.dart';
@@ -16,7 +19,15 @@ class KeepScope {
   final KeepStore store;
   final HandyFiles files;
   final ScanCamera? camera;
-  const KeepScope({required this.store, required this.files, this.camera});
+
+  /// Automatic backups to a folder; null in tests that do not need them.
+  final HandyAutoBackup? autoBackup;
+  const KeepScope({
+    required this.store,
+    required this.files,
+    this.camera,
+    this.autoBackup,
+  });
 
   KeepState get state => store.state!;
 
@@ -26,6 +37,9 @@ class KeepScope {
     InventoryAsset? item,
     String name = '',
     String box = '',
+    String price = '',
+    String currency = '',
+    String purchasedOn = '',
   }) => Navigator.push<void>(
     context,
     MaterialPageRoute(
@@ -39,10 +53,84 @@ class KeepScope {
         blobs: store.library!.blobs,
         initialName: name,
         initialBox: box,
+        initialPrice: price,
+        initialPurchasedOn: purchasedOn,
+        currency: currency.isNotEmpty
+            ? currency
+            : startCurrency(context, state),
         onCommit: store.saveItem,
       ),
     ),
   );
+
+  /// Adds several items from photos, all saved in one write. [box] puts
+  /// them all in that box to start with.
+  Future<void> batchAdd(BuildContext context, {String box = ''}) async {
+    final saved = await Navigator.push<int>(
+      context,
+      MaterialPageRoute(
+        fullscreenDialog: true,
+        builder: (_) => BatchAddPage(
+          boxes: state.boxes,
+          locations: knownLocations(state),
+          files: files,
+          camera: camera,
+          initialBox: box,
+          onCommit: store.saveItems,
+        ),
+      ),
+    );
+    if (saved != null && context.mounted) {
+      showHandyMessage(
+        context,
+        tr(
+          context,
+          saved == 1 ? '1 item added.' : '$saved items added.',
+          'Đã thêm $saved món.',
+        ),
+      );
+    }
+  }
+
+  /// Saves [items] as a CSV file for a spreadsheet. The inventory is only
+  /// read; the file is a copy.
+  Future<void> exportCsv(BuildContext context, List<InventoryAsset> items) =>
+      _run(
+        context,
+        () async {
+          final csv = keepCsv(
+            state,
+            items,
+            headers: [
+              tr(context, 'Name', 'Tên'),
+              tr(context, 'Kept at', 'Cất ở'),
+              tr(context, 'Box', 'Thùng'),
+              tr(context, 'Borrower', 'Người mượn'),
+              tr(context, 'Lent on', 'Ngày cho mượn'),
+              tr(context, 'Back by', 'Hẹn trả'),
+              tr(context, 'Bought on', 'Ngày mua'),
+              tr(context, 'Price', 'Giá mua'),
+              tr(context, 'Currency', 'Tiền tệ'),
+              tr(context, 'Warranty until', 'Bảo hành đến'),
+              tr(context, 'Serial', 'Số serial'),
+              tr(context, 'Notes', 'Ghi chú'),
+            ],
+          );
+          final uri = await files.exportBytes(
+            'handy-keep-items.csv',
+            Uint8List.fromList(utf8.encode(csv)),
+            mimeType: 'text/csv',
+          );
+          if (uri == null) throw const _Cancelled();
+        },
+        (c) => tr(
+          c,
+          items.length == 1
+              ? '1 item saved as CSV.'
+              : '${items.length} items saved as CSV.',
+          'Đã lưu ${items.length} món ra file CSV.',
+        ),
+      );
 
   Future<void> editBox(BuildContext context, [InventoryBox? box]) =>
       showBoxDialog(context, box: box, onCommit: store.saveBoxRecord);
@@ -58,6 +146,16 @@ class KeepScope {
       _run(context, () => store.giveBack(item.id), (c) {
         return tr(c, '${item.name} is back.', 'Đã nhận lại ${item.name}.');
       });
+
+  Future<void> restock(BuildContext context, InventoryAsset item) => _run(
+    context,
+    () => store.restock(item.id),
+    (c) => tr(
+      c,
+      'Noted: ${item.name} bought again today.',
+      'Đã ghi: hôm nay mua thêm ${item.name}.',
+    ),
+  );
 
   Future<void> label(BuildContext context, InventoryLabel target) =>
       Navigator.push<void>(
@@ -116,6 +214,8 @@ class KeepScope {
         showHandyMessage(context, done(context));
       }
       return true;
+    } on _Cancelled {
+      return false;
     } catch (e) {
       if (context.mounted) {
         showHandyMessage(
@@ -130,4 +230,9 @@ class KeepScope {
       return false;
     }
   }
+}
+
+/// The person closed a save dialog: nothing to report.
+class _Cancelled implements Exception {
+  const _Cancelled();
 }

@@ -32,9 +32,20 @@ class OcclusionMask {
 
 class RecallImage {
   final String dataUri;
+
+  /// Parts covered until the answer shows; none for a plain picture.
   final List<OcclusionMask> masks;
-  RecallImage({required this.dataUri, required Iterable<OcclusionMask> masks})
-    : masks = List.unmodifiable(masks);
+
+  /// The note side the picture belongs to: 'front' (shown with the question)
+  /// or 'back' (shown only with the answer). Covers need 'front'.
+  final String side;
+  RecallImage({
+    required this.dataUri,
+    required Iterable<OcclusionMask> masks,
+    this.side = 'front',
+  }) : masks = List.unmodifiable(masks);
+
+  /// The first covered part; only for a picture that has covers.
   OcclusionMask get mask => masks.first;
   factory RecallImage.fromJson(Object? value) {
     final r = _record(value), uri = r['dataUri'];
@@ -55,24 +66,36 @@ class RecallImage {
         'Image exceeds limit or base64 is noncanonical',
       );
     _validateImage(bytes, match[1]!);
+    // Version 1 always had at least one region (and 'mask'); version 2 may
+    // carry a plain picture with none.
     final Object? rawMasks = r['masks'] ?? [r['mask']];
-    if (rawMasks is! List || rawMasks.isEmpty || rawMasks.length > 32)
-      throw const FormatException('Image needs 1–32 occlusion regions');
+    if (rawMasks is! List || rawMasks.length > 32)
+      throw const FormatException('Image takes up to 32 occlusion regions');
+    final side = r['side'] ?? 'front';
+    if (side != 'front' && side != 'back')
+      throw const FormatException('Invalid picture side');
     return RecallImage(
       dataUri: uri,
       masks: rawMasks.map(OcclusionMask.fromJson),
+      side: side as String,
     );
   }
   Map<String, Object?> toJson() => {
     'dataUri': dataUri,
-    'mask': mask.toJson(),
+    // Kept for version 1 readers of covered pictures.
+    if (masks.isNotEmpty) 'mask': masks.first.toJson(),
     'masks': masks.map((m) => m.toJson()).toList(),
+    if (side != 'front') 'side': side,
   };
-  RecallImage copyWith({String? dataUri, Iterable<OcclusionMask>? masks}) =>
-      RecallImage.fromJson({
-        'dataUri': dataUri ?? this.dataUri,
-        'masks': (masks ?? this.masks).map((m) => m.toJson()).toList(),
-      });
+  RecallImage copyWith({
+    String? dataUri,
+    Iterable<OcclusionMask>? masks,
+    String? side,
+  }) => RecallImage.fromJson({
+    'dataUri': dataUri ?? this.dataUri,
+    'masks': (masks ?? this.masks).map((m) => m.toJson()).toList(),
+    'side': side ?? this.side,
+  });
 }
 
 void _dimensions(int width, int height) {

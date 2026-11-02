@@ -56,6 +56,51 @@ void main() {
     expect(ids('#111111 trên #ffffff'), ['contrast']);
   });
 
+  test('words, lunar dates and salaries from one line', () {
+    final w = interpret('1.250.000 bằng chữ', vi: true).single;
+    expect(w.toolId, 'number-words');
+    expect(w.values, {'number': '1250000', 'unit': 'dong', 'style': 'north'});
+    expect(interpret('2,5 in words', vi: true).single.values['unit'], 'none');
+    final l = interpret(
+      '31/12/2026 âm lịch',
+      vi: true,
+      now: DateTime(2026, 11, 1),
+    ).single;
+    expect(l.toolId, 'lunar');
+    expect(l.values, {'direction': 'solar', 'date': '2026-12-31'});
+    expect(
+      interpret(
+        'hôm nay âm lịch',
+        vi: true,
+        now: DateTime(2026, 11, 1),
+      ).single.values['date'],
+      '2026-11-01',
+    );
+    final g = interpret(
+      'lương 25.000.000',
+      vi: true,
+      now: DateTime(2026, 11, 1),
+    ).single;
+    expect(g.toolId, 'salary');
+    expect(g.values['mode'], 'gross');
+    expect(g.values['amount'], '25000000');
+    expect(g.values['date'], '2026-11-01');
+    expect(
+      interpret('net 20.000.000 đ', vi: true).single.values['mode'],
+      'net',
+    );
+    expect(ids('lương tháng này'), contains('count'));
+  });
+
+  test('case steps keep their ids and carry their mode', () {
+    final r = interpret(
+      'Xin chào',
+      vi: true,
+    ).firstWhere((r) => r.toolId == 'title-case');
+    expect(r.spec!.id, 'case');
+    expect(r.values['mode'], 'title');
+  });
+
   test('links offer a QR code; prose offers counts and transforms', () {
     expect(ids('https://example.com').first, 'qr');
     expect(ids('Xin chào\nthế giới').first, 'count');

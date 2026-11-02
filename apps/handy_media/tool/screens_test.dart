@@ -2,12 +2,15 @@
 // SHOTS_DIR=<dir> flutter test --no-pub tool/screens_test.dart
 import 'dart:io';
 import 'dart:ui' as ui;
+import 'package:flutter/foundation.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:handy_files/handy_files.dart';
 import 'package:handy_media/app.dart';
+import 'package:handy_core/handy_core.dart';
 import 'package:handy_media/capture_library.dart';
+import 'package:handy_media/guide/text_reader.dart';
 import 'package:handy_media_engine/handy_media_engine.dart';
 import 'package:handy_storage/documents.dart';
 import 'package:handy_storage/handy_storage.dart';
@@ -334,13 +337,18 @@ Future<Files> boot(
   Size size, {
   String theme = 'light',
   bool empty = false,
+  PortableCapture? extra,
+  TextReader? reader,
 }) async {
   t.view.physicalSize = size;
   t.view.devicePixelRatio = 1;
   addTearDown(t.view.resetPhysicalSize);
   addTearDown(t.view.resetDevicePixelRatio);
   final store = Memory();
-  if (!empty) store.text = (await library(t)).serialize();
+  if (!empty) {
+    final lib = await library(t);
+    store.text = CaptureLibrary([...lib.projects, ?extra]).serialize();
+  }
   final files = Files();
   final drafts = <String, DocumentRepository>{};
   await t.pumpWidget(
@@ -352,6 +360,7 @@ Future<Files> boot(
         preferences: Prefs()
           ..value = HandyPreferences(locale: 'vi', theme: theme),
         drafts: (id) => drafts[id] ??= Memory(),
+        reader: reader,
       ),
     ),
   );
@@ -369,6 +378,71 @@ Future<void> openGuide(WidgetTester t, String id) async {
     () => Future<void>.delayed(const Duration(milliseconds: 100)),
   );
   await t.pumpAndSettle();
+}
+
+/// The rows of a made-up screen, as a recogniser reads them: each label and
+/// value one line, words boxed where [screen] drew them.
+List<OcrLine> readRows(List<(String, String)> rows) {
+  final lines = <OcrLine>[];
+  void line(String text, double x, double y, double size) {
+    final words = <OcrWord>[];
+    var at = x;
+    for (final w in text.split(' ')) {
+      final width = w.length * size * .56;
+      words.add(OcrWord(w, OcrBox(at, y, width, size * 1.25)));
+      at += width + size * .28;
+    }
+    lines.add(OcrLine(text, OcrBox(x, y, at - x, size * 1.25), words: words));
+  }
+
+  var y = 190.0;
+  for (final (label, value) in rows) {
+    line(label, 48, y + 16, 22);
+    if (value.isNotEmpty) line(value, 48, y + 50, 19);
+    y += 108;
+  }
+  return lines;
+}
+
+class RowReader implements TextReader {
+  final List<OcrLine> lines;
+  RowReader(this.lines);
+  @override
+  bool get supported => true;
+  @override
+  Future<List<OcrLine>> read(
+    Uint8List png, {
+    CancellationToken? cancellation,
+  }) async => lines;
+}
+
+const _profile = [
+  ('Email', 'mai.tran@example.com'),
+  ('Số điện thoại', '0912 345 678'),
+  ('Số tài khoản', '0071 0012 34568'),
+  ('Mã OTP', '482913'),
+  ('Thành phố', 'Đà Nẵng'),
+];
+
+Future<PortableCapture> profileGuide(WidgetTester t) async {
+  final pic = await t.runAsync(
+    () => screen('Hồ sơ', _profile, button: 'Lưu', hue: 0xFF34506E),
+  );
+  final step = ProjectStep(
+    id: 'profile-1',
+    title: 'Mở hồ sơ',
+    body: 'Kiểm tra thông tin trước khi gửi ảnh.',
+    imageUri: 'file:///handy-media/profile-1.png',
+    imageWidth: 540,
+    imageHeight: 1080,
+  );
+  return PortableCapture(
+    CaptureProject.parse({
+      ...CaptureProject.create('profile', title: 'Gửi ảnh hồ sơ').toJson(),
+      'steps': [step.toJson()],
+    }),
+    {step.imageUri: pic!},
+  );
 }
 
 void main() {
@@ -467,25 +541,6 @@ void main() {
     await t.pumpAndSettle();
     await shot(t, 'phone-9-image');
   });
-  for (final (label, size) in [
-    ('phone', const Size(390, 844)),
-    ('desktop', const Size(1440, 900)),
-  ]) {
-    testWidgets('$label subtitles', (t) async {
-      await boot(t, size);
-      await go(t, '/subtitles');
-      await t.enterText(
-        find.byKey(const Key('subtitle-input')),
-        '1\n00:00:01,200 --> 00:00:03,800\nXin chào, hôm nay chúng ta học nấu phở.\n\n2\n00:00:04,000 --> 00:00:06,500\nĐầu tiên, rửa sạch xương bò.\n\n3\n00:00:06,900 --> 00:00:09,400\nChần xương trong nước sôi năm phút.\n\n4\n00:00:09,800 --> 00:00:12,000\nVớt ra và rửa lại bằng nước lạnh.\n',
-      );
-      await t.enterText(find.byKey(const Key('subtitle-offset')), '1500');
-      await t.pump(const Duration(milliseconds: 300));
-      await t.pumpAndSettle();
-      FocusManager.instance.primaryFocus?.unfocus();
-      await t.pumpAndSettle();
-      await shot(t, '$label-10-subtitles');
-    });
-  }
   testWidgets('desktop settings', (t) async {
     await boot(t, const Size(1440, 900));
     await go(t, '/settings');
@@ -516,5 +571,106 @@ void main() {
       );
       await t.pump();
     });
+  });
+
+  for (final (label, size) in [
+    ('phone', const Size(390, 844)),
+    ('desktop', const Size(1440, 900)),
+  ]) {
+    testWidgets('$label gif sheet', (t) async {
+      await boot(t, size);
+      await openGuide(t, 'wifi');
+      await t.tap(find.byKey(const Key('guide-export-options')));
+      await t.pumpAndSettle();
+      await t.ensureVisible(find.byKey(const Key('guide-export-gif')));
+      await t.pumpAndSettle();
+      await shot(t, '$label-13-export-with-gif');
+      await t.tap(find.byKey(const Key('guide-export-gif')));
+      await t.pumpAndSettle();
+      await shot(t, '$label-14-gif-sheet');
+    });
+    testWidgets('$label sensitive review', (t) async {
+      await boot(
+        t,
+        size,
+        extra: await profileGuide(t),
+        reader: RowReader(readRows(_profile)),
+      );
+      await openGuide(t, 'profile');
+      await t.ensureVisible(find.byKey(const Key('capture-find-sensitive')));
+      await t.pumpAndSettle();
+      await shot(t, '$label-15-find-sensitive');
+      await t.tap(find.byKey(const Key('capture-find-sensitive')));
+      await t.pumpAndSettle();
+      await t.ensureVisible(find.byKey(const Key('sensitive-row-2')));
+      await t.tap(find.byKey(const Key('sensitive-row-2')));
+      await t.pumpAndSettle();
+      await shot(t, '$label-16-sensitive-review');
+      await t.tap(find.byKey(const Key('sensitive-apply')));
+      await t.pumpAndSettle();
+      await shot(t, '$label-17-sensitive-hidden');
+    });
+    testWidgets('$label windows capture', (t) async {
+      debugDefaultTargetPlatformOverride = TargetPlatform.windows;
+      const channel = MethodChannel('handy_capture');
+      final pic = await t.runAsync(
+        () => screen('Hồ sơ', _profile, button: 'Lưu', hue: 0xFF34506E),
+      );
+      var taken = false;
+      t.binding.defaultBinaryMessenger.setMockMethodCallHandler(channel, (
+        call,
+      ) async {
+        const shot = {
+          'uri': 'file:///handy-capture/windows/shot-1-1.png',
+          'mime': 'image/png',
+          'width': 540,
+          'height': 1080,
+        };
+        if (call.method == 'screenshot') taken = true;
+        return switch (call.method) {
+          'screenshot' => shot,
+          'read' => pic,
+          _ => {
+            'recording': false,
+            'pending': false,
+            'lastResult': taken ? shot : null,
+            'error': null,
+          },
+        };
+      });
+      addTearDown(() {
+        debugDefaultTargetPlatformOverride = null;
+        t.binding.defaultBinaryMessenger.setMockMethodCallHandler(
+          channel,
+          null,
+        );
+      });
+      await boot(t, size);
+      await shot(t, '$label-18-studio-windows');
+      await go(t, '/capture');
+      await shot(t, '$label-19-capture-windows');
+      await t.tap(find.byKey(const Key('native-screenshot')));
+      await t.runAsync(
+        () => Future<void>.delayed(const Duration(milliseconds: 300)),
+      );
+      await t.pumpAndSettle();
+      await shot(t, '$label-20-capture-windows-result');
+      await t.pumpWidget(const SizedBox.shrink());
+      debugDefaultTargetPlatformOverride = null;
+    });
+  }
+
+  testWidgets('phone stitch empty', (t) async {
+    await boot(t, const Size(390, 844));
+    // Mid-screen, clear of the bar pinned at the foot.
+    await Scrollable.ensureVisible(
+      t.element(find.byKey(const Key('studio-stitch'))),
+      alignment: .5,
+    );
+    await t.pumpAndSettle();
+    await t.tap(find.byKey(const Key('studio-stitch')));
+    await t.pumpAndSettle();
+    expect(find.byKey(const Key('stitch-pick')), findsOneWidget);
+    await shot(t, 'phone-21-stitch');
   });
 }

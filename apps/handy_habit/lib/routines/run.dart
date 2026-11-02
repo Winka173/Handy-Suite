@@ -46,6 +46,7 @@ Future<void> openSession(
       sessionId: id,
       clock: scope.clock,
       fresh: fresh,
+      notices: scope.notices,
     ),
   ),
 );

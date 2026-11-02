@@ -9,6 +9,8 @@ dependencies:
   flutter:
     sdk: flutter
   handy_ui: any
+  handy_home_widget: any
+  url_launcher: 6.3.2
   handy_core: any
   handy_storage: any
   handy_files: any

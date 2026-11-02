@@ -216,4 +216,15 @@ void main() {
     );
     expect(() => parseSubtitles('garbage'), throwsFormatException);
   });
+  test('subtitle UTF-8 limit counts bytes rather than UTF-16 code units', () {
+    // Moved here with the subtitle screen, which now lives in Handy Tools.
+    expect(
+      () => parseSubtitles('1\n00:00:01,000 --> 00:00:02,000\n${'€' * 340000}'),
+      throwsFormatException,
+    );
+    expect(
+      () => renderSubtitles([SubtitleCue(0, 1, '€' * 340000)]),
+      throwsFormatException,
+    );
+  });
 }

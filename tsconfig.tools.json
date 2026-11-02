@@ -15,6 +15,6 @@
     "tooling/vitest.flutter.config.ts",
     "tooling/vitest.pwa.config.ts",
     "tooling/vitest.re2.config.ts",
-    "tooling/save-share-worker.test.ts"
+    "tooling/bookmark-share-worker.test.ts"
   ]
 }

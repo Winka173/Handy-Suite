@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'package:handy_files/handy_files.dart';
 import 'package:handy_storage/documents.dart';
 import 'package:handy_storage/export_history.dart';
@@ -5,9 +6,17 @@ import 'package:handy_storage/handy_storage.dart';
 import 'package:handy_storage/history_page.dart';
 import 'package:handy_storage/recovery.dart';
 import 'package:handy_ui/kit.dart';
+import 'capture_library.dart';
 import 'studio/media_store.dart';
 
+/// The subtitle tools moved to Handy Tools. Settings saved by older
+/// versions may still pin them or hold their inputs, so their ids stay
+/// readable here; "Clear saved inputs" removes what is left of them.
 const mediaTools = {'subtitle-srt', 'subtitle-vtt'};
+
+/// Whether older settings still hold subtitle inputs or pins.
+bool hasLeftoverInputs(HandyPreferences p) =>
+    p.drafts.isNotEmpty || p.favorites.isNotEmpty;
 
 /// Media settings: the shared page, the export history and the saved
 /// copies of the guide library.
@@ -17,6 +26,7 @@ class MediaSettingsPage extends StatelessWidget {
   final HandyFiles files;
   final MediaStore store;
   final ExportHistory history;
+  final HandyAutoBackup? autoBackup;
   const MediaSettingsPage({
     super.key,
     required this.read,
@@ -24,7 +34,52 @@ class MediaSettingsPage extends StatelessWidget {
     required this.files,
     required this.store,
     required this.history,
+    this.autoBackup,
   });
+
+  /// A library from an automatic backup (plain or password-locked), read
+  /// and checked whole before it replaces the guides here.
+  Future<void> _restore(BuildContext context) async {
+    final file = await files.importBytes(
+      extensions: ['json', 'hseal'],
+      maxBytes: 40000000,
+    );
+    if (file == null || !context.mounted) return;
+    final bytes = await openSealedBackup(context, file.bytes);
+    if (bytes == null || !context.mounted) return;
+    final CaptureLibrary library;
+    try {
+      library = CaptureLibrary.parse(utf8.decode(bytes));
+    } catch (e) {
+      showHandyMessage(
+        context,
+        tr(
+          context,
+          'Not a Handy Media library. Nothing changed.',
+          'Không phải thư viện Handy Media. Không có gì thay đổi.',
+        ),
+      );
+      return;
+    }
+    final ok = await confirmHandy(
+      context,
+      title: tr(context, 'Replace your guides?', 'Thay các hướng dẫn hiện có?'),
+      message: tr(
+        context,
+        'The backup holds ${library.projects.length} guides. The guides here now are replaced; an earlier copy stays under "Bring back an earlier library".',
+        'Bản sao lưu có ${library.projects.length} hướng dẫn. Các hướng dẫn hiện có sẽ bị thay; bản trước vẫn nằm trong "Khôi phục thư viện trước đó".',
+      ),
+      confirmLabel: tr(context, 'Replace', 'Thay thế'),
+      destructive: true,
+    );
+    if (!ok || !context.mounted) return;
+    await store.commit(library);
+    if (context.mounted)
+      showHandyMessage(
+        context,
+        tr(context, 'Library restored.', 'Đã khôi phục thư viện.'),
+      );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -36,9 +91,20 @@ class MediaSettingsPage extends StatelessWidget {
       onTheme: (v) => save(read().copyWith(theme: v)),
       onLocale: (v) => save(read().copyWith(locale: v)),
       sections: [
+        if (autoBackup != null) HandyAutoBackupSection(backup: autoBackup!),
         HandySettingsSection(
           title: tr(context, 'Files', 'Tệp'),
           children: [
+            HandyTile(
+              key: const Key('restore-library'),
+              icon: Icons.unarchive_outlined,
+              title: tr(
+                context,
+                'Restore guides from a backup',
+                'Khôi phục hướng dẫn từ bản sao lưu',
+              ),
+              onTap: () => _restore(context),
+            ),
             HandyTile(
               key: const Key('open-export-history'),
               icon: Icons.history,
@@ -124,7 +190,9 @@ class MediaSettingsPage extends StatelessWidget {
             ? tr(context, 'Settings restored.', 'Đã khôi phục cài đặt.')
             : null;
       },
-      onClearInputs: () => save(read().copyWith(drafts: {})),
+      onClearInputs: hasLeftoverInputs(read())
+          ? () => save(read().copyWith(drafts: {}, favorites: []))
+          : null,
       onReset: () => save(HandyPreferences()),
     );
   }

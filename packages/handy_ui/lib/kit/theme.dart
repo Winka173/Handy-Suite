@@ -15,11 +15,25 @@ abstract final class HandySpace {
   static const double wide = 840;
 }
 
-/// The suite's face, shared by every app; each app still brings its hue.
+/// How a group's heading reads: plain ink, under a newspaper's ink rule,
+/// small capitals like a departures board, a terminal's mono comment, or a
+/// section head in the title face.
+enum HandyHeading { plain, rule, caps, mono, large }
+
+/// How a group of rows sits: on a panel, or open on the page between rules.
+enum HandyRows { card, open }
+
+/// One app's face: its faces, corners, grounds and how its chrome behaves.
+/// Every app has its own, so no two read as the same kit; behaviour,
+/// spacing and accessibility stay shared.
 class HandyBrand {
-  /// Family (bundled in handy_ui) for page titles and result figures.
+  /// Family for page titles and result figures (falls back to [text]).
   final String? display;
   final FontWeight displayWeight;
+
+  /// Family for everything else. Geist and Bricolage ship in handy_ui;
+  /// any other family is bundled by the app that uses it.
+  final String text;
   final double card, control, title;
 
   /// The app hue fills the primary button and tints selections and the
@@ -31,15 +45,51 @@ class HandyBrand {
 
   /// Panels are a tone step on a white page instead of white cards with an edge.
   final bool flatPanels;
+
+  /// Panels are pale tiles of the app hue, with no edge.
+  final bool pastel;
+
+  /// Surfaces part by tone alone: no edge on cards.
+  final bool edgeless;
+
+  /// The top bar shows the app's mark on a tile of its hue; otherwise the
+  /// name stands alone.
+  final bool tileMark;
+
+  /// Opens dark; the person can still choose light. No "system" choice.
+  final bool darkFirst;
+
+  /// Light ground, and dark ground and surface, when the style sets them.
+  final Color? ground, groundDark, surfaceDark;
+
+  /// The page sits on a sheet inset in a frame of this colour.
+  final Color? frame;
+  final HandyHeading heading;
+  final HandyRows rows;
+
+  /// Every selection is the same 1px line of the hue, never a fill.
+  final bool lineSelect;
   const HandyBrand({
+    this.frame,
+    this.heading = HandyHeading.plain,
+    this.rows = HandyRows.card,
+    this.lineSelect = false,
     this.display,
     this.displayWeight = FontWeight.w500,
+    this.text = 'Geist',
     this.card = 8,
     this.control = 6,
     this.title = 24,
     this.ladder = false,
     this.tintGround = false,
     this.flatPanels = false,
+    this.pastel = false,
+    this.edgeless = false,
+    this.tileMark = true,
+    this.darkFirst = false,
+    this.ground,
+    this.groundDark,
+    this.surfaceDark,
   });
   static const ledger = HandyBrand();
   static const workbench = HandyBrand(
@@ -56,15 +106,146 @@ class HandyBrand {
     control: 8,
     title: 28,
   );
-  static const notebook = HandyBrand(
+
+  /// Tools: a calculator's tape. Ink chrome, no mark tile, the hue only on
+  /// the result.
+  static const tools = HandyBrand(
+    display: 'IBMPlexSans',
+    displayWeight: FontWeight.w600,
+    text: 'IBMPlexSans',
+    card: 4,
+    control: 4,
+    title: 26,
+    tileMark: false,
+  );
+
+  /// Dev: a terminal read in long sessions. Opens dark, panels darker than
+  /// the ground, square corners.
+  static const dev = HandyBrand(
+    display: 'SpaceGrotesk',
+    text: 'SpaceGrotesk',
+    card: 4,
+    control: 4,
+    darkFirst: true,
+    groundDark: Color(0xFF111214),
+    surfaceDark: Color(0xFF09090A),
+    heading: HandyHeading.mono,
+    lineSelect: true,
+  );
+
+  /// Docs: paper on a desk. A grey frame, white sheets with soft corners,
+  /// a book face for titles.
+  static const docs = HandyBrand(
+    display: 'Literata',
+    displayWeight: FontWeight.w600,
+    card: 16,
+    control: 8,
+    title: 30,
+    ground: Color(0xFFFFFFFF),
+    frame: Color(0xFFE9EAE6),
+    heading: HandyHeading.large,
+  );
+
+  /// Media: a darkroom. Opens on true black so pictures carry the colour.
+  static const media = HandyBrand(
+    display: 'Bricolage',
+    displayWeight: FontWeight.w600,
+    card: 10,
+    control: 8,
+    title: 28,
+    edgeless: true,
+    darkFirst: true,
+    groundDark: Color(0xFF000000),
+    surfaceDark: Color(0xFF141414),
+  );
+
+  /// Keep: boxes on a shelf. A cardboard ground, white labelled boxes.
+  static const keep = HandyBrand(
+    display: 'BeVietnamPro',
+    displayWeight: FontWeight.w600,
+    text: 'BeVietnamPro',
+    card: 14,
+    control: 8,
+    title: 28,
+    ground: Color(0xFFF4F0E9),
+    frame: Color(0xFFE6DAC5),
+  );
+
+  /// Recall: the hue climbs from pale tints to the primary action.
+  static const recall = HandyBrand(
+    display: 'Lexend',
+    displayWeight: FontWeight.w600,
+    text: 'Lexend',
+    ladder: true,
+    card: 12,
+    control: 8,
+    title: 28,
+  );
+
+  /// Bookmark: a newspaper's index. Paper ground, ink only, a news face.
+  static const bookmark = HandyBrand(
     display: 'Newsreader',
-    displayWeight: FontWeight.w400,
-    card: 20,
-    control: 22,
+    displayWeight: FontWeight.w500,
+    card: 2,
+    control: 4,
     title: 32,
+    tileMark: false,
+    ground: Color(0xFFFAF8F3),
+    heading: HandyHeading.rule,
+    rows: HandyRows.open,
+  );
+
+  /// Spend: pale tiles of its green under one large radius.
+  static const spend = HandyBrand(
+    display: 'Geist',
+    displayWeight: FontWeight.w600,
+    ladder: true,
+    pastel: true,
+    edgeless: true,
+    card: 24,
+    control: 20,
+    title: 28,
+    ground: Color(0xFFFFFFFF),
+  );
+
+  /// Habit: a morning greeting over tonal panels, rounded type.
+  static const habit = HandyBrand(
+    display: 'Nunito',
+    displayWeight: FontWeight.w700,
+    text: 'Nunito',
     flatPanels: true,
+    card: 18,
+    control: 12,
+    title: 32,
+    heading: HandyHeading.large,
+  );
+
+  /// Trip: a daybook of departures. Archivo, small capitals over each
+  /// group like a timetable, ink chrome; the hue marks only what is confirmed.
+  static const trip = HandyBrand(
+    display: 'Archivo',
+    displayWeight: FontWeight.w600,
+    text: 'Archivo',
+    card: 6,
+    control: 6,
+    title: 28,
+    heading: HandyHeading.caps,
   );
   static HandyBrand current = ladderBrand;
+}
+
+/// Package that bundles [family]: handy_ui for its own faces, else the app.
+String? handyFontPackage(String family) =>
+    const {'Geist', 'Bricolage', 'GeistMono'}.contains(family)
+    ? 'handy_ui'
+    : null;
+
+/// [family] as the engine knows it. Written out in full rather than passed
+/// as a package, because a style's package sticks through copyWith and
+/// would send the app's own faces to handy_ui.
+String handyFontFamily(String family) {
+  final package = handyFontPackage(family);
+  return package == null ? family : 'packages/$package/$family';
 }
 
 /// System faces tried, in order, for scripts the bundled fonts lack.
@@ -167,15 +348,19 @@ HandyColors _colors(Color accent, bool light, HandyBrand b) {
       : Color.lerp(accent, Colors.white, .45)!;
   if (light) {
     return HandyColors(
-      select: b.ladder ? soft : const Color(0xFFEEEEEE),
+      select: b.ladder || b.pastel ? soft : const Color(0xFFEEEEEE),
       selectInk: b.ladder ? softInk : _ink,
-      lead: b.ladder
+      lead: b.pastel
+          ? Color.lerp(accent, Colors.white, .9)!
+          : b.ladder
           ? Color.lerp(accent, Colors.white, .93)!
           : b.flatPanels
           ? const Color(0xFFF5F5F3)
           : Colors.white,
       accent: accent,
-      ground: b.flatPanels
+      ground: b.ground != null
+          ? b.ground!
+          : b.flatPanels
           ? Colors.white
           : b.tintGround
           ? Color.lerp(const Color(0xFFF7F7F6), accent, .035)!
@@ -200,7 +385,9 @@ HandyColors _colors(Color accent, bool light, HandyBrand b) {
         ? Color.lerp(accent, Colors.black, .9)!
         : const Color(0xFF111111),
     accent: Color.lerp(accent, Colors.white, 0.25)!,
-    ground: b.tintGround
+    ground: b.groundDark != null
+        ? b.groundDark!
+        : b.tintGround
         ? Color.lerp(Colors.black, accent, .04)!
         : const Color(0xFF000000),
     raised: const Color(0xFF222222),
@@ -230,7 +417,9 @@ ThemeData buildHandyTheme(
   final light = brightness == Brightness.light;
   final c = _colors(accent, light, b);
   final ink = light ? _ink : Colors.white;
-  final surface = light ? Colors.white : const Color(0xFF111111);
+  final surface = light
+      ? Colors.white
+      : b.surfaceDark ?? const Color(0xFF111111);
   final fill = b.ladder
       ? (light ? deepAccent(accent) : c.accent)
       : (light ? _primaryLight : Colors.white);
@@ -259,8 +448,7 @@ ThemeData buildHandyTheme(
     useMaterial3: true,
     colorScheme: scheme,
     brightness: brightness,
-    fontFamily: 'Geist',
-    package: 'handy_ui',
+    fontFamily: handyFontFamily(b.text),
     // The bundled faces cover Latin and Vietnamese. Other scripts (Japanese,
     // Chinese, Korean…) fall back to the system's own faces by name.
     fontFamilyFallback: handyFontFallback,
@@ -276,8 +464,7 @@ ThemeData buildHandyTheme(
   TextStyle? display(TextStyle? s) => b.display == null
       ? s
       : s?.copyWith(
-          fontFamily: b.display,
-          package: 'handy_ui',
+          fontFamily: handyFontFamily(b.display!),
           fontWeight: b.displayWeight,
         );
   final text = base.textTheme.copyWith(
@@ -402,12 +589,20 @@ ThemeData buildHandyTheme(
     ),
     iconTheme: IconThemeData(color: ink, size: 20),
     cardTheme: CardThemeData(
-      color: b.flatPanels && light ? c.lead : surface,
+      color: b.pastel && light
+          ? Color.lerp(accent, Colors.white, .94)
+          : b.ladder && light
+          ? Color.lerp(accent, Colors.white, .975)
+          : b.flatPanels && light
+          ? c.lead
+          : surface,
       elevation: 0,
       margin: EdgeInsets.zero,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(b.card),
-        side: b.flatPanels ? BorderSide.none : BorderSide(color: c.border),
+        side: b.flatPanels || b.edgeless
+            ? BorderSide.none
+            : BorderSide(color: c.border),
       ),
     ),
     listTileTheme: ListTileThemeData(
@@ -422,24 +617,47 @@ ThemeData buildHandyTheme(
     dividerTheme: DividerThemeData(color: c.rule, thickness: 1, space: 1),
     chipTheme: ChipThemeData(
       shape: control,
-      side: BorderSide(color: c.border),
+      side: b.lineSelect
+          ? WidgetStateBorderSide.resolveWith(
+              (s) => BorderSide(
+                color: s.contains(WidgetState.selected) ? c.accent : c.border,
+              ),
+            )
+          : BorderSide(color: c.border),
       backgroundColor: surface,
-      selectedColor: c.select,
+      selectedColor: b.lineSelect ? surface : c.select,
       showCheckmark: false,
       labelStyle: text.labelLarge,
       padding: const EdgeInsets.symmetric(horizontal: 2, vertical: 6),
     ),
     segmentedButtonTheme: SegmentedButtonThemeData(
-      style: SegmentedButton.styleFrom(
-        shape: control,
-        side: BorderSide(color: c.border),
-        backgroundColor: surface,
-        selectedBackgroundColor: c.select,
-        selectedForegroundColor: c.selectInk,
-        foregroundColor: c.muted,
-        textStyle: text.labelLarge,
-        minimumSize: const Size(44, 40),
-      ),
+      style:
+          SegmentedButton.styleFrom(
+            shape: control,
+            side: BorderSide(color: c.border),
+            backgroundColor: surface,
+            selectedBackgroundColor: b.lineSelect ? surface : c.select,
+            selectedForegroundColor: b.lineSelect ? ink : c.selectInk,
+            foregroundColor: c.muted,
+            textStyle: text.labelLarge,
+            minimumSize: const Size(44, 40),
+          ).copyWith(
+            // The terminal's selection: a 1px line of the hue under the segment.
+            backgroundBuilder: b.lineSelect
+                ? (context, states, child) => DecoratedBox(
+                    decoration: BoxDecoration(
+                      border: Border(
+                        bottom: BorderSide(
+                          color: states.contains(WidgetState.selected)
+                              ? c.accent
+                              : Colors.transparent,
+                        ),
+                      ),
+                    ),
+                    child: child,
+                  )
+                : null,
+          ),
     ),
     switchTheme: SwitchThemeData(
       thumbColor: WidgetStatePropertyAll(surface),
@@ -461,12 +679,16 @@ ThemeData buildHandyTheme(
       elevation: 0,
       backgroundColor: c.ground,
       surfaceTintColor: Colors.transparent,
-      indicatorColor: c.select,
-      indicatorShape: control,
+      indicatorColor: b.lineSelect ? Colors.transparent : c.select,
+      indicatorShape: b.lineSelect
+          ? UnderlineInputBorder(borderSide: BorderSide(color: c.accent))
+          : control,
       iconTheme: WidgetStateProperty.resolveWith(
         (s) => IconThemeData(
           size: 22,
-          color: s.contains(WidgetState.selected) ? c.selectInk : c.muted,
+          color: s.contains(WidgetState.selected)
+              ? (b.lineSelect ? c.accent : c.selectInk)
+              : c.muted,
         ),
       ),
       labelTextStyle: WidgetStateProperty.resolveWith(
@@ -509,6 +731,19 @@ ThemeData buildHandyTheme(
         side: BorderSide(color: c.border),
       ),
       textStyle: text.bodyMedium,
+    ),
+    tabBarTheme: TabBarThemeData(
+      labelColor: ink,
+      unselectedLabelColor: c.muted,
+      labelStyle: text.labelLarge,
+      dividerColor: c.border,
+      indicatorSize: TabBarIndicatorSize.tab,
+      indicator: UnderlineTabIndicator(
+        borderSide: BorderSide(
+          color: b.lineSelect ? c.accent : ink,
+          width: b.lineSelect ? 1 : 2,
+        ),
+      ),
     ),
     progressIndicatorTheme: ProgressIndicatorThemeData(
       color: ink,

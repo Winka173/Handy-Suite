@@ -136,7 +136,12 @@ class _LiteSheetState extends State<_LiteSheet> {
               plan.omitted.contains(step.id)
                   ? tr(context, 'left out', 'bỏ')
                   : plan.shrunk.contains(step.id)
-                  ? '${minutesText(context, step.seconds)} → ${minutesText(context, plan.steps.firstWhere((s) => s.id == step.id).seconds)}'
+                  // Nunito has no arrow: the change is said in words.
+                  ? tr(
+                      context,
+                      '${minutesText(context, plan.steps.firstWhere((s) => s.id == step.id).seconds)}, not ${minutesText(context, step.seconds)}',
+                      '${minutesText(context, plan.steps.firstWhere((s) => s.id == step.id).seconds)} thay vì ${minutesText(context, step.seconds)}',
+                    )
                   : minutesText(context, step.seconds),
               style: TextStyle(color: c.muted),
             ),

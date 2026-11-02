@@ -251,6 +251,131 @@ SpendState household() {
   );
 }
 
+/// A till receipt drawn for the shots: paper, a heading and lines.
+Future<Uint8List> receiptPng(WidgetTester t) async =>
+    (await t.runAsync(() async {
+      final rec = ui.PictureRecorder();
+      final canvas = Canvas(rec);
+      canvas.drawRect(
+        const Rect.fromLTWH(0, 0, 480, 720),
+        Paint()..color = const Color(0xFFF7F5F0),
+      );
+      final ink = Paint()..color = const Color(0xFF3A3A3A);
+      canvas.drawRect(const Rect.fromLTWH(140, 48, 200, 18), ink);
+      for (var i = 0; i < 14; i++) {
+        final y = 120.0 + i * 34;
+        canvas.drawRect(Rect.fromLTWH(48, y, 220 - (i % 3) * 40, 10), ink);
+        canvas.drawRect(Rect.fromLTWH(352, y, 80, 10), ink);
+      }
+      canvas.drawRect(const Rect.fromLTWH(48, 620, 384, 3), ink);
+      canvas.drawRect(const Rect.fromLTWH(48, 640, 120, 16), ink);
+      canvas.drawRect(const Rect.fromLTWH(312, 640, 120, 16), ink);
+      final image = await rec.endRecording().toImage(480, 720);
+      final data = await image.toByteData(format: ui.ImageByteFormat.png);
+      return data!.buffer.asUint8List();
+    }))!;
+
+/// The household with what the newer features keep: a dinner split three
+/// ways with its receipt (Hoa has paid back, Nam has not), cinema Linh
+/// paid for, a subscription the plan should notice, a column template.
+SpendState householdPlus(Receipt? receipt) {
+  final s = household();
+  final people = [
+    Person(id: 'hoa', name: 'Hoa'),
+    Person(id: 'nam', name: 'Nam'),
+    Person(id: 'linh', name: 'Linh'),
+  ];
+  final dinner = Entry(
+    id: 'lau',
+    account: 'vcb',
+    kind: 'expense',
+    amount: BigInt.from(-1200000),
+    when: at(0),
+    payee: 'Lẩu Thái Tomyum',
+    category: 'food',
+  );
+  final split = CostSplit(
+    id: 'split-lau',
+    payer: me,
+    currency: 'VND',
+    date: inDays(0),
+    name: 'Lẩu Thái Tomyum',
+    method: 'equal',
+    total: BigInt.from(1200000),
+    entry: 'lau',
+    category: 'food',
+    parts: splitParts(BigInt.from(1200000), 'equal', [
+      (me, 1, null),
+      ('hoa', 1, null),
+      ('nam', 1, null),
+    ]),
+  );
+  final cinema = CostSplit(
+    id: 'split-cgv',
+    payer: 'linh',
+    currency: 'VND',
+    date: inDays(0),
+    name: 'CGV Landmark 81',
+    method: 'equal',
+    total: BigInt.from(360000),
+    category: 'fun',
+    parts: splitParts(BigInt.from(360000), 'equal', [
+      (me, 1, null),
+      ('linh', 1, null),
+    ]),
+  );
+  var next = s.copy({
+    'people': people.map((p) => p.toJson()).toList(),
+    'entries': [
+      ...s.entries.map((e) => e.toJson()),
+      dinner.toJson(),
+      for (final (i, d) in [-63, -32, -2].indexed)
+        Entry(
+          id: 'spotify$i',
+          account: 'vib',
+          kind: 'expense',
+          amount: BigInt.from(-59000),
+          when: at(d),
+          payee: 'Spotify Premium',
+          category: 'fun',
+        ).toJson(),
+    ],
+    'splits': [split.toJson(), cinema.toJson()],
+  });
+  final paid = settlement(
+    next,
+    split,
+    'hoa',
+    BigInt.from(400000),
+    account: 'momo',
+    date: inDays(0),
+    payee: 'Hoa · Lẩu Thái Tomyum',
+  );
+  next = next.copy({
+    'entries': [...next.entries.map((e) => e.toJson()), paid.toJson()],
+    'receipts': [?receipt?.toJson()],
+  });
+  return saveTemplate(
+    next,
+    statementTemplate(
+      name: 'Vietcombank CSV',
+      headers: ['Ngày giao dịch', 'Nội dung', 'Ghi nợ', 'Ghi có', 'Số dư'],
+      mapping: const StatementMapping(
+        account: 'vcb',
+        payee: 1,
+        amount: -1,
+        debit: 2,
+        credit: 3,
+        balance: 4,
+        dateFormat: 'dmy',
+        group: '.',
+        decimal: ',',
+      ),
+      delimiter: ';',
+    ),
+  );
+}
+
 Future<SpendController> boot(
   WidgetTester t,
   Size size, {
@@ -261,9 +386,17 @@ Future<SpendController> boot(
   t.view.devicePixelRatio = 1;
   addTearDown(t.view.resetPhysicalSize);
   addTearDown(t.view.resetDevicePixelRatio);
-  final c = SpendController(
-    open: () async => TestSpendStore()..value = state ?? household(),
-  );
+  final store = TestSpendStore();
+  if (state != null) {
+    store.value = state;
+  } else {
+    final png = await receiptPng(t);
+    final r = Receipt.of('lau', 'hoa-don-lau.png', png);
+    store
+      ..value = householdPlus(r)
+      ..files[r.id] = png;
+  }
+  final c = SpendController(open: () async => store);
   await c.load();
   await t.pumpWidget(
     RepaintBoundary(
@@ -417,6 +550,91 @@ void main() {
     await shot(t, 'phone-13-dark');
     await area(t, 2);
     await shot(t, 'phone-14-dark-plan');
+  });
+  testWidgets('phone record with receipt and split', (t) async {
+    await boot(t, const Size(390, 844));
+    await area(t, 1);
+    await tapKey(t, 'entry-lau');
+    await t.scrollUntilVisible(
+      find.byKey(const Key('entry-receipts')),
+      300,
+      scrollable: find.byType(Scrollable).hitTestable().first,
+    );
+    await shot(t, 'phone-15-entry-receipt-split');
+    await tapKey(t, 'entry-split');
+    await shot(t, 'phone-16-split');
+    await t.tap(find.text('Số cụ thể'));
+    await t.pumpAndSettle();
+    await t.enterText(find.byKey(const Key('split-amount-me')), '500.000');
+    await t.pumpAndSettle();
+    await shot(t, 'phone-17-split-exact-off');
+  });
+  testWidgets('phone receipt', (t) async {
+    final c = await boot(t, const Size(390, 844));
+    await t.runAsync(() => c.receiptBytes(c.state!.receipts.single.id));
+    await area(t, 1);
+    await tapKey(t, 'entry-lau');
+    await tapKey(t, 'receipt-${c.state!.receipts.single.id}');
+    await shot(t, 'phone-18-receipt');
+  });
+  testWidgets('phone people', (t) async {
+    await boot(t, const Size(390, 844));
+    await tapKey(t, 'today-owed');
+    await shot(t, 'phone-19-people');
+    await tapKey(t, 'person-nam');
+    await shot(t, 'phone-20-person');
+    await tapKey(t, 'person-settle');
+    await shot(t, 'phone-21-settle');
+  });
+  testWidgets('phone plan overlay and suggestion', (t) async {
+    final c = await boot(t, const Size(390, 844));
+    await area(t, 2);
+    await tapKey(t, 'whatif-purchase');
+    await t.enterText(find.byKey(const Key('field-name')), 'iPhone 6 tháng');
+    await t.enterText(find.byKey(const Key('field-cost')), '27.000.000');
+    await t.enterText(find.byKey(const Key('field-installments')), '6');
+    await t.pumpAndSettle();
+    await tapKey(t, 'editor-save');
+    await t.scrollUntilVisible(
+      find.byKey(Key('whatif-compare-${c.state!.scenarios.single.id}')),
+      200,
+      scrollable: find.byType(Scrollable).hitTestable().first,
+    );
+    await shot(t, 'phone-22-plan-overlay');
+    await t.scrollUntilVisible(
+      find.text('Có vẻ lặp lại'),
+      300,
+      scrollable: find.byType(Scrollable).hitTestable().first,
+    );
+    await shot(t, 'phone-23-suggestion');
+  });
+  testWidgets('desktop plan overlay', (t) async {
+    await boot(t, const Size(1440, 900));
+    await area(t, 2);
+    await tapKey(t, 'whatif-purchase');
+    await t.enterText(find.byKey(const Key('field-name')), 'Laptop 12 tháng');
+    await t.enterText(find.byKey(const Key('field-cost')), '36.000.000');
+    await t.enterText(find.byKey(const Key('field-installments')), '12');
+    await t.pumpAndSettle();
+    await tapKey(t, 'editor-save');
+    await shot(t, 'desktop-7-plan-overlay');
+  });
+  testWidgets('phone templates', (t) async {
+    await boot(t, const Size(390, 844));
+    await tapKey(t, 'open-settings');
+    await tapKey(t, 'spend-templates');
+    await shot(t, 'phone-24-templates');
+  });
+  testWidgets('phone 320 people and split', (t) async {
+    await boot(t, const Size(320, 640));
+    await tapKey(t, 'today-owed');
+    await shot(t, 'phone320-people');
+    await t.tap(find.byType(BackButton));
+    await t.pumpAndSettle();
+    await area(t, 1);
+    await tapKey(t, 'entry-lau');
+    await tapKey(t, 'entry-split');
+    await shot(t, 'phone320-split');
   });
   testWidgets('desktop settings', (t) async {
     await boot(t, const Size(1440, 900));

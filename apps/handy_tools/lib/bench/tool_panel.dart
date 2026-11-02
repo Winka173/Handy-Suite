@@ -104,8 +104,19 @@ class ToolPanelState extends State<ToolPanel> {
             },
   };
 
-  bool get complete =>
-      widget.spec.fields.every((f) => f.optional || values()[f.id]!.isNotEmpty);
+  /// Advanced fields (a tool's rule overrides) stay folded until opened, or
+  /// open from the start when a saved input already overrides one.
+  late bool advancedOpen = widget.spec.fields.any(
+    (f) => f.advanced && (start[f.id] ?? '').isNotEmpty,
+  );
+
+  bool get complete {
+    final v = values();
+    return widget.spec.fields.every(
+      (f) => f.optional || !f.visible(v) || v[f.id]!.isNotEmpty,
+    );
+  }
+
   bool get large =>
       values().values.fold<int>(0, (n, s) => n + s.length) > liveLimit;
 
@@ -130,7 +141,8 @@ class ToolPanelState extends State<ToolPanel> {
     tapeEntry(
       context,
       input: [
-        for (final f in widget.spec.fields) values()[f.id]!,
+        for (final f in widget.spec.fields)
+          if (f.visible(values())) values()[f.id]!,
       ].where((s) => s.isNotEmpty).join(' · '),
       toolId: widget.spec.id,
       values: values(),
@@ -260,16 +272,50 @@ class ToolPanelState extends State<ToolPanel> {
           : null,
     );
     final unitPair = spec.id == 'units';
+    final advanced = spec.fields.where((f) => f.advanced && f.visible(v));
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         if (widget.header != null)
           widget.header!(context, [HandyMenuButton(items: menu(context))]),
         for (final f in spec.fields.where(
-          (f) => !unitPair || (f.id != 'from' && f.id != 'to'),
+          (f) =>
+              !f.advanced &&
+              f.visible(v) &&
+              (!unitPair || (f.id != 'from' && f.id != 'to')),
         )) ...[
           field(f),
           if (unitPair && f.id == 'value') _pair(context, field),
+        ],
+        if (advanced.isNotEmpty) ...[
+          Align(
+            alignment: AlignmentDirectional.centerStart,
+            child: TextButton.icon(
+              key: const Key('advanced-toggle'),
+              onPressed: () => setState(() => advancedOpen = !advancedOpen),
+              icon: Icon(
+                advancedOpen ? Icons.expand_less : Icons.tune,
+                size: 18,
+              ),
+              label: Text(
+                spec.advancedLabel?.call(context, v) ??
+                    tr(context, 'More settings', 'Thiết lập thêm'),
+              ),
+            ),
+          ),
+          const SizedBox(height: HandySpace.s),
+          if (advancedOpen) ...[
+            Text(
+              tr(
+                context,
+                'Leave a field empty to use the value shown in it.',
+                'Để trống một ô là dùng giá trị đang hiện mờ trong ô.',
+              ),
+              style: Theme.of(context).textTheme.bodySmall,
+            ),
+            const SizedBox(height: HandySpace.m),
+            for (final f in advanced) field(f),
+          ],
         ],
         const SizedBox(height: HandySpace.s),
         // The state (empty, answer, error) fades; the answer itself updates
@@ -326,11 +372,13 @@ class ToolPanelState extends State<ToolPanel> {
                 )
               else
                 HandyEmpty(
-                  title: tr(
-                    context,
-                    'Fill in the fields — the answer appears here.',
-                    'Điền các ô — kết quả hiện ở đây.',
-                  ),
+                  title: spec.empty == null
+                      ? tr(
+                          context,
+                          'Fill in the fields — the answer appears here.',
+                          'Điền các ô — kết quả hiện ở đây.',
+                        )
+                      : tr(context, spec.empty!.$1, spec.empty!.$2),
                 ),
             ],
           ),

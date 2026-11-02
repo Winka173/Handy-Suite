@@ -34,9 +34,15 @@ class RecallSettingsPage extends StatelessWidget {
   }
 
   Future<String?> _restore(BuildContext context) async {
-    final file = await scope.files.importText(maxBytes: recallBackupBytes);
+    final file = await scope.files.importBytes(
+      extensions: ['json', 'hseal'],
+      maxBytes: recallBackupBytes,
+    );
     if (file == null || !context.mounted) return null;
-    final next = parseRecallBackup(file.text);
+    // A password-locked automatic backup opens to the same JSON.
+    final bytes = await openSealedBackup(context, file.bytes);
+    if (bytes == null || !context.mounted) return null;
+    final next = parseRecallBackup(utf8.decode(bytes));
     final ok = await confirmHandy(
       context,
       title: tr(context, 'Replace your library?', 'Thay thư viện hiện có?'),
@@ -111,6 +117,8 @@ class RecallSettingsPage extends StatelessWidget {
           'Mỗi ngày một thông báo vào giờ bạn chọn. Không có gì rời khỏi máy.',
         ),
       ),
+      if (scope.autoBackup != null)
+        HandyAutoBackupSection(backup: scope.autoBackup!),
       HandySettingsSection(
         title: tr(context, 'Your library', 'Thư viện học'),
         description: tr(

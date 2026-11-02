@@ -84,7 +84,7 @@ void main() {
             body: ListView(
               children: [
                 ToolPanel(
-                  spec: specById['uppercase']!,
+                  spec: specById['case']!,
                   files: files,
                   tape: TapeController(),
                   draft: 'private source',
@@ -104,7 +104,7 @@ void main() {
       files.cancel = false;
       await tester.tap(find.byKey(const Key('export-result')));
       await tester.pumpAndSettle();
-      expect((await history.load()).single.tool, 'uppercase');
+      expect((await history.load()).single.tool, 'case');
       expect(documents.text, isNot(contains('PRIVATE SOURCE')));
       documents.fail = true;
       await tester.tap(find.byKey(const Key('export-result')));

@@ -97,5 +97,16 @@
         "artifactSha256":  null,
         "startedAt":  "2026-11-01T16:34:01.3788237Z",
         "elapsedSeconds":  37.83
+    },
+    {
+        "app":  "trip",
+        "target":  "windows",
+        "exitCode":  0,
+        "sourceSha256":  "e9531374ebd655d6e7c3dc3890f9e951caee25f6066c311bfd1d29c56772bad6",
+        "sourceUnchanged":  true,
+        "artifact":  null,
+        "artifactSha256":  null,
+        "startedAt":  "2026-11-02T03:11:30.6978220Z",
+        "elapsedSeconds":  85.85
     }
 ]

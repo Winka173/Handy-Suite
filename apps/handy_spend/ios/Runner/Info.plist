@@ -35,6 +35,8 @@
 	<true/>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
+	<key>NSCameraUsageDescription</key>
+	<string>Photograph a receipt to keep with a transaction on this device / Chup hoa don de luu cung giao dich tren may</string>
 	<key>NSFaceIDUsageDescription</key>
 	<string>Unlock local financial records / Mo khoa du lieu tai chinh tren may</string>
 	<key>UIApplicationSceneManifest</key>
@@ -76,6 +78,14 @@
 		<string>UIInterfaceOrientationPortraitUpsideDown</string>
 		<string>UIInterfaceOrientationLandscapeLeft</string>
 		<string>UIInterfaceOrientationLandscapeRight</string>
+	</array>
+	<key>UIFileSharingEnabled</key>
+	<true/>
+	<key>LSSupportsOpeningDocumentsInPlace</key>
+	<true/>
+	<key>LSApplicationQueriesSchemes</key>
+	<array>
+		<string>handy-keep</string>
 	</array>
 </dict>
 </plist>

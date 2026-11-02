@@ -4,6 +4,7 @@ import 'package:handy_ui/kit.dart';
 import '../habits/habit_editor.dart';
 import '../habits/habits_page.dart';
 import '../insights/insights_page.dart';
+import '../pauses/pauses.dart';
 import '../routines/routine_editor.dart';
 import '../routines/routines_page.dart';
 import '../scope.dart';
@@ -93,8 +94,11 @@ class _HabitShellState extends State<HabitShell> {
             key: const Key('habit-add'),
             tooltip: tr(context, 'Add', 'Thêm'),
             position: PopupMenuPosition.under,
-            onSelected: (v) =>
-                v == 'habit' ? openHabitEditor(context, scope) : addRoutine(),
+            onSelected: (v) => switch (v) {
+              'habit' => openHabitEditor(context, scope),
+              'pause' => openPauseEditor(context, scope),
+              _ => addRoutine(),
+            },
             itemBuilder: (context) => [
               PopupMenuItem(
                 key: const Key('add-habit'),
@@ -105,6 +109,11 @@ class _HabitShellState extends State<HabitShell> {
                 key: const Key('add-routine'),
                 value: 'routine',
                 child: Text(tr(context, 'New routine', 'Quy trình mới')),
+              ),
+              PopupMenuItem(
+                key: const Key('add-pause'),
+                value: 'pause',
+                child: Text(tr(context, 'Pause', 'Kỳ nghỉ')),
               ),
             ],
             // A 48px target on phones; a labelled chip on wide screens.

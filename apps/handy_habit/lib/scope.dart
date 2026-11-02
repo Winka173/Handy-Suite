@@ -5,6 +5,7 @@ import 'package:handy_ui/kit.dart';
 import 'package:timezone/timezone.dart' as tz;
 import 'controller.dart';
 import 'reminders.dart';
+import 'run_notice.dart';
 
 /// What every Habit screen shares: the state, the adapters, the clock and
 /// the area on screen.
@@ -12,7 +13,11 @@ class HabitScope {
   final HabitController controller;
   final HandyFiles files;
   final HabitReminders reminders;
+  final HabitRunNotices notices;
   final DateTime Function() clock;
+
+  /// Automatic backups to a folder; null in tests that do not need them.
+  final HandyAutoBackup? autoBackup;
 
   /// Today, Habits, Routines or Insights.
   final area = ValueNotifier(0);
@@ -20,12 +25,14 @@ class HabitScope {
     required this.controller,
     required this.files,
     required this.reminders,
+    required this.notices,
     required this.clock,
+    this.autoBackup,
   });
 
   HabitState get state => controller.state!;
   String get today => localDay(clock(), state.zone);
-  HabitIndex get index => HabitIndex(state.events);
+  HabitIndex get index => HabitIndex.of(state);
 
   /// The hour of the day where the data's time zone is.
   int get hour => tz.TZDateTime.from(clock(), location(state.zone)).hour;

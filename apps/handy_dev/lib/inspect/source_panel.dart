@@ -122,8 +122,8 @@ class SourcePanel extends StatelessWidget {
                 focusedBorder: InputBorder.none,
                 hintText: tr(
                   context,
-                  'Paste JSON, a JWT, YAML, CSV, a cURL command…',
-                  'Dán JSON, JWT, YAML, CSV, lệnh cURL…',
+                  'Paste JSON, a JWT, a URL, a timestamp, a cron line…',
+                  'Dán JSON, JWT, URL, mốc thời gian, dòng cron…',
                 ),
               ),
             ),

@@ -3,6 +3,7 @@ import 'specs.dart';
 
 String copyText(Output o) => switch (o) {
   ValueOutput o => o.value,
+  WordsOutput o => o.words,
   ScheduleOutput o => o.copy,
   RowsOutput o => o.copy,
   TextOutput o => o.text,
@@ -38,7 +39,8 @@ class OutputView extends StatelessWidget {
           ScheduleTable(o.schedule),
         ],
       ),
-      RowsOutput o => HandyValueRows(o.rows, lead: o.lead),
+      RowsOutput o => RowsView(o),
+      WordsOutput o => WordsView(o),
       TextOutput o => Card(
         color: HandyColors.of(context).lead,
         child: Padding(
@@ -164,6 +166,87 @@ class _ScheduleTableState extends State<ScheduleTable> {
             ),
           ],
         ],
+      ),
+    );
+  }
+}
+
+/// Labelled figures, with the grey line that says where they came from.
+class RowsView extends StatelessWidget {
+  final RowsOutput output;
+  const RowsView(this.output, {super.key});
+  @override
+  Widget build(BuildContext context) {
+    final rows = HandyValueRows(output.rows, lead: output.lead);
+    if (output.note.isEmpty) return rows;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        rows,
+        const SizedBox(height: HandySpace.s),
+        Text(
+          output.note,
+          key: const Key('rows-note'),
+          style: Theme.of(context).textTheme.bodySmall,
+        ),
+      ],
+    );
+  }
+}
+
+/// A number in words: the sentence in the app's hue, the other language
+/// under it in ink with its own Copy.
+class WordsView extends StatelessWidget {
+  final WordsOutput output;
+  const WordsView(this.output, {super.key});
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final c = HandyColors.of(context);
+    return Card(
+      color: c.lead,
+      child: Padding(
+        padding: const EdgeInsets.all(HandySpace.l),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            if (output.caption.isNotEmpty) ...[
+              Text(
+                output.caption,
+                style: theme.textTheme.bodyMedium?.copyWith(color: c.muted),
+              ),
+              const SizedBox(height: HandySpace.xs),
+            ],
+            SelectionArea(
+              child: Text(
+                output.words,
+                key: const Key('words-main'),
+                style: theme.textTheme.titleLarge?.copyWith(color: c.accent),
+              ),
+            ),
+            const SizedBox(height: HandySpace.m),
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Expanded(
+                  child: SelectionArea(
+                    child: Text(
+                      output.other,
+                      key: const Key('words-other'),
+                      style: theme.textTheme.bodyMedium,
+                    ),
+                  ),
+                ),
+                IconButton(
+                  key: const Key('words-copy-other'),
+                  tooltip: tr(context, 'Copy English', 'Chép câu tiếng Anh'),
+                  icon: const Icon(Icons.copy_rounded, size: 18),
+                  onPressed: () => copyToClipboard(context, output.other),
+                ),
+              ],
+            ),
+          ],
+        ),
       ),
     );
   }

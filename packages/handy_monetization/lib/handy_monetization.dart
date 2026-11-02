@@ -16,11 +16,16 @@ String get monetizationPlatform => kIsWeb
 
 class MonetizationConfig {
   final String productId, androidPublicKey, adUnitId;
+
+  /// The app's public store or web page on this platform (https), used to
+  /// point at sibling apps; empty until the app is published.
+  final String listingUrl;
   final bool adsEnabled;
   const MonetizationConfig({
     this.productId = '',
     this.androidPublicKey = '',
     this.adUnitId = '',
+    this.listingUrl = '',
     this.adsEnabled = false,
   });
   factory MonetizationConfig.parse(String source, String app, String platform) {
@@ -39,7 +44,12 @@ class MonetizationConfig {
 
     final product = field('productId', 200),
         publicKey = field('androidPublicKey', 2048),
-        unit = field('bannerAdUnitId', 100);
+        unit = field('bannerAdUnitId', 100),
+        listing = field('listingUrl', 300);
+    if (listing.isNotEmpty &&
+        (Uri.tryParse(listing)?.scheme != 'https' ||
+            Uri.parse(listing).host.isEmpty))
+      throw const FormatException('Invalid listing URL');
     if (product.isNotEmpty && !RegExp(r'^[A-Za-z0-9_.-]+$').hasMatch(product) ||
         unit.isNotEmpty &&
             !RegExp(r'^ca-app-pub-\d{16}/\d{10}$').hasMatch(unit))
@@ -48,17 +58,41 @@ class MonetizationConfig {
       productId: product,
       androidPublicKey: publicKey,
       adUnitId: unit,
+      listingUrl: listing,
       adsEnabled:
           value['adsEnabled'] == true &&
           unit.isNotEmpty &&
           ['android', 'ios'].contains(platform),
     );
   }
+  static const _raw = String.fromEnvironment(
+    'HANDY_MONETIZATION_CONFIG',
+    defaultValue: '{}',
+  );
+
+  /// The public pages of the suite's apps on this platform, by app id; only
+  /// apps that have one.
+  static Map<String, String> listings([String source = _raw]) {
+    final out = <String, String>{};
+    try {
+      final root = jsonDecode(source);
+      if (root is! Map) return out;
+      for (final app in root.keys.whereType<String>()) {
+        final url = MonetizationConfig.parse(
+          source,
+          app,
+          monetizationPlatform,
+        ).listingUrl;
+        if (url.isNotEmpty) out[app] = url;
+      }
+    } on FormatException {
+      return {};
+    }
+    return out;
+  }
+
   static MonetizationConfig forApp(String app) {
-    const raw = String.fromEnvironment(
-      'HANDY_MONETIZATION_CONFIG',
-      defaultValue: '{}',
-    );
+    const raw = _raw;
     try {
       final config = MonetizationConfig.parse(raw, app, monetizationPlatform);
       if (kDebugMode && const bool.fromEnvironment('HANDY_TEST_ADS'))

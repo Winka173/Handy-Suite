@@ -17,9 +17,15 @@ class Evaluation {
   /// Engine value that joins the tape's total, when the answer is a number.
   String? get number => switch (output) {
     ValueOutput o when isPlainNumber(o.value) => o.value,
-    RowsOutput o when isPlainNumber(o.rows[o.lead].$2) => o.rows[o.lead].$2,
+    RowsOutput o when isPlainNumber(_amount(o.rows[o.lead].$2)) => _amount(
+      o.rows[o.lead].$2,
+    ),
     _ => null,
   };
+
+  /// A money figure joins the total without its unit.
+  static String _amount(String s) =>
+      s.endsWith(' đ') ? s.substring(0, s.length - 2) : s;
 }
 
 const liveLimit = 20000;
@@ -45,7 +51,7 @@ Evaluation runChain(List<String> steps, String text) {
   try {
     var out = text;
     for (final id in steps) {
-      out = specById[id]!.engine.run(out);
+      out = runStep(id, out);
     }
     return Evaluation.ok(TextOutput(out), out);
   } on FormatException catch (e) {

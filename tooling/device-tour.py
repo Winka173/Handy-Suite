@@ -26,7 +26,7 @@ import time
 
 ROOT = pathlib.Path(__file__).resolve().parent.parent
 OUT = ROOT / 'device-tours'
-APPS = ['tools', 'dev', 'keep', 'recall', 'save', 'docs', 'media', 'spend', 'habit']
+APPS = ['tools', 'dev', 'keep', 'recall', 'bookmark', 'docs', 'media', 'spend', 'habit']
 SEGMENT = 170
 
 

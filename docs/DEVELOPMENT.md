@@ -1,6 +1,6 @@
 # Phát triển Handy Suite
 
-Flutter 3.44.9 / Dart 3.12.2. Chín app trong `apps/handy_*`, 20 package dùng chung
+Flutter 3.44.9 / Dart 3.12.2. Mười app trong `apps/handy_*`, 21 package dùng chung
 trong `packages/handy_*`; khai báo workspace tại `pubspec.yaml`.
 
 - Engines xử lý dữ liệu thuần Dart; UI nằm trong app/shared UI package.
@@ -24,9 +24,9 @@ Từ thư mục app: `flutter run -d windows` hoặc chọn device Android/iOS p
 Từ root, build cả suite:
 
 ```powershell
-./tooling/flutter-builds.ps1 -Apps @('tools','docs','media','dev','keep','recall','save','spend','habit') -Target apk
-./tooling/flutter-builds.ps1 -Apps @('tools','docs','media','dev','keep','recall','save','spend','habit') -Target windows
-./tooling/flutter-builds.ps1 -Apps @('tools','docs','media','dev','keep','recall','save','spend','habit') -Target web
+./tooling/flutter-builds.ps1 -Apps @('tools','docs','media','dev','keep','recall','save','spend','habit','trip') -Target apk
+./tooling/flutter-builds.ps1 -Apps @('tools','docs','media','dev','keep','recall','save','spend','habit','trip') -Target windows
+./tooling/flutter-builds.ps1 -Apps @('tools','docs','media','dev','keep','recall','save','spend','habit','trip') -Target web
 ```
 
 Trên macOS, từ thư mục app dùng `flutter build ios --simulator --no-codesign` để
@@ -60,8 +60,8 @@ large-project, state, reader, parity, video-transform và editor; app hỗ trợ
 kiểm tra ngay trong runner. Capture/camera test cần thao tác hộp thoại OS thật;
 các helper Python chỉ tương tác với emulator QA được chỉ định.
 
-`python tooling/verify-save-checkpoint.py` kiểm tra build cả bảy app, test workspace,
-MSIX unsigned và integration/share Android Handy Save trong `docs/qa/evidence`.
+`python tooling/verify-bookmark-checkpoint.py` kiểm tra build cả bảy app, test workspace,
+MSIX unsigned và integration/share Android Handy Bookmark trong `docs/qa/evidence`.
 Cần build outputs thực tế, không tự tạo bằng chứng trên clone mới. Source hash và
 artifact hash được kiểm tra riêng. Các native integration cũ của sáu app còn lại
 được giữ làm bằng chứng lịch sử; audit sáu app `verify-flutter-checkpoint.py` yêu

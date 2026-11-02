@@ -1,0 +1,7 @@
+title,url,time_added,tags,status
+"How to brew coffee, properly",https://www.example-coffee.com/brew?utm_source=pocket_saves,1700000000,coffee|kitchen,unread
+Đọc sách mỗi ngày,https://vnexpress.net/doc-sach-4567.html,1690000000,,archive
+https://github.com/flutter/flutter,https://github.com/flutter/flutter,1680000000,dev|flutter,unread
+Same coffee again,https://www.example-coffee.com/brew,1700000100,,unread
+Broken row,not a url,1680000000,,unread
+Short row,https://short.example.com

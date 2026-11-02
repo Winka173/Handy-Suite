@@ -71,7 +71,6 @@ List<Widget> chooseStep(ImportPageState w) {
 
 List<Widget> mapStep(ImportPageState w) {
   final context = w.context;
-  final s = w.s;
   final theme = Theme.of(context);
   return [
     Row(
@@ -94,6 +93,23 @@ List<Widget> mapStep(ImportPageState w) {
         ),
       ],
     ),
+    if (w.template != null)
+      Padding(
+        padding: const EdgeInsets.only(bottom: HandySpace.s),
+        child: HandyNotice(
+          tr(
+            context,
+            'Read with your template “${w.template!['name']}”: same column headers. Change anything below if it is off.',
+            'Đã đọc theo mẫu “${w.template!['name']}” của bạn: cùng tiêu đề cột. Sai chỗ nào thì sửa bên dưới.',
+          ),
+          tone: HandyTone.success,
+          action: TextButton(
+            key: const Key('import-drop-template'),
+            onPressed: w.busy ? null : w.dropTemplate,
+            child: Text(tr(context, "Don't use", 'Không dùng')),
+          ),
+        ),
+      ),
     const SizedBox(height: HandySpace.s),
     HandyGroup(children: [w.sample()]),
     HandyLabel(tr(context, 'Into', 'Nhập vào')),
@@ -105,19 +121,6 @@ List<Widget> mapStep(ImportPageState w) {
       (v) => w.account = v,
       key: const Key('import-account'),
     ),
-    if (s.profiles.isNotEmpty)
-      _choice(
-        w,
-        tr(context, 'Saved column profile', 'Hồ sơ cột đã lưu'),
-        '',
-        {
-          '': tr(context, 'None', 'Không dùng'),
-          for (final p in s.profiles) p['id'] as String: p['name'] as String,
-        },
-        (id) {
-          if (id.isNotEmpty) w.useProfile(id);
-        },
-      ),
     HandyLabel(tr(context, 'Columns', 'Các cột')),
     _column(
       w,
@@ -409,20 +412,46 @@ List<Widget> reviewStep(ImportPageState w) {
         value: w.partial,
         onChanged: w.busy ? null : (v) => w.update(() => w.partial = v),
       ),
-    CheckboxListTile.adaptive(
-      contentPadding: EdgeInsets.zero,
-      title: Text(
-        tr(
-          context,
-          'Remember these columns (Pro)',
-          'Nhớ cách ghép cột này (Pro)',
+    if (w.canTemplate) ...[
+      CheckboxListTile.adaptive(
+        key: const Key('import-save-template'),
+        contentPadding: EdgeInsets.zero,
+        title: Text(
+          w.template == null
+              ? tr(
+                  context,
+                  'Save these columns as a template (Pro)',
+                  'Lưu cách ghép cột thành mẫu (Pro)',
+                )
+              : tr(
+                  context,
+                  'Update the template with these choices (Pro)',
+                  'Cập nhật mẫu theo lựa chọn này (Pro)',
+                ),
         ),
+        subtitle: Text(
+          tr(
+            context,
+            'Next time a file with these headers is read the same way.',
+            'Lần sau file có cùng tiêu đề cột sẽ được đọc như vậy.',
+          ),
+        ),
+        value: w.saveProfile,
+        onChanged: w.busy || !w.scope.pro(context)
+            ? null
+            : (v) => w.update(() => w.saveProfile = v == true),
       ),
-      value: w.saveProfile,
-      onChanged: w.busy || !w.scope.pro(context)
-          ? null
-          : (v) => w.update(() => w.saveProfile = v == true),
-    ),
+      if (w.saveProfile)
+        HandyField(
+          label: tr(context, 'Template name', 'Tên mẫu'),
+          child: TextField(
+            key: const Key('import-template-name'),
+            controller: w.templateName,
+            maxLength: 128,
+            decoration: const InputDecoration(counterText: ''),
+          ),
+        ),
+    ],
   ];
 }
 
@@ -495,5 +524,6 @@ List<Widget> doneStep(ImportPageState w) {
         child: Text(tr(context, 'Undo this import', 'Hoàn tác lần nhập này')),
       ),
     ),
+    SuggestionList(scope: w.scope),
   ];
 }

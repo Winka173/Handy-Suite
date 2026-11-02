@@ -208,7 +208,9 @@ void main() {
     ]) {
       expect(() => p.copyWith(masks: [mask]), throwsFormatException);
     }
-    expect(() => p.copyWith(masks: []), throwsFormatException);
+    // Schema 2: a plain picture has no covers (it used to need one).
+    expect(p.copyWith(masks: []).masks, isEmpty);
+    expect(() => p.copyWith(side: 'left'), throwsFormatException);
     expect(
       () => p.copyWith(masks: List.filled(33, p.mask)),
       throwsFormatException,

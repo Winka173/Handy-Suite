@@ -1,0 +1,46 @@
+name: handy_trip
+version: 0.1.0+1
+publish_to: none
+resolution: workspace
+environment:
+  sdk: ^3.12.0
+dependencies:
+  flutter:
+    sdk: flutter
+  handy_trip_engine: any
+  handy_ui: any
+  handy_core: any
+  handy_files: any
+  handy_notifications: any
+  handy_monetization: any
+  sqlite3: 3.5.2
+  path_provider: 2.1.6
+  web: 1.1.1
+  pdf: 3.13.1
+  crypto: 3.0.8
+  timezone: 0.11.2
+  flutter_local_notifications: 22.3.3
+  geolocator: 14.1.2
+  url_launcher: 6.3.2
+  desktop_drop: 0.8.0
+  image_picker: 1.2.4
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  integration_test:
+    sdk: flutter
+flutter:
+  uses-material-design: true
+  assets:
+    - fonts/Archivo-OFL.txt
+  fonts:
+    - family: Archivo
+      fonts:
+        - asset: fonts/Archivo-Regular.ttf
+          weight: 400
+        - asset: fonts/Archivo-Medium.ttf
+          weight: 500
+        - asset: fonts/Archivo-SemiBold.ttf
+          weight: 600
+        - asset: fonts/Archivo-Bold.ttf
+          weight: 700

@@ -1,6 +1,11 @@
 # Lỗi và giới hạn hiện tại
 
-Handy Save: xem [giới hạn riêng](docs/HANDY_SAVE_KNOWN_LIMITATIONS.md). Metadata từ
+Handy Trip: [giới hạn riêng](docs/handy_trip/KNOWN_LIMITATIONS.md) và
+[bằng chứng QA](docs/handy_trip/QA_RESULTS.md). Host/Android emulator và build
+Android/Windows/Web đã có; iOS, thiết bị thật, browser/provider runtime và store
+chưa được chứng nhận. Bản AAB/MSIX chưa ký phát hành.
+
+Handy Bookmark: xem [giới hạn riêng](docs/HANDY_BOOKMARK_KNOWN_LIMITATIONS.md). Metadata từ
 website thật chưa có lần fetch thành công trên host QA; lưu link offline vẫn chạy.
 Android share đã kiểm tra trên emulator; iOS, browser runtime và app xã hội thật
 chưa xác nhận. Backup không chứa thumbnail cache, tối đa 30MB.
@@ -32,9 +37,17 @@ chưa xác nhận. Backup không chứa thumbnail cache, tối đa 30MB.
     Windows tự lấy font hệ thống cho tiếng Nhật, Trung, Hàn. Bản Web offline
     (`--no-web-resources-cdn`) không có font CJK nên chữ Nhật/Trung/Hàn hiện thành
     ô vuông; cần đóng gói một font CJK (khoảng 4–8 MB) hoặc cho phép tải font
-    fallback từ CDN. Đáng chú ý cho thẻ học ngoại ngữ của Recall.
-12. Giao diện mới của Handy Save chưa có lại tìm kiếm đã lưu (Pro) và sắp xếp thủ công
-    (lên/xuống); dữ liệu `savedSearches` và `bookmarkOrder` vẫn được giữ và sao lưu.
+    fallback từ CDN. Recall nay tải lát font khi cần và giữ để dùng offline (mục 25); các app khác chưa.
+12. Handy Bookmark (tên cũ Handy Save, đổi 2026-11-02) đã có lại tìm kiếm đã lưu (Pro) và
+    thứ tự tự xếp; thêm nhập từ Pocket, bản đọc offline và kiểm tra link hỏng (chỉ khi bấm,
+    không có trên Web). Bản đọc và kiểm tra link mới kiểm thử trên host với máy chủ cục bộ,
+    chưa tải từ website thật hay chạy trên thiết bị; trang dựng bằng JavaScript (nhiều mạng
+    xã hội) hoặc cần đăng nhập không cho bản đọc, và Hoàn tác sau khi xóa link không khôi
+    phục bản đọc. Tên kho dữ liệu trên máy (`handy-save.sqlite`, IndexedDB `handy-save-*`,
+    khóa cài đặt, `ProductName` Windows) và mã định dạng bản sao lưu (`handy-save`,
+    `handy-save-zip`) giữ tên cũ để không mất dữ liệu; mã ứng dụng đổi sang
+    `com.example.handysuite.bookmark`, nên bản cài thử cũ trên Android/iOS là một app khác.
+    Bằng chứng QA cũ trong `docs/qa/evidence/save-*` thuộc tên và đường dẫn cũ.
 13. Giao diện mới của Handy Docs bỏ ghim công cụ và "đầu vào đã lưu" cho Markdown (bản
     nháp đã được lưu). Dữ liệu `favorites`/`drafts` cũ vẫn giữ trong cài đặt. Ảnh review
     màn PDF chỉ có trạng thái trống vì PDFium không chạy trong `flutter test`; màn có
@@ -53,7 +66,7 @@ chưa xác nhận. Backup không chứa thumbnail cache, tối đa 30MB.
 16. Giao diện mới của chín app đã chạy tour có quay phim trên BlueStacks (Android 11,
     x86_64, màn ngang 960×540 dp) bằng `tooling/device-tour.py`. Đó là máy giả lập,
     không phải điện thoại thật; chưa chạy trên iOS. Chia sẻ từ Facebook, YouTube và
-    TikTok vào Save chưa thử trên máy này.
+    TikTok vào Bookmark chưa thử trên máy này.
 17. Giao diện mới của Handy Spend (2026-11-01): đồng hiển thị là "đ" vì Geist và
     Bricolage không có ký tự ₫ (nhập vẫn nhận ₫, đ, k, tr). Màu `#RRGGBB` và icon của
     danh mục cũ vẫn giữ trong dữ liệu nhưng app vẽ chấm theo thứ tự danh mục và không
@@ -68,6 +81,58 @@ chưa xác nhận. Backup không chứa thumbnail cache, tối đa 30MB.
     trên BlueStacks (máy giả lập); ảnh `habit-ui-review.pdf` và bằng chứng UI cũ thuộc bản
     trước.
 
+19. Tự sao lưu (2026-11-02) ghi bản sao lưu của Keep, Recall, Bookmark, Spend, Habit, Docs
+    (tệp đã giữ) và Media vào thư mục người dùng chọn, khi mở hoặc rời app, không chạy nền khi
+    app đã đóng. Android dùng bộ chọn thư mục của hệ thống (máy, Google Drive, OneDrive); iOS
+    ghi vào thư mục của app trong Tệp (iCloud Backup của máy mang theo, không chọn được thư mục
+    khác); Windows chọn thư mục bất kỳ; Web không có. Khóa bằng mật khẩu dùng X25519 +
+    AES-256-GCM, khóa riêng được bọc bằng PBKDF2-SHA256 600.000 vòng; app không lưu mật khẩu,
+    quên mật khẩu thì không mở được. Đã kiểm thử trên host và ghi/xoay vòng thư mục trên Windows
+    thật; bộ chọn thư mục Android (SAF) và thư mục iOS chưa chạy trên thiết bị.
+20. Thông báo trên Windows (Keep, Recall): lịch hẹn tạo, liệt kê và hủy đã kiểm tra trên Windows
+    thật, nhưng chưa thấy toast thật bật lên đúng giờ. Windows không tự lặp hằng ngày nên nhắc
+    ôn hằng ngày được đặt sẵn 14 ngày và nạp lại mỗi lần mở app. Bookmark, Spend và Habit trên
+    Windows vẫn dùng danh sách trong app.
+21. Widget màn hình chính (Android) cho Habit, Spend, Recall: APK debug build được và Android
+    (BlueStacks, máy giả lập) đã đăng ký cả ba widget, nhưng chưa đặt widget lên màn hình chính
+    để xem nó vẽ hay bấm thử. Widget Spend chỉ hiện số tiền khi app không bật khóa và không ẩn số
+    tiền. iOS chưa có widget (cần Xcode).
+22. Liên kết giữa app (Spend → Keep "Thêm vào Handy Keep", Bookmark → Recall "Tạo thẻ ôn") chỉ
+    có trên Android/iOS và chỉ điền sẵn, người dùng vẫn bấm Lưu. Trên BlueStacks, link
+    `handy-keep://new?…` mở trình tạo món đồ với tên đã điền, và `handy-recall://new?…` hỏi bộ
+    thẻ rồi mở trình tạo thẻ đã điền cả hai mặt. Nút gửi link trong Spend và Bookmark chưa bấm
+    thử trên máy; Recall chưa nhận link trên iOS.
+23. Handy Tools: Tính lương dùng bảng tham số có ngày hiệu lực (kiểm tra lần cuối 2026-11-02),
+    bỏ qua phụ cấp miễn thuế, người không cư trú và quyết toán năm; danh sách ngân hàng VietQR
+    là bản chép ngày 2026-11-02, không tự cập nhật, và app không kiểm tra được tên chủ tài khoản.
+24. Handy Dev: timestamp và cron chỉ đọc UTC, múi giờ máy hoặc độ lệch cố định (không có tên
+    múi giờ IANA nên độ lệch cố định không theo giờ mùa hè); so sánh văn bản dừng ở 20.000
+    dòng mỗi bên hoặc 2.000 dòng đổi; tóm tắt HAR che giá trị query nhưng không che bí mật
+    nằm trong đường dẫn URL.
+25. Handy Recall: chữ Nhật/Trung/Hàn trên Web cần mạng lần đầu để tải lát font Noto, sau đó
+    giữ trong cache `handy_recall-fonts-v1`. Đọc to dùng giọng của hệ điều hành; bản build
+    Windows cần `nuget.exe` trên PATH (máy này chưa có). Nhập Anki chưa thử trên thiết bị;
+    ô điền khuyết lồng nhau, learning step và dữ liệu FSRS của Anki không được nhập.
+26. Handy Keep: giá là số người dùng nhập, không quy đổi giữa các loại tiền; tổng tách theo
+    từng loại tiền. Thêm hàng loạt tối đa 20 ảnh mỗi lần và phải vừa thư viện 16 MB. CSV, thêm
+    hàng loạt và chụp liên tiếp mới kiểm thử trên host.
+27. Handy Habit: màn chạy quy trình vẫn tạm dừng khi app rời màn hình; trên Android/iOS một
+    thông báo im lặng nói đang dừng ở đâu và còn bao lâu (không đếm ngược). Chế độ nghỉ và
+    thông báo này mới kiểm thử trên host.
+28. Handy Spend (schema 2): ảnh hóa đơn, chia tiền, gợi ý khoản định kỳ, mẫu sao kê và "Dự báo
+    nếu…" mới kiểm thử trên host; camera, chia sẻ/mở hóa đơn, lưu hóa đơn trong IndexedDB và
+    bản sao lưu ZIP 85 MB chưa chạy trên thiết bị hay trình duyệt.
+29. Handy Docs: nhận dạng chữ chạy trên máy (gói `handy_ocr`); ML Kit (Android/iOS) chưa thử
+    trên thiết bị với dấu tiếng Việt, Windows chỉ đọc tiếng Việt khi đã cài gói OCR tiếng Việt
+    (máy này chỉ có en-US), Web không có. Ký/điền, nén ảnh và dấu tiếng Việt cần PDFium native
+    (không có trên Web); nén mạnh biến trang thành ảnh nên mất chữ chọn được. Docs cần iOS 15.5.
+30. Handy Media: phụ đề đã chuyển sang Handy Tools. Trên Windows chỉ chụp ảnh màn hình, không
+    quay; "Tìm thông tin nhạy cảm" dựa vào nhận dạng chữ trên máy nên có thể bỏ sót và chưa
+    chạy trên Android/iOS; xuất GIF chạy trên luồng giao diện, không có MP4, giới hạn 100 khung,
+    48 Mpx và 20 MB.
+31. Pro: mọi bản build hiện chưa có mã sản phẩm trên store nên Pro chưa mua được. Các tính năng
+    mới chưa bị khóa sau Pro; kế hoạch Pro từng app nằm trong `docs/STORE_SETUP.md`.
+
 Chi tiết chức năng và giới hạn: [FUNCTIONS](docs/FUNCTIONS.md).
 
 Handy Habit: xem [QA riêng](docs/handy_habit/QA_PLAN.md). iOS cần Mac/Xcode; chưa
@@ -77,3 +142,10 @@ Windows/Web dùng danh sách đến hạn trong app, không hứa nhắc nền. 
 không mã hóa. Timer chỉ auto-next ở tiền cảnh; khôi phục sẽ tạm dừng và cảnh báo
 ước tính thời gian. P1 vacation/widget/challenge chưa triển khai.
 Trạng thái kiểm thử: [FEATURE_MATRIX](FEATURE_MATRIX.md).
+
+Chức năng thêm ngày 2026-11-02 (đợt 2): Media nối ảnh cần các ảnh cùng chiều
+rộng và một đoạn trùng gần như giống hệt (nội dung động như video hay đồng hồ
+có thể làm lệch khớp); Tools sổ tính căn kết quả theo dòng, một dòng dài tự xuống
+hàng sẽ làm lệch các kết quả bên dưới; Docs chỉ tìm trong Tệp đã giữ (không tìm
+trong bản quét hay PDF đang mở); Keep chỉ đoán ngày sắp hết khi có ít nhất hai
+lần mua cách nhau tối đa 180 ngày; Dev chỉ so với phản hồi trước trong cùng phiên.

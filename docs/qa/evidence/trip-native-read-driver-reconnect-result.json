@@ -1,0 +1,14 @@
+﻿{
+    "app":  "trip",
+    "scenario":  "native-read",
+    "device":  "emulator-5570",
+    "physicalDevice":  false,
+    "exitCode":  0,
+    "originalTransportExitCode":  1,
+    "originalTestProcess":  8929,
+    "sourceSha256":  "e9531374ebd655d6e7c3dc3890f9e951caee25f6066c311bfd1d29c56772bad6",
+    "logSha256":  "79e06169f4a5498cfa6ce57a4ea295505cb425ba29013fed1a8d1e69b172693b",
+    "existingProcessResultsRetrieved":  true,
+    "finishedAt":  "2026-11-02T03:12:27.2556690Z",
+    "appTestsAlreadyFinishedBeforeReconnect":  false
+}

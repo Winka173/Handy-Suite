@@ -152,6 +152,10 @@ void main() {
       '$ui/BricolageGrotesque-Display.ttf',
     ]);
     final sdk = Platform.environment['FLUTTER_ROOT']!;
+    await _font('SpaceGrotesk', [
+      for (final f in Directory('fonts').listSync())
+        if (f.path.endsWith('.ttf')) f.path,
+    ]);
     await _font('MaterialIcons', [
       '$sdk/bin/cache/artifacts/material_fonts/materialicons-regular.otf',
     ]);
@@ -199,6 +203,85 @@ void main() {
       await shot(t, '$label-5-request');
     });
   }
+  // The utility lenses (timestamp, IDs, diff, cron, bases, URL, HMAC).
+  for (final (label, size) in [
+    ('phone', const Size(390, 844)),
+    ('desktop', const Size(1440, 900)),
+  ]) {
+    testWidgets('$label timestamp', (t) async {
+      await boot(t, size);
+      await paste(t, '1730505600');
+      await shot(t, '$label-7-timestamp');
+    });
+    testWidgets('$label ids', (t) async {
+      await boot(t, size);
+      await tap(t, 'make-v7');
+      await t.enterText(find.byKey(const Key('id-count')), '6');
+      await tap(t, 'id-generate');
+      await shot(t, '$label-8-ids');
+    });
+    testWidgets('$label diff', (t) async {
+      await boot(t, size);
+      await paste(
+        t,
+        'service: billing\nreplicas: 3\nimage: billing:1.8\nport: 8080\n'
+        'log: info\ntimeout: 30s\nretries: 2\nregion: sg\nowner: payments',
+      );
+      await tap(t, 'kind-text');
+      await tap(t, 'lens-text-diff');
+      await t.enterText(
+        find.byKey(const Key('lens-option')),
+        'service: billing\nreplicas: 5\nimage: billing:1.9\nport: 8080\n'
+        'log: info\ntimeout: 30s\nretries: 2\nregion: sg\nowner: payments\n'
+        'canary: true',
+      );
+      await t.pumpAndSettle();
+      await shot(t, '$label-9-diff');
+    });
+    testWidgets('$label cron', (t) async {
+      await boot(t, size);
+      await paste(t, '*/15 9-17 * * 1-5');
+      await shot(t, '$label-10-cron');
+    });
+    testWidgets('$label bases', (t) async {
+      await boot(t, size);
+      await paste(t, '-42');
+      await tap(t, 'pick-bits-16');
+      await shot(t, '$label-11-bases');
+    });
+    testWidgets('$label url', (t) async {
+      await boot(t, size);
+      await paste(
+        t,
+        'https://shop.example.vn/search?q=%C3%A1o+m%C6%B0a&size=M&utm_source=zalo#results',
+      );
+      await t.enterText(find.byKey(const Key('query-value-1')), 'L');
+      await t.pumpAndSettle();
+      await shot(t, '$label-12-url');
+    });
+    testWidgets('$label hmac', (t) async {
+      await boot(t, size);
+      await paste(t, '{"event":"order.paid","order":1042,"total":607000}');
+      await tap(t, 'lens-hmac');
+      await t.enterText(find.byKey(const Key('lens-option')), 'whsec_demo');
+      await t.pumpAndSettle();
+      await shot(t, '$label-13-hmac');
+    });
+  }
+  testWidgets('phone bases error', (t) async {
+    await boot(t, const Size(390, 844));
+    await paste(t, '0x1ff');
+    await tap(t, 'pick-bits-8');
+    await shot(t, 'phone-14-error');
+  });
+  testWidgets('phone dark diff', (t) async {
+    await boot(t, const Size(390, 844), theme: 'dark');
+    await paste(t, 'a\nb\nc');
+    await tap(t, 'lens-text-diff');
+    await t.enterText(find.byKey(const Key('lens-option')), 'a\nB\nc\nd');
+    await t.pumpAndSettle();
+    await shot(t, 'phone-15-dark-diff');
+  });
   testWidgets('phone dark json', (t) async {
     await boot(t, const Size(390, 844), theme: 'dark');
     await paste(t, _order);

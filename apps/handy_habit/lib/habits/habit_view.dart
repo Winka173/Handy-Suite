@@ -1,5 +1,6 @@
 import 'package:handy_habit_engine/handy_habit_engine.dart';
 import 'package:handy_ui/kit.dart';
+import '../pauses/pauses.dart';
 import '../scope.dart';
 import '../today/check_in.dart';
 import '../ui/words.dart';
@@ -58,7 +59,10 @@ class HabitView extends StatelessWidget {
     final index = scope.index;
     final m = metrics(h, today, s.weekStart, index);
     final current = scheduleOn(h, today) ?? h.schedules.last;
-    final next = nextDueDate(h, today);
+    // The next planned day that is not paused.
+    String? next = nextDueDate(h, today);
+    for (var i = 0; next != null && index.paused(h.id, next) && i < 400; i++)
+      next = nextDueDate(h, addDays(next, 1));
     final events = s.events.where((e) => e.habit == h.id).toList()
       ..sort((a, b) => b.day.compareTo(a.day));
     final unit = m.unit == 'weeks'
@@ -146,8 +150,8 @@ class HabitView extends StatelessWidget {
                 Text(
                   tr(
                     context,
-                    'Counted over planned $unit that have closed; skipped days and today, if not done yet, are left out.',
-                    'Tính trên số $unit có lịch đã qua; bỏ ngày bỏ qua và hôm nay nếu chưa làm.',
+                    'Counted over planned $unit that have closed; skipped and paused days and today, if not done yet, are left out.',
+                    'Tính trên số $unit có lịch đã qua; bỏ ngày bỏ qua, ngày nghỉ và hôm nay nếu chưa làm.',
                   ),
                   style: theme.textTheme.bodySmall?.copyWith(color: c.muted),
                 ),
@@ -178,6 +182,13 @@ class HabitView extends StatelessWidget {
                     ),
                   ],
                 ),
+                if (s.pauses.any(
+                  (p) => p.everything || p.habits.contains(h.id),
+                ))
+                  HandySection(
+                    title: tr(context, 'Pauses', 'Kỳ nghỉ'),
+                    children: [PauseList(scope: scope, habit: h.id)],
+                  ),
                 HandySection(
                   title: tr(context, 'Schedules', 'Các lịch đã dùng'),
                   children: [
@@ -286,7 +297,7 @@ class HabitMenu extends StatelessWidget {
     final h = habit;
     final done = await scope.write(
       context,
-      (s) => s.copy({
+      (s) => dropHabitFromPauses(s, h.id).copy({
         'habits': [
           for (final x in s.habits)
             if (x.id != h.id) x.toJson(),
@@ -354,6 +365,13 @@ class HabitMenu extends StatelessWidget {
           ),
           key: const Key('habit-archive'),
         ),
+        if (!h.archived)
+          HandyMenuItem(
+            Icons.pause_circle_outline,
+            tr(context, 'Pause this habit', 'Nghỉ thói quen này'),
+            () => openPauseEditor(context, scope, habit: h.id),
+            key: const Key('habit-pause'),
+          ),
         HandyMenuItem(
           Icons.copy_outlined,
           tr(

@@ -29,6 +29,11 @@ const examples = [
     "curl https://api.example.com/v1/orders/1042 -H 'Accept: application/json'",
   ),
   ('Base64', 'SGVsbG8gVmnhu4d0IE5hbQ=='),
+  ('Cron', '*/15 9-17 * * 1-5'),
+  (
+    'URL',
+    'https://shop.example.vn/search?q=%C3%A1o+m%C6%B0a&size=M&utm_source=zalo#results',
+  ),
 ];
 
 /// Paste anything, see what it is and what is inside.
@@ -52,8 +57,17 @@ class InspectorState extends State<Inspector> {
   final input = TextEditingController(), option = TextEditingController();
   final focus = FocusNode();
   final chain = <String>[];
+
+  /// Lens settings (zone, bits, hash…) for this session; never saved.
+  final picks = <String, String>{};
   int kind = 0, lens = 0;
   String? forced, path;
+
+  /// The reading and lens on screen at the last build, so an edit keeps
+  /// them and a typed option (an HMAC key above all) never carries over to
+  /// a lens it was not typed for.
+  Lens? shown;
+  DataKind? shownKind;
 
   @override
   void dispose() {
@@ -63,21 +77,53 @@ class InspectorState extends State<Inspector> {
     super.dispose();
   }
 
+  /// Clears the option unless [next] takes the same option as the lens on
+  /// screen; a secret never moves to another lens.
+  void retarget(Lens next) {
+    final before = shown?.option;
+    if (before == null || next.id == shown!.id) return;
+    if (before.secret || before.en != next.option?.en) option.clear();
+  }
+
   void changed() => setState(() {
-    kind = 0;
-    lens = 0;
+    // Editing keeps the reading and the lens while the input still reads
+    // that way; otherwise the best guess comes back.
+    final kinds = detect(input.text);
+    final keep = forced == null && kinds.contains(shownKind);
+    kind = keep ? kinds.indexOf(shownKind!) : 0;
+    if (!keep) lens = 0;
     path = null;
     chain.clear();
+    retarget(current().$2);
   });
 
   /// Opens a tool chosen from the finder, whatever the payload looks like.
+  /// The generators start with one fresh value when the source is empty.
   void use(String toolId, {String text = ''}) => setState(() {
     forced = toolId;
     if (text.isNotEmpty) input.text = text;
+    if (input.text.trim().isEmpty) {
+      if (toolId == 'uuid') input.text = generateIds(IdKind.v4, 1).single;
+      if (toolId == 'timestamp') input.text = nowSeconds();
+    }
     option.clear();
     chain.clear();
     path = null;
   });
+
+  static String nowSeconds() =>
+      '${DateTime.now().millisecondsSinceEpoch ~/ 1000}';
+
+  /// Puts freshly made IDs in the source, keeping the IDs lens.
+  void generate(IdKind k, int count) => setState(() {
+    input.text = generateIds(k, count).join('\n');
+  });
+
+  /// Puts a value (a rebuilt URL) in the source and reads it again.
+  void replace(String text) {
+    input.text = text;
+    changed();
+  }
 
   void fill(String text) {
     input.text = text;
@@ -178,6 +224,20 @@ class InspectorState extends State<Inspector> {
               onPressed: () => fill(e.$2),
             ),
         ]),
+        group(tr(context, 'Make one', 'Tạo mới'), [
+          for (final (id, label, make) in [
+            ('v4', 'UUID v4', () => generateIds(IdKind.v4, 1).single),
+            ('v7', 'UUID v7', () => generateIds(IdKind.v7, 1).single),
+            ('ulid', 'ULID', () => generateIds(IdKind.ulid, 1).single),
+            ('now', tr(context, 'Now (Unix)', 'Bây giờ (Unix)'), nowSeconds),
+          ])
+            ActionChip(
+              key: Key('make-$id'),
+              avatar: const Icon(Icons.add, size: 18),
+              label: Text(label),
+              onPressed: () => fill(make()),
+            ),
+        ]),
         if (p.favorites.isNotEmpty)
           group(tr(context, 'Pinned', 'Đã ghim'), [
             for (final id in p.favorites)
@@ -204,6 +264,10 @@ class InspectorState extends State<Inspector> {
   @override
   Widget build(BuildContext context) {
     final (kinds, l, lenses) = current();
+    shown = l;
+    shownKind = forced != null || kinds.isEmpty
+        ? null
+        : kinds[kind.clamp(0, kinds.length - 1)];
     final text = input.text;
     final r = text.trim().isEmpty
         ? null
@@ -214,6 +278,7 @@ class InspectorState extends State<Inspector> {
                 : kinds[kind.clamp(0, kinds.length - 1)],
             l,
             option: option.text,
+            picks: picks,
             chain: chain,
           );
     final chainable_ = chainable.contains(l.id) || chain.isNotEmpty;
@@ -235,12 +300,16 @@ class InspectorState extends State<Inspector> {
             lenses: lenses,
             lens: forced == null ? lens : 0,
             option: option,
+            picks: picks,
+            onPick: (id, value) => setState(() => picks[id] = value),
             onKind: (i) => setState(() {
+              retarget(lensesFor(kinds[i]).first);
               kind = i;
               lens = 0;
               chain.clear();
             }),
             onLens: (i) => setState(() {
+              retarget(lenses[i]);
               lens = i;
               path = null;
               chain.clear();
@@ -252,7 +321,10 @@ class InspectorState extends State<Inspector> {
               alignment: Alignment.centerLeft,
               child: TextButton.icon(
                 key: const Key('lens-auto'),
-                onPressed: () => setState(() => forced = null),
+                onPressed: () => setState(() {
+                  forced = null;
+                  retarget(current().$2);
+                }),
                 icon: const Icon(Icons.auto_awesome_outlined, size: 18),
                 label: Text(
                   tr(context, 'Detect automatically', 'Tự nhận dạng'),
@@ -293,6 +365,8 @@ class InspectorState extends State<Inspector> {
               onCopy: () => copyToClipboard(context, r.copy),
               onSave: () => saveFile(r),
               onOpenRequest: widget.onOpenRequest,
+              onReplace: replace,
+              onGenerate: generate,
             ),
     );
     return LayoutBuilder(

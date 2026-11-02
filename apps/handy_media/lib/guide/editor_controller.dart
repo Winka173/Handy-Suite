@@ -290,6 +290,19 @@ class EditorController extends ChangeNotifier {
     notifyListeners();
   }
 
+  /// Adds opaque [masks] to step [stepId], as one change Undo takes back.
+  void addMasks(String stepId, List<ProjectLayer> masks) {
+    final s = project.steps.where((s) => s.id == stepId).firstOrNull;
+    if (s == null) {
+      throw const FormatException('That step is no longer in the guide');
+    }
+    if (s.annotations.length + masks.length > 100) {
+      throw const FormatException('Layer limit: 100 per step');
+    }
+    selected = null;
+    replaceStep(s.copyWith(annotations: [...s.annotations, ...masks]));
+  }
+
   void setProject(CaptureProject next) {
     checkpoint();
     _set(next);

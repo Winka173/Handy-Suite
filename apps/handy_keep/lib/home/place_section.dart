@@ -3,6 +3,7 @@ import 'package:handy_inventory/handy_inventory.dart';
 import 'package:handy_ui/kit.dart';
 import '../inventory/whereabouts.dart';
 import '../ui/words.dart';
+import 'value_summary.dart';
 
 /// One place and the things in it. The place's name is the heading, set in
 /// the display face: that is what the person came to read.
@@ -17,7 +18,11 @@ class PlaceSection extends StatelessWidget {
 
   /// The place's identity colour, by its order on screen.
   final int? hue;
+
+  /// What the place's things are worth; null hides the line.
+  final KeepValue? value;
   const PlaceSection({
+    this.value,
     this.hue,
     this.hero = false,
     super.key,
@@ -38,38 +43,54 @@ class PlaceSection extends StatelessWidget {
     final heading = Padding(
       padding: const EdgeInsets.fromLTRB(0, HandySpace.xl, 0, HandySpace.s),
       child: Row(
+        // The dot and the menu sit on the title's line, however many lines
+        // the value adds under it.
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           if (hue != null) ...[
-            HandyDot(hue!, size: 12),
+            Padding(
+              padding: const EdgeInsets.only(top: 9),
+              child: HandyDot(hue!, size: 12),
+            ),
             const SizedBox(width: HandySpace.m),
           ],
           Expanded(
-            child: Semantics(
-              header: true,
-              child: Text.rich(
-                TextSpan(
-                  children: [
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Semantics(
+                  header: true,
+                  child: Text.rich(
                     TextSpan(
-                      text: placeTitle(context, p),
-                      style: theme.textTheme.titleLarge,
+                      children: [
+                        TextSpan(
+                          text: placeTitle(context, p),
+                          style: theme.textTheme.titleLarge,
+                        ),
+                        TextSpan(
+                          text:
+                              '  ${[if (p.detail.isNotEmpty) p.detail, itemCount(context, p.items.length)].join(' · ')}',
+                          style: theme.textTheme.bodyMedium?.copyWith(
+                            color: c.muted,
+                          ),
+                        ),
+                      ],
                     ),
-                    TextSpan(
-                      text:
-                          '  ${[if (p.detail.isNotEmpty) p.detail, itemCount(context, p.items.length)].join(' · ')}',
-                      style: theme.textTheme.bodyMedium?.copyWith(
-                        color: c.muted,
-                      ),
-                    ),
-                  ],
+                  ),
                 ),
-              ),
+                if (value != null)
+                  PlaceValue(value!, key: Key('place-value-${p.key}')),
+              ],
             ),
           ),
           if (box != null && boxActions != null)
-            HandyMenuButton(
-              key: Key('box-menu-${box.id}'),
-              tooltip: tr(context, 'Box actions', 'Thao tác với thùng'),
-              items: boxActions!(box),
+            Transform.translate(
+              offset: const Offset(0, -9),
+              child: HandyMenuButton(
+                key: Key('box-menu-${box.id}'),
+                tooltip: tr(context, 'Box actions', 'Thao tác với thùng'),
+                items: boxActions!(box),
+              ),
             ),
         ],
       ),

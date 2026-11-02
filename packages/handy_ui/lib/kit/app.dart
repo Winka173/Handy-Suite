@@ -8,14 +8,24 @@ import 'theme.dart';
 import 'widgets.dart';
 
 bool _fontLicense = false;
-void _registerFontLicense() {
+void _registerFontLicense(HandyBrand brand) {
   if (_fontLicense) return;
   _fontLicense = true;
+  // The app's own faces keep their licence beside them in its fonts/.
+  final own = {
+    brand.text,
+    ?brand.display,
+  }.where((f) => handyFontPackage(f) == null);
   LicenseRegistry.addLicense(() async* {
     for (final face in ['Geist', 'Bricolage']) {
       yield LicenseEntryWithLineBreaks([
         face,
       ], await rootBundle.loadString('packages/handy_ui/fonts/$face-OFL.txt'));
+    }
+    for (final face in own) {
+      yield LicenseEntryWithLineBreaks([
+        face,
+      ], await rootBundle.loadString('fonts/$face-OFL.txt'));
     }
   });
 }
@@ -24,6 +34,9 @@ void _registerFontLicense() {
 class HandyApp extends StatelessWidget {
   final String app, title;
   final Color accent;
+
+  /// The app's own face; see [HandyBrand].
+  final HandyBrand? brand;
   final String theme, locale;
   final ValueListenable<bool>? adsVisible;
   final Widget home;
@@ -42,6 +55,7 @@ class HandyApp extends StatelessWidget {
     required this.app,
     required this.title,
     required this.accent,
+    this.brand,
     this.theme = 'system',
     this.locale = 'system',
     this.adsVisible,
@@ -52,7 +66,9 @@ class HandyApp extends StatelessWidget {
   });
   @override
   Widget build(BuildContext context) {
-    _registerFontLicense();
+    final b = brand ?? HandyBrand.current;
+    HandyBrand.current = b;
+    _registerFontLicense(b);
     return MonetizationHost(
       app: app,
       child: MaterialApp(
@@ -60,31 +76,83 @@ class HandyApp extends StatelessWidget {
         navigatorObservers: navigatorObservers,
         title: title,
         debugShowCheckedModeBanner: false,
-        theme: buildHandyTheme(accent, Brightness.light),
-        darkTheme: buildHandyTheme(accent, Brightness.dark),
+        theme: buildHandyTheme(accent, Brightness.light, b),
+        darkTheme: buildHandyTheme(accent, Brightness.dark, b),
         themeMode: switch (theme) {
           'dark' => ThemeMode.dark,
           'light' => ThemeMode.light,
-          _ => ThemeMode.system,
+          _ => b.darkFirst ? ThemeMode.dark : ThemeMode.system,
         },
         locale: locale == 'system' ? null : Locale(locale),
         supportedLocales: const [Locale('en'), Locale('vi')],
         localizationsDelegates: GlobalMaterialLocalizations.delegates,
-        builder: (context, child) => Column(
-          children: [
-            Expanded(child: child ?? const SizedBox.shrink()),
-            if (adsVisible == null)
-              const LifetimeBanner()
-            else
-              ValueListenableBuilder<bool>(
-                valueListenable: adsVisible!,
-                builder: (context, visible, _) =>
-                    visible ? const LifetimeBanner() : const SizedBox.shrink(),
-              ),
-          ],
+        builder: (context, child) => _Frame(
+          color: b.frame,
+          child: Column(
+            children: [
+              Expanded(child: child ?? const SizedBox.shrink()),
+              if (adsVisible == null)
+                const LifetimeBanner()
+              else
+                ValueListenableBuilder<bool>(
+                  valueListenable: adsVisible!,
+                  builder: (context, visible, _) => visible
+                      ? const LifetimeBanner()
+                      : const SizedBox.shrink(),
+                ),
+            ],
+          ),
         ),
         home: home,
         onGenerateRoute: onGenerateRoute,
+      ),
+    );
+  }
+}
+
+/// The framed-sheet styles: the page on a sheet inset in a tinted frame,
+/// no shadow. Other styles pass straight through.
+class _Frame extends StatelessWidget {
+  final Color? color;
+  final Widget child;
+  const _Frame({required this.color, required this.child});
+  @override
+  Widget build(BuildContext context) {
+    if (color == null) return child;
+    final mq = MediaQuery.of(context);
+    final inset = mq.size.width < 360 ? HandySpace.xs : HandySpace.s;
+    final p = mq.padding;
+    final outer = EdgeInsets.fromLTRB(
+      p.left + inset,
+      p.top + inset,
+      p.right + inset,
+      p.bottom + inset,
+    );
+    final dark = Theme.of(context).brightness == Brightness.dark;
+    return ColoredBox(
+      color: dark ? const Color(0xFF1B1B1B) : color!,
+      child: Padding(
+        padding: outer,
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(12),
+          child: MediaQuery(
+            data: mq.copyWith(
+              size: Size(
+                (mq.size.width - outer.horizontal).clamp(0, double.infinity),
+                (mq.size.height - outer.vertical).clamp(0, double.infinity),
+              ),
+              padding: EdgeInsets.zero,
+              viewPadding: EdgeInsets.zero,
+              viewInsets: mq.viewInsets.copyWith(
+                bottom: (mq.viewInsets.bottom - outer.bottom).clamp(
+                  0,
+                  double.infinity,
+                ),
+              ),
+            ),
+            child: child,
+          ),
+        ),
       ),
     );
   }

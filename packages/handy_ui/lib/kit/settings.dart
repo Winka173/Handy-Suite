@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:handy_monetization/handy_monetization.dart';
 import 'l10n.dart';
+import 'more_apps.dart';
 import 'theme.dart';
 import 'widgets.dart';
 
@@ -270,11 +271,17 @@ class _HandySettingsPageState extends State<HandySettingsPage> {
               label: tr(context, 'Appearance', 'Giao diện'),
               control: segmented(
                 const Key('settings-theme'),
-                theme,
+                // An app that opens dark offers dark (its default) or light.
+                HandyBrand.current.darkFirst && theme == 'dark'
+                    ? 'system'
+                    : theme,
                 [
-                  ('system', system),
+                  if (!HandyBrand.current.darkFirst) ('system', system),
                   ('light', tr(context, 'Light', 'Sáng')),
-                  ('dark', tr(context, 'Dark', 'Tối')),
+                  (
+                    HandyBrand.current.darkFirst ? 'system' : 'dark',
+                    tr(context, 'Dark', 'Tối'),
+                  ),
                 ],
                 widget.onTheme,
                 (v) => setState(() => theme = v),
@@ -344,6 +351,11 @@ class _HandySettingsPageState extends State<HandySettingsPage> {
             ],
           ),
         ],
+        // Hidden until a sibling app has a public page.
+        HandyMoreApps(
+          app: widget.appName.toLowerCase().replaceFirst('handy ', ''),
+          divider: true,
+        ),
         const Divider(),
         HandySettingsSection(
           title: tr(context, 'About', 'Giới thiệu'),

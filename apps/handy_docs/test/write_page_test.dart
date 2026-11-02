@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:typed_data';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:handy_docs_engine/handy_docs_engine.dart';
 import 'package:handy_files/handy_files.dart';
@@ -57,7 +58,10 @@ void main() {
   ) async {
     const source = '# Tiếng Việt\n\n| A | B |\n| --- | --- |\n| one | two |\n';
     final docs = await write(tester);
-    docs.files.text = const ImportedText('doc.md', source);
+    docs.files.next = ImportedBytes(
+      'doc.md',
+      Uint8List.fromList(utf8.encode(source)),
+    );
     await menu(tester, 'markdown-import');
     expect(sourceText(tester), source);
     await tapKey(tester, 'markdown-save');
@@ -132,7 +136,10 @@ void main() {
       expect(parseMarkdownDraft(docs.markdown.text!), 'Saved');
       await menu(tester, 'markdown-import');
       expect(sourceText(tester), 'Unsaved');
-      docs.files.text = const ImportedText('replacement.md', 'Replacement');
+      docs.files.next = ImportedBytes(
+        'replacement.md',
+        Uint8List.fromList(utf8.encode('Replacement')),
+      );
       await menu(tester, 'markdown-import');
       expect(find.text('Replace unsaved draft?'), findsOneWidget);
       await tester.tap(find.byKey(const Key('confirm-cancel')));

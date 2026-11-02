@@ -181,6 +181,12 @@ Map<String, String> qrPreview(String value) {
       'kind': 'Event',
       'warning': 'Review event time and location before adding.',
     };
+  if (readVietQr(value) != null)
+    return {
+      'kind': 'VietQR',
+      'warning':
+          'Bank transfer. Check the account holder name in your bank app before sending.',
+    };
   final uri = Uri.tryParse(value);
   if (uri != null && uri.hasScheme)
     return {

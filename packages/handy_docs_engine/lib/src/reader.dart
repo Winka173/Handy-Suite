@@ -313,3 +313,47 @@ String readableHtml(String source) {
   walk(document.body ?? document, 0);
   return output.toString().trim();
 }
+
+/// True for names the Markdown writer opens (`.md`, `.markdown`).
+bool isMarkdownName(String name) => readerKind(name) == 'markdown';
+
+const _fenceLanguages = {
+  'js': 'javascript',
+  'ts': 'typescript',
+  'py': 'python',
+  'kt': 'kotlin',
+  'sh': 'bash',
+  'yml': 'yaml',
+};
+
+/// An editable Markdown copy of a document that opened read-only: text as
+/// it is, a web page as its readable text, code in a fenced block that no
+/// backtick run inside it can close. The source is never changed.
+String markdownCopyOf(ReaderDocument document) {
+  switch (document.kind) {
+    case 'markdown':
+    case 'text':
+      return document.source;
+    case 'html':
+      try {
+        return '# ${document.name}\n\n${readableHtml(document.source)}\n';
+      } on FormatException {
+        // Too large to read as a page: keep the markup, fenced.
+        return _fenced(document, 'html');
+      }
+    default:
+      final extension = document.name.split('.').last.toLowerCase();
+      return _fenced(document, _fenceLanguages[extension] ?? extension);
+  }
+}
+
+String _fenced(ReaderDocument document, String language) {
+  final longest = RegExp('`+')
+      .allMatches(document.source)
+      .fold<int>(0, (n, m) => m.group(0)!.length > n ? m.group(0)!.length : n);
+  final fence = '`' * (longest < 3 ? 3 : longest + 1);
+  final body = document.source.endsWith('\n')
+      ? document.source
+      : '${document.source}\n';
+  return '# ${document.name}\n\n$fence$language\n$body$fence\n';
+}

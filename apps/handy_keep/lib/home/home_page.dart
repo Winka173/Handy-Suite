@@ -4,6 +4,7 @@ import 'package:handy_ui/kit.dart';
 import '../deep_links.dart';
 import '../labels.dart';
 import '../scope.dart';
+import '../inventory/purchase_link.dart';
 import 'detail_pane.dart';
 import 'filter_bar.dart';
 import 'list_pane.dart';
@@ -68,6 +69,17 @@ class _KeepHomeState extends State<KeepHome> {
       // Wait until anything open on top (an editor, a dialog) has closed.
       if (ModalRoute.of(context)?.isCurrent == false) {
         pending ??= value;
+        return;
+      }
+      final purchase = PurchaseLink.parse(value);
+      if (purchase != null) {
+        await scope.edit(
+          context,
+          name: purchase.name,
+          price: purchase.price,
+          currency: purchase.currency,
+          purchasedOn: purchase.date,
+        );
         return;
       }
       go(InventoryLabel.parse(value));

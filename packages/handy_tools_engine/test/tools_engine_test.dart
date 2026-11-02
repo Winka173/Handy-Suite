@@ -124,23 +124,6 @@ void main() {
         '599.55',
       ),
     );
-    test('tax', () {
-      expect(tax('110', '10', true), {
-        'base': '100.00',
-        'tax': '10.00',
-        'total': '110.00',
-      });
-      expect(tax('100', '10', false), {
-        'base': '100.00',
-        'tax': '10.00',
-        'total': '110.00',
-      });
-      expect(() => tax('-1', '10', false), throwsFormatException);
-    });
-    test(
-      'half-up currency',
-      () => expect(tax('1.005', '0', true)['total'], '1.01'),
-    );
     test('split cents', () {
       expect(splitBill('10', '0', 3), {
         'total': '10.00',
@@ -238,9 +221,9 @@ void main() {
     });
   });
   group('Unicode and text bounds', () {
-    test('23 unique tools', () {
-      expect(tools.length, 23);
-      expect(tools.map((t) => t.id).toSet().length, 23);
+    test('22 unique tools', () {
+      expect(tools.length, 22);
+      expect(tools.map((t) => t.id).toSet().length, 22);
     });
     test(
       'NFC whitespace',
@@ -273,16 +256,30 @@ void main() {
       'codepoint sort astral vs BMP',
       () => expect(run('sort', '😀\n\uE000\na'), 'a\n\uE000\n😀'),
     );
-    test('uppercase/lowercase', () {
-      expect(run('uppercase', 'Tiếng Việt'), 'TIẾNG VIỆT');
-      expect(run('lowercase', 'TIẾNG VIỆT'), 'tiếng việt');
+    test('case: upper and lower keep the old tools output', () {
+      expect(run('case', 'Tiếng Việt', 'upper'), 'TIẾNG VIỆT');
+      expect(run('case', 'TIẾNG VIỆT', 'lower'), 'tiếng việt');
+      expect(changeCase('Straße ǆ', 'upper'), 'Straße ǆ'.toUpperCase());
     });
-    test('title/sentence case', () {
-      expect(run('title-case', 'XIN CHÀO thế GIỚI'), 'Xin Chào Thế Giới');
+    test('case: title and sentence keep the old tools output', () {
+      expect(run('case', 'XIN CHÀO thế GIỚI', 'title'), 'Xin Chào Thế Giới');
       expect(
-        run('sentence-case', 'XIN CHÀO. THẾ GIỚI!'),
+        run('case', 'XIN CHÀO. THẾ GIỚI!', 'sentence'),
         'Xin chào. Thế giới!',
       );
+      expect(
+        run('case', 'đã xong. còn gì? hết!  được', 'sentence'),
+        'Đã xong. Còn gì? Hết!  Được',
+      );
+      expect(
+        run('case', "o'neil mcdonald-smith", 'title'),
+        "O'Neil Mcdonald-Smith",
+      );
+      expect(run('case', '', 'title'), '');
+    });
+    test('case: an unknown mode is refused, not guessed', () {
+      expect(() => run('case', 'a', 'shout'), throwsFormatException);
+      expect(() => run('case', 'a'), throwsFormatException);
     });
     test('literal dollar text', () {
       expect(replaceLiteral('a a', 'a', r'$&', true), r'$& $&');

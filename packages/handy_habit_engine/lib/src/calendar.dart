@@ -61,15 +61,21 @@ String? nextDueDate(Habit h, String from) {
 class HabitIndex {
   final Map<String, int> totals = {};
   final Set<String> skipped = {};
-  HabitIndex(Iterable<HabitEvent> events) {
+  final List<Pause> pauses;
+  HabitIndex(Iterable<HabitEvent> events, [Iterable<Pause> pauses = const []])
+    : pauses = List.unmodifiable(pauses) {
     for (final e in events) {
       final k = '${e.habit}:${e.day}';
       totals[k] = (totals[k] ?? 0) + e.value;
       if (e.skipped) skipped.add(k);
     }
   }
+
+  /// Records and pauses of [s]: what statuses and metrics read.
+  factory HabitIndex.of(HabitState s) => HabitIndex(s.events, s.pauses);
   int value(String habit, String d) => totals['$habit:$d'] ?? 0;
   bool skip(String habit, String d) => skipped.contains('$habit:$d');
+  bool paused(String habit, String d) => pauses.any((p) => p.covers(habit, d));
 }
 
 Habit archiveHabit(Habit h, String today, bool archived) {
@@ -97,6 +103,7 @@ String habitStatus(Habit h, String d, String today, HabitIndex index) {
   final s = scheduleOn(h, d)!, v = index.value(h.id, d);
   if (v >= s.target) return 'completed';
   if (v > 0) return 'partial';
+  if (index.paused(h.id, d)) return 'paused';
   if (s.kind == 'weekly') return d == today ? 'open' : 'notScheduled';
   return d.compareTo(today) < 0 ? 'missed' : 'open';
 }
@@ -144,18 +151,22 @@ HabitMetrics metrics(
     for (; w.compareTo(currentWeek) <= 0; w = addDays(w, 7)) {
       final s = scheduleOn(h, w);
       if (s == null || s.kind != 'weekly') continue;
+      // Paused days shrink the quota (rounded up) and are no chance to
+      // miss; a paused day done anyway still counts.
       var count = 0, opportunities = 0;
       for (var i = 0; i < 7; i++) {
         final d = addDays(w, i);
         if (isScheduledOn(h, d) && !index.skip(h.id, d)) {
-          opportunities++;
-          if (d.compareTo(today) <= 0 &&
-              index.value(h.id, d) >= scheduleOn(h, d)!.target)
-            count++;
+          final done =
+              d.compareTo(today) <= 0 &&
+              index.value(h.id, d) >= scheduleOn(h, d)!.target;
+          if (done) count++;
+          if (done || !index.paused(h.id, d)) opportunities++;
         }
       }
-      if (opportunities < s.weeklyTarget) continue;
-      final qualifies = count >= s.weeklyTarget,
+      final quota = weekQuota(h, w, index);
+      if (quota == 0 || opportunities < quota) continue;
+      final qualifies = count >= quota,
           closed = addDays(w, 6).compareTo(today) < 0;
       if (!closed && !qualifies) continue;
       eligible++;
@@ -176,6 +187,8 @@ HabitMetrics metrics(
           index.skip(h.id, d))
         continue;
       final ok = index.value(h.id, d) >= s.target;
+      // A paused day not done is neither kept nor broken.
+      if (!ok && index.paused(h.id, d)) continue;
       if (d == today && !ok) continue;
       eligible++;
       if (ok) {
@@ -326,14 +339,8 @@ List<DueReminder> dueReminders(HabitState s, DateTime now) {
         s.settings['quietStart'] as String? ?? '22:00',
       ),
       quietEnd = minuteOfDay(s.settings['quietEnd'] as String? ?? '07:00');
-  bool quiet(tz.TZDateTime at) {
-    final m = at.hour * 60 + at.minute;
-    return quietStart == quietEnd
-        ? false
-        : quietStart < quietEnd
-        ? m >= quietStart && m < quietEnd
-        : m >= quietStart || m < quietEnd;
-  }
+  bool quiet(tz.TZDateTime at) =>
+      _quiet(at.hour * 60 + at.minute, quietStart, quietEnd);
 
   for (final r in objects(
     s.settings['reminders'] ?? [],
@@ -344,12 +351,16 @@ List<DueReminder> dueReminders(HabitState s, DateTime now) {
         final h = s.habits
             .where((h) => h.id == r.target && !h.archived)
             .firstOrNull;
-        return h != null && isScheduledOn(h, d);
+        return h != null &&
+            isScheduledOn(h, d) &&
+            !s.pauses.any((p) => p.covers(h.id, d));
       }
       final routine = s.routines
           .where((v) => v.id == r.target && !v.archived)
           .firstOrNull;
-      return routine != null && routine.weekdays.contains(date(d).weekday);
+      return routine != null &&
+          routine.weekdays.contains(date(d).weekday) &&
+          !s.pauses.any((p) => p.everything && p.coversDay(d));
     }
 
     void add(String key, tz.TZDateTime at) {

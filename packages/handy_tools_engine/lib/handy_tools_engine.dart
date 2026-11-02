@@ -12,10 +12,16 @@ import 'package:pdf/pdf.dart' as pdf;
 import 'package:pdf/widgets.dart' as pw;
 
 part 'src/numbers.dart';
+part 'src/notebook.dart';
 part 'src/tools.dart';
 part 'src/security_qr.dart';
 part 'src/qr_render.dart';
 part 'src/qr_history.dart';
+part 'src/salary.dart';
+part 'src/number_words.dart';
+part 'src/lunar.dart';
+part 'src/vietqr.dart';
+part 'src/vietqr_banks.dart';
 
 typedef ToolRunner = String Function(String input, String options);
 

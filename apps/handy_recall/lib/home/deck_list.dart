@@ -19,11 +19,32 @@ class DeckList extends StatelessWidget {
       children: [
         HandyLabel(
           tr(context, 'Decks', 'Bộ thẻ'),
-          trailing: TextButton.icon(
-            key: const Key('deck-new'),
-            onPressed: () => scope.editDeck(context),
-            icon: const Icon(Icons.add, size: 18),
-            label: Text(tr(context, 'New deck', 'Bộ thẻ mới')),
+          trailing: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // On a narrow phone the Anki action keeps its icon and
+              // tooltip so "New deck" keeps its words.
+              if (MediaQuery.sizeOf(context).width < 400)
+                IconButton(
+                  key: const Key('anki-open'),
+                  tooltip: tr(context, 'Import from Anki', 'Nhập từ Anki'),
+                  onPressed: () => scope.importAnki(context),
+                  icon: const Icon(Icons.move_to_inbox_outlined, size: 20),
+                )
+              else
+                TextButton.icon(
+                  key: const Key('anki-open'),
+                  onPressed: () => scope.importAnki(context),
+                  icon: const Icon(Icons.move_to_inbox_outlined, size: 18),
+                  label: Text(tr(context, 'From Anki', 'Từ Anki')),
+                ),
+              TextButton.icon(
+                key: const Key('deck-new'),
+                onPressed: () => scope.editDeck(context),
+                icon: const Icon(Icons.add, size: 18),
+                label: Text(tr(context, 'New deck', 'Bộ thẻ mới')),
+              ),
+            ],
           ),
         ),
         if (s.decks.isEmpty)
@@ -35,13 +56,25 @@ class DeckList extends StatelessWidget {
             ),
             message: tr(
               context,
-              'Then add cards one by one, or bring them in from a CSV file.',
-              'Sau đó thêm từng thẻ, hoặc nhập cả loạt từ file CSV.',
+              'Then add cards one by one, or bring them in from a CSV file. Already use Anki? Bring a deck from there.',
+              'Sau đó thêm từng thẻ, hoặc nhập cả loạt từ file CSV. Đã dùng Anki? Đưa bộ thẻ từ đó sang.',
             ),
-            action: FilledButton(
-              key: const Key('deck-first'),
-              onPressed: () => scope.editDeck(context),
-              child: Text(tr(context, 'First deck', 'Bộ thẻ đầu tiên')),
+            action: Wrap(
+              alignment: WrapAlignment.center,
+              spacing: HandySpace.s,
+              runSpacing: HandySpace.s,
+              children: [
+                FilledButton(
+                  key: const Key('deck-first'),
+                  onPressed: () => scope.editDeck(context),
+                  child: Text(tr(context, 'First deck', 'Bộ thẻ đầu tiên')),
+                ),
+                OutlinedButton(
+                  key: const Key('anki-first'),
+                  onPressed: () => scope.importAnki(context),
+                  child: Text(tr(context, 'Import from Anki', 'Nhập từ Anki')),
+                ),
+              ],
             ),
           )
         else

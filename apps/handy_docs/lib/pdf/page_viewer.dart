@@ -9,7 +9,7 @@ class PageViewer extends StatelessWidget {
   final bool busy;
   final double width;
   final void Function(int) onSelect, onRemove, onTurn;
-  final VoidCallback onSavePage;
+  final VoidCallback onSavePage, onRead;
   const PageViewer({
     super.key,
     required this.desk,
@@ -19,6 +19,7 @@ class PageViewer extends StatelessWidget {
     required this.onRemove,
     required this.onTurn,
     required this.onSavePage,
+    required this.onRead,
   });
 
   @override
@@ -114,6 +115,16 @@ class PageViewer extends StatelessWidget {
               ),
               onPressed: busy || desk.preview == null ? null : onSavePage,
               icon: const Icon(Icons.image_outlined),
+            ),
+            IconButton(
+              key: const Key('pdf-page-ocr'),
+              tooltip: tr(
+                context,
+                'Read the text on this page',
+                'Nhận dạng chữ trang này',
+              ),
+              onPressed: busy || desk.document == null ? null : onRead,
+              icon: const Icon(Icons.document_scanner_outlined),
             ),
           ],
         ),

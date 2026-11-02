@@ -1,5 +1,6 @@
 import 'package:handy_files/handy_files.dart';
 import 'package:handy_ui/kit.dart';
+import '../ocr/ocr_job.dart';
 import '../session.dart';
 import '../ui/paper.dart';
 import 'scan_store.dart';
@@ -79,6 +80,18 @@ class PageGrid extends StatelessWidget {
                             i == pages.length - 1 || busy
                                 ? null
                                 : () => onRun(() => store.move(i, i + 1)),
+                          ),
+                          HandyMenuItem(
+                            Icons.document_scanner_outlined,
+                            tr(context, 'Read the text', 'Nhận dạng chữ'),
+                            busy
+                                ? null
+                                : () => Navigator.pushNamed(
+                                    context,
+                                    '/ocr',
+                                    arguments: OcrSource(p.name, p.png),
+                                  ),
+                            key: Key('scan-ocr-${p.id}'),
                           ),
                           HandyMenuItem(
                             Icons.image_outlined,

@@ -1,18 +1,26 @@
 import 'dart:async';
+import 'package:handy_files/camera.dart';
 import 'package:handy_files/handy_files.dart';
+import 'package:handy_home_widget/handy_home_widget.dart';
+import 'package:handy_spend_engine/handy_spend_engine.dart';
 import 'package:handy_storage/handy_storage.dart';
 import 'package:handy_ui/kit.dart';
 import 'accounts/account_view.dart';
 import 'controller.dart';
+import 'home_widget.dart';
 import 'import/import_page.dart';
+import 'people/people_page.dart';
+import 'receipts/receipt_view.dart';
 import 'plan/whatif_page.dart';
 import 'privacy.dart';
 import 'reminders.dart';
 import 'scope.dart';
 import 'settings/categories_page.dart';
+import 'settings/data.dart';
 import 'settings/imports_page.dart';
 import 'settings/rules_page.dart';
 import 'settings/settings_page.dart';
+import 'settings/templates_page.dart';
 import 'shell/spend_shell.dart';
 
 export 'import/statement_io.dart' show readDroppedStatement;
@@ -27,14 +35,20 @@ class SpendApp extends StatefulWidget {
   final HandyFiles files;
   final PreferencesRepository? preferences;
   final SpendPrivacy? privacy;
+  final ScanCamera? camera;
   final bool enableDrop;
+
+  /// Off in host tests: no folder backups, no home-screen widget.
+  final bool device;
   const SpendApp({
     super.key,
     this.controller,
     this.files = const SystemHandyFiles(),
     this.preferences,
     this.privacy,
+    this.camera,
     this.enableDrop = true,
+    this.device = true,
   });
   @override
   State<SpendApp> createState() => _SpendAppState();
@@ -50,13 +64,23 @@ class _SpendAppState extends State<SpendApp> with WidgetsBindingObserver {
         workflowSteps: {},
       );
   final prefs = ValueNotifier<HandyPreferences?>(null);
-  late final scope = SpendScope(
+  late final SpendScope scope = SpendScope(
     controller: controller,
     files: widget.files,
     reminders: SpendReminders(),
     privacy: widget.privacy ?? SpendPrivacy(),
+    camera: widget.camera,
+    autoBackup: widget.device
+        ? HandyAutoBackup.local(
+            app: 'spend',
+            extension: 'zip',
+            build: () => spendBackupBytes(scope),
+            revision: () => controller.state?.revision.toString(),
+          )
+        : null,
   );
   late final routes = _Depth(_ads);
+  final widgetFeed = HomeWidgetFeed(spendWidgetClass);
 
   @override
   void initState() {
@@ -72,6 +96,7 @@ class _SpendAppState extends State<SpendApp> with WidgetsBindingObserver {
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
+    scope.autoBackup?.dispose();
     controller.removeListener(_changed);
     scope.area.removeListener(_ads);
     scope.dispose();
@@ -95,6 +120,31 @@ class _SpendAppState extends State<SpendApp> with WidgetsBindingObserver {
     if (s == null) return;
     // The in-app list stays right if the OS refuses; settings says why.
     unawaited(scope.reminders.sync(s).catchError((Object _) {}));
+    scope.autoBackup?.attach();
+    if (widget.device) {
+      try {
+        final locale = prefs.value?.locale ?? 'system';
+        final vi =
+            locale == 'vi' ||
+            locale == 'system' &&
+                WidgetsBinding
+                        .instance
+                        .platformDispatcher
+                        .locale
+                        .languageCode ==
+                    'vi';
+        final safe = safeToSpend(
+          s,
+          scope.today,
+          scope.end,
+          accounts: scope.planningAccounts,
+          conservative: scope.conservative.value,
+        );
+        unawaited(widgetFeed.publish(spendWidgetView(s, safe, vi: vi)));
+      } catch (_) {
+        // A widget that cannot be worked out keeps its last picture.
+      }
+    }
   }
 
   /// Ads only on the home of Today, the ledger and accounts; never over a
@@ -148,6 +198,10 @@ class _SpendAppState extends State<SpendApp> with WidgetsBindingObserver {
       ),
       ['', 'settings', 'categories'] => () => CategoriesPage(scope: scope),
       ['', 'settings', 'rules'] => () => RulesPage(scope: scope),
+      ['', 'settings', 'templates'] => () => TemplatesPage(scope: scope),
+      ['', 'people'] => () => PeoplePage(scope: scope),
+      ['', 'person', final id] => () => PersonPage(scope: scope, id: id),
+      ['', 'receipt', final id] => () => ReceiptPage(scope: scope, id: id),
       ['', 'imports'] => () => ImportsPage(scope: scope),
       ['', 'import'] => () => ImportPage(scope: scope),
       ['', 'import', final id] => () => ImportPage(scope: scope, account: id),
@@ -186,6 +240,7 @@ class _SpendAppState extends State<SpendApp> with WidgetsBindingObserver {
       authentication: scope.privacy,
       accent: spendAccent,
       child: HandyApp(
+        brand: HandyBrand.spend,
         app: 'spend',
         title: 'Handy Spend',
         accent: spendAccent,

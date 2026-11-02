@@ -8,6 +8,7 @@ import 'package:handy_notifications/controller.dart';
 import 'package:handy_notifications/handy_notifications.dart';
 import 'package:handy_recall/handy_recall.dart';
 import 'package:handy_recall_app/app.dart';
+import 'package:handy_recall_app/study/speaker.dart';
 import 'package:handy_storage/documents.dart';
 import 'package:handy_storage/handy_storage.dart';
 import 'package:handy_ui/kit.dart';
@@ -105,6 +106,24 @@ ReminderController testReminders() => ReminderController(
   location: () async => tz.UTC,
 );
 
+/// Voices for tests: what a device has, and what was read.
+class FakeSpeaker implements Speaker {
+  List<String> voices;
+  final spoken = <(String, String)>[];
+  FakeSpeaker([this.voices = const ['en-US', 'ja-JP', 'vi-VN']]);
+  @override
+  Future<List<String>> languages() async => voices;
+  @override
+  Future<bool> speak(String text, String language) async {
+    if (matchLanguage(language, voices) == null) return false;
+    spoken.add((text, language));
+    return true;
+  }
+
+  @override
+  Future<void> stop() async {}
+}
+
 /// One deck "Skills" with one card due an hour ago.
 RecallState fixture() => saveCard(
   saveDeck(emptyRecallState(), const RecallDeck(id: 'deck', name: 'Skills')),
@@ -124,6 +143,7 @@ Future<void> start(
   Store? store,
   Files? files,
   Preferences? prefs,
+  Speaker? speaker,
   Size size = const Size(420, 900),
 }) async {
   tester.view.physicalSize = size;
@@ -136,6 +156,7 @@ Future<void> start(
       files: files ?? Files(),
       preferences: prefs ?? Preferences(),
       reminders: testReminders(),
+      speaker: speaker ?? FakeSpeaker(),
       clock: () => now,
     ),
   );

@@ -46,6 +46,26 @@ class RecallStore extends ChangeNotifier {
       commit(saveCard(state!, card));
   Future<void> removeCardRecord(String id) => commit(removeCard(state!, id));
 
+  /// Writes the note an editor holds: its card, and its reverse or cloze
+  /// siblings, made, kept or dropped to match.
+  Future<void> saveDraft(CardDraft d) => commit(
+    saveNote(
+      state!,
+      deckId: d.card.deckId,
+      from: d.original,
+      front: d.card.front,
+      back: d.card.back,
+      image: d.card.image,
+      reverse: d.reverse,
+      newId: newId,
+      now: stamp(clock()),
+    ),
+  );
+
+  /// Deletes a card with every card made from the same note.
+  Future<void> removeNoteRecord(RecallCard card) =>
+      commit(removeNote(state!, card));
+
   /// Grades a card with the real scheduler and writes it before returning.
   Future<RecallCard> grade(RecallCard card, String rating) async {
     final next = reviewCard(card, rating, now: stamp(clock()));
@@ -53,9 +73,17 @@ class RecallStore extends ChangeNotifier {
     return next;
   }
 
-  /// Adds every row of a CSV to [deckId]; a bad file adds nothing.
+  /// Adds every row of a CSV to [deckId] (reverse cards too when the deck
+  /// makes them); a bad file adds nothing.
   Future<int> importCsv(String text, String deckId) async {
-    final added = importCardsCsv(text, deckId, newId(), now: stamp(clock()));
+    final reverse = state!.decks.any((d) => d.id == deckId && d.reverse);
+    final added = importCardsCsv(
+      text,
+      deckId,
+      newId(),
+      now: stamp(clock()),
+      reverse: reverse,
+    );
     await commit(
       validateRecallState({
         ...state!.toJson(),
@@ -67,4 +95,14 @@ class RecallStore extends ChangeNotifier {
     );
     return added.length;
   }
+}
+
+/// What the card editor commits: the card as edited (its id and schedule
+/// kept when it already existed), the card it started from, and whether the
+/// note should also have a reverse card.
+class CardDraft {
+  final RecallCard card;
+  final RecallCard? original;
+  final bool reverse;
+  const CardDraft(this.card, {this.original, this.reverse = false});
 }

@@ -129,6 +129,7 @@ class _DevAppState extends State<DevApp> {
   Widget build(BuildContext context) {
     final p = prefs.value;
     return HandyApp(
+      brand: HandyBrand.dev,
       app: 'dev',
       title: 'Handy Dev',
       accent: devAccent,
@@ -162,11 +163,14 @@ class _DevHomeState extends State<DevHome> {
       tr(context, 'Convert', 'Chuyển đổi'),
       tr(context, 'Encode & hash', 'Mã hóa & băm'),
       tr(context, 'Sensitive', 'Nhạy cảm'),
+      tr(context, 'Time, IDs & text', 'Thời gian, ID & văn bản'),
     );
     String group(DevTool t) => t.sensitive
         ? groups.$4
         : t.id.startsWith('json') || ['schema', 'regex'].contains(t.id)
         ? groups.$1
+        : ['timestamp', 'uuid', 'cron', 'text-diff', 'url-parse'].contains(t.id)
+        ? groups.$5
         : [
             'base64-encode',
             'base64-decode',
@@ -186,7 +190,7 @@ class _DevHomeState extends State<DevHome> {
         pins.contains(id) ? pins.remove(id) : pins.add(id);
         return app.save(app.read().copyWith(favorites: pins));
       },
-      groups: [groups.$1, groups.$2, groups.$3, groups.$4],
+      groups: [groups.$1, groups.$5, groups.$2, groups.$3, groups.$4],
       entries: [
         for (final t in devTools)
           HandyCatalogEntry(
@@ -208,28 +212,16 @@ class _DevHomeState extends State<DevHome> {
   Widget build(BuildContext context) {
     // Phones: short labels, no icons, so neither label breaks.
     final narrow = MediaQuery.sizeOf(context).width < 560;
-    final areas = SegmentedButton<int>(
+    final areas = _AreaTabs(
       key: const Key('area'),
-      showSelectedIcon: false,
-      segments: [
-        ButtonSegment(
-          value: 0,
-          icon: narrow ? null : const Icon(Icons.data_object, size: 18),
-          label: Text(
-            narrow
-                ? tr(context, 'Data', 'Dữ liệu')
-                : tr(context, 'Inspect', 'Soi dữ liệu'),
-            maxLines: 1,
-          ),
-        ),
-        ButtonSegment(
-          value: 1,
-          icon: narrow ? null : const Icon(Icons.send_outlined, size: 18),
-          label: Text(tr(context, 'Requests', 'Request'), maxLines: 1),
-        ),
+      labels: [
+        narrow
+            ? tr(context, 'Data', 'Dữ liệu')
+            : tr(context, 'Inspect', 'Soi dữ liệu'),
+        tr(context, 'Requests', 'Request'),
       ],
-      selected: {area},
-      onSelectionChanged: (s) => setState(() => area = s.first),
+      selected: area,
+      onSelected: (i) => setState(() => area = i),
     );
     return CallbackShortcuts(
       bindings: {
@@ -270,6 +262,60 @@ class _DevHomeState extends State<DevHome> {
           ),
         ),
       ),
+    );
+  }
+}
+
+/// The terminal's area switch: the selected area is underlined by the one
+/// 1px line of the hue every selection in Dev uses.
+class _AreaTabs extends StatelessWidget {
+  final List<String> labels;
+  final int selected;
+  final ValueChanged<int> onSelected;
+  const _AreaTabs({
+    super.key,
+    required this.labels,
+    required this.selected,
+    required this.onSelected,
+  });
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final c = HandyColors.of(context);
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        for (var i = 0; i < labels.length; i++)
+          Flexible(
+            child: Semantics(
+              selected: i == selected,
+              button: true,
+              child: InkWell(
+                onTap: () => onSelected(i),
+                child: Container(
+                  constraints: const BoxConstraints(minHeight: 48),
+                  alignment: Alignment.center,
+                  padding: const EdgeInsets.symmetric(horizontal: HandySpace.s),
+                  decoration: BoxDecoration(
+                    border: Border(
+                      bottom: BorderSide(
+                        color: i == selected ? c.accent : Colors.transparent,
+                      ),
+                    ),
+                  ),
+                  child: Text(
+                    labels[i],
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: theme.textTheme.labelLarge?.copyWith(
+                      color: i == selected ? null : c.muted,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ),
+      ],
     );
   }
 }

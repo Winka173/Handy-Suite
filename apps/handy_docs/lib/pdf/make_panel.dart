@@ -10,7 +10,8 @@ class MakePanel extends StatelessWidget {
   final TextEditingController range, watermark;
   final int rotation;
   final ValueChanged<int> onRotation;
-  final VoidCallback onMake, onMerge, onSave;
+  final VoidCallback onMake, onMerge, onSave, onFill;
+  final ValueChanged<bool> onCompress;
   const MakePanel({
     super.key,
     required this.desk,
@@ -22,6 +23,8 @@ class MakePanel extends StatelessWidget {
     required this.onMake,
     required this.onMerge,
     required this.onSave,
+    required this.onFill,
+    required this.onCompress,
   });
 
   @override
@@ -92,8 +95,8 @@ class MakePanel extends StatelessWidget {
               ),
               helperText: tr(
                 context,
-                'Latin letters and digits, in grey at the foot of each page.',
-                'Chữ Latin và số không dấu, màu xám ở chân mỗi trang.',
+                'In grey at the foot of each page. Vietnamese works.',
+                'Màu xám ở chân mỗi trang. Gõ có dấu được.',
               ),
               helperMaxLines: 2,
             ),
@@ -126,6 +129,80 @@ class MakePanel extends StatelessWidget {
             ),
           ),
         ],
+        const SizedBox(height: HandySpace.xl),
+        _Section(
+          title: tr(context, 'Sign and fill', 'Ký và điền'),
+          detail: tr(
+            context,
+            'Place a signature, text or a date on the pages, then save a new copy.',
+            'Đặt chữ ký, chữ hoặc ngày lên trang rồi lưu thành bản mới.',
+          ),
+          children: [
+            if (!supportsPdfEditing)
+              HandyNotice(
+                tr(
+                  context,
+                  'Signing needs the Android, iOS or Windows app.',
+                  'Ký và điền cần ứng dụng Android, iOS hoặc Windows.',
+                ),
+              )
+            else
+              OutlinedButton.icon(
+                key: const Key('pdf-fill'),
+                onPressed: busy ? null : onFill,
+                icon: const Icon(Icons.draw_outlined),
+                label: Text(tr(context, 'Sign and fill', 'Ký và điền')),
+              ),
+          ],
+        ),
+        const SizedBox(height: HandySpace.xl),
+        _Section(
+          title: tr(context, 'Make it smaller', 'Làm nhỏ tệp'),
+          detail: tr(
+            context,
+            'Now ${fileSize(context, desk.inputs[desk.selected].bytes.length)}. A smaller copy is made; this file stays as it is.',
+            'Hiện ${fileSize(context, desk.inputs[desk.selected].bytes.length)}. Bản nhỏ hơn là bản mới; tệp này giữ nguyên.',
+          ),
+          children: [
+            if (!supportsPdfEditing)
+              HandyNotice(
+                tr(
+                  context,
+                  'Making PDFs smaller needs the Android, iOS or Windows app.',
+                  'Làm nhỏ PDF cần ứng dụng Android, iOS hoặc Windows.',
+                ),
+              )
+            else ...[
+              Wrap(
+                spacing: HandySpace.s,
+                runSpacing: HandySpace.s,
+                children: [
+                  OutlinedButton(
+                    key: const Key('pdf-compress'),
+                    onPressed: busy ? null : () => onCompress(false),
+                    child: Text(tr(context, 'Shrink pictures', 'Nén ảnh')),
+                  ),
+                  OutlinedButton(
+                    key: const Key('pdf-compress-strong'),
+                    onPressed: busy ? null : () => onCompress(true),
+                    child: Text(tr(context, 'Strong', 'Nén mạnh')),
+                  ),
+                ],
+              ),
+              const SizedBox(height: HandySpace.s),
+              Text(
+                tr(
+                  context,
+                  'Shrink pictures keeps text and links. Strong turns every page into a picture: text can no longer be selected or searched.',
+                  'Nén ảnh giữ chữ và liên kết. Nén mạnh biến mỗi trang thành ảnh: chữ không còn chọn hay tìm được.',
+                ),
+                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                  color: HandyColors.of(context).muted,
+                ),
+              ),
+            ],
+          ],
+        ),
         HandyReveal(
           child: desk.output == null
               ? const SizedBox(width: double.infinity)
@@ -139,6 +216,39 @@ class MakePanel extends StatelessWidget {
   }
 }
 
+/// "2,4 MB", "610 KB", in the reader's number style.
+String fileSize(BuildContext context, int bytes) {
+  if (bytes >= 1000000) {
+    final mb = (bytes / 1000000).toStringAsFixed(1);
+    return '${formatFigure(context, mb)} MB';
+  }
+  return '${formatFigure(context, '${(bytes / 1000).ceil()}')} KB';
+}
+
+class _Section extends StatelessWidget {
+  final String title, detail;
+  final List<Widget> children;
+  const _Section({
+    required this.title,
+    required this.detail,
+    required this.children,
+  });
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Text(title, style: theme.textTheme.titleMedium),
+        const SizedBox(height: HandySpace.xs),
+        Text(detail, style: theme.textTheme.bodyMedium),
+        const SizedBox(height: HandySpace.m),
+        ...children,
+      ],
+    );
+  }
+}
+
 class _Result extends StatelessWidget {
   final PdfDesk desk;
   final bool busy;
@@ -147,7 +257,11 @@ class _Result extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final merged = desk.outputNote == 'merge';
-    final size = (desk.output!.length / 1024).ceil();
+    final smaller = desk.outputNote == 'smaller' || desk.outputNote == 'strong';
+    final size = fileSize(context, desk.output!.length);
+    final saved = desk.before == 0
+        ? 0
+        : (100 - desk.output!.length * 100 / desk.before).floor();
     return HandyGroup(
       color: HandyColors.of(context).select,
       children: [
@@ -157,23 +271,34 @@ class _Result extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                merged
+                smaller
+                    ? '${fileSize(context, desk.before)} → $size'
+                    : merged
                     ? tr(context, 'Merged PDF ready', 'PDF ghép đã sẵn sàng')
                     : tr(
                         context,
                         'New PDF ready · ${desk.outputNote} pages',
                         'PDF mới đã sẵn sàng · ${desk.outputNote} trang',
                       ),
-                style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                  color: HandyColors.of(context).selectInk,
-                ),
+                key: const Key('pdf-result-title'),
+                style:
+                    (smaller
+                            ? Theme.of(context).textTheme.headlineSmall
+                            : Theme.of(context).textTheme.titleMedium)
+                        ?.copyWith(color: HandyColors.of(context).selectInk),
               ),
               Text(
-                tr(
-                  context,
-                  '$size KB, checked. Save it to keep it.',
-                  '$size KB, đã kiểm tra. Lưu lại để giữ.',
-                ),
+                smaller
+                    ? tr(
+                        context,
+                        '$saved% smaller${desk.outputNote == 'strong' ? ', pages are pictures now' : ''}. Checked; save it to keep it.',
+                        'Nhỏ hơn $saved%${desk.outputNote == 'strong' ? ', các trang giờ là ảnh' : ''}. Đã kiểm tra; lưu lại để giữ.',
+                      )
+                    : tr(
+                        context,
+                        '$size, checked. Save it to keep it.',
+                        '$size, đã kiểm tra. Lưu lại để giữ.',
+                      ),
                 style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                   color: HandyColors.of(context).selectInk,
                 ),
@@ -189,7 +314,7 @@ class _Result extends StatelessWidget {
                   ),
                   const SizedBox(width: HandySpace.s),
                   HandyShareButton(
-                    name: 'handy-document.pdf',
+                    name: desk.outputName,
                     mimeType: 'application/pdf',
                     bytes: busy ? null : () => desk.output!,
                   ),

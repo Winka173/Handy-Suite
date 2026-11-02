@@ -9,6 +9,9 @@ import 'editor_actions.dart';
 import 'editor_bar.dart';
 import 'editor_body.dart';
 import 'editor_controller.dart';
+import 'review_panel.dart';
+import 'sensitive_review.dart';
+import 'text_reader.dart';
 
 /// Writing one guide: the steps as film, the picture to mark up, and the
 /// chosen note's settings. Nothing reaches the library until Save; the
@@ -20,6 +23,9 @@ class CaptureEditor extends StatefulWidget {
   final CaptureDraft? draft;
   final bool restoredDraft;
 
+  /// Reads words in pictures for "Find private details"; none by default.
+  final TextReader? reader;
+
   /// Opens the picture picker at once, for a guide just started.
   final bool pickFirst;
   final Future<void> Function(PortableCapture bundle) onCommit;
@@ -30,6 +36,7 @@ class CaptureEditor extends StatefulWidget {
     this.camera,
     this.draft,
     this.restoredDraft = false,
+    this.reader,
     this.pickFirst = false,
     required this.onCommit,
   });
@@ -44,7 +51,14 @@ class CaptureEditorState extends State<CaptureEditor> {
     restored: widget.restoredDraft,
   );
   late final ScanCamera camera = widget.camera ?? SystemScanCamera();
+  late final TextReader reader = widget.reader ?? deviceTextReader();
   bool busy = false, closing = false;
+
+  /// Places found on a step, while they are looked over.
+  SensitiveReview? review;
+
+  /// While a review is open nothing else in the editor can be changed.
+  bool get locked => busy || review != null;
   CancellationToken? token;
   String progress = '';
 
@@ -61,6 +75,7 @@ class CaptureEditorState extends State<CaptureEditor> {
   @override
   void dispose() {
     token?.cancel();
+    review?.dispose();
     c.dispose();
     super.dispose();
   }
@@ -99,6 +114,18 @@ class CaptureEditorState extends State<CaptureEditor> {
 
   void showProgress(String text) => setState(() => progress = text);
 
+  void startReview(SensitiveReview next) {
+    if (review != null) endReview();
+    setState(() => review = next);
+  }
+
+  void endReview() {
+    final r = review;
+    setState(() => review = null);
+    // Disposed after the frame that stops listening to it.
+    WidgetsBinding.instance.addPostFrameCallback((_) => r?.dispose());
+  }
+
   void say(String message) => showHandyMessage(context, message);
 
   void close() {
@@ -118,7 +145,10 @@ class CaptureEditorState extends State<CaptureEditor> {
     final k = HardwareKeyboard.instance;
     final mod = k.isControlPressed || k.isMetaPressed;
     final key = e.logicalKey;
-    if (mod && key == LogicalKeyboardKey.keyS) {
+    if (review != null) {
+      if (key != LogicalKeyboardKey.escape) return KeyEventResult.ignored;
+      endReview();
+    } else if (mod && key == LogicalKeyboardKey.keyS) {
       save();
     } else if (typing) {
       return KeyEventResult.ignored;
@@ -140,18 +170,25 @@ class CaptureEditorState extends State<CaptureEditor> {
 
   @override
   Widget build(BuildContext context) => ListenableBuilder(
-    listenable: Listenable.merge([c, c.zoom]),
+    listenable: Listenable.merge([c, c.zoom, ?review]),
     builder: (context, _) => PopScope(
       canPop: closing,
       onPopInvokedWithResult: (popped, _) {
-        if (!popped) leave();
+        if (popped) return;
+        review == null ? leave() : endReview();
       },
       child: Focus(
         autofocus: true,
         onKeyEvent: _key,
         child: Scaffold(
           appBar: EditorBar(state: this),
-          bottomNavigationBar: token == null
+          bottomNavigationBar: review != null && token == null
+              ? ReviewBar(
+                  review: review!,
+                  onApply: applyReview,
+                  onCancel: endReview,
+                )
+              : token == null
               ? null
               : HandyBottomBar(
                   child: Row(

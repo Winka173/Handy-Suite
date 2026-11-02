@@ -35,13 +35,14 @@ class DueRow extends StatelessWidget {
     final days = calendar(o.date).difference(calendar(scope.today)).inDays;
     final account = scope.account(b.account);
     final income = b.amount > BigInt.zero && b.toAccount == null;
+    final narrow = MediaQuery.sizeOf(context).width < 360;
     return Padding(
       key: Key('due-${o.id}'),
       padding: const EdgeInsets.fromLTRB(HandySpace.l, 10, HandySpace.s, 10),
       child: Row(
         children: [
           SizedBox(
-            width: 84,
+            width: narrow ? 56 : 84,
             child: Text(
               days < 0
                   ? tr(context, '${-days} d late', 'Trễ ${-days} ngày')
@@ -74,6 +75,7 @@ class DueRow extends StatelessWidget {
               ],
             ),
           ),
+          // The figure is never cut; at 320 px the name gives way.
           Money(
             scope,
             b.toAccount != null ? -b.amount : b.amount,
@@ -84,6 +86,12 @@ class DueRow extends StatelessWidget {
           const SizedBox(width: HandySpace.xs),
           TextButton(
             key: Key('paid-${o.id}'),
+            style: narrow
+                ? TextButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(horizontal: 6),
+                    minimumSize: const Size(44, 44),
+                  )
+                : null,
             onPressed: () => markPaid(context, scope, o),
             child: Text(
               income

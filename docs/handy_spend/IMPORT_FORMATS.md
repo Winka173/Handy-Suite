@@ -32,7 +32,13 @@ legitimate daily repeated purchases can be false positives. This
 is conservative review, not automatic deletion or merchant-specific certainty.
 Unselected duplicates are retained on disk in the original source file. Partial
 import requires explicit opt-in; selected writes/log are one transaction. A stale
-preview is refused. Reusable mapping profiles are gated by verified Pro ownership.
+preview is refused. Saved statement templates keep the column mapping, date order,
+decimal/grouping marks, sign rule, delimiter and encoding under a name, keyed by a
+signature of the header row (case and spacing ignored). A new file whose headers match
+is read with its template automatically (a one-column read first tries the other
+delimiters); a notice names the template and every choice stays editable, or the
+template can be set aside. Templates are managed in Settings; saving one requires
+verified Pro. No bank presets are shipped.
 Batch Undo refuses changed rows and dependent refunds. Originals are never overwritten.
 
 CSV/XLSX exports include readable columns and a versioned portable record per row
@@ -45,8 +51,11 @@ layout is configured for 200 pages, but the library's page-count guard is debug-
 this is not a certified release page-count or peak-memory limit. Very long cells
 and large production reports still need broader QA; layout errors do not save output.
 
-Full ZIP backup: manifest + SHA256 data.json, schema version and explicit empty
-attachment list. Restore previews counts, requires two confirmations and guards
-revision before replacing. Engine JSON/ZIP and CSV/XLSX roundtrips are tested.
+Full ZIP backup: manifest + SHA256 data.json, schema version and every receipt as
+`receipts/<id>` with its size and SHA-256 (at most 85 MB: ledger 30 MB + receipts
+50 MB). Restore checks each file's size, checksum and signature, refuses missing,
+extra or unlisted files, previews counts, requires two confirmations and guards
+revision before replacing; files are written before the ledger change. A JSON backup
+holds the ledger without receipts. Engine JSON/ZIP and CSV/XLSX roundtrips are tested.
 Web download dispatch does not prove the user saved the file. Exports are private
-and unencrypted; receipt files and encrypted backups are not implemented P0 features.
+and unencrypted; encrypted backups are not implemented.

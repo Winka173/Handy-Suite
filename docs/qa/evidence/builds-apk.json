@@ -97,5 +97,16 @@
         "artifactSha256":  "009d7e5f8b5dd86d29a239dc80c555775a62d2d6e33eb0e386816961c6054ddf",
         "startedAt":  "2026-11-01T16:34:41.3437755Z",
         "elapsedSeconds":  22.37
+    },
+    {
+        "app":  "trip",
+        "target":  "apk",
+        "exitCode":  0,
+        "sourceSha256":  "e9531374ebd655d6e7c3dc3890f9e951caee25f6066c311bfd1d29c56772bad6",
+        "sourceUnchanged":  true,
+        "artifact":  "artifacts/flutter/handy_trip/android/handy-trip-pilot-debug.apk",
+        "artifactSha256":  "a6006bd748aeabcbab9b1aa464cd9ea0b85529b6a6ad4eb9cde4e1199310a88a",
+        "startedAt":  "2026-11-02T03:13:11.8271670Z",
+        "elapsedSeconds":  29.86
     }
 ]

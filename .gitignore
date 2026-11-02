@@ -32,3 +32,5 @@ artifacts/
 review-shots/
 device-tours/
 __pycache__/
+.taste-skill/**/shots/
+.taste-skill/**/*.png

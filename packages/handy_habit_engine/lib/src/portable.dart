@@ -10,7 +10,7 @@ Uint8List backup(HabitState s, {bool zip = true}) {
   final manifest = utf8.encode(
     jsonEncode({
       'app': 'handy-habit',
-      'schema': 1,
+      'schema': habitSchema,
       'files': {'data.json': sha256.convert(data).toString()},
       'assets': [],
     }),
@@ -38,7 +38,7 @@ HabitState restore(Uint8List bytes, {bool zip = true}) {
     if (files.length != 2) throw const FormatException('Missing backup files');
     final manifest = jsonDecode(utf8.decode(files['manifest.json']!)) as Map;
     if (manifest['app'] != 'handy-habit' ||
-        manifest['schema'] != 1 ||
+        !(manifest['schema'] == 1 || manifest['schema'] == habitSchema) ||
         (manifest['files'] as Map)['data.json'] !=
             sha256.convert(files['data.json']!).toString())
       throw const FormatException('Backup checksum mismatch');
@@ -116,6 +116,13 @@ HabitState merge(HabitState current, HabitState imported) {
         }),
       )
       .toList();
+  final incomingPauses = [
+    for (final p in imported.pauses)
+      p.copy({
+        'id': uid(),
+        'habits': [for (final h in p.habits) habits[h]],
+      }),
+  ];
   final eventById = {for (final e in incomingEvents) e.id: e};
   final fixedSessions = incomingSessions
       .map(
@@ -158,6 +165,10 @@ HabitState merge(HabitState current, HabitState imported) {
       ...current.sessions.map((e) => e.toJson()),
       ...fixedSessions.map((e) => e.toJson()),
     ],
+    'pauses': [
+      ...current.pauses.map((e) => e.toJson()),
+      ...incomingPauses.map((e) => e.toJson()),
+    ],
     'settings': {
       ...current.settings,
       'imports': [...existingBatches, digest],
@@ -177,11 +188,39 @@ HabitState merge(HabitState current, HabitState imported) {
   });
 }
 
+String _csvCell(String v) => '"${_csvSafe(v).replaceAll('"', '""')}"';
+String _csvSafe(String v) => RegExp(r'^[\s]*[=+@\-]').hasMatch(v) ? "'$v" : v;
+
+const _pauseHeader = [
+  'pause_id',
+  'from',
+  'until',
+  'scope',
+  'habit_ids',
+  'habits',
+  'reason',
+  'record_b64',
+];
+
+/// The visible cells of a pause row, before the portable record.
+List<String> _pauseCells(Pause p, Map<String, String> names) => [
+  p.id,
+  p.from,
+  p.until,
+  p.everything ? 'all' : 'chosen',
+  p.habits.join(' '),
+  p.habits.map((h) => names[h] ?? '').join('; '),
+  p.reason,
+];
+
+/// Records in the range, then (when any overlap the range) the pauses as
+/// a second table after a blank line, with their own header.
 String csvLogs(HabitState s, String from, String until) {
-  String cell(String v) =>
-      '"${(RegExp(r'^[\s]*[=+@\-]').hasMatch(v) ? "'$v" : v).replaceAll('"', '""')}"';
   final names = {for (final h in s.habits) h.id: h.title};
-  return [
+  final pauses = s.pauses.where(
+    (p) => p.until.compareTo(from) >= 0 && p.from.compareTo(until) <= 0,
+  );
+  final logs = [
     [
       'id',
       'habit_id',
@@ -215,9 +254,23 @@ String csvLogs(HabitState s, String from, String until) {
           utf8.encode(jsonEncode({'schema': 1, 'entry': e.toJson()})),
         ),
       ],
-  ].map((row) => row.map(cell).join(',')).join('\r\n');
+  ].map((row) => row.map(_csvCell).join(',')).join('\r\n');
+  if (pauses.isEmpty) return logs;
+  final table = [
+    _pauseHeader,
+    for (final p in pauses)
+      [
+        ..._pauseCells(p, names),
+        base64Encode(
+          utf8.encode(jsonEncode({'schema': habitSchema, 'pause': p.toJson()})),
+        ),
+      ],
+  ].map((row) => row.map(_csvCell).join(',')).join('\r\n');
+  return '$logs\r\n\r\n$table';
 }
 
+/// Adds the records (and pauses) of a Habit CSV. Every row is checked
+/// against its portable record first; nothing is written on a refusal.
 HabitState importCsvLogs(HabitState current, Uint8List bytes) {
   if (bytes.length > backupLimit) throw const FormatException('CSV limit');
   final rows = csvParse(utf8.decode(bytes));
@@ -226,9 +279,13 @@ HabitState importCsvLogs(HabitState current, Uint8List bytes) {
   ).first;
   if (jsonEncode(rows.first) != jsonEncode(expected))
     throw const FormatException('Unknown Habit CSV schema');
+  final split = rows.indexWhere(
+    (r) => jsonEncode(r) == jsonEncode(_pauseHeader),
+  );
+  final logRows = rows.sublist(1, split < 0 ? rows.length : split),
+      pauseRows = split < 0 ? <List<String>>[] : rows.sublist(split + 1);
   final entries = {for (final e in current.events) e.id: e};
-  String safe(String v) => RegExp(r'^[\s]*[=+@\-]').hasMatch(v) ? "'$v" : v;
-  for (final row in rows.skip(1)) {
+  for (final row in logRows) {
     if (row.length != expected.length)
       throw const FormatException('Wrong CSV column count');
     final record = jsonDecode(utf8.decode(base64Decode(row.last))) as Map;
@@ -251,7 +308,7 @@ HabitState importCsvLogs(HabitState current, Uint8List bytes) {
       e.updated,
     ];
     for (var i = 0; i < values.length; i++) {
-      if (i != 2 && row[i] != safe(values[i]))
+      if (i != 2 && row[i] != _csvSafe(values[i]))
         throw const FormatException(
           'CSV visible values differ from portable record; edit in app',
         );
@@ -263,8 +320,32 @@ HabitState importCsvLogs(HabitState current, Uint8List bytes) {
       );
     entries[e.id] = e;
   }
+  final pauses = {for (final p in current.pauses) p.id: p};
+  for (final row in pauseRows) {
+    if (row.length != _pauseHeader.length)
+      throw const FormatException('Wrong CSV column count');
+    final record = jsonDecode(utf8.decode(base64Decode(row.last))) as Map;
+    if (record['schema'] != habitSchema)
+      throw const FormatException('Unknown pause record schema');
+    final p = Pause.fromJson(Map<String, dynamic>.from(record['pause'] as Map));
+    // Habit names (column 5) may differ between devices; IDs may not.
+    final visible = _pauseCells(p, const {});
+    for (var i = 0; i < visible.length; i++) {
+      if (i != 5 && row[i] != _csvSafe(visible[i]))
+        throw const FormatException(
+          'CSV visible values differ from portable record; edit in app',
+        );
+    }
+    final old = pauses[p.id];
+    if (old != null && jsonEncode(old.toJson()) != jsonEncode(p.toJson()))
+      throw const FormatException(
+        'Conflicting pause ID; existing data preserved',
+      );
+    pauses[p.id] = p;
+  }
   return current.copy({
     'events': entries.values.map((e) => e.toJson()).toList(),
+    'pauses': pauses.values.map((p) => p.toJson()).toList(),
   });
 }
 
@@ -275,16 +356,37 @@ String markdownReport(
   bool vietnamese = false,
 }) {
   String escape(String v) => v.replaceAll('|', r'\|').replaceAll('\n', ' ');
-  final index = HabitIndex(s.events);
+  final index = HabitIndex.of(s);
   final headers = vietnamese
       ? 'Thói quen | Hoàn thành | Hợp lệ | Chuỗi'
       : 'Habit | Completed | Eligible | Streak';
   final note = vietnamese
       ? 'Ngày bỏ qua không phải thành công. Kỳ hiện tại chưa đóng không phải thất bại.'
       : 'Skipped dates are neutral, not successes. Open current periods are not failures.';
+  final pauseNote = vietnamese
+      ? 'Ngày nghỉ chưa làm không tính vào đâu; ngày nghỉ vẫn làm thì vẫn tính. Hạn mức tuần giảm theo số ngày nghỉ, làm tròn lên.'
+      : 'Paused days not done are left out; a paused day done anyway still counts. Weekly quotas shrink with paused days, rounded up.';
+  final names = {for (final h in s.habits) h.id: h.title};
+  final pauses =
+      s.pauses
+          .where(
+            (p) => p.until.compareTo(from) >= 0 && p.from.compareTo(until) <= 0,
+          )
+          .toList()
+        ..sort((a, b) => a.from.compareTo(b.from));
+  final pauseLines = pauses.map((p) {
+    final who = p.everything
+        ? (vietnamese ? 'Tất cả thói quen' : 'All habits')
+        : p.habits.map((h) => escape(names[h] ?? '')).join(', ');
+    final why = p.reason.isEmpty ? '' : ' · ${escape(p.reason)}';
+    return '- ${p.from} — ${p.until} · $who$why';
+  });
+  final pauseSection = pauses.isEmpty
+      ? ''
+      : '\n## ${vietnamese ? 'Kỳ nghỉ' : 'Pauses'}\n\n${pauseLines.join('\n')}\n\n$pauseNote\n';
   return '# Handy Habit\n\n$from — $until · ${s.zone}\n\n| $headers |\n| --- | ---: | ---: | ---: |\n${s.habits.map((h) {
     final m = metrics(h, until, s.weekStart, index, from: from);
     final unit = vietnamese ? (m.unit == 'weeks' ? 'tuần' : 'ngày') : m.unit;
     return '| ${escape(h.title)} | ${m.completed} | ${m.eligible} | ${m.current} $unit |';
-  }).join('\n')}\n\n$note\n';
+  }).join('\n')}\n\n$note\n$pauseSection';
 }

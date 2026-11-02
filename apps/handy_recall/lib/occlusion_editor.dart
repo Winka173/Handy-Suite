@@ -44,7 +44,9 @@ class _OcclusionCanvasState extends State<OcclusionCanvas> {
   void didUpdateWidget(covariant OcclusionCanvas old) {
     super.didUpdateWidget(old);
     current = widget.image;
-    selected = selected.clamp(0, current.masks.length - 1);
+    selected = current.masks.isEmpty
+        ? 0
+        : selected.clamp(0, current.masks.length - 1);
     if (old.image.dataUri != widget.image.dataUri) {
       selected = 0;
       start = null;
@@ -298,7 +300,8 @@ class _OcclusionCanvasState extends State<OcclusionCanvas> {
               ),
               OutlinedButton(
                 key: const Key('occlusion-delete'),
-                onPressed: current.masks.length <= 1
+                // The last cover can go too: the picture stays, plain.
+                onPressed: current.masks.isEmpty
                     ? null
                     : () {
                         final masks = [...current.masks]

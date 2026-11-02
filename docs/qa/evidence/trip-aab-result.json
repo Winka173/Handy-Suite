@@ -1,0 +1,10 @@
+﻿{
+    "app":  "trip",
+    "exitCode":  0,
+    "sourceSha256":  "e9531374ebd655d6e7c3dc3890f9e951caee25f6066c311bfd1d29c56772bad6",
+    "sourceUnchanged":  true,
+    "artifact":  "apps/handy_trip/build/app/outputs/bundle/release/app-release.aab",
+    "artifactSha256":  "65b74b6c69277200392bdf36b54c31abd45f7c30bbdc0ccbe16a607eb7735ddc",
+    "signed":  false,
+    "storeReady":  false
+}

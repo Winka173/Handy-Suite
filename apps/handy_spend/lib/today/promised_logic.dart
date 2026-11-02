@@ -21,7 +21,8 @@ class Promised {
   BigInt get others =>
       safe.committed - outs.fold(BigInt.zero, (n, p) => n + p.amount);
   BigInt get held => safe.liquid + safe.income;
-  BigInt get promised => safe.committed + safe.reserves + safe.buffer;
+  BigInt get promised =>
+      safe.committed + safe.reserves + safe.buffer + safe.owe;
 }
 
 /// Mirrors `forecast` and `safeToSpend` item by item, so every payment in

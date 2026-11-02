@@ -3,19 +3,26 @@ import 'package:flutter/services.dart';
 import 'package:handy_ui/kit.dart';
 import 'package:handy_habit_engine/handy_habit_engine.dart';
 import 'controller.dart';
+import 'run_notice.dart';
 import 'runner_view.dart';
+import 'ui/words.dart';
 
 class RoutineRunner extends StatefulWidget {
   final HabitController controller;
   final String sessionId;
   final DateTime Function() clock;
   final bool fresh;
+
+  /// Says in the system notifications that the run is paused while the
+  /// app is away; null shows nothing (tests, previews).
+  final HabitRunNotices? notices;
   const RoutineRunner({
     super.key,
     required this.controller,
     required this.sessionId,
     required this.clock,
     this.fresh = false,
+    this.notices,
   });
   @override
   State<RoutineRunner> createState() => _RunnerState();
@@ -25,7 +32,7 @@ class _RunnerState extends State<RoutineRunner> with WidgetsBindingObserver {
   final watch = Stopwatch();
   Timer? timer;
   bool acting = false, ready = false, leaving = false, extra = false;
-  bool foreground = true;
+  bool foreground = true, noticed = false;
   HabitIndex? cachedIndex;
   int? indexedRevision;
   bool recoveryFailed = false;
@@ -79,6 +86,7 @@ class _RunnerState extends State<RoutineRunner> with WidgetsBindingObserver {
     timer?.cancel();
     watch.stop();
     WidgetsBinding.instance.removeObserver(this);
+    unawaited(widget.notices?.clear());
     super.dispose();
   }
 
@@ -87,6 +95,50 @@ class _RunnerState extends State<RoutineRunner> with WidgetsBindingObserver {
     foreground = state == AppLifecycleState.resumed;
     if (!foreground) watch.stop();
     if (!foreground && ready && !acting) unawaited(perform(pause));
+    // Gone from the screen (not just a system sheet over it): say where
+    // the run stopped. Back on screen: take that away.
+    if ((state == AppLifecycleState.hidden ||
+            state == AppLifecycleState.paused) &&
+        !noticed)
+      _notice();
+    if (foreground && noticed) {
+      noticed = false;
+      unawaited(widget.notices?.clear());
+    }
+  }
+
+  /// "Morning · Step 3 of 5" / "Paused · 2:00 left. Tap to continue."
+  void _notice() {
+    final notices = widget.notices;
+    final s = c.state;
+    if (notices == null || s == null || !mounted) return;
+    final run = session;
+    if (run.status != 'active') return;
+    noticed = true;
+    final step = run.steps[run.cursor];
+    final left = secondsLeft(step, running: watch.elapsed.inSeconds);
+    final allDone = run.steps.every((x) => x.status != 'pending');
+    final title = t(
+      '${run.title} · Step ${run.cursor + 1} of ${run.steps.length}',
+      '${run.title} · Bước ${run.cursor + 1}/${run.steps.length}',
+    );
+    final body = allDone
+        ? t(
+            'All steps done. Tap to finish.',
+            'Đã xong các bước. Chạm để kết thúc.',
+          )
+        : left == null
+        ? t('Paused. Tap to continue.', 'Đã tạm dừng. Chạm để tiếp tục.')
+        : left >= 0
+        ? t(
+            'Paused · ${clockText(left)} left. Tap to continue.',
+            'Đã tạm dừng · còn ${clockText(left)}. Chạm để tiếp tục.',
+          )
+        : t(
+            'Paused · ${clockText(-left)} over. Tap to continue.',
+            'Đã tạm dừng · quá ${clockText(-left)}. Chạm để tiếp tục.',
+          );
+    unawaited(notices.show(s, RunNotice(run.id, title, body), widget.clock()));
   }
 
   Future<void> perform(Future<void> Function() operation) async {
@@ -256,6 +308,7 @@ class _RunnerState extends State<RoutineRunner> with WidgetsBindingObserver {
     }
     final id = session.id;
     await c.change((s) => closeSession(s, id, widget.clock(), abort: abort));
+    unawaited(widget.notices?.clear(always: true));
     if (mounted) {
       final navigator = Navigator.of(context);
       setState(() => leaving = true);

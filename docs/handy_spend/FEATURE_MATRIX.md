@@ -22,9 +22,13 @@ The app is not certified launch-ready. See [QA details](QA_MATRIX.md).
 | Device authentication / privacy cover                | UNIT_TESTED        | Real local_auth; injected OS cancel/success tests, cold lock/background cover/resume; Android plugin binding and unavailable-device refusal; successful hardware authentication unverified                                                 |
 | Windows/Web drop and desktop table                   | UNIT_TESTED        | Bounded stream, cancel/malformed refusal; resizable table, shortcuts; actual Explorer/browser drop interaction pending                                                                                                                     |
 | Android / Windows / Web builds                       | INTEGRATION_TESTED | Three successful unchanged-source builds; unsigned AAB and MakeAppx-validated MSIX; compile/package success does not certify all runtime behavior                                                                                          |
+| Receipt attachments (schema 2)                       | UNIT_TESTED        | Signature check, 10 MB/10 per entry/50 MB limits, SQLite table + v1 file migration, ZIP backup/restore with files, delete/Undo; host widget tests only, camera and OS share not device-run                                                 |
+| Split / who owes whom                                | UNIT_TESTED        | Exact allocation, exact-amount refusal, partial and two-way settlement, cross-account refund, Safe to Spend deducts only what you owe; host widget/engine tests                                                                            |
+| Recurring suggestions, statement templates           | UNIT_TESTED        | Cadence/tolerance/dismiss rules; template signature, auto-apply on matching headers, Settings delete/Undo; no real bank statements verified                                                                                                |
+| What-if overlays on the forecast                     | UNIT_TESTED        | Overlay on live forecast, compare lowest/end/short day, toggle, ledger unchanged, `/whatif/<id>` kept; host widget tests                                                                                                                   |
 | iOS, real store transactions, physical-device QA     | BLOCKED            | Requires macOS/Xcode, publisher configuration and physical devices                                                                                                                                                                         |
 
-P1 receipt/OCR, reverse goal planner, advanced issuer interest and encrypted backups
+Receipt OCR, reverse goal planner, advanced issuer interest and encrypted backups
 are deferred. Existing seven Handy apps are retained; their older native/build
 records are historical, while workspace unit/widget regression includes all apps.
 
@@ -43,3 +47,9 @@ The UI was rebuilt on 2026-11-01 (contract in `docs/UX_REDESIGN.md`, "Hợp đ�
 Spend"): Today, Ledger (reports folded in), Plan, Accounts, a dedicated entry sheet and a
 four-step statement import. Engine, storage and data-safety rules are unchanged; the
 frozen checkpoint audit above predates this UI.
+
+Added 2026-11-02 (schema 2): receipt attachments, splits and who owes whom, recurring
+suggestions from history, keyed statement templates and what-if overlays on the plan's
+forecast. Evidence is host-only (`flutter test`); none of it is on the frozen
+checkpoint, a device or a browser yet. Contract: `docs/UX_REDESIGN.md`, "Hợp đồng:
+Handy Spend", "Bổ sung 2026-11-02".

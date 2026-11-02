@@ -18,6 +18,11 @@ class Workspace extends ChangeNotifier {
   String? selected, environment;
   ApiResponse? response;
 
+  /// The response the same request got the time before, to compare with.
+  /// Session memory only, like every response.
+  ApiResponse? previous;
+  final _last = <String, ApiResponse>{};
+
   /// (English, Vietnamese) message of the last failed send.
   (String, String)? sendError;
 
@@ -77,6 +82,7 @@ class Workspace extends ChangeNotifier {
     if (id != draft?.id) draft = null;
     selected = id;
     response = null;
+    previous = null;
     sendError = null;
     notifyListeners();
   }
@@ -94,11 +100,14 @@ class Workspace extends ChangeNotifier {
     sending = true;
     sendError = null;
     response = null;
+    previous = null;
     notifyListeners();
     try {
       response = await transport.send(
         prepareRequest(r, env?.values ?? const {}),
       );
+      previous = _last[r.id];
+      _last[r.id] = response!;
     } on Cancelled {
       sendError = ('Request cancelled.', 'Đã hủy request.');
     } on FormatException catch (e) {

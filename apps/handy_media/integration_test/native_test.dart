@@ -214,52 +214,6 @@ void main() {
       await store.save(CaptureLibrary([]).serialize());
     },
   );
-  testWidgets(
-    'native subtitle conversion rejects invalid offset and preserves source',
-    (tester) async {
-      await tester.pumpWidget(
-        MediaApp(
-          preferences: await english('handy-media-subtitle-integration'),
-          documents: localDocuments(
-            'handy-media-subtitle-integration',
-            maxBytes: 30000000,
-          ),
-        ),
-      );
-      await tester.pumpAndSettle();
-      await go(tester, '/subtitles');
-      const source = '1\n00:00:01,000 --> 00:00:02,000\nHandy Media\n';
-      await tester.enterText(find.byKey(const Key('subtitle-input')), source);
-      await tester.enterText(find.byKey(const Key('subtitle-offset')), '500');
-      FocusManager.instance.primaryFocus?.unfocus();
-      await SystemChannels.textInput.invokeMethod<void>('TextInput.hide');
-      await waitFor(tester, find.text('00:01.500'));
-      expect(find.text('00:01.500'), findsOneWidget);
-      await snap(tester, 'media-subtitles');
-      // A new text-input client after the keyboard closed.
-      await tester.tap(find.byKey(const Key('subtitle-offset')).hitTestable());
-      await tester.pumpAndSettle(const Duration(milliseconds: 500));
-      await tester.enterText(find.byKey(const Key('subtitle-offset')), '-2000');
-      FocusManager.instance.primaryFocus?.unfocus();
-      await SystemChannels.textInput.invokeMethod<void>('TextInput.hide');
-      await waitFor(tester, find.text('Subtitle offset out of range'));
-      await snap(tester, 'media-subtitles-invalid-offset');
-      expect(find.text('Subtitle offset out of range'), findsOneWidget);
-      expect(
-        tester
-            .widget<ButtonStyleButton>(find.byKey(const Key('subtitle-export')))
-            .onPressed,
-        isNull,
-      );
-      expect(
-        tester
-            .widget<TextField>(find.byKey(const Key('subtitle-input')))
-            .controller!
-            .text,
-        source,
-      );
-    },
-  );
   testWidgets('native Vietnamese text watermark processes a real image batch', (
     tester,
   ) async {

@@ -32,6 +32,10 @@ List<ReminderRequest> planReminders(
   required int hour,
   required int minute,
   bool dailyReview = false,
+
+  /// Above 1, the daily review becomes that many dated one-off reminders
+  /// (for platforms whose notifications cannot repeat).
+  int dailyCopies = 1,
 }) {
   if (!['keep', 'recall'].contains(namespace) ||
       hour < 0 ||
@@ -58,7 +62,26 @@ List<ReminderRequest> planReminders(
         hour,
         minute,
       );
-    result.add(ReminderRequest('$namespace:daily-review', next, daily: true));
+    if (dailyCopies <= 1) {
+      result.add(ReminderRequest('$namespace:daily-review', next, daily: true));
+    } else {
+      for (var i = 0; i < dailyCopies; i++) {
+        final when = tz.TZDateTime(
+          location,
+          next.year,
+          next.month,
+          next.day + i,
+          hour,
+          minute,
+        );
+        result.add(
+          ReminderRequest(
+            '$namespace:daily-review:${when.toIso8601String().substring(0, 10)}',
+            when,
+          ),
+        );
+      }
+    }
   }
   for (final d in dates) {
     if (!RegExp(r'^\d{4}-\d{2}-\d{2}$').hasMatch(d.date))

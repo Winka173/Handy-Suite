@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:typed_data';
 import 'package:handy_capture/handy_capture.dart';
 import 'package:handy_files/camera.dart';
@@ -10,13 +11,14 @@ import 'package:handy_storage/recovery.dart';
 import 'package:handy_ui/kit.dart';
 import 'capture_draft.dart';
 import 'guide/ids.dart';
+import 'guide/text_reader.dart';
+import 'image/stitch_page.dart';
 import 'image/image_page.dart';
 import 'native_capture_page.dart';
 import 'settings_page.dart';
 import 'studio/media_store.dart';
 import 'studio/open_guide.dart';
 import 'studio/studio_page.dart';
-import 'subtitles/subtitle_page.dart';
 
 export 'studio/studio_page.dart' show StudioPage;
 
@@ -30,8 +32,15 @@ class MediaApp extends StatefulWidget {
   final ScanCamera? camera;
   final ExportHistory? history;
 
+  /// Reads words in pictures for "Find private details"; the device's by
+  /// default.
+  final TextReader? reader;
+
   /// Each guide's draft store; the device's by default.
   final DocumentRepository Function(String id)? drafts;
+
+  /// Off in host tests: no folder backups.
+  final bool device;
   const MediaApp({
     super.key,
     this.files = const SystemHandyFiles(),
@@ -39,7 +48,9 @@ class MediaApp extends StatefulWidget {
     this.documents,
     this.camera,
     this.history,
+    this.reader,
     this.drafts,
+    this.device = true,
   });
   @override
   State<MediaApp> createState() => _MediaAppState();
@@ -60,15 +71,32 @@ class _MediaAppState extends State<MediaApp> {
     drafts: widget.drafts ?? captureDraftDocuments,
   );
 
+  /// The whole guide library, as the store writes it, to a folder.
+  late final autoBackup = widget.device
+      ? HandyAutoBackup.local(
+          app: 'media',
+          extension: 'json',
+          build: () async =>
+              Uint8List.fromList(utf8.encode(store.library!.serialize())),
+        )
+      : null;
+
   @override
   void initState() {
     super.initState();
     loadPreferences();
+    store.addListener(_stored);
     store.load();
+  }
+
+  void _stored() {
+    if (store.loaded) autoBackup?.attach();
   }
 
   @override
   void dispose() {
+    store.removeListener(_stored);
+    autoBackup?.dispose();
     store.dispose();
     prefs.dispose();
     super.dispose();
@@ -110,6 +138,7 @@ class _MediaAppState extends State<MediaApp> {
       store: store,
       files: widget.files,
       camera: widget.camera,
+      reader: widget.reader,
       guide: PortableCapture(
         CaptureProject.parse({
           ...project.toJson(),
@@ -144,6 +173,7 @@ class _MediaAppState extends State<MediaApp> {
         store: store,
         files: widget.files,
         camera: widget.camera,
+        reader: widget.reader,
       );
     },
   );
@@ -156,15 +186,13 @@ class _MediaAppState extends State<MediaApp> {
         files: widget.files,
         store: store,
         history: widget.history ?? ExportHistory('media'),
+        autoBackup: autoBackup,
       ),
       ['', 'image'] => () => ImagePage(
         files: widget.files,
         camera: widget.camera,
       ),
-      ['', 'subtitles'] => () => SubtitlePage(
-        files: widget.files,
-        history: widget.history,
-      ),
+      ['', 'stitch'] => () => StitchPage(files: widget.files),
       ['', 'capture'] => () => Builder(
         builder: (context) => NativeCapturePage(
           files: widget.files,
@@ -176,6 +204,7 @@ class _MediaAppState extends State<MediaApp> {
         store: store,
         files: widget.files,
         camera: widget.camera,
+        reader: widget.reader,
       ),
       _ => null,
     };
@@ -187,6 +216,7 @@ class _MediaAppState extends State<MediaApp> {
   Widget build(BuildContext context) {
     final p = prefs.value;
     return HandyApp(
+      brand: HandyBrand.media,
       app: 'media',
       title: 'Handy Media',
       accent: mediaAccent,
@@ -204,11 +234,13 @@ class _GuideLink extends StatefulWidget {
   final MediaStore store;
   final HandyFiles files;
   final ScanCamera? camera;
+  final TextReader? reader;
   const _GuideLink({
     required this.id,
     required this.store,
     required this.files,
     this.camera,
+    this.reader,
   });
   @override
   State<_GuideLink> createState() => _GuideLinkState();
@@ -235,6 +267,7 @@ class _GuideLinkState extends State<_GuideLink> {
       store: widget.store,
       files: widget.files,
       camera: widget.camera,
+      reader: widget.reader,
       guide: guide,
     );
     if (mounted) Navigator.maybePop(context);

@@ -4,6 +4,7 @@ import '../scope.dart';
 import '../settings/data.dart';
 import '../ui/form.dart';
 import '../ui/words.dart';
+import 'week_review.dart';
 
 /// What actually happened over a range: days with any check-in each week,
 /// each habit as done out of planned (never a score), and routine runs.
@@ -135,6 +136,20 @@ class InsightsPage extends StatelessWidget {
                     onSelected: (_) => custom(context),
                   ),
                 ],
+              ),
+              Padding(
+                padding: const EdgeInsets.only(top: HandySpace.m),
+                child: Align(
+                  alignment: AlignmentDirectional.centerStart,
+                  child: OutlinedButton.icon(
+                    key: const Key('insights-week-review'),
+                    onPressed: () => openWeekReview(context, scope),
+                    icon: const Icon(Icons.event_note_outlined),
+                    label: Text(
+                      tr(context, 'Look back at the week', 'Nhìn lại tuần'),
+                    ),
+                  ),
+                ),
               ),
               HandyLabel(
                 tr(

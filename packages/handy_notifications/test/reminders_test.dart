@@ -2,6 +2,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:timezone/data/latest.dart' as data;
 import 'package:timezone/timezone.dart' as tz;
 import 'package:handy_notifications/handy_notifications.dart';
+import 'package:handy_notifications/native.dart';
 
 class Port implements NotificationsPort {
   bool grant = true, fail = false;
@@ -204,5 +205,40 @@ void main() {
       throwsStateError,
     );
     expect(port.scheduled, isEmpty);
+  });
+
+  test('a daily review becomes dated copies where toasts cannot repeat', () {
+    data.initializeTimeZones();
+    final hcm = tz.getLocation('Asia/Ho_Chi_Minh');
+    final plan = planReminders(
+      'recall',
+      const [],
+      location: hcm,
+      now: DateTime.utc(2026, 11, 2, 1),
+      hour: 20,
+      minute: 0,
+      dailyReview: true,
+      dailyCopies: 14,
+    );
+    expect(plan, hasLength(14));
+    expect(plan.every((r) => !r.daily), isTrue);
+    expect(plan.first.key, 'recall:daily-review:2026-11-02');
+    expect(plan.last.key, 'recall:daily-review:2026-11-15');
+    expect(plan.map((r) => r.id).toSet(), hasLength(14));
+  });
+
+  test('old zone names from the system still resolve', () {
+    data.initializeTimeZones();
+    expect(
+      resolveZone('Asia/Saigon', const Duration(hours: 7)).name,
+      'Asia/Ho_Chi_Minh',
+    );
+    expect(
+      resolveZone(
+        'Nowhere/Made_Up',
+        const Duration(hours: 7),
+      ).timeZone(DateTime.now().millisecondsSinceEpoch).offset,
+      const Duration(hours: 7),
+    );
   });
 }

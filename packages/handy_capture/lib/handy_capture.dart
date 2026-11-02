@@ -1,10 +1,28 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 
+/// Some native capture exists here: Android (screen and recordings), iOS
+/// (this app's recordings) and Windows (screenshots only).
 bool get nativeCaptureAvailable =>
     !kIsWeb &&
     (defaultTargetPlatform == TargetPlatform.android ||
+        defaultTargetPlatform == TargetPlatform.iOS ||
+        defaultTargetPlatform == TargetPlatform.windows);
+
+/// Recording and the video tools: Android and iOS only. Windows has no
+/// screen recording.
+bool get nativeVideoAvailable =>
+    !kIsWeb &&
+    (defaultTargetPlatform == TargetPlatform.android ||
         defaultTargetPlatform == TargetPlatform.iOS);
+
+/// Dragging out an area on a frozen copy of the screen: Windows only.
+bool get regionCaptureAvailable =>
+    !kIsWeb && defaultTargetPlatform == TargetPlatform.windows;
+
+/// What a screenshot takes: the whole screen (on Windows, the one under the
+/// pointer) or an area dragged out on a frozen copy of every screen.
+enum CaptureArea { screen, region }
 
 class CaptureResult {
   final String uri, mime;
@@ -92,7 +110,15 @@ class NativeCapture {
   void _supported() {
     if (!nativeCaptureAvailable)
       throw UnsupportedError(
-        'Native capture is available on Android and iOS. Import images/videos on other platforms.',
+        'Native capture is available on Android, iOS and Windows. Import images/videos on other platforms.',
+      );
+  }
+
+  void _video() {
+    _supported();
+    if (!nativeVideoAvailable)
+      throw UnsupportedError(
+        'Screen recording and video tools are available on Android and iOS.',
       );
   }
 
@@ -101,7 +127,14 @@ class NativeCapture {
     return CaptureStatus.parse(await _channel.invokeMethod<Object?>('status'));
   }
 
-  Future<CaptureResult> screenshot({int delayMs = 3000}) async {
+  /// On Windows the app window steps aside while the screen is taken;
+  /// [area] chooses the whole screen or a dragged area, and [hint] is the
+  /// one line shown over the frozen screen (Esc cancels).
+  Future<CaptureResult> screenshot({
+    int delayMs = 3000,
+    CaptureArea area = CaptureArea.screen,
+    String hint = '',
+  }) async {
     _supported();
     if (defaultTargetPlatform == TargetPlatform.iOS) {
       throw UnsupportedError(
@@ -110,18 +143,24 @@ class NativeCapture {
     }
     if (delayMs < 0 || delayMs > 10000)
       throw const FormatException('Delay: 0-10000 ms');
+    if (area == CaptureArea.region && !regionCaptureAvailable)
+      throw UnsupportedError('Choosing an area is available on Windows.');
+    if (hint.length > 200) throw const FormatException('Hint: 200 characters');
     return CaptureResult.parse(
-      await _channel.invokeMethod<Object?>('screenshot', {'delayMs': delayMs}),
+      await _channel.invokeMethod<Object?>('screenshot', {
+        'delayMs': delayMs,
+        if (regionCaptureAvailable) ...{'area': area.name, 'hint': hint},
+      }),
     );
   }
 
   Future<void> startRecording() async {
-    _supported();
+    _video();
     await _channel.invokeMethod<Object?>('startRecording');
   }
 
   Future<CaptureResult> stopRecording() async {
-    _supported();
+    _video();
     return CaptureResult.parse(
       await _channel.invokeMethod<Object?>('stopRecording'),
     );
@@ -155,7 +194,7 @@ class NativeCapture {
   }
 
   Future<CaptureResult> importVideo(Uint8List bytes) async {
-    _supported();
+    _video();
     if (bytes.length < 33 ||
         bytes.length > 30000000 ||
         String.fromCharCodes(bytes.sublist(4, 8)) != 'ftyp')
@@ -172,7 +211,7 @@ class NativeCapture {
     bool mute = false,
     String format = 'mp4',
   }) async {
-    _supported();
+    _video();
     if (input.mime != 'video/mp4' ||
         !{0, 90, 180, 270}.contains(rotation) ||
         !{240, 480, 720, 1280}.contains(maxEdge) ||
@@ -196,7 +235,7 @@ class NativeCapture {
     int startMs,
     int endMs,
   ) async {
-    _supported();
+    _video();
     if (input.mime != 'video/mp4' ||
         startMs < 0 ||
         endMs <= startMs ||
@@ -212,7 +251,7 @@ class NativeCapture {
   }
 
   Future<CaptureResult> frame(CaptureResult input, int timeMs) async {
-    _supported();
+    _video();
     if (input.mime != 'video/mp4' || timeMs < 0 || timeMs >= input.durationMs!)
       throw const FormatException('Invalid frame time');
     return CaptureResult.parse(
@@ -224,7 +263,7 @@ class NativeCapture {
   }
 
   Future<CaptureResult> combine(List<CaptureResult> inputs) async {
-    _supported();
+    _video();
     if (inputs.length < 2 ||
         inputs.length > 20 ||
         inputs.any((c) => c.mime != 'video/mp4'))

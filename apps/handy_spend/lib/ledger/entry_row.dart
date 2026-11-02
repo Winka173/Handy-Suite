@@ -44,6 +44,52 @@ class EntryRow extends StatelessWidget {
         kindLabel(context, e.kind),
       ...e.tags.map((t) => '#$t'),
     ].join(' · ');
+    // Receipts and a split are marked by an icon and a word or count, not
+    // by colour.
+    final receipts = scope.receiptsOf(e.id).length;
+    final split = scope.splitOf(e.id);
+    final settled = e.person == null ? null : scope.person(e.person!);
+    final marks = <InlineSpan>[
+      if (receipts > 0) ...[
+        WidgetSpan(
+          alignment: PlaceholderAlignment.middle,
+          child: Icon(
+            Icons.attach_file,
+            size: 13,
+            color: c.muted,
+            semanticLabel: tr(context, 'receipts', 'hóa đơn'),
+          ),
+        ),
+        TextSpan(text: '$receipts  '),
+      ],
+      if (split != null) ...[
+        WidgetSpan(
+          alignment: PlaceholderAlignment.middle,
+          child: Icon(Icons.groups_outlined, size: 14, color: c.muted),
+        ),
+        TextSpan(
+          text: tr(
+            context,
+            ' split ${split.parts.length}  ',
+            ' chia ${split.parts.length}  ',
+          ),
+        ),
+      ],
+      if (settled != null)
+        TextSpan(
+          text: e.kind == 'refund'
+              ? tr(
+                  context,
+                  'paid back by ${settled.name} · ',
+                  '${settled.name} trả lại · ',
+                )
+              : tr(
+                  context,
+                  'paid to ${settled.name} · ',
+                  'trả ${settled.name} · ',
+                ),
+        ),
+    ];
     return Semantics(
       selected: selecting ? selected : null,
       child: InkWell(
@@ -90,6 +136,7 @@ class EntryRow extends StatelessWidget {
                             ),
                             const TextSpan(text: ' '),
                           ],
+                          ...marks,
                           TextSpan(text: meta),
                         ],
                       ),

@@ -61,6 +61,8 @@ class DocsSettingsPage extends StatelessWidget {
     onTheme: (v) => save(read().copyWith(theme: v)),
     onLocale: (v) => save(read().copyWith(locale: v)),
     sections: [
+      if (scope.autoBackup != null)
+        HandyAutoBackupSection(backup: scope.autoBackup!),
       HandySettingsSection(
         title: tr(context, 'Text and files', 'Văn bản và tệp'),
         children: [
@@ -146,9 +148,16 @@ class DocsSettingsPage extends StatelessWidget {
           _recover(
             context,
             'recover-reader',
-            tr(context, 'Reading library', 'Thư viện đọc'),
+            tr(context, 'Kept files', 'Tệp đã giữ'),
             scope.reader.store.documents,
             scope.reader.store.load,
+          ),
+          _recover(
+            context,
+            'recover-signatures',
+            tr(context, 'Saved signatures', 'Chữ ký đã lưu'),
+            scope.signatures.documents,
+            scope.signatures.load,
           ),
         ],
       ),

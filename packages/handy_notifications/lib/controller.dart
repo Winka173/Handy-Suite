@@ -34,7 +34,7 @@ class ReminderController extends ChangeNotifier {
     NotificationsPort? port,
     ReminderSettingsStore? store,
     Future<tz.Location> Function()? location,
-  }) : port = port ?? DeviceNotifications(),
+  }) : port = port ?? DeviceNotifications(windows: windowsIdentity(namespace)),
        store = store ?? _DeviceSettings(),
        location = location ?? deviceLocation;
 
@@ -116,6 +116,7 @@ class ReminderController extends ChangeNotifier {
           hour: h,
           minute: m,
           dailyReview: dailyReview,
+          dailyCopies: dailyCopies,
         );
         registered = await reconcileNotifications(
           port,

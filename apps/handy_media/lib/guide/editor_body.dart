@@ -4,6 +4,8 @@ import '../annotation_canvas.dart';
 import 'editor_actions.dart';
 import 'editor_page.dart';
 import 'layer_panel.dart';
+import 'review_panel.dart';
+import 'sensitive_review.dart';
 import 'step_notes.dart';
 import 'step_strip.dart';
 import 'tool_bar.dart';
@@ -16,7 +18,7 @@ class EditorBody extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final c = state.c, busy = state.busy;
+    final c = state.c, busy = state.locked, review = state.review;
     final colors = HandyColors.of(context);
     if (c.step == null) {
       return HandyEmpty(
@@ -41,13 +43,22 @@ class EditorBody extends StatelessWidget {
       onAdd: state.addFiles,
       onCamera: state.camera.supported ? state.addPhoto : null,
     );
-    final side = [
-      LayerPanel(c: c, busy: busy, onRepeatMask: state.repeatMask),
-      Divider(height: HandySpace.xl, color: colors.rule),
-      StepNotes(key: ValueKey('notes-${c.step!.id}'), c: c, busy: busy),
-      const SizedBox(height: HandySpace.s),
-      _StepActions(state: state),
-    ];
+    final side = review != null
+        ? [ReviewPanel(review: review)]
+        : [
+            LayerPanel(
+              c: c,
+              busy: busy,
+              onRepeatMask: state.repeatMask,
+              onFindSensitive: state.reader.supported
+                  ? state.findSensitive
+                  : null,
+            ),
+            Divider(height: HandySpace.xl, color: colors.rule),
+            StepNotes(key: ValueKey('notes-${c.step!.id}'), c: c, busy: busy),
+            const SizedBox(height: HandySpace.s),
+            _StepActions(state: state),
+          ];
     final notice = c.draftError == null
         ? null
         : Padding(
@@ -144,7 +155,11 @@ class _Picture extends StatelessWidget {
   const _Picture({required this.state});
   @override
   Widget build(BuildContext context) {
-    final c = state.c, step = c.step!, png = c.picture;
+    final c = state.c, png = c.picture, review = state.review;
+    final hue = Theme.of(context).colorScheme.primary;
+    // While places are looked over, the picture shows them and takes no
+    // gestures; the guide itself is unchanged.
+    final step = review == null ? c.step! : review.preview(c.step!, _hex(hue));
     if (png == null) {
       return Center(
         child: HandyEmpty(
@@ -169,14 +184,18 @@ class _Picture extends StatelessWidget {
     return HandySwap(
       child: AbsorbPointer(
         key: ValueKey(step.id),
-        absorbing: state.busy,
+        absorbing: state.locked,
         child: GestureDetector(
           excludeFromSemantics: true,
           onTap: c.tool == null ? () => c.select(null) : null,
           child: AnnotationCanvas(
             step: step,
             png: png,
-            selected: c.selected,
+            selected: review == null
+                ? c.selected
+                : review.focus == null
+                ? null
+                : SensitiveReview.proposalId(review.focus!),
             panEnabled: c.panMode,
             transformation: c.zoom,
             drawing: c.tool == 'pen',
@@ -198,6 +217,9 @@ class _Picture extends StatelessWidget {
     );
   }
 
+  static String _hex(Color color) =>
+      '#${(color.toARGB32() & 0xFFFFFF).toRadixString(16).padLeft(6, '0').toUpperCase()}';
+
   void _add(BuildContext context, VoidCallback add) {
     try {
       add();
@@ -212,7 +234,7 @@ class _StepActions extends StatelessWidget {
   const _StepActions({required this.state});
   @override
   Widget build(BuildContext context) {
-    final c = state.c, busy = state.busy, i = c.stepIndex;
+    final c = state.c, busy = state.locked, i = c.stepIndex;
     return Row(
       children: [
         IconButton(

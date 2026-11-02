@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:js_interop';
+import 'dart:typed_data';
 import 'package:web/web.dart' as web;
 import 'package:handy_spend_engine/handy_spend_engine.dart';
 import 'store.dart';
@@ -12,11 +13,13 @@ class BrowserSpendStore implements SpendStore {
   BrowserSpendStore._(this.db);
   static Future<BrowserSpendStore> open() async {
     final ready = Completer<BrowserSpendStore>(),
-        r = web.window.indexedDB.open('handy-spend', 1);
+        r = web.window.indexedDB.open('handy-spend', 2);
+    // Version 2 adds the receipts store; existing stores are kept as they
+    // are, whichever version the browser had.
     r.onupgradeneeded = ((web.Event _) {
       final db = r.result as web.IDBDatabase;
-      for (final name in ['accounts', 'entries', 'state']) {
-        db.createObjectStore(name);
+      for (final name in ['accounts', 'entries', 'state', 'receipts']) {
+        if (!db.objectStoreNames.contains(name)) db.createObjectStore(name);
       }
     }).toJS;
     r.onsuccess = ((web.Event _) => ready.complete(
@@ -115,6 +118,58 @@ class BrowserSpendStore implements SpendStore {
     }).toJS;
     await done.future;
   }
+
+  Future<T> _receipts<T>(
+    String mode,
+    void Function(web.IDBObjectStore store, void Function(T) done) run,
+  ) {
+    final result = Completer<T>(), tx = db.transaction('receipts'.toJS, mode);
+    T? value;
+    tx.oncomplete = ((web.Event _) => result.complete(value as T)).toJS;
+    tx.onabort = ((web.Event _) => result.completeError(
+      StateError('Browser storage refused the receipt; nothing changed'),
+    )).toJS;
+    tx.onerror = tx.onabort;
+    run(tx.objectStore('receipts'), (v) => value = v);
+    return result.future;
+  }
+
+  @override
+  Future<void> putReceipt(String id, Uint8List bytes) =>
+      _receipts<void>('readwrite', (store, _) {
+        store.put(bytes.toJS, id.toJS);
+      });
+
+  @override
+  Future<Uint8List?> readReceipt(String id) => _receipts<Uint8List?>(
+    'readonly',
+    (store, done) {
+      final r = store.get(id.toJS);
+      r.onsuccess = ((web.Event _) {
+        final v = r.result;
+        done(
+          v == null || v.isUndefinedOrNull ? null : (v as JSUint8Array).toDart,
+        );
+      }).toJS;
+    },
+  );
+
+  @override
+  Future<int> sweepReceipts(Set<String> keep) =>
+      _receipts<int>('readwrite', (store, done) {
+        final r = store.getAllKeys();
+        done(0);
+        r.onsuccess = ((web.Event _) {
+          var n = 0;
+          for (final k in (r.result as JSArray).toDart) {
+            final id = (k as JSString).toDart;
+            if (keep.contains(id)) continue;
+            store.delete(k);
+            n++;
+          }
+          done(n);
+        }).toJS;
+      });
 
   @override
   Future<String> integrity() async {

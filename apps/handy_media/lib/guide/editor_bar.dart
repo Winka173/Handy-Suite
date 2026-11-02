@@ -12,7 +12,7 @@ class EditorBar extends StatelessWidget implements PreferredSizeWidget {
 
   @override
   Widget build(BuildContext context) {
-    final c = state.c, busy = state.busy;
+    final c = state.c, busy = state.locked;
     final wide = MediaQuery.sizeOf(context).width >= 720;
     final step = c.step, layer = c.layer;
     final box = const {'rect', 'highlight', 'redact', 'spotlight'};
@@ -32,6 +32,7 @@ class EditorBar extends StatelessWidget implements PreferredSizeWidget {
           border: InputBorder.none,
           enabledBorder: InputBorder.none,
           focusedBorder: InputBorder.none,
+          disabledBorder: InputBorder.none,
           filled: false,
           isDense: true,
         ),
@@ -69,6 +70,11 @@ class EditorBar extends StatelessWidget implements PreferredSizeWidget {
                 )
               : IconButton.filled(
                   key: const Key('guide-export-options'),
+                  // The kit sets every icon button's ink; a filled one
+                  // needs the ink that reads on its fill.
+                  style: IconButton.styleFrom(
+                    foregroundColor: Theme.of(context).colorScheme.onPrimary,
+                  ),
                   tooltip: tr(context, 'Export', 'Xuất'),
                   onPressed: busy || c.project.steps.isEmpty
                       ? null

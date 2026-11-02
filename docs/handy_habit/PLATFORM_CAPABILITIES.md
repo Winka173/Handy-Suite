@@ -1,12 +1,12 @@
 # Platform capabilities
 
-| Capability | Android                    | iOS                        | Windows                 | Web                       |
-| ---------- | -------------------------- | -------------------------- | ----------------------- | ------------------------- |
-| Local data | SQLite worker              | SQLite source              | SQLite worker           | IndexedDB                 |
-| Files      | User picker/share          | User picker/share          | Native dialogs          | Upload/download           |
-| Reminders  | Permission/local schedule  | Permission/source          | In-app due list         | In-app due list           |
-| Runner     | Foreground monotonic       | Foreground monotonic       | Foreground monotonic    | Foreground monotonic      |
-| Ads/Pro    | Existing official adapters | Existing official adapters | Store adapter; no AdMob | Free, no invented payment |
+| Capability | Android                                 | iOS                                               | Windows                 | Web                       |
+| ---------- | --------------------------------------- | ------------------------------------------------- | ----------------------- | ------------------------- |
+| Local data | SQLite worker                           | SQLite source                                     | SQLite worker           | IndexedDB                 |
+| Files      | User picker/share                       | User picker/share                                 | Native dialogs          | Upload/download           |
+| Reminders  | Permission/local schedule               | Permission/source                                 | In-app due list         | In-app due list           |
+| Runner     | Foreground monotonic; paused-run notice | Foreground monotonic; paused-run notice (passive) | Foreground monotonic    | Foreground monotonic      |
+| Ads/Pro    | Existing official adapters              | Existing official adapters                        | Store adapter; no AdMob | Free, no invented payment |
 
 Runtime verification is separate from compilation. Browser eviction/quota, physical
 devices and real stores need evidence. iOS needs macOS/Xcode, unavailable on this host.

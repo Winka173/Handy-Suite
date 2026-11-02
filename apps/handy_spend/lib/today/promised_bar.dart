@@ -37,6 +37,12 @@ class PromisedBar extends StatelessWidget {
           ink.withValues(alpha: .12),
           tr(context, 'Saved', 'Để dành'),
         ),
+      if (safe.owe > BigInt.zero)
+        _Part(
+          safe.owe,
+          ink.withValues(alpha: .16),
+          tr(context, 'You owe', 'Bạn nợ'),
+        ),
       if (safe.buffer > BigInt.zero)
         _Part(
           safe.buffer,
@@ -271,6 +277,12 @@ class PromisedSum extends StatelessWidget {
           row(
             tr(context, 'Saved for goals', 'Để dành mục tiêu'),
             -safe.reserves,
+          ),
+        if (safe.owe > BigInt.zero)
+          row(
+            tr(context, 'You owe people', 'Bạn nợ người khác'),
+            -safe.owe,
+            note: tr(context, 'shared costs', 'chia tiền'),
           ),
         if (safe.buffer > BigInt.zero)
           row(tr(context, 'Buffer', 'Dự phòng'), -safe.buffer),

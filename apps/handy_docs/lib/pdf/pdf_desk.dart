@@ -20,6 +20,9 @@ class PdfDesk extends ChangeNotifier {
   Uint8List? output;
   String outputNote = '';
 
+  /// For a smaller copy: the original's size in bytes.
+  int before = 0;
+
   bool _closed = false;
   Future<void>? _pending;
 
@@ -141,6 +144,43 @@ class PdfDesk extends ChangeNotifier {
     outputNote = 'merge';
     notifyListeners();
   });
+
+  /// A smaller copy of the open file. [strong] turns every page into a
+  /// picture (text is no longer selectable); otherwise only pictures are
+  /// re-encoded. A copy that is not smaller is refused.
+  Future<void> compress(bool strong, CancellationToken token) => _job(() async {
+    output = null;
+    notifyListeners();
+    final source = inputs[selected];
+    final smaller = strong
+        ? await document!.rasterize(cancellation: token)
+        : await document!.compress(cancellation: token);
+    if (smaller.bytes.length >= source.bytes.length) {
+      throw FormatException(
+        strong
+            ? 'This PDF is already as small as a picture copy would be'
+            : 'This PDF could not be made smaller this way; try strong compression',
+      );
+    }
+    output = smaller.bytes;
+    outputNote = strong ? 'strong' : 'smaller';
+    before = source.bytes.length;
+    notifyListeners();
+  });
+
+  /// The file name to offer when the new PDF is saved.
+  String get outputName {
+    if (inputs.isEmpty) return 'handy-document.pdf';
+    final name = inputs[selected].name;
+    final base = name.toLowerCase().endsWith('.pdf')
+        ? name.substring(0, name.length - 4)
+        : name;
+    return switch (outputNote) {
+      'smaller' || 'strong' => '$base-smaller.pdf',
+      'merge' => 'handy-merged.pdf',
+      _ => 'handy-document.pdf',
+    };
+  }
 
   void dropOutput() {
     if (output == null) return;

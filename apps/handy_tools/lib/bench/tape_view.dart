@@ -6,7 +6,13 @@ import 'tape.dart';
 class TapeView extends StatelessWidget {
   final TapeController tape;
   final ValueChanged<TapeEntry> onReuse;
-  const TapeView({super.key, required this.tape, required this.onReuse});
+  final VoidCallback? onNotebook;
+  const TapeView({
+    super.key,
+    required this.tape,
+    required this.onReuse,
+    this.onNotebook,
+  });
 
   @override
   Widget build(BuildContext context) => ListenableBuilder(
@@ -23,7 +29,7 @@ class TapeView extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           SizedBox(
-            height: 40,
+            height: 48,
             child: Row(
               children: [
                 Expanded(
@@ -35,6 +41,12 @@ class TapeView extends StatelessWidget {
                     ),
                   ),
                 ),
+                if (onNotebook != null)
+                  TextButton(
+                    key: const Key('open-notebook'),
+                    onPressed: onNotebook,
+                    child: Text(tr(context, 'Notebook', 'Sổ tính')),
+                  ),
                 if (tape.entries.isNotEmpty)
                   TextButton(
                     key: const Key('tape-clear'),

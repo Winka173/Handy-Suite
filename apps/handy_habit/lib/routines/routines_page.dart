@@ -105,7 +105,7 @@ class _RoutinesPageState extends State<RoutinesPage> {
                   ListTile(
                     key: Key('template-${t.title}'),
                     title: Text(t.title),
-                    subtitle: Text(t.steps.map((x) => x.title).join(' → ')),
+                    subtitle: Text(t.steps.map((x) => x.title).join(' · ')),
                     trailing: TextButton(
                       onPressed: () => scope.write(
                         context,

@@ -17,13 +17,15 @@ from PIL import Image, ImageDraw, ImageFont
 
 ROOT = Path(__file__).resolve().parent.parent
 APPS = {
+
+    'trip': ('#0284C7', 0xE53D),  # flight_takeoff
     'habit': ('#B42318', 0xE86C),
     'spend': ('#2E7D32', 0xE850),  # account_balance_wallet
     'tools': ('#E8590C', 0xE2F2),   # handyman
     'dev': ('#0F8A5F', 0xF0589),    # terminal
     'keep': ('#B7791F', 0xE34A),    # inventory_2
     'recall': ('#4D7C0F', 0xE613),  # style
-    'save': ('#0E7490', 0xE0F1),    # bookmark
+    'bookmark': ('#0E7490', 0xE0F1),    # bookmark
     'docs': ('#1D5FBF', 0xE1BF),    # description
     'media': ('#C2255C', 0xE4BA),   # photo_library
 }

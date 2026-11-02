@@ -1,53 +1,132 @@
 part of '../handy_spend_engine.dart';
 
 const portableLimit = 30000000;
-Uint8List backup(SpendState state, {bool zip = true}) {
+
+/// A ZIP backup holds the ledger (at most 30 MB) and every receipt (at
+/// most 50 MB in all), so the file may reach 85 MB with its headers.
+const backupLimit = 85000000;
+
+/// The whole ledger. A ZIP carries every receipt in [receipts] (by ID),
+/// each listed in the manifest with its size and SHA-256; a receipt the
+/// ledger lists without bytes here stops the backup. JSON carries the
+/// ledger only, so its receipts are left out of it.
+Uint8List backup(
+  SpendState state, {
+  bool zip = true,
+  Map<String, Uint8List> receipts = const {},
+}) {
   state.validate();
-  final bytes = Uint8List.fromList(utf8.encode(jsonEncode(state.toJson())));
+  final data = zip ? state : state.copy({'receipts': []});
+  final bytes = Uint8List.fromList(utf8.encode(jsonEncode(data.toJson())));
   if (bytes.length > portableLimit - 4096)
     throw const FormatException('Backup exceeds 30MB');
   if (!zip) return bytes;
+  final archive = Archive();
+  final listed = <Map<String, dynamic>>[];
+  for (final r in state.receipts) {
+    final file = receipts[r.id];
+    if (file == null || !r.matches(file))
+      throw const FormatException(
+        'A receipt file is missing or changed; nothing was exported / Thiếu hoặc hỏng file hóa đơn; chưa xuất gì',
+      );
+    listed.add({
+      'id': r.id,
+      'path': 'receipts/${r.id}',
+      'size': r.size,
+      'sha256': r.sha,
+    });
+  }
   final manifest = Uint8List.fromList(
     utf8.encode(
       jsonEncode({
         'app': 'handy-spend',
-        'version': 1,
+        'version': schemaVersion,
         'files': {'data.json': sha256.convert(bytes).toString()},
-        'attachments': <String>[],
+        'attachments': listed,
       }),
     ),
   );
-  return Uint8List.fromList(
-    ZipEncoder().encode(
-      Archive()
-        ..addFile(ArchiveFile('manifest.json', manifest.length, manifest))
-        ..addFile(ArchiveFile('data.json', bytes.length, bytes)),
-    ),
-  );
+  archive
+    ..addFile(ArchiveFile('manifest.json', manifest.length, manifest))
+    ..addFile(ArchiveFile('data.json', bytes.length, bytes));
+  for (final r in state.receipts) {
+    final file = receipts[r.id]!;
+    archive.addFile(ArchiveFile('receipts/${r.id}', file.length, file));
+  }
+  final out = Uint8List.fromList(ZipEncoder().encode(archive));
+  if (out.length > backupLimit)
+    throw const FormatException('Backup exceeds 85MB');
+  return out;
 }
 
-SpendState restore(Uint8List bytes, {bool zip = true}) {
-  if (bytes.length > portableLimit)
-    throw const FormatException('Backup exceeds 30MB');
-  var data = bytes;
-  if (zip) {
-    final files = decodePortableZip(
-      bytes,
-      isAllowedPath: (p) => {'manifest.json', 'data.json'}.contains(p),
-      maxEntries: 2,
-      maxEntryBytes: portableLimit - 4096,
-    );
-    if (files.length != 2) throw const FormatException('Missing backup files');
-    final manifest = _map(jsonDecode(utf8.decode(files['manifest.json']!)));
-    if (manifest['app'] != 'handy-spend' ||
-        manifest['version'] != 1 ||
-        _map(manifest['files'])['data.json'] !=
-            sha256.convert(files['data.json']!).toString())
-      throw const FormatException('Backup checksum/schema mismatch');
-    data = files['data.json']!;
-  }
-  return SpendState.fromJson(_map(jsonDecode(utf8.decode(data))));
+/// A backup read in full and checked: the ledger and the bytes of every
+/// receipt it lists.
+class RestoredBackup {
+  final SpendState state;
+  final Map<String, Uint8List> receipts;
+  const RestoredBackup(this.state, this.receipts);
 }
+
+/// Reads a backup (schema 1 or 2). Every receipt the ledger lists must be
+/// in the ZIP with the listed size, checksum and file signature, and the
+/// ZIP holds nothing else; otherwise the whole backup is refused.
+RestoredBackup readBackup(Uint8List bytes, {bool zip = true}) {
+  if (bytes.length > (zip ? backupLimit : portableLimit))
+    throw const FormatException('Backup exceeds its size limit');
+  if (!zip) {
+    final state = SpendState.fromJson(_map(jsonDecode(utf8.decode(bytes))));
+    if (state.receipts.isNotEmpty)
+      throw const FormatException(
+        'Receipts need the ZIP backup / Hóa đơn cần bản sao lưu ZIP',
+      );
+    return RestoredBackup(state, const {});
+  }
+  final receiptPath = RegExp(r'^receipts/[A-Za-z0-9-]{1,64}$');
+  final files = _readZip(
+    bytes,
+    allowed: (p) =>
+        p == 'manifest.json' || p == 'data.json' || receiptPath.hasMatch(p),
+    maxEntries: receiptCountLimit + 2,
+    maxEntryBytes: portableLimit - 4096,
+    maxTotalBytes: backupLimit,
+  );
+  final manifestBytes = files['manifest.json'], data = files['data.json'];
+  if (manifestBytes == null || data == null)
+    throw const FormatException('Missing backup files');
+  final manifest = _map(jsonDecode(utf8.decode(manifestBytes)));
+  if (manifest['app'] != 'handy-spend' ||
+      ![1, schemaVersion].contains(manifest['version']) ||
+      _map(manifest['files'])['data.json'] != sha256.convert(data).toString())
+    throw const FormatException('Backup checksum/schema mismatch');
+  final state = SpendState.fromJson(_map(jsonDecode(utf8.decode(data))));
+  final listed = manifest['attachments'];
+  if (listed is! List || listed.length != state.receipts.length)
+    throw const FormatException('Backup receipt list mismatch');
+  final byId = {for (final r in state.receipts) r.id: r},
+      receipts = <String, Uint8List>{};
+  for (final raw in listed) {
+    final a = _map(raw), r = byId[a['id']];
+    final file = files['receipts/${a['id']}'];
+    if (r == null ||
+        a['path'] != 'receipts/${r.id}' ||
+        a['size'] != r.size ||
+        a['sha256'] != r.sha ||
+        file == null ||
+        !r.matches(file) ||
+        receipts.containsKey(r.id))
+      throw const FormatException(
+        'A receipt in the backup is missing or damaged; nothing was restored / Hóa đơn trong bản sao lưu bị thiếu hoặc hỏng; chưa khôi phục gì',
+      );
+    receipts[r.id] = file;
+  }
+  if (files.length != receipts.length + 2)
+    throw const FormatException('Unlisted files in backup');
+  return RestoredBackup(state, receipts);
+}
+
+/// The ledger of a backup. Use [readBackup] when it may hold receipts.
+SpendState restore(Uint8List bytes, {bool zip = true}) =>
+    readBackup(bytes, zip: zip).state;
 
 String cell(String value) => '"${value.replaceAll('"', '""')}"';
 String safeCell(String value) =>
@@ -672,6 +751,12 @@ SpendState undoImport(SpendState current, String batchId) {
             sha256.convert(utf8.encode(jsonEncode(e.toJson()))).toString(),
       ))
     throw const FormatException('Batch changed; undo refused');
+  final ids = {for (final e in entries) e.id};
+  if (current.receipts.any((r) => ids.contains(r.entry)) ||
+      current.splits.any((x) => ids.contains(x.entry)))
+    throw const FormatException(
+      'Receipts or a split were added to these rows; undo refused / Đã gắn hóa đơn hoặc chia tiền vào các dòng này; không hoàn tác được',
+    );
   return current.copy({
     'entries': current.entries
         .where((e) => e.batch != batchId)

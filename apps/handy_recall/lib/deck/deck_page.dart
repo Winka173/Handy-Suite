@@ -1,5 +1,6 @@
 import 'package:handy_recall/handy_recall.dart';
 import 'package:handy_ui/kit.dart';
+import '../import/paste_page.dart';
 import '../scope.dart';
 import '../study/schedule.dart';
 import 'card_row.dart';
@@ -61,10 +62,16 @@ class _DeckPageState extends State<DeckPage> {
             HandyMenuButton(
               items: [
                 HandyMenuItem(
-                  Icons.edit_outlined,
-                  tr(context, 'Rename', 'Đổi tên'),
+                  Icons.tune,
+                  tr(context, 'Deck settings', 'Cài đặt bộ thẻ'),
                   () => scope.editDeck(context, deck),
                   key: const Key('deck-rename'),
+                ),
+                HandyMenuItem(
+                  Icons.content_paste,
+                  tr(context, 'Paste notes', 'Dán ghi chú'),
+                  () => openPaste(context, scope, deck),
+                  key: const Key('deck-paste'),
                 ),
                 HandyMenuItem(
                   Icons.upload_file_outlined,

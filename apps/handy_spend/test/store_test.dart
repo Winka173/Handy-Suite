@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'dart:convert';
+import 'dart:typed_data';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:handy_spend_engine/handy_spend_engine.dart';
 import 'package:handy_spend/data/store_native.dart';
@@ -98,7 +99,7 @@ while True: time.sleep(1)
       expect(await store.integrity(), 'ok');
       final db = sqlite3.open(path);
       try {
-        expect(db.userVersion, 1);
+        expect(db.userVersion, 2);
         expect(db.select('SELECT COUNT(*) AS n FROM entries').single['n'], 5);
         expect(db.select('PRAGMA foreign_key_check'), isEmpty);
       } finally {
@@ -154,7 +155,7 @@ while True: time.sleep(1)
   );
   test('unknown future schema and corrupt database are preserved', () async {
     final db = sqlite3.open(path);
-    db.userVersion = 2;
+    db.userVersion = 3;
     db.close();
     final before = await File(path).readAsBytes();
     await expectLater(store.read(), throwsA(anything));
@@ -192,4 +193,80 @@ while True: time.sleep(1)
     },
     timeout: const Timeout(Duration(minutes: 3)),
   );
+
+  test(
+    'a schema 1 database gains the receipts table and keeps every row',
+    () async {
+      final v1 = sample(3);
+      final db = sqlite3.open(path);
+      db.execute(
+        'CREATE TABLE accounts(id TEXT PRIMARY KEY,payload TEXT NOT NULL); CREATE TABLE entries(id TEXT PRIMARY KEY,account TEXT NOT NULL REFERENCES accounts(id),destination TEXT REFERENCES accounts(id),date TEXT NOT NULL,kind TEXT NOT NULL,status TEXT NOT NULL,amount TEXT NOT NULL,payload TEXT NOT NULL); CREATE TABLE state(id INTEGER PRIMARY KEY CHECK(id=1),revision INTEGER NOT NULL,payload TEXT NOT NULL); PRAGMA user_version=1;',
+      );
+      for (final a in v1.accounts) {
+        db.execute('INSERT INTO accounts VALUES(?,?)', [
+          a.id,
+          jsonEncode(a.toJson()),
+        ]);
+      }
+      for (final e in v1.entries) {
+        db.execute('INSERT INTO entries VALUES(?,?,?,?,?,?,?,?)', [
+          e.id,
+          e.account,
+          null,
+          e.when,
+          e.kind,
+          e.status,
+          '${e.amount}',
+          jsonEncode(e.toJson()),
+        ]);
+      }
+      final meta = v1.toJson()
+        ..remove('accounts')
+        ..remove('entries')
+        ..remove('receipts')
+        ..remove('people')
+        ..remove('splits')
+        ..['version'] = 1;
+      db.execute('INSERT INTO state VALUES(1,1,?)', [jsonEncode(meta)]);
+      db.close();
+      final read = await store.read();
+      expect(
+        read.entries.map((e) => e.toJson()),
+        v1.entries.map((e) => e.toJson()),
+      );
+      expect(read.revision, 1);
+      final check = sqlite3.open(path);
+      try {
+        expect(check.userVersion, 2);
+        expect(
+          check.select('SELECT COUNT(*) AS n FROM receipts').single['n'],
+          0,
+        );
+      } finally {
+        check.close();
+      }
+      // The next write stores schema 2 and a receipt with it.
+      final bytes = Uint8List.fromList([0xFF, 0xD8, 0xFF, 1, 2, 3]);
+      final r = Receipt.of('e0', 'a.jpg', bytes);
+      await store.putReceipt(r.id, bytes);
+      await store.commit(
+        attachReceipts(read, [r]).copy({'revision': 2}),
+        expectedRevision: 1,
+      );
+      final again = await NativeSpendStore(path).read();
+      expect(again.toJson()['version'], 2);
+      expect(again.receipts.single.toJson(), r.toJson());
+      expect(await store.readReceipt(r.id), bytes);
+      expect(await store.integrity(), 'ok');
+    },
+  );
+  test('receipt files: unlisted ones are swept, listed ones kept', () async {
+    await store.read();
+    final a = Uint8List.fromList([1, 2]), b = Uint8List.fromList([3]);
+    await store.putReceipt('a', a);
+    await store.putReceipt('b', b);
+    expect(await store.sweepReceipts({'a'}), 1);
+    expect(await store.readReceipt('a'), a);
+    expect(await store.readReceipt('b'), isNull);
+  });
 }

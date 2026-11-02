@@ -1,3 +1,4 @@
+import 'dart:typed_data';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:handy_spend_engine/handy_spend_engine.dart';
 import 'package:handy_spend/controller.dart';
@@ -18,6 +19,26 @@ class TestSpendStore implements SpendStore {
 
   @override
   Future<String> integrity() async => 'ok';
+
+  final files = <String, Uint8List>{};
+  bool failFiles = false;
+  @override
+  Future<void> putReceipt(String id, Uint8List bytes) async {
+    if (failFiles) throw StateError('test storage full');
+    files[id] = Uint8List.fromList(bytes);
+  }
+
+  @override
+  Future<Uint8List?> readReceipt(String id) async => files[id];
+
+  @override
+  Future<int> sweepReceipts(Set<String> keep) async {
+    final gone = files.keys.where((k) => !keep.contains(k)).toList();
+    for (final k in gone) {
+      files.remove(k);
+    }
+    return gone.length;
+  }
 }
 
 void main() {

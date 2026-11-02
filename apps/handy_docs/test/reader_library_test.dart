@@ -162,9 +162,9 @@ void main() {
       ReaderDocument.parse(
         ReaderDocument(
           id: 'doc-1',
-          name: 'plan.md',
-          kind: 'markdown',
-          source: '# Plan\n\nStep one',
+          name: 'plan.txt',
+          kind: 'text',
+          source: 'Plan\n\nStep one',
           createdAt: '2026-10-30T09:00:00.000Z',
           lastOpenedAt: '2026-10-30T09:00:00.000Z',
         ).toJson(),
@@ -173,7 +173,7 @@ void main() {
     await read(tester, docs: docs, size: const Size(1280, 800));
     expect(find.text('Pick a document to read'), findsOneWidget);
     await tapKey(tester, 'reader-open-doc-1');
-    expect(find.text('Step one'), findsOneWidget);
+    expect(content(tester), 'Plan\n\nStep one');
     expect(find.byKey(const Key('reader-open-doc-1')), findsOneWidget);
   });
 }

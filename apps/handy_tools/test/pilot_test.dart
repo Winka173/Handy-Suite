@@ -223,7 +223,7 @@ void main() {
       'rate': '12',
       'months': '24',
     });
-    expect(decodeDraft(specById['uppercase']!, 'a,b'), {'text': 'a,b'});
+    expect(decodeDraft(specById['case']!, 'a,b'), {'text': 'a,b'});
   });
 
   testWidgets(
@@ -313,6 +313,8 @@ void main() {
     await tester.sendKeyUpEvent(LogicalKeyboardKey.controlLeft);
     await tester.pumpAndSettle();
     expect(find.byKey(const Key('catalog-search')), findsOneWidget);
+    await tester.enterText(find.byKey(const Key('catalog-search')), 'loan');
+    await tester.pumpAndSettle();
     await tester.tap(find.byKey(const Key('catalog-loan')));
     await tester.pumpAndSettle();
     await tester.sendKeyEvent(LogicalKeyboardKey.escape);
@@ -323,7 +325,12 @@ void main() {
   testWidgets('every tool lays out at 320px without overflow', (tester) async {
     await start(tester, size: const Size(320, 700));
     final nav = Navigator.of(tester.element(find.byType(BenchPage)));
-    for (final id in [...specs.map((s) => s.id), 'qr', 'password']) {
+    for (final id in [
+      ...specs.map((s) => s.id),
+      'qr',
+      'password',
+      'subtitles',
+    ]) {
       nav.pushNamed('/tool/$id');
       await tester.pumpAndSettle();
       expect(tester.takeException(), isNull, reason: id);

@@ -4,22 +4,28 @@ String exportCardsCsv(List<RecallCard> cards) {
   if (cards.length > recallCardLimit)
     throw const FormatException('Too many CSV cards');
   String cell(String text) => '"${text.replaceAll('"', '""')}"';
+  // One row per note: a reverse card or another cloze of the same note would
+  // only repeat the row, and importing the row makes them again.
+  final seen = <String>{};
   final source = [
     'front,back',
-    ...cards.map((c) {
-      final valid = RecallCard.fromJson(c.toJson());
-      return '${cell(valid.front)},${cell(valid.back)}';
-    }),
+    for (final c in cards)
+      if (seen.add(noteOf(c)))
+        '${cell(RecallCard.fromJson(c.toJson()).front)},${cell(c.back)}',
   ].join('\r\n');
   _backupSize(source);
   return source;
 }
 
+/// Cards for every row of a front,back CSV. A front with clozes makes one
+/// card per cloze number; otherwise one card, and with [reverse] its reverse
+/// card too. Ids are `prefix_row`, its siblings `prefix_row_variant`.
 List<RecallCard> importCardsCsv(
   String source,
   String deckId,
   String idPrefix, {
   String? now,
+  bool reverse = false,
 }) {
   _backupSize(source);
   _id(deckId);
@@ -81,16 +87,29 @@ List<RecallCard> importCardsCsv(
       header[0].trim().toLowerCase() != 'front' ||
       header[1].trim().toLowerCase() != 'back')
     throw const FormatException('CSV header must be front,back');
-  return List.generate(rows.length, (i) {
+  final cards = <RecallCard>[];
+  for (var i = 0; i < rows.length; i++) {
     final cells = rows[i];
     if (cells.length != 2)
       throw const FormatException('CSV requires front and back columns');
-    return createCard(
-      id: '${idPrefix}_${i + 1}',
-      deckId: deckId,
-      front: cells[0],
-      back: cells[1],
-      now: at,
-    );
-  });
+    final id = '${idPrefix}_${i + 1}';
+    final variants = noteVariants(cells[0], reverse: reverse);
+    for (final (n, v) in variants.indexed) {
+      cards.add(
+        createCard(
+          id: n == 0 ? id : '${id}_$v',
+          deckId: deckId,
+          front: cells[0],
+          back: cells[1],
+          now: at,
+          note: variants.length > 1 ? id : '',
+          cloze: v.startsWith('c') ? int.parse(v.substring(1)) : 0,
+          reversed: v == 'r',
+        ),
+      );
+    }
+    if (cards.length > recallCardLimit)
+      throw const FormatException('Too many CSV cards');
+  }
+  return cards;
 }

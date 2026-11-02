@@ -5,8 +5,17 @@ import 'package:archive/archive.dart';
 import 'package:crypto/crypto.dart';
 part 'src/portable.dart';
 part 'src/labels.dart';
+part 'src/value.dart';
+part 'src/csv.dart';
+part 'src/runout.dart';
 
 const keepAssetLimit = 5000, keepBoxLimit = 500, keepBackupBytes = 8000000;
+
+/// Version 2 adds an optional purchase price and its currency to each item.
+/// Version 3 adds the days an item was bought again (`restocks`), which
+/// the run-out estimate learns from. Versions 1 and 2 still load.
+const keepStateVersion = 3;
+const keepStateVersions = [1, 2, keepStateVersion];
 String _now() => DateTime.fromMillisecondsSinceEpoch(
   DateTime.now().millisecondsSinceEpoch,
   isUtc: true,
@@ -111,11 +120,22 @@ class InventoryAsset {
           'borrower': _text(a['borrower'], 200),
           'lentOn': _date(a['lentOn']),
           'returnDue': _date(a['returnDue']),
+          'price': _price(a['price'] ?? ''),
+          'currency': _currency(a['currency'] ?? ''),
           'boxId': a['boxId'] == '' ? '' : _id(a['boxId']),
           'photoUri': _localUri(a['photoUri'] ?? ''),
           'createdAt': _instant(a['createdAt']),
           'updatedAt': _instant(a['updatedAt']),
         };
+    if (a.containsKey('restocks')) {
+      final values = a['restocks'];
+      if (values is! List || values.length > 120)
+        throw const FormatException('At most 120 restock days per item');
+      r['restocks'] = List<String>.unmodifiable(
+        {for (final d in values) _date(d)}.where((d) => d.isNotEmpty).toList()
+          ..sort(),
+      );
+    }
     if (a.containsKey('receipts')) {
       final values = a['receipts'];
       if (values is! List || values.length > 20)
@@ -137,6 +157,11 @@ class InventoryAsset {
     if ((r['borrower'] == '' && (r['lentOn'] != '' || r['returnDue'] != '')) ||
         (r['borrower'] != '' && r['lentOn'] == ''))
       throw const FormatException('Loan requires borrower and lending date');
+    if ((r['price'] == '') != (r['currency'] == ''))
+      throw const FormatException('A price needs its currency');
+    if (r['price'] != '' &&
+        _decimals(r['price'] as String) > currencyDigits(r['currency']))
+      throw const FormatException('Too many decimals for this currency');
     if ((r['updatedAt'] as String).compareTo(r['createdAt'] as String) < 0)
       throw const FormatException('Updated time cannot precede creation');
     return InventoryAsset._(r);
@@ -153,9 +178,19 @@ class InventoryAsset {
   String get lentOn => _data['lentOn'];
   String get returnDue => _data['returnDue'];
   String get boxId => _data['boxId'];
+
+  /// What was paid, as a plain decimal ("4500000", "129.9"); empty when
+  /// unknown. Never summed across [currency].
+  String get price => _data['price'];
+
+  /// ISO 4217 code of [price] ("VND", "USD"); empty when there is no price.
+  String get currency => _data['currency'];
   String get photoUri => _data['photoUri'];
   String get createdAt => _data['createdAt'];
   String get updatedAt => _data['updatedAt'];
+
+  /// Days the item was bought again, oldest first.
+  List<String> get restocks => (_data['restocks'] as List<String>?) ?? const [];
   List<InventoryReceipt> get receipts =>
       (_data['receipts'] as List<InventoryReceipt>?) ?? const [];
   Map<String, dynamic> toJson() => {
@@ -203,7 +238,7 @@ class KeepState {
   }) : assets = List.unmodifiable(assets),
        boxes = List.unmodifiable(boxes);
   Map<String, Object?> toJson() => {
-    'version': 1,
+    'version': keepStateVersion,
     'assets': assets.map((a) => a.toJson()).toList(),
     'boxes': boxes.map((b) => b.toJson()).toList(),
   };
@@ -212,7 +247,7 @@ class KeepState {
 KeepState emptyKeepState() => KeepState();
 KeepState validateKeepState(Object? value) {
   final r = _record(value), a = r['assets'], b = r['boxes'];
-  if (r['version'] != 1 ||
+  if (!keepStateVersions.contains(r['version']) ||
       a is! List ||
       b is! List ||
       a.length > keepAssetLimit ||
@@ -250,6 +285,8 @@ InventoryAsset createAsset({
     'borrower': '',
     'lentOn': '',
     'returnDue': '',
+    'price': '',
+    'currency': '',
     'boxId': '',
     'photoUri': '',
     'createdAt': at,
@@ -260,7 +297,7 @@ InventoryAsset createAsset({
 
 KeepState saveAsset(KeepState state, InventoryAsset asset) =>
     validateKeepState({
-      'version': 1,
+      'version': keepStateVersion,
       'assets': state.assets.any((a) => a.id == asset.id)
           ? state.assets
                 .map((a) => a.id == asset.id ? asset.toJson() : a.toJson())
@@ -268,8 +305,22 @@ KeepState saveAsset(KeepState state, InventoryAsset asset) =>
           : [...state.assets.map((a) => a.toJson()), asset.toJson()],
       'boxes': state.boxes.map((b) => b.toJson()).toList(),
     });
+
+/// Adds or replaces several items in one change: all of them, or none.
+KeepState saveAssets(KeepState state, Iterable<InventoryAsset> assets) {
+  final incoming = {for (final a in assets) a.id: a};
+  return validateKeepState({
+    'version': keepStateVersion,
+    'assets': [
+      for (final a in state.assets) (incoming.remove(a.id) ?? a).toJson(),
+      for (final a in incoming.values) a.toJson(),
+    ],
+    'boxes': state.boxes.map((b) => b.toJson()).toList(),
+  });
+}
+
 KeepState removeAsset(KeepState state, String id) => validateKeepState({
-  'version': 1,
+  'version': keepStateVersion,
   'assets': state.assets
       .where((a) => a.id != id)
       .map((a) => a.toJson())
@@ -277,7 +328,7 @@ KeepState removeAsset(KeepState state, String id) => validateKeepState({
   'boxes': state.boxes.map((b) => b.toJson()).toList(),
 });
 KeepState saveBox(KeepState state, InventoryBox box) => validateKeepState({
-  'version': 1,
+  'version': keepStateVersion,
   'assets': state.assets.map((a) => a.toJson()).toList(),
   'boxes': state.boxes.any((b) => b.id == box.id)
       ? state.boxes
@@ -286,7 +337,7 @@ KeepState saveBox(KeepState state, InventoryBox box) => validateKeepState({
       : [...state.boxes.map((b) => b.toJson()), box.toJson()],
 });
 KeepState removeBox(KeepState state, String id) => validateKeepState({
-  'version': 1,
+  'version': keepStateVersion,
   'assets': state.assets
       .map(
         (a) => a.boxId == id ? a.copyWith({'boxId': ''}).toJson() : a.toJson(),

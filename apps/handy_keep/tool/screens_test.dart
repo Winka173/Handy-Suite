@@ -5,6 +5,7 @@ import 'dart:ui' as ui;
 import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:handy_files/handy_files.dart';
 import 'package:handy_inventory/handy_inventory.dart';
 import 'package:handy_keep/app.dart';
 import 'package:handy_keep/inventory/keep_store.dart' show today;
@@ -97,23 +98,38 @@ KeepState household() {
       s = saveAsset(s, createAsset(id: 'i${++n}', name: name, fields: f));
   add('Nồi cơm điện', {
     'boxId': 'b1',
+    'price': '1890000',
+    'currency': 'VND',
     'purchasedOn': day(-400),
     'warrantyUntil': day(330),
   });
-  add('Bộ dao Nhật', {'boxId': 'b1'});
-  add('Máy xay sinh tố', {'boxId': 'b1'});
+  add('Bộ dao Nhật', {'boxId': 'b1', 'price': '2400000', 'currency': 'VND'});
+  add('Máy xay sinh tố', {'boxId': 'b1', 'price': '990000', 'currency': 'VND'});
   add('Sách nấu ăn', {'boxId': 'b2'});
   add('Lò vi sóng', {
     'location': 'Tủ bếp',
     'purchasedOn': day(-718),
     'warrantyUntil': day(12),
     'serial': 'MW-2291-0457',
+    'price': '2790000',
+    'currency': 'VND',
   });
-  add('Máy lọc nước', {'location': 'Tủ bếp', 'maintenanceDue': day(20)});
-  add('Loa bluetooth', {'location': 'Kệ tivi'});
+  add('Máy lọc nước', {
+    'location': 'Tủ bếp',
+    'maintenanceDue': day(20),
+    'price': '6500000',
+    'currency': 'VND',
+  });
+  add('Loa bluetooth', {
+    'location': 'Kệ tivi',
+    'price': '1200000',
+    'currency': 'VND',
+  });
   add('Ổ cứng di động 2 TB', {
     'location': 'Ngăn kéo bàn làm việc',
     'serial': 'WX41A82',
+    'price': '89.99',
+    'currency': 'USD',
   });
   add('Thang nhôm', {'location': 'Gác xép'});
   add('Máy khoan pin', {
@@ -122,12 +138,16 @@ KeepState household() {
     'lentOn': day(-19),
     'returnDue': day(-5),
     'notes': 'Kèm hai viên pin và hộp mũi khoan.',
+    'price': '1650000',
+    'currency': 'VND',
   });
   add('Lều cắm trại', {
     'location': 'Gác xép',
     'borrower': 'Minh',
     'lentOn': day(-3),
     'returnDue': day(9),
+    'price': '1100000',
+    'currency': 'VND',
   });
   add('Thước dây');
   return s;
@@ -138,6 +158,7 @@ Future<void> boot(
   Size size, {
   String theme = 'light',
   KeepState? state,
+  Files? files,
 }) async {
   t.view.physicalSize = size;
   t.view.devicePixelRatio = 1;
@@ -148,7 +169,7 @@ Future<void> boot(
       key: _root,
       child: KeepApp(
         documents: Store()..text = serializeKeepState(state ?? household()),
-        files: Files(),
+        files: files ?? Files(),
         camera: Camera(),
         preferences: Preferences()
           ..value = HandyPreferences(locale: 'vi', theme: theme),
@@ -173,6 +194,10 @@ void main() {
       '$ui/BricolageGrotesque-Display.ttf',
     ]);
     final sdk = Platform.environment['FLUTTER_ROOT']!;
+    await _font('BeVietnamPro', [
+      for (final f in Directory('fonts').listSync())
+        if (f.path.endsWith('.ttf')) f.path,
+    ]);
     await _font('MaterialIcons', [
       '$sdk/bin/cache/artifacts/material_fonts/materialicons-regular.otf',
     ]);
@@ -267,6 +292,63 @@ void main() {
       await t.tap(find.byKey(const Key('filter-boxes')));
       await t.pump();
     });
+  });
+  testWidgets('phone list menu', (t) async {
+    await boot(t, const Size(390, 844));
+    await tapKey(t, 'keep-list-menu');
+    await shot(t, 'phone-12-menu');
+  });
+  testWidgets('phone lent value', (t) async {
+    await boot(t, const Size(390, 844));
+    await tapKey(t, 'filter-lent');
+    await shot(t, 'phone-13-lent');
+  });
+  testWidgets('phone batch start', (t) async {
+    await boot(t, const Size(390, 844));
+    await tapKey(t, 'keep-list-menu');
+    await tapKey(t, 'batch-add');
+    await shot(t, 'phone-14-batch-start');
+  });
+  for (final (label, size) in [
+    ('phone', const Size(390, 844)),
+    ('narrow', const Size(320, 640)),
+    ('desktop', const Size(1440, 900)),
+  ]) {
+    testWidgets('$label batch review', (t) async {
+      final files = Files()
+        ..nextMany = [
+          ImportedBytes('IMG_2041.jpg', pngBytes),
+          ImportedBytes('IMG_2042.jpg', pngBytes),
+          ImportedBytes('IMG_2043.heic', Uint8List.fromList([0, 0, 0, 24])),
+          ImportedBytes('IMG_2044.jpg', pngBytes),
+        ];
+      await boot(t, size, files: files);
+      await tapKey(t, 'filter-boxes');
+      await tapKey(t, 'box-menu-b2');
+      await tapKey(t, 'box-batch-add');
+      await tapKey(t, 'batch-files');
+      await t.enterText(
+        find.byKey(const Key('batch-name-0')),
+        'Từ điển Anh Việt',
+      );
+      await t.enterText(find.byKey(const Key('batch-name-1')), 'Truyện Kiều');
+      await tapKey(t, 'batch-save');
+      FocusManager.instance.primaryFocus?.unfocus();
+      await t.pumpAndSettle();
+      await shot(t, '$label-15-batch-review');
+    });
+  }
+  testWidgets('phone editor price', (t) async {
+    await boot(t, const Size(390, 844));
+    await tapKey(t, 'item-i5');
+    await tapKey(t, 'item-edit');
+    await reveal(t, 'item-price');
+    await shot(t, 'phone-16-editor-price');
+  });
+  testWidgets('narrow boxes', (t) async {
+    await boot(t, const Size(320, 640));
+    await tapKey(t, 'filter-boxes');
+    await shot(t, 'narrow-17-boxes');
   });
   testWidgets('phone dark', (t) async {
     await boot(t, const Size(390, 844), theme: 'dark');

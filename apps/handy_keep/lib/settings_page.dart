@@ -28,6 +28,8 @@ class KeepSettingsPage extends StatelessWidget {
     onLocale: (v) => save(read().copyWith(locale: v)),
     sections: [
       RemindersSection(reminders: reminders),
+      if (scope.autoBackup != null)
+        HandyAutoBackupSection(backup: scope.autoBackup!),
       DataSection(scope: scope),
     ],
     onExportSettings: (context) async {

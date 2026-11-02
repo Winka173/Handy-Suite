@@ -140,7 +140,9 @@ Rational _sqrt(Rational value) {
       : Rational(root * ten.pow(-shift));
 }
 
-String calculate(String source) {
+String calculate(String source) => _format(_calculate(source));
+
+Rational _calculate(String source) {
   _bounded(source, 2000);
   final matches = RegExp(
     r'(?:\d+(?:\.\d*)?|\.\d+)(?:e[+-]?\d+)?|[()+\-*/%^]|sqrt|abs|sin|cos|tan|log|pi|e',
@@ -221,7 +223,7 @@ String calculate(String source) {
   final result = expression(0);
   if (cursor != tokens.length)
     throw const FormatException('Invalid expression');
-  return _format(result);
+  return result;
 }
 
 const unitGroups = <String, List<String>>{

@@ -10,6 +10,7 @@ import 'package:handy_media/annotation_painter.dart';
 import 'package:handy_media/annotation_canvas.dart';
 import 'package:handy_media_engine/handy_media_engine.dart';
 import 'package:handy_ui/kit.dart';
+import 'package:image/image.dart' as img;
 import 'quick_tools_test.dart' show Files, png;
 import 'capture_test.dart' show bundle;
 
@@ -346,4 +347,65 @@ void main() {
       expect(input.project.steps.length, 2);
     },
   );
+  testWidgets('GIF export: options, review, then a frame per step with '
+      'masks and caption bar painted in', (tester) async {
+    final input = guideBundle(), files = GuideFiles();
+    var commits = 0;
+    await tester.pumpWidget(
+      MaterialApp(
+        theme: kitTheme,
+        home: CaptureEditor(
+          initial: input,
+          files: files,
+          onCommit: (_) async {
+            commits++;
+          },
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+    // Dismissing the options makes nothing.
+    await guidePress(tester, find.byKey(const Key('guide-export-options')));
+    await guidePress(tester, find.byKey(const Key('guide-export-gif')));
+    expect(find.byKey(const Key('gif-make')), findsOneWidget);
+    await tester.binding.handlePopRoute();
+    await tester.pumpAndSettle();
+    expect(find.text('Review before sharing'), findsNothing);
+    expect(files.outputs, isEmpty);
+
+    await guidePress(tester, find.byKey(const Key('guide-export-options')));
+    await guidePress(tester, find.byKey(const Key('guide-export-gif')));
+    expect(
+      find.text('2 frames · 100 × 144 px · 4 s, then it starts again'),
+      findsOneWidget,
+    );
+    await tester.ensureVisible(find.text('1 s'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('1 s'));
+    await tester.pumpAndSettle();
+    expect(
+      find.text('2 frames · 100 × 144 px · 2 s, then it starts again'),
+      findsOneWidget,
+    );
+    await tester.ensureVisible(find.byKey(const Key('gif-make')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('gif-make')));
+    await tester.pumpAndSettle();
+    expect(find.text('Review before sharing'), findsOneWidget);
+    await tester.tap(find.byKey(const Key('guide-review-confirm')));
+    await guideSettle(tester);
+    final gif = img.decodeGif(files.outputs['handy-media-guide.gif']!)!;
+    expect(gif.numFrames, 2);
+    expect((gif.width, gif.height), (100, 144));
+    final first = gif.frames.first;
+    expect(first.frameDuration, 1000);
+    // The opaque mask over 20%-60% of step 1 is painted in.
+    expect([first.getPixel(40, 40).r, first.getPixel(40, 40).g], [0, 0]);
+    // Step 2 has no mask: white there.
+    expect(gif.frames[1].getPixel(40, 40).r, greaterThan(240));
+    // The caption bar is near-black at the frame's foot.
+    expect(first.getPixel(97, 141).r, lessThan(60));
+    expect(commits, 0);
+    expect(input.project.steps.first.annotations.single.kind, 'redact');
+  });
 }

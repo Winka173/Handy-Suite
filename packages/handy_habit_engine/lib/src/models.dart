@@ -437,6 +437,7 @@ class HabitState {
   final List<HabitEvent> events;
   final List<Routine> routines;
   final List<RoutineSession> sessions;
+  final List<Pause> pauses;
   final Map<String, dynamic> settings;
   HabitState({
     this.revision = 0,
@@ -444,8 +445,10 @@ class HabitState {
     List<HabitEvent> events = const [],
     List<Routine> routines = const [],
     List<RoutineSession> sessions = const [],
+    List<Pause> pauses = const [],
     Json settings = const {},
   }) : habits = List.unmodifiable(habits),
+       pauses = List.unmodifiable(pauses),
        events = List.unmodifiable(events),
        routines = List.unmodifiable(routines),
        sessions = List.unmodifiable(sessions),
@@ -455,17 +458,21 @@ class HabitState {
   int get backfill => settings['backfill'] as int? ?? 90;
   Json toJson() => {
     'app': 'handy-habit',
-    'schema': 1,
+    'schema': habitSchema,
     'revision': revision,
     'habits': habits.map((e) => e.toJson()).toList(),
     'events': events.map((e) => e.toJson()).toList(),
     'routines': routines.map((e) => e.toJson()).toList(),
     'sessions': sessions.map((e) => e.toJson()).toList(),
+    'pauses': pauses.map((e) => e.toJson()).toList(),
     'settings': settings,
   };
   HabitState copy(Json c) => HabitState.fromJson({...toJson(), ...c});
   factory HabitState.fromJson(Json j) {
-    if (j['app'] != 'handy-habit' || j['schema'] != 1)
+    // Schema 1 had no pauses; it reads as an empty list (migration).
+    if (j['app'] != 'handy-habit' ||
+        !(j['schema'] == 1 && j['pauses'] == null ||
+            j['schema'] == habitSchema))
       throw const FormatException('Unsupported Habit backup/schema');
     final s = HabitState(
       revision: integer(j['revision']),
@@ -473,6 +480,7 @@ class HabitState {
       events: objects(j['events']).map(HabitEvent.fromJson).toList(),
       routines: objects(j['routines']).map(Routine.fromJson).toList(),
       sessions: objects(j['sessions']).map(RoutineSession.fromJson).toList(),
+      pauses: objects(j['pauses'] ?? []).map(Pause.fromJson).toList(),
       settings: Map<String, dynamic>.from(j['settings'] as Map),
     );
     s.validate();
@@ -486,6 +494,8 @@ class HabitState {
     for (final key in ['reportFrom', 'reportUntil']) {
       if (settings[key] != null) date(text(settings[key]));
     }
+    if (settings['runNotice'] != null && settings['runNotice'] is! bool)
+      throw const FormatException('Invalid preferences');
     if (settings['quietStart'] != null)
       minuteOfDay(text(settings['quietStart']));
     if (settings['quietEnd'] != null) minuteOfDay(text(settings['quietEnd']));
@@ -496,6 +506,7 @@ class HabitState {
       events.map((e) => e.id),
       routines.map((e) => e.id),
       sessions.map((e) => e.id),
+      pauses.map((e) => e.id),
     ]) {
       if (list.any((id) => id.isEmpty) || list.toSet().length != list.length)
         throw const FormatException('Duplicate/empty ID');
@@ -538,6 +549,12 @@ class HabitState {
         throw const FormatException(
           'Binary progress cannot exceed one completion',
         );
+    }
+    if (pauses.length > maxPauses)
+      throw const FormatException('At most 1000 pauses');
+    for (final p in pauses) {
+      if (p.habits.any((h) => !byId.containsKey(h)))
+        throw const FormatException('Unknown habit in pause');
     }
     for (final r in routines) {
       for (final step in r.steps) {

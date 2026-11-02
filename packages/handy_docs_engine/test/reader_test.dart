@@ -156,4 +156,46 @@ void main() {
       expect(() => readableHtml('<div>' * 10001), throwsFormatException);
     },
   );
+
+  test(
+    'read-only documents become editable Markdown copies, source intact',
+    () {
+      ReaderDocument doc(String name, String source) => ReaderDocument(
+        id: 'd',
+        name: name,
+        kind: readerKind(name),
+        source: source,
+        createdAt: '2026-11-02T09:00:00.000Z',
+        lastOpenedAt: '2026-11-02T09:00:00.000Z',
+      );
+      expect(isMarkdownName('Ghi chú.MD'), isTrue);
+      expect(isMarkdownName('a.markdown'), isTrue);
+      expect(isMarkdownName('a.txt'), isFalse);
+      expect(
+        markdownCopyOf(doc('note.txt', 'Họp thứ Hai\r\n')),
+        'Họp thứ Hai\r\n',
+      );
+      final code = doc('run.sh', 'echo ```quoted``` done');
+      final copy = markdownCopyOf(code);
+      // The fence is longer than any backtick run in the code.
+      expect(copy, startsWith('# run.sh\n\n````bash\n'));
+      expect(copy, endsWith('\n````\n'));
+      expect(
+        parseMarkdownDocument(copy).text,
+        contains('echo ```quoted``` done'),
+      );
+      expect(code.source, 'echo ```quoted``` done');
+      expect(
+        markdownCopyOf(doc('config.yaml', 'port: 8080\n')),
+        '# config.yaml\n\n```yaml\nport: 8080\n```\n',
+      );
+      final page = markdownCopyOf(
+        doc('p.html', '<h1>Tiêu đề</h1><script>steal()</script><p>Đoạn</p>'),
+      );
+      expect(page, contains('Tiêu đề'));
+      expect(page, isNot(contains('steal')));
+      final big = markdownCopyOf(doc('big.html', '<p>${'x' * 100001}</p>'));
+      expect(big, startsWith('# big.html\n\n```html\n<p>'));
+    },
+  );
 }

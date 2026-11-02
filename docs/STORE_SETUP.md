@@ -11,8 +11,15 @@ official Google test IDs and ads default off. Windows/Web Free is ad-free.
 
 ## Public identifiers and app identity
 
-Copy `config/monetization.example.json` to a local config and fill the eight app keys
-independently. Run:
+Copy `config/monetization.example.json` to a local config and fill the ten app keys
+independently.
+
+Handy Trip uses its independent `trip` key and provisional
+`com.example.handysuite.trip` identifiers. iOS receiving shares additionally
+needs the Trip Share extension and `group.com.example.handysuite.trip` App Group
+registered for the publisher team. No production identifiers are fabricated.
+
+Run:
 
 ```
 python tooling/prepare-store-config.py config/monetization.local.json
@@ -21,7 +28,10 @@ python tooling/prepare-store-config.py config/monetization.local.json
 From an app directory, Flutter accepts
 `--dart-define-from-file=../../.tooling/monetization-defines.json`. The public config
 contains product IDs, Play licensing RSA public key, banner ad-unit IDs and an
-explicit adsEnabled boolean. Never put service-account JSON, passwords, private
+explicit adsEnabled boolean. Each platform may also carry a public
+`listingUrl` (https only): the app's store page there, or its web address. The
+"Other Handy apps" section in every app's settings lists only siblings that
+have one, so it stays hidden until apps are published. Never put service-account JSON, passwords, private
 keys or signing material in Dart defines or app assets.
 
 Development APKs use the `.flutterpilot` application ID suffix.
@@ -111,3 +121,27 @@ preview, reports and full backups remain free. No fake price, purchase or Web pa
 Needed: publisher-owned final bundle/package IDs, product IDs/public license key,
 AdMob IDs/UMP configuration, release signing, privacy forms and official sandbox QA.
 iOS also needs macOS/Xcode. No credentials should be pasted into docs/source.
+
+## Pro plan (not gated yet)
+
+No build has a store product ID, so nothing can be bought and every Pro gate
+would lock the feature for everyone, testers included. The features added on
+2026-11-02 are therefore free for now. Already gated: Bookmark smart
+collections and saved searches; Spend forecasts past 30 days, several what-ifs
+and statement templates. When products exist, gate one or two features per app
+with the existing `LifetimeScope.maybeOf(context)?.pro` check and leave the core
+of each app free:
+
+| App      | Pro                                                                          | Stays free                               |
+| -------- | ---------------------------------------------------------------------------- | ---------------------------------------- |
+| Tools    | Subtitles; salary rule overrides                                             | Gross ↔ Net, number words, lunar, VietQR |
+| Dev      | Side-by-side diff; IDs beyond 10 at once; URL query editor                   | Timestamp, HMAC, cron, bases             |
+| Docs     | Sign and fill with saved signatures; searchable scan PDF; strong compression | OCR copy and save, picture compression   |
+| Media    | GIF export                                                                   | Windows capture, find private details    |
+| Keep     | CSV export with value totals; batch add from photos                          | Totals on screen                         |
+| Recall   | Anki import keeping Anki's schedule; per-deck read-aloud voices              | Cloze, reverse cards                     |
+| Bookmark | Batch link check and batch offline copies                                    | Single-link actions, Pocket import       |
+| Spend    | More than 20 receipts or PDF receipts; settle-up history export              | Splits                                   |
+| Habit    | Pausing only chosen habits                                                   | Pausing everything, the run notice       |
+
+Automatic backups and their password lock stay free in every app.

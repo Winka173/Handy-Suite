@@ -2,37 +2,56 @@ import 'dart:convert';
 import 'package:handy_files/handy_files.dart';
 import 'package:handy_recall/handy_recall.dart';
 import 'package:handy_ui/kit.dart';
-import '../study/recall_store.dart' show newId;
+import '../study/recall_store.dart' show CardDraft, newId;
 import 'card_editor_body.dart';
 
-/// Adds or edits one card. Nothing leaves the form until [onCommit] has
+/// Adds or edits one note: its card and, from the same text, its reverse
+/// card or one card per cloze. Nothing leaves the form until [onCommit] has
 /// written it; a failed write keeps every field. New cards can be saved one
 /// after another without leaving.
 class CardEditor extends StatefulWidget {
   final RecallCard? card;
   final String deckId;
   final HandyFiles files;
-  final Future<void> Function(RecallCard) onCommit;
+  final Future<void> Function(CardDraft) onCommit;
+
+  /// Whether the note has (or, for a new card, starts with) a reverse card.
+  final bool reverse;
+
+  /// Cards made from the same note besides this one.
+  final int siblings;
 
   /// Deletes the card after asking; true when it is gone.
   final Future<bool> Function(BuildContext)? onDelete;
+
+  /// A new card's sides, handed over by another app.
+  final String initialFront, initialBack;
   const CardEditor({
+    this.initialFront = '',
+    this.initialBack = '',
     this.onDelete,
     super.key,
     this.card,
     required this.deckId,
     required this.files,
     required this.onCommit,
+    this.reverse = false,
+    this.siblings = 0,
   });
   @override
   State<CardEditor> createState() => CardEditorState();
 }
 
 class CardEditorState extends State<CardEditor> {
-  late final front = TextEditingController(text: widget.card?.front ?? '');
-  late final back = TextEditingController(text: widget.card?.back ?? '');
+  late final front = TextEditingController(
+    text: widget.card?.front ?? widget.initialFront,
+  );
+  late final back = TextEditingController(
+    text: widget.card?.back ?? widget.initialBack,
+  );
   final frontFocus = FocusNode();
   late RecallImage? image = widget.card?.image;
+  late bool reverse = widget.reverse;
   String error = '';
   int saved = 0;
   bool dirty = false, busy = false, allowPop = false, confirming = false;
@@ -49,6 +68,30 @@ class CardEditorState extends State<CardEditor> {
     change();
     dirty = true;
   });
+
+  /// The cloze numbers the question holds now.
+  List<int> get clozes => clozeNumbers(front.text);
+
+  /// A picture with covers cannot also be asked the other way round.
+  bool get canReverse =>
+      clozes.isEmpty && (image == null || image!.masks.isEmpty);
+
+  /// Turns the selected words of the question into the next cloze (or, with
+  /// [same], into another blank of the last one) and keeps typing there.
+  void wrapCloze({bool same = false}) {
+    if (busy) return;
+    final sel = front.selection;
+    final start = sel.isValid ? sel.start : front.text.length;
+    final end = sel.isValid ? sel.end : front.text.length;
+    final r = makeCloze(front.text, start, end, same: same);
+    touch(() {
+      front.value = TextEditingValue(
+        text: r.text,
+        selection: TextSelection.collapsed(offset: r.cursor),
+      );
+    });
+    frontFocus.requestFocus();
+  }
 
   void leave() {
     setState(() {
@@ -87,6 +130,34 @@ class CardEditorState extends State<CardEditor> {
     }
   }
 
+  /// The card as edited: a new card, or the old one with the same id and
+  /// schedule. Its cloze number is one the text still asks.
+  RecallCard edited() {
+    final numbers = clozes, old = widget.card;
+    final cloze = numbers.isEmpty
+        ? 0
+        : numbers.contains(old?.cloze)
+        ? old!.cloze
+        : numbers.first;
+    if (old == null) {
+      return createCard(
+        id: newId(),
+        deckId: widget.deckId,
+        front: front.text,
+        back: back.text,
+        image: image,
+        cloze: cloze,
+      );
+    }
+    return old.copyWith({
+      'front': front.text,
+      'back': back.text,
+      'image': image?.toJson(),
+      'cloze': cloze == 0 ? null : cloze,
+      'reversed': cloze == 0 && old.reversed,
+    });
+  }
+
   /// Writes the card. With [another], stays open and empty for the next one.
   Future<void> save({bool another = false}) async {
     setState(() {
@@ -94,20 +165,13 @@ class CardEditorState extends State<CardEditor> {
       error = '';
     });
     try {
-      final card = widget.card == null
-          ? createCard(
-              id: newId(),
-              deckId: widget.deckId,
-              front: front.text,
-              back: back.text,
-              image: image,
-            )
-          : widget.card!.copyWith({
-              'front': front.text,
-              'back': back.text,
-              'image': image?.toJson(),
-            });
-      await widget.onCommit(card);
+      await widget.onCommit(
+        CardDraft(
+          edited(),
+          original: widget.card,
+          reverse: reverse && canReverse,
+        ),
+      );
       if (!mounted) return;
       if (!another) return leave();
       setState(() {

@@ -315,6 +315,8 @@ class SpendSettingsPage extends StatelessWidget {
               ),
             ],
           ),
+          if (scope.autoBackup != null)
+            HandyAutoBackupSection(backup: scope.autoBackup!),
           HandySettingsSection(
             title: tr(context, 'Your ledger', 'Sổ của bạn'),
             description: tr(
@@ -335,6 +337,15 @@ class SpendSettingsPage extends StatelessWidget {
                 title: tr(context, 'Restore a backup', 'Khôi phục bản sao lưu'),
                 onTap: () =>
                     _guard(context, () => restoreBackup(context, scope)),
+              ),
+              HandyTile(
+                key: const Key('spend-templates'),
+                icon: Icons.view_column_outlined,
+                title: tr(context, 'Statement templates', 'Mẫu nhập sao kê'),
+                trailing: value('${s.profiles.length}'),
+                navigates: true,
+                onTap: () =>
+                    Navigator.pushNamed(context, '/settings/templates'),
               ),
               HandyTile(
                 key: const Key('spend-imports'),

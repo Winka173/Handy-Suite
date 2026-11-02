@@ -151,7 +151,12 @@ class _Day extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final c = HandyColors.of(context);
-    final status = habitStatus(habit, day, today, index);
+    var status = habitStatus(habit, day, today, index);
+    // A pause already set shows ahead, so the days off read as one band.
+    if (status == 'future' &&
+        isScheduledOn(habit, day) &&
+        index.paused(habit.id, day))
+      status = 'paused';
     final planned = !{'notScheduled', 'future'}.contains(status);
     final isToday = day == today;
     return Semantics(

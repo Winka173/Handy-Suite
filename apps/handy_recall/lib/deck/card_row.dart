@@ -1,8 +1,10 @@
 import 'package:handy_recall/handy_recall.dart';
 import 'package:handy_ui/kit.dart';
+import '../study/card_text.dart';
 import '../study/schedule.dart';
 
-/// A card in its deck: the question, the answer greyed, and when it is due.
+/// A card in its deck: the question as asked (a cloze with its blank), the
+/// answer greyed, what kind of card it is when not plain, and when it is due.
 class CardRow extends StatelessWidget {
   final RecallCard card;
   final DateTime now;
@@ -32,9 +34,22 @@ class CardRow extends StatelessWidget {
       leading: card.image == null
           ? null
           : Icon(Icons.image_outlined, color: c.muted),
-      title: Text(card.front, maxLines: 2, overflow: TextOverflow.ellipsis),
+      title: Text(
+        cardTitle(card).isEmpty
+            ? tr(context, 'Picture', 'Ảnh')
+            : cardTitle(card),
+        maxLines: 2,
+        overflow: TextOverflow.ellipsis,
+      ),
       subtitle: Text(
-        card.back,
+        [
+          if (card.reversed) tr(context, 'Reverse', 'Đảo chiều'),
+          if (card.cloze > 0)
+            tr(context, 'Cloze ${card.cloze}', 'Ô ${card.cloze}'),
+          card.cloze > 0
+              ? clozeText(card.front, card.cloze, revealed: true)
+              : card.answer,
+        ].where((s) => s.isNotEmpty).join(' · '),
         maxLines: 1,
         overflow: TextOverflow.ellipsis,
         style: TextStyle(color: c.muted),

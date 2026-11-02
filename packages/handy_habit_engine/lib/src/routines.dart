@@ -265,3 +265,20 @@ List<Routine> routineTemplates({bool vietnamese = false}) {
     ),
   );
 }
+
+/// Seconds left on [step] after [running] more seconds; negative when
+/// over its plan, null for an untimed step.
+int? secondsLeft(StepRun step, {int running = 0}) =>
+    step.plan.seconds == 0 ? null : step.plan.seconds - step.elapsed - running;
+
+/// Whether the notice for a paused run is on: its own switch, or, until
+/// that is touched, the reminders switch (either one asked for the
+/// permission when it was turned on).
+bool runNoticeOn(HabitState s) =>
+    (s.settings['runNotice'] ?? s.settings['notifications']) == true;
+
+/// Whether a paused run may be shown in the system notifications now:
+/// switched on and not in quiet hours. The OS permission is checked
+/// separately and never asked for here.
+bool runNoticeAllowed(HabitState s, DateTime now) =>
+    runNoticeOn(s) && !inQuietHours(s, now);

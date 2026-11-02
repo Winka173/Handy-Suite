@@ -5,6 +5,7 @@ import 'package:handy_storage/recovery.dart';
 import 'package:handy_ui/kit.dart';
 import '../capture_draft.dart';
 import '../guide/editor_page.dart';
+import '../guide/text_reader.dart';
 import 'media_store.dart';
 
 /// Opens [guide] in the editor, offering its draft copy back first.
@@ -18,6 +19,7 @@ Future<void> openGuide(
   required HandyFiles files,
   required PortableCapture guide,
   ScanCamera? camera,
+  TextReader? reader,
 }) async {
   final id = guide.project.id;
   final fresh = !store.holds(id);
@@ -122,6 +124,7 @@ Future<void> openGuide(
         pickFirst: fresh,
         files: files,
         camera: camera,
+        reader: reader,
         onCommit: (next) async {
           await store.save(next);
           committed = true;

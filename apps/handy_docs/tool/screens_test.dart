@@ -1,6 +1,7 @@
 // Review screenshots with the real typefaces and icons.
 // SHOTS_DIR=<dir> flutter test --no-pub tool/screens_test.dart
 import 'dart:io';
+import 'dart:math' as math;
 import 'dart:ui' as ui;
 import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
@@ -9,9 +10,15 @@ import 'package:handy_docs/app.dart';
 import 'package:handy_docs/scan/scan_screen.dart';
 import 'package:handy_docs/session.dart';
 import 'package:handy_docs_engine/handy_docs_engine.dart';
+import 'package:handy_files/handy_files.dart';
 import 'package:handy_storage/handy_storage.dart';
 import 'package:handy_ui/kit.dart';
+import 'package:handy_docs/ocr/ocr_job.dart';
+import 'package:handy_docs/sign/signature_pad.dart';
+import 'package:handy_docs/sign/signature_store.dart';
+import 'package:handy_ocr/handy_ocr.dart';
 import '../test/helpers.dart';
+import '../test/sign_test.dart' show FakeDesk, FakePages;
 
 Future<void> _font(String family, List<String> paths) async {
   final loader = FontLoader(family);
@@ -82,9 +89,16 @@ Future<Uint8List> photo(String heading, List<String> lines, int warm) async {
       textDirection: TextDirection.ltr,
     )..layout(maxWidth: w - 120);
     p.paint(c, Offset(60, y));
+    if (s.isNotEmpty) {
+      photoLines.add({
+        'text': s,
+        'box': {'x': 60.0, 'y': y, 'w': p.width, 'h': p.height},
+      });
+    }
     y += p.height + size * .9;
   }
 
+  photoLines.clear();
   text(heading, 34, FontWeight.w700);
   y += 10;
   for (final l in lines) {
@@ -114,11 +128,33 @@ const _draft = '''# Biên bản họp nhóm dự án
 > Ghi chú: mọi thay đổi gửi vào nhóm trước 17 giờ.
 ''';
 
+/// Where each line of the last [photo] was drawn, in its pixels: what an
+/// engine would report for it.
+final photoLines = <Map<String, Object>>[];
+
+/// An engine that reports the lines [photo] drew.
+class PhotoOcr implements OcrEngine {
+  List<String> languages = const [];
+  @override
+  OcrPixelFormat get format => OcrPixelFormat.bgra;
+  @override
+  Future<OcrSupport> support() async => OcrSupport(
+    available: true,
+    engine: languages.isEmpty ? 'mlkit-latin' : 'windows-ocr',
+    languages: languages,
+  );
+  @override
+  Future<Map<Object?, Object?>> read(OcrInput input, String? language) async =>
+      {'lines': photoLines};
+}
+
 Future<Docs> boot(
   WidgetTester t,
   Size size, {
   String theme = 'light',
   bool empty = false,
+  FakeDesk? desk,
+  bool signature = false,
 }) async {
   t.view.physicalSize = size;
   t.view.devicePixelRatio = 1;
@@ -200,6 +236,21 @@ Future<Docs> boot(
         ),
     ]).serialize();
   }
+  if (signature) {
+    final png = await t.runAsync(
+      () => renderStrokes([
+        [
+          for (var i = 0; i <= 40; i++)
+            Offset(10 + i * 4.0, 40 - 18 * math.sin(i / 4) * (1 - i / 60)),
+        ],
+        [const Offset(60, 20), const Offset(90, 52), const Offset(140, 30)],
+        [const Offset(150, 46), const Offset(190, 44)],
+      ]),
+    );
+    docs.signatures.text = SignatureBook([
+      SavedSignature('sig-1', png!, '2026-11-01T09:00:00.000Z'),
+    ]).serialize();
+  }
   await t.pumpWidget(
     RepaintBoundary(
       key: _root,
@@ -211,6 +262,9 @@ Future<Docs> boot(
         preferences: docs.prefs,
         camera: docs.camera..on = true,
         history: docs.history,
+        signatureDocuments: docs.signatures,
+        pdfDesk: desk,
+        openFillSource: (_) async => FakePages(),
       ),
     ),
   );
@@ -241,6 +295,10 @@ void main() {
       '$ui/BricolageGrotesque-Display.ttf',
     ]);
     final sdk = Platform.environment['FLUTTER_ROOT']!;
+    await _font('Literata', [
+      for (final f in Directory('fonts').listSync())
+        if (f.path.endsWith('.ttf')) f.path,
+    ]);
     await _font('MaterialIcons', [
       '$sdk/bin/cache/artifacts/material_fonts/materialicons-regular.otf',
     ]);
@@ -329,14 +387,14 @@ void main() {
     await boot(t, const Size(390, 844));
     await open(t, '/read');
     await shot(t, 'phone-12-read');
-    await t.tap(find.byKey(const Key('reader-open-doc-1')));
+    await t.tap(find.byKey(const Key('reader-open-doc-2')));
     await t.pumpAndSettle();
     await shot(t, 'phone-13-document');
   });
   testWidgets('desktop read', (t) async {
     await boot(t, const Size(1440, 900));
     await open(t, '/read');
-    await t.tap(find.byKey(const Key('reader-open-doc-1')));
+    await t.tap(find.byKey(const Key('reader-open-doc-3')));
     await t.pumpAndSettle();
     await shot(t, 'desktop-14-read');
   });
@@ -372,11 +430,140 @@ void main() {
   testWidgets('desktop read film', (t) async {
     await boot(t, const Size(1440, 900));
     await open(t, '/read');
-    await t.tap(find.byKey(const Key('reader-open-doc-1')));
+    await t.tap(find.byKey(const Key('reader-open-doc-3')));
     await t.pumpAndSettle();
     await film(t, 'desktop-read-switch', () async {
       await t.tap(find.byKey(const Key('reader-open-doc-2')));
       await t.pump();
     });
+  });
+
+  // Added 2026-11-02: signing, smaller PDFs, reading text, one way in.
+  Future<FakeDesk> formDesk(WidgetTester t) async {
+    final page = await t.runAsync(
+      () => photo('ĐƠN XIN NGHỈ PHÉP', [
+        'Kính gửi: Phòng Hành chính',
+        'Tôi tên: ............................................',
+        'Xin nghỉ từ ngày 10/11 đến 12/11/2026',
+        'Lý do: việc gia đình',
+        '',
+        'Người làm đơn',
+      ], 0),
+    );
+    FakePages.picture = page!;
+    final desk = FakeDesk()..preview = page;
+    desk.inputs
+      ..clear()
+      ..add(ImportedBytes('Đơn nghỉ phép.pdf', Uint8List(2400000)));
+    return desk;
+  }
+
+  Future<void> placeMarks(WidgetTester t) async {
+    await t.tap(find.byKey(const Key('fill-signature-sig-1')));
+    for (var i = 0; i < 12; i++) {
+      await t.runAsync(
+        () => Future<void>.delayed(const Duration(milliseconds: 30)),
+      );
+      await t.pump();
+    }
+    await t.pumpAndSettle();
+  }
+
+  Future<void> addText(WidgetTester t, String text) async {
+    await t.tap(find.byKey(const Key('fill-text')));
+    await t.pumpAndSettle();
+    await t.enterText(find.byKey(const Key('fill-text-field')), text);
+    await t.tap(find.byKey(const Key('fill-text-apply')));
+    await t.pumpAndSettle();
+  }
+
+  testWidgets('desktop fill', (t) async {
+    final desk = await formDesk(t);
+    await boot(t, const Size(1440, 900), desk: desk, signature: true);
+    await open(t, '/pdf/fill');
+    await shot(t, 'desktop-16-fill-empty');
+    await addText(t, 'Nguyễn Thị Lan');
+    await placeMarks(t);
+    await shot(t, 'desktop-17-fill');
+    await t.tap(find.byKey(const Key('fill-make')));
+    await t.pumpAndSettle();
+    await shot(t, 'desktop-18-fill-preview');
+  });
+
+  testWidgets('phone fill', (t) async {
+    final desk = await formDesk(t);
+    await boot(t, const Size(390, 844), desk: desk, signature: true);
+    await open(t, '/pdf/fill');
+    await t.tap(find.byKey(const Key('fill-tools')));
+    await t.pumpAndSettle();
+    await shot(t, 'phone-16-fill-tools');
+    await placeMarks(t);
+    await shot(t, 'phone-17-fill');
+  });
+
+  testWidgets('desktop pdf smaller', (t) async {
+    final desk = await formDesk(t);
+    await boot(t, const Size(1440, 900), desk: desk);
+    await open(t, '/pdf');
+    await t.tap(find.byKey(const Key('pdf-compress')));
+    await t.pumpAndSettle();
+    await t.scrollUntilVisible(
+      find.byKey(const Key('pdf-export')),
+      200,
+      scrollable: find.byType(Scrollable).last,
+    );
+    await t.pumpAndSettle();
+    await shot(t, 'desktop-19-pdf-smaller');
+  });
+
+  Future<void> readScan(WidgetTester t) async {
+    final png = await t.runAsync(
+      () => photo('HÓA ĐƠN TIỀN ĐIỆN', [
+        'Kỳ: tháng 10/2026',
+        'Khách hàng: Nguyễn Thị Lan',
+        'Chỉ số mới: 4.812 · Chỉ số cũ: 4.603',
+        'Điện năng tiêu thụ: 209 kWh',
+        'Thành tiền: 512.340 đ',
+        'Hạn thanh toán: 15/11/2026',
+      ], 4),
+    );
+    Navigator.of(
+      t.element(find.byKey(const Key('docs-desk'))),
+    ).pushNamed('/ocr', arguments: OcrSource('Hóa đơn điện T10.jpg', png!));
+    await t.pump(const Duration(milliseconds: 300));
+    await t.pumpAndSettle();
+  }
+
+  testWidgets('desktop ocr', (t) async {
+    ocrEngineOverride = PhotoOcr();
+    addTearDown(() => ocrEngineOverride = null);
+    await boot(t, const Size(1440, 900));
+    await readScan(t);
+    await shot(t, 'desktop-20-ocr');
+  });
+
+  testWidgets('phone ocr', (t) async {
+    ocrEngineOverride = PhotoOcr();
+    addTearDown(() => ocrEngineOverride = null);
+    await boot(t, const Size(390, 844));
+    await readScan(t);
+    await shot(t, 'phone-21-ocr');
+    await t.tap(find.text('Trang'));
+    await t.pumpAndSettle();
+    await shot(t, 'phone-22-ocr-page');
+  });
+
+  testWidgets('phone ocr missing language', (t) async {
+    ocrEngineOverride = PhotoOcr()..languages = ['en-US'];
+    addTearDown(() => ocrEngineOverride = null);
+    await boot(t, const Size(390, 844));
+    await readScan(t);
+    await shot(t, 'phone-23-ocr-language');
+  });
+
+  testWidgets('phone kept files', (t) async {
+    await boot(t, const Size(390, 844));
+    await open(t, '/read');
+    await shot(t, 'phone-24-kept');
   });
 }

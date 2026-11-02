@@ -46,6 +46,7 @@ String itemDossier(InventoryAsset asset, KeepState state) {
     'Location / Vị trí: ${shown(asset.location)}',
     'Serial: ${shown(asset.serial)}',
     'Purchased / Ngày mua: ${shown(asset.purchasedOn)}',
+    'Price / Giá mua: ${shown(asset.price.isEmpty ? '' : '${asset.price} ${asset.currency}')}',
     'Warranty / Bảo hành: ${shown(asset.warrantyUntil)}',
     'Maintenance / Bảo dưỡng: ${shown(asset.maintenanceDue)}',
     'Box / Thùng: ${shown(boxName)}',

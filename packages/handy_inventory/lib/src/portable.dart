@@ -84,7 +84,7 @@ PortableKeepBundle parseKeepZip(Uint8List bytes) {
   final m = _record(jsonDecode(utf8.decode(manifest, allowMalformed: false))),
       refs = m['assets'];
   if (m['format'] != 'handy-keep' ||
-      m['version'] != 1 ||
+      !keepStateVersions.contains(m['version']) ||
       refs is! List ||
       refs.length > 255)
     throw const FormatException('Unsupported Keep archive');
@@ -209,7 +209,7 @@ Uint8List buildKeepZip(KeepState state, Map<String, Uint8List> filesByUri) {
   final manifest = utf8.encode(
     jsonEncode({
       'format': 'handy-keep',
-      'version': 1,
+      'version': keepStateVersion,
       'state': clean.toJson(),
       'assets': refs,
     }),

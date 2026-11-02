@@ -92,9 +92,19 @@ Future<Uint8List> _pdf(
       days = tr(context, 'planned days', 'ngày có lịch');
   final note = tr(
     context,
-    'Skipped is not done. Periods still open are not failures.',
-    'Bỏ qua không phải đã làm. Kỳ còn mở chưa phải thất bại.',
+    'Skipped is not done. Periods still open are not failures. Paused days not done are left out; weekly quotas shrink with them.',
+    'Bỏ qua không phải đã làm. Kỳ còn mở chưa phải thất bại. Ngày nghỉ chưa làm không tính; hạn mức tuần giảm theo ngày nghỉ.',
   );
+  final names = {for (final h in s.habits) h.id: h.title};
+  final pauses =
+      s.pauses
+          .where(
+            (p) => p.until.compareTo(first) >= 0 && p.from.compareTo(last) <= 0,
+          )
+          .toList()
+        ..sort((a, b) => a.from.compareTo(b.from));
+  final pauseTitle = tr(context, 'Pauses', 'Kỳ nghỉ'),
+      everyone = tr(context, 'Every habit', 'Mọi thói quen');
   final font = pw.Font.ttf(
     await rootBundle.load(
       'packages/handy_ui/assets/fonts/NotoSans-Regular.ttf',
@@ -103,7 +113,7 @@ Future<Uint8List> _pdf(
   final bold = pw.Font.ttf(
     await rootBundle.load('packages/handy_ui/assets/fonts/NotoSans-Bold.ttf'),
   );
-  final index = HabitIndex(s.events), doc = pw.Document();
+  final index = HabitIndex.of(s), doc = pw.Document();
   doc.addPage(
     pw.MultiPage(
       pageFormat: PdfPageFormat.a4,
@@ -127,6 +137,20 @@ Future<Uint8List> _pdf(
           ],
         ),
         pw.Text(note),
+        if (pauses.isNotEmpty) ...[
+          pw.SizedBox(height: 12),
+          pw.Text(pauseTitle, style: const pw.TextStyle(fontSize: 16)),
+          for (final p in pauses)
+            pw.Text(
+              [
+                '${p.from} — ${p.until}',
+                p.everything
+                    ? everyone
+                    : p.habits.map((h) => names[h] ?? '').join(', '),
+                if (p.reason.isNotEmpty) p.reason,
+              ].join(' · '),
+            ),
+        ],
       ],
     ),
   );
@@ -137,17 +161,30 @@ Future<Uint8List> _pdf(
 /// (new IDs, nothing overwritten) or replaces after a second question.
 Future<String?> importHabits(BuildContext context, HabitScope scope) async {
   final file = await scope.files.importBytes(
-    extensions: ['json', 'zip', 'csv'],
+    extensions: ['json', 'zip', 'csv', 'hseal'],
     maxBytes: backupLimit,
   );
   if (file == null || !context.mounted) return null;
+  // A password-locked automatic backup: open it, then read the ZIP inside.
+  final opened = await openSealedBackup(context, file.bytes);
+  if (opened == null || !context.mounted) return null;
+  final name = file.name.toLowerCase().endsWith('.hseal')
+      ? file.name.substring(0, file.name.length - 6)
+      : file.name;
   final s = scope.state, revision = s.revision;
-  if (file.name.toLowerCase().endsWith('.csv')) {
-    final imported = importCsvLogs(s, file.bytes);
-    final count = imported.events.length - s.events.length;
+  if (name.toLowerCase().endsWith('.csv')) {
+    final imported = importCsvLogs(s, opened);
+    final count = imported.events.length - s.events.length,
+        pauses = imported.pauses.length - s.pauses.length;
     final ok = await confirmHandy(
       context,
-      title: tr(context, 'Add $count records?', 'Thêm $count lần ghi?'),
+      title: pauses == 0
+          ? tr(context, 'Add $count records?', 'Thêm $count lần ghi?')
+          : tr(
+              context,
+              'Add $count records and $pauses pauses?',
+              'Thêm $count lần ghi và $pauses kỳ nghỉ?',
+            ),
       message: tr(
         context,
         'Their habits must already exist here. Repeated records are left out; conflicting ones stop the import.',
@@ -161,16 +198,20 @@ Future<String?> importHabits(BuildContext context, HabitScope scope) async {
         throw StateError('Data changed during preview');
       return current.copy({
         'events': imported.events.map((e) => e.toJson()).toList(),
+        'pauses': imported.pauses.map((p) => p.toJson()).toList(),
       });
     });
     return context.mounted
-        ? tr(context, '$count records added.', 'Đã thêm $count lần ghi.')
+        ? (pauses == 0
+              ? tr(context, '$count records added.', 'Đã thêm $count lần ghi.')
+              : tr(
+                  context,
+                  '$count records and $pauses pauses added.',
+                  'Đã thêm $count lần ghi và $pauses kỳ nghỉ.',
+                ))
         : null;
   }
-  final imported = restore(
-    file.bytes,
-    zip: file.name.toLowerCase().endsWith('.zip'),
-  );
+  final imported = restore(opened, zip: name.toLowerCase().endsWith('.zip'));
   if (!context.mounted) return null;
   final choice = await showAdaptiveDialog<String>(
     context: context,
@@ -179,8 +220,8 @@ Future<String?> importHabits(BuildContext context, HabitScope scope) async {
       content: Text(
         tr(
           context,
-          '${imported.habits.length} habits, ${imported.events.length} records, ${imported.routines.length} routines, ${imported.sessions.length} runs.\n\nMerge adds them beside yours with new IDs. Replace puts the backup in place of everything here. Reminders in it stay off until you turn them on.',
-          '${imported.habits.length} thói quen, ${imported.events.length} lần ghi, ${imported.routines.length} quy trình, ${imported.sessions.length} phiên.\n\nHợp nhất thêm chúng cạnh dữ liệu của bạn với ID mới. Thay thế đặt bản sao lưu vào chỗ toàn bộ dữ liệu ở đây. Nhắc trong đó vẫn tắt cho tới khi bạn bật.',
+          '${imported.habits.length} habits, ${imported.events.length} records, ${imported.routines.length} routines, ${imported.sessions.length} runs, ${imported.pauses.length} pauses.\n\nMerge adds them beside yours with new IDs. Replace puts the backup in place of everything here. Reminders in it stay off until you turn them on.',
+          '${imported.habits.length} thói quen, ${imported.events.length} lần ghi, ${imported.routines.length} quy trình, ${imported.sessions.length} phiên, ${imported.pauses.length} kỳ nghỉ.\n\nHợp nhất thêm chúng cạnh dữ liệu của bạn với ID mới. Thay thế đặt bản sao lưu vào chỗ toàn bộ dữ liệu ở đây. Nhắc trong đó vẫn tắt cho tới khi bạn bật.',
         ),
       ),
       actions: [

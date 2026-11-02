@@ -30,14 +30,31 @@ String habitLine(
   final today = scope.today;
   final s = scheduleOn(h, today) ?? h.schedules.last;
   final parts = <String>[];
-  if (s.kind == 'weekly') {
+  // A pause for everything is said once, in the greeting; a pause for
+  // this habit is said on its row.
+  final restUntil =
+      index.pauses.any((p) => !p.everything && p.covers(h.id, today))
+      ? pausedUntil(index.pauses, h.id, today)
+      : null;
+  if (restUntil != null)
     parts.add(
       tr(
         context,
-        '${doneThisWeek(h, today, index, s.weekStart)} of ${s.weeklyTarget} days this week',
-        '${doneThisWeek(h, today, index, s.weekStart)}/${s.weeklyTarget} ngày tuần này',
+        'Paused until ${formatDay(context, restUntil)}',
+        'Nghỉ đến ${formatDay(context, restUntil)}',
       ),
     );
+  if (s.kind == 'weekly') {
+    // The quota shrinks with the week's paused days.
+    final quota = weekQuota(h, weekOf(today, s.weekStart), index);
+    if (quota > 0)
+      parts.add(
+        tr(
+          context,
+          '${doneThisWeek(h, today, index, s.weekStart)} of $quota days this week',
+          '${doneThisWeek(h, today, index, s.weekStart)}/$quota ngày tuần này',
+        ),
+      );
   } else if (h.type != 'binary') {
     parts.add(progressText(context, h, index.value(h.id, today), s.target));
   }

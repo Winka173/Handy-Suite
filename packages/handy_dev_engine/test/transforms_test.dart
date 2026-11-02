@@ -23,7 +23,7 @@ void main() {
     );
   });
   test('stable IDs; only actual platform implementations are registered', () {
-    expect(devTools.length, regexSupported ? 28 : 26);
+    expect(devTools.length, regexSupported ? 35 : 33);
     expect(devTools.map((t) => t.id).toSet().length, devTools.length);
     expect(devTools.any((t) => t.id == 'regex'), regexSupported);
     expect(devTools.any((t) => t.id == 'schema'), regexSupported);
@@ -262,6 +262,42 @@ void main() {
       {'method': 'GET', 'status': 200, 'durationMs': 12},
     ]);
     expect(s, isNot(contains('TOKEN')));
+  });
+  test('HAR keeps scheme, host and path; query values are redacted', () {
+    final s = tool('har').run(
+      jsonEncode({
+        'log': {
+          'entries': [
+            {
+              'request': {
+                'method': 'POST',
+                'url':
+                    'https://ana:pw-SECRET@api.example.com:8443/v1/orders?token=SECRET&page=2&flag#frag-SECRET',
+                'headers': [
+                  {'name': 'Cookie', 'value': 'SECRET'},
+                ],
+                'postData': {'text': 'SECRET'},
+              },
+              'response': {'status': 201},
+            },
+            {
+              'request': {'method': 'GET', 'url': 'not a url'},
+            },
+          ],
+        },
+      }),
+    );
+    expect(jsonDecode(s), [
+      {
+        'method': 'POST',
+        'url':
+            'https://api.example.com:8443/v1/orders?token=[REDACTED]&page=[REDACTED]&flag',
+        'status': 201,
+      },
+      {'method': 'GET'},
+    ]);
+    expect(s, isNot(contains('SECRET')));
+    expect(s, isNot(contains('ana')));
   });
   test('redaction traverses arrays and credential key variants', () {
     expect(

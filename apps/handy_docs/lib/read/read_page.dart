@@ -5,6 +5,7 @@ import 'document_page.dart';
 import 'document_view.dart';
 import 'library_list.dart';
 import 'reader_actions.dart';
+import '../text/text_opener.dart';
 
 /// Reading: the library on the left and the document on the right on wide
 /// screens; on a phone the library, and a document opens over it.
@@ -26,6 +27,17 @@ class _ReadPageState extends State<ReadPage> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted && actions.store.current != null) shown(true);
     });
+  }
+
+  /// The one way in: Markdown goes to the writer, the rest shows here.
+  Future<void> openFile(BuildContext context) async {
+    final where = await actions.opener.pick(context);
+    if (!context.mounted) return;
+    if (where == Opened.writer) {
+      await Navigator.pushNamed(context, '/write');
+    } else if (where == Opened.reader) {
+      await shown(true);
+    }
   }
 
   Future<void> shown(bool ok) async {
@@ -64,14 +76,12 @@ class _ReadPageState extends State<ReadPage> {
       final busy = actions.busy.value;
       return Scaffold(
         appBar: AppBar(
-          title: Text(tr(context, 'Read', 'Đọc')),
+          title: Text(tr(context, 'Kept files', 'Tệp đã giữ')),
           actions: [
             if (!empty)
               TextButton.icon(
                 key: const Key('reader-import'),
-                onPressed: busy
-                    ? null
-                    : () async => shown(await actions.openFile(context)),
+                onPressed: busy ? null : () => openFile(context),
                 icon: const Icon(Icons.file_open_outlined),
                 label: Text(tr(context, 'Open file', 'Mở tệp')),
               ),
@@ -104,21 +114,15 @@ class _ReadPageState extends State<ReadPage> {
         ),
         body: empty
             ? HandyEmpty(
-                title: tr(
-                  context,
-                  'Open a text file to read it',
-                  'Mở một tệp văn bản để đọc',
-                ),
+                title: tr(context, 'Open a text file', 'Mở một tệp văn bản'),
                 message: tr(
                   context,
-                  'Text, Markdown, web pages and code, up to 1 MB each. Scripts and pictures in web pages never run or load. Keep up to 50 copies here.',
-                  'Văn bản, Markdown, trang web và mã, mỗi tệp tối đa 1 MB. Script và ảnh trong trang web không bao giờ chạy hay tải. Giữ tối đa 50 bản ở đây.',
+                  'Markdown opens in the writer. Text, web pages and code open here to read and search, up to 1 MB each; scripts and pictures never run or load. Save a copy to keep it here (up to 50).',
+                  'Markdown mở trong trình viết. Văn bản, trang web và mã mở ở đây để đọc và tìm, mỗi tệp tối đa 1 MB; script và ảnh không bao giờ chạy hay tải. Lưu một bản để giữ ở đây (tối đa 50).',
                 ),
                 action: FilledButton.icon(
                   key: const Key('reader-import'),
-                  onPressed: busy
-                      ? null
-                      : () async => shown(await actions.openFile(context)),
+                  onPressed: busy ? null : () => openFile(context),
                   icon: const Icon(Icons.file_open_outlined),
                   label: Text(tr(context, 'Open file', 'Mở tệp')),
                 ),

@@ -178,7 +178,7 @@ void main() {
   test(
     'unsupported platforms reject native calls before opening a channel',
     () async {
-      debugDefaultTargetPlatformOverride = TargetPlatform.windows;
+      debugDefaultTargetPlatformOverride = TargetPlatform.linux;
       addTearDown(() => debugDefaultTargetPlatformOverride = null);
       expect(nativeCaptureAvailable, isFalse);
       await expectLater(
@@ -191,4 +191,71 @@ void main() {
       );
     },
   );
+
+  test(
+    'Windows takes screenshots of a screen or an area, never video',
+    () async {
+      debugDefaultTargetPlatformOverride = TargetPlatform.windows;
+      const channel = MethodChannel('handy_capture');
+      final calls = <MethodCall>[];
+      final shot = {
+        'uri': 'file:///handy-capture/windows/shot-1-1.png',
+        'mime': 'image/png',
+        'width': 2560,
+        'height': 1440,
+      };
+      TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+          .setMockMethodCallHandler(channel, (call) async {
+            calls.add(call);
+            return shot;
+          });
+      addTearDown(() {
+        debugDefaultTargetPlatformOverride = null;
+        TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+            .setMockMethodCallHandler(channel, null);
+      });
+      expect(nativeCaptureAvailable, isTrue);
+      expect(nativeVideoAvailable, isFalse);
+      expect(regionCaptureAvailable, isTrue);
+      const native = NativeCapture();
+      final result = await native.screenshot(
+        delayMs: 0,
+        area: CaptureArea.region,
+        hint: 'Drag over what to keep',
+      );
+      expect((result.width, result.height), (2560, 1440));
+      expect(calls.single.arguments, {
+        'delayMs': 0,
+        'area': 'region',
+        'hint': 'Drag over what to keep',
+      });
+      await native.screenshot(delayMs: 3000);
+      expect(calls.last.arguments, {
+        'delayMs': 3000,
+        'area': 'screen',
+        'hint': '',
+      });
+      await expectLater(native.startRecording(), throwsUnsupportedError);
+      await expectLater(
+        native.importVideo(Uint8List(40)),
+        throwsUnsupportedError,
+      );
+      await expectLater(
+        native.screenshot(hint: 'x' * 201),
+        throwsFormatException,
+      );
+      expect(calls, hasLength(2));
+    },
+  );
+
+  test('an area can only be chosen on Windows', () async {
+    debugDefaultTargetPlatformOverride = TargetPlatform.android;
+    addTearDown(() => debugDefaultTargetPlatformOverride = null);
+    expect(regionCaptureAvailable, isFalse);
+    expect(nativeVideoAvailable, isTrue);
+    await expectLater(
+      const NativeCapture().screenshot(area: CaptureArea.region),
+      throwsUnsupportedError,
+    );
+  });
 }

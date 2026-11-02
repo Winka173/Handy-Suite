@@ -17,6 +17,12 @@ class AssetEditor extends StatefulWidget {
   final ScanCamera? camera;
   final Map<String, Uint8List> blobs;
   final String initialName, initialBox;
+
+  /// From a purchase handed over by Handy Spend: shown, never saved unseen.
+  final String initialPrice, initialPurchasedOn;
+
+  /// The currency a new price starts in.
+  final String currency;
   final Future<void> Function(AssetEdit) onCommit;
   const AssetEditor({
     super.key,
@@ -29,6 +35,9 @@ class AssetEditor extends StatefulWidget {
     this.camera,
     this.initialName = '',
     this.initialBox = '',
+    this.initialPrice = '',
+    this.initialPurchasedOn = '',
+    this.currency = 'VND',
   });
   @override
   State<AssetEditor> createState() => AssetEditorState();
@@ -41,8 +50,14 @@ class AssetEditorState extends State<AssetEditor> {
   late final location = TextEditingController(text: a?.location ?? '');
   late final serial = TextEditingController(text: a?.serial ?? '');
   late final notes = TextEditingController(text: a?.notes ?? '');
+  late final price = TextEditingController(
+    text: a?.price ?? widget.initialPrice,
+  );
+  late String currency = a?.currency.isNotEmpty == true
+      ? a!.currency
+      : widget.currency;
   late final dates = {
-    'purchasedOn': a?.purchasedOn ?? '',
+    'purchasedOn': a?.purchasedOn ?? widget.initialPurchasedOn,
     'warrantyUntil': a?.warrantyUntil ?? '',
     'maintenanceDue': a?.maintenanceDue ?? '',
   };
@@ -56,7 +71,7 @@ class AssetEditorState extends State<AssetEditor> {
 
   @override
   void dispose() {
-    for (final c in [name, location, serial, notes]) {
+    for (final c in [name, location, serial, notes, price]) {
       c.dispose();
     }
     super.dispose();
@@ -107,7 +122,10 @@ class AssetEditorState extends State<AssetEditor> {
     });
     try {
       final at = timestamp();
+      final paid = parsePrice(price.text, currency);
       final values = <String, Object?>{
+        'price': paid,
+        'currency': paid.isEmpty ? '' : currency,
         'name': name.text,
         'location': location.text,
         'serial': serial.text,

@@ -27,6 +27,9 @@ class KeepApp extends StatefulWidget {
   final ScanCamera? camera;
   final PreferencesRepository? preferences;
   final ReminderController? reminders;
+
+  /// Off in host tests: no folder backups.
+  final bool device;
   const KeepApp({
     super.key,
     this.documents,
@@ -34,6 +37,7 @@ class KeepApp extends StatefulWidget {
     this.camera,
     this.preferences,
     this.reminders,
+    this.device = true,
   });
   @override
   State<KeepApp> createState() => _KeepAppState();
@@ -56,6 +60,13 @@ class _KeepAppState extends State<KeepApp> with WidgetsBindingObserver {
     store: store,
     files: widget.files,
     camera: widget.camera ?? SystemScanCamera(),
+    autoBackup: widget.device
+        ? HandyAutoBackup.local(
+            app: 'keep',
+            extension: 'zip',
+            build: () async => store.library!.portable(),
+          )
+        : null,
   );
 
   @override
@@ -72,6 +83,7 @@ class _KeepAppState extends State<KeepApp> with WidgetsBindingObserver {
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
     store.removeListener(_syncReminders);
+    scope.autoBackup?.dispose();
     if (widget.reminders == null) reminders.dispose();
     store.dispose();
     prefs.dispose();
@@ -86,6 +98,7 @@ class _KeepAppState extends State<KeepApp> with WidgetsBindingObserver {
   void _syncReminders() {
     final s = store.state;
     if (s == null) return;
+    scope.autoBackup?.attach();
     reminders.update([
       for (final r in getKeepReminders(s, today()))
         ReminderDate('${r.assetId}-${r.kind}', r.date),
@@ -151,6 +164,7 @@ class _KeepAppState extends State<KeepApp> with WidgetsBindingObserver {
   Widget build(BuildContext context) {
     final p = prefs.value;
     return HandyApp(
+      brand: HandyBrand.keep,
       app: 'keep',
       title: 'Handy Keep',
       accent: keepAccent,

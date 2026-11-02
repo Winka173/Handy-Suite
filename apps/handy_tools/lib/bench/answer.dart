@@ -8,6 +8,7 @@ import 'tape.dart';
 String tapeAnswer(BuildContext context, Output o) => switch (o) {
   ValueOutput o => formatFigure(context, o.value),
   RowsOutput o => formatFigure(context, o.rows[o.lead].$2),
+  WordsOutput o => o.words,
   TextOutput o => o.text.split('\n').first,
 };
 
@@ -126,7 +127,7 @@ class ReadingRow extends StatelessWidget {
             label: Text(
               ids[i] == 'qr'
                   ? tr(context, 'QR code', 'Mã QR')
-                  : specById[ids[i]]!.title(context),
+                  : stepTitle(context, ids[i]),
             ),
             selected: i == selected,
             onSelected: (_) => onSelect(i),

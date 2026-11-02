@@ -11,99 +11,327 @@ Map<String, dynamic> scenarioBaseline(SpendState s) => s.toJson()
   ..['audit'] = []
   ..['imports'] = []
   ..['profiles'] = []
+  ..['receipts'] = []
   ..['rules'] = [];
 
-/// The month-end balance a what-if changes, against its own baseline.
-(BigInt base, BigInt changed, String currency) scenarioEffect(Scenario x) {
-  final base = SpendState.fromJson(x.baseline);
-  final start = calendar(x.asOf);
-  final end = day(DateTime.utc(start.year, start.month + 1, 0));
-  return (
-    forecast(base, x.asOf, end).ending,
-    forecast(
-      base,
-      x.asOf,
-      end,
-      staged: x.staged,
-      skipBills: x.skipBills.toSet(),
-    ).ending,
-    base.currency,
-  );
+/// One what-if drawn over the plan's forecast.
+class WhatIfLine {
+  final Scenario scenario;
+  final Projection projection;
+
+  /// Assumptions on an account that is gone or archived, left out.
+  final int ignored;
+  final int hue;
+  const WhatIfLine(this.scenario, this.projection, this.ignored, this.hue);
 }
 
-/// Try a purchase or any change on a copy of the ledger.
-class WhatIfSection extends StatelessWidget {
+/// The what-ifs in [on], each run on the live ledger over the plan's
+/// window. The ledger is read, never written.
+List<WhatIfLine> whatIfLines(
+  SpendState s,
+  Set<String> on,
+  String start,
+  String end, {
+  required Set<String> accounts,
+  required bool includeIncome,
+}) {
+  final out = <WhatIfLine>[];
+  for (final (i, x) in s.scenarios.indexed) {
+    if (!on.contains(x.id)) continue;
+    final (p, ignored) = whatIfForecast(
+      s,
+      x,
+      start,
+      end,
+      accounts: accounts,
+      includeIncome: includeIncome,
+    );
+    out.add(WhatIfLine(x, p, ignored, i));
+  }
+  return out;
+}
+
+/// Turns a what-if on or off over the forecast. More than one at a time
+/// is comparing, which needs Pro (as before).
+Future<void> toggleWhatIf(
+  BuildContext context,
+  SpendScope scope,
+  String id,
+  bool on,
+) async {
+  final now = {...scope.overlays.value};
+  if (on && now.isNotEmpty && !now.contains(id) && !scope.pro(context)) {
+    await askForPro(context, 'Comparing what-ifs', 'So sánh kịch bản');
+    return;
+  }
+  on ? now.add(id) : now.remove(id);
+  scope.overlays.value = now;
+}
+
+/// Shows a what-if that was just made, alone unless Pro compares.
+void showWhatIf(BuildContext context, SpendScope scope, String id) {
+  scope.overlays.value = scope.pro(context)
+      ? {...scope.overlays.value, id}
+      : {id};
+}
+
+/// "Dự báo nếu…": the what-ifs as switches under the forecast (each chip
+/// is the legend of its line), and the two ways to make one.
+class WhatIfSwitches extends StatelessWidget {
   final SpendScope scope;
-  const WhatIfSection({super.key, required this.scope});
+  const WhatIfSwitches({super.key, required this.scope});
 
   @override
   Widget build(BuildContext context) {
     final list = scope.state.scenarios;
+    final on = scope.overlays.value;
     final theme = Theme.of(context);
     final c = HandyColors.of(context);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        HandySection(
-          title: tr(context, 'Try first', 'Thử trước'),
-          trailing: list.length >= 2
-              ? TextButton(
-                  key: const Key('whatif-compare'),
-                  onPressed: () => compareScenarios(context, scope),
-                  child: Text(tr(context, 'Compare', 'So sánh')),
-                )
-              : null,
-          children: [
-            Padding(
-              padding: const EdgeInsets.all(HandySpace.l),
-              child: Text(
-                tr(
-                  context,
-                  'A what-if works on a copy taken today. Your ledger only changes if you record it for real.',
-                  'Thử trước chạy trên bản sao chụp hôm nay. Sổ thật chỉ đổi khi bạn chọn ghi thật.',
-                ),
-                style: theme.textTheme.bodyMedium?.copyWith(color: c.muted),
-              ),
-            ),
-            for (final x in list)
-              Builder(
-                builder: (context) {
-                  final (base, changed, cur) = scenarioEffect(x);
-                  return HandyTile(
-                    key: Key('whatif-${x.id}'),
-                    title: x.name,
-                    subtitle: tr(
-                      context,
-                      'Month end ${moneyText(context, scope, changed - base, cur, sign: true)} against the copy of ${dayLabel(context, scope, x.asOf)}',
-                      'Cuối tháng ${moneyText(context, scope, changed - base, cur, sign: true)} so với bản sao ngày ${dayLabel(context, scope, x.asOf)}',
-                    ),
-                    navigates: true,
-                    onTap: () =>
-                        Navigator.pushNamed(context, '/whatif/${x.id}'),
-                  );
-                },
-              ),
-          ],
+        Semantics(
+          header: true,
+          child: Text(
+            tr(context, 'Forecast if…', 'Dự báo nếu…'),
+            style: theme.textTheme.titleSmall,
+          ),
         ),
-        const SizedBox(height: HandySpace.m),
+        const SizedBox(height: HandySpace.xs),
+        Text(
+          list.isEmpty
+              ? tr(
+                  context,
+                  'Try a purchase or any change and see its line over this forecast. Your ledger only changes if you record it for real.',
+                  'Thử một khoản mua hay thay đổi nào đó và xem đường của nó trên dự báo này. Sổ thật chỉ đổi khi bạn chọn ghi thật.',
+                )
+              : tr(
+                  context,
+                  'Tap one to draw it over the forecast. Assumptions only; the ledger stays as it is.',
+                  'Chạm để vẽ lên dự báo. Chỉ là giả định; sổ thật giữ nguyên.',
+                ),
+          style: theme.textTheme.bodySmall?.copyWith(color: c.muted),
+        ),
+        const SizedBox(height: HandySpace.s),
         Wrap(
           spacing: HandySpace.s,
           runSpacing: HandySpace.s,
           children: [
-            OutlinedButton.icon(
+            for (final (i, x) in list.indexed)
+              FilterChip(
+                key: Key('whatif-toggle-${x.id}'),
+                avatar: HandyDot(i, size: 10),
+                showCheckmark: false,
+                label: Text(x.name),
+                tooltip: on.contains(x.id)
+                    ? tr(
+                        context,
+                        'Shown on the forecast',
+                        'Đang vẽ trên dự báo',
+                      )
+                    : tr(context, 'Draw on the forecast', 'Vẽ lên dự báo'),
+                selected: on.contains(x.id),
+                onSelected: (v) => toggleWhatIf(context, scope, x.id, v),
+              ),
+            ActionChip(
               key: const Key('whatif-purchase'),
-              onPressed: () => openPurchase(context, scope),
-              icon: const Icon(Icons.shopping_bag_outlined, size: 18),
+              avatar: const Icon(Icons.shopping_bag_outlined, size: 16),
               label: Text(tr(context, 'Try a purchase', 'Thử một khoản mua')),
+              onPressed: () => openPurchase(context, scope),
             ),
-            OutlinedButton.icon(
+            ActionChip(
               key: const Key('whatif-new'),
+              avatar: const Icon(Icons.add, size: 16),
+              label: Text(tr(context, 'Other change', 'Thay đổi khác')),
               onPressed: () => newScenario(context, scope),
-              icon: const Icon(Icons.add, size: 18),
-              label: Text(tr(context, 'New what-if', 'Kịch bản mới')),
             ),
           ],
         ),
+      ],
+    );
+  }
+}
+
+/// The forecast as it is, then each what-if on the chart, in the same
+/// three columns so they read down: the lowest day, the end of the window
+/// and the first day short, with the lowest day's change against now.
+class WhatIfCompare extends StatelessWidget {
+  final SpendScope scope;
+  final Projection base;
+  final List<WhatIfLine> lines;
+  const WhatIfCompare({
+    super.key,
+    required this.scope,
+    required this.base,
+    required this.lines,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final c = HandyColors.of(context);
+    String? lowDay(Projection p) => p.points.isEmpty
+        ? null
+        : p.points.reduce((a, b) => b.balance < a.balance ? b : a).date;
+    Widget cell(String label, Widget value, [String? note]) => Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(label, style: theme.textTheme.bodySmall?.copyWith(color: c.muted)),
+        value,
+        if (note != null)
+          Text(
+            note,
+            style: theme.textTheme.bodySmall?.copyWith(color: c.muted),
+          ),
+      ],
+    );
+    Widget figures(Projection p) {
+      final cells = [
+        cell(
+          tr(context, 'Lowest', 'Thấp nhất'),
+          Money(
+            scope,
+            p.lowest,
+            scope.currency,
+            style: theme.textTheme.titleSmall?.copyWith(
+              color: p.lowest.isNegative ? c.negative : null,
+            ),
+          ),
+          lowDay(p) == null ? null : dayLabel(context, scope, lowDay(p)!),
+        ),
+        cell(
+          tr(context, 'At the end', 'Cuối kỳ'),
+          Money(
+            scope,
+            p.ending,
+            scope.currency,
+            style: theme.textTheme.titleSmall,
+          ),
+        ),
+        cell(
+          tr(context, 'Short from', 'Thiếu từ'),
+          Text(
+            p.shortfall == null
+                ? tr(context, 'Never', 'Không thiếu')
+                : dayLabel(context, scope, p.shortfall!),
+            style: theme.textTheme.titleSmall?.copyWith(
+              color: p.shortfall == null ? null : c.negative,
+            ),
+          ),
+        ),
+      ];
+      return LayoutBuilder(
+        builder: (context, box) => box.maxWidth < 300
+            ? Wrap(
+                spacing: HandySpace.l,
+                runSpacing: HandySpace.s,
+                children: cells,
+              )
+            : Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  for (final w in cells)
+                    Expanded(
+                      child: Padding(
+                        padding: const EdgeInsets.only(right: HandySpace.s),
+                        child: w,
+                      ),
+                    ),
+                ],
+              ),
+      );
+    }
+
+    Widget head(Widget mark, String name, {Widget? trailing}) => SizedBox(
+      height: 40,
+      child: Row(
+        children: [
+          mark,
+          const SizedBox(width: HandySpace.s),
+          Expanded(
+            child: Text(
+              name,
+              overflow: TextOverflow.ellipsis,
+              style: theme.textTheme.titleSmall,
+            ),
+          ),
+          ?trailing,
+        ],
+      ),
+    );
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        // The base line is dashed in the app's hue on the chart.
+        head(
+          SizedBox(
+            width: 10,
+            child: Divider(color: c.accent, thickness: 2, height: 2),
+          ),
+          tr(context, 'As it is', 'Như hiện tại'),
+        ),
+        figures(base),
+        for (final l in lines)
+          Padding(
+            key: Key('whatif-compare-${l.scenario.id}'),
+            padding: const EdgeInsets.only(top: HandySpace.m),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                head(
+                  HandyDot(l.hue),
+                  tr(
+                    context,
+                    'If ${l.scenario.name}',
+                    'Nếu ${l.scenario.name}',
+                  ),
+                  trailing: TextButton(
+                    key: Key('whatif-${l.scenario.id}'),
+                    onPressed: () => Navigator.pushNamed(
+                      context,
+                      '/whatif/${l.scenario.id}',
+                    ),
+                    child: Text(tr(context, 'Assumptions', 'Giả định')),
+                  ),
+                ),
+                figures(l.projection),
+                const SizedBox(height: 2),
+                Builder(
+                  builder: (context) {
+                    final d = l.projection.lowest - base.lowest;
+                    return Text(
+                      d == BigInt.zero
+                          ? tr(
+                              context,
+                              'Lowest day as now',
+                              'Ngày thấp nhất như hiện tại',
+                            )
+                          : tr(
+                              context,
+                              'Lowest day ${moneyText(context, scope, d, scope.currency, sign: true)} against now',
+                              'Ngày thấp nhất ${moneyText(context, scope, d, scope.currency, sign: true)} so với hiện tại',
+                            ),
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: d.isNegative ? c.negative : c.muted,
+                      ),
+                    );
+                  },
+                ),
+                if (l.ignored > 0)
+                  Text(
+                    tr(
+                      context,
+                      '${l.ignored} assumption(s) use an account that is closed now and are left out.',
+                      '${l.ignored} giả định dùng tài khoản đã đóng nên không tính.',
+                    ),
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: c.warning,
+                    ),
+                  ),
+              ],
+            ),
+          ),
       ],
     );
   }
@@ -117,10 +345,11 @@ bool _gate(BuildContext context, SpendScope scope) {
 
 Future<void> newScenario(BuildContext context, SpendScope scope) async {
   if (!_gate(context, scope)) return;
-  await showSpendForm(
+  final id = newId();
+  final made = await showSpendForm(
     context,
     scope,
-    title: tr(context, 'New what-if', 'Kịch bản mới'),
+    title: tr(context, 'Forecast if…', 'Dự báo nếu…'),
     saveLabel: tr(context, 'Create', 'Tạo'),
     fields: const [
       SpendField(
@@ -137,7 +366,7 @@ Future<void> newScenario(BuildContext context, SpendScope scope) async {
         'scenarios': [
           ...s.scenarios.map((x) => x.toJson()),
           Scenario(
-            id: newId(),
+            id: id,
             name: v['name'] as String,
             asOf: scope.today,
             baseline: scenarioBaseline(s),
@@ -148,6 +377,10 @@ Future<void> newScenario(BuildContext context, SpendScope scope) async {
       'create_financial_scenario',
     ),
   );
+  if (!made || !context.mounted) return;
+  showWhatIf(context, scope, id);
+  // An empty what-if changes nothing: go straight to its assumptions.
+  await Navigator.pushNamed(context, '/whatif/$id');
 }
 
 /// One purchase, paid at once or in equal monthly parts (no interest is
@@ -171,7 +404,8 @@ Future<void> openPurchase(
     BigInt.zero,
     (BigInt n, e) => n - e.amount,
   );
-  await showSpendForm(
+  final id = existing?.id ?? newId();
+  final made = await showSpendForm(
     context,
     scope,
     title: tr(context, 'Try a purchase', 'Thử một khoản mua'),
@@ -244,7 +478,7 @@ Future<void> openPurchase(
       final base = existing?.baseline ?? scenarioBaseline(s);
       final baseState = SpendState.fromJson(base);
       final next = Scenario(
-        id: existing?.id ?? newId(),
+        id: id,
         name: v['name'] as String,
         asOf: existing?.asOf ?? scope.today,
         baseline: base,
@@ -272,42 +506,6 @@ Future<void> openPurchase(
       );
     },
   );
-}
-
-Future<void> compareScenarios(BuildContext context, SpendScope scope) async {
-  if (!scope.pro(context)) {
-    await askForPro(context, 'Comparing what-ifs', 'So sánh kịch bản');
-    return;
-  }
-  await Navigator.push(
-    context,
-    MaterialPageRoute<void>(
-      builder: (context) => HandyPage(
-        title: tr(context, 'Compare what-ifs', 'So sánh kịch bản'),
-        children: [
-          HandySection(
-            children: [
-              for (final x in scope.state.scenarios.take(3))
-                Builder(
-                  builder: (context) {
-                    final (base, changed, cur) = scenarioEffect(x);
-                    return ListTile(
-                      title: Text(x.name),
-                      subtitle: Text(
-                        tr(
-                          context,
-                          'Month end against its copy: ${moneyText(context, scope, changed - base, cur, sign: true)}',
-                          'Cuối tháng so với bản sao: ${moneyText(context, scope, changed - base, cur, sign: true)}',
-                        ),
-                      ),
-                      trailing: Money(scope, changed, cur),
-                    );
-                  },
-                ),
-            ],
-          ),
-        ],
-      ),
-    ),
-  );
+  if (made && existing == null && context.mounted)
+    showWhatIf(context, scope, id);
 }

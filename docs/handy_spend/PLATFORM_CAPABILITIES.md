@@ -4,6 +4,7 @@
 | ---------- | ------------------------ | ------------------------------ | ----------------------- | ----------------------- |
 | Ledger     | SQLite worker            | SQLite worker source           | Real SQLite tests       | IndexedDB source        |
 | Files      | User picker              | User picker                    | Picker + native drop    | Upload/download + drop  |
+| Receipts   | Camera + picker, SQLite  | Camera + picker source         | Picker, SQLite          | Picker, IndexedDB       |
 | Reminders  | Local plugin/permission  | Local plugin source            | In-app upcoming list    | In-app upcoming list    |
 | Lock       | OS biometrics/device PIN | Local authentication source    | Windows Hello adapter   | No verified device lock |
 | Ads        | Official mobile adapter  | Official mobile adapter source | No mobile AdMob         | No fabricated ads       |

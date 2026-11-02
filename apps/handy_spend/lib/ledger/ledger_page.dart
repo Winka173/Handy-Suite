@@ -76,8 +76,8 @@ class _LedgerPageState extends State<LedgerPage> {
       ),
       message: tr(
         context,
-        'All of them go in one change; a linked refund stops it.',
-        'Tất cả xóa trong một lần; khoản hoàn tiền gắn kèm sẽ chặn lại.',
+        'All of them go in one change, with their receipts and splits; a linked refund stops it.',
+        'Tất cả xóa trong một lần, cùng hóa đơn và phần chia tiền; khoản hoàn tiền gắn kèm sẽ chặn lại.',
       ),
       confirmLabel: tr(context, 'Delete', 'Xóa'),
       destructive: true,
@@ -85,15 +85,7 @@ class _LedgerPageState extends State<LedgerPage> {
     if (!ok || !mounted) return;
     final done = await scope.write(
       context,
-      () => scope.controller.change(
-        (s) => s.copy({
-          'entries': [
-            for (final e in s.entries)
-              if (!ids.contains(e.id)) e.toJson(),
-          ],
-        }),
-        'bulk_delete',
-      ),
+      () => scope.controller.deleteEntries(ids, 'bulk_delete'),
       done: (c) => tr(
         c,
         '${ids.length} entries deleted.',

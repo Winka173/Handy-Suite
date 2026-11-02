@@ -148,8 +148,6 @@ class FreeBenchState extends State<FreeBench> {
                     maxLines: 8,
                     textInputAction: TextInputAction.done,
                     style: theme.textTheme.titleLarge?.copyWith(
-                      fontFamily: 'Geist',
-                      package: 'handy_ui',
                       fontWeight: FontWeight.w400,
                       fontSize: 22,
                     ),
@@ -210,7 +208,7 @@ class FreeBenchState extends State<FreeBench> {
               chain: chain,
               saved: widget.chains,
               steps: textTransforms,
-              label: (c, id) => specById[id]!.title(c),
+              label: stepTitle,
               onAdd: (id) => setState(() => chain.add(id)),
               onRemove: (i) => setState(() => chain.removeAt(i)),
               onUse: (r) => setState(

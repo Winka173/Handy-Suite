@@ -268,6 +268,44 @@ HabitState practice() {
   );
 }
 
+/// The same person with days off: knee pain for the gym three weeks ago,
+/// a trip now ([everything]) or only reading paused, and English later.
+HabitState resting({bool everything = true}) {
+  final s = practice();
+  return s.copy({
+    'pauses': [
+      Pause(
+        id: 'knee',
+        from: addDays(today, -14),
+        until: addDays(today, -10),
+        reason: 'Đau gối',
+        habits: const ['gym'],
+      ).toJson(),
+      if (everything)
+        Pause(
+          id: 'trip',
+          from: addDays(today, -1),
+          until: addDays(today, 3),
+          reason: 'Đi Đà Lạt',
+        ).toJson()
+      else
+        Pause(
+          id: 'eyes',
+          from: addDays(today, -1),
+          until: addDays(today, 2),
+          reason: 'Khám mắt',
+          habits: const ['read'],
+        ).toJson(),
+      Pause(
+        id: 'exam',
+        from: addDays(today, 18),
+        until: addDays(today, 20),
+        habits: const ['english'],
+      ).toJson(),
+    ],
+  });
+}
+
 Future<HabitController> boot(
   WidgetTester t,
   Size size, {
@@ -320,6 +358,10 @@ void main() {
       '$fonts/BricolageGrotesque-Display.ttf',
     ]);
     final sdk = Platform.environment['FLUTTER_ROOT']!;
+    await _font('Nunito', [
+      for (final f in Directory('fonts').listSync())
+        if (f.path.endsWith('.ttf')) f.path,
+    ]);
     await _font('MaterialIcons', [
       '$sdk/bin/cache/artifacts/material_fonts/materialicons-regular.otf',
     ]);
@@ -415,11 +457,69 @@ void main() {
     await fixtures.tapKey(t, 'open-settings');
     await shot(t, 'desktop-6-settings');
   });
+  testWidgets('phone resting', (t) async {
+    await boot(t, const Size(390, 844), state: resting());
+    await shot(t, 'phone-16-resting');
+  });
+  testWidgets('phone pause editor', (t) async {
+    await boot(t, const Size(390, 844));
+    await fixtures.tapKey(t, 'habit-add');
+    await fixtures.tapKey(t, 'add-pause');
+    await fixtures.tapKey(t, 'field-scope-some');
+    await fixtures.tapKey(t, 'field-habits-gym');
+    await t.enterText(find.byKey(const Key('field-reason')), 'Đau gối');
+    await t.pumpAndSettle();
+    await shot(t, 'phone-17-pause-editor');
+  });
+  testWidgets('phone habit paused', (t) async {
+    await boot(t, const Size(390, 844), state: resting());
+    await fixtures.tapKey(t, 'habit-gym');
+    await shot(t, 'phone-18-habit-paused');
+  });
+  testWidgets('phone one habit paused', (t) async {
+    await boot(t, const Size(390, 844), state: resting(everything: false));
+    await shot(t, 'phone-19-one-paused');
+  });
+  testWidgets('phone settings pauses', (t) async {
+    await boot(t, const Size(390, 844), state: resting());
+    await fixtures.tapKey(t, 'open-settings');
+    await t.scrollUntilVisible(
+      find.byKey(const Key('pause-add')),
+      300,
+      scrollable: find.byType(Scrollable).first,
+    );
+    await t.pumpAndSettle();
+    await shot(t, 'phone-20-settings-pauses');
+  });
+  testWidgets('narrow resting', (t) async {
+    await boot(t, const Size(320, 640), state: resting());
+    await shot(t, 'narrow-1-resting');
+  });
+  testWidgets('phone dark resting', (t) async {
+    await boot(t, const Size(390, 844), theme: 'dark', state: resting());
+    await shot(t, 'phone-21-dark-resting');
+  });
+  testWidgets('desktop resting', (t) async {
+    await boot(t, const Size(1440, 900), state: resting());
+    await shot(t, 'desktop-7-resting');
+  });
+  testWidgets('desktop pause editor', (t) async {
+    await boot(t, const Size(1440, 900), state: resting());
+    await fixtures.tapKey(t, 'habit-add');
+    await fixtures.tapKey(t, 'add-pause');
+    await shot(t, 'desktop-8-pause-editor');
+  });
   testWidgets('films', (t) async {
     await boot(t, const Size(390, 844));
     await film(t, 'phone-tap-bead', () async {
       await t.tap(find.byKey(const Key('bead-meditate')).first);
       await t.pump();
     });
+  });
+
+  testWidgets('phone week review', (t) async {
+    await boot(t, const Size(390, 844));
+    await fixtures.tapKey(t, 'week-review-open');
+    await shot(t, 'phone-22-week-review');
   });
 }

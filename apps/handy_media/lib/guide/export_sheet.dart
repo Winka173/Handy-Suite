@@ -27,6 +27,14 @@ const guideFormats = [
     'Mọi bước trong một ảnh, rộng 1000 px',
   ),
   (
+    'gif',
+    Icons.gif_box_outlined,
+    'Animated GIF',
+    'Ảnh động GIF',
+    'One frame per step, plays by itself in chats and pages',
+    'Mỗi bước một khung, tự chạy trong tin nhắn và trang web',
+  ),
+  (
     'md',
     Icons.notes,
     'Markdown',

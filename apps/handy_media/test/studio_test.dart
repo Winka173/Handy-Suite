@@ -6,6 +6,7 @@ import 'package:handy_media/capture_draft.dart';
 import 'package:handy_media/capture_library.dart';
 import 'package:handy_media_engine/handy_media_engine.dart';
 import 'package:handy_storage/documents.dart';
+import 'package:handy_storage/handy_storage.dart';
 import 'package:handy_ui/kit.dart';
 import 'capture_test.dart' show Store, bundle;
 import 'helpers.dart';
@@ -182,7 +183,40 @@ void main() {
     expect(find.text('Open the pictures to fix'), findsOneWidget);
     await tester.binding.handlePopRoute();
     await tester.pumpAndSettle();
-    await tapKey(tester, 'studio-subtitles');
-    expect(find.byKey(const Key('subtitle-input')), findsOneWidget);
+    // Subtitles moved to Handy Tools: no entry here.
+    expect(find.byKey(const Key('studio-subtitles')), findsNothing);
+  });
+
+  testWidgets('clearing saved inputs removes the moved subtitle leftovers', (
+    tester,
+  ) async {
+    final prefs = Prefs()
+      ..value = HandyPreferences(
+        locale: 'en',
+        favorites: ['subtitle-srt'],
+        drafts: {'subtitle-vtt': 'WEBVTT'},
+      );
+    await start(
+      tester,
+      documents: Store(),
+      files: Files(),
+      drafts: {},
+      prefs: prefs,
+    );
+    await go(tester, '/settings');
+    await tapKey(tester, 'settings-clear-inputs');
+    await tester.tap(find.byKey(const Key('confirm-action')));
+    await tester.pumpAndSettle();
+    expect(prefs.value.drafts, isEmpty);
+    expect(prefs.value.favorites, isEmpty);
+    expect(prefs.value.locale, 'en');
+  });
+
+  testWidgets('with nothing left over there is nothing to clear', (
+    tester,
+  ) async {
+    await start(tester, documents: Store(), files: Files(), drafts: {});
+    await go(tester, '/settings');
+    expect(find.byKey(const Key('settings-clear-inputs')), findsNothing);
   });
 }

@@ -4,6 +4,7 @@ import 'inspection.dart';
 import 'json_view.dart';
 import 'lenses.dart';
 import 'status_line.dart';
+import 'utility_views.dart';
 
 String _fact(BuildContext c, String key) {
   final parts = key.split(':');
@@ -17,8 +18,41 @@ String _fact(BuildContext c, String key) {
     'matches' => tr(c, '$n matches', '$n kết quả khớp'),
     'keys' => tr(c, '$n keys', '$n khóa'),
     'items' => tr(c, '$n items', '$n phần tử'),
+    'unit' => switch (parts[1]) {
+      'seconds' => tr(c, 'seconds', 'giây'),
+      'milliseconds' => tr(c, 'milliseconds', 'mili giây'),
+      'microseconds' => tr(c, 'microseconds', 'micro giây'),
+      'nanoseconds' => tr(c, 'nanoseconds', 'nano giây'),
+      'now' => tr(c, 'now', 'bây giờ'),
+      _ => 'ISO-8601',
+    },
+    'id' => key.substring(3),
+    'ids' => tr(c, '$n IDs', '$n ID'),
+    'bad-ids' => tr(c, '$n invalid', '$n không hợp lệ'),
+    'identical' => tr(c, 'identical', 'giống nhau'),
+    'diff' => tr(
+      c,
+      '+${parts[1]} −${parts[2]} lines',
+      '+${parts[1]} −${parts[2]} dòng',
+    ),
+    'never' => tr(c, 'never runs', 'không bao giờ chạy'),
+    'next' => () {
+      final r = relativeTime(DateTime.parse(key.substring(5)), DateTime.now());
+      return tr(c, 'next ${r.en}', 'lần tới ${r.vi}');
+    }(),
+    'bits' => tr(c, '$n-bit', '$n bit'),
+    'params' => tr(c, '$n parameters', '$n tham số'),
     _ => key,
   };
+}
+
+/// Engine messages carry both languages as `English / Tiếng Việt`; the
+/// reader sees their own.
+String localMessage(BuildContext c, String message) {
+  final i = message.indexOf(' / ');
+  return i < 0
+      ? message
+      : tr(c, message.substring(0, i), message.substring(i + 3));
 }
 
 /// The answer to "what is in it": a tree, text or a request, with the
@@ -30,6 +64,10 @@ class ResultPanel extends StatelessWidget {
   final ValueChanged<String> onPath;
   final VoidCallback onCopy, onSave;
   final ValueChanged<ApiRequest> onOpenRequest;
+
+  /// Replaces the source (a rebuilt URL, freshly made IDs).
+  final ValueChanged<String> onReplace;
+  final void Function(IdKind kind, int count) onGenerate;
   const ResultPanel({
     super.key,
     required this.result,
@@ -39,6 +77,8 @@ class ResultPanel extends StatelessWidget {
     required this.onCopy,
     required this.onSave,
     required this.onOpenRequest,
+    required this.onReplace,
+    required this.onGenerate,
   });
 
   @override
@@ -69,7 +109,7 @@ class ResultPanel extends StatelessWidget {
       );
     } else if (r.error.isNotEmpty) {
       body = HandyNotice(
-        r.error,
+        localMessage(context, r.error),
         key: const Key('dev-error'),
         tone: HandyTone.error,
       );
@@ -95,6 +135,12 @@ class ResultPanel extends StatelessWidget {
             ),
           ),
         ],
+      );
+    } else if (r.detail != null) {
+      body = UtilityView(
+        result: r,
+        onReplace: onReplace,
+        onGenerate: onGenerate,
       );
     } else if (r.tree != null) {
       body = JsonTreeView(value: r.tree, onSelect: onPath);
@@ -123,7 +169,8 @@ class ResultPanel extends StatelessWidget {
         body,
         const SizedBox(height: HandySpace.m),
         status,
-        if (r.ok && r.request == null) ...[
+        // A URL's own view carries Copy URL; its parts are not the answer.
+        if (r.ok && r.request == null && r.detail is! UrlParts) ...[
           const SizedBox(height: HandySpace.m),
           Wrap(
             spacing: HandySpace.s,
@@ -132,7 +179,11 @@ class ResultPanel extends StatelessWidget {
                 key: const Key('dev-copy'),
                 onPressed: onCopy,
                 icon: const Icon(Icons.copy_rounded, size: 18),
-                label: Text(tr(context, 'Copy result', 'Sao chép kết quả')),
+                label: Text(switch (r.lens.id) {
+                  'uuid' => tr(context, 'Copy IDs', 'Chép ID'),
+                  'text-diff' => tr(context, 'Copy diff', 'Chép bản so sánh'),
+                  _ => tr(context, 'Copy result', 'Sao chép kết quả'),
+                }),
               ),
               IconButton.outlined(
                 key: const Key('dev-save-file'),

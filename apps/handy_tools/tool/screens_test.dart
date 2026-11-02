@@ -7,6 +7,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:handy_storage/handy_storage.dart';
 import 'package:handy_tools/app.dart';
+import 'package:handy_tools/bench/bench_page.dart';
 import 'package:handy_ui/kit.dart';
 import '../test/pilot_test.dart'
     show FixtureFiles, MemoryPreferences, QrTestDocuments;
@@ -98,6 +99,59 @@ Future<void> type(WidgetTester t, String key, String text) async {
   await t.pumpAndSettle();
 }
 
+Future<void> route(
+  WidgetTester t,
+  String id, [
+  Map<String, String> values = const {},
+]) async {
+  Navigator.of(
+    t.element(find.byType(BenchPage)),
+  ).pushNamed('/tool/$id', arguments: values);
+  await t.pumpAndSettle();
+}
+
+Future<void> bank(WidgetTester t) async {
+  await route(t, 'qr');
+  await t.tap(find.byKey(const Key('qr-mode-bank')));
+  await t.pumpAndSettle();
+  await t.tap(find.byKey(const Key('qr-bank')));
+  await t.pumpAndSettle();
+  await t.enterText(
+    find.descendant(
+      of: find.byKey(const Key('qr-bank')),
+      matching: find.byType(TextField),
+    ),
+    'Vietcombank',
+  );
+  await t.pumpAndSettle();
+  await t.tap(find.text('Vietcombank · VCB').last);
+  await t.pumpAndSettle();
+  await type(t, 'qr-field-0', '0071000123456');
+  await type(t, 'qr-field-1', '1.250.000');
+  await type(t, 'qr-field-2', 'Tiền nhà tháng 11');
+}
+
+const _srt = '''1
+00:00:01,200 --> 00:00:03,800
+Anh về muộn thế?
+
+2
+00:00:04,100 --> 00:00:06,000
+Tắc đường ở cầu Chương Dương.
+
+3
+00:00:06,500 --> 00:00:09,250
+Cơm để trong nồi, còn nóng đấy.
+
+4
+00:00:10,000 --> 00:00:12,400
+Mai mình về quê ăn giỗ bà nhé.
+
+5
+00:00:13,000 --> 00:00:15,500
+Ừ, để anh xin nghỉ buổi chiều.
+''';
+
 Future<void> fillTape(WidgetTester t) async {
   await enter(t, '1.385.000 / 3');
   await enter(t, '15% của 2.400.000');
@@ -136,6 +190,10 @@ void main() {
       '$ui/BricolageGrotesque-Display.ttf',
     ]);
     final sdk = Platform.environment['FLUTTER_ROOT']!;
+    await _font('IBMPlexSans', [
+      for (final f in Directory('fonts').listSync())
+        if (f.path.endsWith('.ttf')) f.path,
+    ]);
     await _font('MaterialIcons', [
       '$sdk/bin/cache/artifacts/material_fonts/materialicons-regular.otf',
     ]);
@@ -202,6 +260,41 @@ void main() {
       await t.pumpAndSettle();
       await shot(t, '$label-7-catalog');
     });
+    testWidgets('$label salary', (t) async {
+      await boot(t, size);
+      await route(t, 'salary', {'date': '2026-11-02', 'dependants': '1'});
+      await type(t, 'field-amount', '45.000.000');
+      await t.scrollUntilVisible(
+        find.byKey(const Key('bench-answer')),
+        200,
+        scrollable: find.byType(Scrollable).first,
+      );
+      await shot(t, '$label-10-salary');
+    });
+    testWidgets('$label words', (t) async {
+      await boot(t, size);
+      await route(t, 'number-words', {'number': '1.250.000'});
+      await shot(t, '$label-11-words');
+    });
+    testWidgets('$label lunar', (t) async {
+      await boot(t, size);
+      await route(t, 'lunar', {'date': '2026-09-25'});
+      await shot(t, '$label-12-lunar');
+    });
+    testWidgets('$label vietqr', (t) async {
+      await boot(t, size);
+      await bank(t);
+      await shot(t, '$label-13-vietqr');
+    });
+    testWidgets('$label subtitles', (t) async {
+      await boot(t, size);
+      await route(t, 'subtitles');
+      await t.enterText(find.byKey(const Key('subtitle-input')), _srt);
+      await t.enterText(find.byKey(const Key('subtitle-offset')), '1500');
+      await t.pump(const Duration(milliseconds: 300));
+      await t.pumpAndSettle();
+      await shot(t, '$label-14-subtitles');
+    });
     testWidgets('$label settings', (t) async {
       await boot(t, size);
       await t.tap(find.byKey(const Key('open-settings')));
@@ -209,6 +302,59 @@ void main() {
       await shot(t, '$label-8-settings');
     });
   }
+  testWidgets('phone 320 new states', (t) async {
+    await boot(t, const Size(320, 700));
+    await route(t, 'case', {
+      'text': 'đơn xin nghỉ phép. kính gửi phòng nhân sự',
+    });
+    await t.tap(find.text('Đầu câu'));
+    await t.pumpAndSettle();
+    await shot(t, 'narrow-15-case');
+    await t.tap(find.byKey(const Key('tool-close')));
+    await t.pumpAndSettle();
+    await route(t, 'salary', {
+      'date': '2026-11-02',
+      'mode': 'net',
+      'amount': '20.000.000',
+      'insured': '5.310.000',
+    });
+    await shot(t, 'narrow-16-salary-rules');
+    await t.scrollUntilVisible(
+      find.byKey(const Key('rows-note')),
+      200,
+      scrollable: find.byType(Scrollable).first,
+    );
+    await shot(t, 'narrow-17-salary-payslip');
+    await t.tap(find.byKey(const Key('tool-close')));
+    await t.pumpAndSettle();
+    await route(t, 'lunar', {
+      'direction': 'lunar',
+      'lday': '1',
+      'lmonth': '5',
+      'lyear': '2025',
+      'leap': 'yes',
+    });
+    await shot(t, 'narrow-18-lunar-error');
+    await t.tap(find.byKey(const Key('tool-close')));
+    await t.pumpAndSettle();
+    await route(t, 'subtitles');
+    await shot(t, 'narrow-19-subtitles-empty');
+    await t.enterText(find.byKey(const Key('subtitle-input')), _srt);
+    await t.enterText(find.byKey(const Key('subtitle-offset')), '-2000');
+    await t.pump(const Duration(milliseconds: 300));
+    await t.pumpAndSettle();
+    await shot(t, 'narrow-20-subtitles-problem');
+  });
+  testWidgets('phone dark salary', (t) async {
+    await boot(t, const Size(390, 844), theme: 'dark');
+    await route(t, 'salary', {'date': '2026-11-02', 'amount': '30.000.000'});
+    await t.scrollUntilVisible(
+      find.byKey(const Key('bench-answer')),
+      200,
+      scrollable: find.byType(Scrollable).first,
+    );
+    await shot(t, 'phone-21-dark-salary');
+  });
   testWidgets('phone dark working', (t) async {
     await boot(t, const Size(390, 844), theme: 'dark');
     await fillTape(t);
@@ -231,5 +377,19 @@ void main() {
       await t.tap(find.byKey(const Key('open-catalog')).first);
       await t.pump();
     });
+  });
+
+  testWidgets('phone notebook', (t) async {
+    await boot(t, const Size(390, 844));
+    await t.ensureVisible(find.byKey(const Key('open-notebook')));
+    await t.tap(find.byKey(const Key('open-notebook')));
+    await t.pumpAndSettle();
+    await t.enterText(
+      find.byKey(const Key('notebook-text')),
+      'Tiền nhà: 5tr\nĐiện 1.200.000\nĂn trưa 22 x 35k\ntổng\n\n'
+      'tiết kiệm = ans * 10%\nchia 3 = 6.235.000 / 3',
+    );
+    await t.pumpAndSettle();
+    await shot(t, 'phone-22-notebook');
   });
 }

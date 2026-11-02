@@ -40,12 +40,16 @@ class ForecastStrip extends StatelessWidget {
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.end,
                         children: [
-                          Text(
-                            n == 0 ? '' : '$n',
-                            maxLines: 1,
-                            style: theme.textTheme.labelSmall?.copyWith(
-                              color: i == 0 ? c.selectInk : c.muted,
-                              fontFeatures: tabular,
+                          // Narrow columns shrink a count rather than cut it.
+                          FittedBox(
+                            fit: BoxFit.scaleDown,
+                            child: Text(
+                              n == 0 ? '' : '$n',
+                              maxLines: 1,
+                              style: theme.textTheme.labelSmall?.copyWith(
+                                color: i == 0 ? c.selectInk : c.muted,
+                                fontFeatures: tabular,
+                              ),
                             ),
                           ),
                           const SizedBox(height: 2),
@@ -80,7 +84,11 @@ class ForecastStrip extends StatelessWidget {
             children: [
               for (var i = 0; i < days.length; i++)
                 Expanded(
+                  // A label wider than its column (Today) runs into the
+                  // unlabelled neighbour instead of being cut.
                   child: Text(
+                    softWrap: false,
+                    overflow: TextOverflow.visible,
                     i == 0
                         ? tr(context, 'Today', 'Nay')
                         : i % 2 == 0
@@ -92,7 +100,6 @@ class ForecastStrip extends StatelessWidget {
                         : '',
                     textAlign: TextAlign.center,
                     maxLines: 1,
-                    overflow: TextOverflow.clip,
                     style: theme.textTheme.labelSmall?.copyWith(
                       color: i == 0 ? c.selectInk : c.muted,
                       fontWeight: i == 0 ? FontWeight.w600 : null,

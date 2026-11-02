@@ -28,13 +28,13 @@ giữ bảng màu và font của bộ:
   và dấu chọn; màu nhạt dùng cho vùng chọn và panel trả lời. Nền và khung trung
   tính, không dùng nền kem.
 
-  | App    | Màu       | App   | Màu       |
-  | ------ | --------- | ----- | --------- |
-  | Tools  | `#E8590C` | Save  | `#0E7490` |
-  | Keep   | `#B7791F` | Docs  | `#1D5FBF` |
-  | Recall | `#4D7C0F` | Media | `#C2255C` |
-  | Dev    | `#0F8A5F` | Spend | `#2E7D32` |
-  | Habit  | `#B42318` |       |           |
+  | App    | Màu       | App      | Màu       |
+  | ------ | --------- | -------- | --------- |
+  | Tools  | `#E8590C` | Bookmark | `#0E7490` |
+  | Keep   | `#B7791F` | Docs     | `#1D5FBF` |
+  | Recall | `#4D7C0F` | Media    | `#C2255C` |
+  | Dev    | `#0F8A5F` | Spend    | `#2E7D32` |
+  | Habit  | `#B42318` |          |           |
 
   Không dùng tím hoặc chàm.
 
@@ -83,6 +83,76 @@ giữ bảng màu và font của bộ:
 | iOS      | Vuốt từ mép để quay lại; công tắc, hộp thoại và bộ chọn ngày giờ kiểu iOS (`.adaptive`, Cupertino picker); rung nhẹ; theo cỡ chữ hệ thống; tôn trọng safe area.           |
 | Windows  | Bố cục rộng nhiều cột; phím tắt (`Ctrl+K` mở bảng công cụ, `Ctrl+L` về ô nhập, `Enter` ghi, `Ctrl+Shift+C` chép, `Ctrl+S` lưu, `Esc` thoát); hover; thanh cuộn luôn hiện. |
 | Web      | URL theo màn hình (`/tool/<id>`, `/settings`), nút back của trình duyệt dùng được; viền focus rõ; cài được như ứng dụng (PWA) và chạy offline.                            |
+
+## Hợp đồng: phần dùng chung thêm vào kit (2026-11-02)
+
+Chạy skill: `draw.mjs --app --kind workspace` (`.taste-skill/kit-more`). Skill đưa ra
+achromatic-ledger và editorial-greeting, nhưng không dùng: đây là các mục nằm trong màn
+Cài đặt và thanh trên có sẵn của từng app, nên giữ accent-ladder của bộ app (skill:
+"một component thì theo thiết kế xung quanh").
+
+**Tự sao lưu** (`HandyAutoBackupSection`, mục trong Cài đặt)
+
+- Việc: dữ liệu không mất khi máy hỏng hay mất, mà không cần tài khoản hay máy chủ.
+- Câu hỏi của mục: "Lần sao lưu gần nhất là khi nào, và nằm ở đâu?". Câu trả lời là
+  dòng đầu, chữ lớn nhất của mục, ví dụ "Hôm nay 09:30 · Google Drive › Handy".
+- Hành động chính: "Sao lưu ngay". Công tắc bật/tắt nằm ở dòng tiêu đề.
+- Điều khiển đều tự lưu:
+  - Chọn thư mục (tên thư mục hiện bên cạnh).
+  - Tần suất: mỗi ngày hoặc mỗi tuần.
+  - Số bản giữ lại: 3, 7, 14 hoặc 30.
+  - Mã hóa bằng mật khẩu.
+- Mã hóa:
+  - Đặt mật khẩu gồm ô mật khẩu, ô nhập lại, và một câu cảnh báo luôn hiện: "Quên mật
+    khẩu thì không mở được bản sao lưu".
+  - Có "Đổi mật khẩu" và "Tắt mã hóa".
+  - App không lưu mật khẩu; xem `handy_core/sealed.dart`.
+- Trạng thái:
+  - Chưa bật: một câu nói lợi ích, kèm nút "Chọn thư mục".
+  - Đang chạy: chỉ báo tiến trình trên dòng trạng thái, nút "Sao lưu ngay" tạm khóa.
+  - Lỗi: một câu nói cái gì hỏng (mất quyền thư mục, ghi lỗi) kèm "Thử lại" hoặc "Chọn
+    lại thư mục". Màu báo lỗi chỉ ở icon nhỏ.
+  - Không hỗ trợ (Web): một câu "Trình duyệt không cho app ghi vào thư mục; dùng Sao lưu
+    thủ công", không có điều khiển chết.
+- Theo nền tảng:
+
+  | Nền tảng | Nơi lưu                                                                                  |
+  | -------- | ---------------------------------------------------------------------------------------- |
+  | Android  | Thư mục chọn qua bộ chọn của hệ thống (máy, Google Drive, OneDrive…), giữ quyền lâu dài. |
+  | iOS      | Thư mục của app trong ứng dụng Tệp; iCloud Backup của máy mang theo. Không chọn thư mục. |
+  | Windows  | Thư mục bất kỳ, kể cả thư mục OneDrive hay Google Drive đã đồng bộ.                      |
+  | Web      | Không có.                                                                                |
+
+- Khi nào chạy: lúc mở app và lúc app ra nền, nếu đã đến hạn và dữ liệu có thay đổi.
+  Không chạy ngầm khi app đóng, và trong mục nói rõ điều này.
+- Rộng 320–1440: một cột; từ 840 thì nhãn bên trái, điều khiển bên phải, theo trang
+  Cài đặt hiện có.
+- Loại bỏ: thanh tiến trình giả, đếm ngược, màu thương hiệu trên công tắc, icon trong ô
+  màu.
+
+**Mở bản sao lưu đã mã hóa** (`openSealedBackup`): khi nhập một tệp `.hseal`, app hỏi
+mật khẩu trong hộp thoại:
+
+- Một ô mật khẩu có nút hiện/ẩn, "Mở" và "Hủy".
+- Sai mật khẩu: báo ngay dưới ô và giữ hộp thoại để nhập lại.
+- Đang giải mã: nút "Mở" thành chỉ báo tiến trình; thường mất 1–4 giây.
+- Hủy: không thay đổi gì.
+
+**Các app khác trong Handy** (`HandyMoreApps`, cuối Cài đặt, trên mục Giới thiệu):
+
+- Mỗi app là một dòng: chấm màu của app, tên, một câu nói app làm gì.
+- Chạm để mở trang store (Android, iOS) hoặc trang web của app (Web, Windows), chỉ khi
+  người dùng chạm.
+- Không hiện app đang mở. Không ảnh quảng cáo, không huy hiệu "Mới".
+
+**Widget màn hình chính** (Android trước; iOS cần Xcode nên chưa làm):
+
+- Habit: tên thói quen và hạt hôm nay; chạm vào hạt là đánh dấu thói quen dạng có hoặc
+  chưa, còn loại khác thì mở app ở thói quen đó.
+- Spend: "Còn tiêu được hôm nay" với một con số lớn.
+- Recall: số thẻ đến hạn, kèm nút "Ôn".
+- Nền trắng hoặc tối theo hệ thống, một chấm màu của app, chữ Geist. Khi trống thì nói
+  thật ("Hôm nay không còn việc"). Số được cập nhật mỗi khi dữ liệu trong app đổi.
 
 ## Hợp đồng: Handy Tools
 
@@ -145,6 +215,76 @@ gõ tự do (thuần Dart, có test); `free_bench.dart` là ô nhập tự do; `
 là form công cụ; `tape.dart` và `tape_view.dart` là băng kết quả; `catalog.dart` là
 bảng công cụ; `shelf.dart` là kệ công cụ trên desktop; `bench_page.dart` gồm shell,
 phím tắt và bố cục. Route: `/`, `/tool/<id>`, `/settings`.
+
+### Bổ sung 2026-11: kiểu chữ, lương, đọc số, âm lịch, VietQR, phụ đề
+
+Chạy lại skill (app-screens, `accent-ladder` giữ palette/type của suite, seed 1976563080,
+`.taste-skill/tools-more`). Không thêm màn hình hay shell mới: mọi thứ là form trên **bàn**,
+đáp án vào **băng**. Dữ liệu: lương 5–200 triệu đ/tháng, 0–4 người phụ thuộc, 4 vùng; số
+tiền tới hàng nghìn tỷ; ngày 1900–2100; tài khoản ngân hàng 6–19 ký tự; tệp phụ đề ≤ 1 MB,
+≤ 10.000 câu. Người dùng: nhân viên xem offer, chủ shop nhỏ tính lương, kế toán ghi hóa đơn,
+người bán hàng in mã chuyển khoản, người xem phim lệch phụ đề.
+
+| Công cụ                | Câu hỏi của form                                               | Khối lớn nhất / phát hiện                                           | Hành động chính |
+| ---------------------- | -------------------------------------------------------------- | ------------------------------------------------------------------- | --------------- |
+| `case` (gộp 4 công cụ) | "Văn bản này viết lại kiểu chữ nào?"                           | Văn bản đã đổi                                                      | Sao chép        |
+| `salary`               | "Mình thực nhận bao nhiêu?" (hoặc "phải trả gross bao nhiêu?") | Dòng Thực nhận (hay Lương gộp) màu cam; dưới là phiếu lương trừ dần | Sao chép        |
+| `number-words`         | "Dòng 'Bằng chữ' ghi gì?"                                      | Câu tiếng Việt viết hoa đầu, kèm "đã hiểu số là …"                  | Sao chép        |
+| `lunar`                | "Hôm đó là ngày mấy âm / dương?"                               | Ngày âm (hay dương), rồi can chi, tiết khí                          | Sao chép        |
+| QR "Chuyển khoản"      | "Mã này chuyển đúng tài khoản chưa?"                           | Mã QR kèm dòng đọc lại: ngân hàng · số TK · số tiền · nội dung      | Lưu ảnh         |
+| Phụ đề                 | "Thời gian khớp chưa?"                                         | 5 câu đầu: giờ mới, giờ cũ màu xám                                  | Lưu .srt/.vtt   |
+
+**Yếu tố đặc trưng giữ nguyên là băng.** Phiếu lương là băng thu nhỏ, hai khối: trên là
+lương gộp trừ BHXH, BHYT, BHTN, thuế TNCN (dấu trừ) ra đúng số thực nhận; dưới là cách
+tính thuế (giảm trừ, thu nhập tính thuế, thuế từng bậc "Bậc 2 · 10% × 8.575.000"). Tất
+cả là số thật từ engine và cộng lại khớp; chạm dòng nào chép số đó. Tên công cụ là "Tính
+lương" (tên dài "Lương Gross / Net" bị cắt ở 320 px). Dưới phiếu là một dòng xám nêu bộ quy định đang
+dùng ("Quy định từ 2026-07-01 · NĐ 161/2026, NQ 110/2025, Luật 109/2025") và trần đóng.
+
+**Quy định có ngày hiệu lực.** Form lương có ô "Áp dụng quy định ngày" (mặc định hôm nay,
+chọn bằng `pickHandyDate`). Mọi tham số (lương đóng BH, giảm trừ bản thân/người phụ thuộc,
+lương cơ sở, lương tối thiểu vùng, tỷ lệ BHXH/BHYT/BHTN, biểu thuế) nằm trong nút "Quy định
+đang dùng · sửa": bấm ra các ô trống có gợi ý là giá trị của bảng; ô nào điền thì ghi đè, xóa
+trắng là về bảng. Có ô ghi đè thì dòng xám ghi "Đã sửa N tham số".
+
+**Đọc số:** chọn đơn vị (đồng / không đơn vị) và giọng (Bắc: linh, nghìn / Nam: lẻ, ngàn).
+Câu tiếng Anh nằm dưới, chữ xám, có nút chép riêng. **Âm lịch:** một nút đổi chiều
+(Dương → Âm / Âm → Dương); chiều Âm → Dương hiện ô ngày, tháng, năm và "tháng nhuận".
+**Kiểu chữ:** một ô văn bản và 4 nút liền (HOA / thường / Đầu Từ / Đầu câu); dưới
+352 px (nút hẹp hơn 88 px) 4 nút thành một hàng chip để chữ không bị bẻ. Chuỗi xử lý
+văn bản vẫn có 4 chip cũ (chuỗi đã lưu vẫn chạy).
+
+**VietQR** là kiểu thứ sáu trong QR: chọn ngân hàng (ô gõ để lọc, danh sách cố định trong
+app), số tài khoản, số tiền và nội dung (không bắt buộc; nội dung tự bỏ dấu, ≤ 25 ký tự).
+Dưới mã là dòng đọc lại và cảnh báo "Kiểm tra tên chủ tài khoản trong app ngân hàng trước
+khi chuyển". Lưu PNG/SVG/PDF, chia sẻ, lịch sử như các kiểu khác.
+
+**Phụ đề là một chế độ của bàn, không phải công cụ registry** (`/tool/subtitles`, nhóm "Tạo
+mới" cạnh QR và Mật khẩu). Lý do: nó làm việc với một tệp (mở, xem trước, kiểm tra cả tệp, lưu
+tệp) chứ không phải chuỗi vào → chuỗi ra; code nằm ở `handy_media_engine` và registry engine
+Tools không phụ thuộc Media. Bố cục: ô nguồn (dán hoặc "Mở tệp"), nút SRT/WebVTT, ô dời (ms)
+với nút −0,5 s / +0,5 s, xem trước 5 câu đầu trước/sau, nút Lưu. Lưu đọc lại cả tệp, dựng
+lại, đọc lại kết quả và so số câu trước khi ghi; lỗi ở bất kỳ câu nào thì không ghi gì.
+
+**Trạng thái:** rỗng: một câu nói cần điền gì (lương: "Nhập lương gộp hoặc thực nhận");
+đang gõ: không báo lỗi; lỗi: một dòng đỏ dưới form, nói giá trị nào sai; không có quy định cho
+ngày đã chọn (trước 2024-07-01): lỗi nói rõ ngày sớm nhất; năm âm không có tháng nhuận đó: lỗi
+nói tháng nhuận thật của năm; phụ đề rỗng: hướng dẫn dán/mở, giới hạn 1 MB và 10.000 câu;
+phụ đề lệch về trước 0: cảnh báo và nút Lưu tắt. Không có trạng thái tải (tính tại chỗ).
+
+**Bề rộng 320–1440:** form một cột; ở 320 px các nút liền 4 lựa chọn vẫn một hàng (nhãn
+ngắn); phiếu lương nhãn trái 2 phần, số phải 3 phần, số không bao giờ xuống dòng; từ 900 px
+form nằm cột trái, băng cột phải như cũ. Phụ đề: điện thoại ô nguồn cao 220 px rồi bảng điều
+khiển; desktop vẫn trong cột bàn (không tách khung riêng).
+
+**Nền tảng:** Android/iOS: bàn phím số cho tiền và số TK, nút Back đóng form về ô nhập; chia
+sẻ qua sheet hệ thống. Windows/Web: Esc đóng form, Ctrl K tìm công cụ, URL `#/tool/salary`,
+`#/tool/number-words`, `#/tool/lunar`, `#/tool/case`, `#/tool/subtitles`, `#/tool/qr`.
+Ô nhập tự do còn hiểu `1.250.000 bằng chữ`, `lương 25.000.000`, `net 20.000.000`,
+`2026-09-25 âm lịch`.
+
+**Loại bỏ:** bảng tham số dài luôn hiện, mỗi kiểu chữ một công cụ, trang phụ đề riêng có
+AppBar, danh sách ngân hàng dạng lưới logo (không tải logo từ mạng).
 
 ## Hợp đồng: Handy Dev
 
@@ -227,6 +367,70 @@ Pointer sang JSONPath, `inspect/status_line.dart` là thanh trạng thái;
 _phân tích_ (JWT, regex, schema, so sánh, JSONPath, chọn trường, HAR) hiện dạng cây;
 lăng kính _chuyển đổi_ hiện văn bản. Thanh trên, bảng `Ctrl+K` và thanh chuỗi dùng
 chung với Tools qua kit (`HandyTopBar`, `showHandyCatalog`, `HandyChainBar`).
+
+### Bổ sung: bảy lăng kính tiện ích (thời gian, ID, so sánh, cron, hệ cơ số, URL, HMAC)
+
+**Dữ liệu và việc:** mốc Unix 10 hoặc 13 chữ số (đôi khi µs/ns), chuỗi ISO-8601; UUID và
+ULID (một cái, hoặc một cột trong log); hai bản văn bản (cấu hình trước và sau, 10–2.000
+dòng); một dòng cron; số nguyên (mặt nạ `0xff`, quyền `0o755`, giá trị 64 bit âm); URL có
+query (UTM, callback OAuth); body webhook cùng khóa bí mật. Việc thường gặp: "mốc này là
+lúc nào?", "cho mình 5 UUID v7", "hai bản khác nhau ở đâu?", "cron này chạy khi nào?",
+"−1 ở 32 bit là gì?", "URL này chứa gì, đổi một tham số", "tính HMAC để so với header".
+
+**Câu hỏi và phát hiện:** mỗi lăng kính trả lời một câu, khối lớn nhất là câu trả lời,
+thanh trạng thái (yếu tố đặc trưng) ghi phát hiện:
+
+- Mốc thời gian: "Đây là lúc nào?" Giờ trong múi đã chọn, cỡ lớn, màu app; dưới là "3 ngày
+  trước". Thanh trạng thái: `giây` / `mili giây`.
+- UUID/ULID: "ID này loại gì, tạo lúc nào?" `UUID v7` cỡ lớn, thời điểm bên dưới; danh
+  sách nhiều ID thì mỗi dòng một ID kèm phiên bản. Hàng **Tạo**: loại, số lượng (1–1000),
+  nút Tạo, thay nguồn bằng ID mới để xem lại ngay.
+- So sánh văn bản: "Khác ở đâu?" `+3 −1 dòng` trên thanh trạng thái; dòng bỏ nền đỏ nhạt
+  có dấu `−`, dòng thêm nền màu app nhạt có dấu `+` (không chỉ dựa vào màu). Hai cột khi
+  khung kết quả rộng từ 600 px, gộp (unified) khi hẹp hơn; có nút đổi. Sao chép lấy bản
+  unified.
+- Cron: "Khi nào chạy?" Câu giải thích (EN/VI theo ngôn ngữ app) cỡ lớn, rồi các lần chạy
+  kế tiếp (giờ trong múi đã chọn + "5 phút nữa"), rồi bảng trường. Thanh trạng thái: lần
+  chạy gần nhất.
+- Hệ cơ số: số thập phân là dòng dẫn; hex, octal, nhị phân (nhóm 4 chữ số khi hiển thị,
+  chép bản gốc), hệ tùy chọn, bù hai theo số bit.
+- URL: host là dòng dẫn; scheme, user (mật khẩu chỉ ghi "đã ẩn"), port, path, fragment;
+  bảng tham số query đã giải mã, sửa, xóa, thêm được; URL dựng lại ngay bên dưới với nút
+  **Chép URL** và **Dùng làm nguồn**.
+- HMAC: chữ ký ở dạng văn bản để chép, như các lăng kính mã hóa.
+
+**Flow:** không có trang mới. Dán vào Soi dữ liệu thì app nhận thêm các loại `Mốc thời
+gian`, `Số nguyên`, `UUID/ULID`, `Cron`, `URL`; mơ hồ thì "Hiểu là" cho chọn (10 chữ số:
+Mốc thời gian | Số nguyên). Văn bản bất kỳ có thêm lăng kính **So sánh văn bản** (ô "So
+với" nhiều dòng) và **HMAC** (ô khóa che ký tự, có nút hiện). Tùy chọn của lăng kính là
+hàng chip ngay dưới hàng lăng kính, cùng kiểu "Hiểu là": Múi giờ (Giờ máy | UTC) và ô "Độ
+lệch khác" (`+07:00`); Số lần chạy (5 | 10 | 20); Số bit (Không | 8 | 16 | 32 | 64) và ô
+"Thêm hệ cơ số"; Hàm băm (SHA-256 | SHA-512), Kết quả (hex | Base64), Khóa là (Văn bản |
+hex | Base64). Màn hình trống có thêm nhóm **Tạo mới**: UUID v4, UUID v7, ULID, Bây giờ.
+Chọn UUID hay Mốc thời gian từ Ctrl K khi nguồn trống thì app tạo sẵn một giá trị.
+
+**Trạng thái:** trống: chip Tạo mới và mẫu Cron, URL; lỗi: một dòng nói trường nào sai
+("Phút: 60 nằm ngoài 0–59", "Không vừa 8 bit"); hai bản giống nhau: "Hai bản giống nhau";
+quá giới hạn so sánh: một dòng lỗi; cron không bao giờ chạy: "Không có lần chạy nào trong
+8 năm tới"; HMAC chưa có khóa: "Điền khóa ở trên"; ID sai trong danh sách: dòng đó báo
+lỗi, các dòng khác vẫn hiện. Không có trạng thái tải: mọi thứ tính tại chỗ.
+
+**Độ rộng 320–1440:** kết quả vẫn là cột phải từ 900 px, ở dưới nguồn khi hẹp hơn. Hàng
+giá trị chạm để chép, cao tối thiểu 48 px, giá trị dài xuống dòng chứ không cắt. Bảng
+query: tên và giá trị cạnh nhau từ 400 px, chồng lên nhau khi hẹp hơn. Hàng Tạo xuống
+dòng trên điện thoại. So sánh hai cột chỉ khi đủ chỗ.
+
+**Nền tảng:** Windows/Web: Ctrl K tìm được từng lăng kính, Tab đi qua chip, ô và nút theo
+thứ tự đọc; không đổi URL (như Soi dữ liệu). Android/iOS: chép có rung nhẹ (kit); nút Quay
+lại như trước. Ô khóa HMAC tắt gợi ý bàn phím và tự sửa.
+
+**An toàn:** HMAC là lăng kính nhạy cảm: khóa chỉ nằm trong ô của phiên, bị xóa khi đổi
+lăng kính hay loại dữ liệu, không vào nháp, chuỗi, cài đặt xuất ra hay thông báo lỗi.
+Tách URL không hiện mật khẩu. HAR giữ scheme, host, path và tên tham số, che mọi giá trị
+query, vẫn bỏ header, cookie, body.
+
+**Loại bỏ:** trang riêng cho mỗi tiện ích, form nhiều bước để tạo UUID, màu theo loại
+trường, bảng diff có lưới kẻ.
 
 ## Hợp đồng: Handy Keep
 
@@ -320,6 +524,62 @@ URL web `#/item/<id>`, `#/box/<id>`, `#/due`, `#/settings`.
 **Loại bỏ:** tab dưới, danh sách theo bảng chữ cái, trang Đến hạn làm tab, form ngày
 gõ tay, nút xuất/nhập nằm giữa trang Thùng.
 
+**Bổ sung 2026-11-02: giá trị, CSV, thêm từ ảnh, hẹn trả** (chạy lại
+`design-taste-frontend` app-screens với `draw.mjs --app --kind workspace --keep
+palette,type --style accent-ladder --out .taste-skill/keep-more`, seed 409778925;
+`frontend-ui-engineering`). Khuôn mặt vẫn là **chỗ ở hiện tại**; yếu tố mới là **giá
+trị theo chỗ**: dưới tên mỗi chỗ (thùng, người mượn, chỗ để) có tổng tiền của các món
+trong đó.
+
+- **Giá trị.** Việc: biết đồ trong một thùng hay cả nhà đáng bao nhiêu khi chuyển nhà
+  hoặc khai bảo hiểm. Không có hành động chính mới; câu trả lời đặt ở nơi người dùng
+  đang xem. Mỗi món có thể có giá mua và tiền tệ (VND, USD, EUR, JPY, KRW, CNY, SGD,
+  THB, AUD, GBP), gõ kiểu "4.500.000" hay "1,299.90". Tổng cộng **theo từng tiền
+  tệ**, không bao giờ cộng chéo: "18.520.000 đ · 89,99 USD". Món chưa có giá được
+  đếm riêng ("3 món chưa có giá"), không tính là 0; giá 0 là số 0 thật.
+  - Tất cả: một dòng nhỏ dưới chip lọc ("Tổng giá trị …"), vì câu hỏi của màn hình
+    vẫn là "ở đâu". Theo thùng, Đang cho mượn, một thùng: số lớn kèm nhãn của chế độ
+    xem ("Trong 3 thùng · 4 món"); đây là danh sách để chuyển nhà và khai bảo hiểm.
+    Mọi con số tính lại theo bộ lọc và ô tìm.
+  - Đầu nhóm: chế độ Theo thùng luôn ghi giá trị từng thùng (kể cả "1 món chưa có
+    giá"); ở chế độ khác chỉ chỗ nào có giá mới ghi.
+  - Chưa món nào có giá: không hiện gì, không nhắc nhở.
+  - Hồ sơ món: dòng "Giá mua" trong Thông tin. Form: ô giá kèm hộp chọn tiền tệ, mặc
+    định là tiền tệ hay dùng nhất, chưa có thì VND (tiếng Việt) hoặc USD.
+- **Xuất CSV.** Việc: đưa danh sách cho công ty chuyển nhà, bảo hiểm, hay bảng tính.
+  Menu ⋯ cạnh tiêu đề "Đồ trong nhà": "Lưu danh sách ra CSV", hoặc "Lưu N món này ra
+  CSV" khi đang lọc hay tìm (đúng những món trên màn hình, đúng thứ tự). Cài đặt → Dữ
+  liệu: lưu mọi món. Cột: tên, cất ở, thùng, người mượn, ngày cho mượn, hẹn trả, ngày
+  mua, giá, tiền tệ, bảo hành đến, serial, ghi chú; tiêu đề cột theo ngôn ngữ app.
+  UTF-8 có BOM (Excel đọc được tiếng Việt), CRLF, mọi ô trong ngoặc kép, ô bắt đầu
+  bằng = + - @ (cả dạng full-width) được thêm dấu ' phía trước. Đi qua `exportBytes`
+  như các bản xuất khác; hủy thì không báo gì, lỗi thì báo và dữ liệu không đổi.
+- **Thêm từ ảnh** (trang toàn màn hình). Việc: ghi nhanh nhiều món khi xếp thùng.
+  Hành động chính: "Lưu N món". Vào từ menu ⋯ ("Thêm từ ảnh") hoặc menu của một thùng
+  ("Thêm nhiều món từ ảnh", điền sẵn thùng đó). Android/iOS: "Chụp ảnh" chụp liên tục,
+  đóng camera là dừng; mọi nền tảng: "Chọn ảnh" chọn nhiều file một lúc. Mỗi ảnh hợp
+  lệ (PNG/JPEG theo chữ ký, ≤ 4 MB, cùng kiểm tra với form) thành một dòng: ảnh 64px,
+  ô tên, nút bỏ. Ảnh bị từ chối được liệt kê kèm lý do ngay dưới danh sách. Dưới cùng
+  là "Chung cho tất cả": một chỗ để và một thùng. Tối đa 20 ảnh mỗi lần (thư viện 16
+  MB). Lưu là một lần ghi: tất cả hoặc không món nào.
+  - Trạng thái: chưa có ảnh (một câu, hai nút, nút Lưu bị khóa); đang chờ ảnh; có
+    ảnh; thiếu tên (dòng đó báo "Đặt tên hoặc bỏ ảnh", không ghi gì); lưu lỗi (báo
+    lỗi, giữ mọi ảnh và tên để thử lại); đủ 20 ảnh (một câu thay cho hai nút).
+  - Đóng hoặc Back khi đã có ảnh: hỏi "Bỏ N ảnh này?"; bỏ thì không giữ gì.
+- **Hẹn trả và nhắc quá hạn.** Đã có sẵn từ trước: "Hẹn trả" là ngày tùy chọn trong
+  hộp Cho mượn (chọn bằng lịch); món quá hẹn hiện trong "Cần để ý" và trang Đến hạn;
+  nhắc cục bộ đặt vào ngày hẹn qua `ReminderController` (chỉ xin quyền khi bật nhắc
+  trong Cài đặt), bị hủy khi trả lại hoặc xóa món. Windows/Web dùng danh sách trong
+  app.
+- **Bề rộng 320–1440.** 320: tổng giá trị xuống dòng nguyên cụm ("3 món chưa có giá"
+  không bị cắt), lỗi tên xuống hai dòng; 900 trở lên: trang Thêm từ ảnh nằm trong cột
+  giữa `HandyContent`, nút Lưu ở thanh dưới.
+- **Nền tảng.** Back trên Android, vuốt trên iOS, Esc trên desktop đều đi qua câu hỏi
+  bỏ ảnh; web giữ URL của trang đang mở (trang Thêm từ ảnh là hộp thoại toàn màn
+  hình, không có URL riêng); camera chỉ có trên Android/iOS.
+- **Loại bỏ:** cộng các tiền tệ khác nhau thành một số; coi món chưa có giá là 0;
+  bảng nhập nhiều ô cho từng món; lưu từng món một trong lúc thêm hàng loạt.
+
 **Ghi chú triển khai** (`apps/handy_keep/lib/`): `inventory/whereabouts.dart` là phần
 lõi thuần Dart (chỗ ở hiện tại, tìm không dấu, mốc đến hạn, có test);
 `inventory/keep_store.dart` ghi trước rồi mới hiện, lưu lỗi thì giữ nguyên;
@@ -412,7 +672,54 @@ phần hình học vùng che đã có test, chỉ đổi giao diện, và giải
 ảnh (trước đây giải mã lại mỗi lần vẽ lại nên ảnh có thể nhấp nháy). Nhắc ôn dùng
 `ReminderController` và `RemindersSection` chung trong `handy_notifications`.
 
-## Hợp đồng: Handy Save
+### Recall: nhập Anki, thẻ điền khuyết, thẻ đảo chiều, đọc to
+
+Chạy lại skill cho bốn việc mới (`draw.mjs --app --kind workspace --keep palette,type`,
+ra `achromatic-ledger`; giữ hướng "colour per app" của kit, chỉ lấy luật màu: màu app
+chỉ trên dữ liệu chính).
+
+- **Nhập từ Anki** (`/import`, mở từ "Từ Anki" cạnh "Bộ thẻ mới" và từ trạng thái chưa
+  có bộ nào). Việc: đưa một bộ Anki sang mà biết trước cái gì vào, cái gì không. Câu hỏi
+  của màn: "Sẽ thêm những gì, và mất gì?" Khối lớn nhất: số thẻ (Bricolage) và lịch ôn 14
+  ngày của chính các thẻ đó (yếu tố đặc trưng của app, cột hôm nay màu app). Hành động
+  chính: **Thêm N thẻ** ở thanh đáy; phụ: File khác. Một lựa chọn: Giữ lịch ôn của Anki
+  (chỉ hiện khi file có lịch sử ôn). Rồi bộ thẻ mới (chấm màu nhận diện), loại thẻ
+  (thường, đảo chiều, điền khuyết, ảnh), **Không được thêm** kèm lý do (thẻ trống, che ảnh
+  của Anki, ảnh sai định dạng/quá 500 KB/hỏng, âm thanh), vài thẻ đầu. Trạng thái: chọn
+  file; đang đọc (khung giữ chỗ, "chưa thêm gì"); lỗi trong khối (một câu nói rõ lỗi, gói
+  định dạng mới không đọc được thì hướng dẫn xuất lại với "Support older Anki versions",
+  nút Chọn file khác); vượt giới hạn thư viện (thông báo đỏ, nút Thêm tắt); ghi lỗi (giữ
+  nguyên bản xem trước, "Không có gì thay đổi"). Bề rộng: dưới 900px một cột; từ 900px
+  hai cột như Hôm nay (trái: số thẻ, lịch ôn, lựa chọn; phải: chi tiết) để mọi khối nằm
+  trên màn đầu; 320px không tràn. Nền tảng: có trên Android, iOS, Windows và Web (đọc
+  bằng Dart thuần, không cần SQLite native); mở từ danh sách thì vào thẳng hộp chọn file,
+  hủy thì quay lại; Back/Esc thoát, đang ghi thì chặn Back; URL web `#/import`.
+- **Thẻ điền khuyết** (`{{c1::đáp án::gợi ý}}`): soạn bằng cách chọn chữ rồi bấm **Tạo ô
+  điền khuyết** (nút dưới ô câu hỏi, mục "Điền khuyết" trong menu chọn chữ, Ctrl+Shift+C;
+  Ctrl+Shift+Alt+C thêm ô cùng số). Dòng cạnh nút nói ra kết quả ("Tạo 2 thẻ, mỗi ô một
+  thẻ"). Ô đáp án đổi tên thành "Ghi chú thêm (không bắt buộc)". Khi ôn: ô trống mang
+  gợi ý trên nền màu app nhạt, các ô khác hiện chữ; lật ra thì ô được điền, gạch chân màu
+  app. Mỗi số một thẻ, lịch riêng.
+- **Thẻ đảo chiều**: công tắc "Tạo thêm thẻ đảo chiều" trong soạn thẻ (mặc định theo bộ
+  thẻ), tắt và ghi lý do với thẻ điền khuyết hoặc ảnh có vùng che; tắt trên thẻ đã có
+  thì cảnh báo trước khi lưu rằng thẻ đảo chiều và lịch ôn của nó sẽ bị xóa. Khi ôn, thẻ
+  đảo chiều có dòng nhỏ "Thẻ đảo chiều"; anh em cùng ghi chú không hiện liền nhau trong
+  một buổi. Xóa một thẻ xóa cả ghi chú, hộp xác nhận nói số thẻ liên quan.
+- **Đọc to**: "Cài đặt bộ thẻ" (thay "Đổi tên") có tên, mặc định thẻ đảo chiều và ngôn ngữ
+  đọc cho câu hỏi và đáp án, chọn từ giọng máy đang có. Không có giọng: một câu hướng dẫn
+  thêm giọng trong cài đặt hệ thống. Khi ôn: nút loa cạnh câu hỏi và cạnh đáp án chỉ khi
+  mặt đó có ngôn ngữ; phím R đọc mặt đang nhìn; thiếu giọng cho ngôn ngữ đó thì báo rõ,
+  không im lặng. Ngoại tuyến khi giọng hệ thống ngoại tuyến (trình duyệt có thể dùng
+  giọng trực tuyến).
+- **Chữ Nhật/Trung/Hàn trên Web**: `web/flutter_bootstrap.js` của Recall giữ các lát font
+  Noto mà engine tải từ fonts.gstatic.com lần đầu cần, trong cache riêng
+  `handy_recall-fonts-v1`; lần đầu phải có mạng, sau đó hiện được khi ngoại tuyến.
+
+**Loại bỏ:** bước nhập không có xem trước, thông báo "định dạng không hỗ trợ" mơ hồ, nút
+loa luôn hiện mà không đọc được, ô đáp án bắt buộc cho thẻ điền khuyết, cú pháp
+`{{c1::}}` chỉ gõ tay.
+
+## Hợp đồng: Handy Bookmark
 
 **Dữ liệu và việc** (skill §2.1)
 
@@ -422,7 +729,7 @@ phần hình học vùng che đã có test, chỉ đổi giao diện, và giải
   thông minh (Pro, 1–12 điều kiện); tìm kiếm đã lưu (Pro).
 - Quy mô thật: 50–3.000 link; mỗi ngày lưu 1–10 link, chủ yếu qua nút Chia sẻ của app
   khác; 5–30 bộ sưu tập; phần lớn link mới nằm trong "Chưa xếp".
-- Người dùng: một người, chủ yếu điện thoại. Lưu từ app khác (không mở Handy Save), rồi
+- Người dùng: một người, chủ yếu điện thoại. Lưu từ app khác (không mở Handy Bookmark), rồi
   lúc rảnh mở app để xếp, tìm lại, mở lại. Desktop để dọn dẹp hàng loạt, nhập/xuất.
 - Việc, theo thứ tự hay gặp: **tìm lại một link và mở nó trong app gốc**; **xếp link mới
   vào bộ sưu tập**; dán link để lưu; đọc lần lượt những link chưa đọc (Tập trung); dọn
@@ -505,10 +812,10 @@ dòng.
 
 **Ghi chú triển khai:** `view/library_view.dart` giữ truy vấn, trang, chọn nhiều và
 hoàn tác một bước (có test); `scope.dart` gom các thao tác; `controller.dart`,
-`platform/` và `services/` giữ nguyên từ bản cũ. Chưa có trong giao diện mới: tìm kiếm
-đã lưu (Pro) và sắp xếp thủ công (lên/xuống); dữ liệu của chúng vẫn được giữ.
+`platform/` và `services/` giữ nguyên từ bản cũ. Tìm kiếm đã lưu (Pro) và thứ tự tự
+xếp đã có lại (xem phần bổ sung dưới).
 
-**Kế hoạch triển khai** (`apps/handy_save/lib/`, giữ `controller.dart`, `platform/`,
+**Kế hoạch triển khai** (`apps/handy_bookmark/lib/`, giữ `controller.dart`, `platform/`,
 `services/`, `SaveController` và `BookmarkStore` như cũ):
 
 - `view/library_view.dart`: trạng thái truy vấn (SearchQuery, phạm vi đang xem, trang,
@@ -520,6 +827,60 @@ hoàn tác một bước (có test); `scope.dart` gom các thao tác; `controlle
 - `bookmark/`: `detail_view.dart`, `reminder_sheet.dart`, `add_link.dart` (dán, trùng).
 - `focus/focus_page.dart`; `data/import_export.dart`; `settings_page.dart`;
   `editors/` (bookmark, collection, smart: giữ logic kiểm tra và key cũ, giao diện mới).
+
+**Bổ sung 2026-11-02: Pocket, bản đọc offline, kiểm tra link, tìm kiếm đã lưu, thứ tự
+tự xếp** (chạy lại `design-taste-frontend` app-screens, sheet accent-ladder giữ màu và
+chữ của Save, `.taste-skill/save-more/`; hợp đồng theo `frontend-ui-engineering`).
+
+- Dữ liệu và việc: bản đọc (tiêu đề, tác giả, trang, các đoạn chữ, ngày lưu, bị cắt hay
+  không; vài trăm đến 200.000 ký tự); kết quả kiểm tra (ổn / đã chuyển kèm địa chỉ mới /
+  không còn / không xác định, mã HTTP, ngày); file Pocket (100–5.000 link, phần lớn đã
+  lưu trữ); tìm kiếm đã lưu (tên, truy vấn, nơi); thứ tự tự xếp. Việc: đọc lại bài khi
+  không có mạng; dọn link chết một hai lần mỗi tháng (thường trên desktop); chuyển từ
+  Pocket một lần; gọi lại một tìm kiếm hay dùng; xếp link theo ý mình (lịch trình chuyến
+  đi trong một bộ sưu tập).
+- **Đọc offline** (`/read/<id>`): câu hỏi "Trang này viết gì?". Khối lớn nhất là chữ, cột
+  tối đa 680px, Geist 18px (chỉnh 14–28px), dòng 1,6; tiêu đề Bricolage; dòng phụ: trang ·
+  tác giả · "Lưu offline ngày …" · số phút đọc. Không ảnh, không link, không màu ngoài
+  chữ. Thanh trên: Cỡ chữ (A−/A+), Nền (theo app / sáng / tối), Mở bản gốc. Bản bị cắt
+  nói rõ ở cuối. Trạng thái: đang mở (khung giữ chỗ), không có bản (một câu + Lưu bản
+  đọc), bản hỏng (một câu, link vẫn nguyên).
+- **Lưu bản đọc offline**: trong Chi tiết, nhóm "Bản đọc offline": chưa có → nút "Lưu
+  bản đọc offline"; đang lưu → vòng tiến trình + "Dừng"; có rồi → "Đọc offline" (nút
+  chính của nhóm), "Lưu lại", "Xóa bản đọc". Hàng loạt: menu chọn nhiều → "Lưu bản đọc
+  offline" (tối đa 200 link một lượt).
+- **Kiểm tra link**: chỉ khi bấm. Menu chọn nhiều → "Kiểm tra link"; tiêu đề danh sách
+  có menu "Kiểm tra link trong danh sách này" (một bộ sưu tập, Tất cả…; tối đa 500 một
+  lượt). Một việc chạy một lúc: **dải công việc** ở đầu danh sách: "Đang kiểm tra 12/80",
+  thanh tiến trình đúng tỉ lệ, "Dừng"; xong thì một câu tổng kết ("80 link: 71 ổn, 3 đã
+  chuyển, 2 không còn, 4 không xác định") + "Xem link hỏng" + đóng. Dừng giữa chừng giữ
+  kết quả đã có.
+- **Link hỏng** (nơi mới, chỉ hiện khi có): câu hỏi "Link nào không còn mở được, và làm
+  gì với nó?". Dòng có chữ trạng thái ở dòng phụ ("Không còn · 404 · 2/11"); chỉ "Không
+  còn" mang màu cảnh báo, một dấu mỗi dòng. Chi tiết của link "Đã chuyển" có "Dùng địa
+  chỉ mới" kèm Hoàn tác; không bao giờ tự đổi.
+- **Nhập từ Pocket**: Cài đặt → "Nhập từ Pocket" (CSV hoặc `ril_export.html`). Xem trước:
+  "Nhập N link từ Pocket?" · "M đã lưu trữ · D đã có sẵn · L không đọc được" · vài tiêu
+  đề mẫu · "Vào bộ sưu tập mới tên Pocket". Chỉ có Thêm (không có Thay toàn bộ); Hủy
+  không đổi gì; xong có Hoàn tác.
+- **Tìm kiếm đã lưu** (Pro): khi có chữ tìm hoặc bộ lọc, tiêu đề danh sách có nút "Lưu
+  tìm kiếm này" (không Pro → hộp giải thích như bộ thông minh). Danh sách nơi có nhóm
+  "Tìm kiếm đã lưu"; chạm là mở lại đúng nơi, chữ và bộ lọc; menu: đổi tên, xóa.
+- **Thứ tự tự xếp**: thứ tự mới "Thứ tự tự xếp" trong Lọc và sắp xếp. Khi bật, tiêu đề
+  có "Xếp lại": các dòng thành dạng gọn có nút Lên/Xuống và tay nắm kéo (kéo được trên
+  mọi nền tảng, nút cho bàn phím và trình đọc màn hình); "Xong" hoặc Esc để thoát. Mỗi
+  lần dời có Hoàn tác. Link đã ghim luôn ở trên.
+- Bề rộng 320–1440: dải công việc một dòng chữ + thanh, nút Dừng xuống dòng dưới 360px;
+  trình đọc giữ lề 16px ở điện thoại, cột 680px ở giữa trên desktop; trang Xếp lại không
+  ảnh để tiêu đề còn chỗ ở 320px.
+- Nền tảng: Android/iOS/Windows lưu bản đọc và kiểm tra link qua bộ tải an toàn (IP công
+  khai được ghim, kiểm tra từng redirect, giới hạn MIME/dung lượng/thời gian, hủy được).
+  **Web nói rõ không có** hai việc này (trình duyệt không bảo đảm được chính sách mạng);
+  bản đọc khôi phục từ backup vẫn đọc được trên web. URL web `#/read/<id>`,
+  `#/search/<id>`, `#/place/broken`. Phím: Ctrl/Cmd +/− đổi cỡ chữ trong trình đọc, Esc
+  thoát Xếp lại; Back Android thoát Xếp lại trước.
+- Loại bỏ: icon màu theo trạng thái trên mọi dòng, banner đỏ toàn màn hình, tự kiểm tra
+  nền, tự sửa địa chỉ, ảnh trong bản đọc, nút "Lưu offline" trên từng dòng danh sách.
 
 ## Hợp đồng: Handy Docs
 
@@ -601,6 +962,68 @@ phòng của ba thư viện). Bỏ bộ tìm công cụ (Ctrl K) và ô "đầu 
 Docs chỉ có bốn nơi và bản nháp đã tự là đầu vào được lưu. Quy trình văn bản vẫn dùng
 `SharedWorkflowPage` cũ cho tới bước 8.
 
+### Thêm 2026-11-02: nhận dạng chữ, ký và điền, nén PDF, một lối mở tệp văn bản
+
+Chạy skill: `draw.mjs --app --kind builder --keep palette,type`
+(`.taste-skill/docs-more`, seed 131926455). Skill đưa achromatic-ledger và framed-sheet;
+giữ accent-ladder của bộ app vì đây là màn con của Docs. Lấy từ sheet: "Builder canvas"
+cho Ký và điền (thanh trên 44 px: thoát, tên tệp, nút chính; bảng công cụ 232 px bên
+trái, trang trên nền tối hơn một bậc; trên điện thoại công cụ thành bottom sheet).
+
+**Nhận dạng chữ** (`#/ocr`, mở từ menu một trang quét hoặc nút trên trang PDF)
+
+- Việc: lấy chữ từ một trang giấy để chép, sửa, lưu. Câu hỏi: "Trang này viết gì?".
+- Khối lớn nhất: chữ đọc được, sửa được ngay. Bên cạnh (desktop) là tờ giấy với các
+  dòng đã đọc tô nền nhạt màu app: yếu tố đặc trưng của màn này, cho thấy máy đọc dòng
+  nào.
+- Hành động chính: **Chép chữ**. Phụ: Lưu .txt, Lưu .md, Mở trong trình viết (hỏi trước
+  khi thay bản nháp chưa lưu).
+- Trạng thái:
+  - Đang đọc: tiến trình và Hủy.
+  - Không thấy chữ: một câu, gợi ý chụp thẳng và rõ hơn.
+  - Windows thiếu tiếng Việt: một câu nói thiếu gói nào, liệt kê ngôn ngữ đã cài, nút
+    "Đọc bằng <ngôn ngữ đã có>" và cách cài (Cài đặt › Thời gian và ngôn ngữ).
+  - Web: một câu "Nhận dạng chữ chạy trong ứng dụng Android, iOS và Windows", không có
+    nút chết.
+  - Lỗi: một câu, ảnh gốc giữ nguyên.
+- Quét nhiều trang: menu "PDF tìm được chữ" làm PDF có lớp chữ ẩn dưới ảnh (PDFium), tìm
+  và chép được trong trình đọc PDF.
+
+**Ký và điền** (`#/pdf/fill`, từ màn PDF)
+
+- Việc: ký tên, điền chữ, ghi ngày lên một PDF rồi lưu **bản mới**. Câu hỏi: "Ký và
+  điền đúng chỗ chưa?". Khối lớn nhất là trang.
+- Bảng công cụ: chữ ký đã lưu (nét mực thật trên nền trắng, xóa được), Ký mới (vẽ bằng
+  ngón tay, chuột, bút), Nhập ảnh PNG, Ô chữ, Ngày (`pickHandyDate`).
+- Trên trang: kéo để dời, góc phải dưới để đổi cỡ; món đang chọn có viền màu app và nút
+  xóa. Bàn phím: mũi tên dời 1%, Shift + mũi tên 5%, Delete xóa.
+- Hành động chính: **Xem bản mới** → các trang của bản mới (đã gộp nét) → **Lưu PDF**.
+  Tệp gốc không bao giờ bị sửa.
+- Trạng thái: chưa có gì trên trang (một câu chỉ vào bảng công cụ), đang tạo (tiến trình,
+  Hủy), lỗi (một câu, vị trí các món giữ nguyên), web (giải thích, không có nút chết).
+
+**Làm nhỏ PDF** (khối trong màn PDF)
+
+- Hai nút: **Nén ảnh** (giữ chữ, link; ảnh JPEG 150 dpi) và **Nén mạnh** (mỗi trang
+  thành ảnh; ghi rõ: chữ không còn chọn hay tìm được).
+- Kết quả: "2,4 MB → 610 KB", phần trăm giảm, Lưu PDF; tệp gốc giữ nguyên. Không nhỏ đi
+  được thì nói thẳng và gợi ý Nén mạnh.
+
+**Một lối mở tệp văn bản**
+
+- Bàn làm việc chỉ còn một lối "Mở tệp văn bản": Markdown mở vào trình viết (hỏi trước
+  khi thay bản nháp chưa lưu); tệp khác (text, code, HTML) mở chỉ-đọc với tìm và nút
+  "Tạo bản Markdown để sửa". Menu "Mở tệp văn bản" của trình viết dùng cùng lối này.
+- Thư viện đọc cũ thành "Tệp đã giữ" (`#/read`): thư mục, gắn sao, gần đây, ZIP sao lưu
+  và khôi phục giữ nguyên; dữ liệu không đổi định dạng nên không cần chuyển đổi. Trên Bàn
+  làm việc là mục "Tệp đã giữ" (ba tệp gần nhất và "Xem tất cả").
+
+**Rộng 320–1440:** dưới 900 px một cột (OCR: chuyển Chữ/Trang; Ký: bảng công cụ thành
+sheet dưới), từ 900 px hai cột. **Nền tảng:** OCR Android/iOS (ML Kit) và Windows
+(Windows.Media.Ocr); Ký, nén ảnh, chữ đóng dấu cần PDFium native (Android, iOS,
+Windows); Web giải thích. Back không rời khi đang xử lý hay còn món chưa lưu (hỏi
+trước). **Loại bỏ:** thanh công cụ nổi kiểu Acrobat, icon màu theo loại, chữ ký mẫu giả.
+
 ## Hợp đồng: Handy Media
 
 **Dữ liệu và việc** (skill §2.1)
@@ -623,14 +1046,14 @@ Docs chỉ có bốn nơi và bản nháp đã tự là đầu vào được lư
 - Màn hình chính ("Xưởng"): "Mình đang làm hướng dẫn nào, và bắt đầu cái mới thế
   nào?" Khối lớn nhất là danh sách hướng dẫn, mỗi cái là **một dải phim** các bước
   (ảnh thu nhỏ đánh số); nút chính **Hướng dẫn mới** mở luôn bộ chọn ảnh. Bên dưới:
-  hai công cụ nhanh (Sửa ảnh, Phụ đề) và, trên Android/iOS, Chụp màn hình.
+  công cụ nhanh Sửa ảnh và, trên Android/iOS/Windows, Chụp màn hình. (Phụ đề đã
+  chuyển sang Handy Tools, 2026-11-02.)
 - Trình soạn: "Bước này cần chỉ vào đâu và che gì?" Ảnh bước là khối lớn nhất; dải
   bước bên trái (desktop) hoặc dưới (điện thoại); thanh công cụ 9 loại chú thích; bảng
   thuộc tính lớp đang chọn. Nút chính **Xuất hướng dẫn**.
 - Sửa ảnh: "Ảnh ra sẽ trông thế nào?" Xem trước là khối lớn nhất; một hàng chọn việc
   (Cắt, Cỡ, Định dạng, Đóng dấu, EXIF); nút chính **Lưu ảnh** (một ảnh) hoặc **Lưu ZIP**.
-- Phụ đề: "Thời gian đã khớp chưa?" Các cue đầu tiên trước/sau khi dời là khối lớn
-  nhất; nút chính **Lưu tệp**.
+- Phụ đề: đã chuyển sang Handy Tools (2026-11-02).
 
 **Flow mới** (bỏ ba tab Công cụ nhanh/Chụp/Cài đặt và Ctrl K):
 
@@ -647,7 +1070,7 @@ Docs chỉ có bốn nơi và bản nháp đã tự là đầu vào được lư
 4. **Xuất hướng dẫn**: một bảng chọn định dạng (PDF, HTML, Markdown, ZIP, ảnh dài, bản
    đồ thay đổi) → luôn qua bước soát lại (đếm email/số điện thoại/mã bí mật) → tiến độ
    và Hủy.
-5. **Sửa ảnh** (`#/image`), **Phụ đề** (`#/subtitles`), **Chụp màn hình**
+5. **Sửa ảnh** (`#/image`), **Chụp màn hình**
    (`#/capture`, chỉ Android/iOS; nơi khác ẩn khỏi Xưởng), **Cài đặt** (`#/settings`).
 
 **Yếu tố đặc trưng:** **dải phim các bước**: mỗi hướng dẫn hiện như một dải ảnh bước
@@ -686,10 +1109,60 @@ phụ đề.
 ảnh trước trên điện thoại; công cụ cầm trên tay rồi kéo để vẽ, chạm để đặt; bảng lớp:
 màu, chữ tại chỗ, căn, lên/xuống, che cùng chỗ ở bước khác; Ctrl Z/Y/S, Delete, Esc;
 bảng xuất và bước soát), `image/` (`ImageDesk`; ảnh lớn bên cạnh việc cần làm, kết quả
-ngay dưới), `subtitles/` (xem trước các câu đầu trước/sau khi dời, Lưu kiểm tra toàn tệp),
+ngay dưới), `subtitles/` (đã bỏ 2026-11-02; Phụ đề nay ở Handy Tools),
 `capture/` + `native_capture_page.dart` (giữ nguyên logic; bố cục mới: chụp, bản vừa
 chụp, tạo bản mới của video). Xóa hướng dẫn giờ xóa cả bản nháp. Bỏ Ctrl K, ghim và
 "đầu vào đã lưu" của phụ đề.
+
+**Bổ sung 2026-11-02: GIF, chụp màn hình Windows, tìm thông tin nhạy cảm, bỏ Phụ đề**
+
+Chạy lại hai skill (`draw.mjs --app --kind builder --keep palette,type --out
+.taste-skill/media-more`, style "achromatic ledger": chrome không màu, màu app chỉ ở dữ
+liệu chính và một hành động). Ảnh soát: `.taste-skill/media-more/shots/`.
+
+- **Bỏ Phụ đề khỏi Media.** Không còn ô ở Xưởng, không còn `#/subtitles`, thư mục
+  `subtitles/` đã xóa. Engine phụ đề trong `handy_media_engine` giữ nguyên cho Handy
+  Tools. Cài đặt cũ có ghim/nội dung `subtitle-srt`/`subtitle-vtt` vẫn đọc được; "Xóa
+  nội dung đã lưu" (chỉ hiện khi còn sót) xóa cả hai.
+- **Xuất GIF** (bảng xuất → "Ảnh động GIF" → bảng tùy chọn). Câu hỏi: "GIF sẽ trông và
+  chạy thế nào?" Khối lớn nhất là **khung đầu tiên đúng như sẽ xuất** (ảnh đã vẽ chú
+  thích và vùng che, thanh chú thích đen có số bước trong vòng tròn màu app, đúng yếu
+  tố đặc trưng dải phim). Dưới: thời gian mỗi bước (1/2/3/5 giây), chiều rộng tối đa
+  (480/640/800/960; ảnh nhỏ hơn không bị phóng to và có câu nói rõ), công tắc thanh
+  chú thích, giới hạn (100 bước, 48 triệu điểm ảnh, 20 MB). Hành động chính **Tạo GIF**
+  → bước soát như mọi định dạng → tiến độ hai pha ("Đang dựng bước 2/5", "Đang tạo khung
+  2/5") và Hủy ở chân màn hình. Trạng thái: vượt giới hạn thì báo lỗi ngay trong bảng
+  và khóa nút; đóng bảng không tạo gì. MP4 không làm vì `handy_capture` không có đường
+  mã hóa chuỗi ảnh.
+- **Chụp màn hình Windows** (`#/capture`). Câu hỏi: "Chụp phần nào?" Chọn **Một vùng**
+  (mặc định) hoặc **Cả màn hình** (màn hình đang có con trỏ), chờ 0/3/5/10 giây để kịp
+  mở menu, nút **Chụp**. App tạm ẩn (tắt hiệu ứng mờ của DWM), màn hình được chụp bằng
+  GDI BitBlt ở điểm ảnh vật lý (runner Per-Monitor V2), rồi một lớp phủ trên mọi màn
+  hình hiện ảnh đứng yên làm tối; kéo để chọn (viền màu app), bấm một cái để lấy cả màn
+  hình dưới con trỏ, Esc hoặc chuột phải để hủy; dòng hướng dẫn EN/VI ở đầu màn hình có
+  con trỏ. Kết quả: ảnh xem trước bên cạnh hành động **Chú thích ảnh** (mở hướng dẫn mới,
+  ảnh là bước 1, cùng luồng với Android) và **Lưu một bản**. Lỗi: quá 16 triệu điểm ảnh
+  hoặc 8 MB thì nói rõ, đã hủy thì nói đã hủy; ảnh chỉ giữ trong bộ nhớ (4 ảnh gần nhất),
+  không ghi đĩa. Windows **không có quay màn hình**; trang nói thẳng như vậy.
+- **Tìm thông tin nhạy cảm** (bảng chú thích của bước → nút "Tìm thông tin nhạy cảm",
+  chỉ hiện khi máy đọc được chữ: Android/iOS bằng ML Kit, Windows bằng Windows.Media.Ocr
+  qua `handy_scan`; web ẩn). Câu hỏi: "Che những chỗ nào?" Đang đọc: tiến độ + Hủy. Khi
+  có kết quả, bảng bên phải (điện thoại: dưới ảnh) liệt kê từng chỗ: loại (Email, Số điện
+  thoại, Số thẻ, IBAN, Số tài khoản, Mã OTP, Khóa hoặc token, Mật khẩu hoặc khóa) và gợi
+  ý chỉ lộ đầu/cuối ("ma…om"), mỗi dòng một ô chọn; "Chọn hết/Bỏ chọn hết". Trên ảnh,
+  chỗ được chọn hiện khối đen, chỗ bỏ chọn là khung viền màu app; trình soạn bị khóa
+  (không vẽ, không đổi bước, không xuất). Chân màn hình: "Đã chọn 3/4", **Hủy**, **Che 3
+  chỗ**. Không có gì được áp dụng tới khi bấm Che; áp dụng là một bước Hoàn tác. Không
+  thấy gì: một câu nhắc việc đọc có thể sót chữ. Chỗ đã bị vùng che phủ thì không đề xuất
+  lại. Windows thiếu gói ngôn ngữ OCR: câu hướng dẫn thêm ngôn ngữ.
+- **Rộng 320–1440:** bảng GIF cuộn trong bottom sheet (điện thoại) và giới hạn 640 px
+  (desktop); bảng soát nằm cột phải từ 1100 px, dưới ảnh ở hẹp hơn; trang chụp Windows
+  dồn một cột dưới 640 px, ảnh xem trước cạnh hành động từ 640 px.
+- **Nền tảng:** GIF mọi nền tảng (web cũng chạy, trên luồng chính); chụp vùng chỉ
+  Windows; tìm thông tin nhạy cảm Android/iOS/Windows; phím Esc thoát bảng soát và lớp
+  phủ chụp.
+- **Loại bỏ:** áp dụng che tự động; hiện nguyên giá trị nhạy cảm trong danh sách soát;
+  bảng chọn chiều rộng giả vờ phóng to ảnh nhỏ; ghi ảnh chụp Windows ra thư mục tạm.
 
 ## Hợp đồng: Handy Spend
 
@@ -814,6 +1287,66 @@ có điểm thấp nhất, khoản định kỳ, để dành, thử trước), `
 `settings/`, `shell/`. Quảng cáo chỉ hiện ở trang gốc, không ở Kế hoạch, form hay trang
 con (`NavigatorObserver`). Đồng ghi là "đ" vì Geist và Bricolage không có ký tự ₫.
 
+**Bổ sung 2026-11-02: hóa đơn, chia tiền, gợi ý định kỳ, mẫu sao kê, "Dự báo nếu…"**
+
+Chạy lại skill (app-screens, `draw.mjs --app --keep palette,type`, kiểu achromatic-ledger,
+seed 1425736859): giữ nguyên màu `#2E7D32`, Bricolage + Geist; màu chỉ trên dữ liệu (đường
+dự báo, đường kịch bản theo `HandyPalette`), mọi con số khác là mực.
+
+- **Hóa đơn trong tờ ghi.** Việc: giữ bằng chứng của một khoản. Hành động chính vẫn là
+  **Lưu** (hóa đơn chỉ vào sổ khi Lưu; Hủy bỏ hết). Khối "Hóa đơn · n" cuối tờ: ảnh thu nhỏ
+  72 px, nút ✕ đánh dấu bỏ (hiện "Giữ lại" để đổi ý), nút **Thêm** (điện thoại: menu Chụp
+  ảnh / Chọn file; desktop, web: chọn nhiều file). Giới hạn ghi ngay dưới khối. Trạng thái:
+  trống (chỉ nút Thêm), đang chờ lưu ("Mới"), file sai loại hoặc quá cỡ (một câu dưới nút
+  Lưu, không thêm gì), đủ 10 file (ẩn Thêm). Dòng sổ có biểu tượng kẹp giấy kèm số, không
+  chỉ là màu.
+- **Xem hóa đơn** (`/receipt/<id>`): ảnh to hết khung, chụm để phóng; PDF là một khung
+  tên + hướng dẫn mở bằng app khác. Thanh dưới: Lưu một bản | Chia sẻ (ẩn nơi OS không
+  có). Xóa ở thanh trên, xóa ngay kèm Hoàn tác. File thiếu/hỏng: một thông báo đỏ, không
+  hiện ảnh sai.
+- **Chia tiền** (chip "Chia tiền" trong tờ ghi khoản chi): một câu hỏi, "mỗi người bao
+  nhiêu?". Tổng to ở đầu; Chia đều | Theo phần | Số cụ thể; danh sách người (bạn luôn có,
+  người quen hiện sẵn không chọn), thêm người ngay tại chỗ; dòng trạng thái sống "Cộng lại
+  đúng X đ" hoặc "Còn thiếu / Vượt tổng X đ" (đỏ). Nút chính **Dùng cách chia này** bị từ
+  chối kèm lý do khi chưa khớp. Lưu cùng khoản chi trong một thay đổi.
+- **Ai nợ ai** (`/people`, `/person/<id>`): hai con số "Người khác nợ bạn" | "Bạn nợ",
+  câu giải thích cách tính vào Có thể chi, danh sách người (chấm màu nhận diện, "Nợ bạn
+  …" / "Bạn nợ …" / "Hết nợ"). Nút chính: **Người khác trả giúp bạn**. Trang một người:
+  số dư là tiêu đề, khoản còn mở và đã xong; nút chính **Thanh toán** mở form số tiền
+  (mặc định cả phần còn nợ, ít hơn là trả một phần), tài khoản **không chọn sẵn** (người
+  dùng xác nhận tiền đi qua đâu), ngày bằng `pickHandyDate`. Hôm nay chỉ thêm một dòng
+  nhỏ dưới bảng cộng trừ khi khác 0; Tài khoản có mục "Chia tiền · Ai nợ ai".
+- **Gợi ý định kỳ** ("Có vẻ lặp lại"): đầu cột phải của Kế hoạch và cuối bước Xong khi
+  nhập sao kê. Mỗi gợi ý: tên, số tiền, "Hàng tháng · 3 lần, gần nhất …"; **Thêm định
+  kỳ** mở form định kỳ điền sẵn (chưa lưu gì), **Không định kỳ** ẩn vĩnh viễn kèm Hoàn
+  tác. Không có gợi ý: khối không hiện.
+- **Mẫu nhập sao kê**: bước Ghép cột hiện thông báo xanh "Đã đọc theo mẫu …" với **Không
+  dùng**; bước Soát có ô "Lưu cách ghép cột thành mẫu (Pro)" và tên mẫu. Cài đặt → Mẫu nhập
+  sao kê (`/settings/templates`): tên, tóm tắt cột và định dạng; đổi tên, xóa có Hoàn tác.
+- **"Dự báo nếu…"** thay khối Thử trước riêng: ngay dưới biểu đồ dự báo, mỗi kịch bản là
+  một chip có chấm màu (chính là chú giải của đường), chạm để vẽ/ẩn; "Thử một khoản mua",
+  "Thay đổi khác". Khi có đường bật: khối so sánh ba cột thẳng hàng (Thấp nhất, Cuối kỳ,
+  Thiếu từ) cho "Như hiện tại" rồi từng "Nếu …", kèm chênh lệch ngày thấp nhất; "Giả
+  định" mở `/whatif/<id>` (trang giờ vẽ cùng biểu đồ trên sổ hôm nay). Bảng Từng ngày thêm
+  dòng "Nếu …" cho mỗi đường. Free: một kịch bản; bật hai đường cùng lúc cần Pro.
+
+**Bề rộng 320–1440.** 320: tờ chia tiền một cột, số tiền mỗi người canh phải; số trong
+"Sắp tới" không bao giờ bị cắt (tên nhường chỗ); dòng nợ trên Hôm nay giữ "đ" liền số.
+390: ba cột so sánh vừa một hàng. ≥ 840: tờ ghi và tờ chia là hộp thoại 560 px, Kế hoạch
+hai cột (dự báo + so sánh | gợi ý, định kỳ, để dành).
+
+**Nền tảng.** Android/iOS: chụp hóa đơn qua camera của OS (iOS cần
+`NSCameraUsageDescription`), chia sẻ qua sheet OS, Back đóng tờ con trước. Windows: chọn
+nhiều file, chia sẻ qua sheet Windows, Lưu một bản. Web: chọn file, lưu trong IndexedDB,
+"Lưu một bản" là tải xuống; URL `/people`, `/person/<id>`, `/receipt/<id>`,
+`/settings/templates`, `/whatif/<id>` mở trực tiếp.
+
+**Loại bỏ:** khối "Thử trước" tách khỏi dự báo và trang So sánh riêng; mẫu ngân hàng
+dựng sẵn; màu là dấu hiệu duy nhất của hóa đơn/chia tiền trên dòng sổ.
+
+**Tiến độ:** xong trên host (widget/engine test, ảnh review). Chưa chạy camera, chia sẻ
+OS hay trình duyệt thật.
+
 ## Lộ trình
 
 | Bước | Phạm vi                                              | Trạng thái |
@@ -822,7 +1355,7 @@ con (`NavigatorObserver`). Đồng ghi là "đ" vì Geist và Bricolage không c
 | 2    | Dev                                                  | Xong       |
 | 3    | Keep                                                 | Xong       |
 | 4    | Recall                                               | Xong       |
-| 5    | Save                                                 | Xong       |
+| 5    | Bookmark                                             | Xong       |
 | 6    | Docs                                                 | Xong       |
 | 7    | Media                                                | Xong       |
 | 8    | Xóa widget UI cũ trong `handy_ui`, ảnh review mới    | Xong       |
@@ -914,7 +1447,7 @@ ngày không có lịch thì không có hạt. Hạt hôm nay vừa là trạng 
 nằm trên hạt hôm nay, bước đang chạy và nút chính. Hạt các ngày trước màu mực.
 
 **Màu:** Habit nhận **đỏ son `#B42318`** (4°), màu duy nhất khác hẳn tám app còn lại; teal
-cũ trùng Dev và Save. Vì đỏ là màu của app, Habit **không bao giờ tô đỏ ngày lỡ**: ngày lỡ
+cũ trùng Dev và Bookmark. Vì đỏ là màu của app, Habit **không bao giờ tô đỏ ngày lỡ**: ngày lỡ
 là vòng rỗng xám có chữ. Thói quen và quy trình mang chấm `HandyPalette` theo thứ tự tạo;
 trường màu và icon cũ vẫn giữ trong dữ liệu nhưng không còn sửa trong app.
 
@@ -954,6 +1487,40 @@ chạy luôn. `insights/`, `settings/`, `shell/`. Quảng cáo chỉ ở trang g
 `HH:mm`, thứ `1,2,3`, màu hex; thanh tiến độ dưới mỗi dòng; lưới 35 nút số ngày; menu ba
 chấm cho việc chính; chữ dài giải thích quy tắc trên mọi màn.
 
+**Bổ sung 2026-11-02: kỳ nghỉ và thông báo phiên chạy.** Chạy lại skill (`draw.mjs --app
+--kind workspace --keep palette,type --out .taste-skill/habit-more`, kiểu
+`editorial-greeting`, seed 973037815; giữ màu và chữ của suite). Dữ liệu: **kỳ nghỉ** (từ
+ngày, đến hết ngày, lý do tùy chọn, cho tất cả hoặc vài thói quen); thực tế 0–10 kỳ mỗi
+năm, 3–14 ngày mỗi kỳ. Việc: đặt kỳ nghỉ trước chuyến đi (vài giây), biết bao giờ hết,
+về sớm thì kết thúc sớm, thỉnh thoảng sửa hoặc xóa.
+
+- **Câu hỏi:** Hôm nay khi đang nghỉ: "Mình có phải làm gì không?" Trả lời ngay ở dòng sự
+  thật dưới lời chào ("Đang nghỉ đến Thứ Năm, 12/11. Không có gì phải làm."), kèm lý do
+  và nút chữ **Kết thúc sớm** (việc chính khi về). Danh sách việc vẫn hiện, hạt hôm nay
+  vẫn chạm được (làm thì vẫn tính), nhưng không đếm là "còn việc".
+- **Yếu tố đặc trưng:** hạt **nghỉ** là một đĩa nhạt đặc, không viền (như ô "nghỉ phép"
+  của dòng thời gian theo loại, không phải vòng rỗng của ngày lỡ, không có màu app). Một
+  chuỗi ngày nghỉ trong lưới tháng thành một dải hạt nhạt liền nhau. Hạt hôm nay khi nghỉ:
+  đĩa nhạt có hai vạch tạm dừng màu xám.
+- **Tạo:** menu Thêm (Ctrl N) → **Kỳ nghỉ**; menu của một thói quen → **Nghỉ thói quen
+  này**. Tờ: Từ ngày, Đến hết ngày (lịch `pickHandyDate`), Cho (Tất cả / Chọn thói quen
+  bằng chip), Lý do (tùy chọn). Nút chính **Lưu kỳ nghỉ**. Không lùi quá khoảng ghi bù;
+  tối đa 366 ngày.
+- **Danh sách:** Cài đặt → mục **Kỳ nghỉ** (đang nghỉ, sắp tới, đã qua; chạm để sửa; menu
+  Kết thúc sớm, Xóa có Hoàn tác). Chi tiết thói quen có mục Kỳ nghỉ khi thói quen có kỳ.
+- **Trạng thái:** chưa có kỳ nào: một câu và nút Thêm; lưu lỗi: tờ giữ nguyên, một câu
+  dưới nút; đang nghỉ một phần: dòng thói quen ghi "Nghỉ đến 12/11" thay cho chuỗi.
+- **Thông báo phiên chạy (Android/iOS):** khi màn chạy đang mở và app ra nền, phiên vẫn
+  **tạm dừng** như trước (không đổi logic thời gian), nên thông báo nói thật: tiêu đề
+  "Buổi sáng · Bước 3/5", nội dung "Đã tạm dừng · còn 2:00. Chạm để tiếp tục." Không đồng
+  hồ đếm ngược, không thông báo lúc hết bước, vì đồng hồ không chạy. Im lặng, ẩn nội dung
+  trên màn khóa (Android `private`, iOS `passive`). Chạm mở `/run/<id>`; vào lại app, xong
+  hoặc dừng phiên thì gỡ. Chỉ hiện khi đã bật "Gửi nhắc" (xin quyền ở công tắc đó, chỉ khi
+  người dùng bật), công tắc riêng "Báo phiên đang dở" bật, và ngoài giờ yên lặng.
+  Windows/Web: không có, như nhắc.
+- **Rộng 320–1440:** tờ kỳ nghỉ là trang đầy trên điện thoại, hộp 560 px từ 840 px; dòng
+  "Đang nghỉ" xuống dòng tự nhiên ở 320 px, nút Kết thúc sớm ở dòng riêng dưới nó.
+- **Loại bỏ:** biểu tượng máy bay, màu đỏ cho ngày nghỉ, hộp cảnh báo vàng, đếm ngược giả.
 
 ## Handy Trip design contract - 2026-11-02
 
@@ -972,3 +1539,93 @@ Use kit fonts/neutral light/dark, labels above inputs, native date picker, >=48p
 clear empty/load/error/permission/unsupported/offline states. No permission at onboarding.
 Screenshot critique uses app-screens 2.7; widget/emulator evidence distinguished from
 browser/physical runtime. Never clone another app's UI or whole UI framework.
+
+### Trip signature features contract
+
+P0 host/native journey and real deny/cancel flows passed before P1 code. Passport adds
+photo covers and personal, clearly unofficial stamp exports; its question remains what
+the user confirmed visiting. Memory Book asks what to keep/share: one deterministic
+daybook with redacted defaults, optional private text and spending, original files intact.
+Compare asks how selected trips differ, with currencies on separate rows. Replay is
+an explicitly illustrative sequence of saved pins, never a route, basemap or GPS track.
+EXIF is a proposal with camera-clock/accuracy caveats and explicit place/date confirmation.
+All actions use existing editor, file ports and shared commit/error patterns. No automatic
+playback, fake map background, invented geography or prefilled visits. At 320px use one
+scrolling column; wider reports expand within the content area; large text remains usable.
+Advanced layout controls require real Pro entitlement; never substitute a local flag.
+
+### Trip screenshot critique (app-screens §2.7)
+
+Inspected 70 actual widget captures across 320/390/768/1024/1440 widths, EN/VI,
+light/dark, plus native Android Passport/EXIF/comparison/replay and decoded PDF pages.
+QA photos are synthetic metadata fixtures, never production examples.
+
+Round 1: removed repeated trip title in the mobile app bar, grouped overview money
+figures and selected the current itinerary day when inside the trip dates. Main
+actions now answer the page's job; titles and ledger rows share consistent edges.
+Round 2: 320px/200% text exposed header/time collisions; bounded the trip title and
+moved stop time into the title at large text. Layout test passes. Coincident replay
+pins shared overlapping labels; grouped their numbers and suppressed dense labels
+above twenty points while preserving the full list. Unconfigured Pro copy removed.
+
+Final review: date/visit counts agree across overview/Passport; unknown geography
+has explicit empty labels, not zero coverage. Cyan denotes action/confirmed state;
+no decorative map or statistics. Mobile keeps four destinations, seven trip sections
+scroll within their own selector, no whole-page horizontal overflow. 320px book
+review scrolls while its footer remains reachable. Wider trip views keep a 300px
+list/divider/detail. Sparse libraries intentionally retain whitespace. CustomPainter
+text uses the platform fallback in widget screenshots; native screenshots are the
+reference for those glyphs. Browser/physical accessibility still requires runtime QA.
+The supplied frontend lint does not support Dart; its unsupported-extension result
+is logged, not represented as a lint pass.
+
+## Mỗi app một phong cách (2026-11-02)
+
+Cả bộ từng được bốc một phong cách chung (accent-ladder) và chỉ khác màu, nên chín
+app đặt cạnh nhau đọc như một bộ giao diện mẫu. Nay mỗi app được bốc riêng bằng
+`draw.mjs --app` theo loại và brief của chính nó; kit chỉ giữ phần dùng chung
+(hành vi, khoảng cách, khả năng tiếp cận, trạng thái trống/tải/lỗi, sao lưu).
+
+| App      | Phong cách         | Chữ                          | Gương mặt                                                  |
+| -------- | ------------------ | ---------------------------- | ---------------------------------------------------------- |
+| Tools    | achromatic-ledger  | IBM Plex Sans                | Không ô logo, khung đen trắng, màu chỉ ở kết quả           |
+| Dev      | data-terminal      | Space Grotesk (+ Geist Mono) | Mở tối; ô tối hơn nền; góc vuông                           |
+| Docs     | framed-sheet       | Literata cho tiêu đề         | Khung xám, tờ giấy trắng bo 16                             |
+| Media    | true-black-flat    | Bricolage                    | Mở tối trên đen tuyền, không viền; ảnh mang màu            |
+| Keep     | framed-sheet       | Be Vietnam Pro               | Nền bìa các-tông, thùng trắng có nhãn                      |
+| Recall   | accent-ladder      | Lexend                       | Màu app leo từ nền nhạt tới nút chính                      |
+| Bookmark | achromatic-ledger  | Newsreader cho tiêu đề       | Nền giấy báo, không ô logo, chỉ mực                        |
+| Spend    | pastel-consumer    | Geist                        | Con số "còn được tiêu" trên ô xanh nhạt bo 24, không viền  |
+| Habit    | editorial-greeting | Nunito                       | Lời chào là tiêu đề; mảng một bậc tông, số ở độ đậm thường |
+
+Nền tảng: Dev và Media mở tối; phần Giao diện trong cài đặt của hai app chỉ có
+Tối (mặc định) và Sáng, vì "theo hệ thống" không còn là mặc định ở đó. Mọi app
+vẫn giữ cùng cách back, phím tắt, URL web và hộp thoại theo nền tảng.
+
+## Chức năng đặc trưng đợt 2 (2026-11-02)
+
+Mỗi chức năng theo app-screen run của design-taste-frontend và hợp đồng của
+frontend-ui-engineering: một câu hỏi, một hành động chính, đủ trạng thái, 320–1440.
+
+| App                  | Câu hỏi của màn                            | Hành động chính                | Trạng thái                                                   | Nền tảng                                                                           |
+| -------------------- | ------------------------------------------ | ------------------------------ | ------------------------------------------------------------ | ---------------------------------------------------------------------------------- |
+| Trip, xưởng làm tem  | Tem của nơi này trông ra sao?              | Lưu tem (PNG); phụ: tờ in A4   | Không ảnh / có ảnh, đang xuất, lỗi                           | ≥840: xem trước trái, chỉnh phải; điện thoại: xem trước trên; phím mũi tên dời ảnh |
+| Spend, ghi một dòng  | Khoản này là gì, bao nhiêu?                | Enter để ghi, có Hoàn tác      | Trống, đang hiểu (dòng xem trước), thiếu số tiền             | Nằm dưới số "có thể chi" ở mọi bề rộng                                             |
+| Docs, tìm chữ        | Tôi để chữ này ở tệp nào?                  | Mở tệp khớp                    | Ẩn khi chưa có tệp; dưới 2 ký tự không tìm; không có kết quả | Đầu bàn làm việc                                                                   |
+| Recall, dán ghi chú  | Đoạn này thành bao nhiêu thẻ?              | Thêm N thẻ                     | Trống, chưa dòng nào hợp lệ, xem trước 50 thẻ                | Trang toàn màn hình; nút chính ghim dưới                                           |
+| Habit, nhìn lại tuần | Tuần qua giữ được bao nhiêu?               | Làm nhỏ lại thói quen đang rơi | Không có gì đến hạn                                          | Hiện ở Hôm nay từ cuối tuần tới hai ngày sau                                       |
+| Tools, sổ tính       | Cả trang này cộng lại bao nhiêu?           | Gõ; chạm kết quả để sao chép   | Trống (ví dụ trong ô), dòng lỗi hiện "?"                     | Kết quả thẳng hàng phải; điện thoại cột 112 px                                     |
+| Dev, so phản hồi     | Lần này khác lần trước ở đâu?              | So với lần gửi trước           | Giống nhau, quá dài để so                                    | Dấu +/− cho số, vạch 1px cho lựa chọn                                              |
+| Media, nối ảnh       | Các ảnh này ghép thành một trang dài chưa? | Nối N ảnh → Lưu ảnh dài        | Trống, 1 ảnh, đang khớp, không thấy đoạn trùng, lỗi          | Dải ảnh kéo để đổi thứ tự                                                          |
+| Keep, sắp hết        | Món nào sắp phải mua?                      | Vừa mua thêm                   | Chưa đủ lần mua, đã đoán, có lẽ đã hết                       | Vào "Cần để ý" một tuần trước                                                      |
+
+### Soát ảnh theo §2.7 (2026-11-02)
+
+Mỗi app được chụp lại và soát theo bảy câu hỏi của app-screens §2.7; đã sửa:
+Bookmark (tên link trong mục lục và dải chưa xếp dùng mặt chữ báo; bốn công tắc
+trạng thái trên một hàng), Docs (hai việc dở trên một hàng ở điện thoại, không
+chừa nửa bàn trống), Media (nút xuất dạng tô đặc mất biểu tượng), Habit (bỏ mũi
+tên Nunito không có), Keep (nhãn xám nhỏ trên giá trị mực), Trip (ngân sách và chi
+tiêu thành hàng nhãn-số căn phải, "còn lại" là câu trả lời; màu Trip trên dấu đã
+xác nhận), Tools (sổ tính: tên dòng có số, kết quả hiện hai số lẻ). Tools, Dev,
+Recall, Spend đạt không cần sửa. Chưa có ảnh review cho so sánh phản hồi của Dev.

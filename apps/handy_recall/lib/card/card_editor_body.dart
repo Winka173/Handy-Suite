@@ -1,9 +1,11 @@
 import 'package:handy_ui/kit.dart';
-import '../occlusion_editor.dart';
 import 'card_editor.dart';
+import 'picture_field.dart';
+import 'question_field.dart';
 
-/// The card form: the question, the answer, and optionally a picture with
-/// parts covered. Save keeps going for new cards; the bar holds both saves.
+/// The card form: the question (with clozes), the answer, the reverse card
+/// switch, and optionally a picture. Save keeps going for new cards; the
+/// bar holds both saves.
 class CardEditorBody extends StatelessWidget {
   final CardEditorState editor;
   const CardEditorBody({super.key, required this.editor});
@@ -13,6 +15,8 @@ class CardEditorBody extends StatelessWidget {
     final e = editor;
     final isNew = e.widget.card == null;
     final c = HandyColors.of(context);
+    final theme = Theme.of(context);
+    final cloze = e.clozes.isNotEmpty;
     return Scaffold(
       appBar: AppBar(
         leading: IconButton(
@@ -88,22 +92,15 @@ class CardEditorBody extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 if (e.busy) const LinearProgressIndicator(),
+                QuestionField(editor: e),
                 HandyField(
-                  label: tr(context, 'Question', 'Câu hỏi'),
-                  child: TextField(
-                    key: const Key('card-front'),
-                    controller: e.front,
-                    focusNode: e.frontFocus,
-                    enabled: !e.busy,
-                    autofocus: isNew,
-                    minLines: 2,
-                    maxLines: 8,
-                    onChanged: (_) => e.touch(() {}),
-                  ),
-                ),
-                const SizedBox(height: HandySpace.l),
-                HandyField(
-                  label: tr(context, 'Answer', 'Đáp án'),
+                  label: cloze
+                      ? tr(
+                          context,
+                          'Extra (optional)',
+                          'Ghi chú thêm (không bắt buộc)',
+                        )
+                      : tr(context, 'Answer', 'Đáp án'),
                   child: TextField(
                     key: const Key('card-back'),
                     controller: e.back,
@@ -113,51 +110,56 @@ class CardEditorBody extends StatelessWidget {
                     onChanged: (_) => e.touch(() {}),
                   ),
                 ),
-                HandyLabel(
-                  tr(context, 'Picture with covers', 'Ảnh có vùng che'),
+                // The reverse card: its own schedule, so it is a choice.
+                Material(
+                  type: MaterialType.transparency,
+                  child: SwitchListTile(
+                    key: const Key('card-reverse'),
+                    contentPadding: EdgeInsets.zero,
+                    value: e.reverse && e.canReverse,
+                    onChanged: e.busy || !e.canReverse
+                        ? null
+                        : (v) => e.touch(() => e.reverse = v),
+                    title: Text(
+                      tr(
+                        context,
+                        'Also make the reverse card',
+                        'Tạo thêm thẻ đảo chiều',
+                      ),
+                    ),
+                    subtitle: Text(
+                      !e.canReverse
+                          ? (cloze
+                                ? tr(
+                                    context,
+                                    'Cloze cards are asked one way only.',
+                                    'Thẻ điền khuyết chỉ hỏi một chiều.',
+                                  )
+                                : tr(
+                                    context,
+                                    'A picture with covers is asked one way only.',
+                                    'Ảnh có vùng che chỉ hỏi một chiều.',
+                                  ))
+                          : !e.reverse && e.widget.reverse
+                          ? tr(
+                              context,
+                              'Saving removes the reverse card and its reviews.',
+                              'Khi lưu, thẻ đảo chiều và lịch ôn của nó bị xóa.',
+                            )
+                          : tr(
+                              context,
+                              'Asks the answer, expects the question. Scheduled on its own.',
+                              'Hỏi đáp án, nhớ lại câu hỏi. Lịch ôn riêng.',
+                            ),
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: !e.reverse && e.widget.reverse
+                            ? c.warning
+                            : c.muted,
+                      ),
+                    ),
+                  ),
                 ),
-                HandyReveal(
-                  child: e.image == null
-                      ? Align(
-                          alignment: AlignmentDirectional.centerStart,
-                          child: OutlinedButton.icon(
-                            key: const Key('card-image'),
-                            onPressed: e.busy ? null : e.importImage,
-                            icon: const Icon(Icons.image_outlined),
-                            label: Text(
-                              tr(
-                                context,
-                                'Add a picture (PNG or JPEG, up to 500 KB)',
-                                'Thêm ảnh (PNG hoặc JPEG, tối đa 500 KB)',
-                              ),
-                            ),
-                          ),
-                        )
-                      : Column(
-                          crossAxisAlignment: CrossAxisAlignment.stretch,
-                          children: [
-                            OcclusionCanvas(
-                              image: e.image!,
-                              hidden: true,
-                              onChanged: e.busy
-                                  ? null
-                                  : (next) => e.touch(() => e.image = next),
-                            ),
-                            Align(
-                              alignment: AlignmentDirectional.centerStart,
-                              child: TextButton(
-                                key: const Key('card-image-remove'),
-                                onPressed: e.busy
-                                    ? null
-                                    : () => e.touch(() => e.image = null),
-                                child: Text(
-                                  tr(context, 'Remove picture', 'Bỏ ảnh'),
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                ),
+                PictureField(editor: e),
                 HandyReveal(
                   child: e.error.isEmpty
                       ? const SizedBox(width: double.infinity)

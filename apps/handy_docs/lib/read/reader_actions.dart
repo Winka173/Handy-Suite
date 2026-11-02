@@ -1,6 +1,7 @@
 import 'package:handy_docs_engine/handy_docs_engine.dart';
 import 'package:handy_files/handy_files.dart';
 import 'package:handy_ui/kit.dart';
+import '../text/text_opener.dart';
 import 'properties_dialog.dart';
 import 'reader_store.dart';
 
@@ -10,6 +11,9 @@ class ReaderActions {
   final ReaderStore store;
   final HandyFiles files;
   ReaderActions(this.store, this.files);
+
+  /// The one way in for text files; set once by the app's scope.
+  late final TextOpener opener;
 
   final busy = ValueNotifier(false);
 
@@ -110,7 +114,21 @@ class ReaderActions {
         : null;
   });
 
+  /// Opens a kept document. Markdown goes to the writer as a draft (the
+  /// kept copy stays as it is); everything else is shown here.
   Future<bool> open(BuildContext context, ReaderDocument entry) async {
+    if (entry.kind == 'markdown') {
+      await guard(context, () async {
+        if (await opener.toWriter(context, entry.source) && context.mounted) {
+          await store.change(
+            entry.copyWith(opened: DateTime.now().toUtc().toIso8601String()),
+          );
+          if (context.mounted) Navigator.pushNamed(context, '/write');
+        }
+        return null;
+      });
+      return false;
+    }
     var shown = false;
     await guard(context, () async {
       if (!await mayClose(context)) return null;
@@ -187,11 +205,14 @@ class ReaderActions {
 
   Future<void> restore(BuildContext context) => guard(context, () async {
     final file = await files.importBytes(
-      extensions: ['zip'],
+      extensions: ['zip', 'hseal'],
       maxBytes: 9000000,
     );
     if (file == null || !context.mounted) return null;
-    final next = readReaderZip(file.bytes);
+    // A password-locked automatic backup opens to the same ZIP.
+    final bytes = await openSealedBackup(context, file.bytes);
+    if (bytes == null || !context.mounted) return null;
+    final next = readReaderZip(bytes);
     if (!await _ask(
       context,
       tr(context, 'Replace your library?', 'Thay thư viện hiện có?'),

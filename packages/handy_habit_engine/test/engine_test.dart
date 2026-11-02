@@ -589,4 +589,25 @@ void main() {
     expect(index.value('h', '2024-01-01'), 100000);
     expect(restore(backup(s)).events.length, 10000);
   });
+  test('the week review counts kept and due days and names the hard day', () {
+    // Daily from Monday 2024-01-01; the first week keeps four days, the
+    // next only Monday and Tuesday.
+    final h = habit(kind: 'daily', weekdays: const [1, 2, 3, 4, 5, 6, 7]);
+    final s = state(h, [
+      event('2024-01-01'),
+      event('2024-01-02'),
+      event('2024-01-04'),
+      event('2024-01-05'),
+      event('2024-01-08'),
+      event('2024-01-09'),
+    ]);
+    expect(reviewWeekStart('2024-01-14', 1), '2024-01-08');
+    expect(reviewWeekStart('2024-01-15', 1), '2024-01-08');
+    final r = weekReview(s, HabitIndex.of(s), '2024-01-08', '2024-01-15');
+    expect((r.kept, r.due), (2, 7));
+    expect((r.keptBefore, r.dueBefore), (4, 7));
+    expect(r.habits.single.struggling, isTrue);
+    // One habit misses each day at most once: no day stands out.
+    expect(r.hardestDay, isNull);
+  });
 }

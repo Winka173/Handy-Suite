@@ -19,3 +19,5 @@ flutter:
         pluginClass: HandyCapturePlugin
       ios:
         pluginClass: HandyCapturePlugin
+      windows:
+        pluginClass: HandyCapturePluginCApi

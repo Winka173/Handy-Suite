@@ -14,6 +14,7 @@ dependencies:
   handy_media_engine: any
   handy_files: any
   handy_pdf: any
+  handy_ocr: any
   handy_storage: any
   handy_ui: any
   image: 4.12.0

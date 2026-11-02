@@ -1,3 +1,4 @@
+import 'package:handy_files/camera.dart';
 import 'package:handy_files/handy_files.dart';
 import 'package:handy_monetization/handy_monetization.dart';
 import 'package:handy_spend_engine/handy_spend_engine.dart';
@@ -13,6 +14,13 @@ class SpendScope {
   final HandyFiles files;
   final SpendReminders reminders;
   final SpendPrivacy privacy;
+
+  /// Photographs a receipt on Android and iOS; elsewhere files only.
+  final ScanCamera camera;
+
+  /// The what-ifs drawn over the plan's forecast ("Dự báo nếu…"). Screen
+  /// state only: turning one on never changes the ledger.
+  final overlays = ValueNotifier<Set<String>>(const {});
 
   /// Days from today the plan looks ahead (1–3660; over 30 needs Pro).
   final horizon = ValueNotifier(30);
@@ -32,7 +40,12 @@ class SpendScope {
     required this.files,
     required this.reminders,
     required this.privacy,
-  });
+    ScanCamera? camera,
+    this.autoBackup,
+  }) : camera = camera ?? SystemScanCamera();
+
+  /// Automatic backups to a folder; null in tests that do not need them.
+  final HandyAutoBackup? autoBackup;
 
   SpendState get state => controller.state!;
   String get currency => state.currency;
@@ -45,6 +58,16 @@ class SpendScope {
   bool get hidden => state.settings['hideAmounts'] == true;
 
   Account account(String id) => state.accounts.firstWhere((a) => a.id == id);
+  Person? person(String id) =>
+      state.people.where((p) => p.id == id).firstOrNull;
+
+  /// Identity colours for people keep the order they were added in.
+  int personHue(String id) => state.people.indexWhere((p) => p.id == id);
+  int scenarioHue(String id) => state.scenarios.indexWhere((x) => x.id == id);
+  List<Receipt> receiptsOf(String entry) =>
+      state.receipts.where((r) => r.entry == entry).toList();
+  CostSplit? splitOf(String entry) =>
+      state.splits.where((x) => x.entry == entry).firstOrNull;
   Category? category(String? id) =>
       id == null ? null : state.categories.where((c) => c.id == id).firstOrNull;
   List<Account> get openAccounts =>
@@ -66,6 +89,7 @@ class SpendScope {
   void dispose() {
     horizon.dispose();
     conservative.dispose();
+    overlays.dispose();
     area.dispose();
     openAccount.dispose();
     ledgerAccount.dispose();

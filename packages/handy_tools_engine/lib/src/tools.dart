@@ -36,19 +36,6 @@ int businessDays(
   return count;
 }
 
-Map<String, Object> tax(String amount, String rate, bool inclusive) {
-  final a = _d(amount), r = _d(rate) / _hundred;
-  if (a < _zero || r < _zero || r > Rational.fromInt(10))
-    throw const FormatException('Invalid nonnegative amount or tax rate');
-  final base = inclusive ? a / (_one + r) : a,
-      total = inclusive ? a : a * (_one + r);
-  return {
-    'base': _fixed(base, 2),
-    'tax': _fixed(total - base, 2),
-    'total': _fixed(total, 2),
-  };
-}
-
 Map<String, Object> splitBill(String amount, String tip, int people) {
   final a = _d(amount), r = _d(tip);
   if (a < _zero ||
@@ -184,6 +171,21 @@ String _title(String source) => source.toLowerCase().replaceAllMapped(
     return first.toUpperCase() + word.substring(first.length);
   },
 );
+
+/// The four case modes of the `case` tool. Each keeps the behaviour of the
+/// separate tool it replaced.
+const caseModes = ['upper', 'lower', 'title', 'sentence'];
+String changeCase(String source, String mode) => switch (mode) {
+  'upper' => source.toUpperCase(),
+  'lower' => source.toLowerCase(),
+  'title' => _title(source),
+  'sentence' => source.toLowerCase().replaceAllMapped(
+    RegExp(r'(^|[.!?]\s+)(\p{L})', unicode: true),
+    (m) => m[1]! + m[2]!.toUpperCase(),
+  ),
+  _ => throw const FormatException('Case: upper, lower, title or sentence'),
+};
+
 ToolDefinition _tool(
   String id,
   String en,
@@ -326,20 +328,13 @@ final List<ToolDefinition> tools = List.unmodifiable([
     (s, o) => _sortLines(s),
   ),
   _tool(
-    'uppercase',
-    'Uppercase',
-    'Viết hoa',
-    'Unicode uppercase.',
+    'case',
+    'Change case',
+    'Đổi kiểu chữ',
+    'Unicode upper, lower, title (letter groups) or sentence case (after . ! ?).',
     'Text',
-    (s, o) => s.toUpperCase(),
-  ),
-  _tool(
-    'lowercase',
-    'Lowercase',
-    'Viết thường',
-    'Unicode lowercase.',
-    'Text',
-    (s, o) => s.toLowerCase(),
+    (s, o) => changeCase(s, o.trim()),
+    'upper / lower / title / sentence',
   ),
   _tool(
     'accents',
@@ -372,18 +367,13 @@ final List<ToolDefinition> tools = List.unmodifiable([
     },
   ),
   _tool(
-    'tax',
-    'Tax calculator',
-    'Tính thuế',
-    'Amounts round half up to two decimals.',
-    'Amount,rate %',
-    (s, o) {
-      final v = _parts(s, 2);
-      if (!['inclusive', 'exclusive'].contains(o.trim()))
-        throw const FormatException('Choose inclusive or exclusive');
-      return _json(tax(v[0], v[1], o.trim() == 'inclusive'));
-    },
-    'inclusive / exclusive',
+    'salary',
+    'Salary',
+    'Tính lương',
+    'Vietnamese employee insurance with caps, family deductions and progressive PIT from a dated rule table; whole đồng.',
+    'Amount (đồng)',
+    runSalary,
+    '{"mode":"gross","date":"YYYY-MM-DD","region":1,"dependants":0}',
   ),
   _tool(
     'split-bill',
@@ -452,25 +442,6 @@ final List<ToolDefinition> tools = List.unmodifiable([
     '0,6|2026-01-01',
   ),
   _tool(
-    'title-case',
-    'Title case',
-    'Viết hoa đầu từ',
-    'Unicode letter groups; not language-specific editorial rules.',
-    'Text',
-    (s, o) => _title(s),
-  ),
-  _tool(
-    'sentence-case',
-    'Sentence case',
-    'Viết hoa đầu câu',
-    'Capitalize first letter and after . ! ?; abbreviations not inferred.',
-    'Text',
-    (s, o) => s.toLowerCase().replaceAllMapped(
-      RegExp(r'(^|[.!?]\s+)(\p{L})', unicode: true),
-      (m) => m[1]! + m[2]!.toUpperCase(),
-    ),
-  ),
-  _tool(
     'literal-replace',
     'Find & replace',
     'Tìm và thay thế',
@@ -498,5 +469,23 @@ final List<ToolDefinition> tools = List.unmodifiable([
     'HEX input, HSL in degrees and percentages.',
     '#RRGGBB',
     (s, o) => _json(colors(s.trim())),
+  ),
+  _tool(
+    'number-words',
+    'Number in words',
+    'Đọc số thành chữ',
+    'Vietnamese and English words; đồng amounts end "đồng chẵn". Up to 27 digits, 12 decimals.',
+    'Number',
+    runNumberWords,
+    'unit=dong|none;style=north|south',
+  ),
+  _tool(
+    'lunar',
+    'Lunar calendar',
+    'Âm lịch',
+    'Vietnamese lunar date at UTC+7 (Hồ Ngọc Đức), leap months, can-chi, solar term; 1900–2100.',
+    'YYYY-MM-DD',
+    runLunar,
+    'solar / lunar / lunar-leap',
   ),
 ]);

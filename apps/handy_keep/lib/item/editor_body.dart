@@ -2,6 +2,7 @@ import 'package:handy_ui/kit.dart';
 import 'asset_editor.dart';
 import 'fields.dart';
 import 'media_section.dart';
+import 'price_field.dart';
 
 /// The editor's layout: what it is and where it lives first, then the
 /// photo and receipts, the dates, and the details nobody needs every day.
@@ -109,6 +110,7 @@ class EditorBody extends StatelessWidget {
                   ],
                 ),
                 const SizedBox(height: HandySpace.xl),
+                PriceField(editor: e),
                 HandyField(
                   label: tr(context, 'Serial number', 'Số serial'),
                   child: TextField(

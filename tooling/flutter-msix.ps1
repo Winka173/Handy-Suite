@@ -1,6 +1,6 @@
-param([ValidateSet('tools','keep','recall','docs','media','dev','save','spend','habit')][string]$App = 'tools')
+param([ValidateSet('tools','keep','recall','docs','media','dev','bookmark','spend','habit','trip')][string]$App = 'tools')
 $ErrorActionPreference = 'Stop'
-$fingerprintArgs=if($App -eq 'habit'){@('--app','habit')}else{@()}
+$fingerprintArgs=if($App -in @('habit','trip')){@('--app',$App)}else{@()}
 $repoRoot = Split-Path -Parent $PSScriptRoot
 $sourceHash=(& python (Join-Path $repoRoot 'tooling/flutter-source-fingerprint.py') @fingerprintArgs).Trim()
 $builds=Get-Content -LiteralPath (Join-Path $repoRoot 'docs/qa/evidence/builds-windows.json') -Raw -Encoding utf8 | ConvertFrom-Json
@@ -22,6 +22,7 @@ try {
     try { $graphics=[System.Drawing.Graphics]::FromImage($bitmap); try { $graphics.DrawImage($image,0,0,$size,$size) } finally { $graphics.Dispose() }; $bitmap.Save((Join-Path $assets "Logo$size.png"),[System.Drawing.Imaging.ImageFormat]::Png) } finally { $bitmap.Dispose() }
   }
 } finally { $image.Dispose() }
+$locationCapability=if($App -eq 'trip'){'<DeviceCapability Name="location"/>'}else{''}
 $title = (Get-Culture).TextInfo.ToTitleCase($App)
 @"
 <?xml version="1.0" encoding="utf-8"?>
@@ -31,7 +32,7 @@ $title = (Get-Culture).TextInfo.ToTitleCase($App)
   <Dependencies><TargetDeviceFamily Name="Windows.Desktop" MinVersion="10.0.17763.0" MaxVersionTested="10.0.26100.0" /></Dependencies>
   <Resources><Resource Language="en-us"/><Resource Language="vi-vn"/></Resources>
   <Applications><Application Id="App" Executable="handy_$App.exe" EntryPoint="Windows.FullTrustApplication"><uap:VisualElements DisplayName="Handy $title" Description="Offline Handy utility" BackgroundColor="transparent" Square150x150Logo="Assets\Logo150.png" Square44x44Logo="Assets\Logo44.png" /></Application></Applications>
-  <Capabilities><rescap:Capability Name="runFullTrust"/></Capabilities>
+  <Capabilities><rescap:Capability Name="runFullTrust"/>$locationCapability</Capabilities>
 </Package>
 "@ | Set-Content -LiteralPath (Join-Path $stage 'AppxManifest.xml') -Encoding utf8
 $makeappx = Get-ChildItem -Path 'C:\Program Files (x86)\Windows Kits\10\bin\*\x64\makeappx.exe' | Sort-Object FullName | Select-Object -Last 1

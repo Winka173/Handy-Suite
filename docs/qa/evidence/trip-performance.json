@@ -1,0 +1,35 @@
+{
+  "environment": "Windows Flutter host test; no image-heavy/device scroll claim",
+  "measurements": [
+    {
+      "trips": 10,
+      "visits": 100,
+      "sqliteWriteMs": 42,
+      "sqliteColdReadMs": 33,
+      "filterMs": 0,
+      "zipRoundTripMs": 50,
+      "processRssBytes": 238366720,
+      "databaseBytes": 258048
+    },
+    {
+      "trips": 100,
+      "visits": 1000,
+      "sqliteWriteMs": 98,
+      "sqliteColdReadMs": 115,
+      "filterMs": 1,
+      "zipRoundTripMs": 157,
+      "processRssBytes": 252760064,
+      "databaseBytes": 602112
+    },
+    {
+      "trips": 1000,
+      "visits": 10000,
+      "sqliteWriteMs": 461,
+      "sqliteColdReadMs": 1016,
+      "filterMs": 7,
+      "zipRoundTripMs": 1236,
+      "processRssBytes": 293019648,
+      "databaseBytes": 4050944
+    }
+  ]
+}

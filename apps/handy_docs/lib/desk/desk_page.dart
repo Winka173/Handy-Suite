@@ -1,6 +1,7 @@
 import 'package:handy_ui/kit.dart';
 import '../scope.dart';
 import '../ui/paper.dart';
+import 'desk_search.dart';
 import 'start_grid.dart';
 import 'work_card.dart';
 
@@ -11,8 +12,9 @@ class DeskPage extends StatelessWidget {
   final DocsScope scope;
   const DeskPage({super.key, required this.scope});
 
-  void go(BuildContext context, String place) =>
-      Navigator.pushNamed(context, '/$place');
+  void go(BuildContext context, String place) => place == 'open'
+      ? scope.opener.pickAndShow(context)
+      : Navigator.pushNamed(context, '/$place');
 
   @override
   Widget build(BuildContext context) => Scaffold(
@@ -46,6 +48,13 @@ class DeskPage extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
+                  if (recent.isNotEmpty) ...[
+                    DeskSearch(
+                      scope: scope,
+                      onOpened: () => go(context, 'read'),
+                    ),
+                    const SizedBox(height: HandySpace.xl),
+                  ],
                   Semantics(
                     header: true,
                     child: Text(
@@ -90,7 +99,7 @@ class DeskPage extends StatelessWidget {
                   if (recent.isNotEmpty) ...[
                     const SizedBox(height: HandySpace.xl),
                     HandySection(
-                      title: tr(context, 'Read lately', 'Đọc gần đây'),
+                      title: tr(context, 'Kept files', 'Tệp đã giữ'),
                       children: [
                         for (final d in recent)
                           HandyTile(
@@ -107,6 +116,17 @@ class DeskPage extends StatelessWidget {
                               if (ok && context.mounted) go(context, 'read');
                             },
                           ),
+                        HandyTile(
+                          key: const Key('desk-kept'),
+                          icon: Icons.folder_open_outlined,
+                          title: tr(
+                            context,
+                            'All kept files',
+                            'Xem tất cả tệp đã giữ',
+                          ),
+                          navigates: true,
+                          onTap: () => go(context, 'read'),
+                        ),
                       ],
                     ),
                   ],

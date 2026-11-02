@@ -30,6 +30,7 @@ class ItemView extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final a = item;
+    final runOut = runOutFor(scope.state, a);
     String dated(String d, String kind) =>
         '${formatDay(context, d)} · ${dueWhen(context, kind, _days(d))}';
     final facts = [
@@ -38,6 +39,8 @@ class ItemView extends StatelessWidget {
           tr(context, 'Bought on', 'Ngày mua'),
           formatDay(context, a.purchasedOn),
         ),
+      if (a.price.isNotEmpty)
+        (tr(context, 'Price paid', 'Giá mua'), priceOf(context, a)),
       if (a.warrantyUntil.isNotEmpty)
         (
           tr(context, 'Warranty until', 'Bảo hành đến'),
@@ -79,6 +82,12 @@ class ItemView extends StatelessWidget {
             HandyMenuButton(
               items: [
                 HandyMenuItem(
+                  Icons.add_shopping_cart,
+                  tr(context, 'Bought again today', 'Vừa mua thêm hôm nay'),
+                  () => scope.restock(context, a),
+                  key: const Key('item-restock-menu'),
+                ),
+                HandyMenuItem(
                   Icons.qr_code_2,
                   tr(context, 'Label and record', 'Nhãn QR và hồ sơ'),
                   () => scope.label(context, InventoryLabel('item', a.id)),
@@ -103,8 +112,70 @@ class ItemView extends StatelessWidget {
           HandyLabel(tr(context, 'Details', 'Thông tin')),
           HandyGroup(
             children: [
+              // A small grey label over the value, which reads in ink.
               for (final (label, value) in facts)
-                ListTile(title: Text(label), subtitle: Text(value)),
+                ListTile(
+                  title: Text(label, style: theme.textTheme.bodySmall),
+                  subtitle: Text(
+                    value,
+                    style: theme.textTheme.bodyLarge?.copyWith(
+                      fontFeatures: tabular,
+                    ),
+                  ),
+                ),
+            ],
+          ),
+        ],
+        if (a.restocks.isNotEmpty || runOut != null) ...[
+          HandyLabel(tr(context, 'Buying it again', 'Mua lại')),
+          HandyGroup(
+            children: [
+              ListTile(
+                key: const Key('item-runout'),
+                title: Text(
+                  runOut == null
+                      ? tr(
+                          context,
+                          'One more purchase and Keep can tell',
+                          'Thêm một lần mua nữa là Keep đoán được',
+                        )
+                      : tr(
+                          context,
+                          'Likely to run out ${formatDay(context, runOut.expected)}',
+                          'Có lẽ hết khoảng ${formatDay(context, runOut.expected)}',
+                        ),
+                ),
+                subtitle: Text(
+                  runOut == null
+                      ? tr(
+                          context,
+                          'Tap "Bought again" each time you buy it, not each time you use it.',
+                          'Chạm "Vừa mua thêm" mỗi lần mua, không cần mỗi lần dùng.',
+                        )
+                      : tr(
+                          context,
+                          'Bought again about every ${runOut.every} days · ${runOut.purchases} purchases so far',
+                          'Thường mua lại sau khoảng ${runOut.every} ngày · đã mua ${runOut.purchases} lần',
+                        ),
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(
+                  HandySpace.l,
+                  0,
+                  HandySpace.l,
+                  HandySpace.m,
+                ),
+                child: Align(
+                  alignment: AlignmentDirectional.centerStart,
+                  child: OutlinedButton.icon(
+                    key: const Key('item-restock'),
+                    onPressed: () => scope.restock(context, a),
+                    icon: const Icon(Icons.add_shopping_cart, size: 18),
+                    label: Text(tr(context, 'Bought again', 'Vừa mua thêm')),
+                  ),
+                ),
+              ),
             ],
           ),
         ],

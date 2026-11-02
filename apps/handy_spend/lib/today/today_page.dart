@@ -2,6 +2,7 @@ import 'package:handy_spend_engine/handy_spend_engine.dart';
 import 'package:handy_ui/kit.dart';
 import '../accounts/account_editor.dart';
 import '../entry/entry_sheet.dart';
+import '../entry/quick_line.dart';
 import '../ledger/entry_row.dart';
 import '../plan/recurring.dart';
 import '../scope.dart';
@@ -57,6 +58,7 @@ class TodayPage extends StatelessWidget {
                             crossAxisAlignment: CrossAxisAlignment.stretch,
                             children: [
                               lead,
+                              QuickLineField(scope: scope),
                               _Recent(scope: scope),
                             ],
                           ),
@@ -73,7 +75,11 @@ class TodayPage extends StatelessWidget {
                     )
                   : Column(
                       crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [lead, ...side],
+                      children: [
+                        lead,
+                        QuickLineField(scope: scope),
+                        ...side,
+                      ],
                     ),
             ),
           ],
@@ -146,84 +152,91 @@ class _Lead extends StatelessWidget {
     final short = safe.shortfall > BigInt.zero;
     final until = dayLabel(context, scope, scope.end);
     final next = promised.outs.firstOrNull;
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        Semantics(
-          header: true,
-          child: Text(
-            short
-                ? tr(context, 'Short until $until', 'Thiếu đến $until')
-                : tr(
-                    context,
-                    'Free to spend until $until',
-                    'Có thể chi đến $until',
-                  ),
-            style: theme.textTheme.titleMedium?.copyWith(color: c.muted),
-          ),
-        ),
-        const SizedBox(height: HandySpace.xs),
-        Money(
-          scope,
-          short ? -safe.shortfall : safe.available,
-          scope.currency,
-          key: const Key('safe-figure'),
-          style: theme.textTheme.displaySmall?.copyWith(
-            color: short ? c.negative : null,
-          ),
-        ),
-        const SizedBox(height: HandySpace.xs),
-        Text(
-          short
-              ? tr(
-                  context,
-                  'What is promised is more than the money held. See the plan.',
-                  'Khoản đã hứa nhiều hơn tiền đang có. Xem kế hoạch.',
-                )
-              : tr(
-                  context,
-                  '${moneyText(context, scope, safe.perDay, scope.currency)} a day for ${safe.days} days',
-                  '${moneyText(context, scope, safe.perDay, scope.currency)} mỗi ngày trong ${safe.days} ngày',
-                ),
-          style: theme.textTheme.bodyLarge,
-        ),
-        if (next != null)
-          Padding(
-            padding: const EdgeInsets.only(top: HandySpace.xs),
-            child: Text(
-              tr(
-                context,
-                'Next: ${partName(context, next)}, ${moneyText(context, scope, next.amount, scope.currency)}, ${whenLabel(context, scope, next.date).toLowerCase()}',
-                'Tiếp theo: ${partName(context, next)}, ${moneyText(context, scope, next.amount, scope.currency)}, ${whenLabel(context, scope, next.date).toLowerCase()}',
+    // The answer sits on the one pale tile of Spend's green.
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(HandySpace.xl),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Semantics(
+              header: true,
+              child: Text(
+                short
+                    ? tr(context, 'Short until $until', 'Thiếu đến $until')
+                    : tr(
+                        context,
+                        'Free to spend until $until',
+                        'Có thể chi đến $until',
+                      ),
+                style: theme.textTheme.titleMedium?.copyWith(color: c.muted),
               ),
-              style: theme.textTheme.bodyMedium?.copyWith(color: c.muted),
             ),
-          ),
-        const SizedBox(height: HandySpace.l),
-        PromisedBar(scope: scope, promised: promised),
-        const SizedBox(height: HandySpace.m),
-        PromisedSum(scope: scope, promised: promised),
-        Align(
-          alignment: AlignmentDirectional.centerStart,
-          child: TextButton(
-            key: const Key('open-plan'),
-            onPressed: () => scope.area.value = 2,
-            child: Text(
-              scope.conservative.value
+            const SizedBox(height: HandySpace.xs),
+            Money(
+              scope,
+              short ? -safe.shortfall : safe.available,
+              scope.currency,
+              key: const Key('safe-figure'),
+              style: theme.textTheme.displaySmall?.copyWith(
+                color: short ? c.negative : null,
+              ),
+            ),
+            const SizedBox(height: HandySpace.xs),
+            Text(
+              short
                   ? tr(
                       context,
-                      'Posted money only · change in Plan',
-                      'Chỉ tính tiền đã có · đổi trong Kế hoạch',
+                      'What is promised is more than the money held. See the plan.',
+                      'Khoản đã hứa nhiều hơn tiền đang có. Xem kế hoạch.',
                     )
                   : tr(
                       context,
-                      'With reliable income · change in Plan',
-                      'Gồm thu nhập chắc chắn · đổi trong Kế hoạch',
+                      '${moneyText(context, scope, safe.perDay, scope.currency)} a day for ${safe.days} days',
+                      '${moneyText(context, scope, safe.perDay, scope.currency)} mỗi ngày trong ${safe.days} ngày',
                     ),
+              style: theme.textTheme.bodyLarge,
             ),
-          ),
+            if (next != null)
+              Padding(
+                padding: const EdgeInsets.only(top: HandySpace.xs),
+                child: Text(
+                  tr(
+                    context,
+                    'Next: ${partName(context, next)}, ${moneyText(context, scope, next.amount, scope.currency)}, ${whenLabel(context, scope, next.date).toLowerCase()}',
+                    'Tiếp theo: ${partName(context, next)}, ${moneyText(context, scope, next.amount, scope.currency)}, ${whenLabel(context, scope, next.date).toLowerCase()}',
+                  ),
+                  style: theme.textTheme.bodyMedium?.copyWith(color: c.muted),
+                ),
+              ),
+            const SizedBox(height: HandySpace.l),
+            PromisedBar(scope: scope, promised: promised),
+            const SizedBox(height: HandySpace.m),
+            PromisedSum(scope: scope, promised: promised),
+            _Owed(scope: scope),
+            Align(
+              alignment: AlignmentDirectional.centerStart,
+              child: TextButton(
+                key: const Key('open-plan'),
+                onPressed: () => scope.area.value = 2,
+                child: Text(
+                  scope.conservative.value
+                      ? tr(
+                          context,
+                          'Posted money only · change in Plan',
+                          'Chỉ tính tiền đã có · đổi trong Kế hoạch',
+                        )
+                      : tr(
+                          context,
+                          'With reliable income · change in Plan',
+                          'Gồm thu nhập chắc chắn · đổi trong Kế hoạch',
+                        ),
+                ),
+              ),
+            ),
+          ],
         ),
-      ],
+      ),
     );
   }
 }
@@ -351,4 +364,49 @@ class _FirstRun extends StatelessWidget {
       ),
     ],
   );
+}
+
+/// One quiet line when people owe you or you owe them, under the sum it
+/// explains; nothing at all otherwise.
+class _Owed extends StatelessWidget {
+  final SpendScope scope;
+  const _Owed({required this.scope});
+  @override
+  Widget build(BuildContext context) {
+    final (them, you) = iouTotals(scope.state, scope.currency);
+    if (them == BigInt.zero && you == BigInt.zero)
+      return const SizedBox.shrink();
+    final c = HandyColors.of(context);
+    final text = [
+      if (them > BigInt.zero)
+        tr(
+          context,
+          'People owe you ${moneyText(context, scope, them, scope.currency)}',
+          'Người khác nợ bạn ${moneyText(context, scope, them, scope.currency)}',
+        ),
+      if (you > BigInt.zero)
+        tr(
+          context,
+          'You owe ${moneyText(context, scope, you, scope.currency)}',
+          'Bạn nợ ${moneyText(context, scope, you, scope.currency)}',
+        ),
+    ].join(' · ').replaceAll(' đ', ' đ');
+    return InkWell(
+      key: const Key('today-owed'),
+      onTap: () => Navigator.pushNamed(context, '/people'),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: HandySpace.s),
+        child: Row(
+          children: [
+            Icon(Icons.groups_outlined, size: 18, color: c.muted),
+            const SizedBox(width: HandySpace.s),
+            Expanded(
+              child: Text(text, style: Theme.of(context).textTheme.bodyMedium),
+            ),
+            Icon(Icons.chevron_right, size: 18, color: c.muted),
+          ],
+        ),
+      ),
+    );
+  }
 }

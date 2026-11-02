@@ -38,7 +38,7 @@ Future<void> openEditor(
                   card: newCard ? null : fixtureCard(),
                   deckId: 'deck',
                   files: files ?? Files(),
-                  onCommit: save,
+                  onCommit: (draft) => save(draft.card),
                 ),
               ),
             ),

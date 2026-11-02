@@ -18,7 +18,15 @@
   it is deliberately not adopted. Drop data enters the same bounded review wizard.
 - Only one editable free scenario; verified Pro enables multiple/duplicate/compare
   and >30-day advanced forecast UI. Basic data access/CSV import/export is free.
-- Backups contain complete financial state and audit but no receipt assets because
-  receipt capture is deferred P1. No pretend encrypted export or placeholder asset.
-- Split transactions and advanced loan/goal reverse planning are not implemented;
-  retain exact reconciled single-entry/linked-transfer invariants first.
+- 2026-11-02: receipts are kept as bytes beside the ledger (SQLite table natively,
+  IndexedDB store on the web), never inside the ledger JSON, and ZIP backups carry them
+  within an 85 MB budget. Backups are still not encrypted.
+- 2026-11-02: shared costs are splits with people, not multi-line transactions: the
+  ledger keeps single entries; a friend's payment back is a refund of the expense (any
+  account in its currency), your payment to them an expense. Money owed to you is not
+  in Safe to Spend until settled; what you owe is taken out at once.
+- 2026-11-02: what-ifs are overlays on the plan's live forecast; their baseline copy is
+  still stored immutably and used to check assumptions. No bank-specific statement
+  templates are shipped (no real statements to verify against); saving one still needs
+  verified Pro, as column profiles did.
+- Advanced loan/goal reverse planning is not implemented.

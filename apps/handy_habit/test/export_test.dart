@@ -77,6 +77,14 @@ void main() {
               note: 'Ghi chú riêng tư\nhai dòng',
             ).toJson(),
           ],
+          'pauses': [
+            Pause(
+              id: 'trip',
+              from: '2024-01-02',
+              until: '2024-01-03',
+              reason: 'Đi Huế',
+            ).toJson(),
+          ],
           'settings': {'onboarded': true, 'locale': locale},
         });
         final c = HabitController(open: () async => store);
@@ -143,6 +151,19 @@ void main() {
             files.output['csv']!,
           ).events.single.note,
           'Ghi chú riêng tư\nhai dòng',
+        );
+        // Pauses travel in the backups and the CSV, and the report names them.
+        expect(restore(files.output['zip']!).pauses.single.reason, 'Đi Huế');
+        expect(
+          importCsvLogs(
+            store.value.copy({'events': [], 'pauses': []}),
+            files.output['csv']!,
+          ).pauses.single.id,
+          'trip',
+        );
+        expect(
+          utf8.decode(files.output['md']!),
+          contains(locale == 'vi' ? '## Kỳ nghỉ' : '## Pauses'),
         );
         expect(jsonEncode(c.state!.toJson()), before);
         await tester.pumpWidget(const SizedBox());

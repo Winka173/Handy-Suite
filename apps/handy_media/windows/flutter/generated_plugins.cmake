@@ -4,6 +4,8 @@
 
 list(APPEND FLUTTER_PLUGIN_LIST
   file_selector_windows
+  handy_capture
+  handy_ocr
   handy_store
   share_plus
   url_launcher_windows

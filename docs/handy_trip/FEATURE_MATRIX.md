@@ -1,18 +1,49 @@
-# Handy Trip feature matrix
+# Handy Trip — trạng thái chức năng
 
-| Feature | Code | Android | iOS | Windows | Web | Evidence |
-| --- | --- | --- | --- | --- | --- | --- |
-| Trips/days/itinerary | NOT_STARTED | NOT_STARTED | NOT_STARTED | NOT_STARTED | NOT_STARTED | - |
-| Places/wishlist/manual check-in | NOT_STARTED | NOT_STARTED | NOT_STARTED | NOT_STARTED | NOT_STARTED | - |
-| Foreground GPS preview/confirmation | NOT_STARTED | NOT_STARTED | BLOCKED | NOT_STARTED | NOT_STARTED | iOS toolchain missing |
-| Journal/photos/managed attachments | NOT_STARTED | NOT_STARTED | NOT_STARTED | NOT_STARTED | NOT_STARTED | - |
-| Bookings/packing/exact expenses | NOT_STARTED | NOT_STARTED | NOT_STARTED | NOT_STARTED | NOT_STARTED | - |
-| Local reminders/fallback | NOT_STARTED | NOT_STARTED | BLOCKED | NOT_STARTED | NOT_STARTED | - |
-| Public reports/full backup restore | NOT_STARTED | NOT_STARTED | NOT_STARTED | NOT_STARTED | NOT_STARTED | - |
-| SQLite/IndexedDB | NOT_STARTED | NOT_STARTED | NOT_STARTED | NOT_STARTED | NOT_STARTED | - |
-| NoBasemap/external navigation | NOT_STARTED | NOT_STARTED | NOT_STARTED | NOT_STARTED | NOT_STARTED | No tile provider configured |
-| Ads/Pro | NOT_STARTED | BLOCKED | BLOCKED | BLOCKED | NOT_STARTED | No publisher accounts/IDs |
-| P1 signatures | NOT_STARTED | NOT_STARTED | NOT_STARTED | NOT_STARTED | NOT_STARTED | P0 gate first |
+Cập nhật 2026-11-02. CODED, HOST_PASS, EMULATOR_PASS, BUILT và DEVICE_VERIFIED
+là các bằng chứng khác nhau. **Chưa có kiểm thử thiết bị vật lý; chưa release-ready.**
 
-Code, unit tests, integration, emulator/runtime and hardware/store verification are
-separate claims. No platform receives PLATFORM_VERIFIED from a compilation alone.
+| Nhóm | Code | Host | Android emulator | iOS | Windows/Web |
+| --- | --- | --- | --- | --- | --- |
+| Trips/days/timezone/status/cover | CODED | DST/days/date changes/duplicate + responsive UI | Trip 3 ngày lưu/reopen; chưa mọi CRUD gesture | SOURCE_ONLY | BUILT; SQLite host |
+| Itinerary/reorder/overnight/overlap | CODED | HOST_PASS | Hai stop chuyển visited qua UI | SOURCE_ONLY | BUILT |
+| Places/wishlist/clipboard/CSV/geo points | CODED | Validation + mapped import + round-trips | Manual check-in, OS share không suy ra GPS | SOURCE_ONLY | BUILT |
+| Durable shared URL/plain text inbox | Android/iOS CODED | Commit-before-ack design | EMULATOR_PASS: ACTION_SEND/Cancel/save/ack/reopen | App Group/team cần cấu hình và QA | Clipboard/file fallback |
+| Foreground GPS preview/confirmation | CODED | Denied/stale/coarse/preview tests | OS fix emulator, không tự tạo visit | SOURCE_ONLY | GPS runtime chưa thử |
+| Journal/repeated visits/unique geography | CODED | HOST_PASS, year theo zone gốc | Hai visits/hai unique; restart/read | SOURCE_ONLY | IndexedDB runtime chưa thử |
+| Originals/previews/album/gallery/captions | CODED | Original bytes, actual EXIF removal, round-trip | Managed image/backup/reopen; actual Photo Picker cancel PASS; camera/selection còn QA | SOURCE_ONLY | BUILT |
+| Booking private codes + image/PDF | CODED | Edit giữ giờ, redaction | Data/reopen; chưa OS PDF providers | SOURCE_ONLY | BUILT |
+| Packing/templates/order/qty/progress | CODED | Isolation/duplicate/reorder + UI | Data/reopen, chưa mọi gesture | SOURCE_ONLY | BUILT |
+| Exact expenses/budget/mixed currencies | CODED | HOST_PASS; không đếm booking hai lần | SQLite snapshot/reopen | SOURCE_ONLY | BUILT |
+| Local reminders/cancel/reschedule | CODED | Target/zone validation | Schedule/delivery/cancel PASS; chưa background/reboot | SOURCE_ONLY | In-app/ICS fallback |
+| Full JSON/ZIP merge/replace/Undo | CODED | Round-trip/checksum/version/CAS/rollback | Native ZIP + restore + reopen | SOURCE_ONLY | Browser quota/multi-tab chưa thử |
+| CSV/limited ICS/GeoJSON/GPX/KML | CODED, schema giới hạn | Supported round-trips | Chưa mọi OS file provider | SOURCE_ONLY | BUILT |
+| Public JSON/Markdown/PDF/ICS/photo ZIP | CODED | Whitelist, image reencode; PDF QA riêng | Native engine; file export picker còn QA | SOURCE_ONLY | BUILT |
+| NoBasemap/external map handoff | CODED | Bounds/anti-meridian | Chưa QA app maps đích | SOURCE_ONLY | Browser handoff chưa thử |
+| Ads + Pro Lifetime | Real adapters, independent IDs | Không fake giá/entitlement; core free | Chưa accounts/production ads/store tests | Chưa team/store | Chưa store association; Web không fake purchase |
+| Passport photo covers, personal PNG/PDF stamps | CODED | Real PNG decode/PDF + review/cancel PASS | Actual PNG output/Passport UI PASS | SOURCE_ONLY | BUILT; runtime còn QA |
+| Memory Book PDF/HTML ZIP | CODED | Two layouts, private opt-in, independent readers PASS | Actual PDF/ZIP generation PASS; OS save picker chưa QA | SOURCE_ONLY | BUILT |
+| Local EXIF proposals | CODED | Rational GPS/date/offset/DST + no auto-write PASS | Preview then explicit check-in PASS; originals unchanged | SOURCE_ONLY | BUILT |
+| Pin replay, trip comparison | CODED | Saved coordinates, chronological/antimeridian/currency tests PASS | Actual UI PASS | SOURCE_ONLY | BUILT |
+| Safe templates and itinerary recipe | CODED | Whitelist duplicate + rich recipe round-trip PASS | Native engine; recipe file provider còn QA | SOURCE_ONLY | BUILT |
+| Stamp workshop (cut photo, 4 shapes, ink, tilt, wear, PNG/A4 PDF) | CODED | Every shape renders transparent PNG + sheet PDF | Chưa chạy | SOURCE_ONLY | Chưa build lại |
+
+Passport dùng bộ đếm theo năm và nhãn quốc gia/vùng/thành phố do người dùng nhập.
+Không suy ra phần trăm thế giới đã khám phá. Pro dùng entitlement thật; store chưa QA.
+
+Bằng chứng: [engine](../qa/evidence/trip-engine-tests.log), [app](../qa/evidence/trip-app-tests.log),
+[performance](../qa/evidence/trip-performance.json), [Android write](../qa/evidence/trip-native-write-result.json),
+[GPS/notifications](../qa/evidence/trip-native-write-report.json), [restart](../qa/evidence/trip-native-read-result.json),
+[OS share](../qa/evidence/trip-share-write-result.json).
+Build records: [Android](../qa/evidence/builds-apk.json), [Windows](../qa/evidence/builds-windows.json),
+[Web](../qa/evidence/builds-web.json). Chọn app=trip và đối chiếu sourceSha256/sourceUnchanged.
+
+70 ảnh widget EN/VI/light/dark ở `review-shots/trip/`; ảnh Android thật từ emulator ở
+`docs/qa/evidence/screenshots/trip-*`. Widget screenshot không chứng nhận OS APIs.
+Xem [QA_RESULTS](QA_RESULTS.md), [KNOWN_LIMITATIONS](KNOWN_LIMITATIONS.md), [PROGRESS](PROGRESS.md).
+
+Final checkpoint: [source và SHA-256 artifact](../qa/evidence/trip-final-checkpoint.json).
+36 engine + 17 app tests pass; 70 ảnh UI, 13 file xuất được đọc độc lập. Android
+P1/restart và APK/AAB/Windows/Web/MSIX cùng source e9531374ebd6. AAB/MSIX chưa ký.
+Không tính lỗi test-harness thiếu plugin là pass: log được giữ riêng, đã sửa script
+và chạy lại lấy kết quả thật từ PID 9251. Chưa có physical-device/store chứng nhận.

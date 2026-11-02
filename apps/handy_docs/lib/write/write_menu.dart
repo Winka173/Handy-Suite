@@ -1,6 +1,6 @@
-import 'package:handy_docs_engine/handy_docs_engine.dart';
 import 'package:handy_files/handy_files.dart';
 import 'package:handy_ui/kit.dart';
+import '../text/text_opener.dart';
 import 'draft.dart';
 
 /// The editor's less frequent actions: find, bring text in, insert a
@@ -12,6 +12,7 @@ class WriteMenu extends StatelessWidget {
   final Future<void> Function(Future<void> Function()) run;
   final Future<bool> Function() mayReplace;
   final VoidCallback onFind;
+  final TextOpener opener;
   const WriteMenu({
     super.key,
     required this.draft,
@@ -20,14 +21,13 @@ class WriteMenu extends StatelessWidget {
     required this.run,
     required this.mayReplace,
     required this.onFind,
+    required this.opener,
   });
 
-  Future<void> _importText(BuildContext context) => run(() async {
-    final file = await files.importText(maxBytes: 1000000);
-    if (file == null || !context.mounted) return;
-    serializeMarkdownDraft(file.text);
-    if (await mayReplace()) draft.replace(file.text);
-  });
+  /// The app's one way in: Markdown replaces the draft here (after
+  /// asking), other text opens read-only with "make a Markdown copy".
+  Future<void> _importText(BuildContext context) =>
+      run(() => opener.pickAndShow(context, inWriter: true));
 
   Future<void> _importPack(BuildContext context) => run(() async {
     final file = await files.importBytes(

@@ -101,6 +101,7 @@ String statusLabel(BuildContext context, String status) => switch (status) {
   'partial' => tr(context, 'Part done', 'Làm dở'),
   'skipped' => tr(context, 'Skipped, with a reason', 'Bỏ qua có lý do'),
   'missed' => tr(context, 'Not done', 'Chưa làm'),
+  'paused' => tr(context, 'Paused', 'Nghỉ'),
   'future' => tr(context, 'Later', 'Sắp tới'),
   'notScheduled' => tr(context, 'Not planned', 'Không có lịch'),
   'finished' => tr(context, 'Finished', 'Đã xong'),

@@ -95,7 +95,7 @@
       "productId": ""
     }
   },
-  "save": {
+  "bookmark": {
     "android": {
       "productId": "",
       "androidPublicKey": "",
@@ -128,6 +128,22 @@
     }
   },
   "habit": {
+    "android": {
+      "productId": "",
+      "androidPublicKey": "",
+      "bannerAdUnitId": "",
+      "adsEnabled": false
+    },
+    "ios": {
+      "productId": "",
+      "bannerAdUnitId": "",
+      "adsEnabled": false
+    },
+    "windows": {
+      "productId": ""
+    }
+  },
+  "trip": {
     "android": {
       "productId": "",
       "androidPublicKey": "",

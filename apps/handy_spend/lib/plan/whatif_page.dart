@@ -4,6 +4,7 @@ import '../scope.dart';
 import '../ui/figures.dart';
 import '../ui/form.dart';
 import '../ui/pro.dart';
+import 'forecast_chart.dart';
 
 /// One what-if: the copy it started from beside the changed version, the
 /// assumptions that make the difference, and the one way into the real
@@ -48,36 +49,69 @@ class _Body extends StatelessWidget {
     final theme = Theme.of(context);
     final c = HandyColors.of(context);
     final base = SpendState.fromJson(x.baseline);
-    final start = x.asOf;
-    final s0 = calendar(start);
-    final end = day(DateTime.utc(s0.year, s0.month + 1, 0));
-    final before = forecast(base, start, end);
-    final after = forecast(
-      base,
+    // Assumptions are checked against the copy; their effect is shown on
+    // the ledger as it is today, over the plan's window, like the plan.
+    final live = scope.state;
+    final start = scope.today, end = scope.end;
+    final accounts = scope.planningAccounts;
+    final income = !scope.conservative.value;
+    final before = forecast(
+      live,
       start,
       end,
-      staged: x.staged,
-      skipBills: x.skipBills.toSet(),
+      accounts: accounts,
+      includeIncome: income,
     );
-    final safeBefore = safeToSpend(base, start, end);
+    final (after, ignored) = whatIfForecast(
+      live,
+      x,
+      start,
+      end,
+      accounts: accounts,
+      includeIncome: income,
+    );
+    final open = {
+      for (final a in live.accounts)
+        if (!a.archived) a.id,
+    };
+    final staged = [
+      for (final e in x.staged)
+        if (open.contains(e.account) &&
+            (e.toAccount == null || open.contains(e.toAccount)))
+          e,
+    ];
+    final safeBefore = safeToSpend(
+      live,
+      start,
+      end,
+      accounts: accounts,
+      conservative: !income,
+    );
     final safeAfter = safeToSpend(
-      base,
+      live,
       start,
       end,
-      staged: x.staged,
+      accounts: accounts,
+      conservative: !income,
+      staged: staged,
       skipBills: x.skipBills.toSet(),
     );
-    final simulated = base.copy({
-      'entries': [
-        ...base.entries.map((e) => e.toJson()),
-        ...x.staged.map((e) => e.copy({'status': 'posted'}).toJson()),
-      ],
-    });
+    SpendState? simulated;
+    try {
+      simulated = live.copy({
+        'entries': [
+          ...live.entries.map((e) => e.toJson()),
+          ...staged.map((e) => e.copy({'status': 'posted'}).toJson()),
+        ],
+      });
+    } catch (_) {
+      // An assumption the ledger cannot hold leaves budgets out.
+    }
     final converted =
         (scope.state.settings['convertedScenarios'] as List? ?? []).contains(
           x.id,
         );
-    final cur = base.currency;
+    final cur = live.currency;
     // One block per figure: the label, then as-is → with this, whole.
     Widget row(String label, BigInt a, BigInt b, {Key? key}) => Padding(
       key: key,
@@ -138,8 +172,8 @@ class _Body extends StatelessWidget {
       title: x.name,
       subtitle: tr(
         context,
-        'What-if on a copy of ${dayLabel(context, scope, start)} · to ${dayLabel(context, scope, end)}',
-        'Kịch bản trên bản sao ngày ${dayLabel(context, scope, start)} · đến ${dayLabel(context, scope, end)}',
+        'Forecast if… · today to ${dayLabel(context, scope, end)} · assumptions checked against the copy of ${dayLabel(context, scope, x.asOf)}',
+        'Dự báo nếu… · từ hôm nay đến ${dayLabel(context, scope, end)} · giả định kiểm tra trên bản sao ngày ${dayLabel(context, scope, x.asOf)}',
       ),
       actions: [
         HandyMenuButton(
@@ -174,15 +208,22 @@ class _Body extends StatelessWidget {
               ),
             ),
       children: [
-        if (financialFingerprint(base) != financialFingerprint(scope.state))
+        const SizedBox(height: HandySpace.s),
+        ForecastChart(
+          scope: scope,
+          projection: before,
+          overlays: [(after, scope.scenarioHue(x.id))],
+        ),
+        if (ignored > 0)
           Padding(
-            padding: const EdgeInsets.only(top: HandySpace.m),
+            padding: const EdgeInsets.only(top: HandySpace.s),
             child: HandyNotice(
               tr(
                 context,
-                'Your ledger has changed since. This what-if still uses its copy.',
-                'Sổ đã đổi từ đó. Kịch bản vẫn dùng bản sao của nó.',
+                '$ignored assumption(s) use an account that is closed now and are left out.',
+                '$ignored giả định dùng tài khoản đã đóng nên không tính.',
               ),
+              tone: HandyTone.warning,
             ),
           ),
         HandyLabel(tr(context, 'Effect', 'Ảnh hưởng')),
@@ -201,7 +242,7 @@ class _Body extends StatelessWidget {
               ),
             ),
             row(
-              tr(context, 'Month end', 'Cuối tháng'),
+              tr(context, 'At the end', 'Cuối kỳ'),
               before.ending,
               after.ending,
               key: const Key('whatif-month-end'),
@@ -216,12 +257,13 @@ class _Body extends StatelessWidget {
               safeBefore.available,
               safeAfter.available,
             ),
-            for (final b in base.budgets)
-              row(
-                tr(context, '${b.name}: left', '${b.name}: còn'),
-                budgetRemaining(base, b),
-                budgetRemaining(simulated, b),
-              ),
+            if (simulated != null)
+              for (final b in live.budgets)
+                row(
+                  tr(context, '${b.name}: left', '${b.name}: còn'),
+                  budgetRemaining(live, b),
+                  budgetRemaining(simulated, b),
+                ),
             if (after.shortfall != null)
               Padding(
                 padding: const EdgeInsets.all(HandySpace.l),

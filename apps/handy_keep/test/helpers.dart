@@ -36,9 +36,12 @@ class Preferences implements PreferencesRepository {
 }
 
 /// Files that record what was exported and hand out queued imports.
-class Files implements HandyFiles {
+class Files implements HandyFiles, BatchHandyFiles {
   Uint8List? png;
-  String? text;
+  String? text, exportedName, exportedMime;
+
+  /// What the next multi-photo pick returns.
+  List<ImportedBytes> nextMany = const [];
   ImportedBytes? nextBytes;
   ImportedText? nextText;
   Completer<ImportedBytes?>? pending;
@@ -65,8 +68,19 @@ class Files implements HandyFiles {
     if (fail) throw Exception('Disk unavailable');
     if (cancel) return null;
     png = bytes;
+    exportedName = name;
+    exportedMime = mimeType;
     return 'saved';
   }
+
+  @override
+  Future<List<ImportedBytes>> importManyBytes({
+    required List<String> extensions,
+    int maxFiles = 50,
+    int maxEachBytes = 20000000,
+    int maxTotalBytes = 60000000,
+    CancellationToken? cancellation,
+  }) async => nextMany;
 
   @override
   Future<ImportedBytes?> importBytes({
@@ -83,10 +97,20 @@ class Files implements HandyFiles {
 
 class Camera implements ScanCamera {
   ImportedBytes? next;
+
+  /// Shots handed out one per capture, before [next]; a burst ends when
+  /// the queue runs out and the camera is closed (null).
+  final List<ImportedBytes> queue = [];
+  bool burst = false;
   @override
   bool get supported => true;
   @override
-  Future<ImportedBytes?> capture() async => next;
+  Future<ImportedBytes?> capture() async {
+    if (queue.isNotEmpty) return queue.removeAt(0);
+    if (burst) return null;
+    return next;
+  }
+
   @override
   Future<ImportedBytes?> recover() async => null;
 }

@@ -200,6 +200,8 @@ void main() {
       await binding.takeScreenshot('spend-transactions');
       await go(2);
       await binding.takeScreenshot('spend-plan');
+      // What-ifs are drawn on the forecast once turned on ("Dự báo nếu…").
+      await tap('whatif-toggle-qa-scenario');
       await tap('whatif-qa-scenario');
       await binding.takeScreenshot('spend-sandbox');
       expect(

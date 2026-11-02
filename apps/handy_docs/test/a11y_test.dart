@@ -50,7 +50,7 @@ void main() {
   testWidgets('the desk shows unfinished work and opens each place', (
     tester,
   ) async {
-    await start(tester, docs: busyDesk(locale: 'en'));
+    final docs = await start(tester, docs: busyDesk(locale: 'en'));
     expect(find.text('On the desk'), findsOneWidget);
     expect(find.byKey(const Key('desk-work-scan')), findsOneWidget);
     expect(find.text('2 pages · make the PDF'), findsOneWidget);
@@ -62,17 +62,24 @@ void main() {
     for (final (key, sign) in [
       ('desk-write', 'markdown-source'),
       ('desk-pdf', 'pdf-import'),
-      ('desk-read', 'reader-import'),
+      ('desk-kept', 'reader-import'),
       ('desk-scan', 'scan-import'),
     ]) {
       await tapKey(tester, key);
       expect(find.byKey(Key(sign)), findsOneWidget, reason: key);
       await back(tester);
     }
+    // A kept Markdown file opens in the writer, after asking about the
+    // draft already there; the kept copy is not changed.
+    final kept = docs.reader.text;
     await tapKey(tester, 'desk-recent-doc-1');
+    expect(find.text('Replace the draft?'), findsOneWidget);
+    await tester.tap(find.byKey(const Key('confirm-action')));
+    await tester.pumpAndSettle();
+    expect(sourceText(tester), '# Máy giặt\n\nChọn chế độ rồi bấm Bắt đầu.');
     expect(
-      find.text('Chọn chế độ rồi bấm Bắt đầu.', findRichText: true),
-      findsOneWidget,
+      ReaderLibrary.parse(docs.reader.text!).documents.single.source,
+      ReaderLibrary.parse(kept!).documents.single.source,
     );
   });
 
@@ -82,7 +89,7 @@ void main() {
     await start(tester);
     expect(find.text('Nothing on the desk'), findsOneWidget);
     expect(find.byKey(const Key('desk-work-scan')), findsNothing);
-    for (final k in ['desk-scan', 'desk-write', 'desk-pdf', 'desk-read']) {
+    for (final k in ['desk-scan', 'desk-write', 'desk-pdf', 'desk-open']) {
       expect(find.byKey(Key(k)), findsOneWidget);
     }
   });
@@ -107,7 +114,15 @@ void main() {
     ) async {
       await start(tester, docs: busyDesk(), size: size);
       expect(tester.takeException(), isNull);
-      for (final place in ['/scan', '/write', '/pdf', '/read', '/settings']) {
+      for (final place in [
+        '/scan',
+        '/write',
+        '/pdf',
+        '/pdf/fill',
+        '/ocr',
+        '/read',
+        '/settings',
+      ]) {
         await go(tester, place);
         await tester.pump(const Duration(milliseconds: 300));
         await tester.pumpAndSettle();

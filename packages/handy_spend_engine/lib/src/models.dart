@@ -96,6 +96,11 @@ class Category {
 class Entry {
   final String id, account, kind, when, created, payee, note, status;
   final String? category, toAccount, rate, refundOf, batch, occurrence;
+
+  /// A payment that settles part of a split ([settles] is the split's ID)
+  /// with one [person]. Both are absent on ordinary entries and are only
+  /// written when set, so older entries keep their exact JSON and hashes.
+  final String? settles, person;
   final List<String> tags;
   final BigInt amount, fee;
   final BigInt? target;
@@ -116,6 +121,8 @@ class Entry {
     this.refundOf,
     this.batch,
     this.occurrence,
+    this.settles,
+    this.person,
     List<String> tags = const [],
     BigInt? fee,
   }) : when = timestamp(when),
@@ -153,6 +160,9 @@ class Entry {
       throw const FormatException('Transfer fields on ordinary transaction');
     if (kind == 'refund' && refundOf == null)
       throw const FormatException('Refund requires original expense');
+    if ((settles == null) != (person == null) ||
+        settles != null && !{'refund', 'expense'}.contains(kind))
+      throw const FormatException('Invalid settlement link');
   }
   Map<String, dynamic> toJson() => {
     'id': id,
@@ -173,6 +183,8 @@ class Entry {
     'occurrence': occurrence,
     'tags': tags,
     'fee': '$fee',
+    if (settles != null) 'settles': settles,
+    if (person != null) 'person': person,
   };
   factory Entry.fromJson(Map<String, dynamic> j) => Entry(
     id: _text(j['id']),
@@ -193,6 +205,8 @@ class Entry {
     occurrence: j['occurrence'] as String?,
     tags: List<String>.from(j['tags'] as List? ?? []),
     fee: _big(j['fee'] ?? '0'),
+    settles: j['settles'] as String?,
+    person: j['person'] as String?,
   );
   Entry copy(Map<String, dynamic> changes) =>
       Entry.fromJson({...toJson(), ...changes});
@@ -377,6 +391,10 @@ class Scenario {
   );
 }
 
+/// The ledger's schema. 2 added receipts, people and splits, settlement
+/// links on entries and keyed statement templates.
+const schemaVersion = 2;
+
 class SpendState {
   final int revision;
   final List<Account> accounts;
@@ -386,7 +404,12 @@ class SpendState {
   final List<Goal> goals;
   final List<Bill> bills;
   final List<Scenario> scenarios;
+  final List<Receipt> receipts;
+  final List<Person> people;
+  final List<CostSplit> splits;
   final Map<String, dynamic> settings;
+
+  /// [profiles] are the saved statement column templates.
   final List<Map<String, dynamic>> profiles, rules, imports, audit;
   SpendState({
     this.revision = 0,
@@ -397,6 +420,9 @@ class SpendState {
     List<Goal> goals = const [],
     List<Bill> bills = const [],
     List<Scenario> scenarios = const [],
+    List<Receipt> receipts = const [],
+    List<Person> people = const [],
+    List<CostSplit> splits = const [],
     Map<String, dynamic> settings = const {},
     List<Map<String, dynamic>> profiles = const [],
     List<Map<String, dynamic>> rules = const [],
@@ -409,6 +435,9 @@ class SpendState {
        goals = List.unmodifiable(goals),
        bills = List.unmodifiable(bills),
        scenarios = List.unmodifiable(scenarios),
+       receipts = List.unmodifiable(receipts),
+       people = List.unmodifiable(people),
+       splits = List.unmodifiable(splits),
        settings = _frozenMap(settings),
        profiles = List.unmodifiable(profiles.map((v) => _frozenMap(v))),
        rules = List.unmodifiable(rules.map((v) => _frozenMap(v))),
@@ -417,7 +446,7 @@ class SpendState {
   String get currency => settings['currency'] as String? ?? 'VND';
   String get zone => settings['zone'] as String? ?? 'Asia/Ho_Chi_Minh';
   Map<String, dynamic> toJson() => {
-    'version': 1,
+    'version': schemaVersion,
     'revision': revision,
     'accounts': accounts.map((e) => e.toJson()).toList(),
     'categories': categories.map((e) => e.toJson()).toList(),
@@ -426,14 +455,20 @@ class SpendState {
     'goals': goals.map((e) => e.toJson()).toList(),
     'bills': bills.map((e) => e.toJson()).toList(),
     'scenarios': scenarios.map((e) => e.toJson()).toList(),
+    'receipts': receipts.map((e) => e.toJson()).toList(),
+    'people': people.map((e) => e.toJson()).toList(),
+    'splits': splits.map((e) => e.toJson()).toList(),
     'settings': settings,
     'profiles': profiles,
     'rules': rules,
     'imports': imports,
     'audit': audit,
   };
+
+  /// Reads schema 1 (before receipts, people and templates) or 2. A newer
+  /// schema is refused, never guessed at.
   factory SpendState.fromJson(Map<String, dynamic> j) {
-    if (j['version'] != 1)
+    if (j['version'] != 1 && j['version'] != schemaVersion)
       throw const FormatException('Unsupported Spend schema');
     final s = SpendState(
       revision: j['revision'] as int? ?? 0,
@@ -444,8 +479,11 @@ class SpendState {
       goals: _list(j['goals'], Goal.fromJson),
       bills: _list(j['bills'], Bill.fromJson),
       scenarios: _list(j['scenarios'], Scenario.fromJson),
+      receipts: _list(j['receipts'] ?? const [], Receipt.fromJson),
+      people: _list(j['people'] ?? const [], Person.fromJson),
+      splits: _list(j['splits'] ?? const [], CostSplit.fromJson),
       settings: _map(j['settings']),
-      profiles: _list(j['profiles'], (e) => e),
+      profiles: _list(j['profiles'], _upgradeTemplate),
       rules: _list(j['rules'], (e) => e),
       imports: _list(j['imports'], (e) => e),
       audit: _list(j['audit'], (e) => e),
@@ -460,6 +498,12 @@ class SpendState {
       if (settings[key] != null && settings[key] is! bool)
         throw const FormatException('Invalid privacy setting');
     }
+    final dismissed = settings['dismissedRecurring'];
+    if (dismissed != null &&
+        (dismissed is! List ||
+            dismissed.length > 2000 ||
+            dismissed.any((k) => k is! String || k.length > 1024)))
+      throw const FormatException('Invalid dismissed suggestions');
     final lock = settings['lockSeconds'];
     if (lock != null && (lock is! int || lock < 0 || lock > 3600))
       throw const FormatException('Invalid lock timeout');
@@ -521,9 +565,10 @@ class SpendState {
       }
       if (e.kind == 'refund') {
         final original = tx[e.refundOf];
+        // A friend paying back their share may pay into another account.
         if (original == null ||
             original.kind != 'expense' ||
-            original.account != e.account ||
+            original.account != e.account && e.settles == null ||
             original.status != 'posted')
           throw const FormatException('Invalid refund reference');
       }
@@ -573,6 +618,7 @@ class SpendState {
           throw const FormatException('Scheduled transfer rate mismatch');
       }
     }
+    _validateExtras(this, ac, tx);
     for (final s in scenarios) {
       final base = SpendState.fromJson(s.baseline);
       base.copy({
@@ -582,5 +628,91 @@ class SpendState {
         ],
       });
     }
+  }
+}
+
+/// Schema 2 rules: receipts belong to entries and fit their budgets;
+/// splits name known people and match their expense; settlements stay
+/// within what is open and move the split's currency.
+void _validateExtras(
+  SpendState s,
+  Map<String, Account> accounts,
+  Map<String, Entry> entries,
+) {
+  void unique(Iterable<String> ids) {
+    final l = ids.toList();
+    if (l.toSet().length != l.length)
+      throw const FormatException('Duplicate ID');
+  }
+
+  unique(s.receipts.map((r) => r.id));
+  unique(s.people.map((p) => p.id));
+  unique(s.splits.map((x) => x.id));
+  if (s.receipts.length > receiptCountLimit)
+    throw const FormatException('At most 1000 receipts / Tối đa 1000 hóa đơn');
+  final perEntry = <String, int>{};
+  var total = 0;
+  for (final r in s.receipts) {
+    if (!entries.containsKey(r.entry))
+      throw const FormatException('Receipt without its transaction');
+    perEntry[r.entry] = (perEntry[r.entry] ?? 0) + 1;
+    if (perEntry[r.entry]! > receiptsPerEntry)
+      throw const FormatException(
+        'At most 10 receipts per transaction / Tối đa 10 hóa đơn mỗi giao dịch',
+      );
+    total += r.size;
+  }
+  if (total > receiptTotalLimit)
+    throw const FormatException(
+      'Receipts are limited to 50 MB in all / Hóa đơn tối đa 50 MB tổng cộng',
+    );
+  final people = {for (final p in s.people) p.id};
+  final splits = {for (final x in s.splits) x.id: x};
+  final splitEntries = <String>{};
+  for (final x in s.splits) {
+    if (x.payer != me && !people.contains(x.payer) ||
+        x.parts.any((p) => p.who != me && !people.contains(p.who)))
+      throw const FormatException('CostSplit names an unknown person');
+    if (x.payer == me) {
+      final e = entries[x.entry];
+      if (e == null ||
+          e.kind != 'expense' ||
+          -e.amount != x.total ||
+          accounts[e.account]?.currency != x.currency ||
+          !splitEntries.add(e.id))
+        throw const FormatException(
+          'A split must match its expense / Phần chia phải khớp khoản chi',
+        );
+    } else if (x.share(me) <= BigInt.zero) {
+      throw const FormatException(
+        'When someone else paid, you need a share / Người khác trả thì bạn phải có phần',
+      );
+    }
+  }
+  final paid = <String, BigInt>{};
+  for (final e in s.entries.where((e) => e.settles != null)) {
+    final x = splits[e.settles];
+    if (x == null ||
+        e.status != 'posted' ||
+        accounts[e.account]?.currency != x.currency ||
+        e.person == me ||
+        (x.payer == me
+            ? e.kind != 'refund' ||
+                  e.refundOf != x.entry ||
+                  x.share(e.person!) <= BigInt.zero
+            : e.kind != 'expense' || e.person != x.payer))
+      throw const FormatException('Invalid settlement');
+    final key = '${x.id}|${e.person}';
+    paid[key] = (paid[key] ?? BigInt.zero) + e.amount.abs();
+    if (paid[key]! > (x.payer == me ? x.share(e.person!) : x.share(me)))
+      throw const FormatException(
+        'Settled more than was owed / Trả nhiều hơn số còn nợ',
+      );
+  }
+  final signatures = <String>{};
+  for (final t in s.profiles) {
+    _checkTemplate(t);
+    if (!signatures.add(t['signature'] as String))
+      throw const FormatException('Two templates for the same columns');
   }
 }

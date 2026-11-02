@@ -20,6 +20,7 @@ class BenchExamples extends StatelessWidget {
       tr(context, '5 km to mi', '5 km sang mi'),
       tr(context, '15% of 2,400,000', '15% của 2.400.000'),
       tr(context, '2026-12-31 to today', '2026-12-31 đến hôm nay'),
+      tr(context, '1,250,000 in words', '1.250.000 bằng chữ'),
       '#E8590C',
     ];
     final muted = Theme.of(
@@ -54,7 +55,7 @@ class BenchExamples extends StatelessWidget {
           spacing: HandySpace.s,
           runSpacing: HandySpace.s,
           children: [
-            for (final id in pinned)
+            for (final id in {for (final p in pinned) canonicalToolId(p)})
               if (specById[id] != null)
                 ActionChip(
                   key: Key('pinned-$id'),

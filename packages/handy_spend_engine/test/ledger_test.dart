@@ -693,7 +693,8 @@ void main() {
     () {
       final s = library();
       expect(
-        () => SpendState.fromJson({...s.toJson(), 'version': 2}),
+        () =>
+            SpendState.fromJson({...s.toJson(), 'version': schemaVersion + 1}),
         throwsFormatException,
       );
       expect(

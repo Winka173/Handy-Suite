@@ -1,4 +1,4 @@
-param([ValidateSet('tools','docs','media','dev','keep','recall','save','spend','habit')][string]$App,[ValidateSet('native','pdf','capture','guide','recovery','conversion','camera-share','large-project','state','reader','parity','video-transform','editor')][string]$Scenario='native',[ValidateSet('emulator-5556','emulator-5558')][string]$Device='emulator-5556')
+param([ValidateSet('tools','docs','media','dev','keep','recall','bookmark','spend','habit')][string]$App,[ValidateSet('native','pdf','capture','guide','recovery','conversion','camera-share','large-project','state','reader','parity','video-transform','editor')][string]$Scenario='native',[ValidateSet('emulator-5556','emulator-5558')][string]$Device='emulator-5556')
 $ErrorActionPreference='Stop'
 $fingerprintArgs=if($App -eq 'habit'){@('--app','habit')}else{@()}
 $root=Split-Path -Parent $PSScriptRoot

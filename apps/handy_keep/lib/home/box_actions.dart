@@ -2,7 +2,8 @@ import 'package:handy_inventory/handy_inventory.dart';
 import 'package:handy_ui/kit.dart';
 import '../scope.dart';
 
-/// A box's menu: pack something into it, print its label, rename, delete.
+/// A box's menu: pack one thing or several (from photos) into it, print its
+/// label, rename, delete.
 List<HandyMenuItem> boxActions(
   BuildContext context,
   KeepScope scope,
@@ -14,6 +15,12 @@ List<HandyMenuItem> boxActions(
     tr(context, 'Add an item to it', 'Thêm đồ vào thùng'),
     () => scope.edit(context, box: b.id),
     key: const Key('box-add-item'),
+  ),
+  HandyMenuItem(
+    Icons.add_photo_alternate_outlined,
+    tr(context, 'Pack several from photos', 'Thêm nhiều món từ ảnh'),
+    () => scope.batchAdd(context, box: b.id),
+    key: const Key('box-batch-add'),
   ),
   HandyMenuItem(
     Icons.qr_code_2,

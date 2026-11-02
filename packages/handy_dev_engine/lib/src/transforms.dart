@@ -8,6 +8,13 @@ import 'inference.dart';
 import 'viewer.dart';
 import 'regex.dart';
 import 'schema.dart';
+import 'time.dart';
+import 'ids.dart';
+import 'text_diff.dart';
+import 'cron.dart';
+import 'bases.dart';
+import 'url_parts.dart';
+import 'hmac.dart';
 export 'inference.dart';
 
 String bounded(String text, [int maxBytes = 1000000]) {
@@ -455,15 +462,37 @@ dynamic redact(dynamic value, [int depth = 0]) {
   return value;
 }
 
+/// Scheme, host, port and path of a HAR request URL, with every query value
+/// replaced; credentials and the fragment are dropped. Null when unreadable.
+String? harUrl(dynamic url) {
+  if (url is! String || url.length > 100000) return null;
+  final u = Uri.tryParse(url.trim());
+  if (u == null || u.scheme.isEmpty || !u.hasAuthority) return null;
+  final b = StringBuffer(
+    '${u.scheme}://${u.host}${u.hasPort ? ':${u.port}' : ''}${u.path}',
+  );
+  final names = [
+    for (final part in u.query.split('&'))
+      if (part.isNotEmpty)
+        part.contains('=')
+            ? '${part.substring(0, part.indexOf('='))}=[REDACTED]'
+            : part,
+  ];
+  if (names.isNotEmpty) b.write('?${names.join('&')}');
+  return b.toString();
+}
+
 dynamic harSummary(String input) {
   final v = parseJson(input);
   if (v is! Map || v['log'] is! Map || v['log']['entries'] is! List)
     throw const FormatException('Missing HAR log.entries');
   return (v['log']['entries'] as List).map((e) {
     if (e is! Map) throw const FormatException('Invalid HAR entry');
+    final url = e['request'] is Map ? harUrl(e['request']['url']) : null;
     return {
       if (e['request'] is Map && e['request'].containsKey('method'))
         'method': e['request']['method'],
+      'url': ?url,
       if (e['response'] is Map && e['response'].containsKey('status'))
         'status': e['response']['status'],
       if (e.containsKey('time')) 'durationMs': e['time'],
@@ -706,7 +735,7 @@ final List<DevTool> devTools = List.unmodifiable([
     'har',
     'HAR summary',
     'Tóm tắt HAR',
-    'Only method, status, duration; omit URLs/headers/bodies.',
+    'Method, status, duration and URL (scheme, host, path; query values redacted); no headers, cookies or bodies.',
     (s, o) => pretty(harSummary(s)),
     sensitive: true,
   ),
@@ -716,6 +745,100 @@ final List<DevTool> devTools = List.unmodifiable([
     'Ẩn bí mật JSON',
     'Mask common credential keys recursively; review before sharing.',
     (s, o) => pretty(redact(parseJson(s))),
+    sensitive: true,
+  ),
+  DevTool(
+    'timestamp',
+    'Unix timestamp',
+    'Mốc thời gian Unix',
+    'Unix s/ms/µs/ns (unit by size) or ISO-8601 to UTC, a zone and relative time. Zones: UTC, device local or a fixed offset; no IANA names.',
+    (s, o) {
+      final opt = timestampOptions(o);
+      return pretty(readTimestamp(s, zone: opt.zone, unit: opt.unit).toJson());
+    },
+    optionsLabel: 'Zone and unit, e.g. +07:00 ms',
+  ),
+  DevTool(
+    'uuid',
+    'UUID / ULID',
+    'UUID / ULID',
+    'Inspect pasted IDs (version, variant, v1/v6/v7 and ULID time), or with empty input make 1–1000 v4, v7 or ULID from a secure random source.',
+    (s, o) {
+      if (s.trim().isNotEmpty) {
+        final r = inspectIds(s);
+        if (r.length == 1 && r.single['valid'] != true) {
+          throw FormatException(r.single['error'] as String);
+        }
+        return pretty(r.length == 1 ? r.single : r);
+      }
+      final parts = o.trim().split(RegExp(r'\s+'));
+      final count = parts.length > 1 ? int.tryParse(parts[1]) : 1;
+      if (count == null) throw const FormatException('Count must be a number');
+      return generateIds(idKind(parts.first), count).join('\n');
+    },
+    optionsLabel: 'Make: v4 | v7 | ulid, and a count',
+  ),
+  DevTool(
+    'text-diff',
+    'Text diff',
+    'So sánh văn bản',
+    'Line diff (Myers), unified output. Before text; options after text. $maxDiffLines lines per side, $maxDiffChanges changed lines.',
+    (s, o) => diffText(s, o).unified(),
+    optionsLabel: 'After text',
+  ),
+  DevTool(
+    'cron',
+    'Cron explain',
+    'Giải thích cron',
+    '5 fields, or 6 with seconds; ranges, steps, lists, names, @daily-style macros. Explained in EN/VI with the next 1–100 runs in UTC, local or a fixed offset.',
+    (s, o) {
+      final opt = cronOptions(o);
+      return pretty(cronReport(parseCron(s), opt.zone, opt.count));
+    },
+    optionsLabel: 'Zone and count, e.g. +07:00 10',
+  ),
+  DevTool(
+    'base-convert',
+    'Number bases',
+    'Đổi hệ cơ số',
+    'BigInt between bases 2/8/10/16 and any 2–36; two’s complement at a bit width. Up to $maxBaseDigits digits.',
+    (s, o) {
+      final opt = baseOptions(o);
+      return pretty(convertBase(s, base: opt.base, bits: opt.bits).toJson());
+    },
+    optionsLabel: 'base=36 bits=32',
+  ),
+  DevTool(
+    'url-parse',
+    'URL parts',
+    'Tách URL',
+    'Scheme, user, host, port, path, decoded query table and fragment; rebuilt after editing. Password hidden; nothing fetched.',
+    (s, o) {
+      final p = parseUrl(s);
+      final json = p.toJson();
+      if (o.trim().isNotEmpty) {
+        final pairs = parseJson(o);
+        if (pairs is! List ||
+            pairs.any(
+              (x) => x is! List || x.length != 2 || x.any((y) => y is! String),
+            )) {
+          throw const FormatException('Query must be [["name","value"], …]');
+        }
+        json['url'] = p.rebuild([
+          for (final x in pairs) (x[0] as String, x[1] as String),
+        ]);
+      }
+      return pretty(json);
+    },
+    optionsLabel: 'Query as [["name","value"]] (optional)',
+  ),
+  DevTool(
+    'hmac',
+    'HMAC',
+    'HMAC',
+    'HMAC-SHA256/SHA512 of UTF-8 text, hex or Base64. The key is session-only: never saved in drafts, chains or exports.',
+    (s, o) => hmacTool(s, o),
+    optionsLabel: 'JSON: key, hash, keyFormat, output',
     sensitive: true,
   ),
 ]);

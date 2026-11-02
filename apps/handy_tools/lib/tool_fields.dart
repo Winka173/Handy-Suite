@@ -49,11 +49,11 @@ class ToolField extends StatelessWidget {
           ? const TextStyle(fontFeatures: tabular)
           : null,
       decoration: InputDecoration(
-        hintText: spec.hint.isEmpty
+        hintText: (spec.hintOf?.call(values) ?? spec.hint).isEmpty
             ? (long
                   ? tr(context, 'Paste or type text', 'Dán hoặc nhập văn bản')
                   : null)
-            : spec.hint,
+            : spec.hintOf?.call(values) ?? spec.hint,
         counterText: '',
         prefixIcon: prefix,
       ),
@@ -66,6 +66,38 @@ class ToolField extends StatelessWidget {
   }
 
   Widget choice(BuildContext context, List<Choice> options) {
+    if (spec.segmented && options.length > 3)
+      // Four or more joined buttons squeeze their words on a phone; below
+      // about 88px a segment, the same choices become a row of chips.
+      return LayoutBuilder(
+        builder: (context, box) => box.maxWidth >= options.length * 88
+            ? SegmentedButton<String>(
+                key: Key('field-${spec.id}'),
+                showSelectedIcon: false,
+                segments: [
+                  for (final o in options)
+                    ButtonSegment(
+                      value: o.$1,
+                      label: Text(tr(context, o.$2, o.$3)),
+                    ),
+                ],
+                selected: {value},
+                onSelectionChanged: enabled ? (s) => onChanged(s.first) : null,
+              )
+            : Wrap(
+                key: Key('field-${spec.id}'),
+                spacing: HandySpace.s,
+                runSpacing: HandySpace.s,
+                children: [
+                  for (final o in options)
+                    ChoiceChip(
+                      label: Text(tr(context, o.$2, o.$3)),
+                      selected: value == o.$1,
+                      onSelected: enabled ? (_) => onChanged(o.$1) : null,
+                    ),
+                ],
+              ),
+      );
     if (options.length <= 3)
       return SegmentedButton<String>(
         key: Key('field-${spec.id}'),

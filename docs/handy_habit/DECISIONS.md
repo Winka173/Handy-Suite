@@ -20,4 +20,8 @@ archive/crypto BSD; pdf Apache-2.0; web/path_provider BSD. Primary package refer
 [notifications](https://pub.dev/packages/flutter_local_notifications/versions/22.3.3),
 [timezone](https://pub.dev/packages/timezone/versions/0.11.2).
 Optional biometric lock deferred: existing Spend lock is app-specific. No unreliable
-replacement. No P1 vacations/widgets/challenges or unrelated app features added.
+replacement. No P1 widgets/challenges or unrelated app features added. Pauses (P1 vacations) were
+added on 2026-11-02 as schema 2: a paused day not done is neutral, a paused day done
+counts, weekly quotas are prorated and rounded up (rule in DATA_SCHEMA). The routine
+runner still pauses in the background; its notice says so instead of running a timer
+nobody can see (no chronometer, no end-of-step alert), the smallest honest change.

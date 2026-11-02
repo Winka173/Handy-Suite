@@ -1,0 +1,10 @@
+﻿{
+    "app":  "trip",
+    "phase":  "write",
+    "exitCode":  0,
+    "sourceSha256":  "78b09249ac29b10a23d0ed7bacfebbf1e72267e82eae81eefde66ecd927a5f8d",
+    "sourceUnchanged":  true,
+    "device":  "emulator-5570",
+    "avd":  "HandyTrip_QA_API35",
+    "physicalDevice":  false
+}

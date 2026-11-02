@@ -112,11 +112,6 @@ Future<void> back(WidgetTester t) async {
   await pause(t, 700);
 }
 
-const _srt =
-    '1\n00:00:01,200 --> 00:00:03,800\nXin chào, hôm nay chúng ta học nấu phở.\n\n'
-    '2\n00:00:04,000 --> 00:00:06,500\nĐầu tiên, rửa sạch xương bò.\n\n'
-    '3\n00:00:06,900 --> 00:00:09,400\nChần xương trong nước sôi năm phút.\n';
-
 void main() {
   IntegrationTestWidgetsFlutterBinding.ensureInitialized();
   testWidgets('Handy Media tour', (t) async {
@@ -236,25 +231,6 @@ void main() {
 
     // Save the result: the fake files keep it.
     await tap(t, 'media-export');
-    await pause(t, 3400);
-    await back(t);
-    await pause(t, 2600);
-
-    // Subtitles: paste a short SRT, then shift it half a second at a time.
-    await tap(t, 'studio-subtitles');
-    await pause(t, 2600);
-    await type(t, 'subtitle-input', _srt);
-    await doneTyping(t);
-    await pause(t, 3400);
-    for (final key in [
-      'subtitle-later',
-      'subtitle-later',
-      'subtitle-later',
-      'subtitle-earlier',
-    ]) {
-      await tap(t, key);
-      await pause(t, 2000);
-    }
     await pause(t, 3400);
     await back(t);
     await pause(t, 2600);

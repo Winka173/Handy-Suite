@@ -27,12 +27,19 @@ class NativeCapturePageState extends State<NativeCapturePage>
       frame = TextEditingController(text: '0');
   final clips = <CaptureResult>[];
   CaptureResult? last;
+
+  /// The last screenshot's picture, read once to show it.
+  Uint8List? preview;
+  String? previewUri;
   Timer? polling;
   CancellationToken? operation;
   bool busy = false, recording = false, pending = false, refreshing = false;
   String error = '', notice = '';
   String? seenNativeUri, seenNativeError;
-  int delay = 3000;
+  int delay = regionCaptureAvailable ? 0 : 3000;
+
+  /// Windows: an area dragged on the frozen screen, or the whole screen.
+  CaptureArea area = CaptureArea.region;
   int videoRotation = 0, videoEdge = 720;
   bool videoMute = false;
   bool get appOnlyRecording => defaultTargetPlatform == TargetPlatform.iOS;
@@ -67,12 +74,23 @@ class NativeCapturePageState extends State<NativeCapturePage>
 
   void accept(CaptureResult next) {
     last = next;
+    if (next.mime == 'image/png' && next.uri != previewUri) _show(next);
     if (next.mime == 'video/mp4') {
       if (!clips.any((c) => c.uri == next.uri)) {
         if (clips.length == 20) clips.removeAt(0);
         clips.add(next);
       }
       end.text = '${next.durationMs}';
+    }
+  }
+
+  Future<void> _show(CaptureResult shot) async {
+    previewUri = shot.uri;
+    try {
+      final bytes = await native.read(shot);
+      if (mounted && previewUri == shot.uri) setState(() => preview = bytes);
+    } catch (_) {
+      // Without a preview the size line and the actions still say enough.
     }
   }
 
@@ -139,6 +157,12 @@ class NativeCapturePageState extends State<NativeCapturePage>
                   context,
                   'System capture canceled.',
                   'Đã hủy capture hệ thống.',
+                )
+              : e.code == 'E_TOO_LARGE'
+              ? tr(
+                  context,
+                  'That is too big for one step: up to 16 million pixels and 8 MB. Choose a smaller area.',
+                  'Quá lớn cho một bước: tối đa 16 triệu điểm ảnh và 8 MB. Hãy chọn vùng nhỏ hơn.',
                 )
               : tr(
                   context,
@@ -228,6 +252,8 @@ class NativeCapturePageState extends State<NativeCapturePage>
         setState(() {
           clips.clear();
           last = null;
+          preview = null;
+          previewUri = null;
           seenNativeUri = null;
         });
       }
@@ -244,12 +270,13 @@ class NativeCapturePageState extends State<NativeCapturePage>
           if (nativeCaptureAvailable)
             HandyMenuButton(
               items: [
-                HandyMenuItem(
-                  Icons.video_file_outlined,
-                  tr(context, 'Open an MP4', 'Mở một MP4'),
-                  busy || pending ? null : importVideo,
-                  key: const Key('native-import-video'),
-                ),
+                if (nativeVideoAvailable)
+                  HandyMenuItem(
+                    Icons.video_file_outlined,
+                    tr(context, 'Open an MP4', 'Mở một MP4'),
+                    busy || pending ? null : importVideo,
+                    key: const Key('native-import-video'),
+                  ),
                 HandyMenuItem(
                   Icons.delete_sweep_outlined,
                   tr(
@@ -269,8 +296,8 @@ class NativeCapturePageState extends State<NativeCapturePage>
           ? HandyEmpty(
               title: tr(
                 context,
-                'Screen capture is in the Android and iOS apps',
-                'Chụp màn hình có trong ứng dụng Android và iOS',
+                'Screen capture is in the Android, iOS and Windows apps',
+                'Chụp màn hình có trong ứng dụng Android, iOS và Windows',
               ),
               message: tr(
                 context,
@@ -285,7 +312,10 @@ class NativeCapturePageState extends State<NativeCapturePage>
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
-                      TakePanel(page: this),
+                      if (regionCaptureAvailable)
+                        WindowsTakePanel(page: this)
+                      else
+                        TakePanel(page: this),
                       if (error.isNotEmpty) ...[
                         const SizedBox(height: HandySpace.m),
                         HandyNotice(

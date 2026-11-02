@@ -9,7 +9,9 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:handy_recall/handy_recall.dart';
 import 'package:handy_recall_app/app.dart';
 import 'package:handy_storage/handy_storage.dart';
+import 'package:handy_files/handy_files.dart';
 import 'package:handy_ui/kit.dart';
+import '../test/apkg.dart';
 import '../test/helpers.dart';
 
 Future<void> _font(String family, List<String> paths) async {
@@ -226,11 +228,48 @@ RecallState library(String picture) {
   return s;
 }
 
+/// Japanese with read-aloud on both sides: a reverse pair and two clozes.
+RecallState nihongo() {
+  var s = saveDeck(
+    emptyRecallState(),
+    const RecallDeck(
+      id: 'jp',
+      name: 'Tiếng Nhật N3',
+      reverse: true,
+      speakFront: 'ja-JP',
+      speakBack: 'vi-VN',
+    ),
+  );
+  var n = 0;
+  String id() => 'jp${++n}';
+  final due = at(now.subtract(const Duration(hours: 1)));
+  s = saveNote(
+    s,
+    deckId: 'jp',
+    front: '{{c1::東京}}は{{c2::首都::thủ đô}}です。',
+    back: 'Tokyo là thủ đô.',
+    newId: id,
+    now: due,
+  );
+  s = saveNote(
+    s,
+    deckId: 'jp',
+    front: '届ける (とどける)',
+    back: 'gửi đến, chuyển tới',
+    reverse: true,
+    newId: id,
+    now: due,
+  );
+  return s;
+}
+
 Future<void> boot(
   WidgetTester t,
   Size size, {
   String theme = 'light',
   RecallState? state,
+  Files? files,
+  FakeSpeaker? speaker,
 }) async {
   t.view.physicalSize = size;
   t.view.devicePixelRatio = 1;
@@ -243,10 +282,11 @@ Future<void> boot(
       child: RecallApp(
         documents: Store()
           ..text = exportRecallBackup(state ?? library(picture)),
-        files: Files(),
+        files: files ?? Files(),
         preferences: Preferences()
           ..value = HandyPreferences(locale: 'vi', theme: theme),
         reminders: testReminders(),
+        speaker: speaker ?? FakeSpeaker(),
         clock: () => now,
       ),
     ),
@@ -277,8 +317,12 @@ void main() {
     ]);
     // Japanese cards: the system face the kit falls back to on Windows.
     const yu = r'C:\Windows\Fonts\YuGothM.ttc';
-    if (File(yu).existsSync()) await _font('packages/handy_ui/Yu Gothic', [yu]);
+    if (File(yu).existsSync()) await _font('Yu Gothic', [yu]);
     final sdk = Platform.environment['FLUTTER_ROOT']!;
+    await _font('Lexend', [
+      for (final f in Directory('fonts').listSync())
+        if (f.path.endsWith('.ttf')) f.path,
+    ]);
     await _font('MaterialIcons', [
       '$sdk/bin/cache/artifacts/material_fonts/materialicons-regular.otf',
     ]);
@@ -343,6 +387,91 @@ void main() {
     await boot(t, const Size(390, 844), state: emptyRecallState());
     await shot(t, 'phone-11-empty');
   });
+  testWidgets('phone cloze', (t) async {
+    await boot(t, const Size(390, 844), state: nihongo());
+    await tapKey(t, 'study-start');
+    await shot(t, 'phone-12-cloze');
+    await tapKey(t, 'review-show');
+    await shot(t, 'phone-13-cloze-answer');
+  });
+  testWidgets('phone reverse card', (t) async {
+    await boot(t, const Size(390, 844), state: nihongo());
+    await tapKey(t, 'deck-review-jp');
+    while (find.byKey(const Key('review-reversed')).evaluate().isEmpty) {
+      await tapKey(t, 'review-show');
+      await tapKey(t, 'grade-good');
+    }
+    await shot(t, 'phone-14-reverse');
+  });
+  testWidgets('phone editor cloze', (t) async {
+    await boot(t, const Size(390, 844), state: nihongo());
+    await tapKey(t, 'deck-jp');
+    await tapKey(t, 'card-jp2');
+    await shot(t, 'phone-15-editor-cloze');
+  });
+  testWidgets('phone editor new card with reverse', (t) async {
+    await boot(t, const Size(390, 844), state: nihongo());
+    await tapKey(t, 'deck-jp');
+    await tapKey(t, 'card-new');
+    await t.enterText(find.byKey(const Key('card-front')), '比べる (くらべる)');
+    await t.enterText(find.byKey(const Key('card-back')), 'so sánh');
+    await t.pumpAndSettle();
+    await shot(t, 'phone-16-editor-reverse');
+  });
+  testWidgets('phone deck settings', (t) async {
+    await boot(t, const Size(390, 844), state: nihongo());
+    await tapKey(t, 'deck-jp');
+    await tapKey(t, 'more-menu');
+    await tapKey(t, 'deck-rename');
+    await shot(t, 'phone-17-deck-settings');
+  });
+  testWidgets('phone deck settings without voices', (t) async {
+    await boot(
+      t,
+      const Size(390, 844),
+      state: nihongo(),
+      speaker: FakeSpeaker([]),
+    );
+    await tapKey(t, 'deck-new');
+    await shot(t, 'phone-18-no-voices');
+  });
+  for (final (label, size) in [
+    ('phone', const Size(390, 844)),
+    ('desktop', const Size(1440, 900)),
+  ]) {
+    testWidgets('$label anki preview', (t) async {
+      final package = apkg();
+      await boot(
+        t,
+        size,
+        files: Files()..bytes = ImportedBytes('spanish.apkg', package),
+      );
+      await tapKey(t, 'anki-open');
+      await shot(t, '$label-19-anki-preview');
+    });
+  }
+  testWidgets('phone anki not a package', (t) async {
+    await boot(
+      t,
+      const Size(390, 844),
+      files: Files()
+        ..bytes = ImportedBytes('notes.apkg', Uint8List.fromList([1, 2, 3])),
+    );
+    await tapKey(t, 'anki-open');
+    await shot(t, 'phone-20-anki-error');
+  });
+  testWidgets('narrow 320 today and empty', (t) async {
+    await boot(t, const Size(320, 640));
+    await shot(t, 'narrow-21-today');
+    await boot(t, const Size(320, 640), state: emptyRecallState());
+    await shot(t, 'narrow-22-empty');
+  });
+  testWidgets('desktop editor cloze', (t) async {
+    await boot(t, const Size(1440, 900), state: nihongo());
+    await tapKey(t, 'deck-jp');
+    await tapKey(t, 'card-jp2');
+    await shot(t, 'desktop-23-editor-cloze');
+  });
   testWidgets('films', (t) async {
     await boot(t, const Size(390, 844));
     await film(t, 'phone-start', () async {
@@ -357,5 +486,19 @@ void main() {
       await t.tap(find.byKey(const Key('grade-good')));
       await t.pump();
     }, frames: 20);
+  });
+
+  testWidgets('phone paste notes', (t) async {
+    await boot(t, const Size(390, 844));
+    await tapKey(t, 'deck-n3');
+    await t.tap(find.byType(HandyMenuButton).last);
+    await t.pumpAndSettle();
+    await tapKey(t, 'deck-paste');
+    await t.enterText(
+      find.byKey(const Key('paste-text')),
+      '- 食べる – ăn\n- 飲む – uống\n読む: đọc\nMột dòng ghi chú không có đáp án',
+    );
+    await t.pumpAndSettle();
+    await shot(t, 'phone-21-paste');
   });
 }

@@ -69,5 +69,9 @@
 	<key>GADApplicationIdentifier</key><string>ca-app-pub-3940256099942544~1458002511</string>
 	<key>GADDelayAppMeasurementInit</key><true/>
 	<key>CFBundleLocalizations</key><array><string>en</string><string>vi</string></array>
+	<key>UIFileSharingEnabled</key>
+	<true/>
+	<key>LSSupportsOpeningDocumentsInPlace</key>
+	<true/>
 </dict>
 </plist>

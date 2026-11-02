@@ -9,6 +9,7 @@ import 'box_actions.dart';
 import 'empty_list.dart';
 import 'filter_bar.dart';
 import 'place_section.dart';
+import 'value_summary.dart';
 
 /// Search, the day's finding, and every item under the place it is in.
 class ListPane extends StatelessWidget {
@@ -64,6 +65,30 @@ class ListPane extends StatelessWidget {
     };
   }
 
+  /// What the value line adds up, in the words of the current view.
+  String viewLabel(BuildContext context, List<Place> groups, int count) {
+    final n = itemCount(context, count);
+    if (query.text.trim().isNotEmpty) {
+      return tr(context, 'Found · $n', 'Tìm thấy · $n');
+    }
+    if (box != null) return tr(context, 'In this box · $n', 'Trong thùng · $n');
+    final boxes = groups.where((p) => p.box != null).length;
+    return switch (filter) {
+      KeepFilter.all => tr(context, 'Total value', 'Tổng giá trị'),
+      KeepFilter.lent => tr(context, 'Out on loan · $n', 'Đang cho mượn · $n'),
+      KeepFilter.boxes => tr(
+        context,
+        boxes == 1 ? 'Packed in 1 box · $n' : 'Packed in $boxes boxes · $n',
+        'Trong $boxes thùng · $n',
+      ),
+      KeepFilter.loose => tr(
+        context,
+        'Not in a box · $n',
+        'Chưa vào thùng · $n',
+      ),
+    };
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -72,6 +97,10 @@ class ListPane extends StatelessWidget {
     final found = findItems(s, query.text);
     final groups = places(s, found);
     final searching = query.text.trim().isNotEmpty;
+    final shown = [for (final p in groups) ...p.items];
+    // Values show once anything has a price; until then, no nagging.
+    final priced = valueOf(s.assets).hasPrices;
+    final packing = filter == KeepFilter.boxes || box != null;
     final due = !searching && filter == KeepFilter.all && box == null
         ? attention(s, today())
         : const <DueItem>[];
@@ -107,6 +136,35 @@ class ListPane extends StatelessWidget {
                 label: Text(tr(context, 'Add item', 'Thêm đồ')),
               ),
             ],
+            const SizedBox(width: HandySpace.xs),
+            HandyMenuButton(
+              key: const Key('keep-list-menu'),
+              tooltip: tr(context, 'More for this list', 'Thêm cho danh sách'),
+              items: [
+                HandyMenuItem(
+                  Icons.add_photo_alternate_outlined,
+                  tr(context, 'Add from photos', 'Thêm từ ảnh'),
+                  () => scope.batchAdd(context, box: box ?? ''),
+                  key: const Key('batch-add'),
+                ),
+                HandyMenuItem(
+                  Icons.table_view_outlined,
+                  searching || filter != KeepFilter.all || box != null
+                      ? tr(
+                          context,
+                          'Save these ${shown.length} as CSV',
+                          'Lưu ${shown.length} món này ra CSV',
+                        )
+                      : tr(
+                          context,
+                          'Save the list as CSV',
+                          'Lưu danh sách ra CSV',
+                        ),
+                  shown.isEmpty ? null : () => scope.exportCsv(context, shown),
+                  key: const Key('export-csv'),
+                ),
+              ],
+            ),
           ],
         ),
         const SizedBox(height: HandySpace.l),
@@ -141,6 +199,12 @@ class ListPane extends StatelessWidget {
             onClearBox: () => onBox(null),
           ),
         ],
+        if (priced && s.assets.isNotEmpty)
+          ValueSummary(
+            label: viewLabel(context, groups, shown.length),
+            value: valueOf(shown),
+            lead: packing || filter == KeepFilter.lent,
+          ),
         HandyReveal(
           // Wide screens show every date in the empty pane instead.
           child: due.isEmpty || wide
@@ -166,6 +230,14 @@ class ListPane extends StatelessWidget {
                   key: ValueKey(p.key),
                   place: p,
                   hue: placeHue(s, p.key),
+                  // Packing shows every box's worth, even "no price yet";
+                  // elsewhere only places with a price say anything.
+                  value: !priced || p.items.isEmpty
+                      ? null
+                      : switch (valueOf(p.items)) {
+                          final v when packing || v.hasPrices => v,
+                          _ => null,
+                        },
                   blobs: scope.store.library!.blobs,
                   selected: selected,
                   onOpen: (a) => onOpen(a.id),

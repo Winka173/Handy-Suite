@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:handy_tools_engine/handy_tools_engine.dart';
 import 'package:handy_ui/kit.dart';
+import 'vn_specs.dart';
 
 /// UI description of every engine tool: real fields instead of the engine's
 /// comma/JSON syntax, and how its output is presented. The engine stays the
@@ -14,6 +15,19 @@ class FieldSpec {
   final FieldType type;
   final bool optional;
   final List<Choice> Function(Map<String, String> values)? choices;
+
+  /// Kept behind the form's "rules in use" toggle until the user opens it.
+  final bool advanced;
+
+  /// Choices drawn as joined buttons even past three options.
+  final bool segmented;
+
+  /// Shown only while this holds for the current values.
+  final bool Function(Map<String, String> values)? visibleWhen;
+
+  /// A hint computed from the other values, such as the table value an
+  /// empty override falls back to.
+  final String Function(Map<String, String> values)? hintOf;
   const FieldSpec(
     this.id,
     this.en,
@@ -23,8 +37,13 @@ class FieldSpec {
     this.hint = '',
     this.optional = false,
     this.choices,
+    this.advanced = false,
+    this.segmented = false,
+    this.visibleWhen,
+    this.hintOf,
   });
   String label(BuildContext c) => tr(c, en, vi);
+  bool visible(Map<String, String> values) => visibleWhen?.call(values) ?? true;
 }
 
 enum Category { numbers, money, dates, text, color }
@@ -49,12 +68,20 @@ class ValueOutput extends Output {
   const ValueOutput(this.value, {this.caption = '', this.money = false});
 }
 
-/// Labelled figures; [lead] answers the tool's question.
+/// Labelled figures; [lead] answers the tool's question. [note] is one
+/// grey line under them (the rules a figure came from).
 class RowsOutput extends Output {
   final List<(String, String)> rows;
   final int lead;
-  final String copy;
-  const RowsOutput(this.rows, this.copy, {this.lead = 0});
+  final String copy, note;
+  const RowsOutput(this.rows, this.copy, {this.lead = 0, this.note = ''});
+}
+
+/// A number in words: [words] answers and is what Copy takes; [other] is
+/// the second language under it, with its own copy action.
+class WordsOutput extends Output {
+  final String words, other, caption;
+  const WordsOutput(this.words, this.other, {this.caption = ''});
 }
 
 /// Transformed text.
@@ -78,6 +105,12 @@ class ToolSpec {
   final (String, String) Function(Map<String, String> v) encode;
   final Output Function(BuildContext c, String raw, Map<String, String> v)
   present;
+
+  /// The empty state's sentence, when the generic one says too little.
+  final (String, String)? empty;
+
+  /// Names the advanced fields' toggle from the current values.
+  final String Function(BuildContext c, Map<String, String> v)? advancedLabel;
   const ToolSpec(
     this.id,
     this.icon,
@@ -87,6 +120,8 @@ class ToolSpec {
     required this.fields,
     required this.encode,
     required this.present,
+    this.empty,
+    this.advancedLabel,
   });
   ToolDefinition get engine => tools.firstWhere((t) => t.id == id);
   String title(BuildContext c) => tr(c, engine.titleEn, engine.titleVi);
@@ -112,13 +147,17 @@ List<Choice> _units(Map<String, String> v) => [
     (u, unitName(u), unitName(u)),
 ];
 
-Map<String, Object?> _json(String raw) =>
+Map<String, Object?> _json(String raw) => decodeObject(raw);
+Map<String, Object?> decodeObject(String raw) =>
     (jsonDecode(raw) as Map).cast<String, Object?>();
-String _today() => DateTime.now().toIso8601String().substring(0, 10);
-String _copyRows(List<(String, String)> rows) =>
-    rows.map((r) => '${r.$1}: ${r.$2}').join('\n');
+String _today() => today();
+String today() => DateTime.now().toIso8601String().substring(0, 10);
+String copyRows(List<(String, String)> rows, [String note = '']) => [
+  ...rows.map((r) => '${r.$1}: ${r.$2}'),
+  if (note.isNotEmpty) note,
+].join('\n');
 RowsOutput _rows(List<(String, String)> rows, {int lead = 0}) =>
-    RowsOutput(rows, _copyRows(rows), lead: lead);
+    RowsOutput(rows, copyRows(rows), lead: lead);
 
 const _amount = FieldSpec('amount', 'Amount', 'Số tiền', FieldType.decimal);
 const _text = FieldSpec('text', 'Text', 'Văn bản', FieldType.longText);
@@ -240,6 +279,7 @@ final List<ToolSpec> specs = [
       ),
     ),
   ),
+  numberWordsSpec,
   ToolSpec(
     'loan',
     Icons.account_balance_outlined,
@@ -320,43 +360,7 @@ final List<ToolSpec> specs = [
       ),
     ),
   ),
-  ToolSpec(
-    'tax',
-    Icons.receipt_long_outlined,
-    Category.money,
-    'Rounded half up to two decimals.',
-    'Làm tròn nửa lên, hai chữ số thập phân.',
-    fields: [
-      _amount,
-      const FieldSpec(
-        'rate',
-        'Tax rate %',
-        'Thuế suất %',
-        FieldType.decimal,
-        initial: '10',
-      ),
-      FieldSpec(
-        'mode',
-        'The amount',
-        'Số tiền',
-        FieldType.choice,
-        initial: 'exclusive',
-        choices: (_) => const [
-          ('exclusive', 'Before tax', 'Chưa thuế'),
-          ('inclusive', 'Includes tax', 'Đã gồm thuế'),
-        ],
-      ),
-    ],
-    encode: (v) => ('${v['amount']},${v['rate']}', v['mode']!),
-    present: (c, raw, v) {
-      final j = _json(raw);
-      return _rows([
-        (tr(c, 'Total', 'Tổng cộng'), '${j['total']}'),
-        (tr(c, 'Before tax', 'Chưa thuế'), '${j['base']}'),
-        (tr(c, 'Tax', 'Thuế'), '${j['tax']}'),
-      ]);
-    },
-  ),
+  salarySpec,
   ToolSpec(
     'split-bill',
     Icons.groups_outlined,
@@ -467,6 +471,7 @@ final List<ToolSpec> specs = [
     present: (c, raw, v) =>
         ValueOutput(tr(c, '$raw working days', '$raw ngày làm việc')),
   ),
+  lunarSpec,
   _textTool(
     'normalize',
     Icons.space_bar,
@@ -485,30 +490,7 @@ final List<ToolSpec> specs = [
     'A to Z by character code.',
     'A đến Z theo mã ký tự.',
   ),
-  _textTool(
-    'uppercase',
-    Icons.text_increase,
-    'EVERY LETTER IN CAPITALS.',
-    'VIẾT HOA TẤT CẢ.',
-  ),
-  _textTool(
-    'lowercase',
-    Icons.text_decrease,
-    'every letter in small letters.',
-    'viết thường tất cả.',
-  ),
-  _textTool(
-    'title-case',
-    Icons.title,
-    'Capitalises The First Letter Of Each Word.',
-    'Viết Hoa Chữ Đầu Mỗi Từ.',
-  ),
-  _textTool(
-    'sentence-case',
-    Icons.short_text,
-    'Capitalises the first letter of each sentence.',
-    'Viết hoa chữ đầu mỗi câu.',
-  ),
+  caseSpec,
   _textTool(
     'accents',
     Icons.font_download_off_outlined,
@@ -630,3 +612,31 @@ final List<ToolSpec> specs = [
 ];
 
 final Map<String, ToolSpec> specById = {for (final s in specs) s.id: s};
+
+/// The four case tools became one `case` tool. Their ids live on as text
+/// chain steps (saved chains keep working) and as old links and pins.
+const caseSteps = {
+  'uppercase': 'upper',
+  'lowercase': 'lower',
+  'title-case': 'title',
+  'sentence-case': 'sentence',
+};
+
+/// The tool an id opens today: an old case id opens `case`.
+String canonicalToolId(String id) => caseSteps.containsKey(id) ? 'case' : id;
+
+/// Values an old id brings with it (its case mode).
+Map<String, String> legacyValues(String id) =>
+    caseSteps[id] == null ? const {} : {'mode': caseSteps[id]!};
+
+/// A text chain step's name, and running it.
+String stepTitle(BuildContext c, String id) => switch (caseSteps[id]) {
+  'upper' => tr(c, 'Uppercase', 'Viết hoa'),
+  'lower' => tr(c, 'Lowercase', 'Viết thường'),
+  'title' => tr(c, 'Title case', 'Viết hoa đầu từ'),
+  'sentence' => tr(c, 'Sentence case', 'Viết hoa đầu câu'),
+  _ => specById[id]!.title(c),
+};
+String runStep(String id, String text) => caseSteps[id] == null
+    ? specById[id]!.engine.run(text)
+    : specById['case']!.engine.run(text, caseSteps[id]!);

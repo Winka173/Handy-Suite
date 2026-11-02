@@ -41,18 +41,18 @@ class StartGrid extends StatelessWidget {
         tr(context, 'Merge and fix PDFs', 'Ghép và sửa PDF'),
         tr(
           context,
-          'Pick, reorder, turn and stamp pages',
-          'Chọn, sắp, xoay và đóng dấu trang',
+          'Pick, turn, stamp, sign and shrink',
+          'Chọn, xoay, đóng dấu, ký và làm nhỏ',
         ),
       ),
       (
-        'read',
-        Icons.chrome_reader_mode_outlined,
-        tr(context, 'Read a file', 'Đọc một tệp'),
+        'open',
+        Icons.file_open_outlined,
+        tr(context, 'Open a text file', 'Mở tệp văn bản'),
         tr(
           context,
-          'Text, Markdown, web pages and code',
-          'Văn bản, Markdown, trang web và mã',
+          'Markdown opens to write; text and code to read',
+          'Markdown mở để viết; văn bản, mã mở để đọc',
         ),
       ),
     ];

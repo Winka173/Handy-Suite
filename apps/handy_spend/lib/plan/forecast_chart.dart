@@ -10,10 +10,15 @@ import '../ui/figures.dart';
 class ForecastChart extends StatelessWidget {
   final SpendScope scope;
   final Projection projection;
+
+  /// What-if forecasts drawn over the same days, each in its own identity
+  /// colour ("Dự báo nếu…"). Their legend is the chip that turns them on.
+  final List<(Projection, int hue)> overlays;
   const ForecastChart({
     super.key,
     required this.scope,
     required this.projection,
+    this.overlays = const [],
   });
 
   @override
@@ -33,11 +38,17 @@ class ForecastChart extends StatelessWidget {
             'Thấp nhất ${scope.hidden ? '' : compactAmount(low.balance, scope.currency, vi: true)} · ${dayLabel(context, scope, low.date)}',
           );
     return Semantics(
-      label: tr(
-        context,
-        'Forecast balance. Exact days are in the daily table.',
-        'Số dư dự báo. Số từng ngày nằm trong bảng từng ngày.',
-      ),
+      label: overlays.isEmpty
+          ? tr(
+              context,
+              'Forecast balance. Exact days are in the daily table.',
+              'Số dư dự báo. Số từng ngày nằm trong bảng từng ngày.',
+            )
+          : tr(
+              context,
+              'Forecast balance with ${overlays.length} what-if lines. Exact days are in the daily table.',
+              'Số dư dự báo cùng ${overlays.length} đường dự báo nếu. Số từng ngày nằm trong bảng từng ngày.',
+            ),
       excludeSemantics: true,
       child: SizedBox(
         height: 200,
@@ -46,6 +57,13 @@ class ForecastChart extends StatelessWidget {
           key: const Key('forecast-chart'),
           painter: _LinePainter(
             values: [for (final x in p.points) x.balance],
+            overlays: [
+              for (final (o, hue) in overlays)
+                (
+                  [for (final x in o.points) x.balance],
+                  HandyPalette.of(context, hue).mark,
+                ),
+            ],
             dates: [for (final x in p.points) dayLabel(context, scope, x.date)],
             tick: (v) =>
                 scope.hidden ? '' : compactAmount(v, scope.currency, vi: vi),
@@ -69,6 +87,7 @@ double _fit(double x, double lo, double hi) => hi < lo ? lo : x.clamp(lo, hi);
 
 class _LinePainter extends CustomPainter {
   final List<BigInt> values;
+  final List<(List<BigInt>, Color)> overlays;
   final List<String> dates;
   final String Function(BigInt) tick;
   final int low;
@@ -77,6 +96,7 @@ class _LinePainter extends CustomPainter {
   final TextStyle text;
   _LinePainter({
     required this.values,
+    this.overlays = const [],
     required this.dates,
     required this.tick,
     required this.low,
@@ -102,8 +122,9 @@ class _LinePainter extends CustomPainter {
   void paint(Canvas canvas, Size size) {
     if (values.isEmpty) return;
     // Round, even steps with zero always on the scale.
-    var lo = values.reduce((a, b) => a < b ? a : b);
-    var hi = values.reduce((a, b) => a > b ? a : b);
+    final all = [values, for (final o in overlays) o.$1].expand((v) => v);
+    var lo = all.reduce((a, b) => a < b ? a : b);
+    var hi = all.reduce((a, b) => a > b ? a : b);
     if (lo > BigInt.zero) lo = BigInt.zero;
     if (hi < BigInt.zero) hi = BigInt.zero;
     final span = (hi - lo) == BigInt.zero ? BigInt.one : hi - lo;
@@ -150,6 +171,37 @@ class _LinePainter extends CustomPainter {
       );
       final t = _text(tick(v), muted);
       t.paint(canvas, Offset(left - 8 - t.width, yy - t.height / 2));
+    }
+
+    // What-if lines: solid and thinner, under the dashed base line, each
+    // with a ring on its lowest day.
+    for (final (series, colour) in overlays) {
+      if (series.length != values.length) continue;
+      final line = Path();
+      for (var i = 0; i < series.length; i++) {
+        i == 0
+            ? line.moveTo(x(i), y(series[i]))
+            : line.lineTo(x(i), y(series[i]));
+      }
+      canvas.drawPath(
+        line,
+        Paint()
+          ..color = colour
+          ..strokeWidth = 1.75
+          ..style = PaintingStyle.stroke,
+      );
+      var low = 0;
+      for (var i = 1; i < series.length; i++) {
+        if (series[i] < series[low]) low = i;
+      }
+      canvas.drawCircle(
+        Offset(x(low), y(series[low])),
+        3.5,
+        Paint()
+          ..color = colour
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = 2,
+      );
     }
 
     // Dashed line: every value is a forecast.
@@ -208,6 +260,12 @@ class _LinePainter extends CustomPainter {
   @override
   bool shouldRepaint(covariant _LinePainter old) =>
       old.values.length != values.length ||
+      old.overlays.length != overlays.length ||
+      [
+        for (var i = 0; i < overlays.length; i++)
+          old.overlays[i].$2 != overlays[i].$2 ||
+              old.overlays[i].$1.lastOrNull != overlays[i].$1.lastOrNull,
+      ].any((v) => v) ||
       old.low != low ||
       old.lowLabel != lowLabel ||
       old.line != line ||
@@ -216,12 +274,14 @@ class _LinePainter extends CustomPainter {
       ].any((v) => v);
 }
 
-/// Every day of the forecast with its money in and out, exactly.
+/// Every day of the forecast with its money in and out, exactly, and the
+/// balance under each what-if shown on the chart.
 Future<void> showDailyTable(
   BuildContext context,
   SpendScope scope,
-  Projection p,
-) => Navigator.push(
+  Projection p, {
+  List<(String name, Projection p, int hue)> overlays = const [],
+}) => Navigator.push(
   context,
   MaterialPageRoute<void>(
     builder: (context) => HandyPage(
@@ -233,11 +293,30 @@ Future<void> showDailyTable(
           return HandyContent(
             child: ListTile(
               title: Text(dayLabel(context, scope, d.date)),
-              subtitle: Text(
-                tr(
-                  context,
-                  'In ${moneyText(context, scope, d.inflow, scope.currency)} · out ${moneyText(context, scope, d.outflow, scope.currency)}',
-                  'Vào ${moneyText(context, scope, d.inflow, scope.currency)} · ra ${moneyText(context, scope, d.outflow, scope.currency)}',
+              subtitle: Text.rich(
+                TextSpan(
+                  text: tr(
+                    context,
+                    'In ${moneyText(context, scope, d.inflow, scope.currency)} · out ${moneyText(context, scope, d.outflow, scope.currency)}',
+                    'Vào ${moneyText(context, scope, d.inflow, scope.currency)} · ra ${moneyText(context, scope, d.outflow, scope.currency)}',
+                  ),
+                  children: [
+                    for (final (name, o, hue) in overlays)
+                      if (i < o.points.length) ...[
+                        const TextSpan(text: '\n'),
+                        WidgetSpan(
+                          alignment: PlaceholderAlignment.middle,
+                          child: HandyDot(hue, size: 8),
+                        ),
+                        TextSpan(
+                          text: tr(
+                            context,
+                            ' If $name: ${moneyText(context, scope, o.points[i].balance, scope.currency)}',
+                            ' Nếu $name: ${moneyText(context, scope, o.points[i].balance, scope.currency)}',
+                          ),
+                        ),
+                      ],
+                  ],
                 ),
               ),
               trailing: Money(scope, d.balance, scope.currency),

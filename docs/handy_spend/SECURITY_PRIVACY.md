@@ -12,7 +12,12 @@ files only. Atomic SQLite transactions and revision guards protect concurrent/st
 writes. The app does not reset damaged/newer databases. Keep backups outside its
 sandbox and verify actual downloaded files.
 
-The local database, audit and exported files are **not encrypted by this app**.
+Receipt photos and PDFs are user-picked or camera files, checked by file signature
+(JPEG/PNG/WebP/PDF), kept in app storage and in ZIP backups. Camera capture asks only
+for the camera through the OS picker; no gallery permission. People in splits are
+names typed by the user; no contacts access.
+
+The local database, audit, receipts and exported files are **not encrypted by this app**.
 Amount hiding is a visual mask. Device authentication uses
 [Flutter local_auth](https://pub.dev/packages/local_auth) and its OS credential
 fallback; it is access control, not encryption. Device lock defaults off and enabling/

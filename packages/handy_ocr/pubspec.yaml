@@ -1,0 +1,21 @@
+name: handy_ocr
+description: On-device text recognition (OCR) for Handy Suite.
+version: 0.1.0
+publish_to: none
+resolution: workspace
+environment:
+  sdk: ^3.12.0
+dependencies:
+  flutter:
+    sdk: flutter
+  google_mlkit_text_recognition: 0.17.1
+  image: 4.12.0
+  handy_core: any
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+flutter:
+  plugin:
+    platforms:
+      windows:
+        pluginClass: HandyOcrPluginCApi

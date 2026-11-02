@@ -64,17 +64,10 @@
       "source": "packages/handy_tools_engine/lib/src/tools.dart"
     },
     {
-      "id": "uppercase",
-      "en": "Uppercase",
-      "vi": "Viết hoa",
-      "description": "Unicode uppercase.",
-      "source": "packages/handy_tools_engine/lib/src/tools.dart"
-    },
-    {
-      "id": "lowercase",
-      "en": "Lowercase",
-      "vi": "Viết thường",
-      "description": "Unicode lowercase.",
+      "id": "case",
+      "en": "Change case",
+      "vi": "Đổi kiểu chữ",
+      "description": "Unicode upper, lower, title (letter groups) or sentence case (after . ! ?).",
       "source": "packages/handy_tools_engine/lib/src/tools.dart"
     },
     {
@@ -99,10 +92,10 @@
       "source": "packages/handy_tools_engine/lib/src/tools.dart"
     },
     {
-      "id": "tax",
-      "en": "Tax calculator",
-      "vi": "Tính thuế",
-      "description": "Amounts round half up to two decimals.",
+      "id": "salary",
+      "en": "Salary",
+      "vi": "Tính lương",
+      "description": "Vietnamese employee insurance with caps, family deductions and progressive PIT from a dated rule table; whole đồng.",
       "source": "packages/handy_tools_engine/lib/src/tools.dart"
     },
     {
@@ -134,20 +127,6 @@
       "source": "packages/handy_tools_engine/lib/src/tools.dart"
     },
     {
-      "id": "title-case",
-      "en": "Title case",
-      "vi": "Viết hoa đầu từ",
-      "description": "Unicode letter groups; not language-specific editorial rules.",
-      "source": "packages/handy_tools_engine/lib/src/tools.dart"
-    },
-    {
-      "id": "sentence-case",
-      "en": "Sentence case",
-      "vi": "Viết hoa đầu câu",
-      "description": "Capitalize first letter and after . ! ?; abbreviations not inferred.",
-      "source": "packages/handy_tools_engine/lib/src/tools.dart"
-    },
-    {
       "id": "literal-replace",
       "en": "Find & replace",
       "vi": "Tìm và thay thế",
@@ -159,6 +138,20 @@
       "en": "HEX / RGB / HSL",
       "vi": "HEX / RGB / HSL",
       "description": "HEX input, HSL in degrees and percentages.",
+      "source": "packages/handy_tools_engine/lib/src/tools.dart"
+    },
+    {
+      "id": "number-words",
+      "en": "Number in words",
+      "vi": "Đọc số thành chữ",
+      "description": "Vietnamese and English words; đồng amounts end \"đồng chẵn\". Up to 27 digits, 12 decimals.",
+      "source": "packages/handy_tools_engine/lib/src/tools.dart"
+    },
+    {
+      "id": "lunar",
+      "en": "Lunar calendar",
+      "vi": "Âm lịch",
+      "description": "Vietnamese lunar date at UTC+7 (Hồ Ngọc Đức), leap months, can-chi, solar term; 1900–2100.",
       "source": "packages/handy_tools_engine/lib/src/tools.dart"
     }
   ],
@@ -349,7 +342,7 @@
       "id": "har",
       "en": "HAR summary",
       "vi": "Tóm tắt HAR",
-      "description": "Only method, status, duration; omit URLs/headers/bodies.",
+      "description": "Method, status, duration and URL (scheme, host, path; query values redacted); no headers, cookies or bodies.",
       "source": "packages/handy_dev_engine/lib/src/transforms.dart"
     },
     {
@@ -357,6 +350,55 @@
       "en": "Redact JSON secrets",
       "vi": "Ẩn bí mật JSON",
       "description": "Mask common credential keys recursively; review before sharing.",
+      "source": "packages/handy_dev_engine/lib/src/transforms.dart"
+    },
+    {
+      "id": "timestamp",
+      "en": "Unix timestamp",
+      "vi": "Mốc thời gian Unix",
+      "description": "Unix s/ms/µs/ns (unit by size) or ISO-8601 to UTC, a zone and relative time. Zones: UTC, device local or a fixed offset; no IANA names.",
+      "source": "packages/handy_dev_engine/lib/src/transforms.dart"
+    },
+    {
+      "id": "uuid",
+      "en": "UUID / ULID",
+      "vi": "UUID / ULID",
+      "description": "Inspect pasted IDs (version, variant, v1/v6/v7 and ULID time), or with empty input make 1–1000 v4, v7 or ULID from a secure random source.",
+      "source": "packages/handy_dev_engine/lib/src/transforms.dart"
+    },
+    {
+      "id": "text-diff",
+      "en": "Text diff",
+      "vi": "So sánh văn bản",
+      "description": "Line diff (Myers), unified output. Before text; options after text. 20000 lines per side, 2000 changed lines.",
+      "source": "packages/handy_dev_engine/lib/src/transforms.dart"
+    },
+    {
+      "id": "cron",
+      "en": "Cron explain",
+      "vi": "Giải thích cron",
+      "description": "5 fields, or 6 with seconds; ranges, steps, lists, names, @daily-style macros. Explained in EN/VI with the next 1–100 runs in UTC, local or a fixed offset.",
+      "source": "packages/handy_dev_engine/lib/src/transforms.dart"
+    },
+    {
+      "id": "base-convert",
+      "en": "Number bases",
+      "vi": "Đổi hệ cơ số",
+      "description": "BigInt between bases 2/8/10/16 and any 2–36; two’s complement at a bit width. Up to 4096 digits.",
+      "source": "packages/handy_dev_engine/lib/src/transforms.dart"
+    },
+    {
+      "id": "url-parse",
+      "en": "URL parts",
+      "vi": "Tách URL",
+      "description": "Scheme, user, host, port, path, decoded query table and fragment; rebuilt after editing. Password hidden; nothing fetched.",
+      "source": "packages/handy_dev_engine/lib/src/transforms.dart"
+    },
+    {
+      "id": "hmac",
+      "en": "HMAC",
+      "vi": "HMAC",
+      "description": "HMAC-SHA256/SHA512 of UTF-8 text, hex or Base64. The key is session-only: never saved in drafts, chains or exports.",
       "source": "packages/handy_dev_engine/lib/src/transforms.dart"
     }
   ]

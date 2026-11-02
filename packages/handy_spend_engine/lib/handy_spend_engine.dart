@@ -12,6 +12,11 @@ import 'package:xml/xml.dart';
 part 'src/models.dart';
 part 'src/planning.dart';
 part 'src/portable.dart';
+part 'src/receipts.dart';
+part 'src/people.dart';
+part 'src/recurring.dart';
+part 'src/templates.dart';
+part 'src/zip.dart';
 
 Object? _freeze(Object? value, [int depth = 0]) {
   if (depth > 64) throw const FormatException('Data nesting limit');

@@ -155,7 +155,8 @@ void main() {
       await tester.pumpAndSettle();
       final cleaned = (await tester.runAsync(preferences.load))!;
       expect(cleaned.drafts, isEmpty);
-      expect(cleaned.favorites, ['subtitle-srt']);
+      // The subtitle tool moved to Handy Tools: its pin goes too.
+      expect(cleaned.favorites, isEmpty);
       await snap('media-cleanup-complete');
       await tester.runAsync(() => preferences.save(HandyPreferences()));
     },

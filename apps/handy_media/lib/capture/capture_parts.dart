@@ -3,6 +3,7 @@ import '../native_capture_page.dart';
 import '../video_preview.dart';
 
 export 'video_tools.dart';
+export 'windows_take.dart';
 
 /// Taking a screenshot or a recording. On iPhone only this app can be
 /// recorded, for up to 60 seconds.
@@ -162,69 +163,141 @@ class LastCapture extends StatelessWidget {
     final image = last.mime == 'image/png';
     final idle = !p.busy && !p.pending;
     final seconds = ((last.durationMs ?? 0) / 1000).toStringAsFixed(1);
+    final facts = Text(
+      [
+        image
+            ? tr(context, 'Screenshot', 'Ảnh chụp')
+            : tr(context, 'Video', 'Video'),
+        '${last.width} × ${last.height}',
+        if (!image) '$seconds s',
+        if (last.actualStartMs != null)
+          tr(
+            context,
+            'starts at ${last.actualStartMs} ms',
+            'bắt đầu ở ${last.actualStartMs} ms',
+          ),
+      ].join(' · '),
+      key: const Key('native-result'),
+      style: Theme.of(
+        context,
+      ).textTheme.titleMedium?.copyWith(color: c.selectInk),
+    );
+    final note = image
+        ? Text(
+            tr(
+              context,
+              'Mark it up to start a new guide with it as step 1.',
+              'Chú thích để bắt đầu một hướng dẫn mới, ảnh này là bước 1.',
+            ),
+            style: Theme.of(
+              context,
+            ).textTheme.bodySmall?.copyWith(color: c.selectInk),
+          )
+        : null;
+    final actions = Wrap(
+      spacing: HandySpace.s,
+      runSpacing: HandySpace.s,
+      children: [
+        if (image)
+          FilledButton.icon(
+            key: const Key('native-annotate'),
+            onPressed: idle ? p.annotate : null,
+            icon: const Icon(Icons.edit_outlined),
+            label: Text(tr(context, 'Mark it up', 'Chú thích ảnh')),
+          )
+        else
+          FilledButton.icon(
+            key: const Key('native-video-preview'),
+            onPressed: idle && !p.recording
+                ? () => Navigator.push(
+                    context,
+                    MaterialPageRoute<void>(
+                      builder: (_) => CaptureVideoPreview(capture: last),
+                    ),
+                  )
+                : null,
+            icon: const Icon(Icons.play_arrow),
+            label: Text(tr(context, 'Play', 'Phát')),
+          ),
+        OutlinedButton.icon(
+          key: const Key('native-export'),
+          onPressed: idle ? p.export : null,
+          icon: const Icon(Icons.save_alt),
+          label: Text(tr(context, 'Save a copy', 'Lưu một bản')),
+        ),
+      ],
+    );
+    final shown = image && p.preview != null && p.previewUri == last.uri
+        ? DecoratedBox(
+            decoration: BoxDecoration(border: Border.all(color: c.border)),
+            child: Image.memory(
+              p.preview!,
+              key: const Key('native-preview'),
+              fit: BoxFit.contain,
+              cacheWidth: 1200,
+              semanticLabel: tr(
+                context,
+                'The screenshot just taken',
+                'Ảnh vừa chụp',
+              ),
+            ),
+          )
+        : null;
+    final words = [
+      facts,
+      if (note != null) ...[const SizedBox(height: HandySpace.xs), note],
+      const SizedBox(height: HandySpace.m),
+      actions,
+    ];
     return HandyGroup(
       color: c.select,
       children: [
         Padding(
           padding: const EdgeInsets.all(HandySpace.l),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Text(
-                [
-                  image
-                      ? tr(context, 'Screenshot', 'Ảnh chụp')
-                      : tr(context, 'Video', 'Video'),
-                  '${last.width} × ${last.height}',
-                  if (!image) '$seconds s',
-                  if (last.actualStartMs != null)
-                    tr(
-                      context,
-                      'starts at ${last.actualStartMs} ms',
-                      'bắt đầu ở ${last.actualStartMs} ms',
+          child: LayoutBuilder(
+            builder: (context, box) {
+              // Wide: the picture beside what to do with it, so a tall
+              // screenshot leaves no empty band.
+              if (shown != null && box.maxWidth >= 640) {
+                return Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    ConstrainedBox(
+                      constraints: BoxConstraints(
+                        maxWidth: box.maxWidth * .55,
+                        maxHeight: 360,
+                      ),
+                      child: shown,
                     ),
-                ].join(' · '),
-                key: const Key('native-result'),
-                style: Theme.of(
-                  context,
-                ).textTheme.titleMedium?.copyWith(color: c.selectInk),
-              ),
-              const SizedBox(height: HandySpace.m),
-              Wrap(
-                spacing: HandySpace.s,
-                runSpacing: HandySpace.s,
+                    const SizedBox(width: HandySpace.l),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: words,
+                      ),
+                    ),
+                  ],
+                );
+              }
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  if (image)
-                    FilledButton.icon(
-                      key: const Key('native-annotate'),
-                      onPressed: idle ? p.annotate : null,
-                      icon: const Icon(Icons.edit_outlined),
-                      label: Text(tr(context, 'Mark it up', 'Chú thích ảnh')),
-                    )
-                  else
-                    FilledButton.icon(
-                      key: const Key('native-video-preview'),
-                      onPressed: idle && !p.recording
-                          ? () => Navigator.push(
-                              context,
-                              MaterialPageRoute<void>(
-                                builder: (_) =>
-                                    CaptureVideoPreview(capture: last),
-                              ),
-                            )
-                          : null,
-                      icon: const Icon(Icons.play_arrow),
-                      label: Text(tr(context, 'Play', 'Phát')),
+                  ...words.take(note == null ? 1 : 3),
+                  if (shown != null) ...[
+                    const SizedBox(height: HandySpace.m),
+                    ConstrainedBox(
+                      constraints: const BoxConstraints(maxHeight: 320),
+                      child: Align(
+                        alignment: Alignment.centerLeft,
+                        child: shown,
+                      ),
                     ),
-                  OutlinedButton.icon(
-                    key: const Key('native-export'),
-                    onPressed: idle ? p.export : null,
-                    icon: const Icon(Icons.save_alt),
-                    label: Text(tr(context, 'Save a copy', 'Lưu một bản')),
-                  ),
+                  ],
+                  const SizedBox(height: HandySpace.m),
+                  actions,
                 ],
-              ),
-            ],
+              );
+            },
           ),
         ),
       ],

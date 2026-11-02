@@ -1,0 +1,132 @@
+{
+  "reader": "PyMuPDF + Pillow + Python zipfile",
+  "outputs": [
+    {
+      "file": "trip-itinerary.pdf",
+      "bytes": 8704,
+      "sha256": "5efa0663686a5b7c5426e40b3f382219a44020e18d3212209834a23184e71cff",
+      "pages": 1,
+      "imageOccurrences": 0,
+      "bookingCodeAbsent": true,
+      "privateCaptionAbsent": true,
+      "embeddedFiles": 0
+    },
+    {
+      "file": "trip-journal.pdf",
+      "bytes": 8897,
+      "sha256": "acd40d63026526b0109527748335875b5f333bc483cd85ba07e98ccd9ed28d20",
+      "pages": 1,
+      "imageOccurrences": 0,
+      "bookingCodeAbsent": true,
+      "privateCaptionAbsent": true,
+      "embeddedFiles": 0
+    },
+    {
+      "file": "trip-memory-contact-sheet.pdf",
+      "bytes": 8987,
+      "sha256": "d8c6c3bfbed899985d4a1aa2d44472a01f353009cfdc5078b842d3cded58a439",
+      "pages": 1,
+      "imageOccurrences": 1,
+      "bookingCodeAbsent": true,
+      "privateCaptionAbsent": true,
+      "embeddedFiles": 0
+    },
+    {
+      "file": "trip-memory-contact-sheet.zip",
+      "bytes": 1809,
+      "sha256": "afbb181250cf9ec6eab64dd45ffe0a0018317ff46d34cf1ca16c517b3ef725af",
+      "entries": [
+        "manifest.json",
+        "index.html",
+        "photos/d085442d-2bed-4a21-a11d-ab0a88095387.jpg"
+      ],
+      "crcValid": true,
+      "privateFieldsAbsent": true
+    },
+    {
+      "file": "trip-memory-daybook.pdf",
+      "bytes": 8992,
+      "sha256": "f3237b9b609b0b14733aa998e371cd5be1b4838f6a1bd1c0d25f2292f9651d17",
+      "pages": 1,
+      "imageOccurrences": 1,
+      "bookingCodeAbsent": true,
+      "privateCaptionAbsent": true,
+      "embeddedFiles": 0
+    },
+    {
+      "file": "trip-memory-daybook.zip",
+      "bytes": 1773,
+      "sha256": "72d873095d741de97a5c52caf8597113637881dee50c62105adef6c381419894",
+      "entries": [
+        "manifest.json",
+        "index.html",
+        "photos/d085442d-2bed-4a21-a11d-ab0a88095387.jpg"
+      ],
+      "crcValid": true,
+      "privateFieldsAbsent": true
+    },
+    {
+      "file": "trip-native-memory-book.pdf",
+      "bytes": 9473,
+      "sha256": "b4d7155d814acd901508a30f1b1fc2498a2ae0206a5542a983465bcf8a4c4553",
+      "pages": 2,
+      "imageOccurrences": 2,
+      "bookingCodeAbsent": true,
+      "privateCaptionAbsent": true,
+      "embeddedFiles": 0
+    },
+    {
+      "file": "trip-native-memory-book.zip",
+      "bytes": 1788,
+      "sha256": "a094835dbac78f4dd12e1bffd1108404f0fe851e69ddab7e23344e5ce52f8648",
+      "entries": [
+        "manifest.json",
+        "index.html",
+        "photos/e3435266-257e-44d6-b51f-b52e6f5a8e8c.jpg"
+      ],
+      "crcValid": true,
+      "privateFieldsAbsent": true
+    },
+    {
+      "file": "trip-native-personal-stamp.png",
+      "bytes": 42241,
+      "sha256": "0bfe3f40df8a984b45b4036d7fb09dbef431fb222434653399ca3854de9f215d",
+      "width": 1200,
+      "height": 800
+    },
+    {
+      "file": "trip-stamp-ledger.pdf",
+      "bytes": 6571,
+      "sha256": "efc490978ec601b5c1d9f2fb9b6b38a839b5582e959e502116c0f5fdda1afd2f",
+      "pages": 1,
+      "imageOccurrences": 0,
+      "bookingCodeAbsent": true,
+      "privateCaptionAbsent": true,
+      "embeddedFiles": 0
+    },
+    {
+      "file": "trip-stamp-ledger.png",
+      "bytes": 30570,
+      "sha256": "adc38545f265f8d6228de759a2201c3fe6f17fc8c9b9a7613b7a1a0bebdb5c59",
+      "width": 1200,
+      "height": 800
+    },
+    {
+      "file": "trip-stamp-postcard.pdf",
+      "bytes": 6576,
+      "sha256": "3f7c82d78fd18b0ecfb1e1ceae6bd1441cefc4d6583324dcfc9994d1b29a311b",
+      "pages": 1,
+      "imageOccurrences": 0,
+      "bookingCodeAbsent": true,
+      "privateCaptionAbsent": true,
+      "embeddedFiles": 0
+    },
+    {
+      "file": "trip-stamp-postcard.png",
+      "bytes": 29080,
+      "sha256": "0db99e09ddaf7bd2a1661eb09d1d5a7792df84b32138f355991aac841f31a1b2",
+      "width": 1200,
+      "height": 800
+    }
+  ]
+}

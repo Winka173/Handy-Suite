@@ -1,0 +1,8 @@
+﻿{
+    "app":  "trip",
+    "exitCode":  1,
+    "sourceSha256":  "deff7e3c0998becd5212b1852fb7c758225f04fb66278b6fc24aa23b59c3cecf",
+    "sourceUnchanged":  true,
+    "device":  "emulator-5570",
+    "physicalDevice":  false
+}

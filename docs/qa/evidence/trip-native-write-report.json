@@ -1,0 +1,16 @@
+{
+  "phase": "write",
+  "pid": 4788,
+  "database": "QA-only SQLite",
+  "visits": 2,
+  "uniquePlaces": 2,
+  "realHardware": false,
+  "gpsAdapter": "foreground emulator OS fix; no automatic visit",
+  "accuracy": 5.0,
+  "notifications": "scheduled/delivered/cancelled on Android emulator; not a physical-device guarantee",
+  "screenshotNames": [
+    "trip-native-write-trips",
+    "trip-native-write-journal",
+    "trip-native-write-passport"
+  ]
+}

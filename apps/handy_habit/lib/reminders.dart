@@ -2,6 +2,7 @@ import 'package:handy_notifications/native.dart';
 import 'package:handy_notifications/handy_notifications.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:handy_habit_engine/handy_habit_engine.dart';
+import 'run_notice.dart';
 
 class HabitReminders {
   final DeviceNotifications port;
@@ -26,6 +27,8 @@ class HabitReminders {
       if (desired.length != planned.length)
         throw StateError('Reminder ID collision');
       for (final old in await port.plugin.pendingNotificationRequests()) {
+        // The paused-run notice is not a reminder; leave it alone.
+        if (old.id == DeviceRunNoticePort.id) continue;
         if (!desired.containsKey(old.id)) await port.plugin.cancel(id: old.id);
       }
       for (final entry in desired.entries) {

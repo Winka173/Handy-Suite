@@ -1,6 +1,7 @@
 import 'package:handy_core/handy_core.dart';
 import 'package:handy_docs_engine/handy_docs_engine.dart';
 import 'package:handy_files/handy_files.dart';
+import 'package:handy_pdf/handy_pdf.dart';
 import 'package:handy_ui/kit.dart';
 import '../corner_editor.dart';
 import '../session.dart';
@@ -79,6 +80,24 @@ class _ScanScreenState extends State<ScanScreen> {
     if (file != null && mounted) await edit(file);
   });
 
+  void export({bool searchable = false}) {
+    token = CancellationToken();
+    progress = 0;
+    final vi = Localizations.localeOf(context).languageCode == 'vi';
+    void step(double v) => mounted ? setState(() => progress = v) : null;
+    run(
+      () => searchable
+          ? store.exportSearchablePdf(
+              widget.files,
+              token!,
+              step,
+              vi ? 'vi' : 'en',
+            )
+          : store.exportPdf(widget.files, token!, step),
+      done: tr(context, 'PDF saved.', 'Đã lưu PDF.'),
+    );
+  }
+
   Future<void> restore() => run(() async {
     final file = await widget.files.importBytes(
       extensions: ['json'],
@@ -113,6 +132,19 @@ class _ScanScreenState extends State<ScanScreen> {
             actions: [
               HandyMenuButton(
                 items: [
+                  if (supportsPdfEditing)
+                    HandyMenuItem(
+                      Icons.manage_search,
+                      tr(
+                        context,
+                        'Searchable PDF (reads the text)',
+                        'PDF tìm được chữ (nhận dạng chữ)',
+                      ),
+                      pages.isEmpty || busy
+                          ? null
+                          : () => export(searchable: true),
+                      key: const Key('scan-export-searchable'),
+                    ),
                   HandyMenuItem(
                     Icons.archive_outlined,
                     tr(context, 'Back up this scan', 'Sao lưu bản quét'),
@@ -178,26 +210,7 @@ class _ScanScreenState extends State<ScanScreen> {
                       Expanded(
                         child: FilledButton.icon(
                           key: const Key('scan-export'),
-                          onPressed: busy || pages.isEmpty
-                              ? null
-                              : () {
-                                  token = CancellationToken();
-                                  progress = 0;
-                                  run(
-                                    () => store.exportPdf(
-                                      widget.files,
-                                      token!,
-                                      (v) => mounted
-                                          ? setState(() => progress = v)
-                                          : null,
-                                    ),
-                                    done: tr(
-                                      context,
-                                      'PDF saved.',
-                                      'Đã lưu PDF.',
-                                    ),
-                                  );
-                                },
+                          onPressed: busy || pages.isEmpty ? null : export,
                           icon: const Icon(Icons.picture_as_pdf_outlined),
                           label: Text(tr(context, 'Make PDF', 'Xuất PDF')),
                         ),

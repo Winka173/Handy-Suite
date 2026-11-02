@@ -61,6 +61,10 @@ void main() {
   testWidgets(
     'native stamp preserves selectable source, rotation and duplicates',
     (tester) async {
+      // Read the font outside runAsync: asset channels answer only there.
+      final font = PdfFont(
+        File('../handy_ui/fonts/Geist-Regular.ttf').readAsBytesSync(),
+      );
       await tester.runAsync(() async {
         final bytes = textPdf();
         final original = Uint8List.fromList(bytes);
@@ -70,6 +74,7 @@ void main() {
             [0, 0],
             rotation: 90,
             watermark: 'CONFIDENTIAL',
+            font: font,
           );
           final stamped = await LocalPdf.open(output);
           try {
@@ -112,7 +117,7 @@ void main() {
           expect(await source.pageText(0), isNot(contains('CONFIDENTIAL')));
           expect(bytes, original);
           await expectLater(
-            source.transform([0], watermark: 'Tiếng Việt'),
+            source.transform([0], watermark: '漢字', font: font),
             throwsFormatException,
           );
           final canceled = CancellationToken()..cancel();
@@ -120,6 +125,7 @@ void main() {
             source.transform(
               [0],
               watermark: 'CANCELED',
+              font: font,
               cancellation: canceled,
             ),
             throwsA(isA<Cancelled>()),

@@ -1,0 +1,31 @@
+{
+  "app": "trip",
+  "sourceSha256": "e9531374ebd655d6e7c3dc3890f9e951caee25f6066c311bfd1d29c56772bad6",
+  "artifacts": [
+    {
+      "path": "artifacts/flutter/handy_trip/android/handy-trip-pilot-debug.apk",
+      "bytes": 249971630,
+      "sha256": "a6006bd748aeabcbab9b1aa464cd9ea0b85529b6a6ad4eb9cde4e1199310a88a"
+    },
+    {
+      "path": "apps/handy_trip/build/app/outputs/bundle/release/app-release.aab",
+      "bytes": 76106393,
+      "sha256": "65b74b6c69277200392bdf36b54c31abd45f7c30bbdc0ccbe16a607eb7735ddc"
+    },
+    {
+      "path": "artifacts/flutter/handy-trip-20261102101256-unsigned.msix",
+      "bytes": 18031522,
+      "sha256": "e99525402bacb0583269cc64f1fed12a5e0903f93cfc872adcc7648031de4f20"
+    }
+  ],
+  "engineTests": 36,
+  "appTests": 17,
+  "responsiveScreenshots": 70,
+  "independentlyDecodedExports": 13,
+  "androidEmulatorP1Pid": 9251,
+  "physicalDeviceVerified": false,
+  "iosBuilt": false,
+  "browserRuntimeVerified": false,
+  "storeReady": false,
+  "limits": "docs/handy_trip/KNOWN_LIMITATIONS.md"
+}

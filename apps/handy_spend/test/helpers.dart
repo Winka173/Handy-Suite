@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:typed_data';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:handy_core/handy_core.dart';
+import 'package:handy_files/camera.dart';
 import 'package:handy_files/handy_files.dart';
 import 'package:handy_spend/app.dart';
 import 'package:handy_spend/controller.dart';
@@ -69,6 +70,19 @@ class Files implements HandyFiles {
   }) async => null;
 }
 
+/// A camera that hands out [next]; unsupported unless asked, so tests
+/// meet the plain file picker by default.
+class FakeCamera implements ScanCamera {
+  @override
+  final bool supported;
+  ImportedBytes? next;
+  FakeCamera({this.supported = false});
+  @override
+  Future<ImportedBytes?> capture() async => next;
+  @override
+  Future<ImportedBytes?> recover() async => null;
+}
+
 String today([String zone = 'Asia/Ho_Chi_Minh']) =>
     reportDay(DateTime.now().toUtc().toIso8601String(), zone);
 String inDays(int n) => day(calendar(today()).add(Duration(days: n)));
@@ -91,6 +105,7 @@ Future<SpendController> start(
   String locale = 'en',
   HandyFiles? files,
   double textScale = 1,
+  ScanCamera? camera,
 }) async {
   tester.view.physicalSize = size;
   tester.view.devicePixelRatio = 1;
@@ -106,6 +121,7 @@ Future<SpendController> start(
       files: files ?? Files(),
       preferences: Preferences(locale),
       privacy: NoLock(),
+      camera: camera ?? FakeCamera(),
       enableDrop: false,
     ),
   );

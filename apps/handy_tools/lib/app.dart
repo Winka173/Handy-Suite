@@ -83,7 +83,8 @@ class _HandyToolsAppState extends State<HandyToolsApp> {
         files: widget.files,
       );
     } else if (name.startsWith('/tool/')) {
-      final id = name.substring(6);
+      // Old links to the four case tools open `case` in that mode.
+      final asked = name.substring(6), id = canonicalToolId(asked);
       if (!specById.containsKey(id) && !generators.any((g) => g.$1 == id)) {
         return null;
       }
@@ -91,7 +92,10 @@ class _HandyToolsAppState extends State<HandyToolsApp> {
       page = BenchPage(
         scope: scope,
         toolId: id,
-        initial: args is Map<String, String> ? args : const {},
+        initial: {
+          ...legacyValues(asked),
+          if (args is Map<String, String>) ...args,
+        },
       );
     }
     if (page == null) return null;
@@ -110,6 +114,7 @@ class _HandyToolsAppState extends State<HandyToolsApp> {
   Widget build(BuildContext context) {
     final p = preferences.value;
     return HandyApp(
+      brand: HandyBrand.tools,
       app: 'tools',
       title: 'Handy Tools',
       accent: toolsAccent,

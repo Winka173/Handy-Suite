@@ -258,7 +258,11 @@ Projection forecast(
 class SafeSpend {
   final BigInt liquid, income, committed, reserves, buffer, available, perDay;
   final int days;
-  const SafeSpend(
+
+  /// What you owe people from shared costs, in the report currency. Money
+  /// people owe you is not counted until they pay it.
+  final BigInt owe;
+  SafeSpend(
     this.liquid,
     this.income,
     this.committed,
@@ -266,8 +270,9 @@ class SafeSpend {
     this.buffer,
     this.available,
     this.perDay,
-    this.days,
-  );
+    this.days, {
+    BigInt? owe,
+  }) : owe = owe ?? BigInt.zero;
   BigInt get shortfall => available.isNegative ? -available : BigInt.zero;
 }
 
@@ -304,7 +309,8 @@ SafeSpend safeToSpend(
           .fold(BigInt.zero, (BigInt n, g) => n + g.reserved),
       floor = buffer ?? _big(s.settings['buffer'] ?? '0');
   if (floor < BigInt.zero) throw const FormatException('Negative cash buffer');
-  final available = p.opening + income - out - reserve - floor,
+  final owe = iouTotals(s, s.currency).$2,
+      available = p.opening + income - out - reserve - floor - owe,
       days = p.points.length;
   return SafeSpend(
     p.opening,
@@ -315,6 +321,43 @@ SafeSpend safeToSpend(
     available,
     available.isNegative ? BigInt.zero : available ~/ BigInt.from(days),
     days,
+    owe: owe,
+  );
+}
+
+/// The live forecast as it would run with [x]'s assumptions: its staged
+/// entries added and its skipped payments left out. Assumptions on an
+/// account that is gone or archived since the copy are left out and
+/// counted in the second value. Nothing is written anywhere.
+(Projection, int ignored) whatIfForecast(
+  SpendState s,
+  Scenario x,
+  String start,
+  String end, {
+  Set<String>? accounts,
+  bool includeIncome = false,
+}) {
+  final open = {
+    for (final a in s.accounts)
+      if (!a.archived) a.id,
+  };
+  final staged = [
+    for (final e in x.staged)
+      if (open.contains(e.account) &&
+          (e.toAccount == null || open.contains(e.toAccount)))
+        e,
+  ];
+  return (
+    forecast(
+      s,
+      start,
+      end,
+      accounts: accounts,
+      includeIncome: includeIncome,
+      staged: staged,
+      skipBills: x.skipBills.toSet(),
+    ),
+    x.staged.length - staged.length,
   );
 }
 

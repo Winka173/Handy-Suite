@@ -2,12 +2,16 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { createHash } from 'node:crypto';
 const app = process.argv[2] ?? 'handy_tools';
-if (!/^handy_(tools|docs|media|dev|keep|recall|save|spend|habit)$/.test(app))
+if (
+  !/^handy_(tools|docs|media|dev|keep|recall|bookmark|spend|habit|trip|boards)$/.test(
+    app,
+  )
+)
   throw new Error('Unknown Flutter app');
 const root = path.resolve(`apps/${app}/build/web`);
-if (app === 'handy_save')
+if (app === 'handy_bookmark')
   fs.copyFileSync(
-    'apps/handy_save/web/save_share_worker.js',
+    'apps/handy_bookmark/web/save_share_worker.js',
     path.join(root, 'save_share_worker.js'),
   );
 function walk(dir) {
@@ -42,7 +46,9 @@ self.addEventListener('fetch',event=>{const url=new URL(event.request.url),base=
 fs.writeFileSync(
   path.join(root, `${app}_service_worker.js`),
   worker +
-    (app === 'handy_save' ? "\nimportScripts('save_share_worker.js');\n" : ''),
+    (app === 'handy_bookmark'
+      ? "\nimportScripts('save_share_worker.js');\n"
+      : ''),
 );
 fs.mkdirSync('docs/qa/evidence', { recursive: true });
 fs.writeFileSync(

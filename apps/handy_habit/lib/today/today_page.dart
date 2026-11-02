@@ -1,6 +1,8 @@
 import 'package:handy_habit_engine/handy_habit_engine.dart';
 import 'package:handy_ui/kit.dart';
 import '../habits/habit_editor.dart';
+import '../insights/week_review.dart';
+import '../pauses/pauses.dart';
 import '../routines/run.dart';
 import '../scope.dart';
 import '../ui/words.dart';
@@ -21,7 +23,7 @@ class TodayPage extends StatelessWidget {
             ..sort((a, b) {
               int rank(Habit h) =>
                   switch (habitStatus(h, today, today, index)) {
-                    'completed' || 'skipped' => 1,
+                    'completed' || 'skipped' || 'paused' => 1,
                     _ => 0,
                   };
               final r = rank(a).compareTo(rank(b));
@@ -44,6 +46,8 @@ class TodayPage extends StatelessWidget {
       final left = [
         _Greeting(scope: scope, due: due, routines: routines, index: index),
         if (scope.activeSession != null) _Resume(scope: scope),
+        if (reviewDue(scope) case final review?)
+          WeekReviewRow(scope: scope, review: review),
         _Habits(scope: scope, due: due, index: index, notToday: notToday),
       ];
       final right = [
@@ -60,27 +64,32 @@ class TodayPage extends StatelessWidget {
         children: [
           HandyContent(
             maxWidth: HandySpace.contentWide,
+            // The greeting spans both columns, so the two sections below
+            // start on one line whatever the greeting holds.
             child: wide
-                ? Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+                ? Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
-                      Expanded(
-                        flex: 3,
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.stretch,
-                          children: left,
-                        ),
-                      ),
-                      const SizedBox(width: HandySpace.xl),
-                      Expanded(
-                        flex: 2,
-                        child: Padding(
-                          padding: const EdgeInsets.only(top: 72),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.stretch,
-                            children: right,
+                      left.first,
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Expanded(
+                            flex: 3,
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.stretch,
+                              children: left.skip(1).toList(),
+                            ),
                           ),
-                        ),
+                          const SizedBox(width: HandySpace.xl),
+                          Expanded(
+                            flex: 2,
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.stretch,
+                              children: right,
+                            ),
+                          ),
+                        ],
                       ),
                     ],
                   )
@@ -131,6 +140,7 @@ class _Greeting extends StatelessWidget {
           (h) => !{
             'completed',
             'skipped',
+            'paused',
           }.contains(habitStatus(h, today, today, index)),
         )
         .length;
@@ -139,20 +149,34 @@ class _Greeting extends StatelessWidget {
         if (s.day == today && s.status == 'finished') s.routine,
     };
     final next = routines.where((r) => !ran.contains(r.id)).firstOrNull;
-    final facts = [
-      if (due.isEmpty)
-        tr(context, 'Nothing planned today', 'Hôm nay không có lịch')
-      else if (left == 0)
-        tr(context, 'All ${due.length} done', 'Xong cả ${due.length} việc')
-      else
-        tr(context, '$left left to do', 'Còn $left việc'),
-      if (next != null)
-        tr(
-          context,
-          '${next.title} at ${next.time}',
-          '${next.title} lúc ${next.time}',
-        ),
-    ];
+    final resting = restingNow(scope.state, today);
+    final facts = resting != null
+        ? [
+            tr(
+              context,
+              'Paused until ${weekdayLong(context, date(resting.$2).weekday)}, ${formatDay(context, resting.$2)}',
+              'Đang nghỉ đến ${weekdayLong(context, date(resting.$2).weekday)}, ${formatDay(context, resting.$2)}',
+            ),
+            tr(context, 'nothing to do', 'không có gì phải làm'),
+          ]
+        : [
+            if (due.isEmpty)
+              tr(context, 'Nothing planned today', 'Hôm nay không có lịch')
+            else if (left == 0)
+              tr(
+                context,
+                'All ${due.length} done',
+                'Xong cả ${due.length} việc',
+              )
+            else
+              tr(context, '$left left to do', 'Còn $left việc'),
+            if (next != null)
+              tr(
+                context,
+                '${next.title} at ${next.time}',
+                '${next.title} lúc ${next.time}',
+              ),
+          ];
     final d = date(today);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -162,7 +186,13 @@ class _Greeting extends StatelessWidget {
           child: Text(
             hello,
             key: const Key('today-greeting'),
-            style: theme.textTheme.headlineSmall,
+            // The editorial move: the greeting is the page's headline,
+            // large and at regular weight.
+            style: theme.textTheme.headlineSmall?.copyWith(
+              fontSize: MediaQuery.sizeOf(context).width < 400 ? 34 : 44,
+              fontWeight: FontWeight.w400,
+              height: 1.1,
+            ),
           ),
         ),
         const SizedBox(height: HandySpace.xs),
@@ -173,9 +203,32 @@ class _Greeting extends StatelessWidget {
           style: theme.textTheme.titleMedium,
         ),
         Text(
-          '${weekdayLong(context, d.weekday)}, ${formatDay(context, today)}',
+          [
+            '${weekdayLong(context, d.weekday)}, ${formatDay(context, today)}',
+            if (resting != null && resting.$1.reason.isNotEmpty)
+              resting.$1.reason,
+          ].join(' · '),
           style: theme.textTheme.bodyMedium?.copyWith(color: c.muted),
         ),
+        if (resting != null)
+          Padding(
+            padding: const EdgeInsets.only(top: HandySpace.xs),
+            child: Align(
+              alignment: AlignmentDirectional.centerStart,
+              child: TextButton(
+                key: const Key('pause-end-today'),
+                // Its words line up with the lines above; the target
+                // stays 48 px tall.
+                style: TextButton.styleFrom(
+                  padding: EdgeInsets.zero,
+                  minimumSize: const Size(0, 48),
+                  alignment: AlignmentDirectional.centerStart,
+                ),
+                onPressed: () => endPauseNow(context, scope, resting.$1),
+                child: Text(tr(context, 'End early', 'Kết thúc sớm')),
+              ),
+            ),
+          ),
       ],
     );
   }
@@ -241,6 +294,12 @@ class _Habits extends StatelessWidget {
     }
     return HandySection(
       title: tr(context, 'To do today', 'Việc hôm nay'),
+      // Also keeps this header the height of the routines one beside it.
+      trailing: TextButton(
+        key: const Key('today-all-habits'),
+        onPressed: () => scope.area.value = 1,
+        child: Text(tr(context, 'All habits', 'Tất cả')),
+      ),
       children: [
         if (due.isEmpty)
           Padding(
@@ -291,7 +350,10 @@ class _Routines extends StatelessWidget {
       for (final s in scope.state.sessions)
         if (s.day == scope.today && s.status == 'finished') s.routine,
     };
-    final next = routines.where((r) => !ran.contains(r.id)).firstOrNull;
+    // While everything is paused no routine is pressed on anyone.
+    final next = restingNow(scope.state, scope.today) != null
+        ? null
+        : routines.where((r) => !ran.contains(r.id)).firstOrNull;
     return HandySection(
       title: tr(context, 'Routines today', 'Quy trình hôm nay'),
       trailing: TextButton(

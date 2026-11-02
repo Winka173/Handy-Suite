@@ -254,7 +254,7 @@ void main() {
     expect(raw.containsKey('receipts'), false);
     expect(
       jsonDecode(serializeKeepState(KeepState(assets: [asset()])))['version'],
-      1,
+      keepStateVersion,
     );
   });
 }

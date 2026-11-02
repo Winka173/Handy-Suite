@@ -45,9 +45,10 @@ jobs:
             handy_dev,
             handy_keep,
             handy_recall,
-            handy_save,
+            handy_bookmark,
             handy_spend,
             handy_habit,
+            handy_trip,
           ]
         platform:
           - {

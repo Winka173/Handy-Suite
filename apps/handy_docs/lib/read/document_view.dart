@@ -41,6 +41,16 @@ class DocumentActions extends StatelessWidget {
           ),
         HandyMenuButton(
           items: [
+            HandyMenuItem(
+              Icons.edit_note,
+              tr(
+                context,
+                'Make an editable Markdown copy',
+                'Tạo bản Markdown để sửa',
+              ),
+              busy ? null : () => actions.opener.editCopy(context, d),
+              key: const Key('reader-markdown-copy'),
+            ),
             if (d.kind == 'html' || d.kind == 'markdown')
               HandyMenuItem(
                 source ? Icons.article_outlined : Icons.code,

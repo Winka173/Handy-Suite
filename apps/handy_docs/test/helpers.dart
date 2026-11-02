@@ -4,6 +4,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:handy_core/handy_core.dart';
 import 'package:handy_docs/app.dart';
 import 'package:handy_docs/capture.dart';
+import 'package:handy_docs/pdf/pdf_desk.dart';
+import 'package:handy_docs/sign/fill_controller.dart';
 import 'package:handy_files/handy_files.dart';
 import 'package:handy_storage/documents.dart';
 import 'package:handy_storage/export_history.dart';
@@ -104,7 +106,11 @@ class Prefs implements PreferencesRepository {
 
 /// Everything a Docs test may look into afterwards.
 class Docs {
-  final scan = Store(), markdown = Store(), reader = Store(), log = Store();
+  final scan = Store(),
+      markdown = Store(),
+      reader = Store(),
+      log = Store(),
+      signatures = Store();
   final files = Files();
   final camera = Camera();
   final prefs = Prefs();
@@ -115,6 +121,8 @@ Future<Docs> start(
   WidgetTester tester, {
   Docs? docs,
   Size size = const Size(800, 900),
+  PdfDesk? desk,
+  Future<FillSource> Function(Uint8List)? fill,
 }) async {
   final d = docs ?? Docs();
   tester.view.physicalSize = size;
@@ -130,6 +138,9 @@ Future<Docs> start(
       preferences: d.prefs,
       camera: d.camera,
       history: d.history,
+      signatureDocuments: d.signatures,
+      pdfDesk: desk,
+      openFillSource: fill,
     ),
   );
   await tester.pumpAndSettle();

@@ -2,6 +2,11 @@ import 'package:flutter/services.dart';
 import 'package:handy_spend_engine/handy_spend_engine.dart';
 import 'package:handy_ui/kit.dart';
 import '../money.dart';
+import '../people/split_logic.dart';
+import '../people/split_sheet.dart';
+import '../receipts/receipt_logic.dart';
+import '../receipts/receipt_view.dart';
+import '../links/keep_link.dart';
 import '../scope.dart';
 import '../ui/figures.dart';
 import '../ui/sheet.dart';
@@ -105,6 +110,15 @@ class _EntrySheetState extends State<EntrySheet> {
   late bool details = (e?.note ?? '').isNotEmpty || (e?.tags ?? []).isNotEmpty;
   bool categoryChosen = false, busy = false;
   String error = '';
+
+  /// The entry's ID before it is saved, so new receipts can name it.
+  late final String entryId = e?.id ?? newId();
+  final waiting = <PendingReceipt>[];
+  final removing = <String>{};
+  late SplitDraft? split = () {
+    final x = e == null ? null : scope.splitOf(e!.id);
+    return x == null ? null : SplitDraft.of(x);
+  }();
   final amount = TextEditingController(),
       payee = TextEditingController(),
       note = TextEditingController(),
@@ -172,6 +186,7 @@ class _EntrySheetState extends State<EntrySheet> {
       final entered = parseAmount(amount.text, from.currency, vi: vi);
       final next = buildEntry(
         s: s,
+        id: entryId,
         existing: e,
         refundOf: widget.refundOf,
         kind: kind,
@@ -189,7 +204,32 @@ class _EntrySheetState extends State<EntrySheet> {
             ? null
             : parseAmount(fee.text, from.currency, vi: vi),
       );
-      await scope.controller.putEntry(next);
+      final before = scope.splitOf(next.id);
+      final shared = split != null && kind == 'expense'
+          ? split!.build(
+              id: before?.id,
+              total: -next.amount,
+              currency: from.currency,
+              date: date,
+              name: entryTitle(context, scope, next),
+              entry: next.id,
+              category: next.category,
+            )
+          : null;
+      final add = [for (final p in waiting) p.receipt];
+      await scope.controller.changeWithFiles(
+        (s) => applyEntry(
+          s,
+          next,
+          add: add,
+          remove: removing,
+          split: shared,
+          dropSplit: shared == null && before != null,
+          people: split?.added ?? const [],
+        ),
+        'save_transaction',
+        files: {for (final p in waiting) p.receipt.id: p.bytes},
+      );
       if (!mounted) return;
       final what = entryTitle(context, scope, next);
       final figure = moneyText(context, scope, next.amount, from.currency);
@@ -225,8 +265,8 @@ class _EntrySheetState extends State<EntrySheet> {
       title: tr(context, 'Delete this entry?', 'Xóa giao dịch này?'),
       message: tr(
         context,
-        'A refund linked to it stops the delete.',
-        'Nếu có khoản hoàn tiền gắn với nó thì không xóa được.',
+        'Its receipts and split go with it; Undo brings them back. A refund or a paid-back share linked to it stops the delete.',
+        'Hóa đơn và phần chia tiền đi cùng nó; Hoàn tác sẽ đưa lại. Nếu có khoản hoàn tiền hay tiền trả lại gắn với nó thì không xóa được.',
       ),
       confirmLabel: tr(context, 'Delete', 'Xóa'),
       destructive: true,
@@ -234,15 +274,7 @@ class _EntrySheetState extends State<EntrySheet> {
     if (!ok || !mounted) return;
     setState(() => busy = true);
     try {
-      await scope.controller.change(
-        (s) => s.copy({
-          'entries': [
-            for (final x in s.entries)
-              if (x.id != e!.id) x.toJson(),
-          ],
-        }),
-        'delete_transaction',
-      );
+      await scope.controller.deleteEntries({e!.id}, 'delete_transaction');
       if (mounted) Navigator.pop(context, _Deleted());
     } catch (err) {
       if (mounted)
@@ -256,6 +288,74 @@ class _EntrySheetState extends State<EntrySheet> {
     } finally {
       if (mounted) setState(() => busy = false);
     }
+  }
+
+  Future<void> addReceipts({bool camera = false}) async {
+    try {
+      final files = await pickReceiptFiles(scope, camera: camera);
+      if (files == null || !mounted) return;
+      final checked = checkReceipts(
+        s,
+        entryId,
+        files,
+        waiting: waiting,
+        removing: removing,
+      );
+      setState(() {
+        error = '';
+        waiting.addAll(checked);
+      });
+    } catch (err) {
+      if (mounted)
+        setState(
+          () => error = tr(
+            context,
+            'Receipt not added: ${errorText(context, err)}.',
+            'Chưa thêm hóa đơn: ${errorText(context, err)}.',
+          ),
+        );
+    }
+  }
+
+  void removeReceipt(String id) => setState(() {
+    final i = waiting.indexWhere((p) => p.receipt.id == id);
+    i >= 0 ? waiting.removeAt(i) : removing.add(id);
+  });
+
+  Future<void> editSplit() async {
+    BigInt total;
+    try {
+      total = parseAmount(amount.text, from.currency, vi: vi);
+      if (total <= BigInt.zero) throw const FormatException('');
+    } catch (_) {
+      setState(
+        () => error = tr(
+          context,
+          'Enter the amount first, then split it.',
+          'Nhập số tiền trước rồi chia.',
+        ),
+      );
+      return;
+    }
+    final result = await openSplitSheet(
+      context,
+      scope,
+      total: total,
+      currency: from.currency,
+      draft: split,
+    );
+    if (result != null && mounted)
+      setState(() {
+        error = '';
+        split = result.draft;
+      });
+  }
+
+  String splitLabel() {
+    final d = split;
+    if (d == null) return tr(context, 'Split', 'Chia tiền');
+    final n = d.chosen.length;
+    return tr(context, 'Split $n ways', 'Chia $n người');
   }
 
   String get title => switch (kind) {
@@ -293,6 +393,13 @@ class _EntrySheetState extends State<EntrySheet> {
                     tr(context, 'Record a refund', 'Ghi hoàn tiền'),
                     () => Navigator.pop(context, _Refund(e!)),
                     key: const Key('entry-refund'),
+                  ),
+                if (e != null && e!.kind == 'expense' && canHandOff)
+                  HandyMenuItem(
+                    Icons.inventory_2_outlined,
+                    tr(context, 'Add to Handy Keep', 'Thêm vào Handy Keep'),
+                    () => sendToKeep(context, scope, e!),
+                    key: const Key('entry-keep'),
                   ),
                 if (canRepeat)
                   HandyMenuItem(
@@ -398,6 +505,16 @@ class _EntrySheetState extends State<EntrySheet> {
                         if (picked != null) setState(() => date = picked);
                       },
               ),
+              if (kind == 'expense' && e?.settles == null)
+                ActionChip(
+                  key: const Key('entry-split'),
+                  avatar: Icon(
+                    split == null ? Icons.call_split : Icons.groups_outlined,
+                    size: 16,
+                  ),
+                  label: Text(splitLabel()),
+                  onPressed: busy ? null : editSplit,
+                ),
               FilterChip(
                 key: const Key('entry-pending'),
                 label: Text(tr(context, 'Not yet paid', 'Chưa trả thật')),
@@ -426,6 +543,21 @@ class _EntrySheetState extends State<EntrySheet> {
             HandyReveal(
               child: DetailFields(note: note, tags: tags, enabled: !busy),
             ),
+          const SizedBox(height: HandySpace.l),
+          ReceiptStrip(
+            key: const Key('entry-receipts'),
+            scope: scope,
+            kept: e == null || widget.preset
+                ? const []
+                : scope.receiptsOf(e!.id),
+            waiting: waiting,
+            removing: removing,
+            enabled: !busy,
+            onAdd: addReceipts,
+            onOpen: (r, bytes) => openReceipt(context, scope, r, bytes: bytes),
+            onRemove: removeReceipt,
+            onKeep: (id) => setState(() => removing.remove(id)),
+          ),
         ],
       ),
     );

@@ -72,6 +72,7 @@ String defaultAccount(SpendState s, String kind) {
 /// the amount as typed (a magnitude; an adjustment may carry its sign).
 Entry buildEntry({
   required SpendState s,
+  String? id,
   Entry? existing,
   Entry? refundOf,
   required String kind,
@@ -108,7 +109,7 @@ Entry buildEntry({
     );
   final cleanRate = (rate ?? '').trim().isEmpty ? null : rate!.trim();
   return Entry(
-    id: existing?.id ?? newId(),
+    id: existing?.id ?? id ?? newId(),
     account: from.id,
     kind: kind,
     amount: amount,
@@ -137,6 +138,8 @@ Entry buildEntry({
     refundOf: kind == 'refund' ? (existing?.refundOf ?? refundOf?.id) : null,
     batch: existing?.batch,
     occurrence: existing?.occurrence,
+    settles: existing?.settles,
+    person: existing?.person,
   );
 }
 
@@ -148,4 +151,6 @@ Entry presetFrom(Entry e, String today, String zone) => e.copy({
   'created': DateTime.now().toUtc().toIso8601String(),
   'batch': null,
   'occurrence': null,
+  'settles': null,
+  'person': null,
 });

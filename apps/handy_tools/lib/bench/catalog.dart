@@ -8,8 +8,8 @@ const generators = [
     Icons.qr_code_2,
     'QR code',
     'Mã QR',
-    'Text, links, Wi-Fi, contacts, events',
-    'Văn bản, liên kết, Wi-Fi, liên hệ, sự kiện',
+    'Text, links, Wi-Fi, contacts, events, bank transfers',
+    'Văn bản, liên kết, Wi-Fi, liên hệ, sự kiện, chuyển khoản',
   ),
   (
     'password',
@@ -18,6 +18,14 @@ const generators = [
     'Mật khẩu',
     'Strong, random, never stored',
     'Mạnh, ngẫu nhiên, không lưu lại',
+  ),
+  (
+    'subtitles',
+    Icons.subtitles_outlined,
+    'Subtitles',
+    'Phụ đề',
+    'SRT ↔ WebVTT, shift the timing',
+    'SRT ↔ WebVTT, dời thời gian',
   ),
 ];
 

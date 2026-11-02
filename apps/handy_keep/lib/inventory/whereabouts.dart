@@ -162,19 +162,26 @@ class DueItem {
 List<DueItem> dueItems(KeepState state, String today) {
   final byId = {for (final a in state.assets) a.id: a};
   final base = DateTime.parse('${today}T00:00:00Z');
+  int days(String d) =>
+      DateTime.parse('${d}T00:00:00Z').difference(base).inDays;
   return [
     for (final r in getKeepReminders(state, today))
-      DueItem(
-        byId[r.assetId]!,
-        r.kind,
-        r.date,
-        DateTime.parse('${r.date}T00:00:00Z').difference(base).inDays,
-      ),
-  ];
+      DueItem(byId[r.assetId]!, r.kind, r.date, days(r.date)),
+    // Things that get used up, when the purchases so far say so.
+    for (final r in runOutEstimates(state))
+      DueItem(r.asset, 'runout', r.expected, days(r.expected)),
+  ]..sort((a, b) {
+    final date = a.date.compareTo(b.date);
+    return date != 0 ? date : a.item.id.compareTo(b.item.id);
+  });
 }
 
 /// What needs attention now: anything overdue or within [window] days.
+/// A run-out shows from a week before.
 List<DueItem> attention(KeepState state, String today, {int window = 30}) =>
-    dueItems(state, today).where((d) => d.days <= window).toList();
+    dueItems(
+      state,
+      today,
+    ).where((d) => d.days <= (d.kind == 'runout' ? 7 : window)).toList();
 
 String _fold(String s) => foldAccents(s.toLowerCase());

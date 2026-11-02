@@ -128,37 +128,96 @@ class HandyBottomBar extends StatelessWidget {
   }
 }
 
-/// Heading above a group: 16/500 in ink, sentence case.
+/// Heading above a group, in the brand's way (`HandyHeading`).
 class HandyLabel extends StatelessWidget {
   final String text;
   final Widget? trailing;
   const HandyLabel(this.text, {super.key, this.trailing});
   @override
-  Widget build(BuildContext context) => Padding(
-    padding: EdgeInsets.fromLTRB(
-      2,
-      HandySpace.xl,
-      trailing == null ? 2 : 0,
-      HandySpace.s,
-    ),
-    child: SizedBox(
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final c = HandyColors.of(context);
+    final heading = HandyBrand.current.heading;
+    final label = switch (heading) {
+      HandyHeading.caps => Text(
+        text.toUpperCase(),
+        style: theme.textTheme.labelMedium?.copyWith(
+          color: c.muted,
+          letterSpacing: 1.1,
+          fontWeight: FontWeight.w600,
+        ),
+      ),
+      HandyHeading.mono => Row(
+        children: [
+          ExcludeSemantics(
+            child: Text(
+              '// ',
+              style: theme.textTheme.labelLarge?.copyWith(
+                fontFamily: handyFontFamily('GeistMono'),
+                color: c.accent,
+              ),
+            ),
+          ),
+          Flexible(
+            child: Text(
+              text,
+              style: theme.textTheme.labelLarge?.copyWith(
+                fontFamily: handyFontFamily('GeistMono'),
+                color: c.muted,
+              ),
+            ),
+          ),
+        ],
+      ),
+      HandyHeading.large ||
+      HandyHeading.rule => Text(text, style: theme.textTheme.titleLarge),
+      HandyHeading.plain => Text(text, style: theme.textTheme.titleMedium),
+    };
+    final row = SizedBox(
       height: trailing == null ? null : 48,
       child: Row(
         children: [
           Expanded(
-            child: Semantics(
-              header: true,
-              child: Text(text, style: Theme.of(context).textTheme.titleMedium),
-            ),
+            child: heading == HandyHeading.caps
+                // Read in the words' own case, not letter by letter.
+                ? Semantics(
+                    header: true,
+                    label: text,
+                    child: ExcludeSemantics(child: label),
+                  )
+                : Semantics(header: true, child: label),
           ),
           ?trailing,
         ],
       ),
-    ),
-  );
+    );
+    return Padding(
+      padding: EdgeInsets.fromLTRB(
+        2,
+        heading == HandyHeading.large ? HandySpace.xxl : HandySpace.xl,
+        trailing == null ? 2 : 0,
+        HandySpace.s,
+      ),
+      child: heading == HandyHeading.rule
+          ? DecoratedBox(
+              // A newspaper's section head: an ink rule, then the name.
+              decoration: BoxDecoration(
+                border: Border(
+                  top: BorderSide(color: theme.colorScheme.onSurface, width: 2),
+                ),
+              ),
+              child: Padding(
+                padding: const EdgeInsets.only(top: HandySpace.s),
+                child: row,
+              ),
+            )
+          : row,
+    );
+  }
 }
 
-/// White panel with a 1px edge; rows inside are split by faint rules.
+/// Rows split by faint rules: on a panel, or open on the page between
+/// hairlines (`HandyRows.open`).
 class HandyGroup extends StatelessWidget {
   final List<Widget> children;
 
@@ -167,20 +226,34 @@ class HandyGroup extends StatelessWidget {
   const HandyGroup({super.key, required this.children, this.color});
   @override
   Widget build(BuildContext context) {
+    final open = HandyBrand.current.rows == HandyRows.open;
     final rows = <Widget>[];
     for (var i = 0; i < children.length; i++) {
-      if (i > 0) rows.add(const Divider(indent: HandySpace.l));
+      if (i > 0) rows.add(Divider(indent: open ? 0 : HandySpace.l));
       rows.add(children[i]);
     }
-    return Card(
-      color: color,
-      clipBehavior: Clip.antiAlias,
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: rows,
-      ),
+    final column = Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: rows,
     );
+    if (open) {
+      final c = HandyColors.of(context);
+      return DecoratedBox(
+        decoration: BoxDecoration(
+          color: color,
+          border: Border(
+            top: BorderSide(color: c.border),
+            bottom: BorderSide(color: c.border),
+          ),
+        ),
+        child: ListTileTheme.merge(
+          contentPadding: const EdgeInsets.symmetric(horizontal: HandySpace.xs),
+          child: column,
+        ),
+      );
+    }
+    return Card(color: color, clipBehavior: Clip.antiAlias, child: column);
   }
 }
 

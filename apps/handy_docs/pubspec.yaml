@@ -17,6 +17,8 @@ dependencies:
   image_picker: 1.2.4
   flutter_markdown_plus: 1.0.12
   handy_pdf: any
+  handy_scan: any
+  handy_ocr: any
 dev_dependencies:
   flutter_test:
     sdk: flutter
@@ -24,5 +26,13 @@ dev_dependencies:
     sdk: flutter
 flutter:
   uses-material-design: true
+  fonts:
+    - family: Literata
+      fonts:
+        - asset: fonts/Literata-Medium.ttf
+          weight: 500
+        - asset: fonts/Literata-SemiBold.ttf
+          weight: 600
   assets:
+    - fonts/Literata-OFL.txt
     - assets/icon.png

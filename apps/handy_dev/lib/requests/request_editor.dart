@@ -341,7 +341,8 @@ class _RequestEditorState extends State<RequestEditor> {
                     key: const Key('send-error'),
                     tone: HandyTone.error,
                   ),
-                if (ws.response != null) ResponseView(response: ws.response!),
+                if (ws.response != null)
+                  ResponseView(response: ws.response!, previous: ws.previous),
                 if (!ws.sending && ws.response == null && ws.sendError == null)
                   HandyEmpty(
                     title: tr(

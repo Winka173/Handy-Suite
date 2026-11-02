@@ -17,11 +17,16 @@ class LayerPanel extends StatelessWidget {
   final EditorController c;
   final bool busy;
   final VoidCallback onRepeatMask;
+
+  /// Reads the picture's words to propose masks; null where text cannot be
+  /// read on this device.
+  final VoidCallback? onFindSensitive;
   const LayerPanel({
     super.key,
     required this.c,
     required this.busy,
     required this.onRepeatMask,
+    this.onFindSensitive,
   });
 
   @override
@@ -29,7 +34,12 @@ class LayerPanel extends StatelessWidget {
     final layer = c.layer;
     return HandySwap(
       child: layer == null
-          ? _Notes(key: const ValueKey('notes'), c: c, busy: busy)
+          ? _Notes(
+              key: const ValueKey('notes'),
+              c: c,
+              busy: busy,
+              onFindSensitive: onFindSensitive,
+            )
           : _Layer(
               key: ValueKey(layer.id),
               c: c,
@@ -44,7 +54,13 @@ class LayerPanel extends StatelessWidget {
 class _Notes extends StatelessWidget {
   final EditorController c;
   final bool busy;
-  const _Notes({super.key, required this.c, required this.busy});
+  final VoidCallback? onFindSensitive;
+  const _Notes({
+    super.key,
+    required this.c,
+    required this.busy,
+    this.onFindSensitive,
+  });
   @override
   Widget build(BuildContext context) {
     final layers = c.step?.annotations ?? const <ProjectLayer>[];
@@ -80,6 +96,17 @@ class _Notes extends StatelessWidget {
               subtitle: tr(context, 'Layer ${i + 1}', 'Lớp ${i + 1}'),
               onTap: busy ? null : () => c.select(l.id),
             ),
+        if (onFindSensitive != null && c.picture != null) ...[
+          const SizedBox(height: HandySpace.s),
+          OutlinedButton.icon(
+            key: const Key('capture-find-sensitive'),
+            onPressed: busy ? null : onFindSensitive,
+            icon: const Icon(Icons.manage_search),
+            label: Text(
+              tr(context, 'Find private details', 'Tìm thông tin nhạy cảm'),
+            ),
+          ),
+        ],
       ],
     );
   }

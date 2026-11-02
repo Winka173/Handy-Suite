@@ -13,6 +13,11 @@ enum DataKind {
   toml,
   yaml,
   csv,
+  link,
+  timestamp,
+  number,
+  ids,
+  cron,
   url,
   base64,
   text,
@@ -100,6 +105,36 @@ List<DataKind> detect(String input) {
         (out.first as Map).length > 1) {
       kinds.add(DataKind.csv);
     }
+  }
+  final oneLine = lines.length == 1;
+  if (oneLine &&
+      RegExp(r'^[A-Za-z][A-Za-z0-9+.-]*://\S+$').hasMatch(s) &&
+      _runs('url-parse', s)) {
+    kinds.add(DataKind.link);
+  }
+  if (oneLine &&
+      (RegExp(r'^-?\d{9,19}(\.\d{1,9})?$').hasMatch(s) ||
+          RegExp(r'^\d{4}-\d{2}-\d{2}([T ]\d{2}:\d{2}.*)?$').hasMatch(s)) &&
+      _runs('timestamp', s)) {
+    kinds.add(DataKind.timestamp);
+  }
+  if (oneLine &&
+      s.length <= maxBaseDigits &&
+      RegExp(
+        r'^[+-]?(0[xX][0-9a-fA-F_]+|0[bB][01_]+|0[oO][0-7_]+|\d[\d_]*)$',
+      ).hasMatch(s)) {
+    kinds.add(DataKind.number);
+  }
+  if (lines.length <= maxIds && lines.every(looksLikeId)) {
+    kinds.add(DataKind.ids);
+  }
+  if (oneLine &&
+      (s.startsWith('@') ||
+          RegExp(r'^[\w*?,/-]+(\s+[\w*?,/-]+){4,5}$').hasMatch(s))) {
+    try {
+      parseCron(s);
+      kinds.add(DataKind.cron);
+    } on FormatException catch (_) {}
   }
   if (RegExp('%[0-9A-Fa-f]{2}').hasMatch(s) && _runs('url-decode', s))
     kinds.add(DataKind.url);

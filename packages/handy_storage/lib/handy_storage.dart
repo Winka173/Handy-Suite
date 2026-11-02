@@ -6,6 +6,8 @@ import 'package:handy_workflow/handy_workflow.dart';
 /// interpreting unknown tool IDs as migratable data.
 const Set<String> toolsPreferenceIds = {
   'calculate',
+  // The calc notebook's sheet, kept as a draft.
+  'notebook',
   'units',
   'loan',
   'compound',

@@ -1,22 +1,72 @@
+import 'dart:isolate';
 import 'dart:math' as math;
-import 'dart:typed_data';
 import 'dart:ui' as ui;
+import 'package:flutter/services.dart';
 import 'package:handy_core/handy_core.dart';
+import 'package:image/image.dart' as img;
 import 'package:pdfrx/pdfrx.dart';
-import 'src/watermark_stub.dart'
-    if (dart.library.io) 'src/watermark_native.dart'
-    as stamp;
+import 'src/edit_stub.dart' if (dart.library.io) 'src/edit_native.dart' as edit;
+import 'src/font.dart';
+import 'src/stamps.dart';
 
-/// Content editing is available through PDFium's native document API.
-const bool supportsPdfWatermark = stamp.supported;
+export 'src/font.dart' show PdfFont;
+export 'src/stamps.dart'
+    show
+        PdfBox,
+        PdfStamp,
+        PdfImageStamp,
+        PdfTextStamp,
+        textLineHeight,
+        textBaseline,
+        validateStamps,
+        shownToPdf,
+        shownSize;
 
-/// Matches the legacy single-line Helvetica stamp without silent truncation.
-void validatePdfWatermark(String text) {
-  if (text.length > 100 || text.codeUnits.any((c) => c < 32 || c > 126)) {
+/// Content editing (stamps, signatures, smaller pictures) is available
+/// through PDFium's native document API: Android, iOS and Windows.
+const bool supportsPdfWatermark = edit.supported;
+const bool supportsPdfEditing = edit.supported;
+
+/// One line, up to 100 characters, that [font] can draw. Without a font only
+/// printable ASCII is accepted.
+void validatePdfWatermark(String text, {PdfFont? font}) {
+  if (text.length > 100 || RegExp(r'[\x00-\x1f\x7f]').hasMatch(text)) {
+    throw const FormatException('Stamp text is one line of up to 100 letters');
+  }
+  if (font == null
+      ? text.codeUnits.any((c) => c < 32 || c > 126)
+      : !font.covers(text)) {
     throw const FormatException(
-      'Watermark requires up to 100 printable ASCII characters',
+      'Stamp text can use Latin letters, Vietnamese and common punctuation',
     );
   }
+}
+
+/// The text face embedded in stamps and filled-in text: Geist, which covers
+/// Vietnamese. Loaded once from the bundled handy_ui fonts.
+Future<PdfFont> loadPdfFont() => _font ??= rootBundle
+    .load('packages/handy_ui/fonts/Geist-Regular.ttf')
+    .then(
+      (data) => PdfFont(
+        data.buffer.asUint8List(data.offsetInBytes, data.lengthInBytes),
+      ),
+    )
+    .catchError((Object e) {
+      _font = null;
+      throw e;
+    });
+Future<PdfFont>? _font;
+
+/// A smaller copy and what changed to make it.
+class PdfCompressed {
+  final Uint8List bytes;
+
+  /// Pictures re-encoded, and pictures left exactly as they were.
+  final int changed, kept;
+
+  /// True when every page became a picture ("strong" compression).
+  final bool rasterized;
+  const PdfCompressed(this.bytes, this.changed, this.kept, this.rasterized);
 }
 
 Future<void>? _initializing;
@@ -165,11 +215,15 @@ class LocalPdf {
     List<int> indices, {
     int rotation = 0,
     String watermark = '',
+    PdfFont? font,
     CancellationToken? cancellation,
   }) async {
     _check();
     cancellation?.check();
-    validatePdfWatermark(watermark);
+    if (watermark.isNotEmpty && supportsPdfWatermark) {
+      font ??= await loadPdfFont();
+    }
+    validatePdfWatermark(watermark, font: font);
     if (watermark.isNotEmpty && !supportsPdfWatermark) {
       throw const FormatException(
         'PDF watermark is available in the Android, iOS and Windows apps',
@@ -193,11 +247,193 @@ class LocalPdf {
       if (watermark.isNotEmpty) {
         await destination.assemble();
         cancellation?.check();
-        await stamp.applyWatermark(destination, watermark, cancellation);
+        await edit.applyMarks(
+          destination,
+          [
+            for (var i = 0; i < selected.length; i++)
+              edit.watermarkMark(i, watermark),
+          ],
+          font!.bytes,
+          cancellation,
+        );
       }
       return await _encode(destination, selected.length, cancellation);
     } finally {
       await destination.dispose();
+    }
+  }
+
+  /// A new copy of every page with [stamps] drawn on: signatures, text,
+  /// dates or a hidden text layer. The open document is never changed.
+  Future<Uint8List> flatten(
+    List<PdfStamp> stamps, {
+    PdfFont? font,
+    CancellationToken? cancellation,
+  }) async {
+    _check();
+    cancellation?.check();
+    if (!supportsPdfEditing) {
+      throw const FormatException(
+        'Signing and filling PDFs is available in the Android, iOS and Windows apps',
+      );
+    }
+    validateStamps(stamps, pages.length);
+    if (stamps.any((s) => s is PdfTextStamp)) {
+      font ??= await loadPdfFont();
+      for (final s in stamps.whereType<PdfTextStamp>()) {
+        if (!font.covers(s.text)) {
+          throw const FormatException(
+            'Text on a page can use Latin letters, Vietnamese and common punctuation',
+          );
+        }
+      }
+    }
+    final count = pages.length;
+    final destination = await PdfDocument.createNew(
+      sourceName: 'memory:handy-pdf-filled',
+    );
+    try {
+      destination.pages = [..._document.pages];
+      await destination.assemble();
+      cancellation?.check();
+      await edit.applyMarks(
+        destination,
+        [for (final s in stamps) edit.markOf(s)],
+        font?.bytes,
+        cancellation,
+      );
+      return await _encode(destination, count, cancellation);
+    } finally {
+      await destination.dispose();
+    }
+  }
+
+  /// A smaller copy: pictures re-encoded as JPEG at [quality] (1–95) and at
+  /// most [dpi] at their size on the page. Text, vectors and links stay as
+  /// they are. Throws a [FormatException] when nothing could be made smaller.
+  Future<PdfCompressed> compress({
+    int quality = 60,
+    int dpi = 150,
+    CancellationToken? cancellation,
+  }) async {
+    _check();
+    cancellation?.check();
+    if (!supportsPdfEditing) {
+      throw const FormatException(
+        'Making PDFs smaller is available in the Android, iOS and Windows apps',
+      );
+    }
+    if (quality < 1 || quality > 95 || dpi < 50 || dpi > 600) {
+      throw const FormatException('Invalid compression settings');
+    }
+    final count = pages.length;
+    final destination = await PdfDocument.createNew(
+      sourceName: 'memory:handy-pdf-smaller',
+    );
+    try {
+      destination.pages = [..._document.pages];
+      await destination.assemble();
+      final report = await edit.recompressImages(
+        destination,
+        quality,
+        dpi,
+        cancellation,
+      );
+      if (report.changed == 0) {
+        throw const FormatException(
+          'No picture in this PDF could be made smaller',
+        );
+      }
+      // Replaced pictures stay in the document until its pages are copied
+      // into a fresh one, which keeps only what the pages use.
+      final fresh = await PdfDocument.createNew(
+        sourceName: 'memory:handy-pdf-smaller-copy',
+      );
+      try {
+        fresh.pages = [...destination.pages];
+        final bytes = await _encode(fresh, count, cancellation);
+        return PdfCompressed(bytes, report.changed, report.kept, false);
+      } finally {
+        await fresh.dispose();
+      }
+    } finally {
+      await destination.dispose();
+    }
+  }
+
+  /// "Strong" compression: every page becomes one JPEG picture at [dpi].
+  /// Text can no longer be selected or searched, and links stop working.
+  Future<PdfCompressed> rasterize({
+    int dpi = 100,
+    int quality = 55,
+    CancellationToken? cancellation,
+    void Function(double)? onProgress,
+  }) async {
+    _check();
+    cancellation?.check();
+    if (quality < 1 || quality > 95 || dpi < 50 || dpi > 300) {
+      throw const FormatException('Invalid compression settings');
+    }
+    final made = <PdfDocument>[];
+    PdfDocument? destination;
+    try {
+      for (var i = 0; i < pages.length; i++) {
+        cancellation?.check();
+        final page = _document.pages[i];
+        var scale = dpi / 72;
+        scale = math.min(scale, 2000 / math.max(page.width, page.height));
+        final width = math.max(1, (page.width * scale).round()),
+            height = math.max(1, (page.height * scale).round());
+        final raster = await page.render(
+          width: width,
+          height: height,
+          fullWidth: width.toDouble(),
+          fullHeight: height.toDouble(),
+          backgroundColor: 0xffffffff,
+        );
+        if (raster == null) {
+          throw const FormatException('PDF page could not be rendered');
+        }
+        final Uint8List jpeg;
+        try {
+          final pixels = Uint8List.fromList(raster.pixels);
+          jpeg = await Isolate.run(
+            () => img.encodeJpg(
+              img.Image.fromBytes(
+                width: width,
+                height: height,
+                bytes: pixels.buffer,
+                numChannels: 4,
+                order: img.ChannelOrder.bgra,
+              ).convert(numChannels: 3),
+              quality: quality,
+            ),
+          );
+        } finally {
+          raster.dispose();
+        }
+        made.add(
+          await PdfDocument.createFromJpegData(
+            jpeg,
+            width: page.width,
+            height: page.height,
+            sourceName: 'memory:handy-pdf-page-$i',
+          ),
+        );
+        onProgress?.call((i + 1) / pages.length);
+      }
+      cancellation?.check();
+      destination = await PdfDocument.createNew(
+        sourceName: 'memory:handy-pdf-pictures',
+      );
+      destination.pages = [for (final d in made) d.pages.first];
+      final bytes = await _encode(destination, made.length, cancellation);
+      return PdfCompressed(bytes, made.length, 0, true);
+    } finally {
+      await destination?.dispose();
+      for (final d in made) {
+        await d.dispose();
+      }
     }
   }
 

@@ -13,6 +13,7 @@ const _modes = [
   ('wifi', 'Wi-Fi', 'Wi-Fi'),
   ('contact', 'Contact', 'Liên hệ'),
   ('event', 'Event', 'Sự kiện'),
+  ('bank', 'Bank transfer', 'Chuyển khoản'),
 ];
 
 /// The code redraws as you type; saving or sharing is the only way it
@@ -37,6 +38,9 @@ class QrPage extends StatefulWidget {
 
 class QrPageState extends State<QrPage> {
   String mode = 'text', security = 'WPA';
+
+  /// The receiving bank's BIN for a VietQR transfer code.
+  String? bankBin;
 
   @override
   void initState() {
@@ -85,6 +89,14 @@ class QrPageState extends State<QrPage> {
       case 'event':
         if (v[0].trim().isEmpty || start == null || end == null) return '';
         return eventQr(v[0], _utc(start!), _utc(end!), v[3]);
+      case 'bank':
+        if (bankBin == null || v[0].trim().isEmpty) return '';
+        return vietQr(
+          bin: bankBin!,
+          account: v[0].trim(),
+          amount: v[1].trim(),
+          message: v[2],
+        );
       case 'url':
         final s = v[0].trim();
         if (s.isEmpty) return '';
@@ -150,6 +162,7 @@ class QrPageState extends State<QrPage> {
       f.clear();
     }
     start = end = null;
+    bankBin = null;
   });
 
   Future<void> openHistory() async {
@@ -211,14 +224,16 @@ class QrPageState extends State<QrPage> {
       int i,
       String label, {
       String? hint,
+      String? helper,
       TextInputType? keyboard,
       bool secret = false,
+      int maxLength = 1200,
     }) => HandyField(
       label: label,
       child: TextField(
         key: ValueKey('qr-field-$i'),
         controller: fields[i],
-        maxLength: 1200,
+        maxLength: maxLength,
         keyboardType: keyboard,
         obscureText: secret && !showPassword,
         minLines: mode == 'text' ? 3 : 1,
@@ -226,7 +241,9 @@ class QrPageState extends State<QrPage> {
         onChanged: (_) => setState(() {}),
         decoration: InputDecoration(
           hintText: hint,
-          counterText: '',
+          helperText: helper,
+          helperMaxLines: 2,
+          counterText: maxLength < 1200 ? null : '',
           suffixIcon: secret
               ? IconButton(
                   tooltip: showPassword
@@ -317,8 +334,71 @@ class QrPageState extends State<QrPage> {
         when(tr(context, 'Ends', 'Kết thúc'), end, false),
         text(3, tr(context, 'Place', 'Địa điểm')),
       ],
+      'bank' => [
+        HandyField(
+          label: tr(context, 'Bank', 'Ngân hàng'),
+          child: LayoutBuilder(
+            builder: (context, box) => DropdownMenu<String>(
+              key: const Key('qr-bank'),
+              width: box.maxWidth,
+              menuHeight: 320,
+              enableFilter: true,
+              requestFocusOnTap: true,
+              initialSelection: bankBin,
+              hintText: tr(
+                context,
+                'Type to find a bank',
+                'Gõ để tìm ngân hàng',
+              ),
+              dropdownMenuEntries: [
+                for (final b in vietQrBanks)
+                  DropdownMenuEntry(
+                    value: b.bin,
+                    label: '${b.shortName} · ${b.code}',
+                  ),
+              ],
+              onSelected: (bin) => setState(() => bankBin = bin),
+            ),
+          ),
+        ),
+        text(
+          0,
+          tr(context, 'Account number', 'Số tài khoản'),
+          keyboard: TextInputType.number,
+          maxLength: 19,
+        ),
+        text(
+          1,
+          tr(context, 'Amount (đ, optional)', 'Số tiền (đ, không bắt buộc)'),
+          hint: '150.000',
+          keyboard: TextInputType.number,
+        ),
+        text(
+          2,
+          tr(context, 'Message (optional)', 'Nội dung (không bắt buộc)'),
+          helper: tr(
+            context,
+            'Accents are removed; letters, digits and spaces.',
+            'Tự bỏ dấu; chỉ chữ, số và khoảng trắng.',
+          ),
+          maxLength: 25,
+        ),
+      ],
       _ => [text(0, tr(context, 'Text', 'Nội dung'))],
     };
+  }
+
+  /// What the code will pay, read back from the payload itself.
+  String? transferReadback(BuildContext context, String value) {
+    final t = readVietQr(value);
+    if (t == null) return null;
+    final bank = vietQrBank(t.bin);
+    return [
+      bank == null ? t.bin : bank.shortName,
+      t.account,
+      if (t.amount.isNotEmpty) '${formatFigure(context, t.amount)} đ',
+      if (t.message.isNotEmpty) '"${t.message}"',
+    ].join(' · ');
   }
 
   String? warning(BuildContext context, String value) => switch (mode) {
@@ -336,6 +416,11 @@ class QrPageState extends State<QrPage> {
       context,
       'Opens ${Uri.parse(value).host}. Check the address before sharing.',
       'Mở ${Uri.parse(value).host}. Kiểm tra địa chỉ trước khi chia sẻ.',
+    ),
+    'bank' => tr(
+      context,
+      "Whoever scans it should check the account holder's name in their bank app before sending.",
+      'Người quét nên kiểm tra tên chủ tài khoản trong app ngân hàng trước khi chuyển.',
     ),
     _ => null,
   };
@@ -358,6 +443,9 @@ class QrPageState extends State<QrPage> {
     }
     final ready = value.isNotEmpty && !busy;
     final note = value.isEmpty ? null : warning(context, value);
+    final readback = mode == 'bank' && value.isNotEmpty
+        ? transferReadback(context, value)
+        : null;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
@@ -419,6 +507,16 @@ class QrPageState extends State<QrPage> {
               ),
             ),
           ),
+          if (readback != null) ...[
+            const SizedBox(height: HandySpace.s),
+            Text(
+              readback,
+              key: const Key('qr-readback'),
+              style: Theme.of(
+                context,
+              ).textTheme.titleMedium?.copyWith(fontFeatures: tabular),
+            ),
+          ],
           const SizedBox(height: HandySpace.m),
           Wrap(
             spacing: HandySpace.s,
@@ -447,7 +545,9 @@ class QrPageState extends State<QrPage> {
           const SizedBox(height: HandySpace.m),
           HandyNotice(
             note,
-            tone: mode == 'url' ? HandyTone.info : HandyTone.warning,
+            tone: mode == 'url' || mode == 'bank'
+                ? HandyTone.info
+                : HandyTone.warning,
           ),
         ],
         ListenableBuilder(

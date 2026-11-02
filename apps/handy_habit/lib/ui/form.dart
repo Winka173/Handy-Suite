@@ -13,6 +13,9 @@ enum FieldKind {
   choice,
   toggle,
   weekdays,
+
+  /// Several of [HabitField.options], as a list of their keys.
+  many,
 }
 
 /// One input of a [HabitForm]. Labels sit above their field; [help] says
@@ -137,6 +140,10 @@ class _HabitFormState extends State<HabitForm> {
           case FieldKind.text || FieldKind.note:
             if (raw!.isEmpty && f.required) throw const FormatException('');
             out[f.id] = raw;
+          case FieldKind.many:
+            final keys = List<String>.from(out[f.id] as List? ?? []);
+            if (keys.isEmpty && f.required) throw const FormatException('');
+            out[f.id] = keys;
           case FieldKind.weekdays:
             final days = List<int>.from(out[f.id] as List? ?? [])..sort();
             if (days.isEmpty && f.required) throw const FormatException('');
@@ -149,7 +156,10 @@ class _HabitFormState extends State<HabitForm> {
             out[f.id] = out[f.id] == true;
         }
       } catch (_) {
-        errors[f.id] = (raw?.isEmpty ?? false) || f.kind == FieldKind.weekdays
+        errors[f.id] =
+            (raw?.isEmpty ?? false) ||
+                f.kind == FieldKind.weekdays ||
+                f.kind == FieldKind.many
             ? tr(context, 'Required', 'Cần điền')
             : tr(context, 'Not a number', 'Không phải số');
       }
@@ -240,6 +250,27 @@ class _HabitFormState extends State<HabitForm> {
                       final days = List<int>.from(values[f.id] as List? ?? []);
                       on ? days.add(d) : days.remove(d);
                       values[f.id] = days..sort();
+                    }),
+            ),
+        ],
+      ),
+      FieldKind.many => Wrap(
+        spacing: HandySpace.xs,
+        runSpacing: HandySpace.xs,
+        children: [
+          for (final o in f.options!.entries)
+            FilterChip(
+              key: Key('field-${f.id}-${o.key}'),
+              label: Text(o.value),
+              selected: (values[f.id] as List? ?? []).contains(o.key),
+              onSelected: busy
+                  ? null
+                  : (on) => setState(() {
+                      final keys = List<String>.from(
+                        values[f.id] as List? ?? [],
+                      );
+                      on ? keys.add(o.key) : keys.remove(o.key);
+                      values[f.id] = keys;
                     }),
             ),
         ],
@@ -349,6 +380,7 @@ class _HabitFormState extends State<HabitForm> {
               const [
                 FieldKind.choice,
                 FieldKind.weekdays,
+                FieldKind.many,
                 FieldKind.date,
               ].contains(f.kind))
             Text(

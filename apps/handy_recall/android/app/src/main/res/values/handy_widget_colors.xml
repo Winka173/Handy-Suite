@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="handy_widget_ground">#FFFFFF</color>
+    <color name="handy_widget_ink">#17181A</color>
+    <color name="handy_widget_muted">#5F636B</color>
+</resources>

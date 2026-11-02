@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'package:handy_dev_engine/handy_dev_engine.dart';
 import 'package:handy_ui/kit.dart';
 import 'detect.dart';
@@ -9,6 +10,9 @@ class LensOption {
 
   /// Turns what the person typed into the engine's option string.
   final String Function(String typed) encode;
+
+  /// A secret (an HMAC key): hidden while typed, never kept across lenses.
+  final bool secret;
   const LensOption(
     this.en,
     this.vi, {
@@ -16,8 +20,19 @@ class LensOption {
     this.multiline = false,
     this.optional = false,
     this.encode = _same,
+    this.secret = false,
   });
   static String _same(String s) => s;
+  String label(BuildContext c) => tr(c, en, vi);
+}
+
+/// A small set of settings for a lens, shown as one row of chips.
+class LensChoice {
+  final String id, en, vi;
+
+  /// (value, English label, Vietnamese label); the first is the default.
+  final List<(String, String, String)> values;
+  const LensChoice(this.id, this.en, this.vi, this.values);
   String label(BuildContext c) => tr(c, en, vi);
 }
 
@@ -27,10 +42,25 @@ class Lens {
   final String id;
   final String? tool;
   final LensOption? option;
-  const Lens(this.id, {this.tool, this.option});
+  final List<LensChoice> choices;
+
+  /// Builds the engine's option string from the typed option and the
+  /// chosen settings, when the plain [LensOption.encode] is not enough.
+  final String Function(String typed, String Function(String) pick)? encode;
+  const Lens(
+    this.id, {
+    this.tool,
+    this.option,
+    this.choices = const [],
+    this.encode,
+  });
   DevTool? get engine =>
       tool == null ? null : devTools.firstWhere((t) => t.id == tool);
   bool get sensitive => engine?.sensitive ?? false;
+
+  /// The chosen value of setting [id], or its default.
+  String pick(Map<String, String> picks, String id) =>
+      picks[id] ?? choices.firstWhere((c) => c.id == id).values.first.$1;
   String title(BuildContext c) => switch (id) {
     'tree' => tr(c, 'Tree', 'Dạng cây'),
     'curl' => tr(c, 'Request', 'Request'),
@@ -39,6 +69,91 @@ class Lens {
 }
 
 Lens _t(String id, [LensOption? o]) => Lens(id, tool: id, option: o);
+
+const _zone = LensChoice('zone', 'Time zone', 'Múi giờ', [
+  ('local', 'Device', 'Giờ máy'),
+  ('utc', 'UTC', 'UTC'),
+]);
+const _otherZone = LensOption(
+  'Other offset',
+  'Độ lệch khác',
+  hint: '+07:00',
+  optional: true,
+);
+
+String _hmacOptions(String key, String Function(String) pick) => jsonEncode({
+  'key': key,
+  'hash': pick('hash'),
+  'output': pick('output'),
+  'keyFormat': pick('keyFormat'),
+});
+
+final timestampLens = Lens(
+  'timestamp',
+  tool: 'timestamp',
+  option: _otherZone,
+  choices: const [_zone],
+);
+final cronLens = Lens(
+  'cron',
+  tool: 'cron',
+  option: _otherZone,
+  choices: const [
+    _zone,
+    LensChoice('count', 'Next runs', 'Lần chạy tới', [
+      ('5', '5', '5'),
+      ('10', '10', '10'),
+      ('20', '20', '20'),
+    ]),
+  ],
+);
+const baseLens = Lens(
+  'base-convert',
+  tool: 'base-convert',
+  option: LensOption(
+    'Also in base',
+    'Thêm hệ cơ số',
+    hint: '36',
+    optional: true,
+  ),
+  choices: [
+    LensChoice('bits', 'Bits', 'Số bit', [
+      ('', 'None', 'Không'),
+      ('8', '8', '8'),
+      ('16', '16', '16'),
+      ('32', '32', '32'),
+      ('64', '64', '64'),
+    ]),
+  ],
+);
+const idsLens = Lens('uuid', tool: 'uuid');
+const urlLens = Lens('url-parse', tool: 'url-parse');
+const textDiffLens = Lens(
+  'text-diff',
+  tool: 'text-diff',
+  option: LensOption('Compare with', 'So với', multiline: true),
+);
+const hmacLens = Lens(
+  'hmac',
+  tool: 'hmac',
+  option: LensOption('Key', 'Khóa', secret: true),
+  encode: _hmacOptions,
+  choices: [
+    LensChoice('hash', 'Hash', 'Hàm băm', [
+      ('sha256', 'SHA-256', 'SHA-256'),
+      ('sha512', 'SHA-512', 'SHA-512'),
+    ]),
+    LensChoice('output', 'Output', 'Kết quả', [
+      ('hex', 'Hex', 'Hex'),
+      ('base64', 'Base64', 'Base64'),
+    ]),
+    LensChoice('keyFormat', 'Key is', 'Khóa là', [
+      ('text', 'Text', 'Văn bản'),
+      ('hex', 'Hex', 'Hex'),
+      ('base64', 'Base64', 'Base64'),
+    ]),
+  ],
+);
 
 String _fields(String typed) => typedFieldsJson(typed);
 
@@ -98,7 +213,21 @@ final _text = [
   _t('url-encode'),
   _t('sha256'),
   _t('sha512'),
+  hmacLens,
 ];
+
+/// Kinds whose text has versions worth comparing line by line.
+const _documents = {
+  DataKind.text,
+  DataKind.json,
+  DataKind.har,
+  DataKind.jsonl,
+  DataKind.xml,
+  DataKind.yaml,
+  DataKind.toml,
+  DataKind.csv,
+  DataKind.env,
+};
 
 /// Lenses for a kind, the default first; text lenses close every list.
 List<Lens> lensesFor(DataKind kind) => [
@@ -113,10 +242,16 @@ List<Lens> lensesFor(DataKind kind) => [
     DataKind.jwt => [_t('jwt')],
     DataKind.env => [_t('env-sample')],
     DataKind.url => [_t('url-decode')],
+    DataKind.link => [urlLens],
+    DataKind.timestamp => [timestampLens],
+    DataKind.number => [baseLens],
+    DataKind.ids => [idsLens],
+    DataKind.cron => [cronLens],
     DataKind.base64 => [_t('base64-decode')],
     DataKind.curl => [const Lens('curl')],
     DataKind.text => <Lens>[],
   },
+  if (_documents.contains(kind)) textDiffLens,
   if (kind != DataKind.curl) ..._text,
 ];
 
@@ -132,6 +267,11 @@ String kindLabel(BuildContext c, DataKind k) => switch (k) {
   DataKind.yaml => 'YAML',
   DataKind.csv => 'CSV',
   DataKind.url => tr(c, 'URL-encoded', 'URL mã hóa'),
+  DataKind.link => 'URL',
+  DataKind.timestamp => tr(c, 'Timestamp', 'Mốc thời gian'),
+  DataKind.number => tr(c, 'Integer', 'Số nguyên'),
+  DataKind.ids => 'UUID / ULID',
+  DataKind.cron => 'Cron',
   DataKind.base64 => 'Base64',
   DataKind.text => tr(c, 'Text', 'Văn bản'),
 };
@@ -157,6 +297,7 @@ LensGroup lensGroup(Lens l) =>
       'json-csv',
       'json-typescript',
       'json-schema-infer',
+      'base-convert',
     }.contains(l.id)
     ? LensGroup.convert
     : const {
@@ -165,6 +306,7 @@ LensGroup lensGroup(Lens l) =>
         'url-encode',
         'sha256',
         'sha512',
+        'hmac',
       }.contains(l.id)
     ? LensGroup.encode
     : LensGroup.view;

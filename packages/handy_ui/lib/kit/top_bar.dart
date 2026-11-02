@@ -45,8 +45,10 @@ class HandyTopBar extends StatelessWidget implements PreferredSizeWidget {
       titleSpacing: HandySpace.l,
       title: Row(
         children: [
-          HandyMark(mark, size: 30),
-          const SizedBox(width: HandySpace.m),
+          if (HandyBrand.current.tileMark) ...[
+            HandyMark(mark, size: 30),
+            const SizedBox(width: HandySpace.m),
+          ],
           // On narrow screens the area switch takes the name's place.
           if (areas == null || width >= 560)
             Flexible(

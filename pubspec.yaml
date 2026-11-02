@@ -3,6 +3,8 @@ publish_to: none
 environment:
   sdk: ^3.12.0
 workspace:
+  - apps/handy_trip
+  - packages/handy_trip_engine
   - apps/handy_habit
   - packages/handy_habit_engine
   - apps/handy_spend
@@ -13,8 +15,8 @@ workspace:
   - apps/handy_dev
   - apps/handy_docs
   - apps/handy_media
-  - apps/handy_save
-  - packages/handy_save_engine
+  - apps/handy_bookmark
+  - packages/handy_bookmark_engine
   - packages/handy_core
   - packages/handy_files
   - packages/handy_storage
@@ -30,8 +32,10 @@ workspace:
   - packages/handy_store
   - packages/handy_monetization
   - packages/handy_scan
+  - packages/handy_ocr
   - packages/handy_pdf
   - packages/handy_capture
+  - packages/handy_home_widget
 dev_dependencies:
   flutter_test:
     sdk: flutter

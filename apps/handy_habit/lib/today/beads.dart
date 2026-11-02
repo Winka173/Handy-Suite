@@ -6,7 +6,7 @@ import '../ui/words.dart';
 
 /// One day of a habit, as a bead: full when done, filled part way when
 /// begun, an empty grey ring when planned and not done, a ring with a
-/// dash when skipped with a reason.
+/// dash when skipped with a reason, a pale disc with no ring when paused.
 class Bead extends StatelessWidget {
   final String status;
 
@@ -83,6 +83,13 @@ class _BeadPainter extends CustomPainter {
             ..style = PaintingStyle.stroke
             ..strokeWidth = stroke * 2.2
             ..strokeCap = StrokeCap.round,
+        );
+      // A day off: a pale disc, never the ring of a day not done.
+      case 'paused':
+        canvas.drawCircle(
+          c,
+          r * .82,
+          Paint()..color = ring.withValues(alpha: ring.a * .45),
         );
       // A day with no plan (a days-a-week habit not done that day).
       case 'notScheduled':
@@ -181,7 +188,14 @@ class TodayBead extends StatelessWidget {
     final value = index.value(habit.id, today);
     final done = status == 'completed';
     final c = HandyColors.of(context);
-    final label = done
+    final paused = status == 'paused';
+    final label = paused
+        ? tr(
+            context,
+            '${habit.title}: paused today. Mark it done anyway',
+            '${habit.title}: hôm nay đang nghỉ. Vẫn đánh dấu đã làm',
+          )
+        : done
         ? tr(
             context,
             '${habit.title}: done today',
@@ -228,6 +242,8 @@ class TodayBead extends StatelessWidget {
                 ),
                 if (done)
                   const Icon(Icons.check, size: 20, color: Colors.white)
+                else if (paused)
+                  Icon(Icons.pause, size: 18, color: c.muted)
                 else if (habit.type != 'binary' && status != 'skipped')
                   Icon(Icons.add, size: 18, color: c.muted),
               ],

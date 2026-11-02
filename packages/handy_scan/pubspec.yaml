@@ -1,4 +1,5 @@
 name: handy_scan
+description: QR scanning for Handy Suite.
 version: 0.1.0
 publish_to: none
 resolution: workspace

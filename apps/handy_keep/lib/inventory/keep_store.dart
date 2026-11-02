@@ -63,6 +63,17 @@ class KeepStore extends ChangeNotifier {
     );
   }
 
+  /// Saves several new items in one write: all of them land, or none.
+  Future<void> saveItems(List<AssetEdit> edits) {
+    final next = saveAssets(state!, edits.map((e) => e.asset));
+    return _write(
+      InventoryLibrary(next, {
+        ...library!.blobs,
+        for (final e in edits) ...e.blobs,
+      }).withState(next),
+    );
+  }
+
   Future<void> removeItem(String id) => commit(removeAsset(state!, id));
   Future<void> saveBoxRecord(InventoryBox box) => commit(saveBox(state!, box));
   Future<void> removeBoxRecord(String id) => commit(removeBox(state!, id));
@@ -72,6 +83,9 @@ class KeepStore extends ChangeNotifier {
 
   Future<void> giveBack(String id) =>
       commit(returnAsset(state!, id, now: timestamp()));
+
+  Future<void> restock(String id) =>
+      commit(restockAsset(state!, id, today(), now: timestamp()));
 
   /// Adds a backup's items and boxes; any repeated ID rejects the whole merge.
   Future<void> merge(InventoryLibrary incoming) => _write(

@@ -85,6 +85,50 @@ void main() {
       expect((await store.read()).toJson(), initial.toJson());
     },
   );
+  test(
+    'schema 1 data on disk reads, takes a pause and is written as schema 2',
+    () async {
+      await store.read();
+      // A database written before pauses: its state row says schema 1.
+      final db = sqlite3.open(path);
+      db.execute('UPDATE state SET revision=1,payload=? WHERE id=1', [
+        jsonEncode({
+          'app': 'handy-habit',
+          'schema': 1,
+          'revision': 1,
+          'settings': {'onboarded': true},
+        }),
+      ]);
+      db.execute('INSERT INTO habits VALUES(?,?)', [
+        'h',
+        jsonEncode(h().toJson()),
+      ]);
+      db.close();
+      final old = await store.read();
+      expect(old.pauses, isEmpty);
+      expect(old.habits.single.id, 'h');
+      final next = putPause(
+        old,
+        Pause(id: 'p', from: '2024-01-02', until: '2024-01-05', reason: 'Huế'),
+        today: '2024-01-02',
+      ).copy({'revision': 2});
+      await store.commit(next, expectedRevision: 1);
+      final again = await NativeHabitStore(path).read();
+      expect(jsonEncode(again.toJson()), jsonEncode(next.toJson()));
+      final raw = sqlite3.open(path);
+      final payload =
+          jsonDecode(
+                raw
+                        .select('SELECT payload FROM state WHERE id=1')
+                        .single['payload']
+                    as String,
+              )
+              as Map;
+      raw.close();
+      expect(payload['schema'], 2);
+      expect((payload['pauses'] as List).single['reason'], 'Huế');
+    },
+  );
   test('corruption and unknown future schema preserve original bytes', () async {
     final corrupt = File(path)..writeAsStringSync('not a SQLite database');
     final before = corrupt.readAsBytesSync();

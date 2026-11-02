@@ -10,14 +10,14 @@ source = Path(sys.argv[1]).read_text(encoding="utf-8-sig")
 if len(source) > 30000 or "PRIVATE KEY" in source:
     raise SystemExit("Only bounded public store configuration is allowed.")
 config = json.loads(source)
-apps = {"docs", "media", "tools", "dev", "keep", "recall", "save", "spend", "habit"}
+apps = {"docs", "media", "tools", "dev", "keep", "recall", "bookmark", "spend", "habit", "trip"}
 if not isinstance(config, dict) or set(config) != apps:
-    raise SystemExit("Configuration must contain exactly the nine app keys.")
+    raise SystemExit("Configuration must contain exactly the eleven app keys.")
 for app, platforms in config.items():
     if not isinstance(platforms, dict) or set(platforms) - {"android", "ios", "windows", "web"}:
         raise SystemExit(f"Invalid platforms for {app}")
     for platform, values in platforms.items():
-        if not isinstance(values, dict) or set(values) - {"productId", "androidPublicKey", "bannerAdUnitId", "adsEnabled"}:
+        if not isinstance(values, dict) or set(values) - {"productId", "androidPublicKey", "bannerAdUnitId", "adsEnabled", "listingUrl"}:
             raise SystemExit(f"Invalid public fields for {app}/{platform}")
         for key in ["productId", "androidPublicKey", "bannerAdUnitId"]:
             value = values.get(key, "")
@@ -31,6 +31,11 @@ for app, platforms in config.items():
             raise SystemExit(f"Microsoft add-on Store ID must be 12 characters for {app}")
         if unit and not re.fullmatch(r"ca-app-pub-\d{16}/\d{10}", unit):
             raise SystemExit(f"Invalid banner ID for {app}/{platform}")
+        listing = values.get("listingUrl", "")
+        if not isinstance(listing, str) or len(listing) > 300 or (
+            listing and not re.fullmatch(r"https://[A-Za-z0-9.-]+(/[^\s\"<>]*)?", listing)
+        ):
+            raise SystemExit(f"listingUrl must be an https address for {app}/{platform}")
         if "adsEnabled" in values and not isinstance(values["adsEnabled"], bool):
             raise SystemExit(f"adsEnabled must be boolean for {app}/{platform}")
 output = Path(__file__).resolve().parent.parent / ".tooling/monetization-defines.json"

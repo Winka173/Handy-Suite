@@ -1,0 +1,14 @@
+﻿{
+    "app":  "trip",
+    "scenario":  "share-write",
+    "device":  "emulator-5570",
+    "physicalDevice":  false,
+    "exitCode":  0,
+    "originalTransportExitCode":  1,
+    "originalTestProcess":  5146,
+    "sourceSha256":  "2b4070e7fdb490921f1c7cbb9435c873d6b7a8e27d4e620e380fff81cf8c2fb9",
+    "logSha256":  "4efb2dfc2dee85cce80d0ad56f28c9699fd5e74f771bd1878e202c1cfafafbed",
+    "existingProcessResultsRetrieved":  true,
+    "finishedAt":  "2026-11-01T20:44:49.7022506Z",
+    "appTestsAlreadyFinishedBeforeReconnect":  true
+}

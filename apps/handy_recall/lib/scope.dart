@@ -1,15 +1,27 @@
 import 'package:handy_files/handy_files.dart';
 import 'package:handy_recall/handy_recall.dart';
 import 'package:handy_ui/kit.dart';
+import 'card_link.dart';
 import 'card/card_editor.dart';
+import 'deck/deck_settings.dart';
 import 'study/recall_store.dart';
+import 'study/speaker.dart';
 
 /// What every Recall screen shares: the store, files, and the actions that
 /// open editors, dialogs and the review.
 class RecallScope {
   final RecallStore store;
   final HandyFiles files;
-  const RecallScope({required this.store, required this.files});
+  final Speaker speaker;
+
+  /// Automatic backups to a folder; null in tests that do not need them.
+  final HandyAutoBackup? autoBackup;
+  const RecallScope({
+    required this.store,
+    required this.files,
+    required this.speaker,
+    this.autoBackup,
+  });
 
   RecallState get state => store.state!;
   DateTime get now => store.clock();
@@ -23,43 +35,66 @@ class RecallScope {
   Future<void> openDeck(BuildContext context, String id) =>
       Navigator.pushNamed(context, '/deck/$id');
 
-  /// Names a new deck or renames one; the dialog stays until it is saved.
+  /// Picks an Anki package and previews it; nothing is added until the
+  /// preview's Import.
+  Future<void> importAnki(BuildContext context) =>
+      Navigator.pushNamed(context, '/import', arguments: true);
+
+  /// Names a new deck or changes one: its name, whether new cards get a
+  /// reverse card, and the read-aloud language of each side. The dialog
+  /// stays until it is saved.
   Future<void> editDeck(BuildContext context, [RecallDeck? deck]) {
-    final name = TextEditingController(text: deck?.name ?? '');
+    final form = DeckForm(deck);
     return showDialog<void>(
       context: context,
       barrierDismissible: false,
       builder: (context) => HandyCommitDialog(
         title: deck == null
             ? tr(context, 'New deck', 'Bộ thẻ mới')
-            : tr(context, 'Rename deck', 'Đổi tên bộ thẻ'),
+            : tr(context, 'Deck settings', 'Cài đặt bộ thẻ'),
         saveLabel: tr(context, 'Save deck', 'Lưu bộ thẻ'),
         saveKey: const Key('deck-save'),
-        onCommit: () => store.saveDeckRecord(
-          RecallDeck(id: deck?.id ?? newId(), name: name.text),
-        ),
+        onCommit: () => store.saveDeckRecord(form.deck(deck?.id ?? newId())),
         fields: (context, busy) => [
-          HandyField(
-            label: tr(context, 'Deck name', 'Tên bộ thẻ'),
-            child: TextField(
-              key: const Key('deck-name'),
-              controller: name,
-              enabled: !busy,
-              autofocus: true,
-              maxLength: 200,
-              decoration: InputDecoration(
-                hintText: tr(
-                  context,
-                  'Spanish verbs, Anatomy…',
-                  'Từ vựng N3, Giải phẫu…',
-                ),
-                counterText: '',
-              ),
+          DeckSettingsFields(form: form, speaker: speaker, busy: busy),
+        ],
+      ),
+    );
+  }
+
+  /// A card handed over by another app: pick its deck (or start one),
+  /// then the editor opens pre-filled.
+  Future<void> addFromLink(BuildContext context, CardLink link) async {
+    const fresh = '';
+    final deckId = await showDialog<String>(
+      context: context,
+      builder: (context) => SimpleDialog(
+        title: Text(tr(context, 'Add to which deck?', 'Thêm vào bộ nào?')),
+        children: [
+          for (final d in state.decks)
+            SimpleDialogOption(
+              key: Key('link-deck-${d.id}'),
+              onPressed: () => Navigator.pop(context, d.id),
+              child: Text(d.name),
             ),
+          SimpleDialogOption(
+            key: const Key('link-deck-new'),
+            onPressed: () => Navigator.pop(context, fresh),
+            child: Text(tr(context, 'A new deck: Saved', 'Bộ mới: Đã lưu')),
           ),
         ],
       ),
     );
+    if (deckId == null || !context.mounted) return;
+    var id = deckId;
+    if (id == fresh) {
+      id = newId();
+      await store.saveDeckRecord(
+        RecallDeck(id: id, name: tr(context, 'Saved', 'Đã lưu')),
+      );
+      if (!context.mounted) return;
+    }
+    await editCard(context, id, null, link);
   }
 
   /// Adds a card to [deckId] or edits [card].
@@ -67,17 +102,30 @@ class RecallScope {
     BuildContext context,
     String deckId, [
     RecallCard? card,
+    CardLink? link,
   ]) => Navigator.push<void>(
     context,
     MaterialPageRoute(
       fullscreenDialog: card == null,
-      builder: (_) => CardEditor(
-        card: card,
-        deckId: deckId,
-        files: files,
-        onCommit: store.saveCardRecord,
-        onDelete: card == null ? null : (c) => deleteCard(c, card),
-      ),
+      builder: (_) {
+        final siblings = card == null
+            ? const <RecallCard>[]
+            : siblingsOf(state, card).where((c) => c.id != card.id).toList();
+        final deck = state.decks.where((d) => d.id == deckId).firstOrNull;
+        return CardEditor(
+          card: card,
+          deckId: deckId,
+          initialFront: link?.front ?? '',
+          initialBack: link?.back ?? '',
+          files: files,
+          reverse: card == null
+              ? deck?.reverse ?? false
+              : card.reversed || siblings.any((c) => c.reversed),
+          siblings: siblings.length,
+          onCommit: store.saveDraft,
+          onDelete: card == null ? null : (c) => deleteCard(c, card),
+        );
+      },
     ),
   );
 
@@ -98,16 +146,24 @@ class RecallScope {
     return run(context, () => store.removeDeckRecord(deck.id));
   }
 
+  /// Deletes a card, and with it every card made from the same note.
   Future<bool> deleteCard(BuildContext context, RecallCard card) async {
+    final others = siblingsOf(state, card).length - 1;
     final ok = await confirmHandy(
       context,
       title: tr(context, 'Delete this card?', 'Xóa thẻ này?'),
-      message: card.front,
+      message: others == 0
+          ? (card.front.isEmpty ? card.back : card.front)
+          : tr(
+              context,
+              '${card.front}\n\nIts $others linked cards (reverse or other clozes) go too.',
+              '${card.front}\n\n$others thẻ liên quan (thẻ đảo chiều hoặc ô điền khuyết khác) cũng bị xóa.',
+            ),
       confirmLabel: tr(context, 'Delete', 'Xóa'),
       destructive: true,
     );
     if (!ok || !context.mounted) return false;
-    return run(context, () => store.removeCardRecord(card.id));
+    return run(context, () => store.removeNoteRecord(card));
   }
 
   Future<void> importCsv(BuildContext context, String deckId) =>

@@ -4,10 +4,12 @@ import 'package:handy_storage/documents.dart';
 import 'package:handy_storage/export_history.dart';
 import 'package:handy_storage/handy_storage.dart';
 import 'package:handy_ui/kit.dart';
+import 'notebook_page.dart';
 import 'package:handy_workflow/handy_workflow.dart';
 import '../password_page.dart';
 import '../qr_page.dart';
 import '../specs.dart';
+import '../subtitles/subtitle_panel.dart';
 import 'catalog.dart';
 import 'free_bench.dart';
 import 'shelf.dart';
@@ -202,6 +204,11 @@ class _BenchPageState extends State<BenchPage> {
         header: header,
       ),
       'password' => PasswordPage(header: header),
+      'subtitles' => SubtitlePanel(
+        files: scope.files,
+        history: scope.exportHistory,
+        header: header,
+      ),
       _ => ToolPanel(
         spec: specById[id]!,
         files: scope.files,
@@ -219,7 +226,11 @@ class _BenchPageState extends State<BenchPage> {
 
   @override
   Widget build(BuildContext context) {
-    final tape = TapeView(tape: scope.tape, onReuse: reuse);
+    final tape = TapeView(
+      tape: scope.tape,
+      onReuse: reuse,
+      onNotebook: () => openNotebook(context, scope),
+    );
     return CallbackShortcuts(
       bindings: {
         const SingleActivator(LogicalKeyboardKey.keyK, control: true): catalog,

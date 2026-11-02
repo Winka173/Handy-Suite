@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:handy_recall/handy_recall.dart';
 import 'package:handy_ui/kit.dart';
 import '../scope.dart';
+import '../study/card_text.dart';
 import '../study/schedule.dart';
 import 'card_face.dart';
 import 'grade_bar.dart';
@@ -23,6 +24,9 @@ class _ReviewPageState extends State<ReviewPage> {
   final focus = FocusNode();
   bool revealed = false, busy = false;
   int done = 0, forgot = 0;
+
+  /// Notes already seen this session: their sibling cards wait their turn.
+  final seen = <String>{};
   String error = '';
   RecallScope get scope => widget.scope;
 
@@ -32,8 +36,31 @@ class _ReviewPageState extends State<ReviewPage> {
     super.dispose();
   }
 
-  List<RecallCard> get queue =>
-      dueCards(scope.state, now: stamp(scope.now), deckId: widget.deckId);
+  List<RecallCard> get queue => reviewOrder(
+    dueCards(scope.state, now: stamp(scope.now), deckId: widget.deckId),
+    seen: seen,
+  );
+
+  @override
+  void deactivate() {
+    scope.speaker.stop();
+    super.deactivate();
+  }
+
+  /// Reads [text] aloud; says so plainly when the device has no voice.
+  Future<void> speak(String text, String language) async {
+    final ok = await scope.speaker.speak(text, language);
+    if (!ok && mounted) {
+      showHandyMessage(
+        context,
+        tr(
+          context,
+          'No voice for $language on this device. Add one in the system text-to-speech settings.',
+          'Máy chưa có giọng đọc $language. Hãy thêm trong cài đặt chuyển văn bản thành giọng nói của hệ thống.',
+        ),
+      );
+    }
+  }
 
   Future<void> grade(RecallCard card, String rating) async {
     if (busy || !revealed) return;
@@ -43,6 +70,8 @@ class _ReviewPageState extends State<ReviewPage> {
     });
     try {
       await scope.store.grade(card, rating);
+      seen.add(noteOf(card));
+      scope.speaker.stop();
       if (!kIsWeb &&
           (defaultTargetPlatform == TargetPlatform.android ||
               defaultTargetPlatform == TargetPlatform.iOS)) {
@@ -70,14 +99,29 @@ class _ReviewPageState extends State<ReviewPage> {
       final deck = scope.state.decks
           .where((d) => d.id == widget.deckId)
           .firstOrNull;
+      final cardDeck = card == null
+          ? null
+          : scope.state.decks.where((d) => d.id == card.deckId).firstOrNull;
       void show() {
         if (card != null && !revealed) setState(() => revealed = true);
+      }
+
+      // R reads the side in front of the reader: the answer once shown.
+      void readAloud() {
+        if (card == null) return;
+        final t = cardText(card, cardDeck, revealed: revealed);
+        if (revealed && t.answer.isNotEmpty && t.answerLanguage.isNotEmpty) {
+          speak(t.answer, t.answerLanguage);
+        } else if (t.questionLanguage.isNotEmpty) {
+          speak(t.spokenQuestion, t.questionLanguage);
+        }
       }
 
       return CallbackShortcuts(
         bindings: {
           const SingleActivator(LogicalKeyboardKey.space): show,
           const SingleActivator(LogicalKeyboardKey.enter): show,
+          const SingleActivator(LogicalKeyboardKey.keyR): readAloud,
           const SingleActivator(LogicalKeyboardKey.escape): () =>
               Navigator.maybePop(context),
           for (final (i, r) in ratings.indexed)
@@ -210,6 +254,8 @@ class _ReviewPageState extends State<ReviewPage> {
                                   onTap: show,
                                   child: CardFace(
                                     card: card,
+                                    deck: cardDeck,
+                                    onSpeak: speak,
                                     revealed: revealed,
                                     minHeight: (box.maxHeight * .62).clamp(
                                       0,

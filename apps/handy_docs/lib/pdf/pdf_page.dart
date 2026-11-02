@@ -2,6 +2,7 @@ import 'dart:typed_data';
 import 'package:handy_core/handy_core.dart';
 import 'package:handy_files/handy_files.dart';
 import 'package:handy_ui/kit.dart';
+import '../ocr/ocr_job.dart';
 import 'make_panel.dart';
 import 'page_viewer.dart';
 import 'pdf_desk.dart';
@@ -79,6 +80,24 @@ class _PdfPageState extends State<PdfPage> {
     }
   }
 
+  /// Draws the page sharp enough to read, then reads it on the device.
+  Future<void> readPage() => run((t) async {
+    final png = await desk.document!.renderPng(
+      desk.page,
+      maxEdge: 2000,
+      cancellation: t,
+    );
+    if (!mounted) return;
+    Navigator.pushNamed(
+      context,
+      '/ocr',
+      arguments: OcrSource(
+        '${desk.inputs[desk.selected].name} · ${tr(context, 'page', 'trang')} ${desk.page + 1}',
+        png,
+      ),
+    );
+  });
+
   Future<void> add() => run((t) async {
     final file = await files.importBytes(
       extensions: ['pdf'],
@@ -138,7 +157,7 @@ class _PdfPageState extends State<PdfPage> {
                 ),
               )
             : null,
-        body: desk.document == null
+        body: desk.inputs.isEmpty
             ? _empty(context)
             : LayoutBuilder(builder: _layout),
       ),
@@ -174,6 +193,7 @@ class _PdfPageState extends State<PdfPage> {
       onTurn: (p) => run((t) => desk.turn(p, t)),
       onSavePage: () =>
           save(desk.preview!, 'pdf-page-${desk.page + 1}.png', 'image/png'),
+      onRead: readPage,
     );
     final panel = MakePanel(
       desk: desk,
@@ -188,7 +208,9 @@ class _PdfPageState extends State<PdfPage> {
       onMake: () =>
           run((t) => desk.make(range.text, rotation, watermark.text, t)),
       onMerge: () => run(desk.merge),
-      onSave: () => save(desk.output!, 'handy-document.pdf', 'application/pdf'),
+      onCompress: (strong) => run((t) => desk.compress(strong, t)),
+      onFill: () => Navigator.pushNamed(context, '/pdf/fill'),
+      onSave: () => save(desk.output!, desk.outputName, 'application/pdf'),
     );
     if (!wide) {
       return ListView(

@@ -37,16 +37,6 @@ Future<void> visit(
   await check('image');
   await tester.binding.handlePopRoute();
   await tester.pumpAndSettle();
-  await go(tester, '/subtitles');
-  await tester.enterText(
-    find.byKey(const Key('subtitle-input')),
-    '1\n00:00:01,000 --> 00:00:02,000\nXin chào\n',
-  );
-  await tester.pump(const Duration(milliseconds: 300));
-  await tester.pumpAndSettle();
-  await check('subtitles');
-  await tester.binding.handlePopRoute();
-  await tester.pumpAndSettle();
   await go(tester, '/settings');
   await check('settings');
 }

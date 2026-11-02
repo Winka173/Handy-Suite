@@ -17,7 +17,7 @@ iOS hoặc coverage mọi màn hình. Một số ảnh dùng debug theme/banner 
 Các ảnh khác và raw logs nằm trong [qa/evidence](qa/evidence).
 Giới hạn đã biết, gồm preview video emulator: [KNOWN_ISSUES](../KNOWN_ISSUES.md).
 
-## Handy Save
+## Handy Bookmark
 
 Ảnh từ emulator HandySave_QA_API35, dữ liệu QA riêng:
 
@@ -32,7 +32,7 @@ Giới hạn đã biết, gồm preview video emulator: [KNOWN_ISSUES](../KNOWN_
 - [Chuyển sang trình xử lý URL Android](qa/evidence/screenshots/save-open-system-handler.png)
 
 Ảnh chuyển URL là màn hình Chrome First Run trên emulator mới; kiểm tra xác nhận
-đã chuyển ra ngoài Handy Save, chưa xác nhận website tải thành công.
+đã chuyển ra ngoài Handy Bookmark, chưa xác nhận website tải thành công.
 
 Test widget có màn hình hẹp 360px và text scale 1.6; editor còn có test 320px,
 text scale 2.0. Đây là các mẫu kiểm tra cụ thể, chưa phải chứng nhận accessibility

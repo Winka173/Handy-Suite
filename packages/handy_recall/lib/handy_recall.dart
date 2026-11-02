@@ -4,11 +4,18 @@ import 'dart:typed_data';
 import 'package:image/image.dart' as image;
 part 'src/image.dart';
 part 'src/csv.dart';
+part 'src/cloze.dart';
+part 'src/notes.dart';
+part 'src/paste.dart';
 
 String _now() => DateTime.fromMillisecondsSinceEpoch(
   DateTime.now().millisecondsSinceEpoch,
   isUtc: true,
 ).toIso8601String();
+
+/// The backup schema this build writes. Version 1 files (no notes, cloze or
+/// reverse cards, plain pictures or read-aloud languages) still load.
+const recallSchemaVersion = 2;
 
 const recallDeckLimit = 500,
     recallCardLimit = 20000,
@@ -62,14 +69,55 @@ double _number(Object? value, double min, double max, {bool integer = false}) {
   return value.toDouble();
 }
 
+bool _flag(Object? value) {
+  if (value == null) return false;
+  if (value is! bool) throw const FormatException('Invalid recall flag');
+  return value;
+}
+
+/// A BCP 47 language tag for reading aloud ("ja-JP", "vi"), or '' for none.
+String _language(Object? value) {
+  if (value == null || value == '') return '';
+  if (value is! String ||
+      value.length > 35 ||
+      !RegExp(r'^[A-Za-z]{2,3}(?:[-_][A-Za-z0-9]{1,8})*$').hasMatch(value))
+    throw const FormatException('Invalid read-aloud language');
+  return value;
+}
+
 class RecallDeck {
   final String id, name;
-  const RecallDeck({required this.id, required this.name});
+
+  /// New cards in this deck also get a reverse card (answer → question).
+  final bool reverse;
+
+  /// Read-aloud language of the question side and of the answer side; ''
+  /// when that side is not read aloud.
+  final String speakFront, speakBack;
+  const RecallDeck({
+    required this.id,
+    required this.name,
+    this.reverse = false,
+    this.speakFront = '',
+    this.speakBack = '',
+  });
   factory RecallDeck.fromJson(Object? value) {
     final r = _record(value);
-    return RecallDeck(id: _id(r['id']), name: _text(r['name'], 200));
+    return RecallDeck(
+      id: _id(r['id']),
+      name: _text(r['name'], 200),
+      reverse: _flag(r['reverse']),
+      speakFront: _language(r['speakFront']),
+      speakBack: _language(r['speakBack']),
+    );
   }
-  Map<String, Object?> toJson() => {'id': id, 'name': name};
+  Map<String, Object?> toJson() => {
+    'id': id,
+    'name': name,
+    if (reverse) 'reverse': true,
+    if (speakFront.isNotEmpty) 'speakFront': speakFront,
+    if (speakBack.isNotEmpty) 'speakBack': speakBack,
+  };
   RecallDeck copyWith(Map<String, Object?> changes) =>
       RecallDeck.fromJson({...toJson(), ...changes});
 }
@@ -79,6 +127,16 @@ class RecallCard {
   final double intervalDays, ease;
   final int reviewCount, lapses;
   final RecallImage? image;
+
+  /// The note this card was made from, shared with its sibling cards (the
+  /// reverse card, the other cloze numbers); '' when the card stands alone.
+  final String note;
+
+  /// Which cloze this card asks (`{{c2::…}}` is 2); 0 for a plain card.
+  final int cloze;
+
+  /// Asks the answer side and expects the question side.
+  final bool reversed;
   const RecallCard._({
     required this.id,
     required this.deckId,
@@ -91,14 +149,17 @@ class RecallCard {
     required this.reviewCount,
     required this.lapses,
     this.image,
+    this.note = '',
+    this.cloze = 0,
+    this.reversed = false,
   });
   factory RecallCard.fromJson(Object? value) {
     final r = _record(value);
     final card = RecallCard._(
       id: _id(r['id']),
       deckId: _id(r['deckId']),
-      front: _text(r['front'], recallTextLimit),
-      back: _text(r['back'], recallTextLimit),
+      front: _text(r['front'], recallTextLimit, required: false),
+      back: _text(r['back'], recallTextLimit, required: false),
       dueAt: _instant(r['dueAt']),
       lastReviewedAt: r['lastReviewedAt'] == ''
           ? ''
@@ -108,7 +169,23 @@ class RecallCard {
       reviewCount: _number(r['reviewCount'], 0, 1000000, integer: true).toInt(),
       lapses: _number(r['lapses'], 0, 1000000, integer: true).toInt(),
       image: r.containsKey('image') ? RecallImage.fromJson(r['image']) : null,
+      note: r['note'] == null || r['note'] == '' ? '' : _id(r['note']),
+      cloze: _number(r['cloze'] ?? 0, 0, 999, integer: true).toInt(),
+      reversed: _flag(r['reversed']),
     );
+    if (card.front.isEmpty && card.image == null)
+      throw const FormatException('A card needs a question or a picture');
+    if (card.back.isEmpty && card.image == null && card.cloze == 0)
+      throw const FormatException('A card needs an answer');
+    if (card.cloze > 0 &&
+        (card.reversed || !clozeNumbers(card.front).contains(card.cloze)))
+      throw const FormatException('Cloze card does not match its text');
+    if (card.image != null &&
+        card.image!.masks.isNotEmpty &&
+        (card.reversed || card.image!.side != 'front'))
+      throw const FormatException(
+        'Covered picture parts belong on the question side',
+      );
     if (card.lapses > card.reviewCount ||
         (card.reviewCount == 0 && card.lastReviewedAt.isNotEmpty) ||
         (card.reviewCount > 0 && card.lastReviewedAt.isEmpty))
@@ -130,10 +207,26 @@ class RecallCard {
     'ease': ease,
     'lastReviewedAt': lastReviewedAt,
     if (image != null) 'image': image!.toJson(),
+    if (note.isNotEmpty) 'note': note,
+    if (cloze > 0) 'cloze': cloze,
+    if (reversed) 'reversed': true,
   };
+
+  /// The side asked and the side expected, as this card shows them. A cloze
+  /// card asks its text with one cloze blanked (see [clozeSpans]).
+  String get question => reversed ? back : front;
+  String get answer => reversed ? front : back;
+
+  /// The picture shows with the question (with its covers), not only with
+  /// the answer.
+  bool get imageOnQuestion =>
+      image != null && (image!.side == 'front') != reversed;
+
   RecallCard copyWith(Map<String, Object?> changes) {
     final value = {...toJson(), ...changes};
-    if (value['image'] == null) value.remove('image');
+    for (final k in ['image', 'note', 'cloze', 'reversed']) {
+      if (value[k] == null) value.remove(k);
+    }
     return RecallCard.fromJson(value);
   }
 }
@@ -147,7 +240,7 @@ class RecallState {
   }) : decks = List.unmodifiable(decks),
        cards = List.unmodifiable(cards);
   Map<String, Object?> toJson() => {
-    'version': 1,
+    'version': recallSchemaVersion,
     'decks': decks.map((d) => d.toJson()).toList(),
     'cards': cards.map((c) => c.toJson()).toList(),
   };
@@ -156,7 +249,7 @@ class RecallState {
 RecallState emptyRecallState() => RecallState();
 RecallState validateRecallState(Object? value) {
   final r = _record(value), d = r['decks'], c = r['cards'];
-  if (r['version'] != 1 ||
+  if ((r['version'] != 1 && r['version'] != recallSchemaVersion) ||
       d is! List ||
       c is! List ||
       d.length > recallDeckLimit ||
@@ -182,6 +275,9 @@ RecallCard createCard({
   required String back,
   RecallImage? image,
   String? now,
+  String note = '',
+  int cloze = 0,
+  bool reversed = false,
 }) => RecallCard.fromJson({
   'id': id,
   'deckId': deckId,
@@ -194,10 +290,13 @@ RecallCard createCard({
   'ease': 2.5,
   'lastReviewedAt': '',
   if (image != null) 'image': image.toJson(),
+  if (note.isNotEmpty) 'note': note,
+  if (cloze > 0) 'cloze': cloze,
+  if (reversed) 'reversed': true,
 });
 RecallState saveDeck(RecallState state, RecallDeck deck) =>
     validateRecallState({
-      'version': 1,
+      'version': recallSchemaVersion,
       'decks': state.decks.any((d) => d.id == deck.id)
           ? state.decks
                 .map((d) => d.id == deck.id ? deck.toJson() : d.toJson())
@@ -213,7 +312,7 @@ RecallState removeDeck(RecallState state, String id) => validateRecallState(
 );
 RecallState saveCard(RecallState state, RecallCard card) =>
     validateRecallState({
-      'version': 1,
+      'version': recallSchemaVersion,
       'decks': state.decks.map((d) => d.toJson()).toList(),
       'cards': state.cards.any((c) => c.id == card.id)
           ? state.cards

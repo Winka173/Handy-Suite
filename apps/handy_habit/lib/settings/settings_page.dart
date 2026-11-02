@@ -1,5 +1,6 @@
 import 'package:handy_habit_engine/handy_habit_engine.dart';
 import 'package:handy_ui/kit.dart';
+import '../pauses/pauses.dart';
 import '../scope.dart';
 import '../ui/form.dart';
 import '../ui/words.dart';
@@ -112,9 +113,9 @@ class HabitSettingsPage extends StatelessWidget {
           'Đến',
           kind: FieldKind.time,
           helpEn:
-              'A reminder that falls inside moves to the end. The same time twice turns this off.',
+              'A reminder that falls inside moves to the end; a paused routine is not shown in notifications. The same time twice turns this off.',
           helpVi:
-              'Nhắc rơi vào khoảng này dời tới lúc kết thúc. Hai giờ giống nhau là tắt.',
+              'Nhắc rơi vào khoảng này dời tới lúc kết thúc; quy trình đang dở không hiện trong thông báo. Hai giờ giống nhau là tắt.',
         ),
       ],
       initial: {
@@ -322,6 +323,39 @@ class HabitSettingsPage extends StatelessWidget {
                       await _set(context, {'notifications': allowed});
                   },
                 ),
+              if (scope.reminders.supported)
+                SwitchListTile.adaptive(
+                  key: const Key('set-run-notice'),
+                  title: Text(
+                    tr(
+                      context,
+                      'Show a paused routine in notifications',
+                      'Báo quy trình đang dở trong thông báo',
+                    ),
+                  ),
+                  subtitle: Text(
+                    tr(
+                      context,
+                      'When you leave a run, it pauses; the notice says where you stopped and opens it again.',
+                      'Rời màn chạy thì phiên tạm dừng; thông báo nói bạn dừng ở đâu và mở lại phiên.',
+                    ),
+                  ),
+                  value: runNoticeOn(s),
+                  onChanged: (on) async {
+                    final allowed = on && await scope.reminders.request();
+                    if (on && !allowed && context.mounted)
+                      showHandyMessage(
+                        context,
+                        tr(
+                          context,
+                          'Notifications are off for Handy Habit in the system settings; routines still run.',
+                          'Thông báo của Handy Habit đang tắt trong cài đặt hệ thống; quy trình vẫn chạy bình thường.',
+                        ),
+                      );
+                    if (context.mounted)
+                      await _set(context, {'runNotice': allowed});
+                  },
+                ),
               HandyTile(
                 key: const Key('set-quiet'),
                 title: tr(context, 'Quiet hours', 'Giờ yên lặng'),
@@ -406,6 +440,25 @@ class HabitSettingsPage extends StatelessWidget {
                 ),
             ],
           ),
+          HandySettingsSection(
+            title: tr(context, 'Pauses', 'Kỳ nghỉ'),
+            description: tr(
+              context,
+              'Days off for every habit or a few. They are not missed, keep your runs and get no reminders.',
+              'Những ngày nghỉ cho mọi thói quen hoặc vài thói quen. Không tính là lỡ, không đứt chuỗi, không nhắc.',
+            ),
+            children: [
+              PauseList(scope: scope),
+              HandyTile(
+                key: const Key('pause-add'),
+                icon: Icons.add,
+                title: tr(context, 'Add a pause', 'Thêm kỳ nghỉ'),
+                onTap: () => openPauseEditor(context, scope),
+              ),
+            ],
+          ),
+          if (scope.autoBackup != null)
+            HandyAutoBackupSection(backup: scope.autoBackup!),
           HandySettingsSection(
             title: tr(context, 'Your data', 'Dữ liệu của bạn'),
             description: tr(

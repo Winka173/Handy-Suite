@@ -4,6 +4,7 @@ import 'package:handy_files/handy_files.dart';
 import 'package:handy_media_engine/handy_media_engine.dart';
 import 'package:handy_ui/kit.dart';
 import '../guide/ids.dart';
+import '../guide/text_reader.dart';
 import 'guide_card.dart';
 import 'media_store.dart';
 import 'open_guide.dart';
@@ -14,11 +15,13 @@ class StudioPage extends StatefulWidget {
   final MediaStore store;
   final HandyFiles files;
   final ScanCamera? camera;
+  final TextReader? reader;
   const StudioPage({
     super.key,
     required this.store,
     required this.files,
     this.camera,
+    this.reader,
   });
   @override
   State<StudioPage> createState() => _StudioPageState();
@@ -53,6 +56,7 @@ class _StudioPageState extends State<StudioPage> {
       store: store,
       files: widget.files,
       camera: widget.camera,
+      reader: widget.reader,
       guide: guide,
     ),
   );
@@ -210,16 +214,20 @@ class _StudioPageState extends State<StudioPage> {
                         onTap: () => Navigator.pushNamed(context, '/image'),
                       ),
                       HandyTile(
-                        key: const Key('studio-subtitles'),
-                        icon: Icons.closed_caption_outlined,
-                        title: tr(context, 'Subtitles', 'Phụ đề'),
+                        key: const Key('studio-stitch'),
+                        icon: Icons.view_day_outlined,
+                        title: tr(
+                          context,
+                          'Join screenshots',
+                          'Nối ảnh chụp màn hình',
+                        ),
                         subtitle: tr(
                           context,
-                          'Shift the timing, SRT and WebVTT',
-                          'Dời thời gian, SRT và WebVTT',
+                          'Several screenshots of one page into one long picture',
+                          'Nhiều ảnh chụp của một trang thành một ảnh dài',
                         ),
                         navigates: true,
-                        onTap: () => Navigator.pushNamed(context, '/subtitles'),
+                        onTap: () => Navigator.pushNamed(context, '/stitch'),
                       ),
                       if (nativeCaptureAvailable)
                         HandyTile(
@@ -230,11 +238,17 @@ class _StudioPageState extends State<StudioPage> {
                             'Capture the screen',
                             'Chụp màn hình',
                           ),
-                          subtitle: tr(
-                            context,
-                            'Screenshots and recordings to mark up',
-                            'Ảnh chụp và video để chú thích',
-                          ),
+                          subtitle: nativeVideoAvailable
+                              ? tr(
+                                  context,
+                                  'Screenshots and recordings to mark up',
+                                  'Ảnh chụp và video để chú thích',
+                                )
+                              : tr(
+                                  context,
+                                  'An area or the whole screen, to mark up',
+                                  'Một vùng hoặc cả màn hình, để chú thích',
+                                ),
                           navigates: true,
                           onTap: () => Navigator.pushNamed(context, '/capture'),
                         ),
