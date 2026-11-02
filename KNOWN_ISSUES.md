@@ -149,3 +149,5 @@ có thể làm lệch khớp); Tools sổ tính căn kết quả theo dòng, m�
 hàng sẽ làm lệch các kết quả bên dưới; Docs chỉ tìm trong Tệp đã giữ (không tìm
 trong bản quét hay PDF đang mở); Keep chỉ đoán ngày sắp hết khi có ít nhất hai
 lần mua cách nhau tối đa 180 ngày; Dev chỉ so với phản hồi trước trong cùng phiên.
+
+Handy Boards remains in development. [Known limitations](docs/HANDY_BOARDS_KNOWN_LIMITATIONS.md) cover native/provider/store QA, browser metadata residency, retained snapshot storage and platform verification. Resource calendars, Study reports, indexed paging, staged streaming backup and widget/shortcut source are implemented. iOS share extension source exists but is not built or provisioned on Mac. Host or build passes do not certify the full master prompt.

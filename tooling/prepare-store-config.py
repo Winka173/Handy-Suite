@@ -10,9 +10,9 @@ source = Path(sys.argv[1]).read_text(encoding="utf-8-sig")
 if len(source) > 30000 or "PRIVATE KEY" in source:
     raise SystemExit("Only bounded public store configuration is allowed.")
 config = json.loads(source)
-apps = {"docs", "media", "tools", "dev", "keep", "recall", "bookmark", "spend", "habit", "trip"}
+apps = {"docs", "media", "tools", "dev", "keep", "recall", "bookmark", "spend", "habit", "trip", "boards"}
 if not isinstance(config, dict) or set(config) != apps:
-    raise SystemExit("Configuration must contain exactly the eleven app keys.")
+    raise SystemExit("Configuration must contain exactly the twelve app keys.")
 for app, platforms in config.items():
     if not isinstance(platforms, dict) or set(platforms) - {"android", "ios", "windows", "web"}:
         raise SystemExit(f"Invalid platforms for {app}")

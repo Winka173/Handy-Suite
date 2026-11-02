@@ -1,0 +1,10 @@
+﻿{
+    "startedAt":  "2026-11-02T14:33:47.6912877Z",
+    "finishedAt":  "2026-11-02T14:34:31.7175562Z",
+    "sourceSha256":  "1c6648d041b381b5d428c07b1016cdea1552d7a7b5b62370463d47c8ee58d817",
+    "sourceUnchanged":  true,
+    "exitCode":  0,
+    "metricsFresh":  true,
+    "metrics":  "boards-indexed-performance.json",
+    "physicalDevice":  false
+}

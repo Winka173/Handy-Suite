@@ -1,6 +1,6 @@
 # Handy Suite
 
-Monorepo Flutter 3.44.9 / Dart 3.12.2 gồm mười ứng dụng local-first:
+Monorepo Flutter 3.44.9 / Dart 3.12.2 gồm mười một ứng dụng local-first:
 
 | App            | Source                | Chức năng                                                                     |
 | -------------- | --------------------- | ----------------------------------------------------------------------------- |
@@ -14,6 +14,7 @@ Monorepo Flutter 3.44.9 / Dart 3.12.2 gồm mười ứng dụng local-first:
 | Handy Spend    | `apps/handy_spend`    | Sổ thu/chi, ngân sách, Safe to Spend, forecast, Financial Sandbox             |
 | Handy Habit    | `apps/handy_habit`    | Thói quen, streak, quy trình nhiều bước, Routine Lite, nhắc và backup         |
 | Handy Trip     | `apps/handy_trip`     | Lịch trình offline, địa điểm, check-in xác nhận, nhật ký, hành lý và chi tiêu |
+| Handy Boards   | `apps/handy_boards`   | Category-first tasks, Kanban, planner, optional Study, local backup           |
 
 Không backend hoặc cloud AI. Mô hình Free + Ads + Pro Lifetime.
 
@@ -49,3 +50,5 @@ Node 22.13+ chỉ phục vụ QA RE2/PWA và format tài liệu: `npm ci --ignor
 
 Các ứng dụng đang được phát triển. Kiểm thử hiện có không thay thế kiểm thử thiết
 bị thật, iOS, browser runtime, giao dịch store hoặc chứng nhận phát hành.
+
+Handy Boards is in progress: [feature matrix](docs/HANDY_BOARDS_FEATURE_MATRIX.md).

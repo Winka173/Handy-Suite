@@ -49,6 +49,7 @@ jobs:
             handy_spend,
             handy_habit,
             handy_trip,
+            handy_boards,
           ]
         platform:
           - {

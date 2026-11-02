@@ -1,6 +1,6 @@
 # Phát triển Handy Suite
 
-Flutter 3.44.9 / Dart 3.12.2. Mười app trong `apps/handy_*`, 21 package dùng chung
+Flutter 3.44.9 / Dart 3.12.2. Mười một app trong `apps/handy_*`, 24 package dùng chung
 trong `packages/handy_*`; khai báo workspace tại `pubspec.yaml`.
 
 - Engines xử lý dữ liệu thuần Dart; UI nằm trong app/shared UI package.

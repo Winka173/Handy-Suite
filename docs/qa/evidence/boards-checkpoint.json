@@ -1,0 +1,356 @@
+{
+  "generatedAt": "2026-11-02T14:40:22.976077+00:00",
+  "sourceSha256": "1c6648d041b381b5d428c07b1016cdea1552d7a7b5b62370463d47c8ee58d817",
+  "allRecordedChecksCurrent": true,
+  "uiWebChecksCurrent": true,
+  "checks": {
+    "host": {
+      "evidence": "boards-host-result.json",
+      "current": true,
+      "record": {
+        "startedAt": "2026-11-02T14:32:31.9470425Z",
+        "finishedAt": "2026-11-02T14:36:03.3943532Z",
+        "sourceSha256": "1c6648d041b381b5d428c07b1016cdea1552d7a7b5b62370463d47c8ee58d817",
+        "sourceUnchanged": true,
+        "passed": true,
+        "checks": [
+          {
+            "package": "packages/handy_boards_engine",
+            "formatExitCode": 0,
+            "analyzeExitCode": 0,
+            "testExitCode": 0
+          },
+          {
+            "package": "apps/handy_boards",
+            "formatExitCode": 0,
+            "analyzeExitCode": 0,
+            "testExitCode": 0
+          }
+        ]
+      }
+    },
+    "browserIndexedDb": {
+      "evidence": "boards-browser-result.json",
+      "current": true,
+      "record": {
+        "startedAt": "2026-11-02T14:32:31.9312150Z",
+        "finishedAt": "2026-11-02T14:32:58.2807154Z",
+        "sourceSha256": "1c6648d041b381b5d428c07b1016cdea1552d7a7b5b62370463d47c8ee58d817",
+        "sourceUnchanged": true,
+        "exitCode": 0,
+        "browser": true,
+        "physicalDevice": false,
+        "scope": "Real IndexedDB: Unicode paging, async ZIP round trip/cancel, immutable assets, Undo, competing writers. Pure Dart browser runner avoids Flutter Windows CanvasKit test-server routing failure."
+      }
+    },
+    "indexedPerformance": {
+      "evidence": "boards-performance-result.json",
+      "current": true,
+      "record": {
+        "startedAt": "2026-11-02T14:33:47.6912877Z",
+        "finishedAt": "2026-11-02T14:34:31.7175562Z",
+        "sourceSha256": "1c6648d041b381b5d428c07b1016cdea1552d7a7b5b62370463d47c8ee58d817",
+        "sourceUnchanged": true,
+        "exitCode": 0,
+        "metricsFresh": true,
+        "metrics": "boards-indexed-performance.json",
+        "physicalDevice": false
+      }
+    },
+    "nativeWrite": {
+      "evidence": "boards-native-write-result.json",
+      "current": true,
+      "record": {
+        "app": "boards",
+        "phase": "write",
+        "exitCode": 0,
+        "originalTransportExitCode": 1,
+        "sourceSha256": "1c6648d041b381b5d428c07b1016cdea1552d7a7b5b62370463d47c8ee58d817",
+        "sourceUnchanged": true,
+        "device": "emulator-5570",
+        "avd": "HandyTrip_QA_API35",
+        "physicalDevice": false
+      }
+    },
+    "nativeRead": {
+      "evidence": "boards-native-read-result.json",
+      "current": true,
+      "record": {
+        "app": "boards",
+        "phase": "read",
+        "exitCode": 0,
+        "originalTransportExitCode": 1,
+        "sourceSha256": "1c6648d041b381b5d428c07b1016cdea1552d7a7b5b62370463d47c8ee58d817",
+        "sourceUnchanged": true,
+        "device": "emulator-5570",
+        "avd": "HandyTrip_QA_API35",
+        "physicalDevice": false
+      }
+    },
+    "aab": {
+      "evidence": "boards-aab-result.json",
+      "current": true,
+      "record": {
+        "app": "boards",
+        "exitCode": 0,
+        "sourceSha256": "1c6648d041b381b5d428c07b1016cdea1552d7a7b5b62370463d47c8ee58d817",
+        "sourceUnchanged": true,
+        "artifact": "apps/handy_boards/build/app/outputs/bundle/release/app-release.aab",
+        "artifactSha256": "77494027e08509559e7f4beca8ec6bd6eff052367ee65c4320bbb94d66eeee84",
+        "signed": false,
+        "storeReady": false
+      }
+    },
+    "msix": {
+      "evidence": "boards-msix-result.json",
+      "current": true,
+      "record": {
+        "app": "boards",
+        "artifact": "C:\\Users\\Winka\\Projects\\Handy-Suite\\artifacts\\flutter\\handy-boards-20261102213726-unsigned.msix",
+        "sha256": "6183a50fe3439b8a31636d70ec22884ac2983c10b3acc5028e97885276a7461c",
+        "sourceSha256": "1c6648d041b381b5d428c07b1016cdea1552d7a7b5b62370463d47c8ee58d817",
+        "makeAppxValidated": true,
+        "signed": false,
+        "installed": false,
+        "storeApproved": false
+      }
+    },
+    "screenshots": {
+      "evidence": "boards-shots-result.json",
+      "current": true,
+      "record": {
+        "startedAt": "2026-11-02T14:36:03.7714704Z",
+        "finishedAt": "2026-11-02T14:36:42.0328982Z",
+        "sourceSha256": "1c6648d041b381b5d428c07b1016cdea1552d7a7b5b62370463d47c8ee58d817",
+        "sourceUnchanged": true,
+        "exitCode": 0,
+        "imageCount": 103,
+        "allImagesFresh": true,
+        "physicalDevice": false,
+        "browser": false
+      }
+    },
+    "pwaWorkerVm": {
+      "evidence": "boards-pwa-result.json",
+      "current": true,
+      "record": {
+        "app": "boards",
+        "exitCode": 0,
+        "sourceSha256": "1c6648d041b381b5d428c07b1016cdea1552d7a7b5b62370463d47c8ee58d817",
+        "sourceUnchanged": true,
+        "testPattern": "handy_boards worker",
+        "realBrowser": false
+      }
+    },
+    "apk": {
+      "evidence": "builds-apk.json",
+      "record": {
+        "app": "boards",
+        "target": "apk",
+        "exitCode": 0,
+        "sourceSha256": "1c6648d041b381b5d428c07b1016cdea1552d7a7b5b62370463d47c8ee58d817",
+        "sourceUnchanged": true,
+        "artifact": "artifacts/flutter/handy_boards/android/handy-boards-pilot-debug.apk",
+        "artifactSha256": "66316ad0f67b5d223fedb0d39e53c5680309e7ca982435d3480d623662fa5181",
+        "startedAt": "2026-11-02T14:39:38.7147262Z",
+        "elapsedSeconds": 34.29
+      },
+      "current": true
+    },
+    "windows": {
+      "evidence": "builds-windows.json",
+      "record": {
+        "app": "boards",
+        "target": "windows",
+        "exitCode": 0,
+        "sourceSha256": "1c6648d041b381b5d428c07b1016cdea1552d7a7b5b62370463d47c8ee58d817",
+        "sourceUnchanged": true,
+        "artifact": null,
+        "artifactSha256": null,
+        "startedAt": "2026-11-02T14:36:08.2312255Z",
+        "elapsedSeconds": 78.02
+      },
+      "current": true
+    },
+    "web": {
+      "evidence": "builds-web.json",
+      "record": {
+        "app": "boards",
+        "target": "web",
+        "exitCode": 0,
+        "sourceSha256": "1c6648d041b381b5d428c07b1016cdea1552d7a7b5b62370463d47c8ee58d817",
+        "sourceUnchanged": true,
+        "artifact": null,
+        "artifactSha256": null,
+        "startedAt": "2026-11-02T14:33:27.9596314Z",
+        "elapsedSeconds": 115.85
+      },
+      "current": true
+    },
+    "independentExports": {
+      "current": true,
+      "evidence": "boards-independent-exports.json",
+      "files": {
+        "boards-study.pdf": "4994c0105cc2eba3bb3e9a460749b040f8d676a3271dfe9fb65b9cf51b217e9d",
+        "boards-summary.pdf": "ca71889b25b0a995cfab7fec03dca16988954d5197f7fc50b540a933bd68fa89",
+        "boards-timeline.pdf": "54f349ac9b9e1d204a607368f613294ca2da2024ef368c8f925518e6463b7395",
+        "boards-tasks.xlsx": "1b856a26625b41a8d39398560e71f0bc6adc6df28b1b8755fd990b46612d9291"
+      }
+    },
+    "nativeRestart": {
+      "current": true,
+      "reports": {
+        "write": {
+          "phase": "write",
+          "pid": 14894,
+          "physicalDevice": false,
+          "canonicalTasks": 2,
+          "topLevelTasks": 1,
+          "integrity": "ok",
+          "database": "QA-only boards-qa.sqlite",
+          "screenshotNames": [
+            "boards-native-write-categories",
+            "boards-native-write-today",
+            "boards-native-write-calendar"
+          ],
+          "exportFiles": []
+        },
+        "read": {
+          "phase": "read",
+          "pid": 15146,
+          "physicalDevice": false,
+          "canonicalTasks": 2,
+          "topLevelTasks": 1,
+          "integrity": "ok",
+          "database": "QA-only boards-qa.sqlite",
+          "screenshotNames": [
+            "boards-native-read-categories",
+            "boards-native-read-today",
+            "boards-native-read-calendar"
+          ],
+          "exportFiles": []
+        }
+      }
+    }
+  },
+  "widgetScreenshots": {
+    "review-shots/boards/dark-calendar.png": "068bd86e690cc163f104f690d95d2439053192af6816a459eaf39e20ff68936c",
+    "review-shots/boards/dark-categories.png": "7b86476ba71f753676c83dd839e80e8e40818f0245f79efff8a30e92fd39a0ee",
+    "review-shots/boards/dark-insights.png": "68b1291ad36a93834f6eab9c431f3b920bb105c55c0c15b75c3c0772ce7ea71b",
+    "review-shots/boards/dark-kanban.png": "f6cdae0e16ef92d42eadbe520d69b7fc7aab981110ca460ba3c53fd8a481b0df",
+    "review-shots/boards/dark-list.png": "3620a89311f2ac66555e8bab69a270f00042abdfc95be04a44d9fba58b7af504",
+    "review-shots/boards/dark-table.png": "b914d92c4917b2012285d03e09b804652e2351f879633de736dd71c44064491c",
+    "review-shots/boards/dark-today.png": "05b3633f82087789ee59b141fb4a1a9d1ae7de2ed13f909e4b7bbbf7c87b2067",
+    "review-shots/boards/desktop-advanced-fields.png": "d6c7fd451984edd2a3594384a0911c714c851ce01cf3503370195cd068c5ed4d",
+    "review-shots/boards/desktop-advanced-priority.png": "ec1d6c299b8e4d7561e8d33e2bbbdd4a7a0be41f3edcf4c6ef787fe135f6b9dc",
+    "review-shots/boards/desktop-advanced-rules.png": "d92fb32e6ad5c4ccd8e2087fbd77a61589d8f48dc6e3d0160ac4679d3f139023",
+    "review-shots/boards/desktop-advanced-study-report.png": "0255fbb12daa7f416596bcb125d94427deb48f240cf1d67434a874ba2c9d4b70",
+    "review-shots/boards/desktop-advanced-views.png": "9f8908b4e488095185f64e3f82f58b110595b812295cbd4a091c9eebb91f54be",
+    "review-shots/boards/desktop-advanced-workload-week.png": "558798b7736c9f78ea07afd40ead64773baf6771ebf5b6273a8fbfe3a660051d",
+    "review-shots/boards/desktop-advanced-workload.png": "6317dcb492f7a843de8acc9f544ffb7e55d1aed8bbb6357996c261a6a377f98e",
+    "review-shots/boards/desktop-calendar-week.png": "00e437b2d8ac8b84516fb7290e0298df7876c396668c62083a47feb455f61e38",
+    "review-shots/boards/desktop-calendar.png": "ffc956c8108007a467f8be3f76c9e947e48e00eca0f9d1a781b80015851323e4",
+    "review-shots/boards/desktop-categories.png": "b079e07796f930b9d2df13f718c4b767623aad158674e1577fc81062a3f3b377",
+    "review-shots/boards/desktop-exam-editor.png": "74b8fe5875b53774c953f1da8702d4a0a3af25580cb09639a1dd5aea698137ff",
+    "review-shots/boards/desktop-export.png": "d9714b201f686c240fa7ea7ef9672f6a6064fb5e3119cab5c50705c39600ac5b",
+    "review-shots/boards/desktop-focus.png": "799e7b110308601622ba9905855f0e54da655f08549a81f7c1cb675ca1187bd1",
+    "review-shots/boards/desktop-insights.png": "28be4681f81a488cb06675c9851608726432522480902c02c25f74ab9af72524",
+    "review-shots/boards/desktop-kanban.png": "d614008af37274fb3d172e89072b782ef125a02aa431929892647942ada1453d",
+    "review-shots/boards/desktop-list.png": "10c04542ba5695408ee7c50079caed5d7ce8342b6a25183d1e94610fe1e532f4",
+    "review-shots/boards/desktop-rule-editor.png": "6a4dd9cc5fdfda79f9ab7e07169af3c1010d0e98cfd67c4dc1d400bb78f77c03",
+    "review-shots/boards/desktop-saved-view-editor.png": "a2de357825c7172784d6f76dfabd8bb2e5056a4e637df3b07954a2e04fbea867",
+    "review-shots/boards/desktop-study.png": "e22b850e6bf2533dc249397d90d1c8b1fc0fe7f7891663a45f0b2e460eeb63cd",
+    "review-shots/boards/desktop-table.png": "bc17832d1e7612a5bd11b02a43cb132f285e8f2707976d9afe7fb9ef2765bedf",
+    "review-shots/boards/desktop-task-detail.png": "e10cdb576a454c41ca5944e55c4b2607a1967ff74da85b45cf0aa09af5c794a0",
+    "review-shots/boards/desktop-task-editor.png": "4573f060169dd593e040054cdf48e98873ffba8991f60bf942c824fe6c2e3b0e",
+    "review-shots/boards/desktop-timeline.png": "de5445287f80d5c6576f16928af49e046dab935da98ed12eb8617eab6f200166",
+    "review-shots/boards/desktop-today.png": "4dacfd3f5d49236182f4041bcf82f07415c47df6da1633d26cc5a1de480d86ae",
+    "review-shots/boards/desktop-working-calendar.png": "178e4a2f85173f6bfb14bd6e59cf754c63da4d3bfcc8bc375e3f54fb313b26f4",
+    "review-shots/boards/large-phone-calendar.png": "0fc20c54b4115d49ba7d7f30f4be1cd59dde10f16a485a93fec92536e69cc90a",
+    "review-shots/boards/large-phone-categories.png": "8ec2aad4571f127e399f37c1369859b65ddd29ba4e3c523c4bc978fe14960020",
+    "review-shots/boards/large-phone-insights.png": "140dc6cd1bd7ca7d0c689e506dd1f41deda4f94e57a45e9d82ee4526bb187cf6",
+    "review-shots/boards/large-phone-kanban.png": "adc2189a67d80e97219285b9eb3fb030c59bf3ac413e9af7366538d97b679d10",
+    "review-shots/boards/large-phone-list.png": "4df03801a4af054426fcbe620d65259f2e83ad4ff306ea1f114e783c66a23259",
+    "review-shots/boards/large-phone-table.png": "48f2f52bae7e5e05191e8b5f12e726c011f22e5b03aa3a29536b605721740a42",
+    "review-shots/boards/large-phone-today.png": "a61fc06d9bf5f58fe2cf6d6f129dcbea746fe6e25c9e214cbb3343cbed136bd5",
+    "review-shots/boards/large-text-advanced-fields.png": "ddbf7e39223dbf2e1186d090d4f21a87140a20017bbd159fc71ca770b251289e",
+    "review-shots/boards/large-text-advanced-priority.png": "be9bd5daec9a7af85cd74dc13b6b3a246e9c7f3bd2b72525ebb65662908b2cd8",
+    "review-shots/boards/large-text-advanced-rules.png": "e5f12b87c74520429376ed0158c27d9a6cd6b93906a1be6307b181b508b45bc9",
+    "review-shots/boards/large-text-advanced-study-report.png": "a70f261a0945ecc7ad8f69bd6030803f26e37d974397c329fbdec19c921a123c",
+    "review-shots/boards/large-text-advanced-views.png": "b8bd6b2476f438656a3649ee2f731f738b2bde5a05f8ecfb11f16695c804248b",
+    "review-shots/boards/large-text-advanced-workload-week.png": "04e2b8e997212e068c0b0d1ad61a7fc4398992efa66dee284a6ba5af64d7a121",
+    "review-shots/boards/large-text-advanced-workload.png": "e99e371dfe900376fe29b6ecc0ea5c39ead705772b965fb1c6b5089966fd4cff",
+    "review-shots/boards/large-text-calendar-week.png": "5a83504ee9d3443c70062651141e8ce453b83dd46d8cca0e1208d3f4ac8146e2",
+    "review-shots/boards/large-text-calendar.png": "7fe7cb6afc59aead25e50a05a418bda08a82c5d500f87f199a8d0d12c3a3e72b",
+    "review-shots/boards/large-text-categories.png": "8f20f4b6bf889ff60fac773a97894f025bff95fe293a81c27cbf0265374dc783",
+    "review-shots/boards/large-text-exam-editor.png": "408ebe7fd767faf72bbee5b2e92b78f3d105f4a9402c3bed54f02d39c4bd8182",
+    "review-shots/boards/large-text-export.png": "739cae31a75b5cae4e6825f45c8e79656ecdc9c0099b74350490386664d68430",
+    "review-shots/boards/large-text-focus.png": "d8c2990e5afc19fd45471ac32ad57597f3a543c781043c72ccb87105beb217f1",
+    "review-shots/boards/large-text-insights.png": "760b0729e166359377801e8be7c88d4e05a591b3a961d0b56c49b054f818713f",
+    "review-shots/boards/large-text-kanban.png": "0aa1c35fbf605ab59a39941ddf656203f8d6618b34486217dcbc1a42bb44cf94",
+    "review-shots/boards/large-text-list.png": "ec42b16ab685b11ad1acc24850758dbd77027ba7430f2c4d98318385dc321fee",
+    "review-shots/boards/large-text-rule-editor.png": "abaac450ab619514ed269f38de1e9339bd68b8ff5b720cf46e0d07062c603cf5",
+    "review-shots/boards/large-text-saved-view-editor.png": "10400d62e753ad5b64186b455e417f571be31c943ee88710565868f40d3a154f",
+    "review-shots/boards/large-text-study.png": "290423e2bbc67da88670c70968d4f29817d2e06bf7470108552e2437005b8623",
+    "review-shots/boards/large-text-table.png": "2f0dfce423d0524a04b1536b4ae8388943187b529030d3845b6d71989bf5a755",
+    "review-shots/boards/large-text-task-detail.png": "4bdcd3f642b284bb690921adea47a558dc046c47020bf8d0790ca031d5eb5c9c",
+    "review-shots/boards/large-text-task-editor.png": "06008cd518cd2581d8d360160611eeb291345100141d76f132cd836cb06ee8e5",
+    "review-shots/boards/large-text-timeline.png": "8405cedd422de0bfe6c471c8cb87c7cf3a460774d2e692ec4a356c78ce3ce360",
+    "review-shots/boards/large-text-today.png": "c68812e39586214f13d6b075c4a00dbcf1f31844d3c50c15bb2afba0eda51fa8",
+    "review-shots/boards/large-text-working-calendar.png": "81ecf96a3c830195dae5678f4fd8f719285ee11890169d968ba92b79748e9116",
+    "review-shots/boards/narrow-vi-calendar.png": "e801f83077f0d09639f5ab2284257e9c740ee011aa76be9a10c623efa937d51e",
+    "review-shots/boards/narrow-vi-categories.png": "0661a00910bc0ef1cd69dbe3d7ab466146fb7863847c9ed89e24298aae2ba692",
+    "review-shots/boards/narrow-vi-insights.png": "a4de33165dd104ec15fec0e2e0ebe86a476198656bd17166d400e05eaf879e48",
+    "review-shots/boards/narrow-vi-kanban.png": "ecf238a56b0512db0c6c226f387f4cfc242a71d1bf47808c6d4e8e33114502aa",
+    "review-shots/boards/narrow-vi-list.png": "02957aecbaea5c92d5e6f8a8a4413e07a54776e9b6b1ed20b722e4f1ae3db1ff",
+    "review-shots/boards/narrow-vi-table.png": "1a0e3dc3378a6321c8bf54fb53eed26d152dd80f81318dd2937c0bb74584253d",
+    "review-shots/boards/narrow-vi-today.png": "8e4b15fed1cc82d8887e0b3ca3098a5a4c7b45b8d5c4effb63161d209aba5390",
+    "review-shots/boards/phone-advanced-fields.png": "c72e980dd64b7008d3028b6a991c8a08b430a81f9c880a94789d7928e2f5bcbf",
+    "review-shots/boards/phone-advanced-priority.png": "2d3a7570b3d072820a9bc43b52ad9ddfe0d85c98cad60b97f688b2d4b8ba456a",
+    "review-shots/boards/phone-advanced-rules.png": "45ade3172b5c83a819ec21ba1d7a336d9d6b08f8da93bf72f4a47ae6588a7af8",
+    "review-shots/boards/phone-advanced-study-report.png": "969258c999a0b32f79a8a68d51da37cb809b41ed90cf75ae72d347098f624bfb",
+    "review-shots/boards/phone-advanced-views.png": "5ffd34c61b99dda64fd86f43fc37233c41c3eaea6a0a60a74a3c2e49aa14a972",
+    "review-shots/boards/phone-advanced-workload-week.png": "6f0b376350a27088fa949f8235de37baeb31f996f5bd0155acc8dd6210bfddd8",
+    "review-shots/boards/phone-advanced-workload.png": "19836c1da27759a93032639b3a3498a67e2ab9a63d0546af801cdabdbc498d83",
+    "review-shots/boards/phone-calendar-week.png": "4010388b607fe891096b0adba20e7321c44f564c7d74383d7436d6514e74a552",
+    "review-shots/boards/phone-calendar.png": "50af2a84e9cf9bc556c88dd3088a51dc55fa25fe56ba9a66a82500971de4bf00",
+    "review-shots/boards/phone-categories.png": "2cca24886b2566834df76119ddd556e2ea0856e0374092b056eaed4d03fd2f4f",
+    "review-shots/boards/phone-exam-editor.png": "2772d827b489210502eabc2492ff4b4b191a379bfd9ea58f4ebb41174569a534",
+    "review-shots/boards/phone-export.png": "bc2f617ce53aae37906fc5c52cbc2bfafbaf902defb5f7f7b2225c4917e0b9af",
+    "review-shots/boards/phone-focus.png": "f5fa2c790d5a5d0501944f6f0fd5e2196e42ad5ebe93c708ccc69711e49bea25",
+    "review-shots/boards/phone-insights.png": "b876c26467ac30bc97b0c9ccd3da5633e07a802173e03bf95a63428afac4b54d",
+    "review-shots/boards/phone-kanban.png": "ec905872ac11b8a70195de2dd35f81d79875c1bca350fb7f5bc35bb5cfc09e6b",
+    "review-shots/boards/phone-list.png": "ceea9c105b8050053893b2711eaf1ace0a61f7f62f50bc88b4ebd3583ac5f5cc",
+    "review-shots/boards/phone-rule-editor.png": "5fcf926f7b48ff56dbda6b0e623db01f8afc9ff04c3eb551dcdbbc6e3df4645d",
+    "review-shots/boards/phone-saved-view-editor.png": "cf02306c3d341463bda2192611ccacd59348a24fecc1bb8b99e4f6d4491d0bd0",
+    "review-shots/boards/phone-study.png": "bcd026d37c3387fe3b00e38a4da3e4d4eb385c6a3b51bbe667a61a198493edbf",
+    "review-shots/boards/phone-table.png": "670005f1cf21353b32d1a5cb0e73851b51785170be7256c3ef908a0dad62bc3c",
+    "review-shots/boards/phone-task-detail.png": "cdb4c346c26c7f82d9648065e3932deebd229017fc368d50a5c4e2924277cc5d",
+    "review-shots/boards/phone-task-editor.png": "ffb9bdbc8009127fd1aa91cd5b063f33c9e01465ac5cfd94c24deca664366575",
+    "review-shots/boards/phone-timeline.png": "efa9bcbd17b34c503b10ca493a8dd0c67d90d0db572d657805a9da9dc3e0f302",
+    "review-shots/boards/phone-today.png": "c9fb1642ae734d19f929c80ebc3585ad29495d3138c86c9bf1650d8758c25015",
+    "review-shots/boards/phone-working-calendar.png": "8a0264e78735eec04738b8ecc08de6ba3095b5278e24712ed3e75775aa9b32e8",
+    "review-shots/boards/tablet-calendar.png": "3185399a75b52f0eb430ee24d4b385b287158903e70c1708c591228f3b739fab",
+    "review-shots/boards/tablet-categories.png": "ff49cd97dfe2eebcda16fc955a437eb30fb66563e3cb961d95760a2266489bc3",
+    "review-shots/boards/tablet-insights.png": "ca4a59f6ce70ff8d8d130bb42f4ca04d3ab0b247eaecbb2662e59d89772a2131",
+    "review-shots/boards/tablet-kanban.png": "7ca5838e6cd86b26f5c97db3f050c3bf41ae76f18af9c8b4e5df85a644148e2f",
+    "review-shots/boards/tablet-list.png": "7a6b18feb4787408f6729a48671c0dac578046091d43ff1d1eb39aa92ae13b33",
+    "review-shots/boards/tablet-table.png": "27d0e83d1c8a6ddb28d617367b5e852a1f0ebd96e9d8ac71498525764a59b1a6",
+    "review-shots/boards/tablet-today.png": "a0f6c5f43d2beb4bf919af424ebac8198cf5679540fcc3d8faf5d891b6321d49"
+  },
+  "emulatorScreenshots": {
+    "docs/qa/evidence/screenshots/boards-native-read-calendar.png": "c16842e28bbcec5f1b11bdeda153696c424dcf17cb77d60305e7a0de1465d001",
+    "docs/qa/evidence/screenshots/boards-native-read-categories.png": "840a88cc5b19f0744788c3d437890f1479fb4aaa8e470da84cb5e65f9768e943",
+    "docs/qa/evidence/screenshots/boards-native-read-today.png": "d909cae51b5e164317acdc759e60b35706418e074d46d745113dc79759969eda",
+    "docs/qa/evidence/screenshots/boards-native-write-calendar.png": "43a14edfe4ba48ae530ad1de23ca994ab7b91aeb56ace61a69c688b9231b7fe1",
+    "docs/qa/evidence/screenshots/boards-native-write-categories.png": "80a65b29140cb8254f766626d8c6600b4af021266200b6464673c9c3d5a71536",
+    "docs/qa/evidence/screenshots/boards-native-write-today.png": "8eff74776217b151e0378a1a9a0f496099c115ce5b028114991669ad5011a309"
+  },
+  "fullMasterComplete": false,
+  "physicalDeviceVerified": false,
+  "iosBuilt": false,
+  "realBrowserVerified": false,
+  "realBrowserStorageVerified": true,
+  "storeReady": false,
+  "limitations": "docs/HANDY_BOARDS_KNOWN_LIMITATIONS.md"
+}

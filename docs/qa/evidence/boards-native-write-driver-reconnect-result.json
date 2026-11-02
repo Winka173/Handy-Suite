@@ -1,0 +1,14 @@
+﻿{
+    "app":  "boards",
+    "scenario":  "native-write",
+    "device":  "emulator-5570",
+    "physicalDevice":  false,
+    "exitCode":  0,
+    "originalTransportExitCode":  1,
+    "originalTestProcess":  14894,
+    "sourceSha256":  "1c6648d041b381b5d428c07b1016cdea1552d7a7b5b62370463d47c8ee58d817",
+    "logSha256":  "e30e2d18173221d71aa2ac88ac59cadb0d3ef37b114791f82e3aa4c191583483",
+    "existingProcessResultsRetrieved":  true,
+    "finishedAt":  "2026-11-02T14:34:23.9220215Z",
+    "appTestsAlreadyFinishedBeforeReconnect":  true
+}

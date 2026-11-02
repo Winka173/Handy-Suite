@@ -1,0 +1,10 @@
+﻿{
+    "startedAt":  "2026-11-02T14:32:31.9312150Z",
+    "finishedAt":  "2026-11-02T14:32:58.2807154Z",
+    "sourceSha256":  "1c6648d041b381b5d428c07b1016cdea1552d7a7b5b62370463d47c8ee58d817",
+    "sourceUnchanged":  true,
+    "exitCode":  0,
+    "browser":  true,
+    "physicalDevice":  false,
+    "scope":  "Real IndexedDB: Unicode paging, async ZIP round trip/cancel, immutable assets, Undo, competing writers. Pure Dart browser runner avoids Flutter Windows CanvasKit test-server routing failure."
+}

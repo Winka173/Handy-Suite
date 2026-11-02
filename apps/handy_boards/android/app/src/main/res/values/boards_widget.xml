@@ -1,0 +1,6 @@
+<resources>
+    <string name="handy_widget_description">Due tasks from Handy Boards. Enable names in app Settings.</string>
+    <color name="handy_widget_ground">#FFFAF9F6</color>
+    <color name="handy_widget_ink">#FF1F2329</color>
+    <color name="handy_widget_muted">#FF555B66</color>
+</resources>

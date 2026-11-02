@@ -1,0 +1,11 @@
+﻿{
+    "app":  "boards",
+    "phase":  "read",
+    "exitCode":  1,
+    "originalTransportExitCode":  1,
+    "sourceSha256":  "3a587391b1b2a35ce60274e90b831ac068c3735be5c1933ba372540902ed9eca",
+    "sourceUnchanged":  true,
+    "device":  "emulator-5570",
+    "avd":  "HandyTrip_QA_API35",
+    "physicalDevice":  false
+}

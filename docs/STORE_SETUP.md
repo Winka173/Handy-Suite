@@ -11,13 +11,20 @@ official Google test IDs and ads default off. Windows/Web Free is ad-free.
 
 ## Public identifiers and app identity
 
-Copy `config/monetization.example.json` to a local config and fill the ten app keys
+Copy `config/monetization.example.json` to a local config and fill the eleven app keys
 independently.
 
 Handy Trip uses its independent `trip` key and provisional
 `com.example.handysuite.trip` identifiers. iOS receiving shares additionally
 needs the Trip Share extension and `group.com.example.handysuite.trip` App Group
 registered for the publisher team. No production identifiers are fabricated.
+
+Handy Boards uses key `boards`, provisional Android
+`com.example.handysuite.handy_boards` (debug `.flutterpilot`) and iOS
+`com.example.handysuite.boards`. Its BoardsShare target needs the publisher
+App Group `group.com.example.handysuite.boards` on BOTH host and extension.
+Replace these provisional identifiers consistently before registration/signing.
+The AAB and MSIX evidence is unsigned; no store release is claimed.
 
 Run:
 

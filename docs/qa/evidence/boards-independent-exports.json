@@ -1,0 +1,26 @@
+[
+  {
+    "file": "boards-study.pdf",
+    "pages": 1,
+    "unicodeTextVerified": true,
+    "sha256": "4994c0105cc2eba3bb3e9a460749b040f8d676a3271dfe9fb65b9cf51b217e9d"
+  },
+  {
+    "file": "boards-summary.pdf",
+    "pages": 1,
+    "unicodeTextVerified": true,
+    "sha256": "ca71889b25b0a995cfab7fec03dca16988954d5197f7fc50b540a933bd68fa89"
+  },
+  {
+    "file": "boards-timeline.pdf",
+    "pages": 1,
+    "unicodeTextVerified": true,
+    "sha256": "54f349ac9b9e1d204a607368f613294ca2da2024ef368c8f925518e6463b7395"
+  },
+  {
+    "file": "boards-tasks.xlsx",
+    "independentReader": "openpyxl",
+    "rows": 2,
+    "textNotFormula": true
+  }
+]

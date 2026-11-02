@@ -108,5 +108,16 @@
         "artifactSha256":  null,
         "startedAt":  "2026-11-02T03:11:30.6978220Z",
         "elapsedSeconds":  85.85
+    },
+    {
+        "app":  "boards",
+        "target":  "windows",
+        "exitCode":  0,
+        "sourceSha256":  "1c6648d041b381b5d428c07b1016cdea1552d7a7b5b62370463d47c8ee58d817",
+        "sourceUnchanged":  true,
+        "artifact":  null,
+        "artifactSha256":  null,
+        "startedAt":  "2026-11-02T14:36:08.2312255Z",
+        "elapsedSeconds":  78.02
     }
 ]

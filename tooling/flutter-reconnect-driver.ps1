@@ -1,10 +1,10 @@
 param(
-  [Parameter(Mandatory=$true)][ValidateSet('tools','docs','media','dev','keep','recall','bookmark','spend','habit','trip')][string]$App,
+  [Parameter(Mandatory=$true)][ValidateSet('tools','docs','media','dev','keep','recall','bookmark','spend','habit','trip','boards')][string]$App,
   [Parameter(Mandatory=$true)][string]$Scenario,
   [ValidateSet('emulator-5556','emulator-5558','emulator-5570')][string]$Device='emulator-5558'
 )
 $ErrorActionPreference='Stop'
-$fingerprintArgs=if($App -in @('habit','trip')){@('--app',$App)}else{@()}
+$fingerprintArgs=if($App -in @('habit','trip','boards')){@('--app',$App)}else{@()}
 $root=Split-Path -Parent $PSScriptRoot
 if ($Scenario -notmatch '^[a-z-]+$') { throw 'Invalid integration scenario' }
 . (Join-Path $PSScriptRoot 'flutter-android-lock.ps1')
@@ -24,7 +24,7 @@ try {
   if($original.exitCode -eq 0 -or $original.device -ne $Device -or $originalLog -notmatch 'VMServiceFlutterDriver|VM service|Service connection disposed') {
     throw 'Reconnect requires a failed VM transport run on this device. The real driver must still verify the app test result.'
   }
-  $package="com.example.handysuite.$App.flutterpilot"
+  $package=if($App -eq 'boards'){"com.example.handysuite.handy_boards.flutterpilot"}else{"com.example.handysuite.$App.flutterpilot"}
   $appPid=(& adb -s $Device shell pidof $package).Trim()
   if($LASTEXITCODE -ne 0 -or $appPid -notmatch '^\d+$') { throw 'Original test process is no longer available. Run the test again.' }
   $deviceLog=(& adb -s $Device logcat -d "--pid=$appPid" -s 'flutter:I') -join "`n"

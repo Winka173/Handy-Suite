@@ -1,0 +1,10 @@
+﻿{
+    "app":  "boards",
+    "artifact":  "C:\\Users\\Winka\\Projects\\Handy-Suite\\artifacts\\flutter\\handy-boards-20261102213726-unsigned.msix",
+    "sha256":  "6183a50fe3439b8a31636d70ec22884ac2983c10b3acc5028e97885276a7461c",
+    "sourceSha256":  "1c6648d041b381b5d428c07b1016cdea1552d7a7b5b62370463d47c8ee58d817",
+    "makeAppxValidated":  true,
+    "signed":  false,
+    "installed":  false,
+    "storeApproved":  false
+}

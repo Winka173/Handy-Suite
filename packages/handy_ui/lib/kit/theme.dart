@@ -627,6 +627,10 @@ ThemeData buildHandyTheme(
       iconColor: c.muted,
       titleTextStyle: text.bodyLarge,
       subtitleTextStyle: text.bodyMedium?.copyWith(color: c.muted),
+      // A figure at a row's end reads in ink with even digits.
+      leadingAndTrailingTextStyle: text.bodyMedium?.copyWith(
+        fontFeatures: tabular,
+      ),
     ),
     dividerTheme: DividerThemeData(color: c.rule, thickness: 1, space: 1),
     chipTheme: ChipThemeData(

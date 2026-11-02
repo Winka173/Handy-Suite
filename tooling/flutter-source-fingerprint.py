@@ -10,7 +10,7 @@ workspace = re.findall(r"^  - ((?:apps|packages)/handy_[a-z_]+)$", (root / "pubs
 parser = argparse.ArgumentParser()
 parser.add_argument('--app', choices=[p.removeprefix('apps/handy_') for p in workspace if p.startswith('apps/')])
 selected = parser.parse_args().app
-if selected in {'trip'}:
+if selected in {'trip', 'boards'}:
     # Trip evidence covers its actual production dependency closure. Other app
     # engines are edited concurrently and cannot change this executable.
     by_name = {Path(p).name: p for p in workspace}

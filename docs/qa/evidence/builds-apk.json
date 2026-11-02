@@ -108,5 +108,16 @@
         "artifactSha256":  "a6006bd748aeabcbab9b1aa464cd9ea0b85529b6a6ad4eb9cde4e1199310a88a",
         "startedAt":  "2026-11-02T03:13:11.8271670Z",
         "elapsedSeconds":  29.86
+    },
+    {
+        "app":  "boards",
+        "target":  "apk",
+        "exitCode":  0,
+        "sourceSha256":  "1c6648d041b381b5d428c07b1016cdea1552d7a7b5b62370463d47c8ee58d817",
+        "sourceUnchanged":  true,
+        "artifact":  "artifacts/flutter/handy_boards/android/handy-boards-pilot-debug.apk",
+        "artifactSha256":  "66316ad0f67b5d223fedb0d39e53c5680309e7ca982435d3480d623662fa5181",
+        "startedAt":  "2026-11-02T14:39:38.7147262Z",
+        "elapsedSeconds":  34.29
     }
 ]

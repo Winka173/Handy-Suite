@@ -1621,6 +1621,63 @@ frontend-ui-engineering: một câu hỏi, một hành động chính, đủ tr�
 | Media, nối ảnh       | Các ảnh này ghép thành một trang dài chưa? | Nối N ảnh → Lưu ảnh dài        | Trống, 1 ảnh, đang khớp, không thấy đoạn trùng, lỗi          | Dải ảnh kéo để đổi thứ tự                                                          |
 | Keep, sắp hết        | Món nào sắp phải mua?                      | Vừa mua thêm                   | Chưa đủ lần mua, đã đoán, có lẽ đã hết                       | Vào "Cần để ý" một tuần trước                                                      |
 
+## Handy Boards design contract - 2026-11-02
+
+Draw: editorial-greeting, seed 1051914986; no redraw. Palette/type retained from
+suite: indigo #6366F1, bundled Geist/Bricolage with Vietnamese. Face: workspace/
+board name as a working heading, figures regular weight, tonal panels. Signature:
+category blocks with a persistent identity strip, progress fraction and independent
+status marks. Identity colors are data, never decorative rainbow chrome.
+
+Jobs/questions: Boards: what belongs where? Category overview: which group needs
+attention? Kanban: what is moving? Today: what must happen next? Calendar: when?
+Insights: what progress is actually measurable? Detail: what does this task need?
+Primary action: contextual fast add. Empty app offers blank/template explicitly;
+no seed data on startup. Errors preserve form input; commit blocks duplicate taps.
+
+320px one readable column, 375/430px optional compact 2x2 four-category overview;
+large text uses single column. 768px two/three blocks; >=1024 labelled 228px
+workspace/board sidebar and fluid content, max1100px with 16px gaps. Category
+count determines columns (up to four), not four permanent unreadable phone lanes.
+Kanban scrolls its own columns; no whole-page sideways overflow. Context menus,
+keyboard move alternatives, Ctrl+N capture/Ctrl+F search, explicit back/browser
+routes. iOS/Android use native date controls via kit, Windows mouse/focus, Web
+named screens and in-app reminders. Touch targets >=48px, semantic labels and
+text accompany colors. Loading/error/retry/empty/offline/unsupported states.
+Reject KPI vanity tiles, fake team avatars/maps/AI, Trello branding, tiny four
+phone columns, school labels in generic forms, gesture-only actions and dead Pro
+buttons. Inspect screenshots at all widths against app-screens 2.7 before report.
+
+### Handy Boards — kiểm tra ảnh §2.7
+
+Đã xem 49 ảnh Flutter thật của bộ fixture kiểm thử qua bảy contact sheet và ảnh
+gốc: điện thoại 375/430, VI 320, VI 200%, tablet 768, desktop 1440, dark 1024.
+Fixture chỉ nằm trong test; bản cài mới không tạo task hay quyền Pro giả.
+
+1. Nhóm là câu trả lời chính của màn Category; bốn khối Mathematics/Java/English/
+   Physics cùng hiện ở 375/430. Today nêu việc cần chú ý, Insights nêu mẫu số thật.
+2. Mép nội dung thẳng hàng; không ép 4 cột trên điện thoại. Khi chỉ có một task,
+   vùng trống là mặt làm việc, không kéo giãn card để lấp màn hình. Table cuộn
+   ngang trong vùng riêng; desktop sidebar rộng 228px.
+3. Màu đặt trên danh tính nhóm, trạng thái và lựa chọn chính. Không tô màu trang
+   trí lên KPI. Mặt chữ Geist/Bricolage giữ diện mạo editorial-greeting đã chọn.
+4. Fixture có một task cấp đầu, chưa hoàn tất, 30 phút ước lượng: Category,
+   Kanban, List, Table và Insights đều dùng cùng UUID; 0/1 và 0/30 khớp nhau.
+5. Nhóm trống là 0/0 và phần trăm là dấu gạch, không tạo 0% giả. Hạn thiếu có
+   câu giải thích. Bộ đếm Today ghi rõ hàng đợi nào, không giả số thông báo.
+6. Màu nhóm trên task trùng khối tương ứng; nhãn trạng thái độc lập. Calendar đã
+   tăng chiều cao ô theo text scale để không đè số lượng task lên ngày.
+7. Điện thoại dùng bốn đích điều hướng có tên; 320/200% chuyển một cột, cho cuộn.
+   Nhãn app và trường dài được rút gọn có chủ ý, không cắt nút thao tác chính.
+
+Ba lỗi đã sửa từ vòng ảnh đầu: ngưỡng 375px làm mất bố cục 2×2; Kanban ban đầu
+hiện cột Backlog rỗng thay vì cột có task; Calendar tràn ở 200%. Vòng mới phát
+hiện Table cần tăng chiều cao hàng theo chữ lớn; đã sửa và chụp lại. Bảy contact
+sheet và ảnh gốc nằm trong `review-shots/boards`. Chưa xem đủ mọi editor/nội dung
+50k task hay screen reader trên thiết bị thật. Công cụ lint/inspect HTML của skill
+không xác minh bố cục Flutter Dart; kết quả widget/ảnh không được đổi tên thành
+kiểm thử trình duyệt hoặc thiết bị thật.
+
 ### Soát ảnh theo §2.7 (2026-11-02)
 
 Mỗi app được chụp lại và soát theo bảy câu hỏi của app-screens §2.7; đã sửa:
@@ -1631,3 +1688,29 @@ tên Nunito không có), Keep (nhãn xám nhỏ trên giá trị mực), Trip (n
 tiêu thành hàng nhãn-số căn phải, "còn lại" là câu trả lời; màu Trip trên dấu đã
 xác nhận), Tools (sổ tính: tên dòng có số, kết quả hiện hai số lẻ). Tools, Dev,
 Recall, Spend đạt không cần sửa. Chưa có ảnh review cho so sánh phản hồi của Dev.
+
+Handy Boards follow-up: review expanded to 94 widget captures, including task/rule/
+saved-view editors, export, Study, Focus, Calendar week and advanced day/week tools.
+Large-text Timeline now keeps readable bar text and collapses lengthy assumptions;
+Focus scrolls for long titles; empty Study metadata no longer renders a lone dot.
+Test-owned Pro channel fixtures exist only in tests; release uses real store adapters.
+No browser inspector result or physical-device certification is inferred.
+
+Boards final follow-up: 97 widget images now include exam editing, with 320px VI
+200% checks. Saved-view dropdowns were changed to expand within the dialog after
+the image test caught a 19px overflow; the rerun passed. Three detail contact sheets
+(phone, large-text, desktop) were inspected. No physical/store/browser claim.
+
+Boards localization/accessibility batch: boolean controls now carry their actual
+property name instead of repeated Enabled labels. Dates use the display locale
+after board-timezone conversion. Screen-reader labels distinguish task completion,
+selection, dates and dropdowns. Ctrl/Cmd+Enter submits the current dialog; native
+text-input and screen-reader review remains unverified. All 97 widget captures
+were regenerated; desktop/phone/large-text checks did not report layout overflow.
+
+Boards image review correction: at 200% text, long switch labels were squeezed
+beside their controls despite no RenderFlex exception. Boolean labels now use
+the full width at large text size, with controls below. Export recurrence options
+appear only for template formats. Regenerated the 97 captures and review sheets.
+
+Handy Boards remaining-scope contract: see docs/HANDY_BOARDS_REMAINING_WORK.md. Reuse the existing style/seed. Reports, working-calendar controls, reviewed imports, cancellable progress and opt-in widget previews extend current canonical workflows; test 320-1440 and large text before claiming completion.

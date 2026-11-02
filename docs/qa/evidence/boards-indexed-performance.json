@@ -1,0 +1,14 @@
+{
+  "fixture": "50000 tasks, 1 board; Windows host process",
+  "timings": {
+    "fixtureMs": 4472,
+    "commitMs": 23869,
+    "reopenValidateMs": 4838,
+    "indexedQueryMs": 56
+  },
+  "currentRssBytes": 361295872,
+  "maxRssBytes": 582623232,
+  "matchingTasks": 2942,
+  "pageSize": 100,
+  "generatedAt": "2026-11-02T14:34:29.974907Z"
+}

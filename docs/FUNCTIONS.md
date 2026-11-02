@@ -673,3 +673,61 @@ liệt kê theo từng app ở trên.
 | `base-convert`      | Đổi hệ cơ số         | BigInt between bases 2/8/10/16 and any 2–36; two’s complement at a bit width. Up to 4096 digits.                                                            |
 | `url-parse`         | Tách URL             | Scheme, user, host, port, path, decoded query table and fragment; rebuilt after editing. Password hidden; nothing fetched.                                  |
 | `hmac`              | HMAC                 | HMAC-SHA256/SHA512 of UTF-8 text, hex or Base64. The key is session-only: never saved in drafts, chains or exports.                                         |
+
+## Handy Boards
+
+Independent offline app 11. Category, Status and Tag are separate. One canonical
+task UUID across Category Board, Kanban, List/Table, Today and Calendar. Templates
+are opt-in; generic boards do not require school/project fields.
+
+- Workspace/board/category creation, editable statuses/WIP; four-category compact
+  overview, grid/list, ordering alternatives, contextual capture and task status.
+- Task Markdown (external images blocked; links require consent), all-day/timed
+  IANA deadlines with DST confirmation, priorities, tags, assignee label, pin,
+  checklist/subtasks/dependencies, local comments/history, attachment copies/links.
+- Trash/restore/confirmed hard delete, archive, safe duplicate, cross-board subtree
+  move, batch edits and bounded Undo/Redo. Search/filter/sort Unicode/VI.
+- Today/Upcoming/Radar, month calendar, progress with explicit denominator, local
+  reminder records and Android/iOS adapters. Windows/Web in-app fallback.
+- Optional Study templates/metadata, weekly sessions, assessments/weight/target,
+  normalized personal grade plans and user-owned scale/letter mapping. Focus uses
+  saved timestamps and pause/resume; no continuous background execution claim.
+- Advanced Pro source: timeline, duration-only dependency path, priority reasons,
+  workload/capacity, custom fields/values, saved AND/OR views and bounded local rules.
+- Full JSON/ZIP manifest/hash/assets preview/merge/replace/Undo; mapped CSV and
+  canonical task CSV, Markdown checklists/plain lines; CSV/MD/PDF/ICS summaries;
+  Pro XLSX, timeline/study PDF and safe board template JSON.
+- Android durable shared-text inbox commits before ack; user-initiated clipboard.
+  iOS App Group/BoardsShare extension source is implemented but not built on Mac.
+  Store IDs/signing are not configured.
+
+This list describes implemented scope, not complete parity with the master prompt.
+[Boards matrix](HANDY_BOARDS_FEATURE_MATRIX.md) records missing interactions and QA.
+
+Handy Boards continuation: Table columns/cell edits; grouped List; assignee/estimate/
+reminder/archive filters and attachment-link search; timed start editor; Calendar
+week/day and optional class overlay; month drag reschedule with confirmation/Undo;
+Timeline move/resize/milestones; bounded launch/resume recurrence; full rule editor/
+preview; template JSON/ZIP with custom defaults/subtasks and explicit recurrence
+opt-in. Exact remaining scope stays in the Boards feature matrix.
+
+Boards reports use actual saved focus segments for day/week workload and retained
+completion transitions for history. Saved views support repeated-property AND/OR
+conditions, ranges, reminder/archive predicates and persisted sort/group choices.
+Grade letter mapping accepts readable lines (`A = 90`), not JSON in product UI.
+
+Boards Study adds a dedicated exam editor for date/time/duration/room/materials
+on the existing task. It lists exams by deadline with task progress per subject;
+Calendar/Kanban/category/task details keep the same UUID. It remains opt-in.
+
+Boards UI: locale-aware board-zone deadline labels (portable dates unchanged),
+localized priority explanations/weekdays/common validation errors, named control
+semantics, Ctrl/Cmd+Enter save and Cmd+N/Cmd+F capture/search alternatives.
+
+Boards remaining-work batch: optional board/resource calendars and holidays;
+advanced Study/exam report + CSV; local Trello JSON subset with mapping preview;
+SQLite lazy versioned records/assets and indexed paged List/Table; real IndexedDB
+indexed search with asynchronous file bodies; cancellable native streamed ZIP/PDF,
+large staged ZIP restore; EN/VI owned error catalog; opt-in Android/iOS home widget
+payload and launcher shortcuts (iOS native source unverified without Mac). No extra
+production seed data. Exact test/device coverage stays in the Boards matrix.
