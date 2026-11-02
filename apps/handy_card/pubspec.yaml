@@ -1,0 +1,46 @@
+name: handy_card
+description: "Handy Card: design anything, share anywhere. An offline card studio."
+publish_to: 'none'
+version: 0.1.0+1
+resolution: workspace
+environment:
+  sdk: ^3.12.0
+dependencies:
+  flutter:
+    sdk: flutter
+  handy_card_engine: any
+  handy_ui: any
+  handy_core: any
+  handy_files: any
+  handy_monetization: any
+  sqlite3: 3.5.2
+  path_provider: 2.1.6
+  web: 1.1.1
+  image: 4.12.0
+  crypto: 3.0.8
+  url_launcher: 6.3.2
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+flutter:
+  uses-material-design: true
+  assets:
+    - fonts/HankenGrotesk-OFL.txt
+    - fonts/Literata-OFL.txt
+  fonts:
+    - family: HankenGrotesk
+      fonts:
+        - asset: fonts/HankenGrotesk-Regular.ttf
+          weight: 400
+        - asset: fonts/HankenGrotesk-Medium.ttf
+          weight: 500
+        - asset: fonts/HankenGrotesk-SemiBold.ttf
+          weight: 600
+        - asset: fonts/HankenGrotesk-Bold.ttf
+          weight: 700
+    - family: CardSerif
+      fonts:
+        - asset: fonts/Literata-Regular.ttf
+          weight: 400
+        - asset: fonts/Literata-Bold.ttf
+          weight: 700
