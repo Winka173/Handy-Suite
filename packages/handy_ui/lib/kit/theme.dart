@@ -231,6 +231,20 @@ class HandyBrand {
     title: 28,
     heading: HandyHeading.caps,
   );
+
+  /// Boards: a workspace that opens on the board's own name, set large at
+  /// regular weight over tonal panels; categories keep their colour in
+  /// every view.
+  static const boards = HandyBrand(
+    display: 'PlusJakartaSans',
+    displayWeight: FontWeight.w400,
+    text: 'PlusJakartaSans',
+    flatPanels: true,
+    card: 14,
+    control: 8,
+    title: 32,
+    tileMark: false,
+  );
   static HandyBrand current = ladderBrand;
 }
 

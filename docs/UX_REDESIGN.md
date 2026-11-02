@@ -1586,17 +1586,19 @@ app đặt cạnh nhau đọc như một bộ giao diện mẫu. Nay mỗi app �
 `draw.mjs --app` theo loại và brief của chính nó; kit chỉ giữ phần dùng chung
 (hành vi, khoảng cách, khả năng tiếp cận, trạng thái trống/tải/lỗi, sao lưu).
 
-| App      | Phong cách         | Chữ                          | Gương mặt                                                  |
-| -------- | ------------------ | ---------------------------- | ---------------------------------------------------------- |
-| Tools    | achromatic-ledger  | IBM Plex Sans                | Không ô logo, khung đen trắng, màu chỉ ở kết quả           |
-| Dev      | data-terminal      | Space Grotesk (+ Geist Mono) | Mở tối; ô tối hơn nền; góc vuông                           |
-| Docs     | framed-sheet       | Literata cho tiêu đề         | Khung xám, tờ giấy trắng bo 16                             |
-| Media    | true-black-flat    | Bricolage                    | Mở tối trên đen tuyền, không viền; ảnh mang màu            |
-| Keep     | framed-sheet       | Be Vietnam Pro               | Nền bìa các-tông, thùng trắng có nhãn                      |
-| Recall   | accent-ladder      | Lexend                       | Màu app leo từ nền nhạt tới nút chính                      |
-| Bookmark | achromatic-ledger  | Newsreader cho tiêu đề       | Nền giấy báo, không ô logo, chỉ mực                        |
-| Spend    | pastel-consumer    | Geist                        | Con số "còn được tiêu" trên ô xanh nhạt bo 24, không viền  |
-| Habit    | editorial-greeting | Nunito                       | Lời chào là tiêu đề; mảng một bậc tông, số ở độ đậm thường |
+| App      | Phong cách         | Chữ                          | Gương mặt                                                              |
+| -------- | ------------------ | ---------------------------- | ---------------------------------------------------------------------- |
+| Tools    | achromatic-ledger  | IBM Plex Sans                | Không ô logo, khung đen trắng, màu chỉ ở kết quả                       |
+| Dev      | data-terminal      | Space Grotesk (+ Geist Mono) | Mở tối; ô tối hơn nền; góc vuông                                       |
+| Docs     | framed-sheet       | Literata cho tiêu đề         | Khung xám, tờ giấy trắng bo 16                                         |
+| Media    | true-black-flat    | Bricolage                    | Mở tối trên đen tuyền, không viền; ảnh mang màu                        |
+| Keep     | framed-sheet       | Be Vietnam Pro               | Nền bìa các-tông, thùng trắng có nhãn                                  |
+| Recall   | accent-ladder      | Lexend                       | Màu app leo từ nền nhạt tới nút chính                                  |
+| Bookmark | achromatic-ledger  | Newsreader cho tiêu đề       | Nền giấy báo, không ô logo, chỉ mực                                    |
+| Spend    | pastel-consumer    | Geist                        | Con số "còn được tiêu" trên ô xanh nhạt bo 24, không viền              |
+| Habit    | editorial-greeting | Nunito                       | Lời chào là tiêu đề; mảng một bậc tông, số ở độ đậm thường             |
+| Trip     | achromatic-ledger  | Archivo                      | Tiêu đề chữ hoa nhỏ kiểu bảng giờ tàu; màu chỉ ở việc đã xác nhận      |
+| Boards   | editorial-greeting | Plus Jakarta Sans            | "Hôm nay" là tiêu đề, một câu tóm tắt; màu magenta `#A61C8E` thay chàm |
 
 Nền tảng: Dev và Media mở tối; phần Giao diện trong cài đặt của hai app chỉ có
 Tối (mặc định) và Sáng, vì "theo hệ thống" không còn là mặc định ở đó. Mọi app
