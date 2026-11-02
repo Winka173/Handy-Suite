@@ -295,7 +295,7 @@ void _pdfText(PdfContext c, CardElement e, double alpha) {
     // "?" rather than failing the whole export (the warning says so).
     final shown = font is PdfTtfFont
         ? l.text
-        : l.text.replaceAll(RegExp(r'[^ -ÿ]'), '?');
+        : l.text.replaceAll(RegExp(r'[^\u0000-\u00ff]'), '?');
     c.g.drawString(
       font,
       layout.size,

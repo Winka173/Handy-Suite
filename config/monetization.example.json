@@ -178,5 +178,25 @@
       "bannerAdUnitId": "",
       "adsEnabled": false
     }
+  },
+  "card": {
+    "android": {
+      "productId": "",
+      "androidPublicKey": "",
+      "bannerAdUnitId": "",
+      "adsEnabled": false
+    },
+    "ios": {
+      "productId": "",
+      "bannerAdUnitId": "",
+      "adsEnabled": false,
+      "androidPublicKey": ""
+    },
+    "windows": {
+      "productId": "",
+      "androidPublicKey": "",
+      "bannerAdUnitId": "",
+      "adsEnabled": false
+    }
   }
 }

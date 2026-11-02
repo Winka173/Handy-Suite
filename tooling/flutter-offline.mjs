@@ -3,7 +3,7 @@ import path from 'node:path';
 import { createHash } from 'node:crypto';
 const app = process.argv[2] ?? 'handy_tools';
 if (
-  !/^handy_(tools|docs|media|dev|keep|recall|bookmark|spend|habit|trip|boards|forms)$/.test(
+  !/^handy_(tools|docs|media|dev|keep|recall|bookmark|spend|habit|trip|boards|forms|card)$/.test(
     app,
   )
 )

@@ -1,6 +1,6 @@
-param([ValidateSet('tools','keep','recall','docs','media','dev','bookmark','spend','habit','trip','boards')][string]$App = 'tools')
+param([ValidateSet('tools','keep','recall','docs','media','dev','bookmark','spend','habit','trip','boards','card')][string]$App = 'tools')
 $ErrorActionPreference = 'Stop'
-$fingerprintArgs=if($App -in @('habit','trip','boards')){@('--app',$App)}else{@()}
+$fingerprintArgs=if($App -in @('habit','trip','boards','card')){@('--app',$App)}else{@()}
 $repoRoot = Split-Path -Parent $PSScriptRoot
 $sourceHash=(& python (Join-Path $repoRoot 'tooling/flutter-source-fingerprint.py') @fingerprintArgs).Trim()
 $builds=Get-Content -LiteralPath (Join-Path $repoRoot 'docs/qa/evidence/builds-windows.json') -Raw -Encoding utf8 | ConvertFrom-Json

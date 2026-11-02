@@ -26,6 +26,11 @@ App Group `group.com.example.handysuite.boards` on BOTH host and extension.
 Replace these provisional identifiers consistently before registration/signing.
 The AAB and MSIX evidence is unsigned; no store release is claimed.
 
+Handy Card uses key `card` and provisional `com.example.handysuite.card`
+identifiers on Android (debug `.flutterpilot`) and iOS. Everything is free in
+this build because no product exists yet; the planned Pro gates are listed in
+`docs/HANDY_CARD_PRODUCT_SPEC.md`. Ads stay off in the studio and export sheet.
+
 Run:
 
 ```

@@ -50,6 +50,7 @@ jobs:
             handy_habit,
             handy_trip,
             handy_boards,
+            handy_card,
           ]
         platform:
           - {

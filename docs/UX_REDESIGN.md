@@ -1714,3 +1714,40 @@ the full width at large text size, with controls below. Export recurrence option
 appear only for template formats. Regenerated the 97 captures and review sheets.
 
 Handy Boards remaining-scope contract: see docs/HANDY_BOARDS_REMAINING_WORK.md. Reuse the existing style/seed. Reports, working-calendar controls, reviewed imports, cancellable progress and opt-in widget previews extend current canonical workflows; test 320-1440 and large text before claiming completion.
+
+## Handy Card design contract - 2026-11-02
+
+Style dealt by design-taste-frontend (`draw.mjs --app --kind builder`, seed
+191118814): **achromatic ledger**. The chrome holds no colour; the card being
+designed is the only colour on screen. Face: a blue-grey pasteboard `#F2F4F7`
+like a cutting mat, Hanken Grotesk for the chrome, hue `#1450F5` only on the
+active selection (frame, handles, snap guides). Signature element: the card on
+the mat with its trim, a dashed bleed line and a dotted safe margin, never
+part of the exported art.
+
+| Screen   | Its one question                                 | Primary action | States                                                                                                     |
+| -------- | ------------------------------------------------ | -------------- | ---------------------------------------------------------------------------------------------------------- |
+| Home     | Which design am I on, or what do I start from?   | New design     | Empty (templates strip + New), loading, load error with retry; designs as real thumbnails, newest first    |
+| New      | What am I making, at what size?                  | Create         | Kind, size preset or custom, orientation, one or two sides, template or blank                              |
+| Studio   | Is this card right?                              | Export         | Nothing selected (card inspector), one, many, inside a group, text editing, pan mode, unsaved/saved        |
+| Profiles | Which identity does this card speak for?         | Save profile   | Empty, invalid links listed beside their field, private values marked                                      |
+| Export   | What do I hand over, and will it print and scan? | Save file      | Format, side, size/DPI, bleed and crop marks, warnings (missing faces/pictures, QR too dense), busy, error |
+
+Studio layout: at 1100 px and wider, layers and the add palette on the left
+(248 px), the canvas well in the middle, the inspector on the right (288 px).
+From 720 to 1100 px the inspector stays and layers open in a sheet. Under 720
+px the canvas takes the screen, a bottom bar holds Add, Layers, Edit, Arrange,
+Undo and Redo, and the inspector and layers open as bottom sheets; handles grow
+to 44 px touch targets. Works from 320 px.
+
+Platform behaviour: designs autosave 600 ms after the last edit; Back (system
+back, Android predictive back, Esc on desktop) leaves the studio after the save
+finishes. Desktop and web shortcuts: Ctrl/⌘ Z, Shift Z or Y, C, V, X, D, A, G,
+Shift G, S, E, Delete, arrows (Shift for 10), +/−/0 for zoom, Space to pan.
+Touch: tap selects, drag moves, two fingers pan and zoom, long-press adds to
+the selection. Web URLs: `/` and `/design/<id>`. Ads never appear in the
+studio, the export sheet or anything that shares.
+
+Patterns rejected: a tutorial wall, coloured chrome or tinted tool tiles, a
+form that edits a static preview (the canvas is the editor), fake buttons for
+NFC or Wallet (not built; marked not started in the matrix).

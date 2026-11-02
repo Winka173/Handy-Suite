@@ -151,3 +151,10 @@ trong bản quét hay PDF đang mở); Keep chỉ đoán ngày sắp hết khi c
 lần mua cách nhau tối đa 180 ngày; Dev chỉ so với phản hồi trước trong cùng phiên.
 
 Handy Boards remains in development. [Known limitations](docs/HANDY_BOARDS_KNOWN_LIMITATIONS.md) cover native/provider/store QA, browser metadata residency, retained snapshot storage and platform verification. Resource calendars, Study reports, indexed paging, staged streaming backup and widget/shortcut source are implemented. iOS share extension source exists but is not built or provisioned on Mac. Host or build passes do not certify the full master prompt.
+
+Handy Card is in development. PDF export embeds the bundled faces; SVG names
+them only, so a viewer without them substitutes. PDF gradients are 64 vector
+bands. Crop is set with sliders (no drag crop yet). The batch generator has an
+engine but no screen; NFC, Wallet passes, brand kits, XLSX and SVG import are
+not built. Stored designs are not encrypted. Nothing has run on a device yet;
+see `docs/HANDY_CARD_PLATFORM_MATRIX.md`.

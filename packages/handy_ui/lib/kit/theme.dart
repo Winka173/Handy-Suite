@@ -245,6 +245,19 @@ class HandyBrand {
     title: 32,
     tileMark: false,
   );
+
+  /// Card: a design tool whose chrome holds no colour; the card on a
+  /// blue-grey cutting mat is the only colour on screen.
+  static const handyCard = HandyBrand(
+    display: 'HankenGrotesk',
+    displayWeight: FontWeight.w600,
+    text: 'HankenGrotesk',
+    card: 8,
+    control: 6,
+    title: 24,
+    tileMark: false,
+    ground: Color(0xFFF2F4F7),
+  );
   static HandyBrand current = ladderBrand;
 }
 
@@ -602,6 +615,16 @@ ThemeData buildHandyTheme(
       ),
     ),
     iconTheme: IconThemeData(color: ink, size: 20),
+    // The floating action is the screen's primary: the same fill, never
+    // Material's tinted container.
+    floatingActionButtonTheme: FloatingActionButtonThemeData(
+      backgroundColor: fill,
+      foregroundColor: onFill,
+      elevation: 2,
+      focusElevation: 2,
+      hoverElevation: 3,
+      shape: control,
+    ),
     cardTheme: CardThemeData(
       color: b.pastel && light
           ? Color.lerp(accent, Colors.white, .94)

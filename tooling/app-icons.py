@@ -18,6 +18,7 @@ from PIL import Image, ImageDraw, ImageFont
 ROOT = Path(__file__).resolve().parent.parent
 APPS = {
     'boards': ('#6366F1', 0xE871),  # dashboard
+    'card': ('#1450F5', 0xEA67),  # badge
 
     'trip': ('#0284C7', 0xE53D),  # flight_takeoff
     'habit': ('#B42318', 0xE86C),

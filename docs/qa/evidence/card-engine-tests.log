@@ -1,0 +1,61 @@
+00:00 +0: loading C:/Users/Winka/Projects/Handy-Suite/packages/handy_card_engine/test/editor_test.dart
+00:00 +0: C:/Users/Winka/Projects/Handy-Suite/packages/handy_card_engine/test/editor_test.dart: geometry a rotated box hit-tests on its turned outline, not its square bounds
+00:00 +1: C:/Users/Winka/Projects/Handy-Suite/packages/handy_card_engine/test/editor_test.dart: geometry inside a rotated, moved group, children hit where they are drawn
+00:00 +2: C:/Users/Winka/Projects/Handy-Suite/packages/handy_card_engine/test/editor_test.dart: geometry hidden and locked layers are not hit
+00:00 +3: C:/Users/Winka/Projects/Handy-Suite/packages/handy_card_engine/test/editor_test.dart: geometry resizing a rotated box keeps the opposite corner fixed
+00:00 +4: C:/Users/Winka/Projects/Handy-Suite/packages/handy_card_engine/test/editor_test.dart: geometry a thousand small moves add up without drift
+00:00 +5: C:/Users/Winka/Projects/Handy-Suite/packages/handy_card_engine/test/editor_test.dart: structure group then ungroup puts every element back where it was seen
+00:00 +6: C:/Users/Winka/Projects/Handy-Suite/packages/handy_card_engine/test/editor_test.dart: structure resizing a group scales its children and their text
+00:00 +7: C:/Users/Winka/Projects/Handy-Suite/packages/handy_card_engine/test/editor_test.dart: structure arrange, align and distribute
+00:00 +8: C:/Users/Winka/Projects/Handy-Suite/packages/handy_card_engine/test/editor_test.dart: structure duplicate gives fresh ids all the way down
+00:00 +9: C:/Users/Winka/Projects/Handy-Suite/packages/handy_card_engine/test/editor_test.dart: structure moving a layer into a turned group keeps it in place on the card
+00:00 +10: C:/Users/Winka/Projects/Handy-Suite/packages/handy_card_engine/test/editor_test.dart: session and history a drag is one undo step; redo ends after a different edit
+00:00 +11: C:/Users/Winka/Projects/Handy-Suite/packages/handy_card_engine/test/editor_test.dart: session and history typing coalesces into one step; a cancelled drag leaves no trace
+00:00 +12: C:/Users/Winka/Projects/Handy-Suite/packages/handy_card_engine/test/editor_test.dart: session and history history is bounded
+00:00 +13: C:/Users/Winka/Projects/Handy-Suite/packages/handy_card_engine/test/editor_test.dart: snapping an edge near the card centre snaps to it and draws a guide
+00:00 +14: C:/Users/Winka/Projects/Handy-Suite/packages/handy_card_engine/test/editor_test.dart: snapping far from anything, nothing snaps
+00:00 +15: C:/Users/Winka/Projects/Handy-Suite/packages/handy_card_engine/test/editor_test.dart: an element type this build does not know is kept through a save
+00:00 +16: C:/Users/Winka/Projects/Handy-Suite/packages/handy_card_engine/test/editor_test.dart: schema 0 drafts migrate; newer schemas are refused
+00:00 +17: C:/Users/Winka/Projects/Handy-Suite/packages/handy_card_engine/test/editor_test.dart: the badge extension saves, loads and draws like a built-in
+00:00 +18: C:/Users/Winka/Projects/Handy-Suite/packages/handy_card_engine/test/export_test.dart: vCard escapes, folds at 75 octets and keeps Vietnamese whole
+00:00 +19: C:/Users/Winka/Projects/Handy-Suite/packages/handy_card_engine/test/export_test.dart: QR a vCard payload makes a matrix; too much content is refused clearly
+00:00 +20: C:/Users/Winka/Projects/Handy-Suite/packages/handy_card_engine/test/export_test.dart: profile links only https, tel and mailto survive; private values stay out
+00:00 +21: C:/Users/Winka/Projects/Handy-Suite/packages/handy_card_engine/test/export_test.dart: profile links live bindings follow the profile; unlinking keeps the text
+00:00 +22: C:/Users/Winka/Projects/Handy-Suite/packages/handy_card_engine/test/export_test.dart: HTML the profile page escapes everything and links only safely
+00:00 +23: C:/Users/Winka/Projects/Handy-Suite/packages/handy_card_engine/test/export_test.dart: SVG and PDF SVG sets real text, escapes it and sizes the page in millimetres
+00:00 +24: C:/Users/Winka/Projects/Handy-Suite/packages/handy_card_engine/test/performance_test.dart: editor core timings at 10, 100 and 500 elements
+00:00 +24: C:/Users/Winka/Projects/Handy-Suite/packages/handy_card_engine/test/export_test.dart: SVG and PDF PDF embeds the face, keeps the size, adds bleed and crop marks
+Helvetica has no Unicode support see https://github.com/DavBfr/dart_pdf/wiki/Fonts-Management
+Helvetica has no Unicode support see https://github.com/DavBfr/dart_pdf/wiki/Fonts-Management
+00:00 +25: C:/Users/Winka/Projects/Handy-Suite/packages/handy_card_engine/test/performance_test.dart: editor core timings at 10, 100 and 500 elements
+00:00 +26: C:/Users/Winka/Projects/Handy-Suite/packages/handy_card_engine/test/performance_test.dart: editor core timings at 10, 100 and 500 elements
+00:00 +27: C:/Users/Winka/Projects/Handy-Suite/packages/handy_card_engine/test/performance_test.dart: editor core timings at 10, 100 and 500 elements
+00:00 +28: C:/Users/Winka/Projects/Handy-Suite/packages/handy_card_engine/test/performance_test.dart: editor core timings at 10, 100 and 500 elements
+00:00 +29: C:/Users/Winka/Projects/Handy-Suite/packages/handy_card_engine/test/performance_test.dart: editor core timings at 10, 100 and 500 elements
+{
+  "10": {
+    "hitTestMicros": 90,
+    "dragOf60MovesMicros": 21462,
+    "encodeMicros": 454,
+    "decodeMicros": 1793,
+    "svgMicros": 7543,
+    "jsonBytes": 5205
+  },
+  "100": {
+    "hitTestMicros": 35,
+    "dragOf60MovesMicros": 34622,
+    "encodeMicros": 1427,
+    "decodeMicros": 3845,
+    "svgMicros": 12898,
+    "jsonBytes": 48903
+  },
+  "500": {
+    "hitTestMicros": 9,
+    "dragOf60MovesMicros": 225320,
+    "encodeMicros": 5327,
+    "decodeMicros": 11970,
+    "svgMicros": 52657,
+    "jsonBytes": 243453
+  }
+}
+00:01 +30: All tests passed!

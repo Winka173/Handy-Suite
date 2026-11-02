@@ -1,0 +1,5 @@
+00:00 +0: loading C:/Users/Winka/Projects/Handy-Suite/apps/handy_card/test/card_flow_test.dart
+00:00 +0: blank card → add, drag, undo, redo → saved and reopened exactly
+00:17 +1: a project file restores the design on a fresh install
+00:19 +2: on a phone the studio uses the bottom bar and sheets
+00:21 +3: All tests passed!

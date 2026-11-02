@@ -170,7 +170,7 @@ void main() {
         'c',
         'b',
       ]);
-      els = alignElements(els, {'a', 'b', 'c'}, Align.top);
+      els = alignElements(els, {'a', 'b', 'c'}, CardAlign.top);
       expect(els.map((e) => e.frame.y), [0, 0, 0]);
       els = moveBy(els, {'b'}, const Vec(-30, 0));
       els = distribute(els, {'a', 'b', 'c'}, horizontal: true);

@@ -359,14 +359,14 @@ List<CardElement> moveInTree(
   );
 }
 
-enum Align { left, centerX, right, top, centerY, bottom }
+enum CardAlign { left, centerX, right, top, centerY, bottom }
 
 /// [ids] lined up on one edge or centre of [to] (the selection's box, or
 /// the card for a single element).
 List<CardElement> alignElements(
   List<CardElement> elements,
   Set<String> ids,
-  Align how, {
+  CardAlign how, {
   Box? to,
 }) {
   final top = topmostOnly(elements, ids);
@@ -376,12 +376,12 @@ List<CardElement> alignElements(
   for (final id in top) {
     final b = worldBounds(out, id);
     final delta = switch (how) {
-      Align.left => Vec(target.x - b.x, 0),
-      Align.centerX => Vec(target.center.x - b.center.x, 0),
-      Align.right => Vec(target.right - b.right, 0),
-      Align.top => Vec(0, target.y - b.y),
-      Align.centerY => Vec(0, target.center.y - b.center.y),
-      Align.bottom => Vec(0, target.bottom - b.bottom),
+      CardAlign.left => Vec(target.x - b.x, 0),
+      CardAlign.centerX => Vec(target.center.x - b.center.x, 0),
+      CardAlign.right => Vec(target.right - b.right, 0),
+      CardAlign.top => Vec(0, target.y - b.y),
+      CardAlign.centerY => Vec(0, target.center.y - b.center.y),
+      CardAlign.bottom => Vec(0, target.bottom - b.bottom),
     };
     out = moveBy(out, {id}, delta);
   }

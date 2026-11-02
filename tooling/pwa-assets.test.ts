@@ -15,6 +15,7 @@ test.each([
   'habit',
   'trip',
   'boards',
+  'card',
 ])(
   'handy_%s worker isolates assets, excludes API data and requires explicit update',
   async (app) => {

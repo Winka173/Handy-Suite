@@ -1,0 +1,29 @@
+{
+  "measuredOn": "flutter test host (windows)",
+  "results": {
+    "10": {
+      "hitTestMicros": 90,
+      "dragOf60MovesMicros": 21462,
+      "encodeMicros": 454,
+      "decodeMicros": 1793,
+      "svgMicros": 7543,
+      "jsonBytes": 5205
+    },
+    "100": {
+      "hitTestMicros": 35,
+      "dragOf60MovesMicros": 34622,
+      "encodeMicros": 1427,
+      "decodeMicros": 3845,
+      "svgMicros": 12898,
+      "jsonBytes": 48903
+    },
+    "500": {
+      "hitTestMicros": 9,
+      "dragOf60MovesMicros": 225320,
+      "encodeMicros": 5327,
+      "decodeMicros": 11970,
+      "svgMicros": 52657,
+      "jsonBytes": 243453
+    }
+  }
+}

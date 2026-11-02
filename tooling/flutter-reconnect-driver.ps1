@@ -1,10 +1,10 @@
 param(
-  [Parameter(Mandatory=$true)][ValidateSet('tools','docs','media','dev','keep','recall','bookmark','spend','habit','trip','boards')][string]$App,
+  [Parameter(Mandatory=$true)][ValidateSet('tools','docs','media','dev','keep','recall','bookmark','spend','habit','trip','boards','card')][string]$App,
   [Parameter(Mandatory=$true)][string]$Scenario,
   [ValidateSet('emulator-5556','emulator-5558','emulator-5570')][string]$Device='emulator-5558'
 )
 $ErrorActionPreference='Stop'
-$fingerprintArgs=if($App -in @('habit','trip','boards')){@('--app',$App)}else{@()}
+$fingerprintArgs=if($App -in @('habit','trip','boards','card')){@('--app',$App)}else{@()}
 $root=Split-Path -Parent $PSScriptRoot
 if ($Scenario -notmatch '^[a-z-]+$') { throw 'Invalid integration scenario' }
 . (Join-Path $PSScriptRoot 'flutter-android-lock.ps1')

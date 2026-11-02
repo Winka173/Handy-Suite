@@ -61,3 +61,11 @@ large restores, mobile widget/shortcut source and owned validation localization.
 See docs/HANDY_BOARDS_FEATURE_MATRIX.md and source-bound QA checkpoint for code,
 automated tests and device verification separately. Store/iOS/physical checks are
 not inferred from Android/Windows/Web builds.
+
+Handy Card: app thiết kế thẻ (danh thiếp, portfolio, thẻ sự kiện, thẻ shop,
+thiết kế tự do). Đã có engine scene graph thuần Dart, editor nhiều lớp (chọn,
+kéo, đổi cỡ, xoay, nhóm, căn, snap, undo), hồ sơ với binding live/snapshot,
+PNG/JPEG/SVG/PDF/tờ in/vCard/QR/trang hồ sơ HTML/chữ ký email và ZIP dự án.
+Trạng thái thật từng mục: [Card test matrix](docs/HANDY_CARD_TEST_MATRIX.md).
+Batch mới có engine (chưa có màn hình); NFC, Wallet, brand kit chưa làm. Chưa
+build và chưa chạy trên Android/iOS/Windows/Web.
