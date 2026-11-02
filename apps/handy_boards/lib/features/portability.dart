@@ -3,7 +3,6 @@ import 'package:flutter/services.dart';
 import 'package:handy_ui/kit.dart';
 import 'package:handy_boards_engine/handy_boards_engine.dart';
 import 'package:pdf/widgets.dart' as pw;
-import 'package:pdf/pdf.dart';
 import '../scope.dart';
 import '../ui/form.dart';
 import 'advanced.dart';
@@ -52,158 +51,6 @@ Future<Uint8List> boardPdf(
       ],
     ),
   );
-  job?.check();
-  final output = await doc.save(enableEventLoopBalancing: true);
-  job?.check();
-  job?.progress(1);
-  return output;
-}
-
-Future<Uint8List> timelinePdf(
-  BoardsState s,
-  String board, {
-  BoardsJob? job,
-  bool vi = false,
-}) async {
-  job?.check();
-  final name = s.get('boards', board).str('zone'),
-      tasks = queryTasks(s, board: board)
-          .where(
-            (t) =>
-                t.data['parent'] == null &&
-                t.data['start'] != null &&
-                t.data['due'] != null,
-          )
-          .toList();
-  if (tasks.length > 300)
-    throw const FormatException(
-      'Timeline PDF limited to 300 dated top-level tasks',
-    );
-  final dates =
-      tasks
-          .expand(
-            (t) => [
-              calendarDate(deadlineDay(object(t.data['start']), name)),
-              calendarDate(deadlineDay(object(t.data['due']), name)),
-            ],
-          )
-          .toList()
-        ..sort();
-  final first = dates.firstOrNull ?? DateTime.now(),
-      span = dates.isEmpty ? 1 : dates.last.difference(first).inDays + 1;
-  if (span > 366)
-    throw const FormatException('Timeline PDF limited to 366 days');
-  final font = pw.Font.ttf(
-        await rootBundle.load(
-          'packages/handy_ui/assets/fonts/NotoSans-Regular.ttf',
-        ),
-      ),
-      doc = pw.Document();
-  for (var offset = 0; offset < span; offset += 30) {
-    job?.check();
-    job?.progress(offset / span);
-    await Future<void>.delayed(Duration.zero);
-    final windowStart = first.add(Duration(days: offset)),
-        windowEnd = windowStart.add(const Duration(days: 29));
-    final rows = tasks
-        .where(
-          (t) =>
-              !calendarDate(
-                deadlineDay(object(t.data['due']), name),
-              ).isBefore(windowStart) &&
-              !calendarDate(
-                deadlineDay(object(t.data['start']), name),
-              ).isAfter(windowEnd),
-        )
-        .toList();
-    doc.addPage(
-      pw.MultiPage(
-        pageFormat: PdfPageFormat.a4.landscape,
-        theme: pw.ThemeData.withFont(base: font),
-        maxPages: 100,
-        build: (_) => [
-          pw.Header(text: s.get('boards', board).str('title')),
-          pw.Text(
-            'Timeline / ${windowStart.toIso8601String().substring(0, 10)} — ${windowEnd.toIso8601String().substring(0, 10)}',
-          ),
-          pw.Text(
-            'Saved start/due dates; no inferred route or resource schedule. Missing-date tasks omitted.',
-          ),
-          pw.SizedBox(height: 16),
-          pw.Row(
-            children: [
-              pw.SizedBox(width: 180),
-              for (var i = 0; i < 30; i++)
-                pw.SizedBox(
-                  width: 18,
-                  child: pw.Text(
-                    '${windowStart.add(Duration(days: i)).day}',
-                    style: const pw.TextStyle(fontSize: 7),
-                  ),
-                ),
-            ],
-          ),
-          for (final t in rows)
-            pw.SizedBox(
-              height: 40,
-              child: pw.Row(
-                children: [
-                  pw.SizedBox(
-                    width: 180,
-                    child: pw.Text(
-                      t.str('title'),
-                      maxLines: 2,
-                      style: const pw.TextStyle(fontSize: 10),
-                    ),
-                  ),
-                  pw.SizedBox(
-                    width: 540,
-                    height: 30,
-                    child: pw.Stack(
-                      children: [
-                        pw.Positioned(
-                          left:
-                              calendarDate(
-                                deadlineDay(object(t.data['start']), name),
-                              ).difference(windowStart).inDays.clamp(0, 29) *
-                              18.0,
-                          top: 8,
-                          child: pw.Container(
-                            height: 18,
-                            width:
-                                (calendarDate(
-                                          deadlineDay(
-                                            object(t.data['due']),
-                                            name,
-                                          ),
-                                        )
-                                        .difference(windowStart)
-                                        .inDays
-                                        .clamp(0, 29) -
-                                    calendarDate(
-                                          deadlineDay(
-                                            object(t.data['start']),
-                                            name,
-                                          ),
-                                        )
-                                        .difference(windowStart)
-                                        .inDays
-                                        .clamp(0, 29) +
-                                    1) *
-                                18.0,
-                            color: PdfColor.fromHex('#6366F1'),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-            ),
-        ],
-      ),
-    );
-  }
   job?.check();
   final output = await doc.save(enableEventLoopBalancing: true);
   job?.check();
@@ -279,13 +126,12 @@ Future<void> exportBoards(
       'ics': 'ICS',
       if (boardsPro(context)) 'xlsx': 'XLSX',
       if (boardsPro(context))
-        'timeline-pdf': tr(context, 'Timeline PDF', 'PDF dòng thời gian'),
-      if (boardsPro(context))
-        'study-pdf': tr(
-          context,
-          'Printable study planner PDF',
-          'PDF kế hoạch học tập để in',
-        ),
+        if (boardsPro(context))
+          'study-pdf': tr(
+            context,
+            'Printable study planner PDF',
+            'PDF kế hoạch học tập để in',
+          ),
       if (boardsPro(context))
         'template': tr(context, 'Board template JSON', 'JSON mẫu bảng'),
       if (boardsPro(context))
@@ -364,7 +210,7 @@ Future<void> exportBoards(
       }
       if (!context.mounted) return;
       final Uint8List bytes;
-      if (['zip', 'json', 'pdf', 'timeline-pdf', 'study-pdf'].contains(f)) {
+      if (['zip', 'json', 'pdf', 'study-pdf'].contains(f)) {
         bytes = await runBoardsJob(context, (job) async {
           final result = switch (f) {
             'zip' || 'json' => await exportBackupAsync(
@@ -374,7 +220,6 @@ Future<void> exportBoards(
               progress: job.progress,
             ),
             'pdf' => await boardPdf(s, board!, job: job, vi: vi),
-            'timeline-pdf' => await timelinePdf(s, board!, job: job, vi: vi),
             _ => await studyPlannerPdf(s, board!, job: job, vi: vi),
           };
           job.check();
@@ -423,7 +268,7 @@ Future<void> exportBoards(
           'xlsx' =>
             'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
           'template' => 'application/json',
-          'timeline-pdf' || 'study-pdf' => 'application/pdf',
+          'study-pdf' => 'application/pdf',
           _ => 'text/markdown',
         },
       );

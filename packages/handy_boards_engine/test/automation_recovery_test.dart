@@ -176,39 +176,35 @@ void main() {
       expect(check.str('task'), next.rows('tasks').single.id);
     },
   );
-  test(
-    'critical path warns on conflicting dates and mixed deadlines reject reversed start',
-    () {
-      var s = withTask(withTask(fixture()), id: 'u');
-      s = s.put(
-        'tasks',
-        s.get('tasks', 't').copy({
-          'estimate': 30,
-          'due': {'kind': 'day', 'day': '2026-11-05'},
-        }),
-      );
-      s = s.put(
-        'tasks',
-        s.get('tasks', 'u').copy({
-          'estimate': 30,
-          'start': {'kind': 'day', 'day': '2026-11-04'},
-        }),
-      );
-      s = addDependency(s, 't', 'u');
-      expect(criticalPath(s, 'b')['warning'], 'Dependency dates overlap');
-      final invalid = s.put(
-        'tasks',
-        s.get('tasks', 'u').copy({
-          'due': {
-            'kind': 'time',
-            'at': '2026-11-02T12:00:00Z',
-            'zone': 'Asia/Ho_Chi_Minh',
-          },
-        }),
-      );
-      expect(invalid.validate, throwsFormatException);
-    },
-  );
+  test('mixed deadlines reject a reversed start', () {
+    var s = withTask(withTask(fixture()), id: 'u');
+    s = s.put(
+      'tasks',
+      s.get('tasks', 't').copy({
+        'estimate': 30,
+        'due': {'kind': 'day', 'day': '2026-11-05'},
+      }),
+    );
+    s = s.put(
+      'tasks',
+      s.get('tasks', 'u').copy({
+        'estimate': 30,
+        'start': {'kind': 'day', 'day': '2026-11-04'},
+      }),
+    );
+    s = addDependency(s, 't', 'u');
+    final invalid = s.put(
+      'tasks',
+      s.get('tasks', 'u').copy({
+        'due': {
+          'kind': 'time',
+          'at': '2026-11-02T12:00:00Z',
+          'zone': 'Asia/Ho_Chi_Minh',
+        },
+      }),
+    );
+    expect(invalid.validate, throwsFormatException);
+  });
   test(
     'grade threshold form notation validates labels/values and preserves decimals',
     () {

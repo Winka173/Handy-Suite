@@ -172,18 +172,6 @@ void main() {
     );
   });
   test(
-    'critical path uses explicit durations and returns warning if unknown',
-    () {
-      var s = withTask(withTask(fixture()), id: 'u');
-      expect(criticalPath(s, 'b')['valid'], false);
-      s = s
-          .put('tasks', s.get('tasks', 't').copy({'estimate': 30}))
-          .put('tasks', s.get('tasks', 'u').copy({'estimate': 40}));
-      s = addDependency(s, 't', 'u');
-      expect(criticalPath(s, 'b')['minutes'], 70);
-    },
-  );
-  test(
     'focus timestamps survive restart; pause/resume do not double count',
     () {
       var s = startFocus(withTask(fixture()), 't', DateTime.utc(2026, 1, 1));

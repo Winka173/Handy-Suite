@@ -25,7 +25,7 @@ bounds, never silent truncation. Browser exports yield/cancel between records an
 assets; native export-only workers can be interrupted. A confirmed restore's DB
 transaction is atomic and not interrupted halfway through COMMIT. Imported system
 reminders and home-widget task names start disabled on replacement restore.
-Advanced timeline PDF remains <=300 dated tasks/366 days; Study printable <=1000
+Study printable <=1000
 tasks/100 categories. PDF font coverage is bundled EN/VI, not every writing system.
 
 Native metadata is version-addressable with a bounded decoded-record cache; assets

@@ -688,11 +688,13 @@ are opt-in; generic boards do not require school/project fields.
 - Optional Study templates/metadata, weekly sessions, assessments/weight/target,
   normalized personal grade plans and user-owned scale/letter mapping. Focus uses
   saved timestamps and pause/resume; no continuous background execution claim.
-- Advanced Pro source: timeline, duration-only dependency path, priority reasons,
-  workload/capacity, custom fields/values, saved AND/OR views and bounded local rules.
+- Advanced Pro source: priority reasons, workload/capacity, custom fields/values, saved AND/OR views and bounded local rules.
 - Full JSON/ZIP manifest/hash/assets preview/merge/replace/Undo; mapped CSV and
   canonical task CSV, Markdown checklists/plain lines; CSV/MD/PDF/ICS summaries;
-  Pro XLSX, timeline/study PDF and safe board template JSON.
+  Pro XLSX, study PDF and safe board template JSON.
+- Timeline (Gantt bars, critical path) and its PDF were removed on 2026-11-03:
+  project scheduling is heavier than a personal board needs. "Do first" links
+  between tasks stay on each task and still guard moves.
 - Android durable shared-text inbox commits before ack; user-initiated clipboard.
   iOS App Group/BoardsShare extension source is implemented but not built on Mac.
   Store IDs/signing are not configured.
@@ -703,7 +705,7 @@ This list describes implemented scope, not complete parity with the master promp
 Handy Boards continuation: Table columns/cell edits; grouped List; assignee/estimate/
 reminder/archive filters and attachment-link search; timed start editor; Calendar
 week/day and optional class overlay; month drag reschedule with confirmation/Undo;
-Timeline move/resize/milestones; bounded launch/resume recurrence; full rule editor/
+Bounded launch/resume recurrence; full rule editor/
 preview; template JSON/ZIP with custom defaults/subtasks and explicit recurrence
 opt-in. Exact remaining scope stays in the Boards feature matrix.
 

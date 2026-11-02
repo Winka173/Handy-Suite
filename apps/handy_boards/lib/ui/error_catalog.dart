@@ -185,9 +185,6 @@ const boardsErrorVi = <String, String>{
   'Template field/recurrence bounds':
       'Trường tùy chỉnh hoặc quy tắc lặp của mẫu vượt giới hạn.',
   'Text exceeds 3 MB': 'Văn bản vượt 3 MB.',
-  'Timeline PDF limited to 300 dated top-level tasks':
-      'PDF dòng thời gian giới hạn 300 công việc cấp chính có ngày.',
-  'Timeline PDF limited to 366 days': 'PDF dòng thời gian giới hạn 366 ngày.',
   'Timezone offset required': 'Mốc thời gian cần có độ lệch múi giờ.',
   'Too many occurrences; choose a smaller horizon':
       'Quá nhiều lần lặp. Hãy chọn khoảng ngày ngắn hơn.',

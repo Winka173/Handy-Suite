@@ -36,8 +36,8 @@ ICS exports due events (all-day or UTC), UTF-8 fold/escape; no recurrence rules 
 PDF summary excludes note/attachment bodies; personal task titles remain private.
 
 Pro exports: valid XLSX inline string cells (no formula injection), safe board
-template JSON without original UUIDs/history/attachments/private notes/field values, timeline PDF and
-printable Study PDF. Independent readers PyMuPDF/openpyxl verify actual files.
+template JSON without original UUIDs/history/attachments/private notes/field values and
+printable Study PDF (timeline PDF removed 2026-11-03). Independent readers PyMuPDF/openpyxl verify actual files.
 Templates preserve subtask links, checklist structure (completion reset), field definitions/defaults and category/status ordering.
 Recurrence definitions (including dates/timezone) require explicit opt-in on BOTH
 export and import. Imported definitions start disabled until reviewed in the task

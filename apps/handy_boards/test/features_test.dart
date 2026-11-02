@@ -30,7 +30,6 @@ void main() {
         ..createSync(recursive: true);
       for (final (name, render) in [
         ('summary', boardPdf),
-        ('timeline', timelinePdf),
         ('study', studyPlannerPdf),
       ]) {
         final bytes = await render(s, 'b');
@@ -147,7 +146,7 @@ void main() {
     },
   );
   testWidgets(
-    'advanced timeline/fields/views/rules render under test-owned native store response',
+    'advanced priority/fields/views/rules render under test-owned native store response',
     (t) async {
       // Native channel fixture exists only in this test, never in app/release code.
       const channel = MethodChannel('boards_test_store');
@@ -193,27 +192,15 @@ void main() {
         ),
       );
       await t.pumpAndSettle();
-      expect(find.textContaining('Bars use saved start'), findsOneWidget);
-      final width = t.widget<Slider>(find.byType(Slider).first).value;
-      await t.drag(find.byTooltip('Practice equations'), Offset(width * 2, 0));
-      await t.pumpAndSettle();
-      expect(find.text('Apply date change?'), findsOneWidget);
+      // The timeline and its critical path were removed on 2026-11-03.
+      expect(find.widgetWithText(ChoiceChip, 'Timeline'), findsNothing);
       expect(
-        object(c.state!.get('tasks', 'task').data['due'])['day'],
-        '2026-11-03',
-      );
-      await fixtures.tap(t, find.text('Cancel').last);
-      await t.drag(find.byTooltip('Practice equations'), Offset(width * 2, 0));
-      await t.pumpAndSettle();
-      await fixtures.tap(t, find.text('Confirm').last);
-      await fixtures.settleIO(t);
-      expect(
-        object(c.state!.get('tasks', 'task').data['start'])['day'],
-        '2026-11-03',
-      );
-      expect(
-        object(c.state!.get('tasks', 'task').data['due'])['day'],
-        '2026-11-05',
+        t
+            .widget<ChoiceChip>(
+              find.widgetWithText(ChoiceChip, 'Smart priority'),
+            )
+            .selected,
+        isTrue,
       );
       expect(c.state!.rows('tasks').single.id, 'task');
       for (final (tab, expected) in [
