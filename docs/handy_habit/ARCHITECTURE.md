@@ -17,7 +17,7 @@ Spend today_page missing plan/recurring.dart and openBillEditor. Web Spend build
 but source changed during execution; not stable snapshot evidence. Preserve these edits.
 
 Implementation now has nine apps and twenty shared packages. `handy_habit_engine` owns
-calendar, streaks, state validation, routine transitions/Lite, reminders and portable
+calendar, streaks, state validation, routine transitions, reminders and portable
 formats. App owns controller, native/IDB repositories, permission adapter and screens.
 No fork of the shared UI library. Four requested mobile areas, adaptive rail and web
 named routes; one vermilion hue (#B42318), bead strings for one-tap check-in and a step-by-step runner (UI rebuilt 2026-11-02). See the

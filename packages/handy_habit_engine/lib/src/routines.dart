@@ -1,49 +1,5 @@
 part of '../handy_habit_engine.dart';
 
-class LitePlan {
-  final List<RoutineStep> steps;
-  final List<String> omitted, shrunk;
-  final bool feasible;
-  final int requested, total;
-  LitePlan(this.steps, this.omitted, this.shrunk, this.feasible, this.requested)
-    : total = steps.fold(0, (a, s) => a + s.seconds);
-}
-
-LitePlan routineLite(Routine r, int seconds) {
-  integer(seconds, max: 86400);
-  final steps = r.steps.toList(), shrunk = <String>[], omitted = <String>[];
-  var total = r.planned;
-  final order = List<int>.generate(steps.length, (i) => i)
-    ..sort((a, b) {
-      final c = steps[a].priority.compareTo(steps[b].priority);
-      return c == 0 ? b.compareTo(a) : c;
-    });
-  for (final i in order) {
-    if (total <= seconds) break;
-    final s = steps[i], cut = min(total - seconds, s.seconds - s.minimum);
-    if (cut > 0) {
-      steps[i] = s.copy({'seconds': s.seconds - cut});
-      total -= cut;
-      shrunk.add(s.id);
-    }
-  }
-  for (final i in order) {
-    if (total <= seconds) break;
-    final s = steps[i];
-    if (!s.required) {
-      total -= s.seconds;
-      omitted.add(s.id);
-    }
-  }
-  return LitePlan(
-    List.unmodifiable(steps.where((s) => !omitted.contains(s.id))),
-    List.unmodifiable(omitted),
-    List.unmodifiable(shrunk),
-    total <= seconds,
-    seconds,
-  );
-}
-
 RoutineSession startSession(
   Routine routine,
   String today,

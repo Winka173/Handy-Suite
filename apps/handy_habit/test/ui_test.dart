@@ -339,14 +339,12 @@ void main() {
   });
 
   testWidgets(
-    'the quick version leaves the routine as it is, and a linked step records once',
+    'running a routine leaves it as it is, and a linked step records once',
     (tester) async {
       final c = await start(tester, state: seeded(), tab: 2);
       await tapKey(tester, 'routine-r');
-      await tapKey(tester, 'routine-lite');
-      expect(find.byKey(const Key('lite-result')), findsOneWidget);
       expect(c.state!.routines.single.planned, 60);
-      await tapKey(tester, 'lite-start');
+      await tapKey(tester, 'routine-start');
       expect(find.byKey(const Key('routine-complete-step')), findsOneWidget);
       await tester.tap(find.byKey(const Key('routine-complete-step')));
       await tester.pumpAndSettle();

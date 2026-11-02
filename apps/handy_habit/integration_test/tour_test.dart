@@ -122,14 +122,11 @@ void main() {
     await pause(t, 1500);
     await back(t);
 
-    // The morning routine, step by step; the quick version first.
+    // The morning routine, step by step.
     await area(2);
     await pause(t, 1500);
     await tap(t, 'routine-morning');
     await pause(t, 1500);
-    await tap(t, 'routine-lite');
-    await pause(t, 2000);
-    await tap(t, 'sheet-cancel');
     await tap(t, 'routine-start');
     await pause(t, 2500);
     await tap(t, 'routine-complete-step');

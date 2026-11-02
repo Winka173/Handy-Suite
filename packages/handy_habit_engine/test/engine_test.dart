@@ -449,44 +449,6 @@ void main() {
       expect(recoverSession(session, DateTime.utc(2025)).elapsed, 0);
     },
   );
-  test(
-    'Lite exact minima, omission, order, infeasibility and template preservation',
-    () {
-      final r = Routine(
-            id: 'r',
-            title: 'Study',
-            steps: [
-              RoutineStep(id: 'a', title: 'Focus', seconds: 300, minimum: 180),
-              RoutineStep(
-                id: 'b',
-                title: 'Notes',
-                seconds: 120,
-                minimum: 60,
-                required: false,
-                priority: 0,
-              ),
-            ],
-          ),
-          before = jsonEncode(r.toJson()),
-          plan = routineLite(r, 180);
-      expect(plan.feasible, true);
-      expect(plan.total, 180);
-      expect(plan.steps.single.id, 'a');
-      expect(plan.omitted, ['b']);
-      expect(routineLite(r, 179).feasible, false);
-      expect(jsonEncode(r.toJson()), before);
-      expect(routineLite(r, 1000).total, 420);
-    },
-  );
-  test('untimed required step is preserved even in a zero-cost Lite plan', () {
-    final r = Routine(
-      id: 'r',
-      title: 'Manual',
-      steps: [RoutineStep(id: 'a', title: 'Check', seconds: 0, minimum: 0)],
-    );
-    expect(routineLite(r, 0).steps.single.id, 'a');
-    expect(routineLite(r, 0).feasible, true);
-  });
   for (final zip in [false, true]) {
     test(
       '${zip ? 'ZIP' : 'JSON'} full roundtrip and future schema refusal',

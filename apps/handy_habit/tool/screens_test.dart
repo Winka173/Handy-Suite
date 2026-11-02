@@ -415,8 +415,6 @@ void main() {
     await area(t, 2);
     await fixtures.tapKey(t, 'routine-morning');
     await shot(t, 'phone-8-routine');
-    await fixtures.tapKey(t, 'routine-lite');
-    await shot(t, 'phone-9-lite');
   });
   testWidgets('phone runner', (t) async {
     await boot(t, const Size(390, 844));

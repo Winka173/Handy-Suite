@@ -109,10 +109,7 @@ void main() {
       await tester.tap(find.byKey(Key('routine-${routine.id}')).first);
       await tester.pumpAndSettle();
       await binding.takeScreenshot('habit-native-builder');
-      await tester.tap(find.byKey(const Key('routine-lite')));
-      await tester.pumpAndSettle();
-      await binding.takeScreenshot('habit-native-lite');
-      await tester.tap(find.byKey(const Key('lite-start')));
+      await tester.tap(find.byKey(const Key('routine-start')));
       await settleNative(tester, () => c.state!.sessions.isNotEmpty);
       await binding.takeScreenshot('habit-native-runner');
       final sessionId = c.state!.sessions.single.id;

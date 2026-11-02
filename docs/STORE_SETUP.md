@@ -128,8 +128,8 @@ App namespace `com.example.handysuite.habit`, debug suffix `.flutterpilot`; iOS 
 `com.example.handysuite.habit`. Android/iOS currently use official test AdMob app IDs;
 replace through public build configuration before distribution. Pro uses the same
 non-consumable official adapters/restore flow as the suite. Concrete benefits are ad
-removal where supported and reusable Routine Lite variants. Core tracking, Lite
-preview, reports and full backups remain free. No fake price, purchase or Web payment.
+removal where supported (reusable Routine Lite variants went with Lite on
+2026-11-03). Core tracking, reports and full backups remain free. No fake price, purchase or Web payment.
 Needed: publisher-owned final bundle/package IDs, product IDs/public license key,
 AdMob IDs/UMP configuration, release signing, privacy forms and official sandbox QA.
 iOS also needs macOS/Xcode. No credentials should be pasted into docs/source.

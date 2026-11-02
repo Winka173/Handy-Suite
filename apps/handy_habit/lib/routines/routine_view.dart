@@ -2,7 +2,6 @@ import 'package:handy_habit_engine/handy_habit_engine.dart';
 import 'package:handy_ui/kit.dart';
 import '../scope.dart';
 import '../ui/words.dart';
-import 'lite_sheet.dart';
 import 'routine_editor.dart';
 import 'run.dart';
 
@@ -162,16 +161,6 @@ class RoutineView extends StatelessWidget {
                           : null,
                       icon: const Icon(Icons.play_arrow),
                       label: Text(tr(context, 'Start', 'Bắt đầu')),
-                    ),
-                    OutlinedButton.icon(
-                      key: const Key('routine-lite'),
-                      onPressed: ready
-                          ? () => openLite(context, scope, r)
-                          : null,
-                      icon: const Icon(Icons.timer_outlined, size: 18),
-                      label: Text(
-                        tr(context, 'Short of time', 'Gấp thời gian'),
-                      ),
                     ),
                   ],
                 ),

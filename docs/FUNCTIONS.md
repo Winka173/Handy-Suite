@@ -77,8 +77,8 @@ Keep, Spend hoặc timer đa dụng. [Trạng thái kiểm chứng](handy_habit/
   vào lại/xong/dừng thì gỡ. Chỉ khi công tắc riêng bật, đã có quyền và ngoài giờ yên lặng.
 - Hoàn thành bước liên kết ghi tiến độ cùng transaction, không ghi hai lần do
   thao tác cũ. Undo chỉ gỡ event còn nguyên của bước; dừng phiên giữ check-in đã hoàn thành.
-- Routine Lite: chọn 5–90 phút, preview bước giữ/rút/bỏ và tổng thời gian; không
-  bỏ bước bắt buộc, báo rõ nếu không thể rút đủ. Chạy một lần không đổi template.
+- Routine Lite (rút gọn quy trình theo số phút) đã bỏ ngày 2026-11-03: Runner đã
+  cho bỏ qua hay hoàn thành từng bước. Biến thể Lite đã lưu là quy trình bình thường.
 - Insights: khoảng ngày, habit, nhóm, routine; mẫu số cơ hội hợp lệ, phiên hoàn
   thành và thời gian dự kiến/thực tế, không chấm điểm năng suất tùy tiện.
 - Nhắc cục bộ Android/iOS: quyền chỉ xin khi bật, giờ yên lặng, chọn thứ, snooze,
@@ -88,7 +88,7 @@ Keep, Spend hoặc timer đa dụng. [Trạng thái kiểm chứng](handy_habit/
   checksum và rollback. CSV log nhập/xuất (kèm bảng kỳ nghỉ thứ hai khi có);
   Markdown/PDF báo cáo EN/VI có khoảng ngày, liệt kê kỳ nghỉ. Schema dữ liệu 2.
 - EN/VI, sáng/tối, bốn tab mobile/rail màn hình rộng, bàn phím và UI kit dùng chung.
-  Ads + Pro Lifetime dùng adapter thật; Pro bỏ ads được hỗ trợ và lưu biến thể Lite.
+  Ads + Pro Lifetime dùng adapter thật; Pro bỏ ads được hỗ trợ.
 
 Schema/CSV và chính sách dữ liệu: [DATA_SCHEMA](handy_habit/DATA_SCHEMA.md).
 Giới hạn nền tảng: [PLATFORM_CAPABILITIES](handy_habit/PLATFORM_CAPABILITIES.md).
