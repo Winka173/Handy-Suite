@@ -288,6 +288,8 @@ Source: `apps/handy_docs/lib`, `packages/handy_docs_engine`, `packages/handy_pdf
   tương phản, nhiều trang, sắp xếp/xóa trang, ghép PDF, lưu/khôi phục session JSON.
   "PDF tìm được chữ": OCR từng trang rồi đặt lớp chữ ẩn dưới ảnh. Không AI đám mây.
   Scanner giới hạn cạnh 2048 / 4Mpx mỗi trang, session 16MB/16Mpx.
+- **Lưu chữ nhận dạng thành Word (.docx)**: đoạn cách bằng dòng trống, xuống dòng giữ nguyên,
+  `` sang trang; Office Open XML tối giản (không style riêng), tiêu đề trong thuộc tính tệp.
 - **Nhận dạng chữ (OCR, trên máy):** từ menu một trang quét hoặc nút trên trang PDF
   (render 2000 px). Android/iOS: Google ML Kit v2, chữ Latin, model đi kèm app (Google
   liệt kê tiếng Việt; chưa kiểm trên thiết bị). Windows: `Windows.Media.Ocr` với gói
@@ -299,6 +301,10 @@ Source: `apps/handy_docs/lib`, `packages/handy_docs_engine`, `packages/handy_pdf
   trang, reorder, duplicate, xoay, render trang ra PNG, chữ đóng dấu (tối đa 100 ký tự,
   font Geist nhúng một lần nên có tiếng Việt; ký tự font không có bị từ chối).
   Bảo toàn source; không hứa sửa mọi cấu trúc hoặc mã hóa PDF.
+- **In** (màn PDF): "In hai mặt thủ công" tạo hai tệp, `… - 1 mặt trước.pdf` (trang lẻ) và
+  `… - 2 mặt sau.pdf` (trang chẵn, trang cuối trước), kèm ba bước; số trang lẻ thì bảo lấy
+  tờ cuối ra. "Đánh số trang" (Android/iOS/Windows): giữa hoặc góc phải chân trang, số bắt
+  đầu tuỳ chọn, có thể bỏ trang đầu; luôn là bản mới, tệp gốc giữ nguyên.
 - **Ký và điền PDF** (`#/pdf/fill`): chữ ký vẽ bằng ngón tay/chuột/bút hoặc nhập PNG
   (tối đa 6 chữ ký lưu trên máy, mỗi cái PNG ≤ 500 KB, xóa được, có bản lưu dự phòng),
   ô chữ một dòng (≤ 120 ký tự) và ngày (`pickHandyDate`); kéo, đổi cỡ, phím mũi tên,

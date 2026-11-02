@@ -209,8 +209,28 @@ class _PdfPageState extends State<PdfPage> {
           run((t) => desk.make(range.text, rotation, watermark.text, t)),
       onMerge: () => run(desk.merge),
       onCompress: (strong) => run((t) => desk.compress(strong, t)),
+      onDuplex: () => run(desk.duplex),
+      onSaveBacks: () => save(
+        desk.backs!,
+        desk.duplexName(2, vi: tr(context, 'en', 'vi') == 'vi'),
+        'application/pdf',
+      ),
+      onNumber: (start, skipFirst, right) => run(
+        (t) => desk.number(
+          start: start,
+          skipFirst: skipFirst,
+          right: right,
+          token: t,
+        ),
+      ),
       onFill: () => Navigator.pushNamed(context, '/pdf/fill'),
-      onSave: () => save(desk.output!, desk.outputName, 'application/pdf'),
+      onSave: () => save(
+        desk.output!,
+        desk.outputNote == 'duplex'
+            ? desk.duplexName(1, vi: tr(context, 'en', 'vi') == 'vi')
+            : desk.outputName,
+        'application/pdf',
+      ),
     );
     if (!wide) {
       return ListView(

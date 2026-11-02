@@ -107,6 +107,16 @@ class _OcrPageState extends State<OcrPage> {
                       key: const Key('ocr-writer'),
                     ),
                     HandyMenuItem(
+                      Icons.description_outlined,
+                      tr(
+                        context,
+                        'Save as Word (.docx)',
+                        'Lưu thành Word (.docx)',
+                      ),
+                      busy ? null : () => save('docx'),
+                      key: const Key('ocr-save-docx'),
+                    ),
+                    HandyMenuItem(
                       Icons.save_alt,
                       tr(context, 'Save as text (.txt)', 'Lưu thành .txt'),
                       busy ? null : () => save('txt'),

@@ -1,3 +1,4 @@
+import 'package:handy_docs_engine/handy_docs_engine.dart';
 import 'dart:convert';
 import 'dart:typed_data';
 import 'package:flutter/widgets.dart';
@@ -99,8 +100,15 @@ class OcrJob extends ChangeNotifier {
   /// The edited words as a file: `.txt`, or `.md` with nothing escaped.
   (String, Uint8List, String) file(String kind) => (
     '$base.$kind',
-    Uint8List.fromList(utf8.encode(text.text)),
-    kind == 'md' ? 'text/markdown' : 'text/plain',
+    kind == 'docx'
+        ? docxFromText(text.text, title: base)
+        : Uint8List.fromList(utf8.encode(text.text)),
+    switch (kind) {
+      'md' => 'text/markdown',
+      'docx' =>
+        'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+      _ => 'text/plain',
+    },
   );
 
   void _set(OcrState next) {

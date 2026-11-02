@@ -20,6 +20,10 @@ class PdfDesk extends ChangeNotifier {
   Uint8List? output;
   String outputNote = '';
 
+  /// With a both-sides job, [output] holds the fronts and this the backs.
+  Uint8List? backs;
+  DuplexPlan? plan;
+
   /// For a smaller copy: the original's size in bytes.
   int before = 0;
 
@@ -75,7 +79,7 @@ class PdfDesk extends ChangeNotifier {
       selected = index;
       page = 0;
       preview = png;
-      output = null;
+      output = backs = null;
       notifyListeners();
       await old?.close();
     } catch (_) {
@@ -87,7 +91,7 @@ class PdfDesk extends ChangeNotifier {
   /// Takes a file off the desk; its original was never touched.
   Future<void> remove(int index, CancellationToken token) => _job(() async {
     inputs.removeAt(index);
-    output = null;
+    output = backs = null;
     if (inputs.isEmpty) {
       final old = document;
       document = null;
@@ -119,11 +123,12 @@ class PdfDesk extends ChangeNotifier {
     String watermark,
     CancellationToken token,
   ) => _job(() async {
-    output = null;
+    output = backs = null;
     notifyListeners();
     final indices = range.trim().isEmpty
         ? [for (var i = 0; i < pages; i++) i]
         : pageRange(range, pages);
+    backs = null;
     output = await document!.transform(
       indices,
       rotation: rotation,
@@ -134,9 +139,44 @@ class PdfDesk extends ChangeNotifier {
     notifyListeners();
   });
 
+  /// Two PDFs for printing both sides by hand: the fronts, then the backs
+  /// in the order that lands each on its front once the stack is turned.
+  Future<void> duplex(CancellationToken token) => _job(() async {
+    output = backs = null;
+    notifyListeners();
+    final p = duplexPlan(pages);
+    final fronts = await document!.transform(p.fronts, cancellation: token);
+    backs = await document!.transform(p.backs, cancellation: token);
+    output = fronts;
+    plan = p;
+    outputNote = 'duplex';
+    notifyListeners();
+  });
+
+  /// A copy with page numbers at the foot of each page.
+  Future<void> number({
+    required int start,
+    required bool skipFirst,
+    required bool right,
+    required CancellationToken token,
+  }) => _job(() async {
+    output = backs = null;
+    notifyListeners();
+    final box = right
+        ? const PdfBox(.82, .945, .12, .026)
+        : const PdfBox(.44, .945, .12, .026);
+    output = await document!.flatten([
+      for (var i = 0; i < pages; i++)
+        if (pageNumberFor(i, start: start, skipFirst: skipFirst) case final n?)
+          PdfTextStamp(i, box, '$n', color: 0xFF333333),
+    ], cancellation: token);
+    outputNote = 'numbered';
+    notifyListeners();
+  });
+
   /// Every open file, in the order added, as one PDF.
   Future<void> merge(CancellationToken token) => _job(() async {
-    output = null;
+    output = backs = null;
     notifyListeners();
     output = await LocalPdf.merge([
       for (final f in inputs) f.bytes,
@@ -149,7 +189,7 @@ class PdfDesk extends ChangeNotifier {
   /// picture (text is no longer selectable); otherwise only pictures are
   /// re-encoded. A copy that is not smaller is refused.
   Future<void> compress(bool strong, CancellationToken token) => _job(() async {
-    output = null;
+    output = backs = null;
     notifyListeners();
     final source = inputs[selected];
     final smaller = strong
@@ -178,13 +218,27 @@ class PdfDesk extends ChangeNotifier {
     return switch (outputNote) {
       'smaller' || 'strong' => '$base-smaller.pdf',
       'merge' => 'handy-merged.pdf',
+      'numbered' => '$base-numbered.pdf',
       _ => 'handy-document.pdf',
     };
   }
 
+  /// The file names of a both-sides job, in the reader's language: side 1
+  /// is the fronts, side 2 the backs.
+  String duplexName(int side, {required bool vi}) {
+    final name = inputs.isEmpty ? 'handy-document' : inputs[selected].name;
+    final base = name.toLowerCase().endsWith('.pdf')
+        ? name.substring(0, name.length - 4)
+        : name;
+    final part = side == 1
+        ? (vi ? 'mặt trước' : 'fronts')
+        : (vi ? 'mặt sau' : 'backs');
+    return '$base - $side $part.pdf';
+  }
+
   void dropOutput() {
     if (output == null) return;
-    output = null;
+    output = backs = null;
     notifyListeners();
   }
 

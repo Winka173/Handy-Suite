@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:archive/archive.dart';
 import 'dart:typed_data';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:handy_docs/scan/scan_store.dart';
@@ -66,6 +67,13 @@ void main() {
       expect(utf8.decode(docs.files.exported!), 'Thành tiền: 512.340 đồng');
       await menu(tester, 'ocr-save-md');
       expect(docs.files.name, 'Hóa đơn điện tháng 10.md');
+      await menu(tester, 'ocr-save-docx');
+      expect(docs.files.name, 'Hóa đơn điện tháng 10.docx');
+      final word = ZipDecoder().decodeBytes(docs.files.exported!);
+      expect(
+        utf8.decode(word.findFile('word/document.xml')!.content),
+        contains('Thành tiền: 512.340 đồng'),
+      );
       // The draft is replaced only after asking, and is not saved by it.
       await menu(tester, 'ocr-writer');
       await tester.tap(find.byKey(const Key('confirm-action')));

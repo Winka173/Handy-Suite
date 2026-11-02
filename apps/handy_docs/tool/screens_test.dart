@@ -6,6 +6,7 @@ import 'dart:ui' as ui;
 import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:handy_core/handy_core.dart';
 import 'package:handy_docs/app.dart';
 import 'package:handy_docs/scan/scan_screen.dart';
 import 'package:handy_docs/session.dart';
@@ -501,6 +502,37 @@ void main() {
     await shot(t, 'phone-17-fill');
   });
 
+  for (final (label, size) in const [
+    ('phone', Size(390, 844)),
+    ('desktop', Size(1440, 900)),
+  ]) {
+    testWidgets('$label pdf both sides', (t) async {
+      final form = await formDesk(t);
+      final desk = _BothSides()
+        ..preview = form.preview
+        ..inputs.clear()
+        ..inputs.add(ImportedBytes('Báo cáo quý 3.pdf', Uint8List(2400000)));
+      await boot(t, size, desk: desk);
+      await open(t, '/pdf');
+      await t.scrollUntilVisible(
+        find.byKey(const Key('pdf-duplex')),
+        200,
+        scrollable: find.byType(Scrollable).last,
+      );
+      // Mid-screen, clear of anything pinned at the foot.
+      await Scrollable.ensureVisible(
+        t.element(find.byKey(const Key('pdf-duplex'))),
+        alignment: .5,
+      );
+      await t.pumpAndSettle();
+      await t.tap(find.byKey(const Key('pdf-duplex')));
+      await t.pumpAndSettle();
+      await t.ensureVisible(find.byKey(const Key('pdf-export-backs')));
+      await t.pumpAndSettle();
+      await shot(t, '$label-19b-pdf-both-sides');
+    });
+  }
+
   testWidgets('desktop pdf smaller', (t) async {
     final desk = await formDesk(t);
     await boot(t, const Size(1440, 900), desk: desk);
@@ -566,4 +598,19 @@ void main() {
     await open(t, '/read');
     await shot(t, 'phone-24-kept');
   });
+}
+
+/// Seven pages on the desk; both sides worked out as PDFium would.
+class _BothSides extends FakeDesk {
+  @override
+  int get pages => 7;
+  @override
+  Future<void> duplex(CancellationToken token) async {
+    final p = duplexPlan(pages);
+    output = Uint8List(1);
+    backs = Uint8List(1);
+    plan = p;
+    outputNote = 'duplex';
+    notifyListeners();
+  }
 }
