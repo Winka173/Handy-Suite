@@ -54,4 +54,27 @@ void main() {
     final total = int.parse(result(t).split('= ').last);
     expect(total, inInclusiveRange(3, 18));
   });
+
+  testWidgets('the finder lists text once, and Text goes back to the bench', (
+    t,
+  ) async {
+    await start(t);
+    await t.tap(find.byKey(const Key('open-catalog')).first);
+    await t.pumpAndSettle();
+    await t.enterText(find.byKey(const Key('catalog-search')), 'text');
+    await t.pumpAndSettle();
+    for (final id in [
+      'normalize',
+      'deduplicate',
+      'sort',
+      'case',
+      'accents',
+      'count',
+    ]) {
+      expect(find.byKey(Key('catalog-$id')), findsNothing, reason: id);
+    }
+    await t.tap(find.byKey(const Key('catalog-text')));
+    await t.pumpAndSettle();
+    expect(find.byKey(const Key('bench-input')), findsOneWidget);
+  });
 }

@@ -420,6 +420,11 @@ Source: `apps/handy_tools/lib`, `packages/handy_tools_engine`.
   "15% của 2.400.000" trên bàn vẫn ra số bằng máy tính. Đổi tiền theo tỷ giá
   nhập tay đã bỏ. Màu (HEX/RGB/HSL, độ tương phản) chuyển sang Handy Dev. Ghim cũ
   của các tool này được bỏ qua, không làm hỏng cài đặt.
+- Danh mục gọn lại (2026-11-03): sáu tool văn bản (`normalize`, `deduplicate`, `sort`,
+  `case`, `accents`, `count`) thành một mục "Văn bản" đưa về bàn, vì bàn đã đếm và
+  biến đổi mọi chữ được dán; "Tìm và thay" vẫn riêng. `dates` trả lời cả ngày lịch lẫn
+  ngày làm việc (chọn cuối tuần; khoảng ngược chiều mang dấu trừ); `business-days` rời
+  danh mục, link cũ vẫn mở form có ngày lễ. Engine và registry không đổi.
 - **Bốc thăm** (`#/tool/draw`, nhóm Tạo mới): chọn N mục từ danh sách (mỗi dòng một
   mục, hoặc phân cách bằng dấu phẩy; tối đa 500, mục trùng giữ nguyên), chia đội đều
   (chênh nhau tối đa một người), tung xu, xúc xắc `NdM` (1-20 viên, 2-100 mặt).

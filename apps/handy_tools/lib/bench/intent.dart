@@ -137,13 +137,8 @@ List<Reading> interpret(String input, {required bool vi, DateTime? now}) {
     final a = _date(m[1]!, today), b = _date(m[2]!, today);
     if (a != null && b != null) {
       return [
-        Reading('dates', {'start': a, 'end': b}),
-        Reading('business-days', {
-          'start': a,
-          'end': b,
-          'weekend': '0,6',
-          'holidays': '',
-        }),
+        // Working days come with the dates answer.
+        Reading('dates', {'start': a, 'end': b, 'weekend': '0,6'}),
       ];
     }
   }

@@ -45,6 +45,24 @@ const generators = [
   ),
 ];
 
+/// Text tools the bench already does on any pasted text (counts and every
+/// transform as a chip). The finder lists them as one "Text" entry that
+/// opens the bench; their own forms stay reachable by old links and pins.
+const benchTextTools = {
+  'normalize',
+  'deduplicate',
+  'sort',
+  'case',
+  'accents',
+  'count',
+};
+
+/// Tools folded into another's answer: working days show with `dates`.
+const foldedTools = {'business-days'};
+
+/// The finder's single text entry.
+const textEntry = 'text';
+
 String toolTitle(BuildContext c, String id) {
   for (final g in generators) {
     if (g.$1 == id) return tr(c, g.$3, g.$4);
@@ -83,15 +101,30 @@ Future<String?> showToolCatalog(
           pinnable: false,
           keywords: '${g.$3} ${g.$4}',
         ),
-      for (final s in specs)
-        HandyCatalogEntry(
-          id: s.id,
-          title: s.title(context),
-          hint: s.hint(context),
-          group: categoryLabel(context, s.category),
-          icon: s.icon,
-          keywords: '${s.engine.titleEn} ${s.engine.titleVi}',
+      HandyCatalogEntry(
+        id: textEntry,
+        title: tr(context, 'Text', 'Văn bản'),
+        hint: tr(
+          context,
+          'Paste on the bench: count, tidy, dedupe, sort, case, accents',
+          'Dán vào bàn: đếm, chuẩn hoá, bỏ trùng, sắp xếp, hoa thường, bỏ dấu',
         ),
+        group: categoryLabel(context, Category.text),
+        icon: Icons.notes,
+        pinnable: false,
+        keywords:
+            'text normalize deduplicate sort case accents count văn bản chuẩn hoá bỏ trùng sắp xếp viết hoa bỏ dấu đếm',
+      ),
+      for (final s in specs)
+        if (!benchTextTools.contains(s.id) && !foldedTools.contains(s.id))
+          HandyCatalogEntry(
+            id: s.id,
+            title: s.title(context),
+            hint: s.hint(context),
+            group: categoryLabel(context, s.category),
+            icon: s.icon,
+            keywords: '${s.engine.titleEn} ${s.engine.titleVi}',
+          ),
     ],
   );
 }

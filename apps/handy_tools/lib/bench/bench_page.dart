@@ -91,10 +91,18 @@ class _BenchPageState extends State<BenchPage> {
       pinned: scope.read().favorites.toSet(),
       onTogglePin: scope.togglePin,
     );
-    if (id != null && mounted) {
-      setState(() {});
-      openTool(id);
+    if (id == null || !mounted) return;
+    if (id == textEntry) {
+      // Text is the bench itself: back to it, ready to paste.
+      if (widget.toolId == null) {
+        focus.requestFocus();
+      } else {
+        Navigator.popUntil(context, (r) => r.isFirst);
+      }
+      return;
     }
+    setState(() {});
+    openTool(id);
   }
 
   void reuse(TapeEntry e) {

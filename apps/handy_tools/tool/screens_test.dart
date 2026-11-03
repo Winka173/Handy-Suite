@@ -254,6 +254,11 @@ void main() {
       await openTool(t, 'password');
       await shot(t, '$label-6-password');
     });
+    testWidgets('$label dates', (t) async {
+      await boot(t, size);
+      await enter(t, '31/12/2026 đến hôm nay', submit: false);
+      await shot(t, '$label-6d-dates');
+    });
     testWidgets('$label measure', (t) async {
       fixturePicture = await t.runAsync(_tablePhoto);
       await boot(t, size);

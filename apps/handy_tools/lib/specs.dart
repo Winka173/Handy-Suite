@@ -350,14 +350,52 @@ final List<ToolSpec> specs = [
     'dates',
     Icons.date_range_outlined,
     Category.dates,
-    'Calendar days from the first date to the second.',
-    'Số ngày lịch từ ngày đầu đến ngày sau.',
+    'Calendar days and working days between two dates.',
+    'Số ngày lịch và số ngày làm việc giữa hai ngày.',
     fields: [
       FieldSpec('start', 'From', 'Từ ngày', FieldType.date, initial: _today()),
       const FieldSpec('end', 'To', 'Đến ngày', FieldType.date),
+      FieldSpec(
+        'weekend',
+        'Weekend',
+        'Cuối tuần',
+        FieldType.choice,
+        initial: '0,6',
+        choices: (_) => const [
+          ('0,6', 'Sat + Sun', 'T7 + CN'),
+          ('0', 'Sun only', 'Chỉ CN'),
+          ('5,6', 'Fri + Sat', 'T6 + T7'),
+        ],
+      ),
     ],
     encode: (v) => ('${v['start']},${v['end']}', ''),
-    present: (c, raw, v) => ValueOutput(tr(c, '$raw days', '$raw ngày')),
+    // Working days come with the answer (business-days merged in on
+    // 2026-11-03); holidays stay in that tool's form, reached by old links.
+    present: (c, raw, v) {
+      // A range written backwards counts the same days, with a minus, like
+      // the calendar figure above it.
+      final back = raw.startsWith('-');
+      final (from, to) = back ? (v['end'], v['start']) : (v['start'], v['end']);
+      String? work;
+      try {
+        work = specById['business-days']!.engine.run(
+          '$from,$to',
+          '${v['weekend'] ?? '0,6'}|',
+        );
+        if (back && work != '0') work = '-$work';
+      } on FormatException {
+        work = null;
+      }
+      return _rows([
+        (tr(c, 'Calendar days', 'Ngày lịch'), tr(c, '$raw days', '$raw ngày')),
+        (
+          tr(c, 'Working days', 'Ngày làm việc'),
+          work == null
+              ? '–'
+              : tr(c, '$work working days', '$work ngày làm việc'),
+        ),
+      ]);
+    },
   ),
   ToolSpec(
     'business-days',

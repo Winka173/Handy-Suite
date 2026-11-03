@@ -50,8 +50,11 @@ void main() {
       vi: true,
       now: DateTime(2026, 11, 1),
     );
-    expect(d.first.values, {'start': '2026-12-31', 'end': '2026-11-01'});
-    expect(d[1].toolId, 'business-days');
+    expect(d.single.values, {
+      'start': '2026-12-31',
+      'end': '2026-11-01',
+      'weekend': '0,6',
+    });
     // Colour checks moved to Handy Dev on 2026-11-03.
     expect(ids('#e8590c'), isNot(contains('colors')));
   });
