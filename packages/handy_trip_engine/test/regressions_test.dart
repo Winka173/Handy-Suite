@@ -129,24 +129,6 @@ void main() {
         ),
         throwsFormatException,
       );
-      final itinerary = importItineraryJson(state, 't', {
-        'app': 'handy-trip-itinerary',
-        'schema': 1,
-        'stops': [
-          {
-            'title': 'Imported lunch',
-            'day': '2026-03-09',
-            'time': '12:00',
-            'placeName': 'Unknown social label',
-          },
-        ],
-      });
-      expect(itinerary.stops.last.place, isNull);
-      expect(
-        itinerary.stops.last.text('note'),
-        contains('Unknown social label'),
-      );
-      expect(itinerary.visits, isEmpty);
     },
   );
   test(

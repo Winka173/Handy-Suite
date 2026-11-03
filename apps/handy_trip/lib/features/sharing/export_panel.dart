@@ -100,14 +100,6 @@ class _ExportState extends State<ExportPanel> {
       bytes = Uint8List.fromList(
         utf8.encode(exportCsv(s, kind.split(':').last)),
       );
-    } else if (kind == 'recipe') {
-      if (widget.tripId == null)
-        throw const FormatException('Choose one trip for an itinerary recipe');
-      ext = 'json';
-      mime = 'application/json';
-      bytes = Uint8List.fromList(
-        utf8.encode(jsonEncode(exportItineraryRecipe(s, widget.tripId!))),
-      );
     } else if (kind == 'album') {
       ext = 'zip';
       mime = 'application/zip';
@@ -174,35 +166,11 @@ class _ExportState extends State<ExportPanel> {
       );
   }
 
-  Future<void> geo(String format) async {
-    final snapshot = widget.tripId == null
-        ? scope.state
-        : selectTrip(scope.state, widget.tripId!);
-    if (!await tripConfirm(
-      context,
-      tr(
-        context,
-        'Export precise saved coordinates of confirmed places? These are point pins, not recorded routes.',
-        'Xuất tọa độ chính xác đã lưu của các nơi đã xác nhận? Đây là điểm ghim, không phải hành trình GPS.',
-      ),
-    ))
-      return;
-    await scope.files.exportBytes(
-      'handy-trip-points.$format',
-      Uint8List.fromList(
-        utf8.encode(exportGeo(snapshot, format, includePrecise: true)),
-      ),
-      mimeType: format == 'geojson'
-          ? 'application/geo+json'
-          : 'application/xml',
-    );
-  }
-
   Future<void> restoreFile([ImportedBytes? dropped]) async {
     final file =
         dropped ??
         await scope.files.importBytes(
-          extensions: ['json', 'zip', 'csv', 'ics', 'geojson', 'gpx', 'kml'],
+          extensions: ['json', 'zip', 'csv', 'ics'],
           maxBytes: portableLimit,
         );
     if (file == null) return;
@@ -210,27 +178,8 @@ class _ExportState extends State<ExportPanel> {
         extension = file.name.split('.').last.toLowerCase();
     TripState? imported;
     TripState? proposed;
-    if (extension == 'json' &&
-        object(jsonDecode(utf8.decode(file.bytes)))['app'] ==
-            'handy-trip-itinerary') {
-      if (scope.trip == null)
-        throw const FormatException(
-          'Select a target trip before itinerary JSON import',
-        );
-      proposed = importItineraryJson(
-        scope.state,
-        scope.trip!.key,
-        object(jsonDecode(utf8.decode(file.bytes))),
-      );
-    } else if (extension == 'zip' || extension == 'json') {
+    if (extension == 'zip' || extension == 'json') {
       imported = await compute(_restore, (file.bytes, extension == 'zip'));
-    } else if (['geojson', 'gpx', 'kml'].contains(extension)) {
-      final points = importGeo(utf8.decode(file.bytes), extension);
-      proposed = scope.state;
-      for (final p in points) {
-        final duplicate = clearDuplicate(proposed!, p);
-        if (duplicate == null) proposed = savePlace(proposed, p);
-      }
     } else if (extension == 'ics') {
       final trip = scope.trip;
       if (trip == null)
@@ -489,12 +438,6 @@ class _ExportState extends State<ExportPanel> {
               ('pdf', 'Public itinerary PDF', 'Lịch trình PDF công khai'),
               ('json', 'Public itinerary JSON', 'Lịch trình JSON công khai'),
               ('ics', 'Public calendar ICS', 'Lịch ICS công khai'),
-              if (widget.tripId != null)
-                (
-                  'recipe',
-                  'Interoperable itinerary JSON recipe',
-                  'JSON lịch trình có schema tương tác',
-                ),
               (
                 'album',
                 'Share photo album ZIP (metadata stripped)',
@@ -547,16 +490,6 @@ class _ExportState extends State<ExportPanel> {
               ),
           ],
         ),
-        Wrap(
-          spacing: 8,
-          children: [
-            for (final format in ['geojson', 'gpx', 'kml'])
-              TextButton(
-                onPressed: busy ? null : () => job(() => geo(format)),
-                child: Text(format.toUpperCase()),
-              ),
-          ],
-        ),
         const SizedBox(height: 24),
         OutlinedButton.icon(
           onPressed: busy ? null : () => job(() => restoreFile()),
@@ -564,8 +497,8 @@ class _ExportState extends State<ExportPanel> {
           label: Text(
             tr(
               context,
-              'Import / drop one backup, CSV, ICS or geo file here',
-              'Nhập / thả một backup, CSV, ICS hoặc tệp địa lý vào đây',
+              'Import / drop one backup, CSV or ICS file here',
+              'Nhập / thả một backup, CSV hoặc ICS vào đây',
             ),
           ),
         ),

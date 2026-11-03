@@ -10,7 +10,6 @@ import 'package:handy_core/portable_zip.dart';
 import 'package:timezone/data/latest.dart' as zones;
 import 'package:timezone/timezone.dart' as tz;
 import 'package:image/image.dart' as img;
-import 'package:xml/xml.dart';
 part 'src/primitives.dart';
 part 'src/planner.dart';
 part 'src/visits.dart';

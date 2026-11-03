@@ -288,23 +288,6 @@ void main() {
       expect(public, isNot(contains('179.99')));
     },
   );
-  for (final format in ['geojson', 'gpx', 'kml'])
-    test(
-      '$format point export/import, anti-meridian and explicit precision consent',
-      () {
-        final s = checkIn(fixture(), visit('v'));
-        expect(
-          () => exportGeo(s, format, includePrecise: false),
-          throwsFormatException,
-        );
-        final result = importGeo(
-          exportGeo(s, format, includePrecise: true),
-          format,
-        );
-        expect(result.single.geo!.lon, 179.99);
-        expect(result.single.name, s.places.single.name);
-      },
-    );
   test('own CSV roundtrip and conflicting import refuse', () {
     final s = fixture(), csv = exportCsv(s, 'stops');
     expect(

@@ -27,7 +27,7 @@ Cần chọn target trip; địa điểm không khớp giữ thành note, không
 
 ICS: all-day/UTC/TZID, SUMMARY/UID/DTSTART/DTEND, escaping/folding UTF-8;
 không recurrence, không seconds khác 00, không âm thầm làm mất precision.
-GeoJSON/KML/GPX chỉ points, tối đa 10000 điểm/3 MB; không route/track hoặc XML DTD.
+GeoJSON/KML/GPX và recipe lịch trình đã bỏ ngày 2026-11-03 (ít dùng, thêm lựa chọn khó hiểu).
 Imported points thành wishlist. Export precise coordinates cần consent riêng.
 
 Public JSON/Markdown/PDF/ICS whitelist loại booking codes/private notes/addresses/GPS.
@@ -40,6 +40,4 @@ P1: personal stamp PNG/PDF không có GPS/mã booking, ghi rõ unofficial. Memor
 PDF và HTML ZIP có hai layout, tối đa 366 ngày/100 ảnh; private notes/captions và
 expense totals đều opt-in, mặc định bỏ. HTML được escape, không script/network;
 ảnh reencode bỏ EXIF, manifest/hash trong ZIP. Nội dung ảnh vẫn cần review.
-Recipe lịch trình giữ title/day/time/end/duration/type/fold/order/placeName, bỏ
-history/booking/finance/private notes/assets/GPS. Zone khác target bị từ chối;
-không tự sửa thời gian. Round-trip tests kiểm tra schema đang hỗ trợ.
+Recipe lịch trình đã bỏ ngày 2026-11-03; lịch trình công khai vẫn xuất được JSON/Markdown/PDF/ICS.

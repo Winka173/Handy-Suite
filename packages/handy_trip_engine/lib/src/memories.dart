@@ -176,39 +176,3 @@ Uint8List memoryBookZip(
     archive.addFile(ArchiveFile(e.key, e.value.length, e.value));
   return Uint8List.fromList(ZipEncoder().encode(archive));
 }
-
-List<Json> replayPoints(TripState s, String tripId) {
-  final visits = s.visits.where((v) => v.trip == tripId && v.confirmed).toList()
-    ..sort((a, b) => DateTime.parse(a.at).compareTo(DateTime.parse(b.at)));
-  final result = <Json>[];
-  double? previous;
-  for (final v in visits) {
-    final geo = v.data['geo'] == null
-        ? s.place(v.place).geo
-        : Geo.fromJson(object(v.data['geo']));
-    if (geo == null) continue;
-    var longitude = geo.lon;
-    if (previous != null) {
-      while (longitude - previous > 180) {
-        longitude -= 360;
-      }
-      while (longitude - previous < -180) {
-        longitude += 360;
-      }
-    }
-    previous = longitude;
-    result.add({
-      'id': v.key,
-      'lat': geo.lat,
-      'lon': longitude,
-      'day': localDay(DateTime.parse(v.at), v.zone),
-      'place': redactBookingCodes(
-        s,
-        s.place(v.place).name,
-      ).replaceAll(RegExp(r'\s+'), ' ').trim(),
-    });
-  }
-  if (result.length > 500)
-    throw const FormatException('Replay limited to 500 pins per selection');
-  return result;
-}

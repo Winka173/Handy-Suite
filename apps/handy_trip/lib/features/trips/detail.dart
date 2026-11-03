@@ -14,7 +14,6 @@ import '../media/attachments.dart';
 import '../sharing/export_panel.dart';
 import '../settings/settings.dart';
 import 'editor.dart';
-import 'replay.dart';
 import '../sharing/memory_book.dart';
 
 class TripDetail extends StatelessWidget {
@@ -80,8 +79,6 @@ class TripDetail extends StatelessWidget {
                       return showTripData(context, scope, tripId: trip.key);
                     if (v == 'memory-book')
                       return exportMemoryBook(context, scope, trip.key);
-                    if (v == 'replay')
-                      return showTripReplay(context, scope, trip.key);
                     if (v == 'duplicate') {
                       await tripForm(
                         context,
@@ -141,11 +138,6 @@ class TripDetail extends StatelessWidget {
                       ('edit', 'Edit trip', 'Sửa chuyến'),
                       ('export', 'Export / backup', 'Xuất / backup'),
                       ('memory-book', 'Create memory book', 'Tạo sách kỷ niệm'),
-                      (
-                        'replay',
-                        'Replay confirmed pins',
-                        'Xem lại điểm đã ghé',
-                      ),
                       (
                         'duplicate',
                         'Duplicate without history/secrets',

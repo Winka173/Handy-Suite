@@ -110,35 +110,6 @@ void main() {
     },
   );
   test(
-    'public itinerary recipe round-trip preserves documented fields without visit history',
-    () {
-      final source = checkIn(fixture(), visit('v')),
-          recipe = exportItineraryRecipe(source, 't');
-      final target = importItineraryJson(
-        fixture().copy({'stops': []}),
-        't',
-        recipe,
-      );
-      expect(target.stops.single.title, source.stops.single.title);
-      expect(target.stops.single.on, source.stops.single.on);
-      expect(target.stops.single.time, source.stops.single.time);
-      expect(target.stops.single.place, 'p');
-      expect(target.stops.single.status, 'planned');
-      expect(target.visits, isEmpty);
-      expect(recipe.containsKey('visits'), isFalse);
-      expect(target.stops.single.endTime, source.stops.single.endTime);
-      expect(target.stops.single.endOffset, source.stops.single.endOffset);
-      expect(target.stops.single.duration, source.stops.single.duration);
-      expect(
-        () => importItineraryJson(fixture().copy({'stops': []}), 't', {
-          ...recipe,
-          'zone': 'UTC',
-        }),
-        throwsFormatException,
-      );
-    },
-  );
-  test(
     'memory book keeps off-plan days, default redaction and optional private content',
     () {
       final s = memories(), book = memoryBookData(s, 't');
@@ -216,35 +187,6 @@ void main() {
         ),
         throwsFormatException,
       );
-    },
-  );
-  test(
-    'replay sorts actual instants and unwraps antimeridian without changing saved pins',
-    () {
-      var s = fixture().put(
-        'places',
-        Place({
-          'id': 'west',
-          'name': 'West',
-          'geo': {'lat': 10, 'lon': -179.99},
-        }),
-      );
-      s = s.put('visits', visit('later', at: '2026-03-08T23:30:00+14:00'));
-      s = s.put(
-        'visits',
-        visit(
-          'earlier',
-          at: '2026-03-08T09:00:00Z',
-        ).copy({'place': 'west', 'stop': null}),
-      );
-      final points = replayPoints(s, 't');
-      expect(points.map((p) => p['id']), ['earlier', 'later']);
-      expect(
-        ((points.first['lon'] as num) - (points.last['lon'] as num)).abs(),
-        lessThan(1),
-      );
-      expect(s.place('west').geo!.lon, -179.99);
-      expect(s.place('p').geo!.lon, 179.99);
     },
   );
 }

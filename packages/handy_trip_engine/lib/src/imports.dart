@@ -1,34 +1,5 @@
 part of '../handy_trip_engine.dart';
 
-Json exportItineraryRecipe(TripState s, String tripId) {
-  final trip = s.trip(tripId);
-  return {
-    'app': 'handy-trip-itinerary',
-    'schema': 1,
-    'title': redactBookingCodes(s, trip.title),
-    'zone': trip.zone,
-    'privacy':
-        'Public itinerary recipe only; no history, finance, notes, booking data, photo assets or GPS. Choose an existing target trip with matching dates when importing.',
-    'stops': [
-      for (final stop in s.stops.where((v) => v.trip == tripId))
-        {
-          'title': redactBookingCodes(s, stop.title),
-          'day': stop.on,
-          'time': stop.time ?? '',
-          'endTime': stop.endTime,
-          'endOffset': stop.endOffset,
-          'duration': stop.duration,
-          'type': stop.type,
-          'lateFold': stop.data['lateFold'] == true,
-          'order': stop.order,
-          'placeName': stop.place == null
-              ? ''
-              : redactBookingCodes(s, s.place(stop.place!).name),
-        },
-    ],
-  };
-}
-
 TripState importPlacesTable(
   TripState state,
   List<List<String>> rows, {
@@ -68,62 +39,6 @@ TripState importPlacesTable(
       ...state.places.map((p) => p.toJson()),
       ...added.map((p) => p.toJson()),
     ],
-  });
-}
-
-/// Documented JSON interchange, not a private relational backup or location proof.
-TripState importItineraryJson(TripState state, String tripId, Json input) {
-  if (input['app'] != 'handy-trip-itinerary' ||
-      input['schema'] != 1 ||
-      input['stops'] is! List)
-    throw const FormatException('Unsupported itinerary JSON schema');
-  final records = input['stops'] as List;
-  if (records.length > 10000)
-    throw const FormatException('At most 10000 stops');
-  final trip = state.trip(tripId), added = <Json>[];
-  if (input['zone'] != null && input['zone'] != trip.zone)
-    throw const FormatException(
-      'Recipe timezone differs from target; review/convert explicitly before import',
-    );
-  for (final record in records) {
-    final row = object(record),
-        placeName = string(row['placeName'] ?? '', max: 300);
-    final matches = state.places
-        .where(
-          (p) =>
-              placeName.isNotEmpty &&
-              p.name.toLowerCase() == placeName.toLowerCase(),
-        )
-        .toList();
-    final time = string(row['time'] ?? ''), end = string(row['endTime'] ?? '');
-    added.add(
-      Stop({
-        'id': newId(),
-        'trip': tripId,
-        'title': string(row['title'], max: 300, required: true),
-        'day': string(row['day']),
-        'time': time.isEmpty ? null : time,
-        'endTime': end.isEmpty ? null : end,
-        'endOffset': row['endOffset'] ?? 0,
-        'duration': row['duration'] ?? 0,
-        'type': row['type'] ?? 'activity',
-        'lateFold': row['lateFold'] == true,
-        'order':
-            row['order'] ??
-            (state.stops
-                    .where((s) => s.trip == tripId && s.on == row['day'])
-                    .length +
-                added.where((s) => s['day'] == row['day']).length),
-        'place': matches.length == 1 ? matches.single.key : null,
-        'status': 'planned',
-        'note': placeName.isEmpty || matches.length == 1
-            ? ''
-            : 'Unmatched place label: $placeName',
-      }).toJson(),
-    );
-  }
-  return state.copy({
-    'stops': [...state.stops.map((s) => s.toJson()), ...added],
   });
 }
 

@@ -18,7 +18,7 @@
 - Không tiles/geocoding mặc định; NoBasemap + explicit map handoff, không GPS tracks.
   Vị trí người dùng xác nhận không phải bằng chứng đã ghé hay taxonomy địa lý chính thức.
 - P1 đã code/test host và Android emulator; không thay thế kiểm thử iOS/thiết bị thật.
-  Memory Book tối đa 366 ngày/100 ảnh; replay tối đa 500 điểm, không có map tiles.
+  Memory Book tối đa 366 ngày/100 ảnh; không có map tiles.
   Cross-app recipe/file handoff chưa kiểm thử đầu cuối với app nhận.
 - Publisher accounts/product IDs/AdMob/UMP/signing/store sandbox chưa có. Không
   production ads/purchase/restore/refund/store submission nào được tuyên bố pass.

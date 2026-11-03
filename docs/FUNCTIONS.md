@@ -12,8 +12,8 @@ App độc lập thứ mười: lên lịch, ghi nhận đã ghé và lưu kỷ 
   Nhân bản lịch và hành lý không sao chép booking, chi tiêu hoặc lượt ghé cũ.
 - Địa điểm, wishlist, yêu thích, nhãn địa lý do người dùng xác nhận, link HTTP(S),
   dán clipboard, nhận link/văn bản từ Android/iOS share inbox. Không lấy vị trí
-  từ nội dung mạng xã hội hay tự đánh dấu đã ghé. Nhập CSV có chọn cột, GeoJSON,
-  GPX/KML chỉ nhận điểm; không tạo đường GPS giả.
+  từ nội dung mạng xã hội hay tự đánh dấu đã ghé. Nhập CSV có chọn cột (GeoJSON/GPX/KML đã bỏ ngày
+  2026-11-03).
 - Check-in thủ công không cần GPS; GPS chỉ lấy một lần theo thao tác, xem tọa độ,
   độ chính xác và thời điểm trước khi xác nhận. Quyền bị từ chối có lựa chọn thủ công.
   Lượt ghé lặp lại và số địa điểm duy nhất được tính riêng; giữ múi giờ lịch sử.
@@ -37,9 +37,9 @@ App độc lập thứ mười: lên lịch, ghi nhận đã ghé và lưu kỷ 
   giấy tờ chính thức. Memory Book PDF/HTML ZIP theo ngày hoặc contact sheet;
   ghi chú riêng, caption và chi tiêu chỉ xuất khi chọn. Ảnh xuất bỏ EXIF.
 - Gợi ý EXIF đọc cục bộ, hiển thị cảnh báo giờ/GPS, chỉ tạo lượt ghé qua form xác
-  nhận hiện có. Replay nối các điểm đã lưu để minh họa, không phải tuyến đã đi.
+  nhận hiện có. Replay (nối điểm bằng đường thẳng) đã bỏ ngày 2026-11-03.
 - So sánh chuyến đã bỏ (2026-11-03): ít người dùng; Hộ chiếu đã cho số lượt ghé
-  và địa điểm. Pro thêm kiểu stamp và contact sheet. Recipe lịch trình JSON không chứa lịch sử/chi tiêu.
+  và địa điểm. Pro thêm kiểu stamp và contact sheet. Recipe lịch trình JSON đã bỏ (2026-11-03); bản xuất JSON công khai vẫn còn.
 
 Các tính năng native iOS là source chưa được build/kiểm thử trên macOS; không coi
 build Android/Windows/Web hay ảnh widget là bằng chứng thiết bị thật.
