@@ -143,15 +143,6 @@ void main() {
     await pause(t, 2500);
     await tap(t, 'plan-income');
     await pause(t, 2000);
-    await tap(t, 'whatif-purchase');
-    await type(t, 'field-name', 'iPhone trả góp 6 tháng');
-    await type(t, 'field-cost', '27.000.000');
-    await type(t, 'field-installments', '6');
-    await tap(t, 'editor-save');
-    await pause(t, 1500);
-    await tap(t, 'whatif-${c.state!.scenarios.single.id}');
-    await pause(t, 3000);
-    await back(t);
 
     // Accounts: net worth, then one account and its check.
     await area(3);

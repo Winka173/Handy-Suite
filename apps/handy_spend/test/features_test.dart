@@ -411,33 +411,6 @@ void main() {
       expect(c.state!.profiles.single['name'], 'Thẻ VCB');
     },
   );
-
-  testWidgets(
-    'what-ifs are drawn over the forecast, compared, and never touch the ledger',
-    (tester) async {
-      final c = await start(
-        tester,
-        store: seeded(SpendState(accounts: [cash(opening: 1000000, since: 0)])),
-      );
-      await tapKey(tester, 'nav-2');
-      await tapKey(tester, 'whatif-purchase');
-      await typeKey(tester, 'field-name', 'Laptop');
-      await typeKey(tester, 'field-cost', '3000000');
-      await tapKey(tester, 'editor-save');
-      final x = c.state!.scenarios.single;
-      expect(c.state!.entries, isEmpty);
-      // Turned on at once and compared against the forecast as it is.
-      expect(find.byKey(Key('whatif-compare-${x.id}')), findsOneWidget);
-      expect(find.textContaining('Never short'), findsNothing);
-      await tapKey(tester, 'whatif-toggle-${x.id}');
-      expect(find.byKey(Key('whatif-compare-${x.id}')), findsNothing);
-      await tapKey(tester, 'whatif-toggle-${x.id}');
-      // The old link still opens it.
-      await tapKey(tester, 'whatif-${x.id}');
-      expect(find.byKey(const Key('whatif-record')), findsOneWidget);
-      expect(c.state!.entries, isEmpty);
-    },
-  );
 }
 
 String _dmy(String iso) =>

@@ -8,7 +8,6 @@ import 'forecast_chart.dart';
 import 'goals.dart';
 import 'recurring.dart';
 import 'suggestions.dart';
-import 'whatifs.dart';
 
 /// The plan: will the money last to the end of the window, and what is
 /// already promised out of it.
@@ -18,11 +17,7 @@ class PlanPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => ListenableBuilder(
-    listenable: Listenable.merge([
-      scope.horizon,
-      scope.conservative,
-      scope.overlays,
-    ]),
+    listenable: Listenable.merge([scope.horizon, scope.conservative]),
     builder: (context, _) => LayoutBuilder(
       builder: (context, size) {
         if (scope.state.accounts.isEmpty) {
@@ -49,18 +44,10 @@ class PlanPage extends StatelessWidget {
           accounts: scope.planningAccounts,
           includeIncome: !scope.conservative.value,
         );
-        final lines = whatIfLines(
-          scope.state,
-          scope.overlays.value,
-          scope.today,
-          scope.end,
-          accounts: scope.planningAccounts,
-          includeIncome: !scope.conservative.value,
-        );
         final left = [
           _Window(scope: scope),
           const SizedBox(height: HandySpace.l),
-          _Outlook(scope: scope, projection: p, lines: lines),
+          _Outlook(scope: scope, projection: p),
           _Counted(scope: scope),
         ];
         final right = [
@@ -216,12 +203,7 @@ class _Window extends StatelessWidget {
 class _Outlook extends StatelessWidget {
   final SpendScope scope;
   final Projection projection;
-  final List<WhatIfLine> lines;
-  const _Outlook({
-    required this.scope,
-    required this.projection,
-    this.lines = const [],
-  });
+  const _Outlook({required this.scope, required this.projection});
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -257,29 +239,20 @@ class _Outlook extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        ForecastChart(
-          scope: scope,
-          projection: p,
-          overlays: [for (final l in lines) (l.projection, l.hue)],
-        ),
-        const SizedBox(height: HandySpace.m),
-        WhatIfSwitches(scope: scope),
+        ForecastChart(scope: scope, projection: p),
         const SizedBox(height: HandySpace.l),
-        if (lines.isEmpty)
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              cell(tr(context, 'Today', 'Hôm nay'), p.opening),
-              cell(
-                tr(context, 'Lowest', 'Thấp nhất'),
-                p.lowest,
-                note: low == null ? null : dayLabel(context, scope, low.date),
-              ),
-              cell(tr(context, 'At the end', 'Cuối kỳ'), p.ending),
-            ],
-          )
-        else
-          WhatIfCompare(scope: scope, base: p, lines: lines),
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            cell(tr(context, 'Today', 'Hôm nay'), p.opening),
+            cell(
+              tr(context, 'Lowest', 'Thấp nhất'),
+              p.lowest,
+              note: low == null ? null : dayLabel(context, scope, low.date),
+            ),
+            cell(tr(context, 'At the end', 'Cuối kỳ'), p.ending),
+          ],
+        ),
         if (p.shortfall != null)
           Padding(
             padding: const EdgeInsets.only(top: HandySpace.m),
@@ -296,14 +269,7 @@ class _Outlook extends StatelessWidget {
           alignment: AlignmentDirectional.centerStart,
           child: TextButton(
             key: const Key('plan-daily'),
-            onPressed: () => showDailyTable(
-              context,
-              scope,
-              p,
-              overlays: [
-                for (final l in lines) (l.scenario.name, l.projection, l.hue),
-              ],
-            ),
+            onPressed: () => showDailyTable(context, scope, p),
             child: Text(tr(context, 'Day by day', 'Xem từng ngày')),
           ),
         ),

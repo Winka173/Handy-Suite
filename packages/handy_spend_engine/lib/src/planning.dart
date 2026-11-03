@@ -325,42 +325,6 @@ SafeSpend safeToSpend(
   );
 }
 
-/// The live forecast as it would run with [x]'s assumptions: its staged
-/// entries added and its skipped payments left out. Assumptions on an
-/// account that is gone or archived since the copy are left out and
-/// counted in the second value. Nothing is written anywhere.
-(Projection, int ignored) whatIfForecast(
-  SpendState s,
-  Scenario x,
-  String start,
-  String end, {
-  Set<String>? accounts,
-  bool includeIncome = false,
-}) {
-  final open = {
-    for (final a in s.accounts)
-      if (!a.archived) a.id,
-  };
-  final staged = [
-    for (final e in x.staged)
-      if (open.contains(e.account) &&
-          (e.toAccount == null || open.contains(e.toAccount)))
-        e,
-  ];
-  return (
-    forecast(
-      s,
-      start,
-      end,
-      accounts: accounts,
-      includeIncome: includeIncome,
-      staged: staged,
-      skipBills: x.skipBills.toSet(),
-    ),
-    x.staged.length - staged.length,
-  );
-}
-
 Map<String, BigInt> report(
   SpendState s,
   String start,

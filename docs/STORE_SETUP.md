@@ -139,8 +139,8 @@ iOS also needs macOS/Xcode. No credentials should be pasted into docs/source.
 No build has a store product ID, so nothing can be bought and every Pro gate
 would lock the feature for everyone, testers included. The features added on
 2026-11-02 are therefore free for now. Already gated: Bookmark smart
-collections and saved searches; Spend forecasts past 30 days, several what-ifs
-and statement templates. When products exist, gate one or two features per app
+collections and saved searches; Spend forecasts past 30 days and statement
+templates (what-ifs were removed on 2026-11-03). When products exist, gate one or two features per app
 with the existing `LifetimeScope.maybeOf(context)?.pro` check and leave the core
 of each app free:
 

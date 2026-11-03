@@ -18,10 +18,6 @@ class SpendScope {
   /// Photographs a receipt on Android and iOS; elsewhere files only.
   final ScanCamera camera;
 
-  /// The what-ifs drawn over the plan's forecast ("Dự báo nếu…"). Screen
-  /// state only: turning one on never changes the ledger.
-  final overlays = ValueNotifier<Set<String>>(const {});
-
   /// Days from today the plan looks ahead (1–3660; over 30 needs Pro).
   final horizon = ValueNotifier(30);
 
@@ -89,7 +85,6 @@ class SpendScope {
   void dispose() {
     horizon.dispose();
     conservative.dispose();
-    overlays.dispose();
     area.dispose();
     openAccount.dispose();
     ledgerAccount.dispose();

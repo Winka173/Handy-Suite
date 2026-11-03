@@ -30,3 +30,7 @@
   templates are shipped (no real statements to verify against); saving one still needs
   verified Pro, as column profiles did.
 - Advanced loan/goal reverse planning is not implemented.
+
+- 2026-11-03: the "Forecast if…" sandbox is removed. Today's free-to-spend figure and the
+  forecast answer the plan's question; a second mode to learn added more than it gave.
+  Saved scenarios stay in the data and in backups, untouched and unused.

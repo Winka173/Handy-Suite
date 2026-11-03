@@ -1,7 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:handy_spend_engine/handy_spend_engine.dart';
 import 'package:handy_ui/kit.dart';
-import 'package:handy_spend/plan/whatif_page.dart';
 import 'helpers.dart';
 
 TestSpendStore seeded(SpendState s) => TestSpendStore()..value = s;
@@ -224,31 +223,6 @@ void main() {
     await tapKey(tester, 'editor-save');
     expect(find.byKey(const Key('sheet-error')), findsNothing);
     expect(c.state!.entries, isEmpty);
-
-    await tapKey(tester, 'whatif-new');
-    await typeKey(tester, 'field-name', 'Income case');
-    await tapKey(tester, 'editor-save');
-    expect(c.state!.scenarios, hasLength(1));
-    // A new what-if opens on its assumptions and is drawn on the forecast.
-    expect(find.byType(WhatIfPage), findsOneWidget);
-    expect(find.textContaining('Your ledger has changed'), findsNothing);
-    await tapKey(tester, 'whatif-add');
-    await tapKey(tester, 'field-kind-income');
-    await typeKey(tester, 'field-amount', '50000');
-    await typeKey(tester, 'field-payee', 'Extra pay');
-    await tapKey(tester, 'editor-save');
-    final x = c.state!.scenarios.single;
-    expect(x.staged.single.kind, 'income');
-    expect(c.state!.entries, isEmpty);
-    expect(
-      forecast(
-        SpendState.fromJson(x.baseline),
-        today(),
-        today(),
-        staged: x.staged,
-      ).ending,
-      BigInt.from(150000),
-    );
   });
 
   testWidgets('checking a balance records only the difference', (tester) async {

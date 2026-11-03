@@ -503,22 +503,6 @@ void main() {
     await tapKey(t, 'account-vcb');
     await shot(t, 'phone-7-account');
   });
-  testWidgets('phone what-if', (t) async {
-    final c = await boot(t, const Size(390, 844));
-    await area(t, 2);
-    await tapKey(t, 'whatif-purchase');
-    await t.enterText(
-      find.byKey(const Key('field-name')),
-      'iPhone trả góp 6 tháng',
-    );
-    await t.enterText(find.byKey(const Key('field-cost')), '27.000.000');
-    await t.enterText(find.byKey(const Key('field-installments')), '6');
-    await t.pumpAndSettle();
-    await shot(t, 'phone-8-purchase');
-    await tapKey(t, 'editor-save');
-    await tapKey(t, 'whatif-${c.state!.scenarios.single.id}');
-    await shot(t, 'phone-9-whatif');
-  });
   testWidgets('phone settings', (t) async {
     await boot(t, const Size(390, 844));
     await tapKey(t, 'open-settings');
@@ -585,39 +569,6 @@ void main() {
     await shot(t, 'phone-20-person');
     await tapKey(t, 'person-settle');
     await shot(t, 'phone-21-settle');
-  });
-  testWidgets('phone plan overlay and suggestion', (t) async {
-    final c = await boot(t, const Size(390, 844));
-    await area(t, 2);
-    await tapKey(t, 'whatif-purchase');
-    await t.enterText(find.byKey(const Key('field-name')), 'iPhone 6 tháng');
-    await t.enterText(find.byKey(const Key('field-cost')), '27.000.000');
-    await t.enterText(find.byKey(const Key('field-installments')), '6');
-    await t.pumpAndSettle();
-    await tapKey(t, 'editor-save');
-    await t.scrollUntilVisible(
-      find.byKey(Key('whatif-compare-${c.state!.scenarios.single.id}')),
-      200,
-      scrollable: find.byType(Scrollable).hitTestable().first,
-    );
-    await shot(t, 'phone-22-plan-overlay');
-    await t.scrollUntilVisible(
-      find.text('Có vẻ lặp lại'),
-      300,
-      scrollable: find.byType(Scrollable).hitTestable().first,
-    );
-    await shot(t, 'phone-23-suggestion');
-  });
-  testWidgets('desktop plan overlay', (t) async {
-    await boot(t, const Size(1440, 900));
-    await area(t, 2);
-    await tapKey(t, 'whatif-purchase');
-    await t.enterText(find.byKey(const Key('field-name')), 'Laptop 12 tháng');
-    await t.enterText(find.byKey(const Key('field-cost')), '36.000.000');
-    await t.enterText(find.byKey(const Key('field-installments')), '12');
-    await t.pumpAndSettle();
-    await tapKey(t, 'editor-save');
-    await shot(t, 'desktop-7-plan-overlay');
   });
   testWidgets('phone templates', (t) async {
     await boot(t, const Size(390, 844));

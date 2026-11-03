@@ -11,7 +11,6 @@ import 'home_widget.dart';
 import 'import/import_page.dart';
 import 'people/people_page.dart';
 import 'receipts/receipt_view.dart';
-import 'plan/whatif_page.dart';
 import 'privacy.dart';
 import 'reminders.dart';
 import 'scope.dart';
@@ -206,7 +205,6 @@ class _SpendAppState extends State<SpendApp> with WidgetsBindingObserver {
       ['', 'import'] => () => ImportPage(scope: scope),
       ['', 'import', final id] => () => ImportPage(scope: scope, account: id),
       ['', 'account', final id] => () => AccountPage(scope: scope, id: id),
-      ['', 'whatif', final id] => () => WhatIfPage(scope: scope, id: id),
       _ => null,
     };
     if (page == null) return null;

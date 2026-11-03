@@ -100,7 +100,7 @@ Known limits: [KNOWN_ISSUES](../KNOWN_ISSUES.md). Screenshots: [UI_REVIEW](UI_RE
 
 - **Ghi bằng một dòng** (Hôm nay): gõ "cà phê 45k", "45.000 bánh mì", "tiền nhà 1tr2" hoặc "+5 triệu lương" rồi Enter. Số có đơn vị (k, tr, triệu, nghìn) hay có dấu nhóm được ưu tiên, nếu không thì lấy số cuối; dấu + là khoản thu. Chữ còn lại thành người nhận; danh mục lấy theo quy tắc rồi theo lần trước cùng chữ đó; tài khoản là tài khoản dùng gần nhất. Dòng xem trước đọc lại cách hiểu trước khi lưu; lưu xong có Hoàn tác.
 
-Theo dõi tài chính offline và thử quyết định trong Financial Sandbox. Trạng thái
+Theo dõi tài chính offline. Trạng thái
 kiểm chứng từng nhóm nằm trong [matrix riêng](handy_spend/FEATURE_MATRIX.md).
 
 - Tài khoản tiền mặt, ngân hàng, ví, tiết kiệm, thẻ tín dụng, khoản vay và loại khác;
@@ -126,12 +126,8 @@ kiểm chứng từng nhóm nằm trong [matrix riêng](handy_spend/FEATURE_MATR
   Có mốc 7/30/90 ngày và khoảng tùy chọn 1–3660 ngày; trên 30 ngày cần Pro.
   Home/Kế hoạch nhắc đối chiếu tài khoản chưa có ghi nhận mới ít nhất 30 ngày,
   không khẳng định số dư đã được ngân hàng xác minh.
-- "Dự báo nếu…" (sandbox) nằm ngay trên biểu đồ dự báo của Kế hoạch: bật/tắt từng kịch
-  bản để vẽ thành một đường riêng (màu nhận diện, chip là chú giải) trên cùng biểu đồ và
-  bảng từng ngày, kèm so sánh ngày thấp nhất, cuối kỳ và ngày bắt đầu thiếu với dự báo
-  hiện tại. Thử mua tiền mặt/trả góp, thêm thu/chi giả định, đổi một lần đến hạn, đổi
-  tên, bỏ kịch bản; ghi vào sổ thật chỉ sau xác nhận, một lần. Dữ liệu gốc bất biến:
-  giả định kiểm tra trên bản sao lúc tạo, ảnh hưởng tính trên sổ hôm nay, không ghi gì.
+- "Dự báo nếu…" (sandbox) đã bỏ ngày 2026-11-03: "tiêu được hôm nay" và biểu đồ dự báo
+  đã trả lời câu hỏi chính. Kịch bản đã lưu vẫn nằm nguyên trong dữ liệu và bản sao lưu.
   `/whatif/<id>` vẫn mở trang giả định. Free có một kịch bản; Pro hỗ trợ nhiều kịch
   bản, nhân bản, vẽ nhiều đường cùng lúc để so sánh và forecast dài hơn.
 - Sao kê CSV/TXT/XLSX xử lý tại máy: preview, ánh xạ cột, ngày/múi giờ/dấu số,
