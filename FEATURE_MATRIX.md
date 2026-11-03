@@ -79,3 +79,13 @@ nhật, CV một trang, khổ A5 và A4. Đã gộp hoặc bỏ: Dev còn 24 too
 gộp thành `convert`, bỏ HAR và .env), Tools còn 17 (phần trăm và tỷ lệ vào Sổ
 tính, màu sang Dev, bỏ tỷ giá nhập tay), Trip bỏ so sánh chuyến, Habit bỏ
 Routine Lite, Boards bỏ timeline và critical path.
+
+Vòng 4 (2026-11-03), unit test + widget test trên máy, chưa chạy thiết bị:
+Docs gửi một tệp nhỏ sang máy khác bằng mã QR chạy (nhận cần camera
+Android/iOS); Trip ghi "đã ghé" một chạm; Docs Quét mở camera ngay; Media một
+lối Ảnh chụp màn hình (một ảnh đóng khung, nhiều ảnh nối). Đã gộp hoặc bỏ:
+Dev còn 22 tool (JSON lọc và JSON suy kiểu), Tools đưa các phép biến đổi chữ
+vào bàn làm việc và ngày làm việc vào Ngày, Bookmark gộp bộ lọc đã lưu, Trip
+một kiểu sổ kỷ niệm; bỏ what-if của Spend, phát lại hành trình và GPX/KML của
+Trip, Workload của Boards, quy trình chữ của Docs, sắp xếp thủ công của
+Bookmark (dữ liệu cũ vẫn mở được).

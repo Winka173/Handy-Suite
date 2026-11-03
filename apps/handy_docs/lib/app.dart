@@ -20,6 +20,7 @@ import 'settings_page.dart';
 import 'sign/fill_controller.dart';
 import 'sign/fill_route.dart';
 import 'sign/signature_store.dart';
+import 'transfer/transfer_page.dart';
 import 'write/draft.dart';
 import 'write/write_page.dart';
 
@@ -209,6 +210,7 @@ class _DocsAppState extends State<DocsApp> {
         opener: scope.opener,
       ),
       '/read' => () => ReadPage(actions: scope.reader),
+      '/transfer' => () => TransferPage(files: widget.files),
       _ => null,
     };
     if (page == null) return null;

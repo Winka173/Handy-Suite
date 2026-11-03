@@ -326,6 +326,13 @@ Source: `apps/handy_docs/lib`, `packages/handy_docs_engine`, `packages/handy_pdf
   viện; tệp Markdown đã giữ mở vào trình viết, bản đã giữ không đổi. Định dạng lưu không
   đổi nên không cần chuyển đổi. HTML đọc như nội dung an toàn, không thực thi script
   hoặc tải remote.
+- **Gửi sang máy khác** (`#/transfer`, dòng dưới "Bắt đầu việc mới"): một tệp tối đa
+  100 KB thành mã QR chạy liên tục (480 byte mỗi khung, 6 khung/giây, khung đầu mang tên,
+  cỡ và SHA-256), trên nền trắng cả ở giao diện tối; Tạm dừng/Space giữ một khung. Máy
+  nhận (camera Android/iOS) đọc khung theo thứ tự bất kỳ, khung lỡ thì chờ vòng sau; chỉ
+  cho lưu khi đủ khung và đúng SHA-256, hỏng thì nhận lại từ đầu. Loại tệp gửi: pdf,
+  txt, md, csv, json, html, vcf, ics, docx, xlsx, png, jpg, webp, zip, hseal. Không đi qua
+  mạng, không lưu lịch sử.
 - **Giới hạn text:** source 1MB; render/export rendered Markdown 100KB. Các giới
   hạn bổ sung, native adapter và coverage nằm trong FEATURE_MATRIX.
 

@@ -1897,3 +1897,41 @@ Read from the flows the widget tests drive.
 | Media | First picture of a guide | 2 | New guide, add a picture |
 | Trip | Mark a visit | 1 | Was 3+ (long form and a confirm switch); now Visited / I'm here now |
 | Docs | Photograph the first page | 1 | Was 2; Scan now opens the camera when there is one |
+
+## Docs: Gửi tệp qua QR (send a file by moving QR codes) - 2026-11-03
+
+Run: design-taste-frontend app-screens + frontend-ui-engineering. Lives in
+Docs because it moves a file, the thing Docs holds; Tools works on text.
+
+- Job: move one small file to a phone or tablet in the same room when there
+  is no cable, no network and no account (a contract PDF from the Windows
+  laptop to a phone, a note between two phones). The screen's one question:
+  "is it arriving?"; its finding: "12 of 40 frames".
+- Data: the file's name, size and SHA-256; frames of 480 bytes, one header
+  frame; 100 KB at most (about 35 seconds a loop at 6 frames a second).
+- Entry: one quiet tile under the start grid, "Send to another device / Gửi
+  sang máy khác", route `/transfer` (web URL `#/transfer`). Not a fifth start
+  card: it is not a way to begin work, and the four-across grid stays whole.
+- One screen, two sides, chosen by a segmented control: Send and Receive.
+  Receive is the side shown first on a phone with a camera (the phone is
+  usually the receiver); Send elsewhere. No mode beyond that.
+- Send: Choose file (primary) → the code plays at once on a white sheet
+  (white in dark mode too, with a quiet zone), as large as the width allows
+  up to 420 px; under it the name, size and "frame 3 of 40". Pause/Resume
+  and Choose another file. Playing is the content, not decoration, so it
+  runs with reduced motion on; Pause holds one frame. Signature: the code
+  sits on Docs' paper sheet, the same sheet the desk's work cards use.
+- Receive: the camera fills the top; under it the file name once the header
+  is read, a bar and "12 of 40", then "Save file" (primary) and "Receive
+  another". Frames come in any order; a missed one comes round next loop.
+  The checksum decides: a damaged file is never offered to save.
+- States: no file yet (one line on what fits: up to 100 KB); file too large
+  or empty (notice, nothing plays); camera missing (web, Windows: "Receiving
+  needs the camera of an Android or iOS device; send from here"); camera
+  denied (retry); waiting for the header (frames still counted); damaged
+  (notice, start over); saved (the name, Receive another).
+- Platforms: Send on all four; Receive on Android and iOS. Back leaves and
+  stops the camera; Space pauses on Windows and web; nothing touches the
+  network.
+- Reject: a progress ring, a fake "connecting" step, a transfer history,
+  sending folders or several files, compressing behind the user's back.

@@ -173,3 +173,82 @@ class _QrScannerPageState extends State<QrScannerPage> {
           ),
   );
 }
+
+/// A live camera view that reports every QR code it reads, for codes that
+/// change on another screen (a file sent as moving QR codes). It reads
+/// every camera frame and skips only a repeat of the code just read. Native
+/// camera only; nothing is stored or opened. Releases the camera on removal.
+class QrStreamScanner extends StatefulWidget {
+  final ValueChanged<String> onCode;
+  const QrStreamScanner({super.key, required this.onCode});
+  @override
+  State<QrStreamScanner> createState() => _QrStreamScannerState();
+}
+
+class _QrStreamScannerState extends State<QrStreamScanner> {
+  MobileScannerController? controller;
+  int generation = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    start();
+  }
+
+  void start() {
+    controller = MobileScannerController(
+      detectionSpeed: DetectionSpeed.noDuplicates,
+      formats: const [BarcodeFormat.qrCode],
+    );
+  }
+
+  @override
+  void dispose() {
+    controller?.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) => MobileScanner(
+    key: ValueKey(generation),
+    controller: controller,
+    onDetect: (capture) {
+      for (final code in capture.barcodes) {
+        final text = code.rawValue;
+        if (text != null && text.isNotEmpty && text.length <= 4000) {
+          widget.onCode(text);
+        }
+      }
+    },
+    errorBuilder: (context, _) => Center(
+      child: Padding(
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              tr(
+                context,
+                'Camera is unavailable or permission was denied. Enable camera access in system settings, then retry.',
+                'Camera không khả dụng hoặc bị từ chối quyền. Bật quyền camera trong cài đặt hệ thống rồi thử lại.',
+              ),
+              textAlign: TextAlign.center,
+            ),
+            TextButton(
+              key: const Key('qr-stream-retry'),
+              onPressed: () {
+                final old = controller;
+                setState(() {
+                  generation++;
+                  start();
+                });
+                old?.dispose();
+              },
+              child: Text(tr(context, 'Retry', 'Thử lại')),
+            ),
+          ],
+        ),
+      ),
+    ),
+  );
+}

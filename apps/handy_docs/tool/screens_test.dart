@@ -10,6 +10,7 @@ import 'package:handy_core/handy_core.dart';
 import 'package:handy_docs/app.dart';
 import 'package:handy_docs/scan/scan_screen.dart';
 import 'package:handy_docs/session.dart';
+import 'package:handy_docs/transfer/transfer_page.dart';
 import 'package:handy_docs_engine/handy_docs_engine.dart';
 import 'package:handy_files/handy_files.dart';
 import 'package:handy_storage/handy_storage.dart';
@@ -282,6 +283,66 @@ Future<void> open(WidgetTester t, String route) async {
   await t.pumpAndSettle();
 }
 
+/// The transfer page alone, with a camera fed by hand (a plain dark field
+/// stands in for the preview).
+Future<ValueChanged<String>?> transfer(
+  WidgetTester t,
+  Size size, {
+  String theme = 'light',
+  bool camera = true,
+  Files? files,
+}) async {
+  t.view.physicalSize = size;
+  t.view.devicePixelRatio = 1;
+  addTearDown(t.view.resetPhysicalSize);
+  addTearDown(t.view.resetDevicePixelRatio);
+  ValueChanged<String>? read;
+  await t.pumpWidget(
+    RepaintBoundary(
+      key: _root,
+      child: HandyApp(
+        brand: HandyBrand.docs,
+        app: 'docs',
+        title: 'Handy Docs',
+        accent: docsAccent,
+        theme: theme,
+        locale: 'vi',
+        home: TransferPage(
+          files: files ?? Files(),
+          camera: camera,
+          scanner: (onCode) {
+            read = onCode;
+            return const ColoredBox(color: Color(0xFF2B2F33));
+          },
+        ),
+      ),
+    ),
+  );
+  await t.pumpAndSettle();
+  return read;
+}
+
+Uint8List _contract() {
+  final r = math.Random(7);
+  return Uint8List.fromList(List.generate(38000, (_) => r.nextInt(256)));
+}
+
+Future<void> _sending(
+  WidgetTester t,
+  Size size,
+  String name, {
+  String theme = 'light',
+}) async {
+  final files = Files()
+    ..next = ImportedBytes('Hợp đồng thuê nhà.pdf', _contract());
+  await transfer(t, size, theme: theme, camera: false, files: files);
+  await t.tap(find.byKey(const Key('transfer-choose')));
+  await t.pump();
+  await t.pump(const Duration(milliseconds: 1000 ~/ qrTransferFps * 12));
+  await shot(t, name, settle: false);
+  await t.pumpWidget(const SizedBox());
+}
+
 void main() {
   setUpAll(() async {
     const ui = '../../packages/handy_ui/fonts';
@@ -305,6 +366,44 @@ void main() {
     ]);
   });
 
+  testWidgets('phone transfer send', (t) async {
+    await _sending(t, const Size(390, 844), 'phone-transfer-1-send');
+  });
+  testWidgets('narrow transfer send', (t) async {
+    await _sending(t, const Size(320, 700), 'narrow-transfer-send');
+  });
+  testWidgets('phone dark transfer send', (t) async {
+    await _sending(
+      t,
+      const Size(390, 844),
+      'phone-transfer-2-send-dark',
+      theme: 'dark',
+    );
+  });
+  testWidgets('desktop transfer send', (t) async {
+    await _sending(t, const Size(1440, 900), 'desktop-transfer-send');
+  });
+  testWidgets('phone transfer empty', (t) async {
+    await transfer(t, const Size(390, 844), camera: false);
+    await shot(t, 'phone-transfer-0-empty');
+    await t.tap(find.byKey(const Key('transfer-receive')));
+    await t.pumpAndSettle();
+    await shot(t, 'phone-transfer-0-no-camera');
+  });
+  testWidgets('phone transfer receive', (t) async {
+    final read = await transfer(t, const Size(390, 844));
+    final frames = qrTransferFrames('Hợp đồng thuê nhà.pdf', _contract());
+    for (var i = 0; i < 52; i++) {
+      read!(frames[i]);
+    }
+    await t.pumpAndSettle();
+    await shot(t, 'phone-transfer-3-receiving');
+    for (final f in frames) {
+      read!(f);
+    }
+    await t.pumpAndSettle();
+    await shot(t, 'phone-transfer-4-arrived');
+  });
   for (final (label, size) in [
     ('phone', const Size(390, 844)),
     ('tablet', const Size(900, 1100)),

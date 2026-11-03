@@ -169,3 +169,9 @@ machine; "print both sides" cannot add a blank page, so with an odd count
 the last sheet is taken out by hand; page numbers need the Android, iOS or
 Windows app. Media's screenshot frame stops at 16 Mpx. Keep's moving boxes
 were kept on purpose: they already show as places in the same list.
+
+Docs "Gửi sang máy khác" (2026-11-03) is host-tested only: the frames, the
+checksum and both screens pass with a camera fed by hand, but no phone has
+read the codes off a real screen yet, so the 6 frames a second and the
+480-byte frame are estimates. Up to 100 KB; receiving needs the Android or
+iOS app; the screen may dim during a long send (no wake lock).

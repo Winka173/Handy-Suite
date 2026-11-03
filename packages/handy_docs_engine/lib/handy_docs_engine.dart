@@ -7,3 +7,4 @@ export 'src/document_export.dart';
 export 'src/reader.dart';
 export 'src/docx.dart';
 export 'src/duplex.dart';
+export 'src/qr_transfer.dart';
