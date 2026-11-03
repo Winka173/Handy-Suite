@@ -195,22 +195,29 @@ class PlacesList extends StatelessWidget {
                 ),
             ],
           ),
+        // Smart collections and saved searches are both "a list I kept":
+        // one group since 2026-11-03, each row with its own icon.
         heading(
-          tr(context, 'Smart collections', 'Bộ sưu tập thông minh'),
+          tr(context, 'Saved filters', 'Bộ lọc đã lưu'),
           trailing: IconButton(
             key: const Key('smart-new'),
-            tooltip: tr(context, 'New smart collection', 'Bộ thông minh mới'),
+            tooltip: tr(
+              context,
+              'New filter from rules',
+              'Bộ lọc mới theo điều kiện',
+            ),
             icon: const Icon(Icons.add),
             onPressed: () => scope.editSmart(context),
           ),
         ),
-        if (l.smartCollections.isEmpty)
+        if (l.smartCollections.isEmpty && l.savedSearches.isEmpty)
           Text(
             tr(
               context,
-              'Fill a view from rules, like videos saved this week. Pro.',
-              'Tự gom link theo điều kiện, ví dụ video lưu tuần này. Bản Pro.',
+              'Keep a list: + builds one from rules, or save any search or filter from its list. Pro.',
+              'Giữ lại một danh sách: + để tạo theo điều kiện, hoặc lưu tìm kiếm/bộ lọc ngay từ danh sách đó. Bản Pro.',
             ),
+            key: const Key('saved-filters-empty'),
             style: theme.textTheme.bodyMedium?.copyWith(color: c.muted),
           )
         else
@@ -239,21 +246,6 @@ class PlacesList extends StatelessWidget {
                     ],
                   ),
                 ),
-            ],
-          ),
-        heading(tr(context, 'Saved searches', 'Tìm kiếm đã lưu')),
-        if (l.savedSearches.isEmpty)
-          Text(
-            tr(
-              context,
-              'Search or filter a list, then keep it from that list. Pro.',
-              'Tìm hoặc lọc một danh sách rồi lưu lại từ chính danh sách đó. Bản Pro.',
-            ),
-            style: theme.textTheme.bodyMedium?.copyWith(color: c.muted),
-          )
-        else
-          HandyGroup(
-            children: [
               for (final s in l.savedSearches)
                 row(
                   Key('search-${s.id}'),

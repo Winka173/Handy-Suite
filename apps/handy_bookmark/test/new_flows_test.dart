@@ -271,7 +271,7 @@ void main() {
     );
     await tapKey(t, 'list-more');
     await tapKey(t, 'save-search-here');
-    expect(find.text('Saved searches are in Pro'), findsOneWidget);
+    expect(find.text('Saved filters are in Pro'), findsOneWidget);
     await t.tap(find.text('Close'));
     await t.pumpAndSettle();
     expect(c.library!.savedSearches, hasLength(1));

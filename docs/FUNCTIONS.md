@@ -200,7 +200,8 @@ Xem [công thức](handy_spend/FORMULAS_AND_ASSUMPTIONS.md) và
 - Smart Collections AND/OR và saved searches dùng quyền Pro Lifetime đã xác thực;
   điều kiện văn bản, cờ, ngày tương đối, ngày tuyệt đối và số lần mở. Tìm kiếm đã
   lưu giữ nơi, chữ và bộ lọc; lưu từ danh sách đang lọc (Pro), mở/đổi tên/xóa trong
-  nhóm "Tìm kiếm đã lưu" (`#/search/<id>`).
+  nhóm "Bộ lọc đã lưu" (`#/search/<id>`). Từ 2026-11-03 Smart Collections và tìm kiếm
+  đã lưu nằm chung một nhóm "Bộ lọc đã lưu" (mỗi mục giữ biểu tượng riêng; dữ liệu không đổi).
 - Thứ tự tự xếp (chế độ Xếp lại) đã bỏ ngày 2026-11-03: các kiểu sắp xếp có sẵn là đủ.
   Thứ tự đã xếp vẫn nằm trong thư viện và bản sao lưu; tìm kiếm đã lưu theo thứ tự đó vẫn
   hiện đúng thứ tự cũ.

@@ -125,8 +125,8 @@ extension LinkActions on SaveScope {
           title: Text(
             tr(
               context,
-              'Saved searches are in Pro',
-              'Tìm kiếm đã lưu có trong bản Pro',
+              'Saved filters are in Pro',
+              'Bộ lọc đã lưu có trong bản Pro',
             ),
           ),
           content: Text(

@@ -164,8 +164,8 @@ extension CollectionActions on SaveScope {
           title: Text(
             tr(
               context,
-              'Smart collections are in Pro',
-              'Bộ sưu tập thông minh có trong bản Pro',
+              'Saved filters are in Pro',
+              'Bộ lọc đã lưu có trong bản Pro',
             ),
           ),
           content: Text(
