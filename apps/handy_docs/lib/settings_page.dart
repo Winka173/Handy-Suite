@@ -1,14 +1,15 @@
-import 'package:handy_docs_engine/handy_docs_engine.dart';
 import 'package:handy_storage/documents.dart';
 import 'package:handy_storage/handy_storage.dart';
 import 'package:handy_storage/history_page.dart';
 import 'package:handy_storage/recovery.dart';
 import 'package:handy_ui/kit.dart';
-import 'package:handy_ui/workflows.dart';
-import 'package:handy_workflow/handy_workflow.dart';
 import 'scope.dart';
 
 const docsTools = {'md-html', 'md-text', 'md-source'};
+
+/// Steps a saved recipe may hold. Text workflows left Docs on 2026-11-03
+/// (Tools transforms text); recipes saved before then still load and are
+/// kept as they are.
 const docsWorkflowSteps = {'md-text'};
 
 /// Docs settings: the shared page, plus text workflows, the export history
@@ -66,43 +67,6 @@ class DocsSettingsPage extends StatelessWidget {
       HandySettingsSection(
         title: tr(context, 'Text and files', 'Văn bản và tệp'),
         children: [
-          HandyTile(
-            key: const Key('docs-text-workflows'),
-            icon: Icons.account_tree_outlined,
-            title: tr(context, 'Text workflows', 'Quy trình văn bản'),
-            subtitle: tr(
-              context,
-              'Turn Markdown into plain text in saved steps',
-              'Đổi Markdown thành văn bản thường theo các bước đã lưu',
-            ),
-            navigates: true,
-            onTap: () => _push(
-              context,
-              Scaffold(
-                appBar: AppBar(
-                  title: Text(
-                    tr(context, 'Text workflows', 'Quy trình văn bản'),
-                  ),
-                ),
-                body: SharedWorkflowPage(
-                  files: scope.files,
-                  preferences: read(),
-                  registry: {
-                    'md-text': WorkflowStep(
-                      'md-text',
-                      'text/plain',
-                      'text/plain',
-                      (source) async => parseMarkdownDocument(source).text,
-                    ),
-                  },
-                  onSave: (next) async {
-                    final latest = await scope.preferences.load();
-                    await save(latest.copyWith(recipes: next.recipes));
-                  },
-                ),
-              ),
-            ),
-          ),
           HandyTile(
             key: const Key('open-export-history'),
             icon: Icons.history,

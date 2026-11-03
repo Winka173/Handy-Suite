@@ -18,7 +18,7 @@ import '../test/workflow_test.dart' show WorkflowFiles;
 void main() {
   final binding = IntegrationTestWidgetsFlutterBinding.ensureInitialized();
   testWidgets(
-    'native settings, Markdown recipes, document batch and export history reopen exactly',
+    'native settings, document batch and export history reopen exactly',
     (tester) async {
       PreferencesRepository repo() => DevicePreferencesRepository(
         'handy-docs-parity-integration',
@@ -89,46 +89,6 @@ void main() {
       }
 
       await snap('docs-settings-backup');
-
-      // The saved recipe runs the real Markdown step.
-      await tapKey(tester, 'docs-text-workflows');
-      await tester.scrollUntilVisible(
-        find.text('Readable text'),
-        180,
-        scrollable: find.byType(Scrollable).last,
-      );
-      await tester.tap(find.text('Readable text'));
-      await tester.pumpAndSettle();
-      final input = find.widgetWithText(TextField, 'Input text');
-      tester
-          .state<ScrollableState>(find.byType(Scrollable).last)
-          .position
-          .jumpTo(0);
-      await tester.pumpAndSettle();
-      await tester.scrollUntilVisible(
-        input,
-        180,
-        scrollable: find.byType(Scrollable).last,
-      );
-      await tester.enterText(input, '# Local workflow\n\n**Actual** text.');
-      FocusManager.instance.primaryFocus?.unfocus();
-      await tester.pumpAndSettle();
-      await tester.scrollUntilVisible(
-        find.text('Run workflow'),
-        180,
-        scrollable: find.byType(Scrollable).last,
-      );
-      await tester.tap(find.text('Run workflow'));
-      await tester.pumpAndSettle();
-      expect(
-        find.text(
-          parseMarkdownDocument('# Local workflow\n\n**Actual** text.').text,
-        ),
-        findsOneWidget,
-      );
-      await snap('docs-text-workflow');
-      await back(tester);
-      await back(tester);
 
       // Several documents are checked, then kept together.
       files.many = [

@@ -1,4 +1,3 @@
-import 'dart:convert';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:handy_core/handy_core.dart';
 import 'package:handy_docs_engine/handy_docs_engine.dart';
@@ -33,74 +32,27 @@ class WorkflowDocs extends Docs {
 
 void main() {
   testWidgets(
-    'Docs uses real Markdown workflow and preserves preferences on failed save and recipe roundtrip',
+    'text workflows left Docs; recipes saved before still load and are kept',
     (tester) async {
-      final docs = WorkflowDocs(), prefs = docs.prefs, files = docs.files;
+      final docs = WorkflowDocs(), prefs = docs.prefs;
       prefs.value = HandyPreferences(
         locale: 'en',
         theme: 'dark',
-        favorites: ['md-text'],
+        recipes: [
+          Recipe('Readable text', ['md-text']),
+        ],
       );
       await start(tester, docs: docs);
       await tapKey(tester, 'open-settings');
-      await tapKey(tester, 'docs-text-workflows');
-      Future<void> press(String label) async {
-        final finder = find.text(label);
-        if (finder.evaluate().isEmpty) {
-          tester
-              .state<ScrollableState>(find.byType(Scrollable).last)
-              .position
-              .jumpTo(0);
-          await tester.pumpAndSettle();
-          await tester.scrollUntilVisible(
-            finder,
-            160,
-            scrollable: find.byType(Scrollable).last,
-          );
-        }
-        await Scrollable.ensureVisible(
-          tester.element(finder.last),
-          alignment: .5,
-        );
-        await tester.pumpAndSettle();
-        await tester.tap(finder.last);
-        await tester.pumpAndSettle();
-      }
-
-      await tester.enterText(
-        find.widgetWithText(TextField, 'Workflow name'),
-        'Local text',
-      );
-      await press('Add step');
-      const source = '# Title\n\n**Bold** and plain.';
-      await tester.enterText(
-        find.widgetWithText(TextField, 'Input text'),
-        source,
-      );
-      await press('Run workflow');
-      expect(find.text(parseMarkdownDocument(source).text), findsOneWidget);
-      prefs.fail = true;
-      await press('Save workflow');
-      expect(prefs.value.recipes, isEmpty);
-      prefs.fail = false;
-      await press('Save workflow');
+      expect(find.byKey(const Key('docs-text-workflows')), findsNothing);
+      // Any later save keeps the old recipe untouched.
+      await tester.tap(find.text('Light').first);
+      await tester.pumpAndSettle();
       expect(prefs.value.recipes.single.steps, ['md-text']);
-      expect(prefs.value.theme, 'dark');
-      expect(prefs.value.favorites, ['md-text']);
-      await press('Export workflow');
-      final exported = files.output!;
       expect(
-        Recipe.fromJson(jsonDecode(exported)).toJson(),
-        prefs.value.recipes.single.toJson(),
+        parseMarkdownDocument('# Title\n\n**Bold**').text,
+        isNot(contains('#')),
       );
-      files.input = exported;
-      await press('Import workflow');
-      expect(find.byType(SelectableText), findsNothing);
-      await press('Run workflow');
-      expect(find.text(parseMarkdownDocument(source).text), findsOneWidget);
-      files.input = Recipe('Foreign', ['jwt']).export();
-      await press('Import workflow');
-      expect(prefs.value.recipes.single.steps, ['md-text']);
     },
   );
 }

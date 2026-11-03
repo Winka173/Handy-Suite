@@ -275,8 +275,8 @@ Source: `apps/handy_docs/lib`, `packages/handy_docs_engine`, `packages/handy_pdf
 - **Markdown:** sửa source, preview GFM, tìm/thay thế literal, template, highlight
   code local; xuất Markdown/HTML/text/PDF và ZIP gồm source + các bản xuất.
   Desktop soạn và xem trước cạnh nhau; Ctrl S lưu, Ctrl F tìm, Ctrl P xuất PDF;
-  rời trình soạn khi chưa lưu sẽ được hỏi. Recipe md-text dùng workflow chung
-  (Cài đặt → Quy trình văn bản). Mermaid chưa có renderer offline được kiểm chứng.
+  rời trình soạn khi chưa lưu sẽ được hỏi. "Quy trình văn bản" đã bỏ khỏi Docs
+  ngày 2026-11-03 (Tools đã biến đổi văn bản); recipe đã lưu vẫn giữ nguyên. Mermaid chưa có renderer offline được kiểm chứng.
 - **Bàn làm việc:** màn chính hiện việc dở (bản quét, bản nháp, PDF đang mở, tài
   liệu đọc chưa lưu) như xấp giấy, bốn lối bắt đầu (Quét, Viết Markdown, PDF, Mở tệp
   văn bản) và "Tệp đã giữ" gần đây.
