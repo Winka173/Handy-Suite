@@ -69,3 +69,12 @@ PNG/JPEG/SVG/PDF/tờ in/vCard/QR/trang hồ sơ HTML/chữ ký email và ZIP d�
 Trạng thái thật từng mục: [Card test matrix](docs/HANDY_CARD_TEST_MATRIX.md).
 Batch mới có engine (chưa có màn hình); NFC, Wallet, brand kit chưa làm. Chưa
 build và chưa chạy trên Android/iOS/Windows/Web.
+
+Vòng 3 (2026-11-03), unit test + widget test trên máy, chưa chạy thiết bị:
+Tools có Bốc thăm và Đo bằng ảnh (Keep cũng đo từ ảnh của món đồ); Media có
+khung ảnh chụp màn hình; Docs lưu chữ OCR thành Word, in hai mặt thủ công và
+đánh số trang; Recall có chép chính tả; Card có thiệp cưới, thiệp tân gia/sinh
+nhật, CV một trang, khổ A5 và A4. Đã gộp hoặc bỏ: Dev còn 24 tool (converter
+gộp thành `convert`, bỏ HAR và .env), Tools còn 17 (phần trăm và tỷ lệ vào Sổ
+tính, màu sang Dev, bỏ tỷ giá nhập tay), Trip bỏ so sánh chuyến, Habit bỏ
+Routine Lite, Boards bỏ timeline và critical path.

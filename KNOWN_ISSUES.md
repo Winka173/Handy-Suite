@@ -158,3 +158,14 @@ bands. Crop is set with sliders (no drag crop yet). The batch generator has an
 engine but no screen; NFC, Wallet passes, brand kits, XLSX and SVG import are
 not built. Stored designs are not encrypted. Nothing has run on a device yet;
 see `docs/HANDY_CARD_PLATFORM_MATRIX.md`.
+
+Round 3 features (2026-11-03), host-tested only, none run on a device yet:
+Tools/Keep "Đo bằng ảnh" is an estimate that holds only for flat things in
+the reference's plane, photographed square on (no perspective correction).
+Recall dictation needs a system voice for the deck's answer language and
+skips cloze and picture cards. Docs' Word export is minimal Office Open XML
+(paragraphs and breaks, no styles) and was not opened in Word on this
+machine; "print both sides" cannot add a blank page, so with an odd count
+the last sheet is taken out by hand; page numbers need the Android, iOS or
+Windows app. Media's screenshot frame stops at 16 Mpx. Keep's moving boxes
+were kept on purpose: they already show as places in the same list.
