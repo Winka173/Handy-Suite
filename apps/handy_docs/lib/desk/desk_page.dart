@@ -12,9 +12,19 @@ class DeskPage extends StatelessWidget {
   final DocsScope scope;
   const DeskPage({super.key, required this.scope});
 
-  void go(BuildContext context, String place) => place == 'open'
-      ? scope.opener.pickAndShow(context)
-      : Navigator.pushNamed(context, '/$place');
+  void go(BuildContext context, String place) {
+    if (place == 'open') {
+      scope.opener.pickAndShow(context);
+      return;
+    }
+    // Scanning starts with the camera when there is one and nothing yet.
+    if (place == 'scan' &&
+        scope.scan.camera.supported &&
+        scope.scan.pages.isEmpty) {
+      scope.scan.openCamera = true;
+    }
+    Navigator.pushNamed(context, '/$place');
+  }
 
   @override
   Widget build(BuildContext context) => Scaffold(

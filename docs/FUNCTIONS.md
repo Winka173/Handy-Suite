@@ -284,7 +284,8 @@ Source: `apps/handy_docs/lib`, `packages/handy_docs_engine`, `packages/handy_pdf
 - **Bàn làm việc:** màn chính hiện việc dở (bản quét, bản nháp, PDF đang mở, tài
   liệu đọc chưa lưu) như xấp giấy, bốn lối bắt đầu (Quét, Viết Markdown, PDF, Mở tệp
   văn bản) và "Tệp đã giữ" gần đây.
-- **Scanner:** nhập ảnh/camera, crop bốn góc kéo trực tiếp, sửa phối cảnh,
+- **Scanner:** trên điện thoại có camera, ô "Quét" của bàn mở camera ngay khi chưa có
+  trang nào (2026-11-03); nhập ảnh/camera, crop bốn góc kéo trực tiếp, sửa phối cảnh,
   tương phản, nhiều trang, sắp xếp/xóa trang, ghép PDF, lưu/khôi phục session JSON.
   "PDF tìm được chữ": OCR từng trang rồi đặt lớp chữ ẩn dưới ảnh. Không AI đám mây.
   Scanner giới hạn cạnh 2048 / 4Mpx mỗi trang, session 16MB/16Mpx.

@@ -22,6 +22,10 @@ class ScanStore extends ChangeNotifier {
 
   /// A photo the camera took while Android had closed the app.
   ImportedBytes? recovered;
+
+  /// Set by the desk's Scan tile on a phone with no pages yet: the scan
+  /// screen opens the camera at once (one tap to the first photo).
+  bool openCamera = false;
   List<ScanPage> get pages => session?.pages ?? const [];
   bool get full => pages.length >= 20;
 

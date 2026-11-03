@@ -93,4 +93,25 @@ void main() {
     await tapKey(tester, 'pdf-export');
     expect(docs.files.name, 'report-numbered.pdf');
   });
+
+  testWidgets('Scan opens the camera at once on a phone with no pages yet', (
+    tester,
+  ) async {
+    final docs = Docs();
+    docs.camera.on = true;
+    await start(tester, docs: docs);
+    await tapKey(tester, 'desk-scan');
+    await tester.pumpAndSettle();
+    expect(docs.camera.captures, 1);
+  });
+
+  testWidgets('without a camera, Scan opens the scan screen and waits', (
+    tester,
+  ) async {
+    final plain = Docs();
+    await start(tester, docs: plain);
+    await tapKey(tester, 'desk-scan');
+    expect(plain.camera.captures, 0);
+    expect(find.byKey(const Key('scan-import')), findsOneWidget);
+  });
 }

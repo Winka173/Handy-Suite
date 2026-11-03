@@ -84,10 +84,15 @@ class Files implements HandyFiles, BatchHandyFiles {
 class Camera implements ScanCamera {
   bool on = false;
   ImportedBytes? photo, lost;
+  int captures = 0;
   @override
   bool get supported => on;
   @override
-  Future<ImportedBytes?> capture() async => photo;
+  Future<ImportedBytes?> capture() async {
+    captures++;
+    return photo;
+  }
+
   @override
   Future<ImportedBytes?> recover() async => lost;
 }

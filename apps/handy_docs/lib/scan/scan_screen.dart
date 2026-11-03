@@ -24,6 +24,17 @@ class _ScanScreenState extends State<ScanScreen> {
   bool busy = false;
   ScanStore get store => widget.store;
 
+  @override
+  void initState() {
+    super.initState();
+    if (store.openCamera) {
+      store.openCamera = false;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) add(camera: true);
+      });
+    }
+  }
+
   Future<void> run(Future<void> Function() task, {String? done}) async {
     if (busy) return;
     setState(() => busy = true);
