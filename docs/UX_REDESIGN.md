@@ -1876,3 +1876,24 @@ primary action, states, accessibility, patterns to reject).
   explicitly imported sanitized small PNGs; charts expose missing values and units.
 - Empty/loading/error remain explicit. Native notification prompts occur in Settings,
   answer contents never appear on the lock screen, and the in-app center always works.
+
+## Tap audit - 2026-11-03
+
+Each app's most frequent job, counted in taps from its home screen (typing
+not counted; system camera and pickers count as one). Target: two or fewer.
+Read from the flows the widget tests drive.
+
+| App | Job | Taps | Note |
+| --- | --- | --- | --- |
+| Tools | Work out a sum or convert | 0 | Type on the bench |
+| Dev | Look inside pasted data | 0 | Paste; the lens is detected |
+| Spend | Log a spend | 1 | One line on Today, then Enter |
+| Habit | Check in today | 1 | Today's bead |
+| Bookmark | Save a copied link | 1 | Clipboard button in the top bar |
+| Recall | Review a card | 2 | Show answer, grade |
+| Keep | Add a thing | 2 | Add, type the name, save |
+| Boards | Add a task | 2 | Quick add, type, save |
+| Card | Start a design | 2 | New, Create (defaults filled) |
+| Media | First picture of a guide | 2 | New guide, add a picture |
+| Trip | Mark a visit | 1 | Was 3+ (long form and a confirm switch); now Visited / I'm here now |
+| Docs | Photograph the first page | 1 | Was 2; Scan now opens the camera when there is one |
