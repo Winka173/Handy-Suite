@@ -2,7 +2,6 @@ import 'dart:typed_data';
 import 'package:flutter/services.dart' show rootBundle;
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
-import 'package:handy_monetization/handy_monetization.dart';
 import 'package:handy_trip_engine/handy_trip_engine.dart';
 import 'package:handy_ui/kit.dart';
 import '../../scope.dart';
@@ -13,10 +12,7 @@ Future<Uint8List> memoryBookPdf(
   String tripId, {
   bool privateText = false,
   bool includeMoney = false,
-  String layout = 'daybook',
 }) async {
-  if (!['daybook', 'contact-sheet'].contains(layout))
-    throw const FormatException('Unknown book layout');
   final book = memoryBookData(
     s,
     tripId,
@@ -42,7 +38,7 @@ Future<Uint8List> memoryBookPdf(
     return pw.Column(
       children: [
         pw.Container(
-          height: layout == 'contact-sheet' ? 160 : 260,
+          height: 260,
           alignment: pw.Alignment.center,
           child: pw.Image(
             images.putIfAbsent(
@@ -100,20 +96,7 @@ Future<Uint8List> memoryBookPdf(
         final p = photo(key);
         if (p != null) pictures.add(p);
       }
-      if (layout == 'contact-sheet') {
-        children.add(
-          pw.Wrap(
-            spacing: 8,
-            runSpacing: 8,
-            children: [
-              for (final picture in pictures)
-                pw.SizedBox(width: 230, child: picture),
-            ],
-          ),
-        );
-      } else {
-        children.addAll(pictures);
-      }
+      children.addAll(pictures);
       for (final key in v['assets'] as List) caption(key);
     }
     for (final note in day['notes'] as List) {
@@ -153,7 +136,6 @@ Future<void> exportMemoryBook(
   TripScope scope,
   String tripId,
 ) async {
-  final pro = LifetimeScope.maybeOf(context)?.pro == true;
   await tripForm(
     context,
     tr(context, 'Create a memory book', 'Tạo sách kỷ niệm'),
@@ -164,21 +146,6 @@ Future<void> exportMemoryBook(
         'Định dạng',
         kind: 'choice',
         choices: {'pdf': 'PDF', 'zip': 'HTML + photos ZIP'},
-      ),
-      TripField(
-        'layout',
-        'Layout',
-        'Bố cục',
-        kind: 'choice',
-        choices: {
-          'daybook': tr(context, 'Daybook', 'Sổ theo ngày'),
-          if (pro)
-            'contact-sheet': tr(
-              context,
-              'Photo contact sheet · Pro',
-              'Trang ảnh · Pro',
-            ),
-        },
       ),
       const TripField(
         'private',
@@ -199,19 +166,10 @@ Future<void> exportMemoryBook(
         kind: 'toggle',
       ),
     ],
-    {
-      'format': 'pdf',
-      'layout': 'daybook',
-      'private': false,
-      'money': false,
-      'reviewed': false,
-    },
+    {'format': 'pdf', 'private': false, 'money': false, 'reviewed': false},
     (v) async {
       if (v['reviewed'] != true)
         throw const FormatException('Review privacy choices before exporting');
-      if (v['layout'] != 'daybook' &&
-          LifetimeScope.maybeOf(context)?.pro != true)
-        throw StateError('Pro entitlement required for this layout');
       final snapshot = scope.state,
           bytes = v['format'] == 'pdf'
               ? await memoryBookPdf(
@@ -219,14 +177,12 @@ Future<void> exportMemoryBook(
                   tripId,
                   privateText: v['private'] == true,
                   includeMoney: v['money'] == true,
-                  layout: v['layout'],
                 )
               : memoryBookZip(
                   snapshot,
                   tripId,
                   privateText: v['private'] == true,
                   includeMoney: v['money'] == true,
-                  layout: v['layout'],
                 );
       if (bytes.length > portableLimit)
         throw const FormatException('Book exceeds 30 MB');

@@ -34,12 +34,12 @@ App độc lập thứ mười: lên lịch, ghi nhận đã ghé và lưu kỷ 
 - SQLite native/IndexedDB Web riêng; Ads + Pro Lifetime dùng adapter chung, ID riêng.
   Chưa có tài khoản store/AdMob thật; không giả giá hoặc quyền Pro.
 - Passport có ảnh và thống kê lượt ghé/địa điểm; stamp cá nhân PNG/PDF không phải
-  giấy tờ chính thức. Memory Book PDF/HTML ZIP theo ngày hoặc contact sheet;
+  giấy tờ chính thức. Memory Book PDF/HTML ZIP theo ngày (bố cục contact sheet bỏ ngày 2026-11-03);
   ghi chú riêng, caption và chi tiêu chỉ xuất khi chọn. Ảnh xuất bỏ EXIF.
 - Gợi ý EXIF đọc cục bộ, hiển thị cảnh báo giờ/GPS, chỉ tạo lượt ghé qua form xác
   nhận hiện có. Replay (nối điểm bằng đường thẳng) đã bỏ ngày 2026-11-03.
 - So sánh chuyến đã bỏ (2026-11-03): ít người dùng; Hộ chiếu đã cho số lượt ghé
-  và địa điểm. Pro thêm kiểu stamp và contact sheet. Recipe lịch trình JSON đã bỏ (2026-11-03); bản xuất JSON công khai vẫn còn.
+  và địa điểm. Pro thêm kiểu stamp. Recipe lịch trình JSON đã bỏ (2026-11-03); bản xuất JSON công khai vẫn còn.
 
 Các tính năng native iOS là source chưa được build/kiểm thử trên macOS; không coi
 build Android/Windows/Web hay ảnh widget là bằng chứng thiết bị thật.

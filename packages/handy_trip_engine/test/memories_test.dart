@@ -136,8 +136,8 @@ void main() {
     'HTML/photo ZIP contains escaped text, no original metadata and deterministic backup round-trip',
     () {
       final s = memories();
-      for (final layout in ['daybook', 'contact-sheet']) {
-        final bytes = memoryBookZip(s, 't', layout: layout),
+      {
+        final bytes = memoryBookZip(s, 't'),
             archive = ZipDecoder().decodeBytes(bytes);
         final html = utf8.decode(archive.findFile('index.html')!.content);
         expect(html, isNot(contains('<script>')));
@@ -163,7 +163,7 @@ void main() {
           );
         }
         final restored = ZipDecoder().decodeBytes(
-          memoryBookZip(readBackup(fullBackup(s)), 't', layout: layout),
+          memoryBookZip(readBackup(fullBackup(s)), 't'),
         );
         expect(
           restored.findFile('index.html')!.content,

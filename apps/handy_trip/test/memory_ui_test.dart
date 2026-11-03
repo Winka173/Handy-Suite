@@ -151,14 +151,12 @@ void main() {
           '${out.path}/trip-stamp-$style.pdf',
         ).writeAsBytes(await stampPdf(c.state!, 'v', style: style));
       }
-      for (final layout in ['daybook', 'contact-sheet']) {
-        final pdf = await memoryBookPdf(c.state!, 't', layout: layout);
-        expect(String.fromCharCodes(pdf.take(5)), '%PDF-');
-        await File('${out.path}/trip-memory-$layout.pdf').writeAsBytes(pdf);
-        await File(
-          '${out.path}/trip-memory-$layout.zip',
-        ).writeAsBytes(memoryBookZip(c.state!, 't', layout: layout));
-      }
+      final pdf = await memoryBookPdf(c.state!, 't');
+      expect(String.fromCharCodes(pdf.take(5)), '%PDF-');
+      await File('${out.path}/trip-memory-daybook.pdf').writeAsBytes(pdf);
+      await File(
+        '${out.path}/trip-memory-daybook.zip',
+      ).writeAsBytes(memoryBookZip(c.state!, 't'));
     },
   );
   testWidgets(

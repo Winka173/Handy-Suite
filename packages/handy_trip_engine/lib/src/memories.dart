@@ -103,10 +103,7 @@ Uint8List memoryBookZip(
   String tripId, {
   bool privateText = false,
   bool includeMoney = false,
-  String layout = 'daybook',
 }) {
-  if (!['daybook', 'contact-sheet'].contains(layout))
-    throw const FormatException('Unknown memory book layout');
   final book = memoryBookData(
         s,
         tripId,
@@ -147,7 +144,7 @@ Uint8List memoryBookZip(
         '<p>${e.key}: ${amount(minorValue(e.value), e.key)} (separate currency)</p>',
       );
   final html =
-      '<!doctype html><html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta http-equiv="Content-Security-Policy" content="default-src \'none\'; img-src \'self\' file: data:; style-src \'unsafe-inline\'"><title>Handy Trip memory book</title><style>body{max-width:60rem;margin:auto;padding:24px;font-family:system-ui;color:#171717;background:white}section{border-top:1px solid #ddd;padding:16px 0}img{max-width:100%;max-height:600px}figure{margin:16px 0;${layout == 'contact-sheet' ? 'display:inline-block;width:46%;vertical-align:top;' : ''}}p{white-space:pre-wrap}@media(max-width:600px){figure{width:100%}}</style><body><p>${privateText || includeMoney ? 'Private selections included.' : 'Private text and expenses omitted.'} Photos reencoded without EXIF; review visible image content.</p>$body</body></html>';
+      '<!doctype html><html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta http-equiv="Content-Security-Policy" content="default-src \'none\'; img-src \'self\' file: data:; style-src \'unsafe-inline\'"><title>Handy Trip memory book</title><style>body{max-width:60rem;margin:auto;padding:24px;font-family:system-ui;color:#171717;background:white}section{border-top:1px solid #ddd;padding:16px 0}img{max-width:100%;max-height:600px}figure{margin:16px 0;}p{white-space:pre-wrap}@media(max-width:600px){figure{width:100%}}</style><body><p>${privateText || includeMoney ? 'Private selections included.' : 'Private text and expenses omitted.'} Photos reencoded without EXIF; review visible image content.</p>$body</body></html>';
   final entries = <String, Uint8List>{
     'index.html': Uint8List.fromList(utf8.encode(html)),
     for (final e in photos.entries) 'photos/${e.key}.jpg': e.value,
@@ -161,7 +158,8 @@ Uint8List memoryBookZip(
       'schema': 1,
       'privateText': privateText,
       'includeMoney': includeMoney,
-      'layout': layout,
+      // One layout since 2026-11-03 (the contact sheet was dropped).
+      'layout': 'daybook',
       'files': entries.map(
         (k, v) => MapEntry(k, {
           'size': v.length,
