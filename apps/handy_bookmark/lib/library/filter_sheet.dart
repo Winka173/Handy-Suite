@@ -10,7 +10,6 @@ const _sorts = [
   'mostOpened',
   'title',
   'domain',
-  'manual',
 ];
 
 String sortName(BuildContext c, String s) => switch (s) {
@@ -19,6 +18,7 @@ String sortName(BuildContext c, String s) => switch (s) {
   'mostOpened' => tr(c, 'Most opened', 'Mở nhiều nhất'),
   'title' => tr(c, 'Title A–Z', 'Tên A–Z'),
   'domain' => tr(c, 'Website', 'Theo trang web'),
+  // Kept for searches saved before 2026-11-03, when hand order was dropped.
   'manual' => tr(c, 'Your order', 'Thứ tự tự xếp'),
   _ => tr(c, 'Newest first', 'Mới nhất trước'),
 };

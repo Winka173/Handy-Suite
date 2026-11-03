@@ -242,25 +242,6 @@ void main() {
     },
   );
 
-  testWidgets('your order: rearrange with buttons, Esc leaves, order sticks', (
-    t,
-  ) async {
-    final (c, _) = await boot(t, size: const Size(1440, 900));
-    await tapKey(t, 'save-filters');
-    await tapKey(t, 'sort-manual');
-    await t.tapAt(const Offset(10, 10));
-    await t.pumpAndSettle();
-    await tapKey(t, 'arrange');
-    final first = idOf(c, 'https://a.com/one');
-    expect(find.byKey(Key('up-$first')), findsOneWidget);
-    await tapKey(t, 'down-$first');
-    await settle(t);
-    expect(c.library!.manualOrder.indexOf(first), 1);
-    await tapKey(t, 'arrange-done');
-    expect(find.byKey(const Key('arrange-list')), findsNothing);
-    expect(t.takeException(), isNull);
-  });
-
   testWidgets('saved searches: a kept one opens its words; without Pro, '
       'saving explains instead', (t) async {
     final (c, _) = await boot(

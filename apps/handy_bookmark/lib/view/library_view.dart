@@ -58,8 +58,6 @@ class LibraryView extends ChangeNotifier {
   bool loading = true, failed = false;
   final selected = <String>{};
 
-  /// Rearranging by hand: rows show move controls instead of opening.
-  bool arranging = false;
   SaveLibrary? _undoBefore, _undoAfter;
   Timer? _debounce;
   bool get selecting => selected.isNotEmpty;
@@ -74,7 +72,6 @@ class LibraryView extends ChangeNotifier {
     place = p;
     id = which;
     selected.clear();
-    arranging = false;
     reload();
   }
 
@@ -139,33 +136,7 @@ class LibraryView extends ChangeNotifier {
       savedBefore: q['savedBefore'] as String?,
     );
     selected.clear();
-    arranging = false;
     reload();
-  }
-
-  void arrange(bool on) {
-    arranging = on;
-    selected.clear();
-    notifyListeners();
-  }
-
-  /// Moves the row at [from] to [to] (its index once moved) in the person's
-  /// order. The list moves at once; the store follows, and Undo can take it
-  /// back. A failure reloads the stored order.
-  Future<void> move(int from, int to) async {
-    if (from == to) return;
-    final visible = results.map((b) => b.id).toList();
-    final row = results.removeAt(from);
-    results.insert(to, row);
-    notifyListeners();
-    try {
-      await change(
-        (l) => l.copyWith(manualOrder: moveInManualOrder(l, visible, from, to)),
-      );
-    } catch (_) {
-      await reload();
-      rethrow;
-    }
   }
 
   void search(String value) {
@@ -176,7 +147,6 @@ class LibraryView extends ChangeNotifier {
 
   void filter(Filters f) {
     filters = f;
-    if (f.sort != 'manual') arranging = false;
     reload();
   }
 

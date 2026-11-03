@@ -1,11 +1,9 @@
-import 'package:flutter/semantics.dart';
 import 'package:handy_bookmark_engine/handy_bookmark_engine.dart';
 import 'package:handy_ui/kit.dart';
 import '../controller.dart';
 import '../links/link_actions.dart';
 import '../links/task_strip.dart';
 import '../scope.dart';
-import '../ui/words.dart';
 import '../view/library_view.dart';
 import 'bookmark_tile.dart';
 import 'filter_sheet.dart';
@@ -42,7 +40,6 @@ class ResultsView extends StatelessWidget {
       final c = HandyColors.of(context);
       final rows = v.results;
       final wide = MediaQuery.sizeOf(context).width >= 600;
-      final canArrange = v.manual && !cards && rows.length > 1;
       final header = Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
@@ -74,23 +71,7 @@ class ResultsView extends StatelessWidget {
                   fontFeatures: tabular,
                 ),
               ),
-              if (v.arranging)
-                Padding(
-                  padding: const EdgeInsets.only(left: HandySpace.s),
-                  child: FilledButton(
-                    key: const Key('arrange-done'),
-                    onPressed: () => v.arrange(false),
-                    child: Text(tr(context, 'Done', 'Xong')),
-                  ),
-                )
-              else ...[
-                if (canArrange)
-                  IconButton(
-                    key: const Key('arrange'),
-                    tooltip: tr(context, 'Rearrange', 'Xếp lại'),
-                    icon: const Icon(Icons.swap_vert),
-                    onPressed: () => v.arrange(true),
-                  ),
+              ...[
                 if (wide && v.canSaveSearch && v.place != Place.smart)
                   IconButton(
                     key: const Key('save-search-here'),
@@ -131,8 +112,6 @@ class ResultsView extends StatelessWidget {
         );
       } else if (rows.isEmpty) {
         body = _empty(context);
-      } else if (v.arranging) {
-        body = _arrange(context);
       } else if (cards) {
         body = LayoutBuilder(
           builder: (context, box) => GridView.builder(
@@ -190,7 +169,7 @@ class ResultsView extends StatelessWidget {
             header,
             HandySwap(
               child: KeyedSubtree(
-                key: ValueKey('${v.place}-${v.id}-$cards-${v.arranging}'),
+                key: ValueKey('${v.place}-${v.id}-$cards'),
                 child: body,
               ),
             ),
@@ -263,113 +242,6 @@ class ResultsView extends StatelessWidget {
 
   /// Rows that move: up and down buttons for every input, and a handle to
   /// drag. Pinned links stay above the rest, so a step across is disabled.
-  Widget _arrange(BuildContext context) {
-    final v = view;
-    final rows = v.results;
-    final c = HandyColors.of(context);
-    Future<void> move(int from, int to) async {
-      try {
-        await v.move(from, to);
-      } catch (e) {
-        if (context.mounted)
-          showHandyMessage(
-            context,
-            tr(
-              context,
-              'Could not move it: ${errorText(context, e)}.',
-              'Chưa dời được: ${errorText(context, e)}.',
-            ),
-          );
-      }
-    }
-
-    bool step(int from, int to) =>
-        to >= 0 && to < rows.length && rows[from].isPinned == rows[to].isPinned;
-    return HandyGroup(
-      children: [
-        ReorderableListView.builder(
-          key: const Key('arrange-list'),
-          shrinkWrap: true,
-          physics: const NeverScrollableScrollPhysics(),
-          buildDefaultDragHandles: false,
-          itemCount: rows.length,
-          onReorderItem: (from, to) {
-            if (from != to && rows[from].isPinned == rows[to].isPinned)
-              move(from, to);
-          },
-          itemBuilder: (context, i) {
-            final b = rows[i];
-            final title = b.title.isEmpty ? b.sourceDomain : b.title;
-            return Material(
-              key: ValueKey('arrange-${b.id}'),
-              color: Colors.transparent,
-              child: Semantics(
-                customSemanticsActions: {
-                  if (step(i, i - 1))
-                    CustomSemanticsAction(
-                      label: tr(context, 'Move up', 'Lên'),
-                    ): () =>
-                        move(i, i - 1),
-                  if (step(i, i + 1))
-                    CustomSemanticsAction(
-                      label: tr(context, 'Move down', 'Xuống'),
-                    ): () =>
-                        move(i, i + 1),
-                },
-                child: ListTile(
-                  contentPadding: const EdgeInsets.only(
-                    left: HandySpace.l,
-                    right: HandySpace.xs,
-                  ),
-                  title: Text(
-                    title,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  subtitle: Text(
-                    sourceLine(b),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: TextStyle(color: c.muted),
-                  ),
-                  trailing: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      IconButton(
-                        disabledColor: c.border,
-                        key: Key('up-${b.id}'),
-                        tooltip: tr(context, 'Move up', 'Lên'),
-                        icon: const Icon(Icons.arrow_upward),
-                        onPressed: step(i, i - 1) ? () => move(i, i - 1) : null,
-                      ),
-                      IconButton(
-                        disabledColor: c.border,
-                        key: Key('down-${b.id}'),
-                        tooltip: tr(context, 'Move down', 'Xuống'),
-                        icon: const Icon(Icons.arrow_downward),
-                        onPressed: step(i, i + 1) ? () => move(i, i + 1) : null,
-                      ),
-                      ReorderableDragStartListener(
-                        index: i,
-                        child: Tooltip(
-                          message: tr(context, 'Drag to move', 'Kéo để dời'),
-                          child: Padding(
-                            padding: const EdgeInsets.all(HandySpace.m),
-                            child: Icon(Icons.drag_indicator, color: c.muted),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            );
-          },
-        ),
-      ],
-    );
-  }
-
   Widget _empty(BuildContext context) {
     final v = view;
     if (v.text.trim().isNotEmpty || v.filters.any) {

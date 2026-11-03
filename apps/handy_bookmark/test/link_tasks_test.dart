@@ -285,26 +285,4 @@ void main() {
     v.dispose();
     c.dispose();
   });
-
-  test('moving by hand reorders, survives reload and undoes', () async {
-    final (c, _, _) = await boot();
-    final v = LibraryView(c)..filters = const Filters(sort: 'manual');
-    await v.reload();
-    final before = v.results.map((b) => b.originalUrl).toList();
-    expect(before.first, 'https://a.com/ok');
-    await v.move(3, 0);
-    expect(v.results.first.originalUrl, 'https://c.net/down');
-    await v.reload();
-    expect(v.results.map((b) => b.originalUrl), [
-      'https://c.net/down',
-      'https://a.com/ok',
-      'https://a.com/moved',
-      'https://b.org/gone',
-    ]);
-    expect(await v.undo(), isTrue);
-    await v.reload();
-    expect(v.results.map((b) => b.originalUrl), before);
-    v.dispose();
-    c.dispose();
-  });
 }

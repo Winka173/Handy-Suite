@@ -62,11 +62,8 @@ class _SaveShellState extends State<SaveShell> {
         SingleActivator(LogicalKeyboardKey.keyF, control: !meta, meta: meta):
             searchFocus.requestFocus,
       },
-      const SingleActivator(LogicalKeyboardKey.escape): () => v.arranging
-          ? v.arrange(false)
-          : v.selecting
-          ? v.clearSelection()
-          : setState(() => current = null),
+      const SingleActivator(LogicalKeyboardKey.escape): () =>
+          v.selecting ? v.clearSelection() : setState(() => current = null),
     };
     final addButtons = [
       IconButton(

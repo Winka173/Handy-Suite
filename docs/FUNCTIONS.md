@@ -201,9 +201,9 @@ Xem [công thức](handy_spend/FORMULAS_AND_ASSUMPTIONS.md) và
   điều kiện văn bản, cờ, ngày tương đối, ngày tuyệt đối và số lần mở. Tìm kiếm đã
   lưu giữ nơi, chữ và bộ lọc; lưu từ danh sách đang lọc (Pro), mở/đổi tên/xóa trong
   nhóm "Tìm kiếm đã lưu" (`#/search/<id>`).
-- Thứ tự tự xếp ("Thứ tự tự xếp" trong Lọc và sắp xếp): chế độ Xếp lại có nút Lên/Xuống,
-  kéo tay nắm và thao tác cho trình đọc màn hình; link đã ghim vẫn ở trên; Hoàn tác.
-  Thứ tự nằm trong thư viện (schema 2) nên đi theo bản sao lưu.
+- Thứ tự tự xếp (chế độ Xếp lại) đã bỏ ngày 2026-11-03: các kiểu sắp xếp có sẵn là đủ.
+  Thứ tự đã xếp vẫn nằm trong thư viện và bản sao lưu; tìm kiếm đã lưu theo thứ tự đó vẫn
+  hiện đúng thứ tự cũ.
 - Bản đọc offline (chỉ khi bấm, từng link hoặc tối đa 200 link/lượt, có tiến trình và
   Dừng): tải trang HTML qua bộ tải an toàn (tối đa 3MB, 20 giây), lấy phần chữ chính
   kiểu readability (tiêu đề, tác giả, đoạn, tiêu đề phụ, danh sách, trích dẫn, mã), bỏ

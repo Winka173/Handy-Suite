@@ -53,10 +53,10 @@ class _ResultsPageState extends State<ResultsPage> {
     listenable: view,
     builder: (context, _) => PopScope(
       // Back first stops selecting, then leaves.
-      canPop: !view.selecting && !view.arranging,
+      canPop: !view.selecting,
       onPopInvokedWithResult: (didPop, _) {
         if (didPop) return;
-        view.arranging ? view.arrange(false) : view.clearSelection();
+        view.clearSelection();
       },
       child: Scaffold(
         appBar: AppBar(),

@@ -537,16 +537,6 @@ void main() {
     );
     await t.pumpAndSettle();
   });
-  testWidgets('desktop rearrange', (t) async {
-    await boot(t, const Size(1440, 900), extras: true);
-    await tapKey(t, 'collection-trip');
-    await tapKey(t, 'save-filters');
-    await tapKey(t, 'sort-manual');
-    await t.tapAt(const Offset(700, 40));
-    await t.pumpAndSettle();
-    await tapKey(t, 'arrange');
-    await shot(t, 'desktop-18-arrange');
-  });
   testWidgets('phone pocket preview', (t) async {
     final files = OneFile()
       ..next = ImportedBytes(
