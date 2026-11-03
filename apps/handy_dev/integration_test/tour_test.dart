@@ -133,7 +133,7 @@ void main() {
           ..value = HandyPreferences(
             theme: 'light',
             locale: 'vi',
-            favorites: ['jwt', 'jsonpath'],
+            favorites: ['jwt', 'json-filter'],
           ),
         files: Files(),
         documents: _requests(),

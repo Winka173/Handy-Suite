@@ -41,7 +41,7 @@ void main() {
     expect(tree.tree, {
       'a': [1, 2],
     });
-    final path = lens(DataKind.json, 'jsonpath');
+    final path = lens(DataKind.json, 'json-filter');
     expect(inspect('{"a":1}', DataKind.json, path).needsOption, isTrue);
     expect(
       inspect('{"a":[1,2]}', DataKind.json, path, option: r'$.a[*]').tree,
@@ -50,7 +50,7 @@ void main() {
     final fields = inspect(
       '[{"id":1,"x":2}]',
       DataKind.json,
-      lens(DataKind.json, 'json-project'),
+      lens(DataKind.json, 'json-filter'),
       option: 'id',
     );
     expect(fields.tree, [

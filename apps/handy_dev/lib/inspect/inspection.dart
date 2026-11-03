@@ -4,14 +4,7 @@ import 'detect.dart';
 import 'lenses.dart';
 
 /// Lenses whose answer is a finding to explore rather than text to copy.
-const treeLenses = {
-  'jwt',
-  'regex',
-  'schema',
-  'json-diff',
-  'jsonpath',
-  'json-project',
-};
+const treeLenses = {'jwt', 'regex', 'schema', 'json-diff', 'json-filter'};
 
 /// Inputs above this size wait for an explicit Run so typing never stalls.
 const liveLimit = 200000;

@@ -530,36 +530,34 @@ final List<DevTool> devTools = List.unmodifiable([
       optionsLabel: 'Pattern / Biểu thức',
     ),
   DevTool(
-    'json-typescript',
-    'JSON → TypeScript',
-    'JSON → TypeScript',
-    'Infer a sample type; missing array fields optional, no runtime validation.',
-    (s, o) =>
-        inferTypeScript(parseJson(s), o.trim().isEmpty ? 'Root' : o.trim()),
-    optionsLabel: 'Type name',
+    'json-infer',
+    'Infer a type',
+    'Suy ra kiểu',
+    'From a sample: a TypeScript type (options: its name, default Root; missing array fields optional) or a draft-07 JSON Schema (options: schema). No runtime validation.',
+    (s, o) => o.trim() == 'schema'
+        ? pretty(inferJsonSchema(parseJson(s)))
+        : inferTypeScript(parseJson(s), o.trim().isEmpty ? 'Root' : o.trim()),
+    optionsLabel: 'Type name, or schema',
   ),
   DevTool(
-    'json-schema-infer',
-    'Infer JSON Schema',
-    'Suy luận JSON Schema',
-    'Draft-07 inference from sample only.',
-    (s, o) => pretty(inferJsonSchema(parseJson(s))),
-  ),
-  DevTool(
-    'jsonpath',
-    'JSONPath subset',
-    'JSONPath giới hạn',
-    r'Supports $, .name, [index], [*], ["key"]; no scripts or filters.',
-    (s, o) => pretty(selectJsonPath(parseJson(s), o.trim())),
-    optionsLabel: r'Path, e.g. $.items[*].name',
-  ),
-  DevTool(
-    'json-project',
-    'Project JSON fields',
-    'Chọn trường JSON',
-    'Object array; options are JSON field-name array.',
-    (s, o) => pretty(projectFields(parseJson(s), parseJson(o))),
-    optionsLabel: 'Field names as JSON array',
+    'json-filter',
+    'Filter JSON',
+    'Lọc JSON',
+    r'A path ($, .name, [index], [*], ["key"]; no scripts or filters) or field names to keep from an object array (id, name or ["id","name"]).',
+    (s, o) {
+      final q = o.trim();
+      if (q.isEmpty || q.startsWith(r'$')) {
+        return pretty(selectJsonPath(parseJson(s), q.isEmpty ? r'$' : q));
+      }
+      final names = q.startsWith('[')
+          ? parseJson(q)
+          : [
+              for (final n in q.split(','))
+                if (n.trim().isNotEmpty) n.trim(),
+            ];
+      return pretty(projectFields(parseJson(s), names));
+    },
+    optionsLabel: r'Path ($.items[*].name) or fields (id, name)',
   ),
   DevTool(
     'json',
@@ -778,9 +776,14 @@ final List<DevTool> devTools = List.unmodifiable([
 ]);
 final tools = devTools;
 
-/// Tools merged on 2026-11-03, each with the tool and options it became.
+/// Tools merged on 2026-11-03, each with the tool and options it became;
+/// `{}` in the options stands for the options the old tool was given.
 /// Saved chains keep these ids as steps; favorites and drafts move over.
 const devToolAliases = <String, (String, String)>{
+  'jsonpath': ('json-filter', '{}'),
+  'json-project': ('json-filter', '{}'),
+  'json-typescript': ('json-infer', '{}'),
+  'json-schema-infer': ('json-infer', 'schema'),
   'json-min': ('json', 'min'),
   'json-yaml': ('convert', 'json yaml'),
   'json-toml': ('convert', 'json toml'),
@@ -809,5 +812,5 @@ String runDevTool(String id, String input, [String options = '']) {
     (t) => t.id == toolId,
     orElse: () => throw FormatException('Unknown tool: $id'),
   );
-  return tool.run(input, alias?.$2 ?? options);
+  return tool.run(input, alias?.$2.replaceAll('{}', options) ?? options);
 }

@@ -174,26 +174,16 @@ const hmacLens = Lens(
   ],
 );
 
-String _fields(String typed) => typedFieldsJson(typed);
-
-/// `id, name` or `["id","name"]` → the engine's JSON array of field names.
-String typedFieldsJson(String typed) {
-  final t = typed.trim();
-  if (t.startsWith('[')) return t;
-  final names = t.split(',').map((s) => s.trim()).where((s) => s.isNotEmpty);
-  return '[${names.map((n) => '"${n.replaceAll('"', r'\"')}"').join(',')}]';
-}
-
 final _json = [
   const Lens('tree'),
   jsonLens,
   _t(
-    'jsonpath',
-    const LensOption('Path', 'Đường dẫn', hint: r'$.items[*].name'),
-  ),
-  _t(
-    'json-project',
-    const LensOption('Fields', 'Các trường', hint: 'id, name', encode: _fields),
+    'json-filter',
+    const LensOption(
+      'Path or fields',
+      'Đường dẫn hoặc trường',
+      hint: r'$.items[*].name  ·  id, name',
+    ),
   ),
   _t(
     'json-diff',
@@ -214,11 +204,7 @@ final _json = [
     ),
   ),
   fromJsonLens,
-  _t(
-    'json-typescript',
-    const LensOption('Type name', 'Tên kiểu', hint: 'Root', optional: true),
-  ),
-  _t('json-schema-infer'),
+  inferLens,
   _t('redact'),
 ];
 
@@ -231,6 +217,22 @@ final _text = [
 ];
 
 String _way(String _, String Function(String) pick) => pick('way');
+
+/// A type from a sample: TypeScript (named) or a JSON Schema, as a chip.
+const inferLens = Lens(
+  'json-infer',
+  tool: 'json-infer',
+  option: LensOption('Type name', 'Tên kiểu', hint: 'Root', optional: true),
+  encode: _infer,
+  choices: [
+    LensChoice('as', 'As', 'Dạng', [
+      ('typescript', 'TypeScript', 'TypeScript'),
+      ('schema', 'JSON Schema', 'JSON Schema'),
+    ]),
+  ],
+);
+String _infer(String typed, String Function(String) pick) =>
+    pick('as') == 'schema' ? 'schema' : typed;
 
 const jsonLens = Lens(
   'json',
@@ -432,12 +434,7 @@ const chainable = {
 enum LensGroup { view, convert, encode }
 
 LensGroup lensGroup(Lens l) =>
-    const {
-      'convert',
-      'json-typescript',
-      'json-schema-infer',
-      'base-convert',
-    }.contains(l.id)
+    const {'convert', 'json-infer', 'base-convert'}.contains(l.id)
     ? LensGroup.convert
     : const {'regex', 'base64', 'url', 'hash', 'hmac'}.contains(l.id)
     ? LensGroup.encode

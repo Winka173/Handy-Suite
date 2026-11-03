@@ -136,31 +136,17 @@
       "source": "packages/handy_dev_engine/lib/src/transforms.dart"
     },
     {
-      "id": "json-typescript",
-      "en": "JSON → TypeScript",
-      "vi": "JSON → TypeScript",
-      "description": "Infer a sample type; missing array fields optional, no runtime validation.",
+      "id": "json-infer",
+      "en": "Infer a type",
+      "vi": "Suy ra kiểu",
+      "description": "From a sample: a TypeScript type (options: its name, default Root; missing array fields optional) or a draft-07 JSON Schema (options: schema). No runtime validation.",
       "source": "packages/handy_dev_engine/lib/src/transforms.dart"
     },
     {
-      "id": "json-schema-infer",
-      "en": "Infer JSON Schema",
-      "vi": "Suy luận JSON Schema",
-      "description": "Draft-07 inference from sample only.",
-      "source": "packages/handy_dev_engine/lib/src/transforms.dart"
-    },
-    {
-      "id": "jsonpath",
-      "en": "JSONPath subset",
-      "vi": "JSONPath giới hạn",
-      "description": "Supports $, .name, [index], [*], [\"key\"]; no scripts or filters.",
-      "source": "packages/handy_dev_engine/lib/src/transforms.dart"
-    },
-    {
-      "id": "json-project",
-      "en": "Project JSON fields",
-      "vi": "Chọn trường JSON",
-      "description": "Object array; options are JSON field-name array.",
+      "id": "json-filter",
+      "en": "Filter JSON",
+      "vi": "Lọc JSON",
+      "description": "A path ($, .name, [index], [*], [\"key\"]; no scripts or filters) or field names to keep from an object array (id, name or [\"id\",\"name\"]).",
       "source": "packages/handy_dev_engine/lib/src/transforms.dart"
     },
     {

@@ -23,7 +23,7 @@ void main() {
     );
   });
   test('stable IDs; only actual platform implementations are registered', () {
-    expect(devTools.length, regexSupported ? 24 : 22);
+    expect(devTools.length, regexSupported ? 22 : 20);
     expect(devTools.map((t) => t.id).toSet().length, devTools.length);
     expect(devTools.any((t) => t.id == 'regex'), regexSupported);
     expect(devTools.any((t) => t.id == 'schema'), regexSupported);
@@ -333,4 +333,32 @@ void main() {
     expect(jsonDecode(tool('contrast').run('#000000 on #ffffff'))['ratio'], 21);
     expect(() => tool('contrast').run('#000000'), throwsFormatException);
   });
+
+  test(
+    'filter takes a path or field names; infer makes TypeScript or a schema',
+    () {
+      const data = '{"items":[{"id":1,"name":"An","x":true}]}';
+      expect(jsonDecode(tool('json-filter').run(data, r'$.items[*].name')), [
+        'An',
+      ]);
+      expect(jsonDecode(tool('json-filter').run('[{"id":1,"x":2}]', 'id')), [
+        {'id': 1},
+      ]);
+      expect(jsonDecode(tool('json-filter').run('[{"id":1,"x":2}]', '["x"]')), [
+        {'x': 2},
+      ]);
+      expect(tool('json-infer').run('{"a":1}', 'Order'), contains('Order'));
+      expect(
+        jsonDecode(tool('json-infer').run('{"a":1}', 'schema'))['type'],
+        'object',
+      );
+      // Old ids still run, with their options.
+      expect(jsonDecode(runDevTool('jsonpath', data, r'$.items[*].id')), [1]);
+      expect(runDevTool('json-typescript', '{"a":1}', 'Row'), contains('Row'));
+      expect(
+        jsonDecode(runDevTool('json-schema-infer', '{"a":1}'))['type'],
+        'object',
+      );
+    },
+  );
 }

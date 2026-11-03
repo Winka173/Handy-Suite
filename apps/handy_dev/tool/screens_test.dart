@@ -90,7 +90,7 @@ Future<void> boot(WidgetTester t, Size size, {String theme = 'light'}) async {
           ..value = HandyPreferences(
             theme: theme,
             locale: 'vi',
-            favorites: ['jwt', 'jsonpath'],
+            favorites: ['jwt', 'json-filter'],
           ),
         files: Files(),
         documents: store,
