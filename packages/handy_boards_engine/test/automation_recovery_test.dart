@@ -241,37 +241,10 @@ void main() {
       final stats = summary(s, topTasks(s), now: DateTime.utc(2026, 11, 2, 2));
       expect(stats['overdue'], 0);
       expect(stats['unknownEstimates'], 0);
-      expect(workload(s, 'b')['2026-11-01']!['unknown'], 0);
       expect(
         () => s.put('unknown', BoardRecord({'id': 'x'})),
         throwsArgumentError,
       );
-    },
-  );
-  test(
-    'weekly workload sums saved values and counts overloaded days without inventing capacity',
-    () {
-      final buckets = workloadBuckets({
-        'days': {
-          '2026-11-01': {
-            'minutes': 60,
-            'unknown': 1,
-            'actualSeconds': 120,
-            'overloaded': true,
-          },
-          '2026-11-02': {'minutes': 30, 'actualSeconds': 60},
-          '2026-11-03': {
-            'minutes': 40,
-            'actualSeconds': 80,
-            'overloaded': true,
-          },
-        },
-      }, weekly: true);
-      expect(buckets['2026-10-26']!['minutes'], 60);
-      expect(buckets['2026-11-02']!['minutes'], 70);
-      expect(buckets['2026-11-02']!['actualSeconds'], 140);
-      expect(buckets['2026-11-02']!['overloadedDays'], 1);
-      expect(buckets['2026-11-02']!.containsKey('capacity'), false);
     },
   );
   test(

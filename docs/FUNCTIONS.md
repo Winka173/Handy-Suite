@@ -710,7 +710,7 @@ are opt-in; generic boards do not require school/project fields.
 - Optional Study templates/metadata, weekly sessions, assessments/weight/target,
   normalized personal grade plans and user-owned scale/letter mapping. Focus uses
   saved timestamps and pause/resume; no continuous background execution claim.
-- Advanced Pro source: priority reasons, workload/capacity, custom fields/values, saved AND/OR views and bounded local rules.
+- Advanced Pro source: priority reasons, custom fields/values, saved AND/OR views and bounded local rules.
 - Full JSON/ZIP manifest/hash/assets preview/merge/replace/Undo; mapped CSV and
   canonical task CSV, Markdown checklists/plain lines; CSV/MD/PDF/ICS summaries;
   Pro XLSX, study PDF and safe board template JSON.
@@ -731,8 +731,9 @@ Bounded launch/resume recurrence; full rule editor/
 preview; template JSON/ZIP with custom defaults/subtasks and explicit recurrence
 opt-in. Exact remaining scope stays in the Boards feature matrix.
 
-Boards reports use actual saved focus segments for day/week workload and retained
-completion transitions for history. Saved views support repeated-property AND/OR
+Boards history uses retained completion transitions. The workload/capacity tab and
+the board/resource working calendars were removed on 2026-11-03 (team planning,
+heavier than a personal board needs); calendars already saved stay valid data. Saved views support repeated-property AND/OR
 conditions, ranges, reminder/archive predicates and persisted sort/group choices.
 Grade letter mapping accepts readable lines (`A = 90`), not JSON in product UI.
 
@@ -744,8 +745,7 @@ Boards UI: locale-aware board-zone deadline labels (portable dates unchanged),
 localized priority explanations/weekdays/common validation errors, named control
 semantics, Ctrl/Cmd+Enter save and Cmd+N/Cmd+F capture/search alternatives.
 
-Boards remaining-work batch: optional board/resource calendars and holidays;
-advanced Study/exam report + CSV; local Trello JSON subset with mapping preview;
+Boards remaining-work batch: advanced Study/exam report + CSV; local Trello JSON subset with mapping preview;
 SQLite lazy versioned records/assets and indexed paged List/Table; real IndexedDB
 indexed search with asynchronous file bodies; cancellable native streamed ZIP/PDF,
 large staged ZIP restore; EN/VI owned error catalog; opt-in Android/iOS home widget

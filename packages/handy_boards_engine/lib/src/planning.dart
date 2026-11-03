@@ -303,32 +303,6 @@ Json smartPriority(
   return {'score': score, 'reasons': reasons, 'ai': false};
 }
 
-Map<String, Json> workload(BoardsState s, String board, {int? dailyCapacity}) {
-  if (dailyCapacity != null && dailyCapacity <= 0)
-    throw const FormatException('Capacity must be positive');
-  final result = <String, Json>{}, name = s.get('boards', board).str('zone');
-  for (final t in topTasks(
-    s,
-    board: board,
-  ).where((t) => !completed(s, t) && t.data['due'] != null)) {
-    final key = deadlineDay(object(t.data['due']), name),
-        row = result.putIfAbsent(
-          key,
-          () => {'minutes': 0, 'unknown': 0, 'tasks': 0},
-        );
-    row['tasks']++;
-    if (t.number('estimate') == 0) {
-      if (t.str('kind') != 'milestone') row['unknown']++;
-    } else {
-      row['minutes'] += t.number('estimate');
-    }
-    row['overloaded'] = dailyCapacity == null
-        ? null
-        : row['minutes'] > dailyCapacity;
-  }
-  return result;
-}
-
 BoardsState startFocus(BoardsState s, String task, DateTime now) {
   s.get('tasks', task);
   if (s.rows('sessions').any((r) => r.data['runningAt'] != null))

@@ -20,57 +20,6 @@ void validateWorkingCalendar(Json c) {
   for (final date in holidays) day(date as String);
 }
 
-bool isWorkingDay(Json calendar, String date) {
-  validateWorkingCalendar(calendar);
-  return (calendar['weekdays'] as List? ?? [1, 2, 3, 4, 5]).contains(
-        calendarDate(date).weekday,
-      ) &&
-      !(calendar['holidays'] as List? ?? []).contains(date);
-}
-
-/// User-owned availability; this does not silently reschedule saved tasks.
-Json projectWorkingDuration(Json calendar, String start, int minutes) {
-  validateWorkingCalendar(calendar);
-  day(start);
-  if (minutes < 0 || minutes > 525600)
-    throw const FormatException('Duration 0..525600 minutes');
-  final capacity = calendar['minutesPerDay'] as int? ?? 480,
-      weekdays = Set<int>.from(
-        calendar['weekdays'] as List? ?? [1, 2, 3, 4, 5],
-      ),
-      holidays = Set<String>.from(calendar['holidays'] as List? ?? []);
-  var cursor = calendarDate(start), remaining = minutes, worked = 0;
-  String? first;
-  for (
-    var i = 0;
-    i < 36600;
-    i++, cursor = cursor.add(const Duration(days: 1))
-  ) {
-    final date = cursor.toIso8601String().substring(0, 10);
-    day(date);
-    if (!weekdays.contains(cursor.weekday) || holidays.contains(date)) continue;
-    first ??= date;
-    if (remaining <= capacity)
-      return {
-        'anchor': start,
-        'start': first,
-        'finish': date,
-        'finishMinute': (calendar['startMinute'] as int? ?? 540) + remaining,
-        'workingDays': worked + (minutes == 0 ? 0 : 1),
-        'minutes': minutes,
-      };
-    remaining -= capacity;
-    worked++;
-  }
-  throw const FormatException('Working calendar exceeds scheduling horizon');
-}
-
-Json boardWorkingCalendar(BoardsState s, String board, {String assignee = ''}) {
-  final b = s.get('boards', board),
-      resource = object(b.data['resourceCalendars'] ?? {})[assignee];
-  return object(resource ?? b.data['workingCalendar'] ?? {});
-}
-
 Json studyReport(BoardsState s, String board, DateTime now) {
   s.get('boards', board);
   final subjects = <Json>[];

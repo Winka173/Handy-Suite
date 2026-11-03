@@ -17,7 +17,6 @@ import 'package:handy_boards/features/study.dart';
 import 'package:handy_boards/features/portability.dart';
 import 'package:handy_boards/features/saved_view_editor.dart';
 import 'package:handy_boards/features/exam_editor.dart';
-import 'package:handy_boards/features/remaining_views.dart';
 import 'package:handy_boards_engine/handy_boards_engine.dart';
 import 'dart:io';
 import '../test/ui_test.dart' as fixtures;
@@ -140,10 +139,6 @@ void main() {
         ),
         ('saved-view-editor', (context) => editSavedView(context, scope, 'b')),
         ('export', (context) => exportBoards(context, scope, 'b')),
-        (
-          'working-calendar',
-          (context) => editWorkingCalendar(context, scope, 'b'),
-        ),
       ]) {
         await mount(
           Builder(
@@ -178,7 +173,6 @@ void main() {
       await capture.shot(t, '$name-timeline');
       for (final (id, en, vi) in [
         ('priority', 'Smart priority', 'Ưu tiên thông minh'),
-        ('workload', 'Workload', 'Khối lượng'),
         ('fields', 'Custom fields', 'Trường tùy chỉnh'),
         ('views', 'Saved views', 'View đã lưu'),
         ('rules', 'Rules', 'Quy tắc'),
@@ -189,16 +183,6 @@ void main() {
           find.widgetWithText(ChoiceChip, locale == 'vi' ? vi : en),
         );
         await capture.shot(t, '$name-advanced-$id');
-        if (id == 'workload') {
-          await fixtures.tap(
-            t,
-            find.widgetWithText(
-              ChoiceChip,
-              locale == 'vi' ? 'Tuần từ thứ Hai' : 'Week starting Monday',
-            ),
-          );
-          await capture.shot(t, '$name-advanced-workload-week');
-        }
       }
       await t.pumpWidget(const SizedBox());
       c.dispose();

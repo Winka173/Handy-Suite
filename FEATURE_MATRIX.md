@@ -55,7 +55,8 @@ Không đồng nhất build thành công với kiểm chứng runtime trên mọ
 Handy Boards: app 11, canonical category/status/task model, Category Board/Kanban/
 List/Table/Today/Calendar, Study, Focus and advanced tools. [Exact status and gaps](docs/HANDY_BOARDS_FEATURE_MATRIX.md). Not release complete.
 
-Boards remaining-work batch: Study reports, working/resource calendars, Trello
+Boards remaining-work batch: Study reports (working calendars and workload removed
+2026-11-03), Trello
 subset, lazy versioned storage/indexed paging, native streamed ZIP/PDF + staged
 large restores, mobile widget/shortcut source and owned validation localization.
 See docs/HANDY_BOARDS_FEATURE_MATRIX.md and source-bound QA checkpoint for code,

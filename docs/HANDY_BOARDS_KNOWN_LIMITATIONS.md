@@ -12,8 +12,8 @@ Windows installer/store UI, official purchase/refund/restore and consent testing
 remain release gates. Real IndexedDB tests do not certify the complete Web UI or
 PWA update lifecycle in every browser.
 
-Working calendars are user-defined availability and duration projections. They do
-not invent resource bookings or silently reschedule saved tasks. Study reports
+Working calendars and the workload tab were removed on 2026-11-03; calendars saved
+before then stay in the data, unused. Study reports
 use actual saved assessments/tasks, not official or predicted academic grades.
 Trello import is a documented local JSON subset, not API synchronization.
 

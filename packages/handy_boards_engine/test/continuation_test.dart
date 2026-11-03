@@ -118,9 +118,6 @@ void main() {
       s = startFocus(s, 't', start);
       final id = s.rows('sessions').single.id;
       s = pauseFocus(s, id, start.add(const Duration(minutes: 2)));
-      final report = workloadReport(s, 'b'), days = object(report['days']);
-      expect(object(days['2026-11-01'])['actualSeconds'], 60);
-      expect(object(days['2026-11-02'])['actualSeconds'], 60);
       s = resumeFocus(s, id, start.add(const Duration(days: 2)));
       s = reviewInterruptedFocus(
         s,
@@ -128,7 +125,6 @@ void main() {
         300,
         start.add(const Duration(days: 5)),
       );
-      expect(workloadReport(s, 'b')['unallocatedActualSeconds'], 300);
       expect(s.rows('sessions').single.data['runningAt'], isNull);
     },
   );

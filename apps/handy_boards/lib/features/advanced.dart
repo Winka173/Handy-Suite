@@ -51,7 +51,6 @@ class AdvancedPage extends StatefulWidget {
 
 class _AdvancedState extends State<AdvancedPage> {
   String tab = 'priority';
-  bool weeklyWorkload = false;
   BoardsScope get scope => widget.scope;
   @override
   Widget build(BuildContext context) => AnimatedBuilder(
@@ -72,7 +71,6 @@ class _AdvancedState extends State<AdvancedPage> {
                   children: [
                     for (final (id, en, vi) in [
                       ('priority', 'Smart priority', 'Ưu tiên thông minh'),
-                      ('workload', 'Workload', 'Khối lượng'),
                       ('fields', 'Custom fields', 'Trường tùy chỉnh'),
                       ('views', 'Saved views', 'View đã lưu'),
                       ('rules', 'Rules', 'Quy tắc'),
@@ -124,7 +122,6 @@ class _AdvancedState extends State<AdvancedPage> {
                 Expanded(
                   child: switch (tab) {
                     'priority' => _priority(context),
-                    'workload' => _workload(context),
                     'fields' => _fields(context),
                     'views' => _views(context),
                     'study-report' => StudyReports(
@@ -248,181 +245,6 @@ class _AdvancedState extends State<AdvancedPage> {
               ),
               trailing: Text('${scores[t.id]!['score']}'),
             ),
-      ],
-    );
-  }
-
-  Widget _workload(BuildContext context) {
-    final s = scope.state,
-        b = s.get('boards', widget.board),
-        capacity = b.data['capacity'] as int?,
-        report = workloadReport(s, widget.board, dailyCapacity: capacity),
-        rows = workloadBuckets(report, weekly: weeklyWorkload);
-    final keys = rows.keys.toList()..sort();
-    return ListView(
-      children: [
-        Wrap(
-          spacing: 8,
-          children: [
-            for (final (value, en, vi) in [
-              (false, 'Day', 'Ngày'),
-              (true, 'Week starting Monday', 'Tuần từ thứ Hai'),
-            ])
-              ChoiceChip(
-                label: Text(tr(context, en, vi)),
-                selected: weeklyWorkload == value,
-                onSelected: (_) => setState(() => weeklyWorkload = value),
-              ),
-          ],
-        ),
-        Text(
-          tr(
-            context,
-            'Estimated minutes are assigned to the due day. Unknown estimates stay separate. Actual logs use saved focus sessions.',
-            'Phút ước lượng gán vào ngày hạn. Ước lượng chưa rõ được tách riêng. Thời gian thực dùng phiên tập trung đã lưu.',
-          ),
-        ),
-        TextButton(
-          onPressed: () => scope.run(
-            context,
-            () => boardForm(
-              context,
-              tr(context, 'Daily capacity', 'Năng lực mỗi ngày'),
-              [
-                const BoardField(
-                  'minutes',
-                  'Minutes per day (empty = unknown)',
-                  'Phút/ngày (trống = chưa rõ)',
-                  optional: true,
-                  kind: 'number',
-                ),
-              ],
-              {'minutes': capacity?.toString() ?? ''},
-              (v) async {
-                final n = v['minutes'] == '' ? null : int.parse(v['minutes']);
-                if (n != null && n <= 0)
-                  throw const FormatException('Capacity positive');
-                await scope.controller.change(
-                  (s) => s.put('boards', b.copy({'capacity': n})),
-                );
-              },
-            ),
-          ),
-          child: Text(
-            capacity == null
-                ? tr(context, 'Set your own capacity', 'Đặt năng lực của bạn')
-                : '$capacity ${tr(context, 'min/day', 'phút/ngày')}',
-          ),
-        ),
-        Text(
-          '${report['unallocatedActualSeconds']} ${tr(context, 'saved seconds have no verifiable day allocation; active sessions are excluded', 'giây đã lưu chưa xác định được ngày; không tính phiên đang chạy')}',
-        ),
-        LayoutBuilder(
-          builder: (context, box) {
-            final columns =
-                    (box.maxWidth /
-                            (MediaQuery.textScalerOf(context).scale(14) > 20
-                                ? 150
-                                : 110))
-                        .floor()
-                        .clamp(1, 7),
-                width = (box.maxWidth - (columns - 1) * 8) / columns;
-            final maximum = keys.fold<int>(
-              1,
-              (m, key) =>
-                  rows[key]!['minutes'] > m ? rows[key]!['minutes'] as int : m,
-            );
-            return Wrap(
-              spacing: 8,
-              runSpacing: 8,
-              children: [
-                for (final key in keys)
-                  SizedBox(
-                    width: width,
-                    child: Semantics(
-                      label:
-                          '$key: ${rows[key]!['minutes']} ${tr(context, 'estimated minutes', 'phút dự kiến')}',
-                      child: Container(
-                        padding: const EdgeInsets.all(8),
-                        decoration: BoxDecoration(
-                          border: Border.all(
-                            color: Theme.of(context).dividerColor,
-                          ),
-                          color: Theme.of(context).colorScheme.primary
-                              .withValues(
-                                alpha:
-                                    .04 +
-                                    .12 *
-                                        (rows[key]!['minutes'] as int) /
-                                        maximum,
-                              ),
-                        ),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(key),
-                            Text(
-                              '${rows[key]!['minutes']} ${tr(context, 'est. min', 'phút dự kiến')}',
-                            ),
-                            Text(
-                              '${((rows[key]!['actualSeconds'] as int? ?? 0) / 60).toStringAsFixed(1)} ${tr(context, 'actual min', 'phút thực tế')}',
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ),
-              ],
-            );
-          },
-        ),
-        Text(
-          tr(
-            context,
-            'Tint is relative to the largest estimate shown, not an invented capacity. Only your configured capacity determines overload.',
-            'Màu đậm theo ước lượng lớn nhất đang hiển thị, không phải năng lực giả định. Chỉ dùng năng lực bạn đã đặt để xác định quá tải.',
-          ),
-        ),
-        for (final key in keys)
-          ListTile(
-            contentPadding: EdgeInsets.zero,
-            title: Text(key),
-            subtitle: Text(
-              '${rows[key]!['minutes']} ${tr(context, 'estimated min', 'phút dự kiến')} · ${rows[key]!['unknown']} ${tr(context, 'unknown estimates', 'chưa rõ ước lượng')} · ${rows[key]!['actualSeconds'] ?? 0} ${tr(context, 'actual seconds', 'giây thực tế')}',
-            ),
-            trailing: rows[key]!['overloaded'] == true
-                ? Text(
-                    tr(
-                      context,
-                      weeklyWorkload
-                          ? 'Contains overloaded days'
-                          : 'Over capacity',
-                      weeklyWorkload
-                          ? 'Có ngày vượt năng lực'
-                          : 'Vượt năng lực',
-                    ),
-                    style: TextStyle(
-                      color: Theme.of(context).colorScheme.error,
-                    ),
-                  )
-                : null,
-          ),
-        const Divider(),
-        for (final session
-            in s
-                .rows('sessions')
-                .where(
-                  (r) =>
-                      s.get('tasks', r.str('task')).str('board') ==
-                      widget.board,
-                ))
-          ListTile(
-            contentPadding: EdgeInsets.zero,
-            title: Text(s.get('tasks', session.str('task')).str('title')),
-            trailing: Text(
-              '${session.number('elapsed')} ${tr(context, 'saved sec', 'giây đã lưu')}',
-            ),
-          ),
       ],
     );
   }

@@ -38,59 +38,38 @@ Json trello() => {
   ],
 };
 void main() {
-  test(
-    'working calendar skips weekends/holidays and honors custom resource days',
-    () {
-      final calendar = {
-        'weekdays': [1, 2, 3, 4, 5],
-        'holidays': ['2026-11-02'],
-        'minutesPerDay': 480,
-        'startMinute': 540,
-      };
-      final p = projectWorkingDuration(calendar, '2026-10-30', 960);
-      expect(p['start'], '2026-10-30');
-      expect(p['finish'], '2026-11-03');
-      expect(p['workingDays'], 2);
-      expect(
-        projectWorkingDuration(calendar, '2026-10-31', 1)['start'],
-        '2026-11-03',
-      );
-      expect(
-        () => validateWorkingCalendar({'weekdays': []}),
-        throwsFormatException,
-      );
-      expect(
-        () => validateWorkingCalendar({
-          'minutesPerDay': 1000,
-          'startMinute': 540,
-        }),
-        throwsFormatException,
-      );
-      var s = fixture();
-      s = s.put(
-        'boards',
-        s.get('boards', 'b').copy({
-          'workingCalendar': calendar,
-          'resourceCalendars': {
-            'An': {
-              'weekdays': [6, 7],
-              'minutesPerDay': 240,
-              'startMinute': 600,
-            },
+  test('saved working calendars stay valid data and round-trip in backups', () {
+    final calendar = {
+      'weekdays': [1, 2, 3, 4, 5],
+      'holidays': ['2026-11-02'],
+      'minutesPerDay': 480,
+      'startMinute': 540,
+    };
+    expect(
+      () => validateWorkingCalendar({'weekdays': []}),
+      throwsFormatException,
+    );
+    expect(
+      () =>
+          validateWorkingCalendar({'minutesPerDay': 1000, 'startMinute': 540}),
+      throwsFormatException,
+    );
+    var s = fixture();
+    s = s.put(
+      'boards',
+      s.get('boards', 'b').copy({
+        'workingCalendar': calendar,
+        'resourceCalendars': {
+          'An': {
+            'weekdays': [6, 7],
+            'minutesPerDay': 240,
+            'startMinute': 600,
           },
-        }),
-      );
-      expect(
-        isWorkingDay(
-          boardWorkingCalendar(s, 'b', assignee: 'An'),
-          '2026-11-01',
-        ),
-        true,
-      );
-      expect(isWorkingDay(boardWorkingCalendar(s, 'b'), '2026-11-01'), false);
-      expect(readBackup(exportBackup(s)).toJson(), s.toJson());
-    },
-  );
+        },
+      }),
+    );
+    expect(readBackup(exportBackup(s)).toJson(), s.toJson());
+  });
   test('v1 state and backup metadata migrate forward without changing IDs', () {
     final s = withTask(fixture()), j = s.toJson()..['schema'] = 1;
     final migrated = BoardsState.fromJson(j);

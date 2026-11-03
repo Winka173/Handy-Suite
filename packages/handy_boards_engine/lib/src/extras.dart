@@ -24,35 +24,6 @@ Json parseGradeThresholds(String input) {
   return result;
 }
 
-Map<String, Json> workloadBuckets(Json report, {bool weekly = false}) {
-  final result = <String, Json>{};
-  for (final entry in object(report['days']).entries) {
-    final date = calendarDate(entry.key),
-        key = weekly
-            ? date
-                  .subtract(Duration(days: date.weekday - 1))
-                  .toIso8601String()
-                  .substring(0, 10)
-            : entry.key;
-    final row = object(entry.value),
-        bucket = result.putIfAbsent(
-          key,
-          () => {
-            'minutes': 0,
-            'actualSeconds': 0,
-            'unknown': 0,
-            'tasks': 0,
-            'overloadedDays': 0,
-          },
-        );
-    for (final field in ['minutes', 'actualSeconds', 'unknown', 'tasks'])
-      bucket[field] += (row[field] as int? ?? 0);
-    if (row['overloaded'] == true) bucket['overloadedDays']++;
-    bucket['overloaded'] = bucket['overloadedDays'] > 0;
-  }
-  return result;
-}
-
 /// Retained completion transitions, not a reconstructed historical completion %.
 Map<String, int> completionHistory(
   BoardsState s,
@@ -350,62 +321,6 @@ BoardsState reviewInterruptedFocus(
       'reviewed': true,
     }),
   );
-}
-
-Json workloadReport(BoardsState s, String board, {int? dailyCapacity}) {
-  final days = workload(s, board, dailyCapacity: dailyCapacity),
-      location = zone(s.get('boards', board).str('zone'));
-  var unknown = 0, running = 0;
-  for (final session
-      in s
-          .rows('sessions')
-          .where((r) => s.get('tasks', r.str('task')).str('board') == board)) {
-    var allocated = 0;
-    if (session.data['runningAt'] != null) running++;
-    for (final raw in session.data['segments'] as List? ?? []) {
-      final segment = object(raw), end = DateTime.parse(segment['end']);
-      var cursor = DateTime.parse(segment['start']);
-      final seconds = end.difference(cursor).inSeconds;
-      if (seconds < 0 || seconds > 86400 || segment['seconds'] != seconds)
-        throw const FormatException('Invalid focus segment');
-      allocated += seconds;
-      while (cursor.isBefore(end)) {
-        final local = tz.TZDateTime.from(cursor, location),
-            next = tz.TZDateTime(
-              location,
-              local.year,
-              local.month,
-              local.day + 1,
-            ).toUtc(),
-            stop = next.isBefore(end) ? next : end;
-        if (!stop.isAfter(cursor))
-          throw const FormatException('Invalid local day boundary');
-        final date = local.toIso8601String().substring(0, 10),
-            row = days.putIfAbsent(
-              date,
-              () => {
-                'minutes': 0,
-                'unknown': 0,
-                'tasks': 0,
-                'overloaded': dailyCapacity == null ? null : false,
-              },
-            );
-        row['actualSeconds'] =
-            (row['actualSeconds'] as int? ?? 0) +
-            stop.difference(cursor).inSeconds;
-        cursor = stop;
-      }
-    }
-    unknown += (session.number('elapsed') - allocated).clamp(
-      0,
-      session.number('elapsed'),
-    );
-  }
-  return {
-    'days': days,
-    'unallocatedActualSeconds': unknown,
-    'runningSessions': running,
-  };
 }
 
 BoardsState duplicateTask(BoardsState s, String id, {DateTime? now}) {
