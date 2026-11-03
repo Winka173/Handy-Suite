@@ -650,64 +650,80 @@ class StopRow extends StatelessWidget {
             : tr(context, 'Planned', 'Dự kiến'),
       ),
       onTap: () => run(() => editStop(context, scope, old: stop)),
-      trailing: PopupMenuButton<String>(
-        tooltip: tr(context, 'Activity actions', 'Thao tác hoạt động'),
-        onSelected: (action) => run(() async {
-          if (!context.mounted) return;
-          if (action == 'checkin' || action == 'gps')
-            return editCheckIn(
-              context,
-              scope,
-              stop: stop,
-              gps: action == 'gps',
-            );
-          if (action == 'note') return editNote(context, scope, stop: stop.key);
-          if (action == 'remind')
-            return editAlarm(context, scope, 'stop', stop.key, stop.trip);
-          if (['skip', 'planned', 'done'].contains(action)) {
-            if (confirmed)
-              throw const FormatException('Edit/unconfirm the check-in first');
-            await scope.controller.change(
-              (s) => s.put(
-                'stops',
-                stop.copy({
-                  'status': action == 'skip'
-                      ? 'skipped'
-                      : action == 'done'
-                      ? 'visited'
-                      : 'planned',
-                  'manualComplete': action == 'done',
-                }),
-              ),
-            );
-          }
-          if (action == 'delete' &&
-              context.mounted &&
-              await tripConfirm(
-                context,
-                tr(
+      trailing: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          if (!confirmed && stop.place != null && stop.status != 'skipped')
+            IconButton(
+              key: Key('stop-visited-${stop.key}'),
+              tooltip: tr(context, 'Visited now', 'Đã ghé'),
+              icon: const Icon(Icons.where_to_vote_outlined),
+              onPressed: () =>
+                  run(() => quickCheckIn(context, scope, stop: stop)),
+            ),
+          PopupMenuButton<String>(
+            tooltip: tr(context, 'Activity actions', 'Thao tác hoạt động'),
+            onSelected: (action) => run(() async {
+              if (!context.mounted) return;
+              if (action == 'checkin' || action == 'gps')
+                return editCheckIn(
                   context,
-                  'Delete the stop? Existing visit memories will keep their place and become unlinked from this stop.',
-                  'Xóa điểm dừng? Kỷ niệm đã ghi giữ địa điểm và được gỡ liên kết khỏi điểm dừng này.',
-                ),
-              ))
-            await scope.controller.change(
-              (s) => removeEntity(s, 'stops', stop.key),
-            );
-        }),
-        itemBuilder: (context) => [
-          for (final (key, en, vi) in [
-            ('checkin', 'Manual check-in', 'Ghi nhận thủ công'),
-            ('gps', 'GPS check-in', 'Ghi nhận GPS'),
-            if (stop.place == null)
-              ('done', 'Complete activity', 'Hoàn thành hoạt động'),
-            ('skip', 'Skip', 'Bỏ qua'),
-            ('planned', 'Mark planned', 'Đặt lại dự kiến'),
-            ('note', 'Add memory note', 'Thêm ghi chú kỷ niệm'),
-            ('remind', 'Add reminder', 'Thêm nhắc'),
-            ('delete', 'Delete stop', 'Xóa điểm dừng'),
-          ])
-            PopupMenuItem(value: key, child: Text(tr(context, en, vi))),
+                  scope,
+                  stop: stop,
+                  gps: action == 'gps',
+                );
+              if (action == 'note')
+                return editNote(context, scope, stop: stop.key);
+              if (action == 'remind')
+                return editAlarm(context, scope, 'stop', stop.key, stop.trip);
+              if (['skip', 'planned', 'done'].contains(action)) {
+                if (confirmed)
+                  throw const FormatException(
+                    'Edit/unconfirm the check-in first',
+                  );
+                await scope.controller.change(
+                  (s) => s.put(
+                    'stops',
+                    stop.copy({
+                      'status': action == 'skip'
+                          ? 'skipped'
+                          : action == 'done'
+                          ? 'visited'
+                          : 'planned',
+                      'manualComplete': action == 'done',
+                    }),
+                  ),
+                );
+              }
+              if (action == 'delete' &&
+                  context.mounted &&
+                  await tripConfirm(
+                    context,
+                    tr(
+                      context,
+                      'Delete the stop? Existing visit memories will keep their place and become unlinked from this stop.',
+                      'Xóa điểm dừng? Kỷ niệm đã ghi giữ địa điểm và được gỡ liên kết khỏi điểm dừng này.',
+                    ),
+                  ))
+                await scope.controller.change(
+                  (s) => removeEntity(s, 'stops', stop.key),
+                );
+            }),
+            itemBuilder: (context) => [
+              for (final (key, en, vi) in [
+                ('checkin', 'Manual check-in', 'Ghi nhận thủ công'),
+                ('gps', 'GPS check-in', 'Ghi nhận GPS'),
+                if (stop.place == null)
+                  ('done', 'Complete activity', 'Hoàn thành hoạt động'),
+                ('skip', 'Skip', 'Bỏ qua'),
+                ('planned', 'Mark planned', 'Đặt lại dự kiến'),
+                ('note', 'Add memory note', 'Thêm ghi chú kỷ niệm'),
+                ('remind', 'Add reminder', 'Thêm nhắc'),
+                ('delete', 'Delete stop', 'Xóa điểm dừng'),
+              ])
+                PopupMenuItem(value: key, child: Text(tr(context, en, vi))),
+            ],
+          ),
         ],
       ),
     );

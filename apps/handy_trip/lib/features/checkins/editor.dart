@@ -5,6 +5,74 @@ import '../../ui/form.dart';
 import '../media/attachments.dart';
 import '../places/editor.dart';
 
+/// One tap: "I was here, now". A confirmed visit to [place] (or [stop]'s
+/// place) at the current time, in the trip's zone. Pressing it is the
+/// person's own confirmation; nothing is inferred. The message offers Edit
+/// for the full form (time, rating, note, photos). Without a known place
+/// the full form opens instead.
+Future<void> quickCheckIn(
+  BuildContext context,
+  TripScope scope, {
+  Stop? stop,
+  Place? place,
+}) async {
+  final placeKey = place?.key ?? stop?.place;
+  if (placeKey == null) {
+    return editCheckIn(context, scope, stop: stop, place: place);
+  }
+  final now = scope.clock().toUtc();
+  final tripKey = stop?.trip;
+  final zone =
+      (tripKey == null
+          ? null
+          : scope.state.trips
+                .where((t) => t.key == tripKey)
+                .firstOrNull
+                ?.zone) ??
+      scope.state.settings['zone'] as String? ??
+      'Asia/Ho_Chi_Minh';
+  final id = newId();
+  await scope.controller.change(
+    (s) => checkIn(
+      s,
+      Visit({
+        'id': id,
+        'trip': tripKey,
+        'stop': stop?.key,
+        'place': placeKey,
+        'at': now.toIso8601String(),
+        'zone': zone,
+        'origin': 'manual',
+        'confirmed': true,
+        'rating': null,
+        'note': '',
+        'tags': <String>[],
+        'assets': <String>[],
+        'created': now.toIso8601String(),
+        'updated': now.toIso8601String(),
+      }),
+      now: scope.clock(),
+    ),
+  );
+  if (!context.mounted) return;
+  final name = scope.state.place(placeKey).name;
+  ScaffoldMessenger.maybeOf(context)
+    ?..hideCurrentSnackBar()
+    ..showSnackBar(
+      SnackBar(
+        content: Text(tr(context, 'Visited: $name', 'Đã ghé: $name')),
+        action: SnackBarAction(
+          key: const Key('quick-checkin-edit'),
+          label: tr(context, 'Edit', 'Sửa'),
+          onPressed: () {
+            final v = scope.state.visits.where((v) => v.key == id).firstOrNull;
+            if (v != null) editCheckIn(context, scope, old: v);
+          },
+        ),
+      ),
+    );
+}
+
 Future<void> editCheckIn(
   BuildContext context,
   TripScope scope, {

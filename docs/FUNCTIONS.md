@@ -14,6 +14,9 @@ App độc lập thứ mười: lên lịch, ghi nhận đã ghé và lưu kỷ 
   dán clipboard, nhận link/văn bản từ Android/iOS share inbox. Không lấy vị trí
   từ nội dung mạng xã hội hay tự đánh dấu đã ghé. Nhập CSV có chọn cột (GeoJSON/GPX/KML đã bỏ ngày
   2026-11-03).
+- **Đã ghé, một chạm** (2026-11-03): nút "Đã ghé" trên hoạt động chưa xác nhận và "Đã ghé,
+  bây giờ" ở trang địa điểm ghi ngay lượt ghé đã xác nhận (giờ hiện tại, múi giờ của chuyến);
+  thông báo có "Sửa" để mở form đầy đủ. Bấm nút chính là lời xác nhận; không suy luận tự động.
 - Check-in thủ công không cần GPS; GPS chỉ lấy một lần theo thao tác, xem tọa độ,
   độ chính xác và thời điểm trước khi xác nhận. Quyền bị từ chối có lựa chọn thủ công.
   Lượt ghé lặp lại và số địa điểm duy nhất được tính riêng; giữ múi giờ lịch sử.

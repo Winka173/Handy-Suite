@@ -148,15 +148,19 @@ Future<void> showPlace(
               Wrap(
                 spacing: 8,
                 children: [
-                  FilledButton(
+                  FilledButton.icon(
+                    key: const Key('place-visited-now'),
+                    onPressed: () =>
+                        run(() => quickCheckIn(context, scope, place: p)),
+                    icon: const Icon(Icons.where_to_vote_outlined),
+                    label: Text(tr(context, "I'm here now", 'Đã ghé, bây giờ')),
+                  ),
+                  TextButton(
+                    key: const Key('place-visit-details'),
                     onPressed: () =>
                         run(() => editCheckIn(context, scope, place: p)),
                     child: Text(
-                      tr(
-                        context,
-                        'Confirm manual visit',
-                        'Ghi nhận đã ghé thủ công',
-                      ),
+                      tr(context, 'Visit with details', 'Ghi kèm chi tiết'),
                     ),
                   ),
                   TextButton(
