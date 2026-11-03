@@ -326,7 +326,10 @@ Source: `apps/handy_docs/lib`, `packages/handy_docs_engine`, `packages/handy_pdf
 
 ## Handy Media
 
-- **Khung ảnh chụp màn hình** (`#/frame`, ô trong Công cụ nhanh): một ảnh, nền (6 màu phẳng,
+- **Ảnh chụp màn hình** (một ô trong Công cụ nhanh, 2026-11-03): mở thẳng trình chọn ảnh;
+  chọn một ảnh thì sang đóng khung, nhiều ảnh thì sang nối; ảnh dài vừa nối có nút "Đóng
+  khung". `#/screenshots`, `#/stitch`, `#/frame` vẫn mở trực tiếp.
+- **Khung ảnh chụp màn hình** (`#/frame`): một ảnh, nền (6 màu phẳng,
   màu trung bình của ảnh, trong suốt), khoảng trống 0-25% cạnh ngắn, bo góc 0-48 px (tính
   theo ảnh rộng 1080), bóng mềm, khung điện thoại hoặc thanh trình duyệt vẽ phẳng. Xem
   trước trên bản thu nhỏ 900 px; lưu PNG đúng kích thước gốc, tối đa 16 Mpx.

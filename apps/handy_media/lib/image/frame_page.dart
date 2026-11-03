@@ -24,7 +24,10 @@ const frameGrounds = <(int?, String, String)>[
 /// first block; the export is the full-size PNG. Nothing leaves the device.
 class FramePage extends StatefulWidget {
   final HandyFiles files;
-  const FramePage({super.key, required this.files});
+
+  /// A picture to start with (from the screenshots entry, or a joined one).
+  final Uint8List? initial;
+  const FramePage({super.key, required this.files, this.initial});
   @override
   State<FramePage> createState() => _FramePageState();
 }
@@ -43,6 +46,12 @@ class _FramePageState extends State<FramePage> {
     super.dispose();
   }
 
+  @override
+  void initState() {
+    super.initState();
+    if (widget.initial case final bytes?) use(bytes);
+  }
+
   Future<void> pick() async {
     try {
       final file = await widget.files.importBytes(
@@ -50,14 +59,27 @@ class _FramePageState extends State<FramePage> {
         maxBytes: 20000000,
       );
       if (file == null || !mounted) return;
+      await use(file.bytes);
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          error = errorText(context, e);
+          working = false;
+        });
+      }
+    }
+  }
+
+  Future<void> use(Uint8List bytes) async {
+    try {
       setState(() {
-        source = file.bytes;
+        source = bytes;
         small = null;
         preview = null;
         error = null;
         working = true;
       });
-      final s = await compute(_preview, file.bytes);
+      final s = await compute(_preview, bytes);
       if (!mounted) return;
       small = s;
       refresh(now: true);

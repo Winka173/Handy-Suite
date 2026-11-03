@@ -695,17 +695,17 @@ void main() {
     });
   }
 
-  testWidgets('phone stitch empty', (t) async {
+  testWidgets('phone screenshots empty', (t) async {
     await boot(t, const Size(390, 844));
     // Mid-screen, clear of the bar pinned at the foot.
     await Scrollable.ensureVisible(
-      t.element(find.byKey(const Key('studio-stitch'))),
+      t.element(find.byKey(const Key('studio-screenshots'))),
       alignment: .5,
     );
     await t.pumpAndSettle();
-    await t.tap(find.byKey(const Key('studio-stitch')));
-    await t.pumpAndSettle();
-    expect(find.byKey(const Key('stitch-pick')), findsOneWidget);
-    await shot(t, 'phone-21-stitch');
+    // The web entry page; the studio tile goes straight to the picker.
+    await go(t, '/screenshots');
+    expect(find.byKey(const Key('screenshots-pick')), findsOneWidget);
+    await shot(t, 'phone-21-screenshots');
   });
 }

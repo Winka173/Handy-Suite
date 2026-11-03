@@ -1,6 +1,7 @@
 import 'package:handy_capture/handy_capture.dart';
 import 'package:handy_files/camera.dart';
 import 'package:handy_files/handy_files.dart';
+import '../image/screenshots_page.dart';
 import 'package:handy_media_engine/handy_media_engine.dart';
 import 'package:handy_ui/kit.dart';
 import '../guide/ids.dart';
@@ -214,36 +215,25 @@ class _StudioPageState extends State<StudioPage> {
                         onTap: () => Navigator.pushNamed(context, '/image'),
                       ),
                       HandyTile(
-                        key: const Key('studio-stitch'),
+                        key: const Key('studio-screenshots'),
                         icon: Icons.view_day_outlined,
-                        title: tr(
-                          context,
-                          'Join screenshots',
-                          'Nối ảnh chụp màn hình',
-                        ),
+                        title: tr(context, 'Screenshots', 'Ảnh chụp màn hình'),
                         subtitle: tr(
                           context,
-                          'Several screenshots of one page into one long picture',
-                          'Nhiều ảnh chụp của một trang thành một ảnh dài',
+                          'Frame one for sharing, or join several into one',
+                          'Đóng khung một ảnh, hoặc nối nhiều ảnh thành một',
                         ),
                         navigates: true,
-                        onTap: () => Navigator.pushNamed(context, '/stitch'),
-                      ),
-                      HandyTile(
-                        key: const Key('studio-frame'),
-                        icon: Icons.crop_original,
-                        title: tr(
-                          context,
-                          'Frame a screenshot',
-                          'Khung ảnh chụp màn hình',
-                        ),
-                        subtitle: tr(
-                          context,
-                          'Ground, corners and shadow, ready to share',
-                          'Nền, bo góc và bóng, sẵn sàng chia sẻ',
-                        ),
-                        navigates: true,
-                        onTap: () => Navigator.pushNamed(context, '/frame'),
+                        // Straight to the picker: what is picked decides.
+                        onTap: () async {
+                          try {
+                            await openScreenshots(context, widget.files);
+                          } catch (e) {
+                            if (context.mounted) {
+                              showHandyMessage(context, errorText(context, e));
+                            }
+                          }
+                        },
                       ),
                       if (nativeCaptureAvailable)
                         HandyTile(

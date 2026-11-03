@@ -1816,6 +1816,9 @@ primary action, states, accessibility, patterns to reject).
 - States: no image (pick or paste), working (the preview stays, export
   disabled), export error. Limits as the image tools: 16 Mpx output.
 - Reject: gradient backgrounds, glass, mock devices with brand marks.
+- 2026-11-03: framing and joining share one studio tile, "Screenshots", which
+  opens the picker at once; one picture goes to the frame, several to the
+  join, and a joined picture can be framed next. No mode to choose first.
 
 ### Docs: Word từ chữ nhận dạng (OCR to DOCX) and in hai mặt (manual duplex)
 

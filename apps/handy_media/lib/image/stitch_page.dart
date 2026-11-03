@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart';
 import 'package:handy_files/handy_files.dart';
 import 'package:handy_media_engine/handy_media_engine.dart';
 import 'package:handy_ui/kit.dart';
+import 'frame_page.dart';
 
 Future<StitchResult> _stitch(List<Uint8List> shots) => stitchScreenshots(shots);
 
@@ -9,13 +10,16 @@ Future<StitchResult> _stitch(List<Uint8List> shots) => stitchScreenshots(shots);
 /// them in order, join, look, save. Nothing leaves the device.
 class StitchPage extends StatefulWidget {
   final HandyFiles files;
-  const StitchPage({super.key, required this.files});
+
+  /// Screenshots picked on the screenshots entry.
+  final List<ImportedBytes> initial;
+  const StitchPage({super.key, required this.files, this.initial = const []});
   @override
   State<StitchPage> createState() => _StitchPageState();
 }
 
 class _StitchPageState extends State<StitchPage> {
-  final shots = <ImportedBytes>[];
+  late final shots = <ImportedBytes>[...widget.initial];
   StitchResult? result;
   String? error;
   bool busy = false;
@@ -103,10 +107,30 @@ class _StitchPageState extends State<StitchPage> {
                 ),
               ),
             )
-          : FilledButton(
-              key: const Key('stitch-save'),
-              onPressed: () => save(r),
-              child: Text(tr(context, 'Save the long picture', 'Lưu ảnh dài')),
+          : Row(
+              children: [
+                Expanded(
+                  child: FilledButton(
+                    key: const Key('stitch-save'),
+                    onPressed: () => save(r),
+                    child: Text(
+                      tr(context, 'Save the long picture', 'Lưu ảnh dài'),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: HandySpace.s),
+                OutlinedButton(
+                  key: const Key('stitch-frame'),
+                  onPressed: () => Navigator.push(
+                    context,
+                    MaterialPageRoute<void>(
+                      builder: (_) =>
+                          FramePage(files: widget.files, initial: r.png),
+                    ),
+                  ),
+                  child: Text(tr(context, 'Frame it', 'Đóng khung')),
+                ),
+              ],
             ),
       children: [
         if (shots.isEmpty)

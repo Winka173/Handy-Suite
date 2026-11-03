@@ -13,6 +13,7 @@ import 'capture_draft.dart';
 import 'guide/ids.dart';
 import 'guide/text_reader.dart';
 import 'image/frame_page.dart';
+import 'image/screenshots_page.dart';
 import 'image/stitch_page.dart';
 import 'image/image_page.dart';
 import 'native_capture_page.dart';
@@ -195,6 +196,7 @@ class _MediaAppState extends State<MediaApp> {
       ),
       ['', 'stitch'] => () => StitchPage(files: widget.files),
       ['', 'frame'] => () => FramePage(files: widget.files),
+      ['', 'screenshots'] => () => ScreenshotsPage(files: widget.files),
       ['', 'capture'] => () => Builder(
         builder: (context) => NativeCapturePage(
           files: widget.files,
