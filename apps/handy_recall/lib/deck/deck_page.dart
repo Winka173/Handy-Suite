@@ -1,4 +1,5 @@
 import 'package:handy_recall/handy_recall.dart';
+import '../study/sample_deck.dart';
 import 'package:handy_ui/kit.dart';
 import '../import/paste_page.dart';
 import '../scope.dart';
@@ -127,6 +128,26 @@ class _DeckPageState extends State<DeckPage> {
                       ),
                     ],
                   ),
+                  if (isSampleDeck(deck.id)) ...[
+                    const SizedBox(height: HandySpace.m),
+                    HandyNotice(
+                      tr(
+                        context,
+                        'A sample deck to try reviewing with.',
+                        'Bộ mẫu để thử cách ôn.',
+                      ),
+                      action: TextButton(
+                        key: const Key('sample-remove'),
+                        onPressed: () async {
+                          await scope.store.commit(
+                            removeSampleDecks(scope.store.state!),
+                          );
+                          if (context.mounted) Navigator.maybePop(context);
+                        },
+                        child: Text(tr(context, 'Remove it', 'Gỡ bộ mẫu')),
+                      ),
+                    ),
+                  ],
                   const SizedBox(height: HandySpace.xs),
                   Text(
                     tr(

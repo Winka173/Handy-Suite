@@ -97,7 +97,7 @@ mục, và trạng thái thực hiện. Cột Trạng thái chỉ đổi khi có
 | --- | --- | --- | --- |
 | SRS, cloze, đảo chiều, che ảnh, Anki, CSV | KEEP_CORE | Có | HAS |
 | Chép chính tả, TTS từng mặt, dán ghi chú | KEEP_ADVANCED | Có | HAS (đã ở menu phụ) |
-| Demo deck không lẫn thống kê thật, lọc thẻ khó, ôn lại thẻ quên | ADD | Chưa | TODO |
+| Demo deck không lẫn thống kê thật, lọc thẻ khó, ôn lại thẻ quên | ADD | Chưa | Demo deck DONE (S7b); lọc thẻ khó/ôn lại thẻ quên TODO |
 
 ### Bookmark
 
@@ -284,3 +284,12 @@ chưa commit trên máy). Sau S1/S2a: `handy_docs` (transfer 6/6), `handy_keep`
   trình sửa có sẵn (kiểu, đơn vị, mức, lịch, nhóm).
 - Test: `apps/handy_habit/test/presets_test.dart` (đếm, điền sẵn → lưu đúng mục
   tiêu 10 trang, gợi ý đã dùng bị ẩn); `ui_test.dart` đi qua "Tự đặt từ đầu".
+
+### S7b (2026-11-04)
+
+- `apps/handy_recall/lib/study/sample_deck.dart`: bộ 20 từ du lịch tiếng Anh (id
+  `sample-travel-words`, thẻ `sample-0..19`, giọng en-US), đến hạn theo đồng hồ của app;
+  `removeSampleDecks` chỉ gỡ bộ có id `sample-`. Màn trống có "Thử bộ mẫu", trang bộ mẫu
+  có "Gỡ bộ mẫu". Lịch sử ôn nằm trong thẻ nên gỡ bộ không để lại số liệu.
+- Test: `apps/handy_recall/test/sample_deck_test.dart` (thêm → ôn một thẻ → gỡ → trống);
+  44/44 test Recall xanh.

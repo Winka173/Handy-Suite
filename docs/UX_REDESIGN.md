@@ -2055,3 +2055,13 @@ Run: design-taste-frontend app-screens (giữ `HandyBrand.media`) + frontend-ui-
   lịch, nhóm); không lưu gì cho tới khi người dùng bấm Lưu. Gợi ý trùng tên với thói
   quen đã có thì ẩn. Mẫu quy trình từ 6 lên 8 (thêm Chăm da tối, Nghỉ màn hình).
 - Reject: điểm, thú ảo, huy hiệu, "AI coach", tự thêm thói quen.
+
+## Refactor 2026-11 · lát S7b: bộ thẻ mẫu của Recall (hợp đồng)
+
+- Màn trống của Bộ thẻ có thêm một hành động hạng ba "Thử bộ mẫu (20 thẻ)" dưới hai nút
+  "Bộ thẻ đầu tiên" / "Nhập từ Anki": 20 từ du lịch tiếng Anh (có giọng đọc en-US), đến
+  hạn ngay để ôn thử luôn.
+- Bộ mẫu có id `sample-` và chữ "(mẫu)" trong tên; trong bộ có một thông báo "Đây là bộ
+  mẫu" với "Gỡ bộ mẫu" (một chạm, gỡ cả thẻ). Lịch sử ôn nằm trong thẻ nên gỡ bộ là gỡ
+  luôn số liệu của nó, không lẫn vào thống kê thật.
+- Reject: tự thêm bộ mẫu khi mở app, bộ mẫu không gỡ được, số liệu giả.

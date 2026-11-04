@@ -1,4 +1,5 @@
 import 'package:handy_recall/handy_recall.dart';
+import '../study/sample_deck.dart';
 import 'package:handy_ui/kit.dart';
 import '../scope.dart';
 import '../study/schedule.dart';
@@ -73,6 +74,24 @@ class DeckList extends StatelessWidget {
                   key: const Key('anki-first'),
                   onPressed: () => scope.importAnki(context),
                   child: Text(tr(context, 'Import from Anki', 'Nhập từ Anki')),
+                ),
+                // Something to review right now, removable in one tap.
+                TextButton(
+                  key: const Key('deck-sample'),
+                  onPressed: () => scope.store.commit(
+                    addSampleDeck(
+                      scope.store.state!,
+                      vi: tr(context, 'en', 'vi') == 'vi',
+                      now: scope.now.toUtc().toIso8601String(),
+                    ),
+                  ),
+                  child: Text(
+                    tr(
+                      context,
+                      'Try a sample deck (20 cards)',
+                      'Thử bộ mẫu (20 thẻ)',
+                    ),
+                  ),
                 ),
               ],
             ),
