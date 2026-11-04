@@ -59,6 +59,9 @@ build Android/Windows/Web hay ảnh widget là bằng chứng thiết bị thậ
 Theo dõi hành vi lặp lại và chạy quy trình cá nhân nhiều bước; không thay Recall,
 Keep, Spend hoặc timer đa dụng. [Trạng thái kiểm chứng](handy_habit/FEATURE_MATRIX.md).
 
+- **Gợi ý** (2026-11-04): thêm thói quen từ 32 gợi ý trong 8 nhóm (sáng, tối, vận động,
+  học, ngủ, chăm da, màn hình, việc nhà) hoặc tự đặt; gợi ý chỉ điền sẵn trình sửa. Mẫu
+  quy trình: 8.
 - Thói quen: tạo/sửa, sắp xếp, tìm/lọc/nhóm, nhân bản, archive/unarchive, xác nhận
   xóa. Binary, count, thời lượng và lượng có đơn vị; mục tiêu, ghi chú, icon/màu/ưu tiên.
 - Lịch hằng ngày, chọn thứ, số ngày/tuần, mỗi N ngày; ngày bắt đầu/kết thúc, phiên

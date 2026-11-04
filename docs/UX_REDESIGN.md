@@ -2046,3 +2046,12 @@ Run: design-taste-frontend app-screens (giữ `HandyBrand.media`) + frontend-ui-
   dán vào.
 - Bàn hiểu "a + VAT p%", "a - p% - q%", "a lên b", "a tip p% chia n", "a chia n" (dấu %
   của máy tính là phép dư, nên các câu này trước đây ra lỗi hoặc số sai).
+
+## Refactor 2026-11 · lát S7a: gợi ý thói quen của Habit (hợp đồng)
+
+- "Thêm thói quen" mở một tấm: "Tự đặt từ đầu" ở trên, rồi 32 gợi ý trong 8 nhóm
+  (Buổi sáng, Buổi tối, Vận động, Học tập, Giấc ngủ, Chăm da, Màn hình, Việc nhà).
+  Chạm một gợi ý chỉ điền sẵn trình sửa (tên, kiểu ghi nhận, đơn vị, mức tối thiểu,
+  lịch, nhóm); không lưu gì cho tới khi người dùng bấm Lưu. Gợi ý trùng tên với thói
+  quen đã có thì ẩn. Mẫu quy trình từ 6 lên 8 (thêm Chăm da tối, Nghỉ màn hình).
+- Reject: điểm, thú ảo, huy hiệu, "AI coach", tự thêm thói quen.

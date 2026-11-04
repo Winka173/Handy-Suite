@@ -183,8 +183,19 @@ List<Routine> routineTemplates({bool vietnamese = false}) {
           'Khởi động',
           'Dọn nhà',
           'Đọc sách',
+          'Chăm da tối',
+          'Nghỉ màn hình',
         ]
-      : ['Morning', 'Bedtime', 'Study', 'Warmup', 'House reset', 'Reading'];
+      : [
+          'Morning',
+          'Bedtime',
+          'Study',
+          'Warmup',
+          'House reset',
+          'Reading',
+          'Evening skincare',
+          'Screen break',
+        ];
   final steps = vietnamese
       ? [
           ['Chuẩn bị', 'Vận động nhẹ', 'Lên ý định hôm nay'],
@@ -193,6 +204,8 @@ List<Routine> routineTemplates({bool vietnamese = false}) {
           ['Chuẩn bị', 'Vận động tùy khả năng', 'Kiểm tra lại'],
           ['Chọn khu vực', 'Sắp xếp', 'Cất dụng cụ'],
           ['Chọn sách', 'Đọc', 'Ghi chú'],
+          ['Tẩy trang', 'Rửa mặt', 'Dưỡng ẩm'],
+          ['Đứng dậy', 'Nhìn xa', 'Uống nước'],
         ]
       : [
           ['Get ready', 'Gentle movement', 'Set an intention'],
@@ -201,6 +214,8 @@ List<Routine> routineTemplates({bool vietnamese = false}) {
           ['Get ready', 'Move at your own pace', 'Check in'],
           ['Choose an area', 'Tidy up', 'Put tools away'],
           ['Choose a book', 'Read', 'Make a note'],
+          ['Remove make-up', 'Cleanse', 'Moisturise'],
+          ['Stand up', 'Look far away', 'Drink water'],
         ];
   return List.generate(
     titles.length,

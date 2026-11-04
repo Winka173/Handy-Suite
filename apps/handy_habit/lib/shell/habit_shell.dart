@@ -1,4 +1,5 @@
 import 'package:flutter/services.dart';
+import '../habits/preset_sheet.dart';
 import 'package:handy_habit_engine/handy_habit_engine.dart';
 import 'package:handy_ui/kit.dart';
 import '../habits/habit_editor.dart';
@@ -95,7 +96,7 @@ class _HabitShellState extends State<HabitShell> {
             tooltip: tr(context, 'Add', 'Thêm'),
             position: PopupMenuPosition.under,
             onSelected: (v) => switch (v) {
-              'habit' => openHabitEditor(context, scope),
+              'habit' => addHabit(context, scope),
               'pause' => openPauseEditor(context, scope),
               _ => addRoutine(),
             },
@@ -163,7 +164,7 @@ class _HabitShellState extends State<HabitShell> {
     return CallbackShortcuts(
       bindings: {
         const SingleActivator(LogicalKeyboardKey.keyN, control: true): () =>
-            openHabitEditor(context, scope),
+            addHabit(context, scope),
         for (var i = 0; i < 4; i++)
           SingleActivator(
             [

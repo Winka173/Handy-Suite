@@ -1,8 +1,8 @@
 import 'package:handy_habit_engine/handy_habit_engine.dart';
+import 'preset_sheet.dart';
 import 'package:handy_ui/kit.dart';
 import '../scope.dart';
 import '../today/rows.dart';
-import 'habit_editor.dart';
 import 'habit_view.dart';
 
 /// Every habit, by group, with today's bead on each. A wide screen opens
@@ -76,7 +76,7 @@ class _HabitsPageState extends State<HabitsPage> {
               ),
               FilledButton.icon(
                 key: const Key('habit-new'),
-                onPressed: () => openHabitEditor(context, scope),
+                onPressed: () => addHabit(context, scope),
                 icon: const Icon(Icons.add, size: 18),
                 label: Text(tr(context, 'New', 'Thêm')),
               ),

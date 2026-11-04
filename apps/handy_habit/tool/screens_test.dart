@@ -406,7 +406,8 @@ void main() {
     await boot(t, const Size(390, 844));
     await fixtures.tapKey(t, 'habit-add');
     await fixtures.tapKey(t, 'add-habit');
-    await t.enterText(find.byKey(const Key('field-title')), 'Viết nhật ký');
+    await shot(t, 'phone-6-presets');
+    await fixtures.tapKey(t, 'preset-journal');
     await fixtures.tapKey(t, 'field-schedule-weekdays');
     await shot(t, 'phone-7-editor');
   });

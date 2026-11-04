@@ -217,6 +217,7 @@ void main() {
       final c = await start(tester);
       await tapKey(tester, 'habit-add');
       await tapKey(tester, 'add-habit');
+      await tapKey(tester, 'preset-blank');
       await tester.enterText(
         find.byKey(const Key('field-title')),
         'Read a few pages',

@@ -11,6 +11,7 @@ Future<bool> openHabitEditor(
   BuildContext context,
   HabitScope scope, [
   Habit? old,
+  HabitPreset? preset,
 ]) async {
   final s = scope.state, today = scope.today;
   final current = old == null
@@ -157,17 +158,30 @@ Future<bool> openHabitEditor(
       ),
     ],
     initial: {
-      'title': old?.title ?? '',
-      'type': old?.type ?? 'binary',
-      'unit': old?.unit ?? '',
-      'target': current?.target ?? 1000,
-      'schedule': current?.kind ?? 'daily',
-      'weekdays': current?.weekdays ?? const [1, 2, 3, 4, 5],
-      'quota': '${current?.weeklyTarget ?? 3}',
+      'title':
+          old?.title ??
+          (preset == null ? '' : tr(context, preset.en, preset.vi)),
+      'type': old?.type ?? preset?.type ?? 'binary',
+      'unit':
+          old?.unit ??
+          (preset == null ? '' : tr(context, preset.unitEn, preset.unitVi)),
+      'target': current?.target ?? preset?.stored ?? 1000,
+      'schedule': current?.kind ?? preset?.schedule ?? 'daily',
+      'weekdays':
+          current?.weekdays ?? preset?.weekdays ?? const [1, 2, 3, 4, 5],
+      'quota': '${current?.weeklyTarget ?? preset?.perWeek ?? 3}',
       'interval': '${current?.interval ?? 2}',
       'effective': effective,
       'end': old?.end ?? '',
-      'category': old?.category ?? '',
+      'category':
+          old?.category ??
+          (preset == null
+              ? ''
+              : tr(
+                  context,
+                  habitPresetGroups[preset.group]!.$1,
+                  habitPresetGroups[preset.group]!.$2,
+                )),
       'priority': '${old?.priority ?? 1}',
       'note': old?.note ?? '',
     },

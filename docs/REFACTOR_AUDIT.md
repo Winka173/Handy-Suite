@@ -121,7 +121,7 @@ mục, và trạng thái thực hiện. Cột Trạng thái chỉ đổi khi có
 | Mục | Quyết định | Baseline | Trạng thái |
 | --- | --- | --- | --- |
 | Check-in, lịch linh hoạt, chuỗi, kỳ nghỉ, nhắc, quy trình, nhìn lại tuần | KEEP_CORE | Có | HAS |
-| 20–40 preset thói quen/quy trình theo nhóm | ADD | `routineTemplates()` có mẫu quy trình; chưa có preset thói quen | TODO |
+| 20–40 preset thói quen/quy trình theo nhóm | ADD | `routineTemplates()` có mẫu quy trình; chưa có preset thói quen | DONE (S7a): 32 thói quen + 8 quy trình = 40 |
 
 ### Trip
 
@@ -276,3 +276,11 @@ chưa commit trên máy). Sau S1/S2a: `handy_docs` (transfer 6/6), `handy_keep`
   vào `toolsPreferenceIds`); kệ màn rộng nhóm theo tình huống.
 - Test: `apps/handy_tools/test/intent_test.dart` (con số qua máy tính của engine),
   `apps/handy_tools/test/bench_recent_test.dart`.
+
+### S7a (2026-11-04)
+
+- `handy_habit_engine/presets.dart`: 32 gợi ý thói quen trong 8 nhóm; mẫu quy trình
+  thêm 2 (8). App: tấm "Thói quen mới" với "Tự đặt từ đầu" và gợi ý; gợi ý điền sẵn
+  trình sửa có sẵn (kiểu, đơn vị, mức, lịch, nhóm).
+- Test: `apps/handy_habit/test/presets_test.dart` (đếm, điền sẵn → lưu đúng mục
+  tiêu 10 trang, gợi ý đã dùng bị ẩn); `ui_test.dart` đi qua "Tự đặt từ đầu".
