@@ -9,7 +9,7 @@ nghĩa là khác bố cục/hình dạng/hoạ tiết, không phải đổi màu
 | Keep | Bộ mẫu | 1 kệ, 4 món board game (chữ, không ảnh) | Văn bản của dự án | `apps/handy_keep/test/collections_ui_test.dart` |
 | Card | Mẫu thiết kế | 144 mẫu = 11 vẽ tay + 44 bố cục × 2–3 phong cách (133); 55 bố cục khác nhau | Dựng bằng phần tử của scene graph trong code (`templates.dart`, `template_library.dart`); phông có sẵn của app | Test hình học mặt trước duy nhất, phần tử trong trang; ảnh tổng hợp `contact-sheet-gallery` |
 | Widget | Chủ đề / hình nền / trang trí | Theo phiên Widget: 40 / 80 / 240, chưa qua duyệt khác biệt | `docs/handy_widget/` | S10 |
-| Media | Nền/khung ảnh chụp màn hình | 6 nền phẳng + khung điện thoại/trình duyệt (chưa mở rộng) | Vẽ bằng code | S5 |
+| Media | Kiểu khung ảnh chụp màn hình | 12 kiểu nhanh; 8 nền phẳng + 6 nền hai màu; 5 khổ; 3 khung (không, điện thoại, trình duyệt) | Vẽ bằng code (`frame_shot.dart`), tiêu đề bằng phông Bricolage có sẵn | Ảnh `look-*.png` từ `tool/screens_test.dart` ("frame quick looks") |
 
 Không có ảnh tải từ mạng, không logo hay nhân vật của bên thứ ba trong các mục
 trên.

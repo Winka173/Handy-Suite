@@ -2018,3 +2018,20 @@ chỉ ở chọn/tay nắm; màu thuộc về thiết kế của người dùng)
 - Ô ảnh là chỗ để ảnh của người dùng (khung gạch chéo đến khi có ảnh), không phải
   ảnh minh hoạ giả.
 - Reject: đếm bản đổi màu là mẫu mới, ảnh/logo/phông tải ngoài, dải ngang 140 mẫu.
+
+## Refactor 2026-11 · lát S5: khung ảnh chụp màn hình của Media (hợp đồng)
+
+Run: design-taste-frontend app-screens (giữ `HandyBrand.media`) + frontend-ui-engineering.
+
+- Câu hỏi: "ảnh này đã đẹp để gửi chưa?"; bản xem trước luôn trong tầm mắt (điện
+  thoại: 42% trên cùng, điều khiển cuộn bên dưới; màn rộng: xem trước bên trái, cột
+  điều khiển 420 px bên phải có tiêu đề trang).
+- Thứ tự điều khiển: Kiểu nhanh (12, một chạm) → Tiêu đề (tuỳ chọn) → Khổ ảnh (Vừa
+  ảnh, 1:1, 4:5, Story 9:16, Slide 16:9) → Nền (8 màu phẳng, theo màu ảnh, trong suốt,
+  6 nền chuyển hai màu) → Khoảng trống, Bo góc, Khung (không/điện thoại/trình duyệt),
+  Đổ bóng.
+- Tiêu đề do app vẽ bằng phông Bricolage của Media thành PNG (đủ dấu tiếng Việt),
+  sáng hay tối theo nền; engine đặt trên ảnh, trong khoảng trống.
+- Kiểu nhanh khác nhau ở khổ, khung, nền và bo góc, không chỉ đổi màu; mọi giá trị
+  sửa được sau khi chọn.
+- Reject: ảnh nền tải từ mạng, logo thương hiệu thiết bị, nền tím/chàm.

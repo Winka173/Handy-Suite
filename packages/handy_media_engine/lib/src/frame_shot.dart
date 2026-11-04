@@ -19,16 +19,66 @@ class ShotFrame {
   /// `none`, `phone` (a dark body around the screen) or `browser` (a flat
   /// bar with three dots above it).
   final String device;
+
+  /// A second ground colour: the ground runs from [background] at the top
+  /// left to this at the bottom right. Null for a flat ground.
+  final int? background2;
+
+  /// The picture's shape: `auto` (just around the shot), `1:1`, `4:5`,
+  /// `9:16` or `16:9`; the ground grows to fit, the shot stays centred.
+  final String aspect;
   const ShotFrame({
     this.background = 0xFFF2F2F2,
     this.padding = 0.08,
     this.radius = 24,
     this.shadow = true,
     this.device = 'none',
+    this.background2,
+    this.aspect = 'auto',
   });
+
+  ShotFrame copyWith({
+    int? background,
+    bool clearBackground = false,
+    double? padding,
+    double? radius,
+    bool? shadow,
+    String? device,
+    int? background2,
+    bool flat = false,
+    String? aspect,
+  }) => ShotFrame(
+    background: clearBackground ? null : background ?? this.background,
+    padding: padding ?? this.padding,
+    radius: radius ?? this.radius,
+    shadow: shadow ?? this.shadow,
+    device: device ?? this.device,
+    background2: flat ? null : background2 ?? this.background2,
+    aspect: aspect ?? this.aspect,
+  );
 
   /// A transparent ground (only the shot and its frame are drawn).
   static const transparent = 0x00000000;
+}
+
+const frameAspects = {
+  'auto': null,
+  '1:1': 1.0,
+  '4:5': 4 / 5,
+  '9:16': 9 / 16,
+  '16:9': 16 / 9,
+};
+
+void _gradient(img.Image out, int a, int b) {
+  final w = out.width, h = out.height;
+  for (var y = 0; y < h; y++) {
+    for (var x = 0; x < w; x++) {
+      final t = (x / math.max(1, w - 1) + y / math.max(1, h - 1)) / 2;
+      int ch(int shift) =>
+          ((a >> shift & 0xFF) * (1 - t) + (b >> shift & 0xFF) * t).round();
+      out.setPixelRgba(x, y, ch(16), ch(8), ch(0), ch(24));
+    }
+  }
 }
 
 /// Most pixels a framed picture may have.
@@ -92,8 +142,14 @@ void _roundCorners(
   }
 }
 
-/// [source] (PNG/JPEG/WebP) framed for sharing, as PNG.
-Uint8List frameScreenshot(Uint8List source, ShotFrame frame) {
+/// [source] (PNG/JPEG/WebP) framed for sharing, as PNG. [header] is a PNG
+/// the app drew (a title in its own faces, any language), as wide as the
+/// framed shot; it sits above the shot inside the padding.
+Uint8List frameScreenshot(
+  Uint8List source,
+  ShotFrame frame, {
+  Uint8List? header,
+}) {
   final shot = img.decodeImage(source);
   if (shot == null) throw const FormatException('Not a picture we can read');
   if (frame.padding < 0 ||
@@ -102,8 +158,13 @@ Uint8List frameScreenshot(Uint8List source, ShotFrame frame) {
       frame.radius > 48) {
     throw const FormatException('Frame settings out of range');
   }
-  if (!const {'none', 'phone', 'browser'}.contains(frame.device)) {
+  if (!const {'none', 'phone', 'browser'}.contains(frame.device) ||
+      !frameAspects.containsKey(frame.aspect)) {
     throw const FormatException('Unknown frame');
+  }
+  final head = header == null ? null : img.decodePng(header);
+  if (header != null && head == null) {
+    throw const FormatException('The title could not be read');
   }
   final unit = shot.width / 1080;
   final radius = (frame.radius * unit).round();
@@ -111,13 +172,30 @@ Uint8List frameScreenshot(Uint8List source, ShotFrame frame) {
   final bezel = frame.device == 'phone' ? math.max(6, (28 * unit).round()) : 0;
   final bar = frame.device == 'browser' ? math.max(20, (72 * unit).round()) : 0;
   final bodyW = shot.width + 2 * bezel, bodyH = shot.height + 2 * bezel + bar;
-  final w = bodyW + 2 * pad, h = bodyH + 2 * pad;
+  final headH = head == null ? 0 : head.height + pad ~/ 2;
+  final cw = bodyW + 2 * pad, ch = bodyH + 2 * pad + headH;
+  // The ground grows to the chosen shape around the centred content.
+  final ratio = frameAspects[frame.aspect];
+  final w = ratio == null || cw / ch >= ratio ? cw : (ch * ratio).round(),
+      h = ratio == null || cw / ch <= ratio ? ch : (cw / ratio).round();
   if (w * h > frameShotMaxPixels) {
     throw const FormatException('The framed picture would exceed 16 Mpx');
   }
   final ground = frame.background ?? averageColour(shot);
   final out = img.Image(width: w, height: h, numChannels: 4)..clear(_c(ground));
+  if (frame.background2 case final end?) _gradient(out, ground, end);
   final bodyRadius = frame.device == 'phone' ? radius + bezel : radius;
+  // [pad] below is measured from the content's corner, moved into place.
+  final ox = (w - cw) ~/ 2, oy = (h - ch) ~/ 2 + headH;
+  if (head != null) {
+    img.compositeImage(
+      out,
+      head.convert(numChannels: 4),
+      dstX: ox + pad + (bodyW - head.width) ~/ 2,
+      dstY: oy - headH + pad,
+    );
+  }
+  final px = ox + pad, py = oy + pad;
 
   if (frame.shadow && pad > 0) {
     // A soft shadow: thin translucent rounded rectangles, each a little
@@ -130,10 +208,10 @@ Uint8List frameScreenshot(Uint8List source, ShotFrame frame) {
       final i = (spread * k / layers).round();
       img.fillRect(
         out,
-        x1: pad - i,
-        y1: pad - i + drop,
-        x2: pad + bodyW + i - 1,
-        y2: pad + bodyH + i - 1 + drop,
+        x1: px - i,
+        y1: py - i + drop,
+        x2: px + bodyW + i - 1,
+        y2: py + bodyH + i - 1 + drop,
         color: img.ColorRgba8(0, 0, 0, alpha),
         radius: bodyRadius + i,
       );
@@ -143,10 +221,10 @@ Uint8List frameScreenshot(Uint8List source, ShotFrame frame) {
   if (frame.device == 'phone') {
     img.fillRect(
       out,
-      x1: pad,
-      y1: pad,
-      x2: pad + bodyW - 1,
-      y2: pad + bodyH - 1,
+      x1: px,
+      y1: py,
+      x2: px + bodyW - 1,
+      y2: py + bodyH - 1,
       color: img.ColorRgba8(17, 17, 17, 255),
       radius: bodyRadius,
     );
@@ -154,19 +232,19 @@ Uint8List frameScreenshot(Uint8List source, ShotFrame frame) {
     final barColour = img.ColorRgba8(232, 232, 232, 255);
     img.fillRect(
       out,
-      x1: pad,
-      y1: pad,
-      x2: pad + bodyW - 1,
-      y2: pad + bar + radius,
+      x1: px,
+      y1: py,
+      x2: px + bodyW - 1,
+      y2: py + bar + radius,
       color: barColour,
       radius: radius,
     );
     img.fillRect(
       out,
-      x1: pad,
-      y1: pad + bar ~/ 2,
-      x2: pad + bodyW - 1,
-      y2: pad + bar - 1,
+      x1: px,
+      y1: py + bar ~/ 2,
+      x2: px + bodyW - 1,
+      y2: py + bar - 1,
       color: barColour,
     );
     final dot = math.max(3, bar ~/ 7);
@@ -177,8 +255,8 @@ Uint8List frameScreenshot(Uint8List source, ShotFrame frame) {
     ].indexed) {
       img.fillCircle(
         out,
-        x: pad + bar ~/ 2 + i * dot * 3,
-        y: pad + bar ~/ 2,
+        x: px + bar ~/ 2 + i * dot * 3,
+        y: py + bar ~/ 2,
         radius: dot,
         color: img.ColorRgba8(rgb.$2.$1, rgb.$2.$2, rgb.$2.$3, 255),
         antialias: true,
@@ -188,7 +266,7 @@ Uint8List frameScreenshot(Uint8List source, ShotFrame frame) {
 
   final screen = shot.convert(numChannels: 4);
   _roundCorners(screen, radius, top: frame.device != 'browser');
-  img.compositeImage(out, screen, dstX: pad + bezel, dstY: pad + bezel + bar);
+  img.compositeImage(out, screen, dstX: px + bezel, dstY: py + bezel + bar);
   return Uint8List.fromList(img.encodePng(out));
 }
 

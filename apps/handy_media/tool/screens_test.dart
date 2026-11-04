@@ -8,6 +8,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:handy_files/handy_files.dart';
 import 'package:handy_media/app.dart';
+import 'package:handy_media/image/frame_page.dart';
 import 'package:handy_core/handy_core.dart';
 import 'package:handy_media/capture_library.dart';
 import 'package:handy_media/guide/text_reader.dart';
@@ -686,14 +687,38 @@ void main() {
           await Future<void>.delayed(const Duration(milliseconds: 50));
           await t.pump();
         }
-        await t.tap(find.byKey(const Key('frame-ground-2')));
-        await Future<void>.delayed(const Duration(milliseconds: 1800));
+        await t.tap(find.byKey(const Key('frame-preset-story')));
+        await t.enterText(
+          find.byKey(const Key('frame-title')),
+          'Tạo tài khoản trong 30 giây',
+        );
+        await Future<void>.delayed(const Duration(milliseconds: 2500));
         await t.pump();
       });
       await t.pump();
       await shot(t, '$label-22-frame');
     });
   }
+  testWidgets('frame quick looks', (t) async {
+    final pic = await t.runAsync(
+      () => screen(
+        'Đăng ký',
+        [('Họ và tên', 'Trần Thị Mai'), ('Email', 'mai.tran@example.com')],
+        button: 'Tạo tài khoản',
+        hue: 0xFF7A4B2A,
+      ),
+    );
+    final dir = Directory(Platform.environment['SHOTS_DIR'] ?? 'build/shots')
+      ..createSync(recursive: true);
+    await t.runAsync(() async {
+      final small = framePreviewSource(pic!, maxWidth: 360);
+      for (final (id, _, _, look) in framePresets) {
+        File(
+          '${dir.path}/look-$id.png',
+        ).writeAsBytesSync(frameScreenshot(small, look));
+      }
+    });
+  });
 
   testWidgets('phone screenshots empty', (t) async {
     await boot(t, const Size(390, 844));

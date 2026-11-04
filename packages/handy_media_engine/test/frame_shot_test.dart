@@ -88,4 +88,49 @@ void main() {
       throwsFormatException,
     );
   });
+
+  test('shapes, two-colour grounds and a title above the shot', () {
+    final shot = img.Image(width: 400, height: 300)
+      ..clear(img.ColorRgb8(200, 30, 30));
+    final source = Uint8List.fromList(img.encodePng(shot));
+    for (final (aspect, ratio) in [
+      ('1:1', 1.0),
+      ('4:5', .8),
+      ('9:16', 9 / 16),
+      ('16:9', 16 / 9),
+    ]) {
+      final out = img.decodePng(
+        frameScreenshot(source, ShotFrame(aspect: aspect)),
+      )!;
+      expect(out.width / out.height, closeTo(ratio, .01), reason: aspect);
+    }
+    final graded = img.decodePng(
+      frameScreenshot(
+        source,
+        const ShotFrame(background: 0xFF000000, background2: 0xFFFFFFFF),
+      ),
+    )!;
+    expect(graded.getPixel(0, 0).r, lessThan(20));
+    expect(
+      graded.getPixel(graded.width - 1, graded.height - 1).r,
+      greaterThan(235),
+    );
+    final title = img.Image(width: 300, height: 40, numChannels: 4)
+      ..clear(img.ColorRgba8(0, 0, 255, 255));
+    final plain = img.decodePng(frameScreenshot(source, const ShotFrame()))!;
+    final titled = img.decodePng(
+      frameScreenshot(
+        source,
+        const ShotFrame(),
+        header: Uint8List.fromList(img.encodePng(title)),
+      ),
+    )!;
+    expect(titled.height, greaterThan(plain.height + 40));
+    final pad = (300 * .08).round();
+    expect(titled.getPixel(titled.width ~/ 2, pad + 20).b, 255);
+    expect(
+      () => frameScreenshot(source, const ShotFrame(aspect: '3:7')),
+      throwsFormatException,
+    );
+  });
 }

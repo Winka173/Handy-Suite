@@ -56,6 +56,17 @@ void main() {
                 as MemoryImage)
             .bytes;
     final before = shown();
+    await t.scrollUntilVisible(
+      find.byKey(const Key('frame-ground-2')),
+      200,
+      scrollable: find
+          .byWidgetPredicate(
+            (w) => w is Scrollable && w.axisDirection == AxisDirection.down,
+          )
+          .last,
+    );
+    await t.ensureVisible(find.byKey(const Key('frame-ground-2')));
+    await t.pump();
     await t.runAsync(() async {
       await t.tap(find.byKey(const Key('frame-ground-2')));
       for (var i = 0; i < 60 && identical(shown(), before); i++) {
@@ -67,8 +78,14 @@ void main() {
     await t.scrollUntilVisible(
       find.byKey(const Key('frame-device-phone')),
       200,
-      scrollable: find.byType(Scrollable).first,
+      scrollable: find
+          .byWidgetPredicate(
+            (w) => w is Scrollable && w.axisDirection == AxisDirection.down,
+          )
+          .last,
     );
+    await t.ensureVisible(find.byKey(const Key('frame-device-phone')));
+    await t.pump();
     await settleWork(
       t,
       find.text('Updating the preview…'),
@@ -82,5 +99,64 @@ void main() {
     final out = img.decodePng(files.exported!)!;
     // 540 wide: a 14 px phone body each side, 8% of 540 (43 px) around it.
     expect(out.width, 540 + 2 * 14 + 2 * 43);
+  });
+
+  testWidgets('a quick look sets the shape and frame; a title sits above', (
+    t,
+  ) async {
+    final files = Files()
+      ..next = ImportedBytes(
+        'shot.png',
+        Uint8List.fromList(
+          img.encodePng(
+            img.Image(width: 400, height: 300)
+              ..clear(img.ColorRgb8(200, 60, 40)),
+          ),
+        ),
+      );
+    t.view.physicalSize = const Size(800, 1600);
+    t.view.devicePixelRatio = 1;
+    addTearDown(t.view.reset);
+    await t.pumpWidget(
+      MaterialApp(
+        theme: kitTheme,
+        home: FramePage(files: files),
+      ),
+    );
+    await settleWork(
+      t,
+      find.byKey(const Key('frame-preview')),
+      () => t.tap(find.byKey(const Key('frame-pick'))),
+    );
+    Uint8List shown() =>
+        (t.widget<Image>(find.byKey(const Key('frame-preview'))).image
+                as MemoryImage)
+            .bytes;
+    Future<img.Image> waitChange(Future<void> Function() act) async {
+      final before = shown();
+      await t.runAsync(() async {
+        await act();
+        for (var i = 0; i < 80 && identical(shown(), before); i++) {
+          await Future<void>.delayed(const Duration(milliseconds: 50));
+          await t.pump();
+        }
+      });
+      return img.decodePng(shown())!;
+    }
+
+    final story = await waitChange(
+      () => t.tap(find.byKey(const Key('frame-preset-story'))),
+    );
+    expect(story.width / story.height, closeTo(9 / 16, .01));
+    final plain = await waitChange(
+      () => t.tap(find.byKey(const Key('frame-preset-clean'))),
+    );
+    final titled = await waitChange(
+      () => t.enterText(
+        find.byKey(const Key('frame-title')),
+        'Cách bật chế độ tối',
+      ),
+    );
+    expect(titled.height, greaterThan(plain.height));
   });
 }

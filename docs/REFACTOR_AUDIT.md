@@ -35,7 +35,7 @@ mục, và trạng thái thực hiện. Cột Trạng thái chỉ đổi khi có
 | S2c | Keep: tách ảnh khỏi tệp thư viện JSON 16 MB (cần cho bộ sưu tập nhiều ảnh) | DONE |
 | S3 | Trip: thư viện mẫu tem, Bộ sưu tập tem trong Passport, tạo tem một chạm sau lượt ghé | DONE |
 | S4 | Card: thư viện mẫu lớn (120–200 thiết kế khác nhau thật), contact sheet, kiểm tra trùng | DONE (144 mẫu, 55 bố cục) |
-| S5 | Media: thư viện nền/khung/thẻ hướng dẫn 9:16 cho ảnh chụp màn hình | TODO |
+| S5 | Media: thư viện nền/khung/thẻ hướng dẫn 9:16 cho ảnh chụp màn hình | DONE |
 | S6 | Tools: Gần đây/Ghim, preset VAT/giảm giá/% thay đổi; nhóm công cụ theo tình huống | TODO |
 | S7 | Recall demo deck; Habit 20–40 preset; Spend lặp giao dịch/yêu thích | TODO |
 | S8 | Dev: lỗi JSON theo dòng/cột, copy JSON pointer, lịch sử request có che | TODO |
@@ -71,7 +71,7 @@ mục, và trạng thái thực hiện. Cột Trạng thái chỉ đổi khi có
 | Chú thích, hướng dẫn, sửa ảnh nhanh, nối ảnh, che nhạy cảm có duyệt | KEEP_CORE | Có | HAS |
 | GIF/HTML/Markdown, ZIP dự án | KEEP_ADVANCED | Có | TODO (hạ cấp định dạng ít dùng) |
 | Quay màn hình iOS ghi đúng là "trong app" | RETIRE nhãn sai | FUNCTIONS đã ghi "nội dung trong app" | HAS (kiểm lại chuỗi UI ở S5) |
-| Thư viện nền/khung/thẻ 9:16/preset số bước | ADD | 6 màu nền phẳng + khung điện thoại/trình duyệt | TODO |
+| Thư viện nền/khung/thẻ 9:16/preset số bước | ADD | 6 màu nền phẳng + khung điện thoại/trình duyệt | Khung DONE (S5): 12 kiểu nhanh, 4 khổ, 6 nền hai màu, tiêu đề; preset số bước/che trong trình chú thích TODO |
 
 ### Dev
 
@@ -255,3 +255,15 @@ chưa commit trên máy). Sau S1/S2a: `handy_docs` (transfer 6/6), `handy_keep`
   `tool/screens_test.dart` → `contact-sheet-gallery`.
 - Còn lại: đổi màu một chạm cho cả thiết kế, yêu thích mẫu, thư viện hoạ tiết/khung
   riêng, ảnh minh hoạ gốc cho ô ảnh.
+
+### S5 (2026-11-04)
+
+- `handy_media_engine/frame_shot.dart`: nền hai màu (`background2`), khổ (`aspect`:
+  1:1, 4:5, 9:16, 16:9; nền nở ra, ảnh ở giữa), dải tiêu đề PNG do app vẽ.
+- App: 12 kiểu nhanh, chip khổ, 6 nền hai màu, ô tiêu đề (vẽ bằng phông của Media,
+  đủ tiếng Việt); bản xem trước ghim trên, điều khiển cuộn (trước đó cuộn là mất xem
+  trước).
+- Soát ảnh: thêm tiêu đề trang trên màn rộng, khoảng cách dưới dải kiểu nhanh.
+- Test: `packages/handy_media_engine/test/frame_shot_test.dart` (khổ, nền hai màu,
+  tiêu đề, khổ lạ bị từ chối), `apps/handy_media/test/frame_page_test.dart` (kiểu
+  Story ra đúng 9:16, tiêu đề làm ảnh cao thêm).
