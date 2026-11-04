@@ -633,6 +633,8 @@ Source: `apps/handy_keep/lib`, `packages/handy_inventory`.
 
 - **Bộ mẫu** (2026-11-04): khi chưa có bộ thẻ nào, "Thử bộ mẫu (20 thẻ)" thêm 20 từ du
   lịch tiếng Anh đến hạn ngay; trong bộ có "Gỡ bộ mẫu" gỡ cả bộ và thẻ (id `sample-`).
+- **Luyện thêm** (2026-11-04): cuối buổi ôn, "Ôn lại N thẻ vừa quên"; trong bộ, "Luyện N
+  thẻ khó" (quên ≥ 2 lần, tối đa 30). Luyện thêm không đổi lịch ôn và không ghi dữ liệu.
 - **Chép chính tả** (nút bàn phím khi ôn, cho thẻ thường của bộ có giọng đọc mặt đáp):
   đọc mặt đáp một lần khi thẻ hiện, "Nghe lại" và "Chậm hơn" (0,6×); gõ rồi Kiểm tra để
   so từng từ (LCS theo từ: đúng, sai kèm từ đúng, thiếu, thừa). Hoa thường và dấu câu

@@ -16,7 +16,18 @@ import 'review_done.dart';
 class ReviewPage extends StatefulWidget {
   final RecallScope scope;
   final String? deckId;
-  const ReviewPage({super.key, required this.scope, this.deckId});
+
+  /// Practice: these cards, in this order, outside the schedule. Nothing
+  /// is written; "Not yet" puts a card back at the end of the round.
+  final List<String>? practice;
+  final String? practiceTitle;
+  const ReviewPage({
+    super.key,
+    required this.scope,
+    this.deckId,
+    this.practice,
+    this.practiceTitle,
+  });
   @override
   State<ReviewPage> createState() => _ReviewPageState();
 }
@@ -25,6 +36,13 @@ class _ReviewPageState extends State<ReviewPage> {
   final focus = FocusNode();
   bool revealed = false, busy = false;
   int done = 0, forgot = 0;
+
+  /// Cards graded Forgot this session, to practise again at the end.
+  final forgotten = <String>[];
+
+  /// Practice order; a card leaves it when the person has it.
+  late final List<String> round = [...?widget.practice];
+  bool get practising => widget.practice != null;
 
   /// Notes already seen this session: their sibling cards wait their turn.
   final seen = <String>{};
@@ -44,10 +62,32 @@ class _ReviewPageState extends State<ReviewPage> {
     super.dispose();
   }
 
-  List<RecallCard> get queue => reviewOrder(
-    dueCards(scope.state, now: stamp(scope.now), deckId: widget.deckId),
-    seen: seen,
-  );
+  List<RecallCard> get queue => practising
+      ? [
+          for (final id in round)
+            ?scope.state.cards.where((c) => c.id == id).firstOrNull,
+        ]
+      : reviewOrder(
+          dueCards(scope.state, now: stamp(scope.now), deckId: widget.deckId),
+          seen: seen,
+        );
+
+  /// A practice answer: the schedule is not touched.
+  void practise(RecallCard card, bool knew) {
+    if (!revealed) return;
+    scope.speaker.stop();
+    setState(() {
+      round.remove(card.id);
+      if (knew) {
+        done++;
+      } else {
+        round.add(card.id);
+      }
+      revealed = false;
+      typed.clear();
+      checked = null;
+    });
+  }
 
   @override
   void deactivate() {
@@ -89,6 +129,7 @@ class _ReviewPageState extends State<ReviewPage> {
   }
 
   Future<void> grade(RecallCard card, String rating) async {
+    if (practising) return practise(card, rating != 'again');
     if (busy || !revealed) return;
     setState(() {
       busy = true;
@@ -105,7 +146,10 @@ class _ReviewPageState extends State<ReviewPage> {
       }
       setState(() {
         done++;
-        if (rating == 'again') forgot++;
+        if (rating == 'again') {
+          forgot++;
+          if (!forgotten.contains(card.id)) forgotten.add(card.id);
+        }
         revealed = false;
         typed.clear();
         checked = null;
@@ -182,7 +226,12 @@ class _ReviewPageState extends State<ReviewPage> {
           autofocus: true,
           child: Scaffold(
             appBar: AppBar(
-              title: Text(deck?.name ?? tr(context, 'Review', 'Ôn tập')),
+              title: Text(
+                practising
+                    ? widget.practiceTitle ??
+                          tr(context, 'Practice', 'Luyện thêm')
+                    : deck?.name ?? tr(context, 'Review', 'Ôn tập'),
+              ),
               bottom: PreferredSize(
                 preferredSize: const Size.fromHeight(4),
                 child: TweenAnimationBuilder<double>(
@@ -247,6 +296,37 @@ class _ReviewPageState extends State<ReviewPage> {
                               onPressed: () => checkTyped(dict),
                               child: Text(tr(context, 'Check', 'Kiểm tra')),
                             )
+                          : revealed && practising
+                          ? Row(
+                              key: const ValueKey('practice'),
+                              children: [
+                                Expanded(
+                                  child: OutlinedButton(
+                                    key: const Key('practice-again'),
+                                    style: OutlinedButton.styleFrom(
+                                      minimumSize: const Size.fromHeight(64),
+                                    ),
+                                    onPressed: () => practise(card, false),
+                                    child: Text(
+                                      tr(context, 'Not yet', 'Chưa nhớ'),
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(width: HandySpace.s),
+                                Expanded(
+                                  child: FilledButton(
+                                    key: const Key('practice-ok'),
+                                    style: FilledButton.styleFrom(
+                                      minimumSize: const Size.fromHeight(64),
+                                    ),
+                                    onPressed: () => practise(card, true),
+                                    child: Text(
+                                      tr(context, 'Got it', 'Nhớ rồi'),
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            )
                           : revealed
                           ? GradeBar(
                               key: const ValueKey('grades'),
@@ -273,6 +353,8 @@ class _ReviewPageState extends State<ReviewPage> {
                     deckId: widget.deckId,
                     done: done,
                     forgot: forgot,
+                    practice: practising,
+                    forgotten: forgotten,
                   )
                 : LayoutBuilder(
                     builder: (context, box) => ListView(

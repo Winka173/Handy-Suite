@@ -167,7 +167,9 @@ RecallState library(String picture) {
       'dueAt': at(due),
       'reviewCount': reviews,
       'intervalDays': reviews == 0 ? 0 : 4,
-      'lapses': reviews > 0 && n % 5 == 0 ? 1 : 0,
+      'lapses': reviews > 0 && n % 5 == 0
+          ? (n % 10 == 0 && reviews > 1 ? 2 : 1)
+          : 0,
       'lastReviewedAt': reviews == 0
           ? ''
           : at(due.subtract(const Duration(days: 4))),

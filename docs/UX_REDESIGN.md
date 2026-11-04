@@ -2106,3 +2106,15 @@ Run: design-taste-frontend app-screens (giữ `HandyBrand.media`) + frontend-ui-
   lịch sử cục bộ như trước (action `comment` giữ nguyên trong dữ liệu, hiện là "Ghi
   chú"). Không có luồng trả lời, không có người.
 - Reject: xoá dữ liệu người phụ trách cũ, đổi tên action trong dữ liệu, ẩn nhãn đã có.
+
+## Refactor 2026-11 · lát S7d: Recall luyện thẻ vừa quên và thẻ khó (hợp đồng)
+
+- Cuối buổi ôn có thẻ "Quên": nút phụ "Ôn lại N thẻ vừa quên" trên nút về Hôm nay; mở
+  một vòng luyện các thẻ đó ngay.
+- Trong bộ thẻ, sau dòng số liệu ("… · quên 6 lần"): liên kết "Luyện N thẻ khó" khi có
+  thẻ quên từ 2 lần trở lên (nhiều nhất 30, quên nhiều trước). Không đẩy nút "Thêm thẻ"
+  xuống dòng.
+- Luyện thêm không đổi lịch: hai nút "Chưa nhớ" (thẻ quay lại cuối vòng) và "Nhớ rồi";
+  phím 1 là Chưa nhớ, 2–4 là Nhớ rồi; không ghi gì vào dữ liệu. Màn kết thúc nói rõ
+  "Luyện thêm không đổi lịch ôn của thẻ".
+- Reject: luyện thêm đổi khoảng cách ôn, tự mở vòng luyện, đếm điểm.

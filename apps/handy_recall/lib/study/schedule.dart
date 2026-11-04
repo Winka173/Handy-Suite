@@ -27,6 +27,20 @@ List<int> forecast(
   return counts;
 }
 
+/// The deck's hard cards: forgotten at least [least] times, most forgotten
+/// first, at most [limit]. Practising them does not touch the schedule.
+List<String> hardCards(
+  RecallState state,
+  String deckId, {
+  int least = 2,
+  int limit = 30,
+}) {
+  final hard =
+      state.cards.where((c) => c.deckId == deckId && c.lapses >= least).toList()
+        ..sort((a, b) => b.lapses.compareTo(a.lapses));
+  return [for (final c in hard.take(limit)) c.id];
+}
+
 /// How long until a card graded [rating] now is seen again, in days.
 double nextInterval(RecallCard card, String rating, DateTime now) =>
     reviewCard(card, rating, now: stamp(now)).intervalDays;

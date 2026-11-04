@@ -97,7 +97,7 @@ mục, và trạng thái thực hiện. Cột Trạng thái chỉ đổi khi có
 | --- | --- | --- | --- |
 | SRS, cloze, đảo chiều, che ảnh, Anki, CSV | KEEP_CORE | Có | HAS |
 | Chép chính tả, TTS từng mặt, dán ghi chú | KEEP_ADVANCED | Có | HAS (đã ở menu phụ) |
-| Demo deck không lẫn thống kê thật, lọc thẻ khó, ôn lại thẻ quên | ADD | Chưa | Demo deck DONE (S7b); lọc thẻ khó/ôn lại thẻ quên TODO |
+| Demo deck không lẫn thống kê thật, lọc thẻ khó, ôn lại thẻ quên | ADD | Chưa | DONE (S7b demo deck, S7d luyện thẻ khó/vừa quên) |
 
 ### Bookmark
 
@@ -329,3 +329,13 @@ chưa commit trên máy). Sau S1/S2a: `handy_docs` (transfer 6/6), `handy_keep`
   không chụp lại ảnh.
 - Test: `apps/handy_boards/test/retired_test.dart` (việc cá nhân không có ô, lưu giữ rỗng;
   việc đã có "Lan" giữ ô, giá trị và bản sao lưu). Boards 43/43, engine 50/50; mẫu bảng đã có sẵn (HAS).
+
+### S7d (2026-11-04)
+
+- Recall: `ReviewPage(practice:, practiceTitle:)` là vòng luyện không ghi dữ liệu ("Chưa
+  nhớ" đưa thẻ về cuối vòng); `ReviewDone` mời "Ôn lại N thẻ vừa quên"; `hardCards`
+  (quên ≥ 2, tối đa 30) cho "Luyện N thẻ khó" sau dòng số liệu của bộ.
+- Ảnh: bản đầu đặt "Luyện thẻ khó" là nút thứ hai, đẩy "Thêm thẻ" xuống dòng; chuyển thành
+  liên kết sau dòng "quên N lần". Dữ liệu ảnh mẫu: vài thẻ quên 2 lần.
+- Test: `apps/handy_recall/test/practice_test.dart` (bản sao lưu trước và sau vòng luyện
+  giống hệt); Recall 46/46.

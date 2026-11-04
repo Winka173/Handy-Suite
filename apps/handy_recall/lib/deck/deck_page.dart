@@ -4,6 +4,7 @@ import 'package:handy_ui/kit.dart';
 import '../import/paste_page.dart';
 import '../scope.dart';
 import '../study/schedule.dart';
+import '../review/review_page.dart';
 import 'card_row.dart';
 
 /// One deck: review it, add to it, and every card with when it is due.
@@ -46,6 +47,7 @@ class _DeckPageState extends State<DeckPage> {
       final theme = Theme.of(context);
       final c = HandyColors.of(context);
       final stats = recallStats(s, now: stamp(scope.now), deckId: deck.id);
+      final hard = hardCards(s, deck.id);
       final words = query.text.trim().toLowerCase();
       final cards =
           s.cards
@@ -149,16 +151,49 @@ class _DeckPageState extends State<DeckPage> {
                     ),
                   ],
                   const SizedBox(height: HandySpace.xs),
-                  Text(
-                    tr(
-                      context,
-                      '${stats['total']} cards · ${stats['due']} due · ${stats['newCards']} new · forgot ${stats['lapses']} times',
-                      '${stats['total']} thẻ · ${stats['due']} cần ôn · ${stats['newCards']} mới · quên ${stats['lapses']} lần',
-                    ),
-                    style: theme.textTheme.bodyMedium?.copyWith(
-                      color: c.muted,
-                      fontFeatures: tabular,
-                    ),
+                  // The stats end on forgetting; the hard cards follow it.
+                  Wrap(
+                    crossAxisAlignment: WrapCrossAlignment.center,
+                    spacing: HandySpace.xs,
+                    children: [
+                      Text(
+                        tr(
+                          context,
+                          '${stats['total']} cards · ${stats['due']} due · ${stats['newCards']} new · forgot ${stats['lapses']} times',
+                          '${stats['total']} thẻ · ${stats['due']} cần ôn · ${stats['newCards']} mới · quên ${stats['lapses']} lần',
+                        ),
+                        style: theme.textTheme.bodyMedium?.copyWith(
+                          color: c.muted,
+                          fontFeatures: tabular,
+                        ),
+                      ),
+                      if (hard.isNotEmpty)
+                        TextButton.icon(
+                          key: const Key('deck-hard'),
+                          onPressed: () => Navigator.of(context).push(
+                            MaterialPageRoute<void>(
+                              builder: (_) => ReviewPage(
+                                scope: scope,
+                                deckId: deck.id,
+                                practice: hard,
+                                practiceTitle: tr(
+                                  context,
+                                  'Hard cards',
+                                  'Thẻ khó',
+                                ),
+                              ),
+                            ),
+                          ),
+                          icon: const Icon(Icons.replay_rounded, size: 18),
+                          label: Text(
+                            tr(
+                              context,
+                              'Practise ${hard.length} hard',
+                              'Luyện ${hard.length} thẻ khó',
+                            ),
+                          ),
+                        ),
+                    ],
                   ),
                   const SizedBox(height: HandySpace.l),
                   Wrap(
