@@ -127,6 +127,17 @@ class InspectorState extends State<Inspector> {
     changed();
   }
 
+  /// Selects the character at [offset] in the source, so the editor
+  /// scrolls to it and the caret is there to fix it.
+  void showAt(int offset) {
+    final at = offset.clamp(0, input.text.length);
+    input.selection = TextSelection(
+      baseOffset: at,
+      extentOffset: (at + 1).clamp(0, input.text.length),
+    );
+    focus.requestFocus();
+  }
+
   void fill(String text) {
     input.text = text;
     forced = null;
@@ -370,6 +381,7 @@ class InspectorState extends State<Inspector> {
               onOpenRequest: widget.onOpenRequest,
               onReplace: replace,
               onGenerate: generate,
+              onShowAt: showAt,
             ),
     );
     return LayoutBuilder(

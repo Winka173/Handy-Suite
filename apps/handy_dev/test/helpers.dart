@@ -73,6 +73,7 @@ Future<void> start(
   Files? files,
   Store? store,
   HttpTransport? transport,
+  Store? history,
   Size size = const Size(420, 1100),
 }) async {
   tester.view.physicalSize = size;
@@ -85,6 +86,7 @@ Future<void> start(
       files: files ?? Files(),
       documents: store ?? Store(),
       transport: transport,
+      history: history ?? Store(),
     ),
   );
   await tester.pumpAndSettle();

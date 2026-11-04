@@ -141,6 +141,15 @@ List<DataKind> detect(String input) {
       _runs('base64-decode', s)) {
     kinds.add(DataKind.base64);
   }
+  // Broken JSON still opens as JSON first, so the answer says where it
+  // breaks (line, column, likely cause) instead of offering text tools.
+  if (json == null &&
+      (s.startsWith('{') || s.startsWith('[')) &&
+      !kinds.contains(DataKind.jsonl) &&
+      // `[section]` opens TOML too.
+      !kinds.contains(DataKind.toml)) {
+    kinds.insert(0, DataKind.json);
+  }
   kinds.add(DataKind.text);
   return kinds;
 }

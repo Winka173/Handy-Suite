@@ -79,12 +79,16 @@ class DevApp extends StatefulWidget {
   final PreferencesRepository? preferences;
   final DocumentRepository? documents;
   final HttpTransport? transport;
+
+  /// The opt-in send history's store; device storage when null.
+  final DocumentRepository? history;
   const DevApp({
     super.key,
     this.files = const SystemHandyFiles(),
     this.preferences,
     this.documents,
     this.transport,
+    this.history,
   });
   @override
   State<DevApp> createState() => _DevAppState();
@@ -96,6 +100,8 @@ class _DevAppState extends State<DevApp> {
   late final ws = Workspace(
     widget.documents ?? localDocuments('handy-dev-api', maxBytes: 1000000),
     widget.transport ?? HttpTransport(),
+    historyStore:
+        widget.history ?? localDocuments('handy-dev-history', maxBytes: 200000),
   )..load();
   Object? error;
 

@@ -2077,3 +2077,21 @@ Run: design-taste-frontend app-screens (giữ `HandyBrand.media`) + frontend-ui-
   tháng (Netflix, Internet) không lọt vào vì cửa sổ là 28 ngày.
 - Chế độ ẩn số: chip hiện "••••". Mỗi chip có nhãn đọc "Ghi lại hôm nay: …".
 - Reject: nút sao để ghim yêu thích, chip hiện khi đang gõ, ghi mà không có Hoàn tác.
+
+## Refactor 2026-11 · lát S8: Dev chỉ chỗ lỗi JSON, JSON Pointer, lịch sử gửi (hợp đồng)
+
+- JSON hỏng (bắt đầu bằng `{` hoặc `[`, không phải JSONL/TOML) vẫn mở là JSON trước tiên;
+  thông báo lỗi nói "Dòng 4, cột 1: bỏ dấu phẩy thừa ngay trước: }" (dấu phẩy thừa, nháy
+  đơn, khóa không nháy, chú thích, thiếu dấu phẩy, hết sớm) và có "Chỉ chỗ lỗi" chọn đúng
+  ký tự đó trong ô Nguồn.
+- Nhấn giữ hoặc chuột phải một dòng của cây JSON: Chép JSONPath, Chép JSON Pointer (RFC
+  6901, `~1` cho `/`), Chép giá trị. Chạm vẫn chọn dòng và đưa JSONPath lên dòng trạng thái.
+- "Đã gửi" dưới các collection: công tắc, mặc định tắt; khi tắt có một câu nói rõ sẽ giữ
+  gì (method, địa chỉ bỏ giá trị query, mã, thời gian, kích thước; không header, body,
+  bí mật; tối đa 50, trên máy). Mỗi dòng: tên request, đường dẫn mono, rồi kết quả; lỗi
+  và "không có phản hồi" bằng chữ đỏ, không chỉ bằng màu. Chạm mở request gốc nếu còn.
+  Tắt có xác nhận "Tắt và xoá N lần gửi?" và xoá hết.
+- URL lưu là mẫu của request qua `sanitizeRequest` (biến `{{env}}` giữ nguyên, không
+  thay giá trị environment). Tệp lịch sử hỏng thì bắt đầu lại, tắt.
+- Reject: bật sẵn lịch sử, lưu header/body, phát lại request từ lịch sử (dễ gửi lại dữ
+  liệu nhạy cảm), đồng bộ.

@@ -10,7 +10,13 @@ import '../http_transport.dart';
 class Workspace extends ChangeNotifier {
   final DocumentRepository store;
   final HttpTransport transport;
-  Workspace(this.store, this.transport);
+
+  /// Where the opt-in send history lives, apart from the requests.
+  final DocumentRepository? historyStore;
+  Workspace(this.store, this.transport, {this.historyStore});
+
+  /// Off until turned on; see [recordSend] for what one send keeps.
+  SendHistory history = SendHistory();
 
   ApiWorkspace value = emptyWorkspace();
   bool loading = true, sending = false;
@@ -60,6 +66,13 @@ class Workspace extends ChangeNotifier {
 
   Future<void> load() async {
     try {
+      final h = await historyStore?.load();
+      history = h == null ? SendHistory() : parseSendHistory(h);
+    } catch (_) {
+      // A history that cannot be read starts again, off; requests still load.
+      history = SendHistory();
+    }
+    try {
       final text = await store.load();
       value = text == null ? emptyWorkspace() : parseWorkspace(text);
       loadError = null;
@@ -92,6 +105,21 @@ class Workspace extends ChangeNotifier {
     notifyListeners();
   }
 
+  /// Turning it off forgets every send at once.
+  Future<void> keepHistory(bool on) =>
+      _writeHistory(switchSendHistory(history, on));
+
+  Future<void> _writeHistory(SendHistory next) async {
+    await historyStore?.save(exportSendHistory(next));
+    history = next;
+    notifyListeners();
+  }
+
+  /// Opens the saved request a past send came from.
+  void openSent(SentRequest s) {
+    if (value.requests.any((r) => r.id == s.requestId)) select(s.requestId);
+  }
+
   static String newId(String prefix) =>
       '$prefix${DateTime.now().microsecondsSinceEpoch}';
 
@@ -108,6 +136,7 @@ class Workspace extends ChangeNotifier {
       );
       previous = _last[r.id];
       _last[r.id] = response!;
+      await _remember(r, response);
     } on Cancelled {
       sendError = ('Request cancelled.', 'Đã hủy request.');
     } on FormatException catch (e) {
@@ -117,6 +146,7 @@ class Workspace extends ChangeNotifier {
         'Could not reach the server. Check the address and your connection.',
         'Không gọi được máy chủ. Kiểm tra địa chỉ và kết nối.',
       );
+      await _remember(r, null);
     } finally {
       sending = false;
       notifyListeners();
@@ -124,4 +154,21 @@ class Workspace extends ChangeNotifier {
   }
 
   void cancel() => transport.cancel();
+
+  /// A failed history write never turns a good send into an error.
+  Future<void> _remember(ApiRequest r, ApiResponse? answer) async {
+    if (!history.on) return;
+    try {
+      await _writeHistory(
+        recordSend(
+          history,
+          r,
+          at: DateTime.now(),
+          status: answer?.status,
+          elapsedMs: answer?.elapsedMs ?? 0,
+          bytes: answer?.bytes ?? 0,
+        ),
+      );
+    } catch (_) {}
+  }
 }

@@ -58,9 +58,90 @@ void assertJsonData(dynamic value, {int maxNodes = 100000, int maxDepth = 40}) {
 }
 
 dynamic parseJson(String input) {
-  final value = jsonDecode(bounded(input));
+  final text = bounded(input);
+  final dynamic value;
+  try {
+    value = jsonDecode(text);
+  } on FormatException catch (e) {
+    throw jsonSyntaxError(text, e);
+  }
   assertJsonData(value);
   return value;
+}
+
+/// 1-based line and column of [offset] in [text]; a CRLF counts as one
+/// line break and the column counts UTF-16 code units, as editors do.
+({int line, int column}) textPlace(String text, int offset) {
+  final end = offset.clamp(0, text.length);
+  var line = 1, start = 0;
+  for (var i = 0; i < end; i++) {
+    if (text.codeUnitAt(i) == 0x0A) {
+      line++;
+      start = i + 1;
+    }
+  }
+  return (line: line, column: end - start + 1);
+}
+
+/// A JSON syntax error said where it is and what usually causes it there,
+/// bilingual (`English / Tiếng Việt`), keeping the offset for the caller to
+/// select. Errors without an offset pass through.
+FormatException jsonSyntaxError(String text, FormatException e) {
+  final at = e.offset;
+  if (at == null) return e;
+  final offset = at.clamp(0, text.length);
+  final (:line, :column) = textPlace(text, offset);
+  final here = offset < text.length ? text[offset] : '';
+  var before = offset - 1;
+  while (before >= 0 && ' \t\r\n'.contains(text[before])) {
+    before--;
+  }
+  final previous = before >= 0 ? text[before] : '';
+  final (String en, String vi) hint = switch (here) {
+    '' => (
+      'the text ends early; a bracket or quote is not closed',
+      'văn bản hết sớm; còn ngoặc hoặc dấu nháy chưa đóng',
+    ),
+    '}' || ']' when previous == ',' => (
+      'remove the comma before it',
+      'bỏ dấu phẩy thừa ngay trước',
+    ),
+    "'" => (
+      'JSON strings use double quotes "…"',
+      'chuỗi JSON dùng nháy kép "…"',
+    ),
+    '/' || '#' => ('JSON has no comments', 'JSON không có chú thích'),
+    _
+        when RegExp(r'[A-Za-z_$]').hasMatch(here) &&
+            (previous == '{' || previous == ',') =>
+      ('keys need double quotes', 'tên khóa cần nháy kép'),
+    _
+        when previous == '}' ||
+            previous == ']' ||
+            previous == '"' ||
+            RegExp(r'[0-9el]').hasMatch(previous) =>
+      ('a comma is missing before this', 'thiếu dấu phẩy trước chỗ này'),
+    _ => ('unexpected character', 'ký tự không hợp lệ'),
+  };
+  final lineText = text
+      .substring(offset - column + 1)
+      .split('\n')
+      .first
+      .replaceAll('\r', '');
+  final from = (column - 1 - 24).clamp(0, lineText.length);
+  final to = (column - 1 + 16).clamp(0, lineText.length);
+  final near =
+      '${from > 0 ? '…' : ''}${lineText.substring(from, to).trim()}'
+      '${to < lineText.length ? '…' : ''}';
+  // The message splits its languages at the first " / ".
+  final safe = near.replaceAll(' / ', ' / ');
+  final quote = near.isEmpty ? '' : ': $safe';
+  return FormatException(
+    'Line $line, column $column: ${hint.$1}$quote / '
+    'Dòng $line, cột $column: ${hint.$2}$quote',
+    text,
+    offset,
+  );
 }
 
 String pretty(dynamic value) {

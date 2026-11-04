@@ -68,6 +68,9 @@ class ResultPanel extends StatelessWidget {
   /// Replaces the source (a rebuilt URL, freshly made IDs).
   final ValueChanged<String> onReplace;
   final void Function(IdKind kind, int count) onGenerate;
+
+  /// Selects the error's place in the source.
+  final ValueChanged<int>? onShowAt;
   const ResultPanel({
     super.key,
     required this.result,
@@ -79,6 +82,7 @@ class ResultPanel extends StatelessWidget {
     required this.onOpenRequest,
     required this.onReplace,
     required this.onGenerate,
+    this.onShowAt,
   });
 
   @override
@@ -112,6 +116,13 @@ class ResultPanel extends StatelessWidget {
         localMessage(context, r.error),
         key: const Key('dev-error'),
         tone: HandyTone.error,
+        action: r.errorAt == null || onShowAt == null
+            ? null
+            : TextButton(
+                key: const Key('dev-error-show'),
+                onPressed: () => onShowAt!(r.errorAt!),
+                child: Text(tr(context, 'Show in source', 'Chỉ chỗ lỗi')),
+              ),
       );
     } else if (r.request != null) {
       final q = r.request!;

@@ -4,6 +4,7 @@ import 'package:handy_dev_engine/handy_dev_engine.dart';
 import 'package:handy_files/handy_files.dart';
 import 'package:handy_ui/kit.dart';
 import 'environment_dialog.dart';
+import 'history_section.dart';
 import 'name_dialog.dart';
 import 'workspace.dart';
 
@@ -255,7 +256,7 @@ class RequestList extends StatelessWidget {
                           width: 60,
                           child: Align(
                             alignment: Alignment.centerLeft,
-                            child: _Method(r.method, style: method),
+                            child: MethodTag(r.method, style: method),
                           ),
                         ),
                         title: Text(
@@ -274,6 +275,7 @@ class RequestList extends StatelessWidget {
               ],
             ),
         ],
+        SendHistorySection(ws: ws),
       ],
     );
   }
@@ -283,10 +285,10 @@ class RequestList extends StatelessWidget {
 /// blue, PUT amber, PATCH sky, DELETE tomato. The word carries the
 /// meaning; the colour lets the eye find it. Indices are into Dev's
 /// palette, which leaves out teal (too near Dev's green).
-class _Method extends StatelessWidget {
+class MethodTag extends StatelessWidget {
   final String name;
   final TextStyle? style;
-  const _Method(this.name, {this.style});
+  const MethodTag(this.name, {this.style});
 
   static int hue(String m) => switch (m.toUpperCase()) {
     'GET' => 2,

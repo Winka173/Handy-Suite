@@ -50,7 +50,12 @@ const _order =
     '"items": [{"sku": "A-17", "qty": 2, "price": 129000}, {"sku": "B-03", "qty": 1, "price": 349000}], '
     '"paid": true, "total": 607000}';
 
-Future<void> boot(WidgetTester t, Size size, {String theme = 'light'}) async {
+Future<void> boot(
+  WidgetTester t,
+  Size size, {
+  String theme = 'light',
+  String? history,
+}) async {
   t.view.physicalSize = size;
   t.view.devicePixelRatio = 1;
   addTearDown(t.view.resetPhysicalSize);
@@ -94,6 +99,7 @@ Future<void> boot(WidgetTester t, Size size, {String theme = 'light'}) async {
           ),
         files: Files(),
         documents: store,
+        history: Store()..text = history,
         transport: HttpTransport(
           clientFactory: () => MockClient(
             (_) async => http.Response.bytes(
@@ -281,6 +287,59 @@ void main() {
     await t.enterText(find.byKey(const Key('lens-option')), 'a\nB\nc\nd');
     await t.pumpAndSettle();
     await shot(t, 'phone-15-dark-diff');
+  });
+  testWidgets('phone json broken', (t) async {
+    await boot(t, const Size(390, 844));
+    await paste(t, '{\n  "id": 1042,\n  "items": [1, 2],\n}');
+    await shot(t, 'phone-16-json-broken');
+  });
+  testWidgets('phone sent history', (t) async {
+    var h = SendHistory(on: true);
+    final at = DateTime(2026, 11, 4, 9, 12);
+    for (final (i, (id, status, ms)) in [
+      ('r1', 200, 84),
+      ('r2', 422, 131),
+      ('r1', null, 0),
+      ('r3', 200, 240),
+    ].indexed) {
+      final r = [
+        ApiRequest(
+          id: 'r1',
+          name: 'Đơn hàng 1042',
+          url: 'https://api.example.com/v1/orders/1042?expand=items',
+        ),
+        ApiRequest(
+          id: 'r2',
+          name: 'Tạo đơn',
+          url: 'https://api.example.com/v1/orders',
+          method: 'POST',
+        ),
+        ApiRequest(
+          id: 'r3',
+          name: 'Danh sách khách',
+          url: 'https://api.example.com/v1/customers?page=2',
+        ),
+      ].firstWhere((r) => r.id == id);
+      h = recordSend(
+        h,
+        r,
+        at: at.add(Duration(minutes: 7 * i)),
+        status: status,
+        elapsedMs: ms,
+        bytes: status == null ? 0 : 1840,
+      );
+    }
+    await boot(t, const Size(390, 844), history: exportSendHistory(h));
+    await t.tap(find.byKey(const Key('area')));
+    await t.tap(find.text('Request').last);
+    await t.pumpAndSettle();
+    await t.scrollUntilVisible(
+      find.byKey(const Key('sent-3')),
+      200,
+      scrollable: find.byType(Scrollable).first,
+    );
+    await t.pumpAndSettle();
+    await shot(t, 'phone-17-sent');
   });
   testWidgets('phone dark json', (t) async {
     await boot(t, const Size(390, 844), theme: 'dark');

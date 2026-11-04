@@ -38,7 +38,7 @@ mục, và trạng thái thực hiện. Cột Trạng thái chỉ đổi khi có
 | S5 | Media: thư viện nền/khung/thẻ hướng dẫn 9:16 cho ảnh chụp màn hình | DONE |
 | S6 | Tools: Gần đây/Ghim, preset VAT/giảm giá/% thay đổi; nhóm công cụ theo tình huống | DONE |
 | S7 | Recall demo deck; Habit 20–40 preset; Spend lặp giao dịch/yêu thích | DONE (S7a, S7b, S7c) |
-| S8 | Dev: lỗi JSON theo dòng/cột, copy JSON pointer, lịch sử request có che | TODO |
+| S8 | Dev: lỗi JSON theo dòng/cột, copy JSON pointer, lịch sử request có che | DONE |
 | S9 | Boards: bỏ người phụ trách/bình luận khỏi UI mặc định, mẫu bảng | TODO |
 | S10 | Forms, Widget (sau khi phiên kia commit) | BLOCKED |
 | S11 | Native Android/iOS, store, Ads/IAP, a11y; tài liệu cuối | BLOCKED (thiết bị) |
@@ -79,7 +79,7 @@ mục, và trạng thái thực hiện. Cột Trạng thái chỉ đổi khi có
 | --- | --- | --- | --- |
 | JSON, JWT (chỉ giải mã), Base64/URL, regex, thời gian, hash, UUID, request, cURL | KEEP_CORE | Có; 22 công cụ | HAS |
 | HMAC, hệ cơ số, cron 6 trường | KEEP_ADVANCED | Cùng cấp | TODO |
-| Lỗi JSON theo dòng/cột, tìm nhanh trên cây, copy JSON pointer, lịch sử request opt-in có che | ADD | Chưa có vị trí lỗi | TODO |
+| Lỗi JSON theo dòng/cột, tìm nhanh trên cây, copy JSON pointer, lịch sử request opt-in có che | ADD | Chưa có vị trí lỗi; cây đã có ô tìm | DONE (S8) |
 
 ### Keep
 
@@ -304,3 +304,18 @@ chưa commit trên máy). Sau S1/S2a: `handy_docs` (transfer 6/6), `handy_keep`
   (trả hai tháng), nên cửa sổ đổi thành 28 ngày.
 - Test: `packages/handy_spend_engine/test/usual_test.dart`,
   `apps/handy_spend/test/usual_ui_test.dart`; Spend 51/51, engine 43/43 xanh.
+
+### S8 (2026-11-04)
+
+- Engine `transforms.dart`: `parseJson` đổi lỗi cú pháp thành "Line L, column C: <nguyên
+  nhân>: <đoạn trích> / Dòng L, cột C: …", giữ offset; `textPlace`. `history.dart`:
+  `SendHistory` (phiên bản 1, tối đa 50), `recordSend` qua `sanitizeRequest`,
+  `switchSendHistory`, `parseSendHistory` (hỏng thì báo lỗi cả tệp).
+- App: nhận diện JSON hỏng là JSON (trừ JSONL/TOML); "Chỉ chỗ lỗi"; menu chép
+  JSONPath/JSON Pointer/giá trị trên dòng cây; mục "Đã gửi" với công tắc opt-in, kho
+  riêng `handy-dev-history` (≤ 200 KB).
+- Ảnh: hàng lịch sử đầu tiên hiện URL đầy đủ bị cắt ở phần đường dẫn; đổi thành tên
+  request, đường dẫn mono, rồi kết quả.
+- Test: engine `json_error_test.dart`, `history_test.dart` (không chuỗi bí mật nào trong
+  tệp); app `json_error_test.dart`, `history_test.dart`. Dev 45/45, engine 1056 (27 bỏ
+  qua có chủ đích).

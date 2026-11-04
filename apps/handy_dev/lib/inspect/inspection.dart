@@ -25,6 +25,9 @@ class Inspection {
   final ApiRequest? request;
   final String error;
 
+  /// Where in the input the error is, when the engine knows (JSON syntax).
+  final int? errorAt;
+
   /// The lens needs its option before it can run.
   final bool needsOption;
 
@@ -41,6 +44,7 @@ class Inspection {
     this.tree,
     this.request,
     this.error = '',
+    this.errorAt,
     this.needsOption = false,
     this.detail,
     this.copyText,
@@ -216,7 +220,15 @@ Inspection inspect(
       tree: tree,
     );
   } on FormatException catch (e) {
-    return fail(e.message);
+    // An offset only means something when it points into this input.
+    return Inspection(
+      kind: kind,
+      lens: lens,
+      error: e.message,
+      errorAt: identical(e.source, input) || e.source == input
+          ? e.offset
+          : null,
+    );
   } catch (e) {
     return fail('$e');
   }

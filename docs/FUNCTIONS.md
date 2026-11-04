@@ -528,6 +528,14 @@ Source: `apps/handy_tools/lib`, `packages/handy_tools_engine`.
 
 ## Handy Dev
 
+- **Lỗi JSON chỉ chỗ** (2026-11-04): JSON hỏng báo dòng, cột, nguyên nhân thường gặp
+  (dấu phẩy thừa, nháy đơn, khóa không nháy, chú thích, thiếu dấu phẩy, hết sớm) và một
+  đoạn trích; "Chỉ chỗ lỗi" chọn ký tự đó trong Nguồn.
+- **Chép từ cây JSON**: nhấn giữ / chuột phải một dòng để chép JSONPath, JSON Pointer
+  (RFC 6901) hoặc giá trị.
+- **Lịch sử gửi** (opt-in, mặc định tắt): tối đa 50 lần gửi trên máy, mỗi lần chỉ giữ
+  method, URL mẫu đã bỏ user info / giá trị query / fragment, mã trả về, thời gian,
+  kích thước; không header, body, bí mật hay giá trị environment. Tắt là xoá hết.
 - **So với lần gửi trước**: khi gửi lại cùng một request trong phiên, phản hồi có nút so sánh: trạng thái trước → sau, chênh thời gian và dung lượng có dấu (+/−), rồi body so từng dòng (JSON được thụt lề và sắp khóa trước khi so). Phản hồi cũ chỉ nằm trong bộ nhớ của phiên.
 
 Source: `apps/handy_dev/lib`, `packages/handy_dev_engine`, `third_party/re2`,
