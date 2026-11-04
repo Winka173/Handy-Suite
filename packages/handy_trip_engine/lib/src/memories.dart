@@ -30,6 +30,71 @@ Json stampData(TripState s, String visitId) {
   };
 }
 
+/// A stamp design saved on a confirmed visit (`visit.stamp`): which style,
+/// ink and words, and how the visit's photo sits in it. The look of each
+/// style belongs to the app; an unknown style id is kept and drawn as the
+/// app's default, so a newer backup never fails to open.
+Json validateStamp(Object? value) {
+  final j = object(value);
+  double n(String k, double min, double max, double fallback) {
+    final v = j[k] ?? fallback;
+    if (v is! num || !v.isFinite || v < min || v > max)
+      throw FormatException('Invalid stamp $k');
+    return v.toDouble();
+  }
+
+  final style = string(j['style'], max: 40, required: true);
+  if (!RegExp(r'^[a-z0-9-]{1,40}$').hasMatch(style))
+    throw const FormatException('Invalid stamp style');
+  final ink = j['ink'];
+  if (ink is! int || ink < 0 || ink > 0xffffffff)
+    throw const FormatException('Invalid stamp ink');
+  if (j['trip'] != null && j['trip'] is! bool)
+    throw const FormatException('Invalid stamp trip flag');
+  return {
+    'style': style,
+    'ink': ink,
+    'place': string(j['place'] ?? '', max: 80),
+    'trip': j['trip'] == true,
+    'photo': j['photo'] == null ? null : id(j['photo']),
+    'zoom': n('zoom', 1, 3, 1),
+    'dx': n('dx', -1, 1, 0),
+    'dy': n('dy', -1, 1, 0),
+    'rotation': n('rotation', -12, 12, -4),
+    'wear': n('wear', 0, 1, .25),
+    'saved': instant(j['saved']),
+  };
+}
+
+/// Saves (or replaces) the stamp of a confirmed visit. Its photo, when it
+/// has one, must be one of this visit's own pictures or its trip's cover.
+TripState saveStamp(TripState s, String visitId, Json stamp, {DateTime? now}) {
+  final v = s.visits.firstWhere(
+    (v) => v.key == visitId,
+    orElse: () => throw const FormatException('Visit not found'),
+  );
+  if (!v.confirmed)
+    throw const FormatException('Only user-confirmed visits have stamps');
+  final clean = validateStamp(stamp);
+  final photo = clean['photo'];
+  if (photo != null &&
+      !v.assets.contains(photo) &&
+      (v.trip == null || s.trip(v.trip!).cover != photo))
+    throw const FormatException('A stamp photo must belong to its visit');
+  return editVisit(s, v.copy({'stamp': clean}), now: now);
+}
+
+TripState removeStamp(TripState s, String visitId, {DateTime? now}) {
+  final v = s.visits.firstWhere((v) => v.key == visitId);
+  final j = v.toJson()..remove('stamp');
+  return editVisit(s, Visit(j), now: now);
+}
+
+/// Confirmed visits that carry a saved stamp, newest first.
+List<Visit> stampedVisits(TripState s) =>
+    s.visits.where((v) => v.confirmed && v.data['stamp'] != null).toList()
+      ..sort((a, b) => DateTime.parse(b.at).compareTo(DateTime.parse(a.at)));
+
 Json memoryBookData(
   TripState s,
   String tripId, {

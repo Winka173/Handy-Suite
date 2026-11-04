@@ -33,7 +33,7 @@ mục, và trạng thái thực hiện. Cột Trạng thái chỉ đổi khi có
 | S2a | Keep Collections: dữ liệu v4 trong engine (nhiều-nhiều, hồ sơ món, wishlist, completion, ảnh phụ, trường riêng) + sao lưu ZIP | DONE |
 | S2b | Keep Collections: giao diện (4 lối vào, gallery, mẫu, wishlist → đã có, demo gỡ được) | DONE |
 | S2c | Keep: tách ảnh khỏi tệp thư viện JSON 16 MB (cần cho bộ sưu tập nhiều ảnh) | DONE |
-| S3 | Trip: thư viện mẫu tem, Bộ sưu tập tem trong Passport, tạo tem một chạm sau lượt ghé | TODO |
+| S3 | Trip: thư viện mẫu tem, Bộ sưu tập tem trong Passport, tạo tem một chạm sau lượt ghé | DONE |
 | S4 | Card: thư viện mẫu lớn (120–200 thiết kế khác nhau thật), contact sheet, kiểm tra trùng | TODO |
 | S5 | Media: thư viện nền/khung/thẻ hướng dẫn 9:16 cho ảnh chụp màn hình | TODO |
 | S6 | Tools: Gần đây/Ghim, preset VAT/giảm giá/% thay đổi; nhóm công cụ theo tình huống | TODO |
@@ -129,7 +129,7 @@ mục, và trạng thái thực hiện. Cột Trạng thái chỉ đổi khi có
 | --- | --- | --- | --- |
 | Lịch trình, đã ghé một chạm, đặt chỗ, hành lý, chi tiêu, nhật ký, Passport, sổ kỷ niệm | KEEP_CORE | Có | HAS |
 | **Xưởng làm tem** | KEEP + nâng cấp (ngoại lệ) | 4 dáng × 5 màu mực, chữ vòng, PNG/A4, từ Passport | HAS (giữ) |
-| Thư viện 30–60 mẫu tem khác nhau thật, Bộ sưu tập tem, tạo từ lượt ghé | ADD | Chưa | TODO (S3) |
+| Thư viện 30–60 mẫu tem khác nhau thật, Bộ sưu tập tem, tạo từ lượt ghé | ADD | Chưa | DONE (S3): 40 kiểu, tem lưu trên lượt ghé, "Tem của bạn" trong Hộ chiếu |
 | GPX/KML, replay, so sánh chuyến | Không đưa lại | Đã bỏ | HAS |
 
 ### Boards
@@ -222,3 +222,19 @@ chưa commit trên máy). Sau S1/S2a: `handy_docs` (transfer 6/6), `handy_keep`
   ảnh bìa tự chọn, hồ sơ Tiêu hao để giấu "sắp hết" khỏi màn chính, bản giới thiệu
   bộ sưu tập PDF/PNG (P1).
 
+### S3 (2026-11-04)
+
+- Trip engine: `visit.stamp` (tuỳ chọn) + `saveStamp`, `removeStamp`,
+  `stampedVisits`; giá trị được kiểm (kiểu, mực, zoom 1–3, lệch −1..1, nghiêng
+  ±12°, mòn 0–1); ảnh chỉ của chính lượt ghé hoặc ảnh bìa chuyến. Đi theo bản
+  sao lưu đầy đủ sẵn có.
+- Trip app: 40 kiểu tem (7 nhóm), viền mới (đôi, chấm, vỏ sò) và hoạ tiết (sao,
+  chấm, tia nắng, dấu huỷ, ruy băng, góc vé); Xưởng có bộ chọn kiểu, "Giữ tem",
+  mở lại tem đã giữ; Hộ chiếu có "Tem của bạn" nhóm theo chuyến và in A4 tất cả;
+  trang địa điểm có "Làm tem"/"Sửa tem".
+- Soát ảnh hai vòng: viền vỏ sò không hiện (vẽ lại thành đường gợn liền có nét
+  mực), dấu huỷ đè ngày (dời sang phải/nửa trên), biểu tượng máy in đổi thành con
+  dấu cho khớp lời hướng dẫn.
+- Test: `packages/handy_trip_engine/test/stamps_test.dart`,
+  `apps/handy_trip/test/stamp_styles_test.dart` (40 kiểu khác chữ ký, mọi kiểu vẽ
+  được chữ tiếng Việt, giữ tem → Hộ chiếu → mở lại).

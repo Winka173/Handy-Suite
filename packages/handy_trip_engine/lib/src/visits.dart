@@ -26,6 +26,7 @@ class Visit extends Entity {
         (j['geo'] == null || j['capturedAt'] == null || j['accuracy'] == null))
       throw const FormatException('GPS visit needs capture metadata');
     if (j['capturedAt'] != null) instant(j['capturedAt']);
+    if (j['stamp'] != null) validateStamp(j['stamp']);
   }
   String get place => text('place');
   String? get trip => ref('trip');
@@ -36,6 +37,9 @@ class Visit extends Entity {
   String get origin => text('origin', fallback: 'manual');
   String get note => text('note');
   List<String> get assets => list('assets');
+
+  /// The saved stamp design, if the person made one.
+  Json? get stamp => data['stamp'] as Json?;
   Visit copy(Json j) => Visit({...toJson(), ...j});
 }
 

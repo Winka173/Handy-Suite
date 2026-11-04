@@ -9,7 +9,9 @@ import 'package:handy_trip/app.dart';
 import 'package:handy_trip/controller.dart';
 import 'package:handy_trip/features/sharing/memory_book.dart';
 import 'package:handy_trip/features/passport/stamp_export.dart';
+import 'package:handy_trip/features/passport/stamp_design.dart';
 import 'package:handy_trip/features/passport/stamp_studio.dart';
+import 'package:handy_trip/features/passport/stamp_styles.dart';
 import 'package:handy_trip/features/media/photo_proposal.dart';
 import '../test/ui_test.dart' as fixtures;
 import '../test/memory_ui_test.dart' as memories;
@@ -65,6 +67,57 @@ void main() {
     await font('MaterialIcons', [
       '${Platform.environment['FLUTTER_ROOT']}/bin/cache/artifacts/material_fonts/materialicons-regular.otf',
     ]);
+  });
+  testWidgets('stamp catalogue', (t) async {
+    t.view.physicalSize = const Size(1200, 1640);
+    t.view.devicePixelRatio = 1;
+    addTearDown(t.view.resetPhysicalSize);
+    addTearDown(t.view.resetDevicePixelRatio);
+    await t.pumpWidget(
+      RepaintBoundary(
+        key: boundary,
+        child: Directionality(
+          textDirection: TextDirection.ltr,
+          child: ColoredBox(
+            color: const Color(0xfffbfaf7),
+            child: Wrap(
+              children: [
+                for (final st in stampStyles)
+                  SizedBox(
+                    width: 150,
+                    height: 160,
+                    child: Column(
+                      children: [
+                        SizedBox.square(
+                          dimension: 136,
+                          child: CustomPaint(
+                            painter: StampPainter(
+                              const StampDesign(
+                                place: 'Phố cổ Hội An',
+                                day: '02/11/2026',
+                                trip: 'Ba ngày ở biển',
+                              ).withStyle(st),
+                            ),
+                          ),
+                        ),
+                        Text(
+                          st.id,
+                          style: const TextStyle(
+                            fontSize: 10,
+                            color: Color(0xff555555),
+                            fontFamily: 'packages/handy_ui/Geist',
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+    await shot(t, 'stamp-catalogue');
   });
   for (final (name, width, height, locale, theme) in [
     ('phone', 390.0, 844.0, 'en', 'light'),

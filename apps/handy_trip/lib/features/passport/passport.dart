@@ -2,6 +2,7 @@ import 'package:handy_trip_engine/handy_trip_engine.dart';
 import 'package:handy_ui/kit.dart';
 import '../../scope.dart';
 import '../places/place_view.dart';
+import 'stamp_collection.dart';
 import 'stamp_studio.dart';
 
 class PassportPage extends StatefulWidget {
@@ -71,6 +72,9 @@ class _PassportState extends State<PassportPage> {
           '$visits ${tr(context, 'visits', 'lượt ghé')} · ${keys.length} ${tr(context, 'unique places', 'địa điểm duy nhất')}',
           style: Theme.of(context).textTheme.titleLarge,
         ),
+        const SizedBox(height: 24),
+        StampCollection(scope: widget.scope),
+        const SizedBox(height: 24),
         Text(
           tr(
             context,
@@ -156,7 +160,7 @@ class _PassportState extends State<PassportPage> {
                     'Personal memory stamp',
                     'D\u1ea5u k\u1ef7 ni\u1ec7m c\u00e1 nh\u00e2n',
                   ),
-                  icon: const Icon(Icons.local_printshop_outlined),
+                  icon: const Icon(Icons.approval_outlined),
                   onPressed: () => openStampStudio(
                     context,
                     widget.scope,

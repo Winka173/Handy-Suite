@@ -6,6 +6,7 @@ import '../../ui/form.dart';
 import '../itinerary/editor.dart';
 import '../checkins/editor.dart';
 import 'editor.dart';
+import '../passport/stamp_studio.dart';
 
 class ExplorePage extends StatefulWidget {
   final TripScope scope;
@@ -155,6 +156,19 @@ Future<void> showPlace(
                     icon: const Icon(Icons.where_to_vote_outlined),
                     label: Text(tr(context, "I'm here now", 'Đã ghé, bây giờ')),
                   ),
+                  // The stamp of the latest confirmed visit here.
+                  if (latestVisit(scope.state, p.key) case final last?)
+                    OutlinedButton.icon(
+                      key: const Key('place-stamp'),
+                      onPressed: () =>
+                          openStampStudio(context, scope, last.key),
+                      icon: const Icon(Icons.approval_outlined),
+                      label: Text(
+                        last.stamp == null
+                            ? tr(context, 'Make a stamp', 'Làm tem')
+                            : tr(context, 'Edit stamp', 'Sửa tem'),
+                      ),
+                    ),
                   TextButton(
                     key: const Key('place-visit-details'),
                     onPressed: () =>
@@ -262,3 +276,9 @@ Future<void> showPlace(
     ),
   ),
 );
+
+/// The latest confirmed visit to place [key], if any.
+Visit? latestVisit(TripState s, String key) =>
+    (s.visits.where((v) => v.place == key && v.confirmed).toList()
+          ..sort((a, b) => b.at.compareTo(a.at)))
+        .firstOrNull;

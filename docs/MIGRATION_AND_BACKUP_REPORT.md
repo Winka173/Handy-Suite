@@ -7,6 +7,7 @@ Mỗi thay đổi dữ liệu ghi: phiên bản, cách đọc dữ liệu cũ, k
 | Docs | QR chạy thành thử nghiệm | Không đổi định dạng; cờ `qr-transfer` trong danh sách favorites của cài đặt | Cài đặt cũ đọc nguyên; tính năng không lưu lịch sử | `apps/handy_docs/test/transfer_test.dart` |
 | Keep | Bỏ "Đo bằng ảnh" | Không đổi | Ghi chú đo cũ là văn bản thường, giữ nguyên | `apps/handy_keep/test/measure_test.dart` |
 | Keep | Tệp thư viện trên máy: ảnh tách ra kho byte | `handy-keep-local` 1 → 2 | v1 (ảnh base64 nhúng) đọc được, chuyển khi lưu lần tới; ID ảnh không đổi | `apps/handy_keep/test/blob_storage_test.dart` |
+| Trip | Tem đã giữ trên lượt ghé | Trường tuỳ chọn `visit.stamp`, không đổi số phiên bản | Lượt ghé cũ không có tem, đọc nguyên; bản sao lưu đầy đủ mang theo tem | `packages/handy_trip_engine/test/stamps_test.dart` |
 | Keep | Bộ sưu tập, hồ sơ món, wishlist, ảnh phụ, trường riêng | Trạng thái Keep 3 → 4 | v1–3 đọc nguyên; món cũ không thêm khoá nào khi ghi lại; ID, QR `handy-keep://item/<id>`, hóa đơn, ảnh bìa không đổi | `packages/handy_inventory/test/collections_test.dart` |
 
 ## Keep 3 → 4

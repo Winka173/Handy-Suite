@@ -4,6 +4,7 @@ import 'package:handy_trip_engine/handy_trip_engine.dart';
 import 'package:handy_ui/kit.dart';
 import '../../scope.dart';
 import 'stamp_design.dart';
+import 'stamp_styles.dart';
 
 Future<void> openStampStudio(
   BuildContext context,
@@ -29,13 +30,38 @@ class StampStudio extends StatefulWidget {
 
 class _StampStudioState extends State<StampStudio> {
   late final Json data = stampData(widget.scope.state, widget.visitId);
-  late StampDesign design = StampDesign(
-    place: data['place'] as String,
-    day: data['day'] as String,
-    seed: widget.visitId.hashCode,
-  );
+
+  /// The stamp saved on this visit before, if any: it opens as it was.
+  late final Json? saved = widget.scope.state.visits
+      .firstWhere((v) => v.key == widget.visitId)
+      .stamp;
+  late StampDesign design = () {
+    final st = saved;
+    var d = StampDesign(
+      place: data['place'] as String,
+      day: data['day'] as String,
+      seed: widget.visitId.hashCode,
+    ).withStyle(stampStyle(st?['style'] as String? ?? 'travel-ring'));
+    if (st != null) {
+      d = d.copyWith(
+        ink: st['ink'] as int,
+        place: (st['place'] as String).isEmpty ? null : st['place'] as String,
+        trip: st['trip'] == true ? data['trip'] as String : '',
+        zoom: (st['zoom'] as num).toDouble(),
+        offset: Offset(
+          (st['dx'] as num).toDouble(),
+          (st['dy'] as num).toDouble(),
+        ),
+        rotation: (st['rotation'] as num).toDouble(),
+        wear: (st['wear'] as num).toDouble(),
+      );
+    }
+    return d;
+  }();
   late final place = TextEditingController(text: design.place);
-  bool withTrip = false, busy = false;
+  late bool withTrip = saved?['trip'] == true;
+  bool busy = false;
+  String family = 'travel';
   String? photoKey, error;
 
   /// The visit's own photos, then the trip's cover.
@@ -59,7 +85,54 @@ class _StampStudioState extends State<StampStudio> {
   @override
   void initState() {
     super.initState();
-    if (photos.isNotEmpty) usePhoto(photos.first);
+    family = stampStyle(design.style).family;
+    final st = saved;
+    if (st != null) {
+      final keep = photos.where((p) => p.key == st['photo']).firstOrNull;
+      if (keep != null) usePhoto(keep, reset: false);
+    } else if (photos.isNotEmpty) {
+      usePhoto(photos.first);
+    }
+  }
+
+  /// Keeps the stamp on the visit, so it shows in the Passport's stamps
+  /// and opens here again as it was.
+  Future<void> keep() async {
+    setState(() {
+      busy = true;
+      error = null;
+    });
+    try {
+      final at = widget.scope.clock().toUtc();
+      await widget.scope.controller.change(
+        (s) => saveStamp(s, widget.visitId, {
+          'style': design.style,
+          'ink': design.ink,
+          'place': design.place == data['place'] ? '' : design.place,
+          'trip': withTrip,
+          'photo': photoKey,
+          'zoom': design.zoom,
+          'dx': design.offset.dx,
+          'dy': design.offset.dy,
+          'rotation': design.rotation,
+          'wear': design.wear,
+          'saved': at.toIso8601String(),
+        }, now: at),
+      );
+      if (mounted)
+        showHandyMessage(
+          context,
+          tr(
+            context,
+            'Kept in your Passport stamps.',
+            'Đã giữ trong bộ tem của Hộ chiếu.',
+          ),
+        );
+    } catch (e) {
+      if (mounted) setState(() => error = errorText(context, e));
+    } finally {
+      if (mounted) setState(() => busy = false);
+    }
   }
 
   @override
@@ -75,7 +148,7 @@ class _StampStudioState extends State<StampStudio> {
     return (await codec.getNextFrame()).image;
   }
 
-  Future<void> usePhoto(MediaAsset? a) async {
+  Future<void> usePhoto(MediaAsset? a, {bool reset = true}) async {
     try {
       final image = a == null ? null : await decode(bytesOf(a));
       if (!mounted) return;
@@ -85,8 +158,8 @@ class _StampStudioState extends State<StampStudio> {
         design = design.copyWith(
           photo: image,
           noPhoto: image == null,
-          zoom: 1,
-          offset: Offset.zero,
+          zoom: reset ? 1 : null,
+          offset: reset ? Offset.zero : null,
         );
       });
       old?.dispose();
@@ -231,25 +304,71 @@ class _StampStudioState extends State<StampStudio> {
           style: theme.textTheme.bodySmall,
         ),
       ],
-      label(tr(context, 'Shape', 'Hình tem')),
-      SegmentedButton<String>(
-        key: const Key('stamp-shape'),
-        showSelectedIcon: false,
-        segments: [
-          for (final (id, en, vi) in [
-            ('circle', 'Round', 'Tròn'),
-            ('oval', 'Oval', 'Bầu dục'),
-            ('postage', 'Postage', 'Răng cưa'),
-            ('label', 'Label', 'Nhãn'),
-          ])
-            ButtonSegment(
-              value: id,
-              label: Text(tr(context, en, vi), maxLines: 1),
-            ),
-        ],
-        selected: {design.shape},
-        onSelectionChanged: (s) =>
-            setState(() => design = design.copyWith(shape: s.first)),
+      label(tr(context, 'Style', 'Kiểu tem')),
+      SingleChildScrollView(
+        scrollDirection: Axis.horizontal,
+        child: Row(
+          children: [
+            for (final MapEntry(key: id, value: (en, vi))
+                in stampFamilies.entries)
+              Padding(
+                padding: const EdgeInsetsDirectional.only(end: HandySpace.s),
+                child: ChoiceChip(
+                  key: Key('stamp-family-$id'),
+                  label: Text(tr(context, en, vi)),
+                  selected: family == id,
+                  onSelected: (_) => setState(() => family = id),
+                ),
+              ),
+          ],
+        ),
+      ),
+      const SizedBox(height: HandySpace.s),
+      SizedBox(
+        height: 96,
+        child: ListView(
+          key: const Key('stamp-styles'),
+          scrollDirection: Axis.horizontal,
+          children: [
+            for (final st in stampStyles.where((st) => st.family == family))
+              Padding(
+                padding: const EdgeInsetsDirectional.only(end: HandySpace.s),
+                child: Semantics(
+                  button: true,
+                  selected: design.style == st.id,
+                  label: '${tr(context, 'Style', 'Kiểu')} ${st.id}',
+                  child: InkWell(
+                    key: Key('stamp-style-${st.id}'),
+                    borderRadius: BorderRadius.circular(8),
+                    onTap: () => setState(() => design = design.withStyle(st)),
+                    child: Container(
+                      width: 96,
+                      padding: const EdgeInsets.all(4),
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(
+                          color: design.style == st.id
+                              ? theme.colorScheme.onSurface
+                              : Colors.transparent,
+                          width: 2,
+                        ),
+                      ),
+                      child: CustomPaint(
+                        painter: StampPainter(
+                          StampDesign(
+                            place: design.place,
+                            day: design.day,
+                            rotation: 0,
+                            wear: 0,
+                          ).withStyle(st),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+          ],
+        ),
       ),
       label(tr(context, 'Ink', 'Màu mực')),
       Wrap(
@@ -353,12 +472,17 @@ class _StampStudioState extends State<StampStudio> {
           OutlinedButton(
             key: const Key('stamp-sheet'),
             onPressed: busy ? null : () => export(sheet: true),
-            child: Text(tr(context, 'Print sheet (PDF)', 'Tờ in A4 (PDF)')),
+            child: Text(tr(context, 'A4 sheet', 'Tờ A4')),
           ),
-          FilledButton(
+          OutlinedButton(
             key: const Key('stamp-save'),
             onPressed: busy ? null : () => export(sheet: false),
-            child: Text(tr(context, 'Save stamp (PNG)', 'Lưu tem (PNG)')),
+            child: Text(tr(context, 'PNG', 'PNG')),
+          ),
+          FilledButton(
+            key: const Key('stamp-keep'),
+            onPressed: busy ? null : keep,
+            child: Text(tr(context, 'Keep stamp', 'Giữ tem')),
           ),
         ],
       ),

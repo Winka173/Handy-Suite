@@ -2,7 +2,12 @@
 
 ## Handy Trip
 
-- **Xưởng làm tem** (từ Hộ chiếu, mỗi lượt ghé đã xác nhận): cắt ảnh của lượt ghé hoặc ảnh bìa chuyến thành tem tròn, bầu dục, răng cưa hay nhãn; kéo hoặc dùng phím mũi tên để chỉnh vị trí ảnh, phóng to 1–3×; ảnh chuyển sang hai tông màu mực (5 màu); chữ chạy theo vòng tem (địa điểm, ngày, có thể kèm tên chuyến); nghiêng ±12°, độ mòn mực cố định theo lượt ghé. Xuất PNG nền trong 1200 px hoặc tờ A4 12 tem (PDF). Không chứa vị trí chính xác hay metadata ảnh; mẫu dấu cũ (`exportPersonalStamp`) vẫn giữ.
+- **Xưởng làm tem** (2026-11-04: 40 kiểu tem trong 7 nhóm Du lịch, Cổ điển, Dấu bưu điện,
+  Tem thư, Vé, Tối giản, Dễ thương; mỗi kiểu khác nhau ở dáng, viền đơn/đôi/chấm/vỏ sò,
+  hoạ tiết sao/chấm/tia nắng/dấu huỷ/ruy băng/góc vé hoặc nét mảnh, không chỉ đổi màu. "Giữ
+  tem" lưu thiết kế vào chính lượt ghé (đi theo bản sao lưu), Hộ chiếu có mục "Tem của bạn"
+  nhóm theo chuyến, chạm để sửa lại, in tất cả lên tờ A4; trang địa điểm có "Làm tem" /
+  "Sửa tem" cho lượt ghé mới nhất) (từ Hộ chiếu, mỗi lượt ghé đã xác nhận): cắt ảnh của lượt ghé hoặc ảnh bìa chuyến thành tem tròn, bầu dục, răng cưa hay nhãn; kéo hoặc dùng phím mũi tên để chỉnh vị trí ảnh, phóng to 1–3×; ảnh chuyển sang hai tông màu mực (5 màu); chữ chạy theo vòng tem (địa điểm, ngày, có thể kèm tên chuyến); nghiêng ±12°, độ mòn mực cố định theo lượt ghé. Xuất PNG nền trong 1200 px hoặc tờ A4 12 tem (PDF). Không chứa vị trí chính xác hay metadata ảnh; mẫu dấu cũ (`exportPersonalStamp`) vẫn giữ.
 
 App độc lập thứ mười: lên lịch, ghi nhận đã ghé và lưu kỷ niệm du lịch offline.
 [Trạng thái kiểm chứng](handy_trip/FEATURE_MATRIX.md).

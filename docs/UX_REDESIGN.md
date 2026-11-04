@@ -1982,3 +1982,21 @@ các-tông, Be Vietnam Pro) + frontend-ui-engineering.
   cột nội dung của kit.
 - Reject: giá thị trường tự động, danh mục "chính thức", huy hiệu/điểm, độ hiếm tự
   đoán, bìa là món chưa có, nhân bản món vào từng bộ.
+
+## Refactor 2026-11 · lát S3: Xưởng làm tem (hợp đồng)
+
+Ngoại lệ bắt buộc của quyết định 2026-11: giữ và nâng cấp. Run: design-taste-frontend
+app-screens (giữ `HandyBrand.trip`) + frontend-ui-engineering.
+
+- Câu hỏi của Xưởng: "tem của lượt ghé này trông thế nào?"; lớn nhất là bản xem trước.
+  Dưới nó: Ảnh, Kiểu tem (chip nhóm + dải hình thu nhỏ vẽ bằng chính bộ vẽ, chữ là địa
+  điểm thật), Màu mực, Chữ, Nghiêng, Độ mòn. Thanh dưới: Tờ A4, PNG, "Giữ tem" (chính).
+- 40 kiểu, 7 nhóm; không có hai kiểu chỉ khác màu mực (test kiểm `shape/edge/decor/
+  weight`). Vẽ hoàn toàn bằng code (vector), không ảnh tải về, không phông ngoài.
+- Giữ tem: lưu thiết kế vào lượt ghé đã xác nhận (`visit.stamp`), mở lại đúng kiểu,
+  màu, ảnh, vị trí; chỉ ảnh của chính lượt ghé hoặc ảnh bìa chuyến.
+- Hộ chiếu: mục "Tem của bạn · N" ngay dưới số lượt ghé, nhóm theo chuyến, ô 112 px
+  vẽ tem thật, chạm để sửa, "In tờ A4" gom mọi tem (12/trang). Chưa có tem: một dòng
+  chỉ cách làm. Biểu tượng con dấu cạnh mỗi địa điểm mở Xưởng.
+- Trang địa điểm: "Làm tem" / "Sửa tem" cho lượt ghé mới nhất.
+- Không bao giờ: tự tạo lượt ghé, tem cho lượt chưa xác nhận, nhãn "chính thức".
