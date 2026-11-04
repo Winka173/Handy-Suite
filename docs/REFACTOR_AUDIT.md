@@ -26,128 +26,128 @@ mục, và trạng thái thực hiện. Cột Trạng thái chỉ đổi khi có
 
 ## Thứ tự thực hiện
 
-| Lát | Nội dung | Trạng thái |
-| --- | --- | --- |
-| S0 | Audit, quyết định, baseline test, release readiness | DONE |
-| S1 | Việc bỏ/ẩn nhỏ, giữ dữ liệu: Docs QR → Thử nghiệm; Keep bỏ Đo bằng ảnh; hợp đồng màu Boards | DONE |
-| S2a | Keep Collections: dữ liệu v4 trong engine (nhiều-nhiều, hồ sơ món, wishlist, completion, ảnh phụ, trường riêng) + sao lưu ZIP | DONE |
-| S2b | Keep Collections: giao diện (4 lối vào, gallery, mẫu, wishlist → đã có, demo gỡ được) | DONE |
-| S2c | Keep: tách ảnh khỏi tệp thư viện JSON 16 MB (cần cho bộ sưu tập nhiều ảnh) | DONE |
-| S3 | Trip: thư viện mẫu tem, Bộ sưu tập tem trong Passport, tạo tem một chạm sau lượt ghé | DONE |
-| S4 | Card: thư viện mẫu lớn (120–200 thiết kế khác nhau thật), contact sheet, kiểm tra trùng | DONE (144 mẫu, 55 bố cục) |
-| S5 | Media: thư viện nền/khung/thẻ hướng dẫn 9:16 cho ảnh chụp màn hình | DONE |
-| S6 | Tools: Gần đây/Ghim, preset VAT/giảm giá/% thay đổi; nhóm công cụ theo tình huống | DONE |
-| S7 | Recall demo deck; Habit 20–40 preset; Spend lặp giao dịch/yêu thích | DONE (S7a, S7b, S7c) |
-| S8 | Dev: lỗi JSON theo dòng/cột, copy JSON pointer, lịch sử request có che | DONE |
-| S9 | Boards: bỏ người phụ trách/bình luận khỏi UI mặc định, mẫu bảng | DONE |
-| S10 | Forms, Widget (sau khi phiên kia commit) | BLOCKED |
-| S11 | Native Android/iOS, store, Ads/IAP, a11y; tài liệu cuối | BLOCKED (thiết bị) |
+| Lát | Nội dung                                                                                                                      | Trạng thái                                                                                               |
+| --- | ----------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------- |
+| S0  | Audit, quyết định, baseline test, release readiness                                                                           | DONE                                                                                                     |
+| S1  | Việc bỏ/ẩn nhỏ, giữ dữ liệu: Docs QR → Thử nghiệm; Keep bỏ Đo bằng ảnh; hợp đồng màu Boards                                   | DONE                                                                                                     |
+| S2a | Keep Collections: dữ liệu v4 trong engine (nhiều-nhiều, hồ sơ món, wishlist, completion, ảnh phụ, trường riêng) + sao lưu ZIP | DONE                                                                                                     |
+| S2b | Keep Collections: giao diện (4 lối vào, gallery, mẫu, wishlist → đã có, demo gỡ được)                                         | DONE                                                                                                     |
+| S2c | Keep: tách ảnh khỏi tệp thư viện JSON 16 MB (cần cho bộ sưu tập nhiều ảnh)                                                    | DONE                                                                                                     |
+| S3  | Trip: thư viện mẫu tem, Bộ sưu tập tem trong Passport, tạo tem một chạm sau lượt ghé                                          | DONE                                                                                                     |
+| S4  | Card: thư viện mẫu lớn (120–200 thiết kế khác nhau thật), contact sheet, kiểm tra trùng                                       | DONE (144 mẫu, 55 bố cục)                                                                                |
+| S5  | Media: thư viện nền/khung/thẻ hướng dẫn 9:16 cho ảnh chụp màn hình                                                            | DONE                                                                                                     |
+| S6  | Tools: Gần đây/Ghim, preset VAT/giảm giá/% thay đổi; nhóm công cụ theo tình huống                                             | DONE                                                                                                     |
+| S7  | Recall demo deck; Habit 20–40 preset; Spend lặp giao dịch/yêu thích                                                           | DONE (S7a, S7b, S7c)                                                                                     |
+| S8  | Dev: lỗi JSON theo dòng/cột, copy JSON pointer, lịch sử request có che                                                        | DONE                                                                                                     |
+| S9  | Boards: bỏ người phụ trách/bình luận khỏi UI mặc định, mẫu bảng                                                               | DONE                                                                                                     |
+| S10 | Forms, Widget (sau khi phiên kia commit)                                                                                      | BLOCKED                                                                                                  |
+| S11 | Native Android/iOS, store, Ads/IAP, a11y; tài liệu cuối                                                                       | Tài liệu DONE (`ANDROID_IOS_RELEASE_CHECKLIST.md`); thiết bị/store BLOCKED; package `com.example.*` TODO |
 
 ## Từng app
 
 ### Tools
 
-| Mục | Quyết định | Baseline | Trạng thái |
-| --- | --- | --- | --- |
-| Bàn làm việc gõ là ra kết quả, máy tính, %, đơn vị, lương, ngày, VietQR, chia hóa đơn, dọn chữ, đọc số | KEEP_CORE | Có; một màn "bàn", danh mục Ctrl K | HAS |
-| Phụ đề, bốc thăm, âm lịch, mật khẩu, đo bằng ảnh, sổ tính | KEEP_ADVANCED | Có, nằm trong danh mục cùng cấp | DONE (S6): nhóm "Thêm" trên kệ |
-| Ghim | ADD | Có (`pinned` trong catalog) | HAS |
-| Gần đây, sao chép một chạm, lịch sử tính (opt-in), preset VAT/giảm hai lần/% thay đổi | ADD | Chưa | DONE (S6) trừ lịch sử tính; sao chép một chạm đã có (Sao chép/Enter vào Băng kết quả) |
+| Mục                                                                                                    | Quyết định    | Baseline                           | Trạng thái                                                                            |
+| ------------------------------------------------------------------------------------------------------ | ------------- | ---------------------------------- | ------------------------------------------------------------------------------------- |
+| Bàn làm việc gõ là ra kết quả, máy tính, %, đơn vị, lương, ngày, VietQR, chia hóa đơn, dọn chữ, đọc số | KEEP_CORE     | Có; một màn "bàn", danh mục Ctrl K | HAS                                                                                   |
+| Phụ đề, bốc thăm, âm lịch, mật khẩu, đo bằng ảnh, sổ tính                                              | KEEP_ADVANCED | Có, nằm trong danh mục cùng cấp    | DONE (S6): nhóm "Thêm" trên kệ                                                        |
+| Ghim                                                                                                   | ADD           | Có (`pinned` trong catalog)        | HAS                                                                                   |
+| Gần đây, sao chép một chạm, lịch sử tính (opt-in), preset VAT/giảm hai lần/% thay đổi                  | ADD           | Chưa                               | DONE (S6) trừ lịch sử tính; sao chép một chạm đã có (Sao chép/Enter vào Băng kết quả) |
 
 ### Docs
 
-| Mục | Quyết định | Baseline | Trạng thái |
-| --- | --- | --- | --- |
-| Quét, cắt, OCR → TXT/MD/DOCX, PDF gộp/tách/xoay/ký/đánh số/nén | KEEP_CORE | Có | HAS |
-| Markdown, in hai mặt, thư viện tệp UTF-8 | KEEP_ADVANCED | Có, Markdown là ô bắt đầu thứ hai | TODO (hạ cấp) |
-| Gửi tệp bằng QR chạy | RETIRE/FREEZE: Thử nghiệm, mặc định tắt | Ô dưới lưới bắt đầu | DONE (S1) |
-| Giới hạn 50 tệp đã giữ | Nới theo tài nguyên thật | `reader.dart`: 50 tài liệu | DONE: giới hạn thật là 8 MB, tối đa 500 tệp; thư viện/ZIP > 50 ghi phiên bản 2 |
-| Preset quét (giấy/hóa đơn/bảng), tên tệp gợi ý từ OCR đã xác nhận, thao tác PDF hàng loạt | ADD | Chưa | Preset quét DONE; tên tệp từ OCR, PDF hàng loạt TODO |
+| Mục                                                                                       | Quyết định                              | Baseline                          | Trạng thái                                                                     |
+| ----------------------------------------------------------------------------------------- | --------------------------------------- | --------------------------------- | ------------------------------------------------------------------------------ |
+| Quét, cắt, OCR → TXT/MD/DOCX, PDF gộp/tách/xoay/ký/đánh số/nén                            | KEEP_CORE                               | Có                                | HAS                                                                            |
+| Markdown, in hai mặt, thư viện tệp UTF-8                                                  | KEEP_ADVANCED                           | Có, Markdown là ô bắt đầu thứ hai | TODO (hạ cấp)                                                                  |
+| Gửi tệp bằng QR chạy                                                                      | RETIRE/FREEZE: Thử nghiệm, mặc định tắt | Ô dưới lưới bắt đầu               | DONE (S1)                                                                      |
+| Giới hạn 50 tệp đã giữ                                                                    | Nới theo tài nguyên thật                | `reader.dart`: 50 tài liệu        | DONE: giới hạn thật là 8 MB, tối đa 500 tệp; thư viện/ZIP > 50 ghi phiên bản 2 |
+| Preset quét (giấy/hóa đơn/bảng), tên tệp gợi ý từ OCR đã xác nhận, thao tác PDF hàng loạt | ADD                                     | Chưa                              | Preset quét DONE; tên tệp từ OCR, PDF hàng loạt TODO                           |
 
 ### Media
 
-| Mục | Quyết định | Baseline | Trạng thái |
-| --- | --- | --- | --- |
-| Chú thích, hướng dẫn, sửa ảnh nhanh, nối ảnh, che nhạy cảm có duyệt | KEEP_CORE | Có | HAS |
-| GIF/HTML/Markdown, ZIP dự án | KEEP_ADVANCED | Có | TODO (hạ cấp định dạng ít dùng) |
-| Quay màn hình iOS ghi đúng là "trong app" | RETIRE nhãn sai | FUNCTIONS đã ghi "nội dung trong app" | HAS (kiểm lại chuỗi UI ở S5) |
-| Thư viện nền/khung/thẻ 9:16/preset số bước | ADD | 6 màu nền phẳng + khung điện thoại/trình duyệt | Khung DONE (S5): 12 kiểu nhanh, 4 khổ, 6 nền hai màu, tiêu đề; preset số bước/che trong trình chú thích: HAS (đã có trước refactor: "Số bước" tự đánh số 1, 2, 3…, "Che kín", và "Tìm chữ nhạy cảm" gợi ý vùng che bằng OCR) |
+| Mục                                                                 | Quyết định      | Baseline                                       | Trạng thái                                                                                                                                                                                                                   |
+| ------------------------------------------------------------------- | --------------- | ---------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Chú thích, hướng dẫn, sửa ảnh nhanh, nối ảnh, che nhạy cảm có duyệt | KEEP_CORE       | Có                                             | HAS                                                                                                                                                                                                                          |
+| GIF/HTML/Markdown, ZIP dự án                                        | KEEP_ADVANCED   | Có                                             | TODO (hạ cấp định dạng ít dùng)                                                                                                                                                                                              |
+| Quay màn hình iOS ghi đúng là "trong app"                           | RETIRE nhãn sai | FUNCTIONS đã ghi "nội dung trong app"          | HAS (kiểm lại chuỗi UI ở S5)                                                                                                                                                                                                 |
+| Thư viện nền/khung/thẻ 9:16/preset số bước                          | ADD             | 6 màu nền phẳng + khung điện thoại/trình duyệt | Khung DONE (S5): 12 kiểu nhanh, 4 khổ, 6 nền hai màu, tiêu đề; preset số bước/che trong trình chú thích: HAS (đã có trước refactor: "Số bước" tự đánh số 1, 2, 3…, "Che kín", và "Tìm chữ nhạy cảm" gợi ý vùng che bằng OCR) |
 
 ### Dev
 
-| Mục | Quyết định | Baseline | Trạng thái |
-| --- | --- | --- | --- |
-| JSON, JWT (chỉ giải mã), Base64/URL, regex, thời gian, hash, UUID, request, cURL | KEEP_CORE | Có; 22 công cụ | HAS |
-| HMAC, hệ cơ số, cron 6 trường | KEEP_ADVANCED | Cùng cấp | TODO |
-| Lỗi JSON theo dòng/cột, tìm nhanh trên cây, copy JSON pointer, lịch sử request opt-in có che | ADD | Chưa có vị trí lỗi; cây đã có ô tìm | DONE (S8) |
+| Mục                                                                                          | Quyết định    | Baseline                            | Trạng thái |
+| -------------------------------------------------------------------------------------------- | ------------- | ----------------------------------- | ---------- |
+| JSON, JWT (chỉ giải mã), Base64/URL, regex, thời gian, hash, UUID, request, cURL             | KEEP_CORE     | Có; 22 công cụ                      | HAS        |
+| HMAC, hệ cơ số, cron 6 trường                                                                | KEEP_ADVANCED | Cùng cấp                            | TODO       |
+| Lỗi JSON theo dòng/cột, tìm nhanh trên cây, copy JSON pointer, lịch sử request opt-in có che | ADD           | Chưa có vị trí lỗi; cây đã có ô tìm | DONE (S8)  |
 
 ### Keep
 
-| Mục | Quyết định | Baseline | Trạng thái |
-| --- | --- | --- | --- |
-| Hồ sơ món, cho mượn, thùng, QR, bảo hành, giá trị, sao lưu | KEEP_CORE | Có (`handy_inventory`, dữ liệu v3) | HAS |
-| Dự đoán sắp hết | KEEP_ADVANCED (hồ sơ Tiêu hao) | Hiện trên "Cần để ý" mặc định | DONE: món có hồ sơ khác Tiêu hao bị loại; món chưa có hồ sơ giữ cách đoán cũ (không mất dự đoán đang có) |
-| Đo bằng ảnh | RETIRE khỏi Keep | Menu món + "Thêm vào ghi chú" | DONE (S1) |
-| Collections, mẫu, hồ sơ động, wishlist, completion, nhiều ảnh/món, demo | ADD P0 | Không có | DONE (S2a dữ liệu, S2b giao diện); nhiều ảnh/món mới có ở dữ liệu, chưa có ô thêm ảnh phụ |
-| Lưu ảnh | Rủi ro | Cả thư viện (dữ liệu + ảnh base64) là một JSON tối đa 16 MB; vài chục món có ảnh là chạm trần | DONE (S2c): ảnh ra kho byte riêng |
+| Mục                                                                     | Quyết định                     | Baseline                                                                                      | Trạng thái                                                                                               |
+| ----------------------------------------------------------------------- | ------------------------------ | --------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------- |
+| Hồ sơ món, cho mượn, thùng, QR, bảo hành, giá trị, sao lưu              | KEEP_CORE                      | Có (`handy_inventory`, dữ liệu v3)                                                            | HAS                                                                                                      |
+| Dự đoán sắp hết                                                         | KEEP_ADVANCED (hồ sơ Tiêu hao) | Hiện trên "Cần để ý" mặc định                                                                 | DONE: món có hồ sơ khác Tiêu hao bị loại; món chưa có hồ sơ giữ cách đoán cũ (không mất dự đoán đang có) |
+| Đo bằng ảnh                                                             | RETIRE khỏi Keep               | Menu món + "Thêm vào ghi chú"                                                                 | DONE (S1)                                                                                                |
+| Collections, mẫu, hồ sơ động, wishlist, completion, nhiều ảnh/món, demo | ADD P0                         | Không có                                                                                      | DONE (S2a dữ liệu, S2b giao diện); nhiều ảnh/món mới có ở dữ liệu, chưa có ô thêm ảnh phụ                |
+| Lưu ảnh                                                                 | Rủi ro                         | Cả thư viện (dữ liệu + ảnh base64) là một JSON tối đa 16 MB; vài chục món có ảnh là chạm trần | DONE (S2c): ảnh ra kho byte riêng                                                                        |
 
 ### Recall
 
-| Mục | Quyết định | Baseline | Trạng thái |
-| --- | --- | --- | --- |
-| SRS, cloze, đảo chiều, che ảnh, Anki, CSV | KEEP_CORE | Có | HAS |
-| Chép chính tả, TTS từng mặt, dán ghi chú | KEEP_ADVANCED | Có | HAS (đã ở menu phụ) |
-| Demo deck không lẫn thống kê thật, lọc thẻ khó, ôn lại thẻ quên | ADD | Chưa | DONE (S7b demo deck, S7d luyện thẻ khó/vừa quên) |
+| Mục                                                             | Quyết định    | Baseline | Trạng thái                                       |
+| --------------------------------------------------------------- | ------------- | -------- | ------------------------------------------------ |
+| SRS, cloze, đảo chiều, che ảnh, Anki, CSV                       | KEEP_CORE     | Có       | HAS                                              |
+| Chép chính tả, TTS từng mặt, dán ghi chú                        | KEEP_ADVANCED | Có       | HAS (đã ở menu phụ)                              |
+| Demo deck không lẫn thống kê thật, lọc thẻ khó, ôn lại thẻ quên | ADD           | Chưa     | DONE (S7b demo deck, S7d luyện thẻ khó/vừa quên) |
 
 ### Bookmark
 
-| Mục | Quyết định | Baseline | Trạng thái |
-| --- | --- | --- | --- |
-| Chia sẻ vào, Chưa xếp, bộ sưu tập, trùng, tìm, mở link gốc | KEEP_CORE | Có | HAS |
-| Bản đọc offline, Tập trung, kiểm tra link, Bộ lọc đã lưu | KEEP_ADVANCED | Có | HAS |
-| Giới hạn hàng loạt có huỷ/giãn cách | DE-SCOPE mặc định không giới hạn | Đã có: 200 bản đọc/lượt, 500 link/lượt, ≥ 2 s mỗi host, Dừng | HAS |
-| Thẻ ảnh/dòng, gộp trùng có duyệt, xuất bộ sưu tập | ADD | Có thẻ/dòng; gộp trùng thủ công | Gộp trùng có duyệt DONE; thẻ ảnh/dòng HAS; xuất theo bộ sưu tập TODO |
+| Mục                                                        | Quyết định                       | Baseline                                                     | Trạng thái                                                           |
+| ---------------------------------------------------------- | -------------------------------- | ------------------------------------------------------------ | -------------------------------------------------------------------- |
+| Chia sẻ vào, Chưa xếp, bộ sưu tập, trùng, tìm, mở link gốc | KEEP_CORE                        | Có                                                           | HAS                                                                  |
+| Bản đọc offline, Tập trung, kiểm tra link, Bộ lọc đã lưu   | KEEP_ADVANCED                    | Có                                                           | HAS                                                                  |
+| Giới hạn hàng loạt có huỷ/giãn cách                        | DE-SCOPE mặc định không giới hạn | Đã có: 200 bản đọc/lượt, 500 link/lượt, ≥ 2 s mỗi host, Dừng | HAS                                                                  |
+| Thẻ ảnh/dòng, gộp trùng có duyệt, xuất bộ sưu tập          | ADD                              | Có thẻ/dòng; gộp trùng thủ công                              | Gộp trùng có duyệt DONE; thẻ ảnh/dòng HAS; xuất theo bộ sưu tập TODO |
 
 ### Spend
 
-| Mục | Quyết định | Baseline | Trạng thái |
-| --- | --- | --- | --- |
-| Ghi một dòng, còn tiêu được, tài khoản, chuyển khoản/hoàn tiền/thẻ, ngân sách, định kỳ, sao kê, BigInt | KEEP_CORE | Có | HAS |
-| Kịch bản giả định | RETIRE (đã bỏ 2026-11-03, dữ liệu giữ) | Có | HAS |
-| Lặp giao dịch một chạm, giao dịch yêu thích, giải thích đối chiếu | ADD | "Dùng làm mẫu" qua menu sổ | Lặp một chạm + yêu thích suy ra DONE (S7c); giải thích đối chiếu DONE |
+| Mục                                                                                                    | Quyết định                             | Baseline                   | Trạng thái                                                            |
+| ------------------------------------------------------------------------------------------------------ | -------------------------------------- | -------------------------- | --------------------------------------------------------------------- |
+| Ghi một dòng, còn tiêu được, tài khoản, chuyển khoản/hoàn tiền/thẻ, ngân sách, định kỳ, sao kê, BigInt | KEEP_CORE                              | Có                         | HAS                                                                   |
+| Kịch bản giả định                                                                                      | RETIRE (đã bỏ 2026-11-03, dữ liệu giữ) | Có                         | HAS                                                                   |
+| Lặp giao dịch một chạm, giao dịch yêu thích, giải thích đối chiếu                                      | ADD                                    | "Dùng làm mẫu" qua menu sổ | Lặp một chạm + yêu thích suy ra DONE (S7c); giải thích đối chiếu DONE |
 
 ### Habit
 
-| Mục | Quyết định | Baseline | Trạng thái |
-| --- | --- | --- | --- |
-| Check-in, lịch linh hoạt, chuỗi, kỳ nghỉ, nhắc, quy trình, nhìn lại tuần | KEEP_CORE | Có | HAS |
-| 20–40 preset thói quen/quy trình theo nhóm | ADD | `routineTemplates()` có mẫu quy trình; chưa có preset thói quen | DONE (S7a): 32 thói quen + 8 quy trình = 40 |
+| Mục                                                                      | Quyết định | Baseline                                                        | Trạng thái                                  |
+| ------------------------------------------------------------------------ | ---------- | --------------------------------------------------------------- | ------------------------------------------- |
+| Check-in, lịch linh hoạt, chuỗi, kỳ nghỉ, nhắc, quy trình, nhìn lại tuần | KEEP_CORE  | Có                                                              | HAS                                         |
+| 20–40 preset thói quen/quy trình theo nhóm                               | ADD        | `routineTemplates()` có mẫu quy trình; chưa có preset thói quen | DONE (S7a): 32 thói quen + 8 quy trình = 40 |
 
 ### Trip
 
-| Mục | Quyết định | Baseline | Trạng thái |
-| --- | --- | --- | --- |
-| Lịch trình, đã ghé một chạm, đặt chỗ, hành lý, chi tiêu, nhật ký, Passport, sổ kỷ niệm | KEEP_CORE | Có | HAS |
-| **Xưởng làm tem** | KEEP + nâng cấp (ngoại lệ) | 4 dáng × 5 màu mực, chữ vòng, PNG/A4, từ Passport | HAS (giữ) |
-| Thư viện 30–60 mẫu tem khác nhau thật, Bộ sưu tập tem, tạo từ lượt ghé | ADD | Chưa | DONE (S3): 40 kiểu, tem lưu trên lượt ghé, "Tem của bạn" trong Hộ chiếu |
-| GPX/KML, replay, so sánh chuyến | Không đưa lại | Đã bỏ | HAS |
+| Mục                                                                                    | Quyết định                 | Baseline                                          | Trạng thái                                                              |
+| -------------------------------------------------------------------------------------- | -------------------------- | ------------------------------------------------- | ----------------------------------------------------------------------- |
+| Lịch trình, đã ghé một chạm, đặt chỗ, hành lý, chi tiêu, nhật ký, Passport, sổ kỷ niệm | KEEP_CORE                  | Có                                                | HAS                                                                     |
+| **Xưởng làm tem**                                                                      | KEEP + nâng cấp (ngoại lệ) | 4 dáng × 5 màu mực, chữ vòng, PNG/A4, từ Passport | HAS (giữ)                                                               |
+| Thư viện 30–60 mẫu tem khác nhau thật, Bộ sưu tập tem, tạo từ lượt ghé                 | ADD                        | Chưa                                              | DONE (S3): 40 kiểu, tem lưu trên lượt ghé, "Tem của bạn" trong Hộ chiếu |
+| GPX/KML, replay, so sánh chuyến                                                        | Không đưa lại              | Đã bỏ                                             | HAS                                                                     |
 
 ### Boards
 
-| Mục | Quyết định | Baseline | Trạng thái |
-| --- | --- | --- | --- |
-| Khối danh mục, Kanban/Danh sách/Hôm nay/Lịch, checklist, hạn, lặp, mẫu | KEEP_CORE | Có | HAS |
-| Phụ thuộc, WIP, trường tùy chỉnh | KEEP_ADVANCED | Có | HAS |
-| Người phụ trách, luồng bình luận | RETIRE khỏi UI cá nhân | Có trong chi tiết việc, bộ lọc, xuất | DONE (S9): ẩn khi chưa dùng; bình luận thành Ghi chú; dữ liệu/xuất giữ |
-| Màu chàm trong hợp đồng cũ | Sửa tài liệu | `UX_REDESIGN.md` ghi #6366F1 | DONE (S1) |
+| Mục                                                                    | Quyết định             | Baseline                             | Trạng thái                                                             |
+| ---------------------------------------------------------------------- | ---------------------- | ------------------------------------ | ---------------------------------------------------------------------- |
+| Khối danh mục, Kanban/Danh sách/Hôm nay/Lịch, checklist, hạn, lặp, mẫu | KEEP_CORE              | Có                                   | HAS                                                                    |
+| Phụ thuộc, WIP, trường tùy chỉnh                                       | KEEP_ADVANCED          | Có                                   | HAS                                                                    |
+| Người phụ trách, luồng bình luận                                       | RETIRE khỏi UI cá nhân | Có trong chi tiết việc, bộ lọc, xuất | DONE (S9): ẩn khi chưa dùng; bình luận thành Ghi chú; dữ liệu/xuất giữ |
+| Màu chàm trong hợp đồng cũ                                             | Sửa tài liệu           | `UX_REDESIGN.md` ghi #6366F1         | DONE (S1)                                                              |
 
 ### Card
 
-| Mục | Quyết định | Baseline | Trạng thái |
-| --- | --- | --- | --- |
-| Canvas, lớp, bắt dính, chữ/ảnh/hình/QR, nhiều mặt, hồ sơ, xuất | KEEP_CORE | Có | HAS |
-| Chữ ký email, trang HTML, dấu cắt | KEEP_ADVANCED | Có | TODO (hạ cấp) |
-| 120–200 mẫu khác nhau thật, thư viện tài nguyên, gallery, đổi màu một chạm | ADD | 11 mẫu | Mẫu + gallery DONE (S4); đổi màu một chạm DONE; mẫu đã thích DONE; thư viện hoạ tiết riêng TODO |
+| Mục                                                                        | Quyết định    | Baseline | Trạng thái                                                                                      |
+| -------------------------------------------------------------------------- | ------------- | -------- | ----------------------------------------------------------------------------------------------- |
+| Canvas, lớp, bắt dính, chữ/ảnh/hình/QR, nhiều mặt, hồ sơ, xuất             | KEEP_CORE     | Có       | HAS                                                                                             |
+| Chữ ký email, trang HTML, dấu cắt                                          | KEEP_ADVANCED | Có       | TODO (hạ cấp)                                                                                   |
+| 120–200 mẫu khác nhau thật, thư viện tài nguyên, gallery, đổi màu một chạm | ADD           | 11 mẫu   | Mẫu + gallery DONE (S4); đổi màu một chạm DONE; mẫu đã thích DONE; thư viện hoạ tiết riêng TODO |
 
 ### Forms, Widget
 

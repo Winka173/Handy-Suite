@@ -4,16 +4,16 @@ Trạng thái thật, tách theo mức kiểm chứng. "Code + test trên máy" 
 "đã chạy trên thiết bị". Không mục nào ở đây được nâng mức nếu chưa có log/bằng
 chứng trong `docs/qa/evidence`.
 
-| Mức | Trạng thái |
-| --- | --- |
-| Unit + widget test trên Windows (host) | 12 app đã commit và các gói dùng chung: chạy bằng `dart run melos run test --no-select`. Forms/Widget có test riêng của phiên kia, chưa commit |
-| Android emulator | Một số luồng: xuất/khôi phục Docs, codec Media, quyền thông báo Keep, giải mã QR Tools; Forms quyền camera/GPS; Widget đặt/giữ qua khởi động lại (API 35) |
-| Android thiết bị thật | **BLOCKED**: chưa có thiết bị trong môi trường này |
-| iOS simulator / thiết bị | **BLOCKED**: cần macOS + Xcode + ký; chưa build lần nào |
-| Windows thật | OCR Docs, tự sao lưu thư mục, thông báo Windows, ghi/đọc Forms và Widget |
-| Web | PWA worker test sau khi build; Forms, Widget chạy offline trên Edge |
-| Store, Ads, IAP | **BLOCKED**: chưa có tài khoản store, ID quảng cáo, sản phẩm; không giao dịch thật |
-| Thông báo nền (app đã đóng, sau khởi động lại) | Chưa kiểm chứng |
+| Mức                                            | Trạng thái                                                                                                                                                |
+| ---------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Unit + widget test trên Windows (host)         | 12 app đã commit và các gói dùng chung: chạy bằng `dart run melos run test --no-select`. Forms/Widget có test riêng của phiên kia, chưa commit            |
+| Android emulator                               | Một số luồng: xuất/khôi phục Docs, codec Media, quyền thông báo Keep, giải mã QR Tools; Forms quyền camera/GPS; Widget đặt/giữ qua khởi động lại (API 35) |
+| Android thiết bị thật                          | **BLOCKED**: chưa có thiết bị trong môi trường này                                                                                                        |
+| iOS simulator / thiết bị                       | **BLOCKED**: cần macOS + Xcode + ký; chưa build lần nào                                                                                                   |
+| Windows thật                                   | OCR Docs, tự sao lưu thư mục, thông báo Windows, ghi/đọc Forms và Widget                                                                                  |
+| Web                                            | PWA worker test sau khi build; Forms, Widget chạy offline trên Edge                                                                                       |
+| Store, Ads, IAP                                | **BLOCKED**: chưa có tài khoản store, ID quảng cáo, sản phẩm; không giao dịch thật                                                                        |
+| Thông báo nền (app đã đóng, sau khởi động lại) | Chưa kiểm chứng                                                                                                                                           |
 
 ## Để gỡ BLOCKED
 

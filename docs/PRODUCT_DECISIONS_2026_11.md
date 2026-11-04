@@ -25,12 +25,12 @@ Kế hoạch và trạng thái từng việc: [REFACTOR_AUDIT](REFACTOR_AUDIT.md
 
 ## Bốn trạng thái
 
-| Trạng thái | Nghĩa |
-| --- | --- |
-| KEEP_CORE | Giữ, đặt ở luồng chính |
-| KEEP_ADVANCED | Giữ và chạy được, dời vào Nâng cao/Thêm |
-| RETIRE | Bỏ khỏi UI mặc định, ngừng phát triển; dữ liệu cũ vẫn đọc, xuất, khôi phục được |
-| ADD/IMPROVE | Làm thật end-to-end: lưu trữ, trạng thái rỗng/lỗi, test, nhập/xuất |
+| Trạng thái    | Nghĩa                                                                           |
+| ------------- | ------------------------------------------------------------------------------- |
+| KEEP_CORE     | Giữ, đặt ở luồng chính                                                          |
+| KEEP_ADVANCED | Giữ và chạy được, dời vào Nâng cao/Thêm                                         |
+| RETIRE        | Bỏ khỏi UI mặc định, ngừng phát triển; dữ liệu cũ vẫn đọc, xuất, khôi phục được |
+| ADD/IMPROVE   | Làm thật end-to-end: lưu trữ, trạng thái rỗng/lỗi, test, nhập/xuất              |
 
 ## Quyết định thay cho việc đã làm trước đó
 
