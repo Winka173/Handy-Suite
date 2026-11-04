@@ -761,6 +761,8 @@ liệt kê theo từng app ở trên.
 
 ## Handy Card
 
+- **Mẫu đã thích** (2026-11-04): ngôi sao trên từng mẫu trong thư viện, chip "Đã thích"
+  gom lại các mẫu đó.
 - **Đổi bảng màu** (2026-11-04): nút bảng màu trong studio, 10 bảng màu; cả thẻ đổi theo
   vai trò màu trong một bước Hoàn tác, màu tự chọn giữ nguyên; thiết kế màu riêng thì
   không đổi được và được nói rõ.

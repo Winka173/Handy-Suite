@@ -45,6 +45,7 @@ class TemplateGalleryPage extends StatefulWidget {
 }
 
 class _TemplateGalleryPageState extends State<TemplateGalleryPage> {
+  /// An occasion id, 'favorites', or null for all.
   String? kind;
   final _docs = <String, CardDocument>{};
 
@@ -54,11 +55,23 @@ class _TemplateGalleryPageState extends State<TemplateGalleryPage> {
   );
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context) => ListenableBuilder(
+    listenable: widget.scope.library,
+    builder: (context, _) => _build(context),
+  );
+
+  Widget _build(BuildContext context) {
     final theme = Theme.of(context);
-    final shown = cardTemplates
-        .where((t) => t.id != 'blank' && (kind == null || t.kind == kind))
-        .toList();
+    final liked = widget.scope.library.favoriteTemplates;
+    if (kind == 'favorites' && liked.isEmpty) kind = null;
+    final shown = kind == 'favorites'
+        ? [
+            for (final id in liked)
+              ?cardTemplates.where((t) => t.id == id).firstOrNull,
+          ]
+        : cardTemplates
+              .where((t) => t.id != 'blank' && (kind == null || t.kind == kind))
+              .toList();
     return HandyPage(
       title: tr(context, 'Templates', 'Mẫu thiết kế'),
       body: CustomScrollView(
@@ -77,7 +90,7 @@ class _TemplateGalleryPageState extends State<TemplateGalleryPage> {
                   Text(
                     tr(
                       context,
-                      '${shown.length} templates · every text, colour and picture can be changed',
+                      '${shown.length} ${shown.length == 1 ? 'template' : 'templates'} · every text, colour and picture can be changed',
                       '${shown.length} mẫu · đổi được mọi chữ, màu và ảnh',
                     ),
                     key: const Key('gallery-count'),
@@ -94,6 +107,20 @@ class _TemplateGalleryPageState extends State<TemplateGalleryPage> {
                         selected: kind == null,
                         onSelected: (_) => setState(() => kind = null),
                       ),
+                      if (liked.isNotEmpty)
+                        ChoiceChip(
+                          key: const Key('gallery-kind-favorites'),
+                          avatar: const Icon(Icons.star, size: 16),
+                          label: Text(
+                            tr(
+                              context,
+                              'Starred ${liked.length}',
+                              'Đã thích ${liked.length}',
+                            ),
+                          ),
+                          selected: kind == 'favorites',
+                          onSelected: (_) => setState(() => kind = 'favorites'),
+                        ),
                       for (final (id, en, vi) in templateKinds)
                         ChoiceChip(
                           key: Key('gallery-kind-$id'),
@@ -147,11 +174,30 @@ class _TemplateGalleryPageState extends State<TemplateGalleryPage> {
                             ),
                           ),
                           const SizedBox(height: HandySpace.xs),
-                          Text(
-                            tr(context, t.en, t.vi),
-                            maxLines: 2,
-                            overflow: TextOverflow.ellipsis,
-                            style: theme.textTheme.bodySmall,
+                          Row(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Expanded(
+                                child: Text(
+                                  tr(context, t.en, t.vi),
+                                  maxLines: 2,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: theme.textTheme.bodySmall,
+                                ),
+                              ),
+                              IconButton(
+                                key: Key('gallery-star-${t.id}'),
+                                visualDensity: VisualDensity.compact,
+                                tooltip: liked.contains(t.id)
+                                    ? tr(context, 'Unstar', 'Bỏ thích')
+                                    : tr(context, 'Star', 'Thích'),
+                                isSelected: liked.contains(t.id),
+                                icon: const Icon(Icons.star_border, size: 20),
+                                selectedIcon: const Icon(Icons.star, size: 20),
+                                onPressed: () => widget.scope.library
+                                    .toggleFavoriteTemplate(t.id),
+                              ),
+                            ],
                           ),
                         ],
                       ),

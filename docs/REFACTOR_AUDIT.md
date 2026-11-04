@@ -147,7 +147,7 @@ mục, và trạng thái thực hiện. Cột Trạng thái chỉ đổi khi có
 | --- | --- | --- | --- |
 | Canvas, lớp, bắt dính, chữ/ảnh/hình/QR, nhiều mặt, hồ sơ, xuất | KEEP_CORE | Có | HAS |
 | Chữ ký email, trang HTML, dấu cắt | KEEP_ADVANCED | Có | TODO (hạ cấp) |
-| 120–200 mẫu khác nhau thật, thư viện tài nguyên, gallery, đổi màu một chạm | ADD | 11 mẫu | Mẫu + gallery DONE (S4); đổi màu một chạm DONE; yêu thích, thư viện hoạ tiết riêng TODO |
+| 120–200 mẫu khác nhau thật, thư viện tài nguyên, gallery, đổi màu một chạm | ADD | 11 mẫu | Mẫu + gallery DONE (S4); đổi màu một chạm DONE; mẫu đã thích DONE; thư viện hoạ tiết riêng TODO |
 
 ### Forms, Widget
 
@@ -392,3 +392,9 @@ chưa commit trên máy). Sau S1/S2a: `handy_docs` (transfer 6/6), `handy_keep`
   trước chênh lệch.
 - Test: engine `reconcile_test.dart`, app `reconcile_ui_test.dart`; Spend 52/52, engine
   46/46.
+
+### Card mẫu đã thích (2026-11-04)
+
+- `CardLibrary.favoriteTemplates`/`toggleFavoriteTemplate` (cài đặt `favoriteTemplates`,
+  chỉ id); thư viện mẫu có ngôi sao và chip "Đã thích N". Sửa luôn "1 templates".
+- Test: `apps/handy_card/test/template_star_test.dart`; Card 6/6.

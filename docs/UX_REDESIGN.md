@@ -2166,3 +2166,10 @@ Run: design-taste-frontend app-screens (giữ `HandyBrand.media`) + frontend-ui-
 - Chỉ là gợi ý để xem; Cập nhật số dư vẫn ghi đúng phần chênh là điều chỉnh. Vùng này là
   live region cho trình đọc màn hình.
 - Reject: tự sửa khoản nghi ngờ, đoán số tiền chưa ghi, chữ đỏ báo lỗi người dùng.
+
+## Refactor 2026-11 · Card mẫu đã thích (hợp đồng)
+
+- Mỗi ô trong thư viện mẫu có ngôi sao cạnh tên (Thích / Bỏ thích). Khi có ít nhất một
+  mẫu đã thích, chip "Đã thích N" đứng ngay sau "Tất cả", mới thích trước. Bỏ thích mẫu
+  cuối thì quay về Tất cả. Danh sách lưu trong cài đặt của app (chỉ id).
+- Reject: đếm lượt thích, gợi ý theo thích, đồng bộ.

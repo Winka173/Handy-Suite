@@ -162,6 +162,18 @@ class CardLibrary extends ChangeNotifier {
     notifyListeners();
   }
 
+  /// Gallery templates the person starred, by id, newest star first.
+  List<String> get favoriteTemplates => [
+    for (final v in settings['favoriteTemplates'] as List? ?? const [])
+      if (v is String) v,
+  ];
+
+  Future<void> toggleFavoriteTemplate(String id) {
+    final now = favoriteTemplates;
+    final next = now.contains(id) ? (List.of(now)..remove(id)) : [id, ...now];
+    return setSetting('favoriteTemplates', next);
+  }
+
   String setting(String key, String fallback) =>
       settings[key] is String ? settings[key] as String : fallback;
   bool flag(String key, {bool fallback = true}) =>

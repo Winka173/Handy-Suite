@@ -236,6 +236,12 @@ void main() {
         () => Future<void>.delayed(const Duration(milliseconds: 300)),
       );
       await t.pumpAndSettle();
+      // Two starred, so the chip and the filled stars show.
+      final firsts = cardTemplates.where((x) => x.id != 'blank').take(2);
+      for (final x in firsts) {
+        await t.tap(find.byKey(Key('gallery-star-${x.id}')));
+        await t.pumpAndSettle();
+      }
       await shot(t, '$name-gallery');
     });
   }
