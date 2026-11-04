@@ -101,11 +101,11 @@ mục, và trạng thái thực hiện. Cột Trạng thái chỉ đổi khi có
 
 ### Bookmark
 
-| Mục                                                        | Quyết định                       | Baseline                                                     | Trạng thái                                                           |
-| ---------------------------------------------------------- | -------------------------------- | ------------------------------------------------------------ | -------------------------------------------------------------------- |
-| Chia sẻ vào, Chưa xếp, bộ sưu tập, trùng, tìm, mở link gốc | KEEP_CORE                        | Có                                                           | HAS                                                                  |
-| Bản đọc offline, Tập trung, kiểm tra link, Bộ lọc đã lưu   | KEEP_ADVANCED                    | Có                                                           | HAS                                                                  |
-| Giới hạn hàng loạt có huỷ/giãn cách                        | DE-SCOPE mặc định không giới hạn | Đã có: 200 bản đọc/lượt, 500 link/lượt, ≥ 2 s mỗi host, Dừng | HAS                                                                  |
+| Mục                                                        | Quyết định                       | Baseline                                                     | Trạng thái                                                                                                       |
+| ---------------------------------------------------------- | -------------------------------- | ------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------- |
+| Chia sẻ vào, Chưa xếp, bộ sưu tập, trùng, tìm, mở link gốc | KEEP_CORE                        | Có                                                           | HAS                                                                                                              |
+| Bản đọc offline, Tập trung, kiểm tra link, Bộ lọc đã lưu   | KEEP_ADVANCED                    | Có                                                           | HAS                                                                                                              |
+| Giới hạn hàng loạt có huỷ/giãn cách                        | DE-SCOPE mặc định không giới hạn | Đã có: 200 bản đọc/lượt, 500 link/lượt, ≥ 2 s mỗi host, Dừng | HAS                                                                                                              |
 | Thẻ ảnh/dòng, gộp trùng có duyệt, xuất bộ sưu tập          | ADD                              | Có thẻ/dòng; gộp trùng thủ công                              | Gộp trùng có duyệt DONE; thẻ ảnh/dòng HAS; xuất theo bộ sưu tập HAS (mở bộ sưu tập › "Chọn tất cả ở đây" › Xuất) |
 
 ### Spend
