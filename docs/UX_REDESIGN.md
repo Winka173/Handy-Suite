@@ -2136,3 +2136,14 @@ Run: design-taste-frontend app-screens (giữ `HandyBrand.media`) + frontend-ui-
   không đổi). Một cột, tối đa 720px.
 - Reject: gộp tự động khi lưu, xoá bản trùng không hỏi, coi `www.`/dấu `/` cuối là cùng
   trang (khác quy tắc nhập).
+
+## Refactor 2026-11 · Card đổi bảng màu một chạm (hợp đồng)
+
+- Nút bảng màu trên thanh studio mở một tấm thấp: một hàng 10 bảng màu (5 phong cách của
+  mẫu + Biển, Mực đen, Rừng đêm, Nắng, Hồng đất; không tím/chàm). Lớp phủ gần như trong
+  suốt để thẻ vẫn thấy rõ; mỗi chạm đổi cả thẻ và là một bước Hoàn tác.
+- Engine nhận ra bảng màu đang dùng (≥ 3 màu khớp) và đổi theo vai trò (nền, chữ, chữ phụ,
+  nhấn, chữ trên nhấn) tuỳ chỗ màu nằm; màu người dùng tự chọn giữ nguyên.
+- Thiết kế dùng màu riêng: tấm nói rõ "Thiết kế này dùng màu riêng…" và các ô bị mờ.
+- Ô đang dùng viền màu chọn của Card (#1450F5, chỉ dùng cho lựa chọn).
+- Reject: đổi màu từng phần tử tự động, bảng màu ngẫu nhiên, tấm che kín thẻ.

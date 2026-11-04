@@ -7,6 +7,7 @@ import '../scope.dart';
 import 'canvas.dart';
 import 'inspector.dart';
 import 'layers.dart';
+import 'palette_sheet.dart';
 import 'studio_controller.dart';
 
 Future<void> openStudio(
@@ -342,6 +343,12 @@ class _StudioPageState extends State<StudioPage> {
             onPressed: () => c.zoomBy(1.25),
           ),
         ],
+        IconButton(
+          key: const Key('studio-colours'),
+          tooltip: tr(context, 'Colours', 'Bảng màu'),
+          icon: const Icon(Icons.palette_outlined),
+          onPressed: () => openPalettes(context, c),
+        ),
         HandyMenuButton(
           items: [
             HandyMenuItem(

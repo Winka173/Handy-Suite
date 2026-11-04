@@ -17,6 +17,7 @@ import 'package:vector_math/vector_math_64.dart' show Matrix4;
 
 part 'src/geometry.dart';
 part 'src/model.dart';
+part 'src/palettes.dart';
 part 'src/registry.dart';
 part 'src/tree.dart';
 part 'src/session.dart';

@@ -239,6 +239,40 @@ void main() {
       await shot(t, '$name-gallery');
     });
   }
+  for (final (name, size) in [
+    ('phone', const Size(390, 844)),
+    ('desktop', const Size(1440, 900)),
+  ]) {
+    testWidgets('$name palettes', (t) async {
+      await boot(t, size, MemoryCardStore());
+      await t.tap(find.byKey(const Key('templates-all')));
+      await t.pumpAndSettle();
+      final registry = ElementRegistry.standard();
+      final pick = cardTemplates.firstWhere(
+        (x) =>
+            x.id.contains('-') &&
+            x.kind == 'business' &&
+            paletteOf(x.build(registry, DateTime.utc(2026)))?.id == 'paper',
+      );
+      await t.scrollUntilVisible(
+        find.byKey(Key('gallery-${pick.id}')),
+        300,
+        scrollable: find.byType(Scrollable).last,
+      );
+      await t.tap(find.byKey(Key('gallery-${pick.id}')));
+      await t.runAsync(
+        () => Future<void>.delayed(const Duration(milliseconds: 80)),
+      );
+      await t.pumpAndSettle();
+      await t.tap(find.byKey(const Key('studio-colours')));
+      await t.pumpAndSettle();
+      await t.ensureVisible(find.byKey(const Key('palette-sage')));
+      await t.pumpAndSettle();
+      await t.tap(find.byKey(const Key('palette-sage')));
+      await t.pumpAndSettle();
+      await shot(t, '$name-9-palettes');
+    });
+  }
   testWidgets('dark studio', (t) async {
     await boot(t, const Size(1440, 900), await seeded(), theme: 'dark');
     await t.tap(find.textContaining('Thẻ hội nghị').first);

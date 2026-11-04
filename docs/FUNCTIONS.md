@@ -756,6 +756,9 @@ liệt kê theo từng app ở trên.
 
 ## Handy Card
 
+- **Đổi bảng màu** (2026-11-04): nút bảng màu trong studio, 10 bảng màu; cả thẻ đổi theo
+  vai trò màu trong một bước Hoàn tác, màu tự chọn giữ nguyên; thiết kế màu riêng thì
+  không đổi được và được nói rõ.
 - **Thư viện mẫu** (2026-11-04): 144 mẫu (11 mẫu vẽ tay + 133 mẫu từ 44 bố cục × 2–3
   phong cách) cho danh thiếp, trang hồ sơ/bài vuông mạng xã hội, thiệp mời A5, tờ rơi A5,
   thẻ giá, thẻ sự kiện, CV A4, portfolio; lọc theo dịp ở `#/templates`; mọi chữ, màu, ảnh
