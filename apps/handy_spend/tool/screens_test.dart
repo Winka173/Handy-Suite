@@ -506,6 +506,24 @@ void main() {
     await tapKey(t, 'account-vcb');
     await shot(t, 'phone-7-account');
   });
+  testWidgets('phone reconcile', (t) async {
+    final c = await boot(t, const Size(390, 844));
+    final s = c.state!;
+    final held = balances(
+      s,
+      reportDay(DateTime.now().toUtc().toIso8601String(), s.zone),
+    )['cash']!;
+    await area(t, 3);
+    await tapKey(t, 'account-cash');
+    await tapKey(t, 'account-reconcile');
+    // The wallet holds what the ledger says plus today's coffee.
+    await t.enterText(
+      find.byKey(const Key('field-balance')),
+      (held + BigInt.from(35000)).toString(),
+    );
+    await t.pumpAndSettle();
+    await shot(t, 'phone-7b-reconcile');
+  });
   testWidgets('phone settings', (t) async {
     await boot(t, const Size(390, 844));
     await tapKey(t, 'open-settings');

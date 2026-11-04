@@ -2155,3 +2155,14 @@ Run: design-taste-frontend app-screens (giữ `HandyBrand.media`) + frontend-ui-
   khởi đầu (1 / 1,4 / 2 / 1,3); thanh tương phản vẫn chỉnh được. Một dòng dưới chip nói
   kiểu đó làm gì. Đặt lại về Giữ màu gốc.
 - Reject: tự đoán loại giấy, đổi màu ảnh gốc, bộ lọc nghệ thuật.
+
+## Refactor 2026-11 · Spend giải thích chênh lệch khi đối chiếu (hợp đồng)
+
+- Trong "Đối chiếu <tài khoản>", sau dòng "Sổ đang ghi …": khi gõ số dư thật, hiện ngay
+  "Thực tế chênh ±X so với sổ." rồi "Nên xem trước:" với các dữ kiện trong sổ có thể giải
+  thích: khoản đang chờ chưa tính; khoản định kỳ đã đến hạn chưa đánh dấu đã trả (kèm
+  ngày); một khoản 45 ngày gần đây đúng bằng chênh lệch (ghi hai lần hay ngược chiều?);
+  14 ngày trở lên chưa ghi gì. Khớp thì "Khớp với sổ. Không cần điều chỉnh."
+- Chỉ là gợi ý để xem; Cập nhật số dư vẫn ghi đúng phần chênh là điều chỉnh. Vùng này là
+  live region cho trình đọc màn hình.
+- Reject: tự sửa khoản nghi ngờ, đoán số tiền chưa ghi, chữ đỏ báo lỗi người dùng.

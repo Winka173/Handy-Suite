@@ -21,6 +21,10 @@ class SpendField {
   /// Money fields that may carry a sign (an adjustment, a schedule).
   final bool signed;
   final List<String> suggestions;
+
+  /// Drawn under the field and redrawn as it is typed in (what the value
+  /// would mean), given the raw text.
+  final Widget Function(BuildContext context, String raw)? live;
   const SpendField(
     this.id,
     this.en,
@@ -33,6 +37,7 @@ class SpendField {
     this.currency,
     this.signed = false,
     this.suggestions = const [],
+    this.live,
   });
 }
 
@@ -292,6 +297,7 @@ class _SpendFormState extends State<SpendForm> {
           FieldKind.count => TextInputType.number,
           _ => TextInputType.text,
         },
+        onChanged: f.live == null ? null : (_) => setState(() {}),
         maxLines: f.kind == FieldKind.note ? 3 : 1,
         maxLength: f.kind == FieldKind.note ? 8192 : 1024,
         textInputAction: f.kind == FieldKind.note
@@ -340,6 +346,7 @@ class _SpendFormState extends State<SpendForm> {
                 style: theme.textTheme.bodySmall?.copyWith(color: c.muted),
               ),
             ),
+          if (f.live != null) f.live!(context, text[f.id]?.text ?? ''),
           if (errors[f.id] != null && f.kind == FieldKind.choice)
             Text(
               errors[f.id]!,

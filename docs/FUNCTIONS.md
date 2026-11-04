@@ -109,6 +109,9 @@ Known limits: [KNOWN_ISSUES](../KNOWN_ISSUES.md). Screenshots: [UI_REVIEW](UI_RE
 
 ## Handy Spend
 
+- **Đối chiếu có giải thích** (2026-11-04): khi gõ số dư thật, Spend nói chênh bao nhiêu
+  và chỉ ra khoản chờ, khoản định kỳ đến hạn chưa trả, khoản bằng đúng chênh lệch (ghi hai
+  lần/ngược chiều) hoặc thời gian dài chưa ghi; chỉ gợi ý, không tự sửa.
 - **Ghi lại một chạm** (2026-11-04): dưới dòng ghi nhanh, tối đa 4 chip cho khoản đã
   ghi y hệt từ 2 lần trong 28 ngày (`usualEntries` trong engine); chạm là ghi lại hôm
   nay, có Hoàn tác. Hoá đơn định kỳ, sao kê, chia tiền, hoàn tiền, khoản chờ không tính.

@@ -114,7 +114,7 @@ mục, và trạng thái thực hiện. Cột Trạng thái chỉ đổi khi có
 | --- | --- | --- | --- |
 | Ghi một dòng, còn tiêu được, tài khoản, chuyển khoản/hoàn tiền/thẻ, ngân sách, định kỳ, sao kê, BigInt | KEEP_CORE | Có | HAS |
 | Kịch bản giả định | RETIRE (đã bỏ 2026-11-03, dữ liệu giữ) | Có | HAS |
-| Lặp giao dịch một chạm, giao dịch yêu thích, giải thích đối chiếu | ADD | "Dùng làm mẫu" qua menu sổ | Lặp một chạm + yêu thích suy ra DONE (S7c); giải thích đối chiếu TODO |
+| Lặp giao dịch một chạm, giao dịch yêu thích, giải thích đối chiếu | ADD | "Dùng làm mẫu" qua menu sổ | Lặp một chạm + yêu thích suy ra DONE (S7c); giải thích đối chiếu DONE |
 
 ### Habit
 
@@ -383,3 +383,12 @@ chưa commit trên máy). Sau S1/S2a: `handy_docs` (transfer 6/6), `handy_keep`
   phiên bản 2 để bản cũ từ chối rõ ràng thay vì đọc thiếu. Bản mới đọc cả 1 và 2.
 - Test: `packages/handy_docs_engine/test/reader_limit_test.dart` (50 → v1, 180 → v2 khứ hồi
   cả JSON và ZIP, trần 500, ngân sách 8 MB); engine 67/67, Docs 59/59.
+
+### Spend giải thích đối chiếu (2026-11-04)
+
+- Engine `reconcile.dart`: `reconcileHints` (pending, unpaid trong 62 ngày, twice trong 45
+  ngày, quiet ≥ 14 ngày). App: `SpendField.live`, `accounts/reconcile_hints.dart`.
+- Ảnh: bản đầu đặt phần giải thích trước dòng "Sổ đang ghi"; đổi thứ tự để số đối chiếu đi
+  trước chênh lệch.
+- Test: engine `reconcile_test.dart`, app `reconcile_ui_test.dart`; Spend 52/52, engine
+  46/46.

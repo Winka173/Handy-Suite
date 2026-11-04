@@ -3,6 +3,7 @@ import 'package:handy_ui/kit.dart';
 import '../scope.dart';
 import '../ui/figures.dart';
 import '../ui/form.dart';
+import 'reconcile_hints.dart';
 
 const _types = ['cash', 'bank', 'wallet', 'savings', 'credit', 'loan', 'other'];
 
@@ -139,6 +140,8 @@ Future<bool> openReconcile(BuildContext context, SpendScope scope, Account a) {
             'Ledger says ${moneyText(context, scope, held, a.currency)}. The difference is recorded as an adjustment, not income or spending.',
         helpVi:
             'Sổ đang ghi ${moneyText(context, scope, held, a.currency)}. Chênh lệch được ghi là điều chỉnh, không tính là thu hay chi.',
+        live: (context, raw) =>
+            ReconcileExplain(scope: scope, account: a, held: held, raw: raw),
       ),
       const SpendField('note', 'Reason', 'Lý do', required: false),
     ],
