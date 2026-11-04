@@ -176,3 +176,17 @@ checksum and both screens pass with a camera fed by hand, but no phone has
 read the codes off a real screen yet, so the 6 frames a second and the
 480-byte frame are estimates. Up to 100 KB; receiving needs the Android or
 iOS app; the screen may dim during a long send (no wake lock).
+
+The 2026-11 refactor (see `docs/REFACTOR_AUDIT.md`) is host-tested only: unit
+and widget tests on Windows plus rendered review shots; nothing from it has run
+on a phone or on iOS. Its limits: Docs keeps up to 500 files in the same 8 MB,
+and a library or reader ZIP holding more than 50 is written as version 2, which
+an older Docs refuses; Dev's send history is off by default, keeps at most 50
+sends on this device and only the request's URL template without query values;
+Spend's "Again" chips look back 28 days and its reconcile hints are suggestions
+from the ledger, never changes; Recall's practice rounds never move a card in
+the schedule; Keep predicts running out only for items with no profile or the
+consumable one; Card switches palettes only for designs drawn in one of its ten
+palettes; Bookmark merges only links that imports would also call the same.
+Every app still uses a `com.example.*` package id, which no store accepts
+(`docs/ANDROID_IOS_RELEASE_CHECKLIST.md`).

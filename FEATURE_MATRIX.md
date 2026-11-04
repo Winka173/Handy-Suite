@@ -93,3 +93,11 @@ Bookmark (dữ liệu cũ vẫn mở được).
 Refactor 2026-11 (lát S1, 2026-11-04), xem [REFACTOR_AUDIT](docs/REFACTOR_AUDIT.md):
 Docs "Gửi sang máy khác" thành tính năng thử nghiệm, mặc định tắt; Keep bỏ "Đo
 bằng ảnh" (Tools giữ, ghi chú cũ còn nguyên).
+
+Refactor 2026-11 (các lát còn lại, 2026-11-04; có test và ảnh duyệt, chưa chạy trên
+thiết bị): Keep bộ sưu tập, wishlist, kho ảnh; Trip 40 kiểu tem và tem đã giữ; Card 144
+mẫu, thư viện, mẫu đã thích, đổi bảng màu một chạm; Media khung ảnh chụp màn hình; Tools
+tình huống và Gần đây; Habit 32 gợi ý; Recall bộ mẫu và luyện thêm; Spend ghi lại một chạm
+và giải thích đối chiếu; Dev chỉ chỗ lỗi JSON, chép JSON Pointer, lịch sử gửi opt-in;
+Boards mặc định cá nhân; Bookmark gộp link trùng có duyệt; Docs kiểu giấy khi quét và
+500 tệp đã giữ. Trạng thái từng mục: [REFACTOR_AUDIT](docs/REFACTOR_AUDIT.md).
