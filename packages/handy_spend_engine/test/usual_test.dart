@@ -23,22 +23,21 @@ Entry entry(
   status: status,
 );
 
-SpendState library(List<Entry> entries, {bool archived = false}) =>
-    SpendState(
-      accounts: [
-        Account(
-          id: 'cash',
-          name: 'Cash',
-          currency: 'VND',
-          type: 'cash',
-          opening: BigInt.zero,
-          asOf: '2026-01-01',
-          archived: archived,
-        ),
-      ],
-      categories: [Category(id: 'food', name: 'Food', kind: 'expense')],
-      entries: entries,
-    );
+SpendState library(List<Entry> entries, {bool archived = false}) => SpendState(
+  accounts: [
+    Account(
+      id: 'cash',
+      name: 'Cash',
+      currency: 'VND',
+      type: 'cash',
+      opening: BigInt.zero,
+      asOf: '2026-01-01',
+      archived: archived,
+    ),
+  ],
+  categories: [Category(id: 'food', name: 'Food', kind: 'expense')],
+  entries: entries,
+);
 
 void main() {
   test('repeats are found, most frequent first', () {
