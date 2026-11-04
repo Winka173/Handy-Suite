@@ -102,8 +102,12 @@ void main() {
       expect(() => readerFixture(source: '\ud800'), throwsFormatException);
       expect(() => readerUtf8(Uint8List(1000001)), throwsFormatException);
       expect(
-        () =>
-            ReaderLibrary(List.generate(51, (i) => readerFixture(id: 'd-$i'))),
+        () => ReaderLibrary(
+          List.generate(
+            readerDocumentLimit + 1,
+            (i) => readerFixture(id: 'd-$i'),
+          ),
+        ),
         throwsFormatException,
       );
       expect(

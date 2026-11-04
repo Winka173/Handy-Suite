@@ -287,7 +287,7 @@ Xem [giới hạn](HANDY_BOOKMARK_KNOWN_LIMITATIONS.md) và [test plan](HANDY_BO
 
 ## Handy Docs
 
-- **Tìm chữ trong tệp đã giữ** (bàn làm việc): một ô tìm trên mọi tệp trong Tệp đã giữ (tối đa 50), không phân biệt dấu ("hop dong" ra "Hợp đồng"), từ 2 ký tự. Mỗi kết quả có câu chứa chữ tìm, số chỗ khớp; tên tệp khớp được xếp trước. Chạm để mở tệp đó trong trình đọc.
+- **Tìm chữ trong tệp đã giữ** (bàn làm việc): một ô tìm trên mọi tệp trong Tệp đã giữ (từ 2026-11-04: tổng cộng tối đa 8 MB, nhiều nhất 500 tệp; trước đây 50), không phân biệt dấu ("hop dong" ra "Hợp đồng"), từ 2 ký tự. Mỗi kết quả có câu chứa chữ tìm, số chỗ khớp; tên tệp khớp được xếp trước. Chạm để mở tệp đó trong trình đọc.
 
 Source: `apps/handy_docs/lib`, `packages/handy_docs_engine`, `packages/handy_pdf`,
 `packages/handy_scan` (OCR).

@@ -61,7 +61,7 @@ mục, và trạng thái thực hiện. Cột Trạng thái chỉ đổi khi có
 | Quét, cắt, OCR → TXT/MD/DOCX, PDF gộp/tách/xoay/ký/đánh số/nén | KEEP_CORE | Có | HAS |
 | Markdown, in hai mặt, thư viện tệp UTF-8 | KEEP_ADVANCED | Có, Markdown là ô bắt đầu thứ hai | TODO (hạ cấp) |
 | Gửi tệp bằng QR chạy | RETIRE/FREEZE: Thử nghiệm, mặc định tắt | Ô dưới lưới bắt đầu | DONE (S1) |
-| Giới hạn 50 tệp đã giữ | Nới theo tài nguyên thật | `reader.dart`: 50 tài liệu | TODO (đổi định dạng lưu cần migration) |
+| Giới hạn 50 tệp đã giữ | Nới theo tài nguyên thật | `reader.dart`: 50 tài liệu | DONE: giới hạn thật là 8 MB, tối đa 500 tệp; thư viện/ZIP > 50 ghi phiên bản 2 |
 | Preset quét (giấy/hóa đơn/bảng), tên tệp gợi ý từ OCR đã xác nhận, thao tác PDF hàng loạt | ADD | Chưa | Preset quét DONE; tên tệp từ OCR, PDF hàng loạt TODO |
 
 ### Media
@@ -375,3 +375,11 @@ chưa commit trên máy). Sau S1/S2a: `handy_docs` (transfer 6/6), `handy_keep`
 - App `corner_editor.dart`: chip "Đây là gì?" đặt sắc độ và tương phản khởi đầu.
 - Test: engine `scan_presets_test.dart` (xám thật sự xám, làm trắng giữ nét, màu gốc không
   đổi), app `scan_preset_test.dart` (hóa đơn lưu xám). Docs 59/59, engine 64/64.
+
+### Docs nới giới hạn tệp đã giữ (2026-11-04)
+
+- `reader.dart`: `readerDocumentLimit = 500` trong cùng ngân sách 8 MB (mỗi tệp vẫn ≤ 1 MB).
+  Thư viện và gói ZIP ≤ 50 tệp vẫn ghi phiên bản 1 (bản app cũ đọc được); hơn 50 ghi
+  phiên bản 2 để bản cũ từ chối rõ ràng thay vì đọc thiếu. Bản mới đọc cả 1 và 2.
+- Test: `packages/handy_docs_engine/test/reader_limit_test.dart` (50 → v1, 180 → v2 khứ hồi
+  cả JSON và ZIP, trần 500, ngân sách 8 MB); engine 67/67, Docs 59/59.

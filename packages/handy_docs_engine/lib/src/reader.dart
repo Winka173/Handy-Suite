@@ -137,20 +137,25 @@ class ReaderDocument {
   });
 }
 
+/// Kept documents: as many as fit in 8 MB, at most [readerDocumentLimit].
+/// Version 1 allowed 50; a library with more is written as version 2, so
+/// an older app refuses it plainly instead of reading part of it.
+const readerDocumentLimit = 500;
+
 class ReaderLibrary {
   final List<ReaderDocument> documents;
   ReaderLibrary(Iterable<ReaderDocument> input)
     : documents = List.unmodifiable(input) {
-    if (documents.length > 50 ||
+    if (documents.length > readerDocumentLimit ||
         documents.map((d) => d.id).toSet().length != documents.length)
-      throw const FormatException('Reader limit: 50 unique documents');
+      throw const FormatException('Reader limit: 500 unique documents');
     for (final document in documents) ReaderDocument.parse(document.toJson());
     if (utf8.encode(jsonEncode(toJson())).length > 8000000)
       throw const FormatException('Reader library limit: 8 MB');
   }
   Map<String, Object> toJson() => {
     'format': 'handy-reader-library',
-    'version': 1,
+    'version': documents.length > 50 ? 2 : 1,
     'documents': documents.map((d) => d.toJson()).toList(),
   };
   String serialize() => jsonEncode(toJson());
@@ -160,7 +165,7 @@ class ReaderLibrary {
     final raw = jsonDecode(text);
     if (raw is! Map ||
         raw['format'] != 'handy-reader-library' ||
-        raw['version'] != 1 ||
+        (raw['version'] != 1 && raw['version'] != 2) ||
         raw['documents'] is! List)
       throw const FormatException('Unsupported reader library');
     return ReaderLibrary((raw['documents'] as List).map(ReaderDocument.parse));
@@ -191,7 +196,8 @@ Uint8List readerZip(ReaderLibrary library) {
   final manifest = utf8.encode(
     jsonEncode({
       'format': 'handy-reader-pack',
-      'version': 1,
+      // Version 2 only when it holds more than version 1 allowed.
+      'version': library.documents.length > 50 ? 2 : 1,
       'documents': entries,
     }),
   );
@@ -209,20 +215,20 @@ ReaderLibrary readReaderZip(Uint8List bytes) {
     bytes,
     isAllowedPath: (s) =>
         s == 'manifest.json' ||
-        RegExp(r'^documents/[0-9]{1,2}\.txt$').hasMatch(s),
-    maxEntries: 51,
+        RegExp(r'^documents/[0-9]{1,3}\.txt$').hasMatch(s),
+    maxEntries: readerDocumentLimit + 1,
     maxEntryBytes: 1000000,
     maxTotalBytes: 9000000,
   );
   final manifest = files['manifest.json'];
-  if (manifest == null || manifest.length > 100000)
+  if (manifest == null || manifest.length > 1000000)
     throw const FormatException('Reader manifest missing/oversized');
   final raw = jsonDecode(utf8.decode(manifest));
   if (raw is! Map ||
       raw['format'] != 'handy-reader-pack' ||
-      raw['version'] != 1 ||
+      (raw['version'] != 1 && raw['version'] != 2) ||
       raw['documents'] is! List ||
-      raw['documents'].length > 50 ||
+      raw['documents'].length > readerDocumentLimit ||
       files.length != raw['documents'].length + 1)
     throw const FormatException('Invalid reader pack');
   final documents = <ReaderDocument>[];

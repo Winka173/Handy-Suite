@@ -117,8 +117,8 @@ class _ReadPageState extends State<ReadPage> {
                 title: tr(context, 'Open a text file', 'Mở một tệp văn bản'),
                 message: tr(
                   context,
-                  'Markdown opens in the writer. Text, web pages and code open here to read and search, up to 1 MB each; scripts and pictures never run or load. Save a copy to keep it here (up to 50).',
-                  'Markdown mở trong trình viết. Văn bản, trang web và mã mở ở đây để đọc và tìm, mỗi tệp tối đa 1 MB; script và ảnh không bao giờ chạy hay tải. Lưu một bản để giữ ở đây (tối đa 50).',
+                  'Markdown opens in the writer. Text, web pages and code open here to read and search, up to 1 MB each; scripts and pictures never run or load. Save a copy to keep it here (up to 8 MB in all).',
+                  'Markdown mở trong trình viết. Văn bản, trang web và mã mở ở đây để đọc và tìm, mỗi tệp tối đa 1 MB; script và ảnh không bao giờ chạy hay tải. Lưu một bản để giữ ở đây (tổng cộng tối đa 8 MB).',
                 ),
                 action: FilledButton.icon(
                   key: const Key('reader-import'),

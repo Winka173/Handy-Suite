@@ -16,7 +16,8 @@ const readerExtensions = [
 /// open now. An opened file is only read until the person saves a copy;
 /// every change is written first and shown after.
 class ReaderStore extends ChangeNotifier {
-  static const maxDocuments = 50;
+  /// As many as the 8 MB library holds, up to this many.
+  static const maxDocuments = readerDocumentLimit;
   final DocumentRepository documents;
   ReaderStore(this.documents);
 
@@ -96,7 +97,7 @@ class ReaderStore extends ChangeNotifier {
   ReaderLibrary withAll(List<ImportedBytes> files) {
     if (files.length + library!.documents.length > maxDocuments) {
       throw const FormatException(
-        'Document limit: 50; remove local copies or split the batch',
+        'Document limit: 500; remove local copies or split the batch / Tối đa 500 tài liệu; hãy xoá bớt bản đã lưu hoặc chia nhỏ lô',
       );
     }
     return ReaderLibrary([...library!.documents, ...files.map(read)]);
