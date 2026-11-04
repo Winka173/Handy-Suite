@@ -153,6 +153,58 @@ KeepState household() {
   return s;
 }
 
+/// The household plus two collections, one with a target and wishes.
+KeepState collector() {
+  var s = household();
+  s = saveCollection(
+    s,
+    InventoryCollection(
+      id: 'cars',
+      name: 'Xe mô hình 1:64',
+      kind: 'models',
+      hue: 3,
+      target: 24,
+    ),
+  );
+  s = saveCollection(
+    s,
+    InventoryCollection(id: 'books', name: 'Tủ sách', kind: 'books', hue: 2),
+  );
+  var n = 0;
+  void add(String name, String col, [Map<String, Object?> f = const {}]) =>
+      s = saveAsset(
+        s,
+        createAsset(
+          id: 'c${++n}',
+          name: name,
+          fields: {
+            'profile': 'collectible',
+            'collections': [col],
+            if ((f['status'] ?? 'owned') == 'owned') 'location': 'Kệ kính',
+            ...f,
+          },
+        ),
+      );
+  add('Supra đỏ', 'cars', {'series': 'Phố đêm', 'number': '12'});
+  add('Civic Type R trắng', 'cars', {'series': 'Phố đêm', 'number': '7'});
+  add('GT-R xanh dương', 'cars', {'series': 'Đường đua', 'number': '3'});
+  add('Xe buýt hai tầng', 'cars', {'variant': 'Bản giới hạn'});
+  add('Xe cứu hỏa', 'cars', {'condition': 'Còn hộp'});
+  add('Xe tải chở kem', 'cars');
+  add('RX-7 vàng', 'cars', {'status': 'ordered'});
+  add('911 xanh lá', 'cars', {
+    'status': 'wanted',
+    'priority': 'high',
+    'budget': '450000',
+    'budgetCurrency': 'VND',
+  });
+  add('Xe đua F1 đen', 'cars', {'status': 'wanted', 'priority': 'low'});
+  for (final b in ['Dế Mèn phiêu lưu ký', 'Truyện Kiều', 'Số đỏ', 'Tắt đèn']) {
+    add(b, 'books');
+  }
+  return s;
+}
+
 Future<void> boot(
   WidgetTester t,
   Size size, {
@@ -219,6 +271,50 @@ void main() {
       await shot(t, '$label-2-boxes');
     });
   }
+  for (final (label, size) in [
+    ('phone', const Size(390, 844)),
+    ('narrow', const Size(320, 700)),
+    ('desktop', const Size(1440, 900)),
+  ]) {
+    testWidgets('$label collection', (t) async {
+      await boot(t, size, state: collector());
+      await tapKey(t, 'shelf-cars');
+      await shot(t, '$label-c2-collection');
+    });
+  }
+  testWidgets('phone shelf', (t) async {
+    await boot(t, const Size(390, 844), state: collector());
+    await reveal(t, 'collection-shelf');
+    await shot(t, 'phone-c1-shelf');
+  });
+  testWidgets('phone shelf empty', (t) async {
+    await boot(t, const Size(390, 844));
+    await reveal(t, 'shelf-start');
+    await shot(t, 'phone-c0-shelf-empty');
+  });
+  testWidgets('phone dark collection', (t) async {
+    await boot(t, const Size(390, 844), state: collector(), theme: 'dark');
+    await tapKey(t, 'shelf-cars');
+    await shot(t, 'phone-c3-collection-dark');
+  });
+  testWidgets('phone wishlist', (t) async {
+    await boot(t, const Size(390, 844), state: collector());
+    await tapKey(t, 'shelf-wishlist');
+    await shot(t, 'phone-c4-wishlist');
+  });
+  testWidgets('phone wanted item', (t) async {
+    await boot(t, const Size(390, 844), state: collector());
+    await tapKey(t, 'shelf-cars');
+    await tapKey(t, 'collection-item-c8');
+    await shot(t, 'phone-c5-wanted-item');
+  });
+  testWidgets('phone collector editor', (t) async {
+    await boot(t, const Size(390, 844), state: collector());
+    await tapKey(t, 'shelf-cars');
+    await tapKey(t, 'collection-add');
+    await reveal(t, 'item-series');
+    await shot(t, 'phone-c6-editor');
+  });
   testWidgets('phone item', (t) async {
     await boot(t, const Size(390, 844));
     await tapKey(t, 'item-i5');

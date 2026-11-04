@@ -558,6 +558,13 @@ Source: `apps/handy_dev/lib`, `packages/handy_dev_engine`, `third_party/re2`,
 
 - **Đo bằng ảnh** đã rời Keep ngày 2026-11-04 (công cụ chính thức ở Handy Tools). Ghi chú
   "Đo bằng ảnh: ≈ 84 mm, …" đã ghi trước đó là văn bản thường, vẫn xem, sửa, xuất được.
+- **Bộ sưu tập** (2026-11-04): kệ trên màn chính, mỗi bộ có loại (figure, thẻ, sách/truyện,
+  game, board game, LEGO/mô hình, đồng hồ, thiết bị, đồ máy ảnh, khác) và mục tiêu tự đặt;
+  trang bộ cho "6/24 · còn thiếu 18" và lưới bìa; một món ở được nhiều bộ mà không nhân bản.
+  Muốn có / Đang đặt / Đã có trên cùng bản ghi, "Đã có rồi" ghi ngày mua hôm nay. Thông tin
+  sưu tầm: dòng, số, phiên bản, lần phát hành, tình trạng và trường riêng theo loại bộ. Bộ
+  mẫu 4 board game gỡ được một chạm. Dữ liệu Keep phiên bản 4; ảnh và hóa đơn lưu ngoài tệp
+  thư viện (tệp v2), nên tổng ảnh không còn trần 16 MB.
 - **Sắp hết**: Keep học từ các ngày mua (ngày mua của món, các lần "Vừa mua thêm", và ngày mua của các món cùng tên), lấy khoảng cách ở giữa làm nhịp mua lại; đồ được mua lại trong vòng 180 ngày mới được đoán. Một tuần trước ngày dự đoán, món đó vào "Cần để ý". Người dùng chỉ chạm "Vừa mua thêm" khi mua, không cần mỗi lần dùng. Dữ liệu lên phiên bản 3 (`restocks`); file phiên bản 1 và 2 vẫn mở được.
 
 Source: `apps/handy_keep/lib`, `packages/handy_inventory`.

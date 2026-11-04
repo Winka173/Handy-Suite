@@ -31,7 +31,7 @@ mục, và trạng thái thực hiện. Cột Trạng thái chỉ đổi khi có
 | S0 | Audit, quyết định, baseline test, release readiness | DONE |
 | S1 | Việc bỏ/ẩn nhỏ, giữ dữ liệu: Docs QR → Thử nghiệm; Keep bỏ Đo bằng ảnh; hợp đồng màu Boards | DONE |
 | S2a | Keep Collections: dữ liệu v4 trong engine (nhiều-nhiều, hồ sơ món, wishlist, completion, ảnh phụ, trường riêng) + sao lưu ZIP | DONE |
-| S2b | Keep Collections: giao diện (4 lối vào, gallery, mẫu, wishlist → đã có, demo gỡ được) | TODO |
+| S2b | Keep Collections: giao diện (4 lối vào, gallery, mẫu, wishlist → đã có, demo gỡ được) | DONE |
 | S2c | Keep: tách ảnh khỏi tệp thư viện JSON 16 MB (cần cho bộ sưu tập nhiều ảnh) | DONE |
 | S3 | Trip: thư viện mẫu tem, Bộ sưu tập tem trong Passport, tạo tem một chạm sau lượt ghé | TODO |
 | S4 | Card: thư viện mẫu lớn (120–200 thiết kế khác nhau thật), contact sheet, kiểm tra trùng | TODO |
@@ -88,7 +88,7 @@ mục, và trạng thái thực hiện. Cột Trạng thái chỉ đổi khi có
 | Hồ sơ món, cho mượn, thùng, QR, bảo hành, giá trị, sao lưu | KEEP_CORE | Có (`handy_inventory`, dữ liệu v3) | HAS |
 | Dự đoán sắp hết | KEEP_ADVANCED (hồ sơ Tiêu hao) | Hiện trên "Cần để ý" mặc định | TODO |
 | Đo bằng ảnh | RETIRE khỏi Keep | Menu món + "Thêm vào ghi chú" | DONE (S1) |
-| Collections, mẫu, hồ sơ động, wishlist, completion, nhiều ảnh/món, demo | ADD P0 | Không có | Dữ liệu DONE (S2a); UI TODO (S2b) |
+| Collections, mẫu, hồ sơ động, wishlist, completion, nhiều ảnh/món, demo | ADD P0 | Không có | DONE (S2a dữ liệu, S2b giao diện); nhiều ảnh/món mới có ở dữ liệu, chưa có ô thêm ảnh phụ |
 | Lưu ảnh | Rủi ro | Cả thư viện (dữ liệu + ảnh base64) là một JSON tối đa 16 MB; vài chục món có ảnh là chạm trần | DONE (S2c): ảnh ra kho byte riêng |
 
 ### Recall
@@ -208,3 +208,17 @@ chưa commit trên máy). Sau S1/S2a: `handy_docs` (transfer 6/6), `handy_keep`
 - Test: `packages/handy_storage/test/blobs_test.dart`,
   `apps/handy_keep/test/blob_storage_test.dart` (chuyển v1 → v2, 21 MB ảnh,
   ảnh mất, lỗi ghi ảnh giữ thư viện cũ).
+
+### S2b (2026-11-04)
+
+- Keep: kệ bộ sưu tập trên màn chính, trang bộ (`#/collection/<id>`), Muốn có
+  (`#/wishlist`), "Đã có rồi", form món có chọn bộ/trạng thái/thông tin sưu tầm,
+  bộ mẫu gỡ được. Món muốn có không vào danh sách chỗ để và tổng giá trị.
+- Ảnh review đã soát §2.7 hai vòng (bìa không lấy món chưa có, nhãn ngắn, ô
+  không ảnh nhạt, form gập trường hiếm).
+- Test: `apps/handy_keep/test/collections_ui_test.dart` (kệ mẫu vào/ra, tạo bộ +
+  thêm món + muốn có + đã có, món gia dụng lưu như cũ, danh sách muốn có).
+- Còn lại cho Keep: ô thêm ảnh phụ (dữ liệu đã có), sắp xếp thứ tự bằng kéo,
+  ảnh bìa tự chọn, hồ sơ Tiêu hao để giấu "sắp hết" khỏi màn chính, bản giới thiệu
+  bộ sưu tập PDF/PNG (P1).
+

@@ -1,5 +1,6 @@
 import 'package:handy_ui/kit.dart';
 import 'asset_editor.dart';
+import 'collector_section.dart';
 import 'fields.dart';
 import 'media_section.dart';
 import 'price_field.dart';
@@ -91,6 +92,7 @@ class EditorBody extends StatelessWidget {
                     ),
                   ),
                 ],
+                CollectorSection(editor: e),
                 MediaSection(editor: e),
                 HandyLabel(tr(context, 'Dates', 'Ngày')),
                 HandyGroup(

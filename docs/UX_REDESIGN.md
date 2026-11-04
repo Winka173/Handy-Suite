@@ -1948,3 +1948,37 @@ Quyết định: [PRODUCT_DECISIONS_2026_11](PRODUCT_DECISIONS_2026_11.md).
 - Keep: menu của một món không còn "Đo bằng ảnh"; đo bằng ảnh là việc của Tools.
   Ghi chú đo đã có vẫn là văn bản thường trong ghi chú.
 - Reject: hộp thoại "tính năng đã bỏ", nút mờ không bấm được, tự xoá ghi chú đo cũ.
+
+## Refactor 2026-11 · lát S2b: Keep Collections (hợp đồng)
+
+Run: design-taste-frontend app-screens (giữ `HandyBrand.keep`: tấm giấy trên nền
+các-tông, Be Vietnam Pro) + frontend-ui-engineering.
+
+- Dữ liệu: món là bản ghi duy nhất; bộ sưu tập chỉ tham chiếu (một món ở nhiều
+  bộ). Số lượng thật: vài bộ, mỗi bộ 5–200 món; mục tiêu do người dùng đặt.
+- Lối vào trên màn chính (một cơ sở dữ liệu): Đồ trong nhà (như cũ), Kệ bộ sưu tập,
+  Thùng (bộ lọc cũ), Muốn có (bìa đầu kệ khi có món muốn có).
+- Màn chính: kệ chỉ hiện khi không tìm, không lọc, không xem một thùng. Chưa có bộ
+  nào: một nhóm hai dòng ("Sưu tầm thứ gì?", "Thử một kệ mẫu"), không lấn danh sách
+  đồ. Có bộ: các bìa 104 px đứng trên một tấm ván kệ màu viền (chi tiết riêng của
+  Keep), nhãn ngắn "6/24" hoặc "4 món". Món muốn có/đang đặt không nằm dưới chỗ để
+  nào và không vào tổng giá trị.
+- Trang bộ (câu hỏi: "có gì rồi, còn thiếu gì?"): con số lớn nhất là "6/24" (hoặc
+  số món), dòng dưới "6 đã có · 1 đang đặt · 2 muốn có · còn thiếu 18", thanh tiến
+  độ theo màu bộ khi có mục tiêu. Lưới bìa (cột theo bề rộng, tối thiểu 2), món đã
+  có trước theo thứ tự riêng, "Còn muốn có" sau, bìa mờ. Thanh dưới: "Muốn có" và
+  "Thêm món" (chính). Menu ⋯: bỏ bộ (món vẫn còn), gỡ bộ mẫu.
+- Muốn có: danh sách theo ưu tiên, mỗi dòng có "Đã có"; trang món muốn có thay ô
+  chỗ để bằng ghi chú + nút "Đã có rồi". Đã có = cùng bản ghi, ngày mua hôm nay.
+- Form món: chỉ khi người dùng có bộ sưu tập (hoặc món không phải đã có) mới hiện
+  chọn bộ, trạng thái Đã có/Đang đặt/Muốn có, rồi dòng và số; phiên bản, lần phát
+  hành, tình trạng, trường riêng của loại bộ gập sau "Thêm thông tin sưu tầm". Món
+  gia dụng lưu y như cũ (test kiểm khoá JSON không đổi).
+- Ô không ảnh: nền nhạt màu bộ, chữ cái 22% cạnh theo màu nhận diện; không chữ đen
+  khổng lồ.
+- Bộ mẫu: id tiền tố `sample-`, 4 board game chung chung, có ghi chú "Bộ mẫu" và gỡ
+  một chạm; không trộn vào dữ liệu thật.
+- Nền tảng: route `#/collection/<id>`, `#/wishlist`; Back về màn chính; desktop dùng
+  cột nội dung của kit.
+- Reject: giá thị trường tự động, danh mục "chính thức", huy hiệu/điểm, độ hiếm tự
+  đoán, bìa là món chưa có, nhân bản món vào từng bộ.

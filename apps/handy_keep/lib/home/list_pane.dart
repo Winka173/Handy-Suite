@@ -4,6 +4,7 @@ import '../inventory/keep_store.dart' show today;
 import '../inventory/whereabouts.dart';
 import '../scope.dart';
 import '../ui/words.dart';
+import '../collections/shelf.dart';
 import 'attention_strip.dart';
 import 'box_actions.dart';
 import 'empty_list.dart';
@@ -94,7 +95,9 @@ class ListPane extends StatelessWidget {
     final theme = Theme.of(context);
     final c = HandyColors.of(context);
     final s = scope.state;
-    final found = findItems(s, query.text);
+    // Wanted and ordered items are not anywhere yet: they live in their
+    // collections and the wishlist, not under a place.
+    final found = findItems(s, query.text).where((a) => a.owned).toList();
     final groups = places(s, found);
     final searching = query.text.trim().isNotEmpty;
     final shown = [for (final p in groups) ...p.items];
@@ -124,7 +127,7 @@ class ListPane extends StatelessWidget {
               ),
             ),
             Text(
-              itemCount(context, s.assets.length),
+              itemCount(context, s.assets.where((a) => a.owned).length),
               style: theme.textTheme.bodyMedium?.copyWith(color: c.muted),
             ),
             if (wide) ...[
@@ -199,6 +202,8 @@ class ListPane extends StatelessWidget {
             onClearBox: () => onBox(null),
           ),
         ],
+        if (!searching && filter == KeepFilter.all && box == null)
+          CollectionShelf(scope: scope),
         if (priced && s.assets.isNotEmpty)
           ValueSummary(
             label: viewLabel(context, groups, shown.length),

@@ -2,6 +2,7 @@ import 'package:handy_inventory/handy_inventory.dart';
 import 'package:handy_ui/kit.dart';
 import '../inventory/keep_store.dart' show today;
 import '../inventory/whereabouts.dart' show itemHue;
+import '../collections/collection_actions.dart';
 import '../scope.dart';
 import '../ui/words.dart';
 import 'receipts_view.dart';
@@ -52,6 +53,26 @@ class ItemView extends StatelessWidget {
           dated(a.maintenanceDue, 'maintenance'),
         ),
       if (a.serial.isNotEmpty) (tr(context, 'Serial', 'Số serial'), a.serial),
+      for (final (v, en, vi) in [
+        (a.series, 'Series', 'Dòng / series'),
+        (a.number, 'Number', 'Số trong dòng'),
+        (a.variant, 'Variant', 'Phiên bản'),
+        (a.edition, 'Edition', 'Lần phát hành'),
+        (a.condition, 'Condition', 'Tình trạng'),
+      ])
+        if (v.isNotEmpty) (tr(context, en, vi), v),
+      for (final e in a.fields.entries) (ownLabel(context, a, e.key), e.value),
+      if (a.budget.isNotEmpty)
+        (
+          tr(context, 'Budget', 'Ngân sách'),
+          money(context, a.budgetCurrency, a.budget),
+        ),
+      if (a.link.isNotEmpty)
+        (tr(context, 'Where to find it', 'Mua ở đâu'), a.link),
+    ];
+    final inCollections = [
+      for (final c in scope.state.collections)
+        if (a.collections.contains(c.id)) c,
     ];
     return Column(
       key: const Key('item-view'),
@@ -107,7 +128,36 @@ class ItemView extends StatelessWidget {
           ],
         ),
         const SizedBox(height: HandySpace.l),
-        WherePanel(scope: scope, item: a),
+        if (a.owned)
+          WherePanel(scope: scope, item: a)
+        else
+          HandyNotice(
+            a.status == 'ordered'
+                ? tr(context, 'On order, not here yet', 'Đang đặt, chưa về')
+                : tr(context, 'On your wishlist', 'Trong danh sách muốn có'),
+            action: FilledButton(
+              key: const Key('item-got-it'),
+              onPressed: () => scope.gotIt(context, a),
+              child: Text(tr(context, 'Got it', 'Đã có rồi')),
+            ),
+          ),
+        if (inCollections.isNotEmpty) ...[
+          const SizedBox(height: HandySpace.m),
+          Wrap(
+            spacing: HandySpace.s,
+            runSpacing: HandySpace.s,
+            children: [
+              for (final c in inCollections)
+                ActionChip(
+                  key: Key('item-in-${c.id}'),
+                  avatar: c.hue < 0 ? null : HandyDot(c.hue),
+                  label: Text(c.name),
+                  onPressed: () =>
+                      Navigator.pushNamed(context, '/collection/${c.id}'),
+                ),
+            ],
+          ),
+        ],
         if (facts.isNotEmpty) ...[
           HandyLabel(tr(context, 'Details', 'Thông tin')),
           HandyGroup(
@@ -194,4 +244,13 @@ class ItemView extends StatelessWidget {
       ],
     );
   }
+}
+
+/// The label of one of the person's own fields: a collection kind's word
+/// for it when one suggests it, else the key itself.
+String ownLabel(BuildContext context, InventoryAsset a, String key) {
+  for (final k in keepCollectionKinds) {
+    if (k.fields[key] case (final en, final vi)) return tr(context, en, vi);
+  }
+  return key;
 }

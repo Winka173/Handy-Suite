@@ -40,6 +40,8 @@ class KeepScope {
     String price = '',
     String currency = '',
     String purchasedOn = '',
+    List<String> collections = const [],
+    String status = 'owned',
   }) => Navigator.push<void>(
     context,
     MaterialPageRoute(
@@ -59,6 +61,9 @@ class KeepScope {
             ? currency
             : startCurrency(context, state),
         onCommit: store.saveItem,
+        collections: state.collections,
+        initialCollections: collections,
+        initialStatus: status,
       ),
     ),
   );

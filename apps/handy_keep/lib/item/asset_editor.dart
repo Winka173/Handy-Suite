@@ -23,6 +23,13 @@ class AssetEditor extends StatefulWidget {
 
   /// The currency a new price starts in.
   final String currency;
+
+  /// The person's collections, and the ones a new item starts in.
+  final List<InventoryCollection> collections;
+  final List<String> initialCollections;
+
+  /// owned, ordered or wanted for a new item.
+  final String initialStatus;
   final Future<void> Function(AssetEdit) onCommit;
   const AssetEditor({
     super.key,
@@ -38,6 +45,9 @@ class AssetEditor extends StatefulWidget {
     this.initialPrice = '',
     this.initialPurchasedOn = '',
     this.currency = 'VND',
+    this.collections = const [],
+    this.initialCollections = const [],
+    this.initialStatus = 'owned',
   });
   @override
   State<AssetEditor> createState() => AssetEditorState();
@@ -64,6 +74,35 @@ class AssetEditorState extends State<AssetEditor> {
   late String boxId = a?.boxId ?? widget.initialBox;
   late String photo = a?.photoUri ?? '';
   late List<InventoryReceipt> receipts = [...?a?.receipts];
+  late final Set<String> collectionIds = {
+    ...?a?.collections,
+    if (a == null) ...widget.initialCollections,
+  };
+  late String status = a?.status ?? widget.initialStatus;
+  late String priority = a?.priority ?? '';
+  late final collector = {
+    for (final k in keepCollectorFields)
+      k: TextEditingController(text: (a?.toJson()[k] as String?) ?? ''),
+  };
+  late final link = TextEditingController(text: a?.link ?? '');
+  late final budget = TextEditingController(text: a?.budget ?? '');
+
+  /// Own fields, including those a profile change hides: they are kept.
+  late final own = <String, TextEditingController>{
+    for (final e in (a?.fields ?? const <String, String>{}).entries)
+      e.key: TextEditingController(text: e.value),
+  };
+
+  /// The rarer collector fields stay folded until asked for or filled.
+  late bool moreCollector =
+      [
+        'variant',
+        'edition',
+        'condition',
+      ].any((k) => collector[k]!.text.isNotEmpty) ||
+      own.isNotEmpty;
+  TextEditingController ownField(String key) =>
+      own.putIfAbsent(key, TextEditingController.new);
   String error = '';
   bool dirty = false, saving = false, importing = false;
   bool allowPop = false, confirming = false;
@@ -71,7 +110,17 @@ class AssetEditorState extends State<AssetEditor> {
 
   @override
   void dispose() {
-    for (final c in [name, location, serial, notes, price]) {
+    for (final c in [
+      name,
+      location,
+      serial,
+      notes,
+      price,
+      link,
+      budget,
+      ...collector.values,
+      ...own.values,
+    ]) {
       c.dispose();
     }
     super.dispose();
@@ -136,6 +185,7 @@ class AssetEditorState extends State<AssetEditor> {
         'updatedAt': at,
         if (receipts.isNotEmpty || a?.receipts.isNotEmpty == true)
           'receipts': receipts.map((r) => r.toJson()).toList(),
+        ...collectorValues(),
       };
       final next = a == null
           ? createAsset(id: newId(), name: name.text, now: at, fields: values)
@@ -147,6 +197,36 @@ class AssetEditorState extends State<AssetEditor> {
     } finally {
       if (mounted) setState(() => saving = false);
     }
+  }
+
+  /// The version-4 fields, written only when used or already there, so a
+  /// household item saves exactly as before.
+  Map<String, Object?> collectorValues() {
+    final had = a?.toJson() ?? const <String, dynamic>{};
+    final wish = status != 'owned';
+    final spend = wish ? parsePrice(budget.text, currency) : '';
+    final ownValues = {
+      for (final e in own.entries)
+        if (e.value.text.trim().isNotEmpty) e.key: e.value.text.trim(),
+    };
+    return {
+      if (collectionIds.isNotEmpty || had.containsKey('collections'))
+        'collections': collectionIds.toList(),
+      if (collectionIds.isNotEmpty && !had.containsKey('profile'))
+        'profile': 'collectible',
+      if (wish || had.containsKey('status')) 'status': status,
+      if (wish || had.containsKey('priority')) 'priority': wish ? priority : '',
+      if (wish || had.containsKey('link')) 'link': wish ? link.text : '',
+      if (spend.isNotEmpty || had.containsKey('budget')) ...{
+        'budget': spend,
+        'budgetCurrency': spend.isEmpty ? '' : currency,
+      },
+      for (final e in collector.entries)
+        if (e.value.text.trim().isNotEmpty || had.containsKey(e.key))
+          e.key: e.value.text,
+      if (ownValues.isNotEmpty || had.containsKey('fields'))
+        'fields': ownValues,
+    };
   }
 
   void leave() {

@@ -1,3 +1,5 @@
+import 'collections/collection_page.dart';
+import 'collections/wishlist_page.dart';
 import 'package:handy_files/camera.dart';
 import 'package:handy_files/handy_files.dart';
 import 'package:handy_inventory/handy_inventory.dart';
@@ -162,6 +164,11 @@ class _KeepAppState extends State<KeepApp> with WidgetsBindingObserver {
       ),
       ['', 'due'] => () => DuePage(scope: scope),
       ['', 'item', final id] => () => ItemPage(scope: scope, id: id),
+      ['', 'collection', final id] => () => CollectionPage(
+        scope: scope,
+        id: id,
+      ),
+      ['', 'wishlist'] => () => WishlistPage(scope: scope),
       _ => null,
     };
     if (page == null) return null;
