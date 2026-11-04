@@ -86,7 +86,7 @@ mục, và trạng thái thực hiện. Cột Trạng thái chỉ đổi khi có
 | Mục | Quyết định | Baseline | Trạng thái |
 | --- | --- | --- | --- |
 | Hồ sơ món, cho mượn, thùng, QR, bảo hành, giá trị, sao lưu | KEEP_CORE | Có (`handy_inventory`, dữ liệu v3) | HAS |
-| Dự đoán sắp hết | KEEP_ADVANCED (hồ sơ Tiêu hao) | Hiện trên "Cần để ý" mặc định | TODO |
+| Dự đoán sắp hết | KEEP_ADVANCED (hồ sơ Tiêu hao) | Hiện trên "Cần để ý" mặc định | DONE: món có hồ sơ khác Tiêu hao bị loại; món chưa có hồ sơ giữ cách đoán cũ (không mất dự đoán đang có) |
 | Đo bằng ảnh | RETIRE khỏi Keep | Menu món + "Thêm vào ghi chú" | DONE (S1) |
 | Collections, mẫu, hồ sơ động, wishlist, completion, nhiều ảnh/món, demo | ADD P0 | Không có | DONE (S2a dữ liệu, S2b giao diện); nhiều ảnh/món mới có ở dữ liệu, chưa có ô thêm ảnh phụ |
 | Lưu ảnh | Rủi ro | Cả thư viện (dữ liệu + ảnh base64) là một JSON tối đa 16 MB; vài chục món có ảnh là chạm trần | DONE (S2c): ảnh ra kho byte riêng |
@@ -339,3 +339,10 @@ chưa commit trên máy). Sau S1/S2a: `handy_docs` (transfer 6/6), `handy_keep`
   liên kết sau dòng "quên N lần". Dữ liệu ảnh mẫu: vài thẻ quên 2 lần.
 - Test: `apps/handy_recall/test/practice_test.dart` (bản sao lưu trước và sau vòng luyện
   giống hệt); Recall 46/46.
+
+### Keep sắp hết (2026-11-04)
+
+- `handy_inventory/runout.dart`: món có `profile` khác `consumable` không vào dự đoán (hai
+  món sưu tầm cùng tên không còn "sắp hết"). Món không có `profile` (mọi dữ liệu trước v4)
+  vẫn được đoán, nên không ai mất dự đoán đang thấy. Chỉ đổi quy tắc, không đổi dữ liệu.
+- Test: `packages/handy_inventory/test/runout_test.dart`; inventory 62/62, Keep 72/72.

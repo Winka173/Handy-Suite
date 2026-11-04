@@ -57,4 +57,26 @@ void main() {
     (old['assets'] as List).first.remove('restocks');
     expect(validateKeepState(old).assets.single.restocks, isEmpty);
   });
+
+  test('collectibles and lasting things never run out; consumables do', () {
+    InventoryAsset as(InventoryAsset a, String profile) =>
+        a.copyWith({'profile': profile});
+    final state = KeepState(
+      assets: [
+        as(item('f1', 'Labubu', '2026-05-01'), 'collectible'),
+        as(item('f2', 'labubu', '2026-08-01'), 'collectible'),
+        as(item('c1', 'USB-C cable', '2026-06-01'), 'asset'),
+        as(item('c2', 'USB-C cable', '2026-09-01'), 'asset'),
+        as(item('s1', 'Dish soap', '2026-08-01', ['2026-09-01']), 'consumable'),
+        // No profile yet: still read from its purchases.
+        item('aa1', 'Pin AA', '2026-05-01'),
+        item('aa2', 'Pin AA', '2026-08-01'),
+      ],
+    );
+    expect(runOutEstimates(state).map((r) => r.asset.name).toSet(), {
+      'Dish soap',
+      'Pin AA',
+    });
+    expect(runOutFor(state, state.assets.first), isNull);
+  });
 }

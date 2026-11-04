@@ -34,9 +34,18 @@ String _plainName(String name) =>
 /// item's purchases are its purchase day, the days it was bought again, and
 /// the purchase days of other items with the same name (several packs of
 /// the same thing saved one by one).
+///
+/// Only things that get used up: an item set to another profile (a
+/// collectible, a lasting asset, a custom one) is left out, so two figures
+/// of the same name never "run out". Items without a profile keep being
+/// read from their purchases, as before profiles existed.
 List<KeepRunOut> runOutEstimates(KeepState state) {
+  final counted = [
+    for (final a in state.assets)
+      if (!a._data.containsKey('profile') || a.profile == 'consumable') a,
+  ];
   final byName = <String, Set<String>>{};
-  for (final a in state.assets) {
+  for (final a in counted) {
     final days = byName.putIfAbsent(_plainName(a.name), () => {});
     if (a.purchasedOn.isNotEmpty) days.add(a.purchasedOn);
     days.addAll(a.restocks);
@@ -44,7 +53,7 @@ List<KeepRunOut> runOutEstimates(KeepState state) {
   final out = <KeepRunOut>[];
   final seen = <String>{};
   // The newest item of a name stands for the name.
-  final newest = [...state.assets]
+  final newest = [...counted]
     ..sort((a, b) => b.updatedAt.compareTo(a.updatedAt));
   for (final a in newest) {
     final name = _plainName(a.name);

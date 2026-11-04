@@ -590,7 +590,7 @@ Source: `apps/handy_dev/lib`, `packages/handy_dev_engine`, `third_party/re2`,
   sưu tầm: dòng, số, phiên bản, lần phát hành, tình trạng và trường riêng theo loại bộ. Bộ
   mẫu 4 board game gỡ được một chạm. Dữ liệu Keep phiên bản 4; ảnh và hóa đơn lưu ngoài tệp
   thư viện (tệp v2), nên tổng ảnh không còn trần 16 MB.
-- **Sắp hết**: Keep học từ các ngày mua (ngày mua của món, các lần "Vừa mua thêm", và ngày mua của các món cùng tên), lấy khoảng cách ở giữa làm nhịp mua lại; đồ được mua lại trong vòng 180 ngày mới được đoán. Một tuần trước ngày dự đoán, món đó vào "Cần để ý". Người dùng chỉ chạm "Vừa mua thêm" khi mua, không cần mỗi lần dùng. Dữ liệu lên phiên bản 3 (`restocks`); file phiên bản 1 và 2 vẫn mở được.
+- **Sắp hết**: Keep học từ các ngày mua (ngày mua của món, các lần "Vừa mua thêm", và ngày mua của các món cùng tên), lấy khoảng cách ở giữa làm nhịp mua lại; đồ được mua lại trong vòng 180 ngày mới được đoán. Một tuần trước ngày dự đoán, món đó vào "Cần để ý". Người dùng chỉ chạm "Vừa mua thêm" khi mua, không cần mỗi lần dùng. Dữ liệu lên phiên bản 3 (`restocks`); file phiên bản 1 và 2 vẫn mở được. Từ 2026-11-04 chỉ đồ dùng hết mới được đoán: món đã đặt hồ sơ khác (sưu tầm, tài sản, tuỳ chỉnh) không bao giờ "sắp hết"; món chưa có hồ sơ vẫn được đoán như cũ.
 
 Source: `apps/handy_keep/lib`, `packages/handy_inventory`.
 
