@@ -228,7 +228,9 @@ class _DocsAppState extends State<DocsApp> {
       theme: p?.theme ?? 'system',
       locale: p?.locale ?? 'system',
       onGenerateRoute: route,
-      home: p == null ? const HandyLoading() : DeskPage(scope: scope),
+      home: p == null
+          ? const HandyLoading()
+          : DeskPage(scope: scope, preferences: prefs),
     );
   }
 }

@@ -326,7 +326,8 @@ Source: `apps/handy_docs/lib`, `packages/handy_docs_engine`, `packages/handy_pdf
   viện; tệp Markdown đã giữ mở vào trình viết, bản đã giữ không đổi. Định dạng lưu không
   đổi nên không cần chuyển đổi. HTML đọc như nội dung an toàn, không thực thi script
   hoặc tải remote.
-- **Gửi sang máy khác** (`#/transfer`, dòng dưới "Bắt đầu việc mới"): một tệp tối đa
+- **Gửi sang máy khác** (thử nghiệm, mặc định tắt từ 2026-11-04; bật ở Cài đặt → Thử nghiệm
+  thì hiện dòng dưới "Bắt đầu việc mới"; `#/transfer` luôn mở được): một tệp tối đa
   100 KB thành mã QR chạy liên tục (480 byte mỗi khung, 6 khung/giây, khung đầu mang tên,
   cỡ và SHA-256), trên nền trắng cả ở giao diện tối; Tạm dừng/Space giữ một khung. Máy
   nhận (camera Android/iOS) đọc khung theo thứ tự bất kỳ, khung lỡ thì chờ vòng sau; chỉ
@@ -555,8 +556,8 @@ Source: `apps/handy_dev/lib`, `packages/handy_dev_engine`, `third_party/re2`,
 
 ## Handy Keep
 
-- **Đo bằng ảnh** (menu của một món): dùng ảnh của món nếu có; "Thêm vào ghi chú"
-  ghi "Đo bằng ảnh: ≈ 84 mm, …" dưới ghi chú sau khi xác nhận, không đổi gì khác.
+- **Đo bằng ảnh** đã rời Keep ngày 2026-11-04 (công cụ chính thức ở Handy Tools). Ghi chú
+  "Đo bằng ảnh: ≈ 84 mm, …" đã ghi trước đó là văn bản thường, vẫn xem, sửa, xuất được.
 - **Sắp hết**: Keep học từ các ngày mua (ngày mua của món, các lần "Vừa mua thêm", và ngày mua của các món cùng tên), lấy khoảng cách ở giữa làm nhịp mua lại; đồ được mua lại trong vòng 180 ngày mới được đoán. Một tuần trước ngày dự đoán, món đó vào "Cần để ý". Người dùng chỉ chạm "Vừa mua thêm" khi mua, không cần mỗi lần dùng. Dữ liệu lên phiên bản 3 (`restocks`); file phiên bản 1 và 2 vẫn mở được.
 
 Source: `apps/handy_keep/lib`, `packages/handy_inventory`.

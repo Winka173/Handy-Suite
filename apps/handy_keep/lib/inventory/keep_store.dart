@@ -84,28 +84,19 @@ class KeepStore extends ChangeNotifier {
   Future<void> giveBack(String id) =>
       commit(returnAsset(state!, id, now: timestamp()));
 
-  /// Adds [line] under the item's notes; nothing else changes.
-  Future<void> appendNote(String id, String line) {
-    final a = state!.assets.firstWhere((a) => a.id == id);
-    return commit(
-      saveAsset(
-        state!,
-        a.copyWith({
-          'notes': a.notes.isEmpty ? line : '${a.notes}\n$line',
-          'updatedAt': timestamp(),
-        }),
-      ),
-    );
-  }
-
   Future<void> restock(String id) =>
       commit(restockAsset(state!, id, today(), now: timestamp()));
 
-  /// Adds a backup's items and boxes; any repeated ID rejects the whole merge.
+  /// Adds a backup's items, boxes and collections; any repeated ID rejects
+  /// the whole merge.
   Future<void> merge(InventoryLibrary incoming) => _write(
     InventoryLibrary(
       validateKeepState({
-        'version': 1,
+        'version': keepStateVersion,
+        'collections': [
+          ...state!.collections.map((c) => c.toJson()),
+          ...incoming.state.collections.map((c) => c.toJson()),
+        ],
         'assets': [
           ...state!.assets.map((a) => a.toJson()),
           ...incoming.state.assets.map((a) => a.toJson()),

@@ -8,14 +8,18 @@ part 'src/labels.dart';
 part 'src/value.dart';
 part 'src/csv.dart';
 part 'src/runout.dart';
+part 'src/collections.dart';
 
 const keepAssetLimit = 5000, keepBoxLimit = 500, keepBackupBytes = 8000000;
 
 /// Version 2 adds an optional purchase price and its currency to each item.
 /// Version 3 adds the days an item was bought again (`restocks`), which
-/// the run-out estimate learns from. Versions 1 and 2 still load.
-const keepStateVersion = 3;
-const keepStateVersions = [1, 2, keepStateVersion];
+/// the run-out estimate learns from. Version 4 adds collections (an item
+/// can be in several; it is never copied), item profiles, wishlist states,
+/// more photos and custom fields; every new field is optional, so versions
+/// 1–3 load unchanged.
+const keepStateVersion = 4;
+const keepStateVersions = [1, 2, 3, keepStateVersion];
 String _now() => DateTime.fromMillisecondsSinceEpoch(
   DateTime.now().millisecondsSinceEpoch,
   isUtc: true,
@@ -145,6 +149,7 @@ class InventoryAsset {
         throw const FormatException('Duplicate receipt IDs');
       r['receipts'] = List<InventoryReceipt>.unmodifiable(receipts);
     }
+    _collectorFields(a, r);
     if ((r['warrantyUntil'] as String).isNotEmpty &&
         (r['purchasedOn'] as String).isNotEmpty &&
         (r['warrantyUntil'] as String).compareTo(r['purchasedOn'] as String) <
@@ -193,6 +198,38 @@ class InventoryAsset {
   List<String> get restocks => (_data['restocks'] as List<String>?) ?? const [];
   List<InventoryReceipt> get receipts =>
       (_data['receipts'] as List<InventoryReceipt>?) ?? const [];
+
+  /// Which fields the item shows: asset (the default), collectible,
+  /// consumable or custom. Values of hidden fields are kept.
+  String get profile => _data['profile'] ?? 'asset';
+
+  /// owned (the default), ordered or wanted (the wishlist).
+  String get status => _data['status'] ?? 'owned';
+  bool get owned => status == 'owned';
+
+  /// '', low, medium or high; for the wishlist.
+  String get priority => _data['priority'] ?? '';
+
+  /// Collections the item is in, by id. The item itself is never copied.
+  List<String> get collections =>
+      (_data['collections'] as List<String>?) ?? const [];
+  String get series => _data['series'] ?? '';
+  String get number => _data['number'] ?? '';
+  String get variant => _data['variant'] ?? '';
+  String get edition => _data['edition'] ?? '';
+  String get condition => _data['condition'] ?? '';
+  String get link => _data['link'] ?? '';
+
+  /// What the person means to spend on a wanted item, with its currency.
+  String get budget => _data['budget'] ?? '';
+  String get budgetCurrency => _data['budgetCurrency'] ?? '';
+
+  /// More photos after the cover ([photoUri]), in order.
+  List<String> get photos => (_data['photos'] as List<String>?) ?? const [];
+
+  /// The person's own fields (key → text), e.g. "scale" → "1/7".
+  Map<String, String> get fields =>
+      (_data['fields'] as Map<String, String>?) ?? const {};
   Map<String, dynamic> toJson() => {
     ..._data,
     if (_data.containsKey('receipts'))
@@ -232,15 +269,19 @@ class InventoryBox {
 class KeepState {
   final List<InventoryAsset> assets;
   final List<InventoryBox> boxes;
+  final List<InventoryCollection> collections;
   KeepState({
     Iterable<InventoryAsset> assets = const [],
     Iterable<InventoryBox> boxes = const [],
+    Iterable<InventoryCollection> collections = const [],
   }) : assets = List.unmodifiable(assets),
-       boxes = List.unmodifiable(boxes);
+       boxes = List.unmodifiable(boxes),
+       collections = List.unmodifiable(collections);
   Map<String, Object?> toJson() => {
     'version': keepStateVersion,
     'assets': assets.map((a) => a.toJson()).toList(),
     'boxes': boxes.map((b) => b.toJson()).toList(),
+    'collections': collections.map((c) => c.toJson()).toList(),
   };
 }
 
@@ -263,7 +304,8 @@ KeepState validateKeepState(Object? value) {
     throw const FormatException('Duplicate inventory IDs');
   if (assets.any((a) => a.boxId.isNotEmpty && !boxIds.contains(a.boxId)))
     throw const FormatException('Asset refers to missing box');
-  return KeepState(assets: assets, boxes: boxes);
+  final collections = _collections(r['collections'], assets);
+  return KeepState(assets: assets, boxes: boxes, collections: collections);
 }
 
 InventoryAsset createAsset({
@@ -304,6 +346,7 @@ KeepState saveAsset(KeepState state, InventoryAsset asset) =>
                 .toList()
           : [...state.assets.map((a) => a.toJson()), asset.toJson()],
       'boxes': state.boxes.map((b) => b.toJson()).toList(),
+      'collections': _collectionsJson(state),
     });
 
 /// Adds or replaces several items in one change: all of them, or none.
@@ -316,6 +359,7 @@ KeepState saveAssets(KeepState state, Iterable<InventoryAsset> assets) {
       for (final a in incoming.values) a.toJson(),
     ],
     'boxes': state.boxes.map((b) => b.toJson()).toList(),
+    'collections': _collectionsJson(state),
   });
 }
 
@@ -326,6 +370,14 @@ KeepState removeAsset(KeepState state, String id) => validateKeepState({
       .map((a) => a.toJson())
       .toList(),
   'boxes': state.boxes.map((b) => b.toJson()).toList(),
+  // A removed item leaves its collections' order and cover.
+  'collections': [
+    for (final c in state.collections)
+      c.copyWith({
+        'order': c.order.where((o) => o != id).toList(),
+        if (c.coverAssetId == id) 'coverAssetId': '',
+      }).toJson(),
+  ],
 });
 KeepState saveBox(KeepState state, InventoryBox box) => validateKeepState({
   'version': keepStateVersion,
@@ -335,6 +387,7 @@ KeepState saveBox(KeepState state, InventoryBox box) => validateKeepState({
             .map((b) => b.id == box.id ? box.toJson() : b.toJson())
             .toList()
       : [...state.boxes.map((b) => b.toJson()), box.toJson()],
+  'collections': _collectionsJson(state),
 });
 KeepState removeBox(KeepState state, String id) => validateKeepState({
   'version': keepStateVersion,
@@ -344,6 +397,7 @@ KeepState removeBox(KeepState state, String id) => validateKeepState({
       )
       .toList(),
   'boxes': state.boxes.where((b) => b.id != id).map((b) => b.toJson()).toList(),
+  'collections': _collectionsJson(state),
 });
 InventoryAsset _asset(KeepState state, String id) => state.assets.firstWhere(
   (a) => a.id == id,
@@ -450,9 +504,11 @@ KeepState _stripPaths(KeepState state) => KeepState(
     (a) => a.copyWith({
       'photoUri': '',
       if (a.toJson().containsKey('receipts')) 'receipts': [],
+      if (a.toJson().containsKey('photos')) 'photos': [],
     }),
   ),
   boxes: state.boxes,
+  collections: state.collections,
 );
 String exportKeepBackup(KeepState state) {
   final source = const JsonEncoder.withIndent(

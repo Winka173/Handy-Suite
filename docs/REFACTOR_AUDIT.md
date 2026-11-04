@@ -1,0 +1,194 @@
+# Refactor audit: 14 app (bắt đầu 2026-11-04)
+
+Quyết định sản phẩm: [PRODUCT_DECISIONS_2026_11](PRODUCT_DECISIONS_2026_11.md).
+Mức sẵn sàng phát hành: [RELEASE_READINESS](RELEASE_READINESS.md).
+
+Tài liệu này ghi **baseline đo từ source** (không lấy từ spec), quyết định cho từng
+mục, và trạng thái thực hiện. Cột Trạng thái chỉ đổi khi có code + test trong repo:
+
+- `DONE`: đã làm và có test chạy được trên máy (host); chưa phải thiết bị thật.
+- `TODO`: chưa làm.
+- `HAS`: baseline đã đáp ứng quyết định, không cần sửa.
+- `BLOCKED`: thiếu công cụ/quyền/nền tảng; ghi lý do.
+
+## Baseline kỹ thuật
+
+- Monorepo Dart pub workspace + melos; 14 app trong `apps/`, 27 gói trong
+  `packages/` (engine thuần Dart, adapter nền tảng, `handy_ui` kit).
+- Forms (`apps/handy_forms`, `packages/handy_forms_engine`) và Widget
+  (`apps/handy_widget`, `packages/handy_widget_engine`) **chưa được commit**;
+  chúng thuộc một phiên làm việc khác. Việc sửa code hai app này chờ phiên đó
+  commit, để không trộn công việc của hai phiên (xem mục Forms, Widget).
+- Kiểm thử baseline: `dart run melos run test --no-select` chạy ngày 2026-11-04;
+  kết quả ghi ở cuối tài liệu.
+- Chưa có thiết bị Android thật, chưa có macOS/Xcode: mọi mục native ghi
+  `BLOCKED` cho tới khi có môi trường.
+
+## Thứ tự thực hiện
+
+| Lát | Nội dung | Trạng thái |
+| --- | --- | --- |
+| S0 | Audit, quyết định, baseline test, release readiness | DONE |
+| S1 | Việc bỏ/ẩn nhỏ, giữ dữ liệu: Docs QR → Thử nghiệm; Keep bỏ Đo bằng ảnh; hợp đồng màu Boards | DONE |
+| S2a | Keep Collections: dữ liệu v4 trong engine (nhiều-nhiều, hồ sơ món, wishlist, completion, ảnh phụ, trường riêng) + sao lưu ZIP | DONE |
+| S2b | Keep Collections: giao diện (4 lối vào, gallery, mẫu, wishlist → đã có, demo gỡ được) | TODO |
+| S2c | Keep: tách ảnh khỏi tệp thư viện JSON 16 MB (cần cho bộ sưu tập nhiều ảnh) | TODO |
+| S3 | Trip: thư viện mẫu tem, Bộ sưu tập tem trong Passport, tạo tem một chạm sau lượt ghé | TODO |
+| S4 | Card: thư viện mẫu lớn (120–200 thiết kế khác nhau thật), contact sheet, kiểm tra trùng | TODO |
+| S5 | Media: thư viện nền/khung/thẻ hướng dẫn 9:16 cho ảnh chụp màn hình | TODO |
+| S6 | Tools: Gần đây/Ghim, preset VAT/giảm giá/% thay đổi; nhóm công cụ theo tình huống | TODO |
+| S7 | Recall demo deck; Habit 20–40 preset; Spend lặp giao dịch/yêu thích | TODO |
+| S8 | Dev: lỗi JSON theo dòng/cột, copy JSON pointer, lịch sử request có che | TODO |
+| S9 | Boards: bỏ người phụ trách/bình luận khỏi UI mặc định, mẫu bảng | TODO |
+| S10 | Forms, Widget (sau khi phiên kia commit) | BLOCKED |
+| S11 | Native Android/iOS, store, Ads/IAP, a11y; tài liệu cuối | BLOCKED (thiết bị) |
+
+## Từng app
+
+### Tools
+
+| Mục | Quyết định | Baseline | Trạng thái |
+| --- | --- | --- | --- |
+| Bàn làm việc gõ là ra kết quả, máy tính, %, đơn vị, lương, ngày, VietQR, chia hóa đơn, dọn chữ, đọc số | KEEP_CORE | Có; một màn "bàn", danh mục Ctrl K | HAS |
+| Phụ đề, bốc thăm, âm lịch, mật khẩu, đo bằng ảnh, sổ tính | KEEP_ADVANCED | Có, nằm trong danh mục cùng cấp | TODO (nhóm "Thêm") |
+| Ghim | ADD | Có (`pinned` trong catalog) | HAS |
+| Gần đây, sao chép một chạm, lịch sử tính (opt-in), preset VAT/giảm hai lần/% thay đổi | ADD | Chưa | TODO |
+
+### Docs
+
+| Mục | Quyết định | Baseline | Trạng thái |
+| --- | --- | --- | --- |
+| Quét, cắt, OCR → TXT/MD/DOCX, PDF gộp/tách/xoay/ký/đánh số/nén | KEEP_CORE | Có | HAS |
+| Markdown, in hai mặt, thư viện tệp UTF-8 | KEEP_ADVANCED | Có, Markdown là ô bắt đầu thứ hai | TODO (hạ cấp) |
+| Gửi tệp bằng QR chạy | RETIRE/FREEZE: Thử nghiệm, mặc định tắt | Ô dưới lưới bắt đầu | DONE (S1) |
+| Giới hạn 50 tệp đã giữ | Nới theo tài nguyên thật | `reader.dart`: 50 tài liệu | TODO (đổi định dạng lưu cần migration) |
+| Preset quét (giấy/hóa đơn/bảng), tên tệp gợi ý từ OCR đã xác nhận, thao tác PDF hàng loạt | ADD | Chưa | TODO |
+
+### Media
+
+| Mục | Quyết định | Baseline | Trạng thái |
+| --- | --- | --- | --- |
+| Chú thích, hướng dẫn, sửa ảnh nhanh, nối ảnh, che nhạy cảm có duyệt | KEEP_CORE | Có | HAS |
+| GIF/HTML/Markdown, ZIP dự án | KEEP_ADVANCED | Có | TODO (hạ cấp định dạng ít dùng) |
+| Quay màn hình iOS ghi đúng là "trong app" | RETIRE nhãn sai | FUNCTIONS đã ghi "nội dung trong app" | HAS (kiểm lại chuỗi UI ở S5) |
+| Thư viện nền/khung/thẻ 9:16/preset số bước | ADD | 6 màu nền phẳng + khung điện thoại/trình duyệt | TODO |
+
+### Dev
+
+| Mục | Quyết định | Baseline | Trạng thái |
+| --- | --- | --- | --- |
+| JSON, JWT (chỉ giải mã), Base64/URL, regex, thời gian, hash, UUID, request, cURL | KEEP_CORE | Có; 22 công cụ | HAS |
+| HMAC, hệ cơ số, cron 6 trường | KEEP_ADVANCED | Cùng cấp | TODO |
+| Lỗi JSON theo dòng/cột, tìm nhanh trên cây, copy JSON pointer, lịch sử request opt-in có che | ADD | Chưa có vị trí lỗi | TODO |
+
+### Keep
+
+| Mục | Quyết định | Baseline | Trạng thái |
+| --- | --- | --- | --- |
+| Hồ sơ món, cho mượn, thùng, QR, bảo hành, giá trị, sao lưu | KEEP_CORE | Có (`handy_inventory`, dữ liệu v3) | HAS |
+| Dự đoán sắp hết | KEEP_ADVANCED (hồ sơ Tiêu hao) | Hiện trên "Cần để ý" mặc định | TODO |
+| Đo bằng ảnh | RETIRE khỏi Keep | Menu món + "Thêm vào ghi chú" | DONE (S1) |
+| Collections, mẫu, hồ sơ động, wishlist, completion, nhiều ảnh/món, demo | ADD P0 | Không có | Dữ liệu DONE (S2a); UI TODO (S2b) |
+| Lưu ảnh | Rủi ro | Cả thư viện (dữ liệu + ảnh base64) là một JSON tối đa 16 MB; vài chục món có ảnh là chạm trần | TODO (S2c) |
+
+### Recall
+
+| Mục | Quyết định | Baseline | Trạng thái |
+| --- | --- | --- | --- |
+| SRS, cloze, đảo chiều, che ảnh, Anki, CSV | KEEP_CORE | Có | HAS |
+| Chép chính tả, TTS từng mặt, dán ghi chú | KEEP_ADVANCED | Có | HAS (đã ở menu phụ) |
+| Demo deck không lẫn thống kê thật, lọc thẻ khó, ôn lại thẻ quên | ADD | Chưa | TODO |
+
+### Bookmark
+
+| Mục | Quyết định | Baseline | Trạng thái |
+| --- | --- | --- | --- |
+| Chia sẻ vào, Chưa xếp, bộ sưu tập, trùng, tìm, mở link gốc | KEEP_CORE | Có | HAS |
+| Bản đọc offline, Tập trung, kiểm tra link, Bộ lọc đã lưu | KEEP_ADVANCED | Có | HAS |
+| Giới hạn hàng loạt có huỷ/giãn cách | DE-SCOPE mặc định không giới hạn | Đã có: 200 bản đọc/lượt, 500 link/lượt, ≥ 2 s mỗi host, Dừng | HAS |
+| Thẻ ảnh/dòng, gộp trùng có duyệt, xuất bộ sưu tập | ADD | Có thẻ/dòng; gộp trùng thủ công | TODO |
+
+### Spend
+
+| Mục | Quyết định | Baseline | Trạng thái |
+| --- | --- | --- | --- |
+| Ghi một dòng, còn tiêu được, tài khoản, chuyển khoản/hoàn tiền/thẻ, ngân sách, định kỳ, sao kê, BigInt | KEEP_CORE | Có | HAS |
+| Kịch bản giả định | RETIRE (đã bỏ 2026-11-03, dữ liệu giữ) | Có | HAS |
+| Lặp giao dịch một chạm, giao dịch yêu thích, giải thích đối chiếu | ADD | "Dùng làm mẫu" qua menu sổ | TODO |
+
+### Habit
+
+| Mục | Quyết định | Baseline | Trạng thái |
+| --- | --- | --- | --- |
+| Check-in, lịch linh hoạt, chuỗi, kỳ nghỉ, nhắc, quy trình, nhìn lại tuần | KEEP_CORE | Có | HAS |
+| 20–40 preset thói quen/quy trình theo nhóm | ADD | `routineTemplates()` có mẫu quy trình; chưa có preset thói quen | TODO |
+
+### Trip
+
+| Mục | Quyết định | Baseline | Trạng thái |
+| --- | --- | --- | --- |
+| Lịch trình, đã ghé một chạm, đặt chỗ, hành lý, chi tiêu, nhật ký, Passport, sổ kỷ niệm | KEEP_CORE | Có | HAS |
+| **Xưởng làm tem** | KEEP + nâng cấp (ngoại lệ) | 4 dáng × 5 màu mực, chữ vòng, PNG/A4, từ Passport | HAS (giữ) |
+| Thư viện 30–60 mẫu tem khác nhau thật, Bộ sưu tập tem, tạo từ lượt ghé | ADD | Chưa | TODO (S3) |
+| GPX/KML, replay, so sánh chuyến | Không đưa lại | Đã bỏ | HAS |
+
+### Boards
+
+| Mục | Quyết định | Baseline | Trạng thái |
+| --- | --- | --- | --- |
+| Khối danh mục, Kanban/Danh sách/Hôm nay/Lịch, checklist, hạn, lặp, mẫu | KEEP_CORE | Có | HAS |
+| Phụ thuộc, WIP, trường tùy chỉnh | KEEP_ADVANCED | Có | HAS |
+| Người phụ trách, luồng bình luận | RETIRE khỏi UI cá nhân | Có trong chi tiết việc, bộ lọc, xuất | TODO (S9) |
+| Màu chàm trong hợp đồng cũ | Sửa tài liệu | `UX_REDESIGN.md` ghi #6366F1 | DONE (S1) |
+
+### Card
+
+| Mục | Quyết định | Baseline | Trạng thái |
+| --- | --- | --- | --- |
+| Canvas, lớp, bắt dính, chữ/ảnh/hình/QR, nhiều mặt, hồ sơ, xuất | KEEP_CORE | Có | HAS |
+| Chữ ký email, trang HTML, dấu cắt | KEEP_ADVANCED | Có | TODO (hạ cấp) |
+| 120–200 mẫu khác nhau thật, thư viện tài nguyên, gallery, đổi màu một chạm | ADD | 11 mẫu | TODO (S4) |
+
+### Forms, Widget
+
+Chưa commit, thuộc phiên khác. Các quyết định trong master prompt (Forms: hạ
+quy trình/tự động hóa/kiosk xuống tùy chọn, `HandyBrand.forms`, lịch hồ sơ theo
+truy vấn thật; Widget: luồng 4 bước, kiểm duyệt trùng hình ảnh, hướng dẫn đặt
+widget) được ghi lại ở đây và thực hiện ở S10 khi mã nguồn đã có trong git.
+
+## Nhật ký thực hiện
+
+### S1 (2026-11-04)
+
+- Docs: "Gửi sang máy khác" chỉ hiện khi bật Cài đặt → Thử nghiệm (mặc định tắt);
+  đường dẫn `/transfer` vẫn mở được để không gãy link. Không có dữ liệu lưu nào
+  bị ảnh hưởng (tính năng không lưu lịch sử).
+- Keep: bỏ "Đo bằng ảnh" khỏi menu món; ghi chú "Đo bằng ảnh: ≈ …" đã ghi vẫn
+  nằm nguyên trong ghi chú, xem/sửa/xuất như văn bản.
+- Boards: hợp đồng thiết kế ghi màu #A61C8E.
+
+### S2a (2026-11-04)
+
+- `handy_inventory` lên dữ liệu phiên bản 4: `collections` (tối đa 200; tên,
+  loại, màu nhận diện, ảnh bìa, mục tiêu do người dùng đặt, thứ tự riêng) và
+  các trường tuỳ chọn của món: `profile`, `status` (owned/ordered/wanted),
+  `priority`, `collections`, `series`/`number`/`variant`/`edition`/`condition`,
+  `link`, `budget` + tiền tệ, `photos` (11 ảnh phụ), `fields` (40 trường riêng).
+- Món đồ là bản ghi duy nhất: bộ sưu tập chỉ tham chiếu, xoá bộ sưu tập không xoá
+  món, xoá món dọn thứ tự và ảnh bìa. Món đang muốn/đang đặt không cho mượn được.
+  `markOwned` chuyển wishlist thành đã có trên cùng ID.
+- ZIP mang ảnh phụ (vai trò `gallery`, giữ thứ tự); bản sao lưu JSON bỏ đường dẫn
+  ảnh phụ như ảnh bìa. Gộp bản sao lưu trong app gộp cả bộ sưu tập.
+- 10 loại bộ sưu tập: figure, thẻ, sách/truyện, game, board game, LEGO/mô hình,
+  đồng hồ, thiết bị, đồ máy ảnh, khác; mỗi loại gợi ý vài trường riêng. Không có
+  danh mục "chính thức" nào được dựng sẵn.
+- Test: `packages/handy_inventory/test/collections_test.dart` (8 ca: đọc dữ liệu
+  v3 không đổi, nhiều-nhiều, wishlist, completion, giữ giá trị ẩn, từ chối tham
+  chiếu sai, ZIP khứ hồi).
+
+## Kết quả test nền (2026-11-04, trước S1)
+
+`dart run melos run test --no-select` trên Windows: **41/41 gói SUCCESS**, gồm cả
+`handy_forms`, `handy_forms_engine`, `handy_widget`, `handy_widget_engine` (bản
+chưa commit trên máy). Sau S1/S2a: `handy_docs` (transfer 6/6), `handy_keep`
+(64/64), `handy_inventory` (61/61) chạy lại đều đạt.

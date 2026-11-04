@@ -160,7 +160,7 @@ not built. Stored designs are not encrypted. Nothing has run on a device yet;
 see `docs/HANDY_CARD_PLATFORM_MATRIX.md`.
 
 Round 3 features (2026-11-03), host-tested only, none run on a device yet:
-Tools/Keep "Đo bằng ảnh" is an estimate that holds only for flat things in
+Tools "Đo bằng ảnh" (Keep's copy was removed on 2026-11-04) is an estimate that holds only for flat things in
 the reference's plane, photographed square on (no perspective correction).
 Recall dictation needs a system voice for the deck's answer language and
 skips cloze and picture cards. Docs' Word export is minimal Office Open XML
@@ -170,7 +170,8 @@ the last sheet is taken out by hand; page numbers need the Android, iOS or
 Windows app. Media's screenshot frame stops at 16 Mpx. Keep's moving boxes
 were kept on purpose: they already show as places in the same list.
 
-Docs "Gửi sang máy khác" (2026-11-03) is host-tested only: the frames, the
+Docs "Gửi sang máy khác" (2026-11-03; experimental and off by default since
+2026-11-04) is host-tested only: the frames, the
 checksum and both screens pass with a camera fed by hand, but no phone has
 read the codes off a real screen yet, so the 6 frames a second and the
 480-byte frame are estimates. Up to 100 KB; receiving needs the Android or

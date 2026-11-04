@@ -1629,8 +1629,9 @@ frontend-ui-engineering: một câu hỏi, một hành động chính, đủ tr�
 
 ## Handy Boards design contract - 2026-11-02
 
-Draw: editorial-greeting, seed 1051914986; no redraw. Palette/type retained from
-suite: indigo #6366F1, bundled Geist/Bricolage with Vietnamese. Face: workspace/
+Draw: editorial-greeting, seed 1051914986; no redraw. Hue magenta #A61C8E, face
+Plus Jakarta Sans (`HandyBrand.boards`); the indigo #6366F1 and Geist/Bricolage of
+the first draft were replaced on 2026-11-02 and indigo is banned. Face: workspace/
 board name as a working heading, figures regular weight, tonal panels. Signature:
 category blocks with a persistent identity strip, progress fraction and independent
 status marks. Identity colors are data, never decorative rainbow chrome.
@@ -1935,3 +1936,15 @@ Docs because it moves a file, the thing Docs holds; Tools works on text.
   network.
 - Reject: a progress ring, a fake "connecting" step, a transfer history,
   sending folders or several files, compressing behind the user's back.
+
+## Refactor 2026-11 · lát S1: ẩn và bỏ (hợp đồng)
+
+Quyết định: [PRODUCT_DECISIONS_2026_11](PRODUCT_DECISIONS_2026_11.md).
+
+- Docs "Gửi sang máy khác": chỉ hiện dòng dưới lưới bắt đầu khi bật công tắc
+  "Thử nghiệm: gửi tệp bằng QR chạy" trong Cài đặt (mặc định tắt). Bàn làm việc
+  mặc định chỉ còn bốn lối bắt đầu và tệp đã giữ. `#/transfer` vẫn mở trang để
+  link cũ không gãy. Trạng thái: tắt (không dòng), bật (dòng như trước).
+- Keep: menu của một món không còn "Đo bằng ảnh"; đo bằng ảnh là việc của Tools.
+  Ghi chú đo đã có vẫn là văn bản thường trong ghi chú.
+- Reject: hộp thoại "tính năng đã bỏ", nút mờ không bấm được, tự xoá ghi chú đo cũ.

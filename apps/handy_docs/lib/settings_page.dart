@@ -5,7 +5,12 @@ import 'package:handy_storage/recovery.dart';
 import 'package:handy_ui/kit.dart';
 import 'scope.dart';
 
-const docsTools = {'md-html', 'md-text', 'md-source'};
+const docsTools = {'md-html', 'md-text', 'md-source', qrTransferFlag};
+
+/// Kept in the favourites list when "send a file by moving QR codes" is
+/// switched on. Experimental and off by default since 2026-11-04: it has
+/// not been tried with a real receiving phone.
+const qrTransferFlag = 'qr-transfer';
 
 /// Steps a saved recipe may hold. Text workflows left Docs on 2026-11-03
 /// (Tools transforms text); recipes saved before then still load and are
@@ -84,6 +89,45 @@ class DocsSettingsPage extends StatelessWidget {
                 files: scope.files,
               ),
             ),
+          ),
+        ],
+      ),
+      HandySettingsSection(
+        title: tr(context, 'Experimental', 'Thử nghiệm'),
+        description: tr(
+          context,
+          'Not tried on real phones yet; may not work in every light or on every camera.',
+          'Chưa thử trên điện thoại thật; có thể chưa chạy được với mọi ánh sáng, mọi camera.',
+        ),
+        children: [
+          StatefulBuilder(
+            builder: (context, setState) {
+              final on = read().favorites.contains(qrTransferFlag);
+              return SwitchListTile(
+                key: const Key('experimental-qr-transfer'),
+                value: on,
+                title: Text(
+                  tr(
+                    context,
+                    'Send a file by moving QR codes',
+                    'Gửi tệp bằng mã QR chạy',
+                  ),
+                ),
+                subtitle: Text(
+                  tr(
+                    context,
+                    'Shows "Send to another device" on the desk',
+                    'Hiện "Gửi sang máy khác" trên bàn làm việc',
+                  ),
+                ),
+                onChanged: (v) async {
+                  final now = read().favorites.toSet();
+                  v ? now.add(qrTransferFlag) : now.remove(qrTransferFlag);
+                  await save(read().copyWith(favorites: now));
+                  setState(() {});
+                },
+              );
+            },
           ),
         ],
       ),

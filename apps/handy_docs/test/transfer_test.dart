@@ -3,10 +3,12 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:handy_docs/app.dart';
+import 'package:handy_docs/settings_page.dart' show qrTransferFlag;
 import 'package:handy_docs/transfer/qr_view.dart';
 import 'package:handy_docs/transfer/transfer_page.dart';
 import 'package:handy_docs_engine/handy_docs_engine.dart';
 import 'package:handy_files/handy_files.dart';
+import 'package:handy_storage/handy_storage.dart';
 import 'package:handy_ui/kit.dart';
 import 'helpers.dart';
 
@@ -54,11 +56,31 @@ String progress(WidgetTester tester) =>
     tester.widget<Text>(find.byKey(const Key('transfer-progress'))).data!;
 
 void main() {
+  testWidgets('QR transfer is experimental: off until switched on', (
+    tester,
+  ) async {
+    final docs = await start(tester);
+    expect(find.byKey(const Key('desk-transfer')), findsNothing);
+    await go(tester, '/settings');
+    await tapKey(tester, 'experimental-qr-transfer');
+    expect(docs.prefs.value.favorites, contains(qrTransferFlag));
+    await back(tester);
+    expect(find.byKey(const Key('desk-transfer')), findsOneWidget);
+    // Old links still open the page.
+    await go(tester, '/transfer');
+    expect(find.byType(TransferPage), findsOneWidget);
+  });
+
   testWidgets('the desk opens Send on a device without a camera', (
     tester,
   ) async {
     debugDefaultTargetPlatformOverride = TargetPlatform.windows;
-    await start(tester);
+    final docs = Docs();
+    docs.prefs.value = HandyPreferences(
+      locale: 'en',
+      favorites: const [qrTransferFlag],
+    );
+    await start(tester, docs: docs);
     await tapKey(tester, 'desk-transfer');
     expect(find.byKey(const Key('transfer-send-side')), findsOneWidget);
     await tapKey(tester, 'transfer-receive');

@@ -88,12 +88,6 @@ class ItemView extends StatelessWidget {
                   key: const Key('item-restock-menu'),
                 ),
                 HandyMenuItem(
-                  Icons.straighten,
-                  tr(context, 'Measure from a photo', 'Đo bằng ảnh'),
-                  () => scope.measure(context, a),
-                  key: const Key('item-measure'),
-                ),
-                HandyMenuItem(
                   Icons.qr_code_2,
                   tr(context, 'Label and record', 'Nhãn QR và hồ sơ'),
                   () => scope.label(context, InventoryLabel('item', a.id)),

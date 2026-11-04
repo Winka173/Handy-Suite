@@ -1,5 +1,8 @@
+import 'package:flutter/foundation.dart';
+import 'package:handy_storage/handy_storage.dart';
 import 'package:handy_ui/kit.dart';
 import '../scope.dart';
+import '../settings_page.dart' show qrTransferFlag;
 import '../ui/paper.dart';
 import 'desk_search.dart';
 import 'start_grid.dart';
@@ -10,7 +13,10 @@ import 'work_card.dart';
 /// begin?"
 class DeskPage extends StatelessWidget {
   final DocsScope scope;
-  const DeskPage({super.key, required this.scope});
+
+  /// The app's settings, read for the experimental QR transfer row.
+  final ValueListenable<HandyPreferences?>? preferences;
+  const DeskPage({super.key, required this.scope, this.preferences});
 
   void go(BuildContext context, String place) {
     if (place == 'open') {
@@ -35,6 +41,7 @@ class DeskPage extends StatelessWidget {
     ),
     body: ListenableBuilder(
       listenable: Listenable.merge([
+        ?preferences,
         scope.scan,
         scope.draft,
         scope.draft.source,
@@ -106,29 +113,33 @@ class DeskPage extends StatelessWidget {
                     camera: scope.scan.camera.supported,
                     onStart: (id) => go(context, id),
                   ),
-                  const SizedBox(height: HandySpace.m),
-                  // Moving a file is not a way to begin work, so it sits
-                  // under the grid as one quiet row.
-                  HandyGroup(
-                    children: [
-                      HandyTile(
-                        key: const Key('desk-transfer'),
-                        icon: Icons.qr_code_2,
-                        title: tr(
-                          context,
-                          'Send to another device',
-                          'Gửi sang máy khác',
+                  // Experimental, off by default: moving a file is not a way
+                  // to begin work, so when on it sits under the grid as one
+                  // quiet row.
+                  if (preferences?.value?.favorites.contains(qrTransferFlag) ==
+                      true) ...[
+                    const SizedBox(height: HandySpace.m),
+                    HandyGroup(
+                      children: [
+                        HandyTile(
+                          key: const Key('desk-transfer'),
+                          icon: Icons.qr_code_2,
+                          title: tr(
+                            context,
+                            'Send to another device',
+                            'Gửi sang máy khác',
+                          ),
+                          subtitle: tr(
+                            context,
+                            'A small file as moving QR codes, no network',
+                            'Tệp nhỏ thành mã QR chạy, không cần mạng',
+                          ),
+                          navigates: true,
+                          onTap: () => go(context, 'transfer'),
                         ),
-                        subtitle: tr(
-                          context,
-                          'A small file as moving QR codes, no network',
-                          'Tệp nhỏ thành mã QR chạy, không cần mạng',
-                        ),
-                        navigates: true,
-                        onTap: () => go(context, 'transfer'),
-                      ),
-                    ],
-                  ),
+                      ],
+                    ),
+                  ],
                   if (recent.isNotEmpty) ...[
                     const SizedBox(height: HandySpace.xl),
                     HandySection(

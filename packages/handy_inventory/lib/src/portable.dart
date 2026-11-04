@@ -8,6 +8,9 @@ class PortableInventoryFile {
   final String assetId, path, role, mime;
   final InventoryReceipt? receipt;
   final Uint8List bytes;
+
+  /// Place of a `gallery` photo among the item's more photos.
+  final int index;
   PortableInventoryFile({
     required this.assetId,
     required this.path,
@@ -15,6 +18,7 @@ class PortableInventoryFile {
     required this.mime,
     required this.bytes,
     this.receipt,
+    this.index = 0,
   });
 }
 
@@ -28,11 +32,16 @@ class PortableKeepBundle {
   /// URI in the source archive is trusted and no filesystem write occurs here.
   KeepState materialize(Map<String, String> uris) {
     final assets = {for (final a in state.assets) a.id: a};
+    final gallery = <String, List<(int, String)>>{};
     for (final f in files) {
       final uri = uris[f.path];
       if (uri == null) throw const FormatException('Missing staged asset');
       _localUri(uri, required: true);
       final a = assets[f.assetId]!;
+      if (f.role == 'gallery') {
+        gallery.putIfAbsent(a.id, () => []).add((f.index, uri));
+        continue;
+      }
       assets[a.id] = f.role == 'photo'
           ? a.copyWith({'photoUri': uri})
           : a.copyWith({
@@ -42,10 +51,17 @@ class PortableKeepBundle {
               ],
             });
     }
+    for (final e in gallery.entries) {
+      e.value.sort((x, y) => x.$1.compareTo(y.$1));
+      assets[e.key] = assets[e.key]!.copyWith({
+        'photos': [for (final p in e.value) p.$2],
+      });
+    }
     return validateKeepState(
       KeepState(
         assets: state.assets.map((a) => assets[a.id]!),
         boxes: state.boxes,
+        collections: state.collections,
       ).toJson(),
     );
   }
@@ -89,7 +105,10 @@ PortableKeepBundle parseKeepZip(Uint8List bytes) {
       refs.length > 255)
     throw const FormatException('Unsupported Keep archive');
   final state = validateKeepState(m['state']);
-  if (state.assets.any((a) => a.photoUri.isNotEmpty || a.receipts.isNotEmpty))
+  if (state.assets.any(
+    (a) =>
+        a.photoUri.isNotEmpty || a.receipts.isNotEmpty || a.photos.isNotEmpty,
+  ))
     throw const FormatException('Archive manifest contains device paths');
   final used = <String>{'manifest.json'},
       identities = <String>{},
@@ -106,8 +125,11 @@ PortableKeepBundle parseKeepZip(Uint8List bytes) {
         !_safePath(path) ||
         !used.add(path) ||
         !entries.containsKey(path) ||
-        !['photo', 'receipt'].contains(role))
+        !['photo', 'receipt', 'gallery'].contains(role))
       throw const FormatException('Invalid archive asset reference');
+    final index = r['index'] ?? 0;
+    if (index is! int || index < 0 || index >= keepItemPhotoLimit)
+      throw const FormatException('Invalid photo position');
     var mime = path.endsWith('.png')
         ? 'image/png'
         : path.endsWith('.pdf')
@@ -127,7 +149,7 @@ PortableKeepBundle parseKeepZip(Uint8List bytes) {
     } else if (mime == 'application/pdf') {
       throw const FormatException('Photo must be an image');
     }
-    if (!identities.add('$assetId:$role:${receipt?.id ?? ''}'))
+    if (!identities.add('$assetId:$role:${receipt?.id ?? ''}:$index'))
       throw const FormatException('Duplicate archive reference');
     final data = entries[path]!;
     _signature(data, mime);
@@ -146,6 +168,7 @@ PortableKeepBundle parseKeepZip(Uint8List bytes) {
         mime: mime,
         bytes: Uint8List.fromList(data),
         receipt: receipt,
+        index: index,
       ),
     );
   }
@@ -166,6 +189,7 @@ Uint8List buildKeepZip(KeepState state, Map<String, Uint8List> filesByUri) {
     String mime,
     String role, [
     InventoryReceipt? receipt,
+    int index = 0,
   ]) {
     final input = filesByUri[uri];
     if (input == null || input.length > keepZipAssetBytes)
@@ -187,6 +211,7 @@ Uint8List buildKeepZip(KeepState state, Map<String, Uint8List> filesByUri) {
       'path': path,
       'role': role,
       'sha256': sha256.convert(bytes).toString(),
+      if (role == 'gallery') 'index': index,
       if (receipt != null)
         'receipt': {
           'id': receipt.id,
@@ -205,6 +230,17 @@ Uint8List buildKeepZip(KeepState state, Map<String, Uint8List> filesByUri) {
         'photo',
       );
     for (final r in a.receipts) add(a, r.uri, r.mime, 'receipt', r);
+    for (var i = 0; i < a.photos.length; i++) {
+      final uri = a.photos[i];
+      add(
+        a,
+        uri,
+        uri.toLowerCase().endsWith('.png') ? 'image/png' : 'image/jpeg',
+        'gallery',
+        null,
+        i,
+      );
+    }
   }
   final manifest = utf8.encode(
     jsonEncode({

@@ -89,3 +89,7 @@ vào bàn làm việc và ngày làm việc vào Ngày, Bookmark gộp bộ lọ
 một kiểu sổ kỷ niệm; bỏ what-if của Spend, phát lại hành trình và GPX/KML của
 Trip, Workload của Boards, quy trình chữ của Docs, sắp xếp thủ công của
 Bookmark (dữ liệu cũ vẫn mở được).
+
+Refactor 2026-11 (lát S1, 2026-11-04), xem [REFACTOR_AUDIT](docs/REFACTOR_AUDIT.md):
+Docs "Gửi sang máy khác" thành tính năng thử nghiệm, mặc định tắt; Keep bỏ "Đo
+bằng ảnh" (Tools giữ, ghi chú cũ còn nguyên).

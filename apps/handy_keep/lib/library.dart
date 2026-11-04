@@ -84,6 +84,7 @@ class InventoryLibrary {
   static Set<String> _references(KeepState state) => {
     for (final a in state.assets) ...[
       if (a.photoUri.isNotEmpty) a.photoUri,
+      ...a.photos,
       for (final r in a.receipts) r.uri,
     ],
   };
