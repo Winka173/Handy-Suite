@@ -32,7 +32,7 @@ mục, và trạng thái thực hiện. Cột Trạng thái chỉ đổi khi có
 | S1 | Việc bỏ/ẩn nhỏ, giữ dữ liệu: Docs QR → Thử nghiệm; Keep bỏ Đo bằng ảnh; hợp đồng màu Boards | DONE |
 | S2a | Keep Collections: dữ liệu v4 trong engine (nhiều-nhiều, hồ sơ món, wishlist, completion, ảnh phụ, trường riêng) + sao lưu ZIP | DONE |
 | S2b | Keep Collections: giao diện (4 lối vào, gallery, mẫu, wishlist → đã có, demo gỡ được) | TODO |
-| S2c | Keep: tách ảnh khỏi tệp thư viện JSON 16 MB (cần cho bộ sưu tập nhiều ảnh) | TODO |
+| S2c | Keep: tách ảnh khỏi tệp thư viện JSON 16 MB (cần cho bộ sưu tập nhiều ảnh) | DONE |
 | S3 | Trip: thư viện mẫu tem, Bộ sưu tập tem trong Passport, tạo tem một chạm sau lượt ghé | TODO |
 | S4 | Card: thư viện mẫu lớn (120–200 thiết kế khác nhau thật), contact sheet, kiểm tra trùng | TODO |
 | S5 | Media: thư viện nền/khung/thẻ hướng dẫn 9:16 cho ảnh chụp màn hình | TODO |
@@ -89,7 +89,7 @@ mục, và trạng thái thực hiện. Cột Trạng thái chỉ đổi khi có
 | Dự đoán sắp hết | KEEP_ADVANCED (hồ sơ Tiêu hao) | Hiện trên "Cần để ý" mặc định | TODO |
 | Đo bằng ảnh | RETIRE khỏi Keep | Menu món + "Thêm vào ghi chú" | DONE (S1) |
 | Collections, mẫu, hồ sơ động, wishlist, completion, nhiều ảnh/món, demo | ADD P0 | Không có | Dữ liệu DONE (S2a); UI TODO (S2b) |
-| Lưu ảnh | Rủi ro | Cả thư viện (dữ liệu + ảnh base64) là một JSON tối đa 16 MB; vài chục món có ảnh là chạm trần | TODO (S2c) |
+| Lưu ảnh | Rủi ro | Cả thư viện (dữ liệu + ảnh base64) là một JSON tối đa 16 MB; vài chục món có ảnh là chạm trần | DONE (S2c): ảnh ra kho byte riêng |
 
 ### Recall
 
@@ -192,3 +192,19 @@ widget) được ghi lại ở đây và thực hiện ở S10 khi mã nguồn �
 `handy_forms`, `handy_forms_engine`, `handy_widget`, `handy_widget_engine` (bản
 chưa commit trên máy). Sau S1/S2a: `handy_docs` (transfer 6/6), `handy_keep`
 (64/64), `handy_inventory` (61/61) chạy lại đều đạt.
+
+### S2c (2026-11-04)
+
+- `handy_storage/blobs.dart`: kho byte theo id (`BlobRepository`). Native: một
+  tệp mỗi mục trong `<support>/<namespace>-blobs/`, tên là SHA-256 của id, đầu
+  tệp ghi id và SHA-256 của nội dung, ghi qua tệp tạm rồi đổi tên. Web: CSDL
+  IndexedDB riêng `<namespace>-blobs` (không nâng cấp CSDL cũ). Đọc lại luôn kiểm
+  SHA-256.
+- Keep: tệp thư viện phiên bản 2 chỉ còn dữ liệu; ảnh và hóa đơn nằm trong kho
+  byte. Thứ tự ghi: byte mới → dữ liệu → dọn byte mà chính lần chạy này đã bỏ (ảnh
+  của bản bị đặt lại vẫn còn để hoàn tác). Thư viện v1 nhúng ảnh vẫn đọc được và
+  được chuyển ở lần lưu kế tiếp. Ảnh mất khỏi kho được đếm (`missing`), không làm
+  hỏng việc mở thư viện.
+- Test: `packages/handy_storage/test/blobs_test.dart`,
+  `apps/handy_keep/test/blob_storage_test.dart` (chuyển v1 → v2, 21 MB ảnh,
+  ảnh mất, lỗi ghi ảnh giữ thư viện cũ).

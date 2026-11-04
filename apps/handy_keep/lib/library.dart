@@ -3,18 +3,40 @@ import 'dart:typed_data';
 import 'package:handy_inventory/handy_inventory.dart';
 
 /// Embedded blobs use stable virtual file IDs. They are never dereferenced as OS paths.
+///
+/// Version 1 of the local file embeds every photo and receipt as base64, so
+/// the whole library must fit 16 MB. Version 2 (2026-11-04) keeps only the
+/// data; the bytes live in a [BlobRepository] under the same ids.
 class InventoryLibrary {
   final KeepState state;
   final Map<String, Uint8List> blobs;
-  InventoryLibrary(this.state, Map<String, Uint8List> blobs)
-    : blobs = Map.unmodifiable({
-        for (final e in blobs.entries)
-          e.key: Uint8List.fromList(e.value).asUnmodifiableView(),
-      });
+
+  /// True when read from a version 2 file: [blobs] still has to be filled
+  /// from the blob store.
+  final bool external;
+  InventoryLibrary(
+    this.state,
+    Map<String, Uint8List> blobs, {
+    this.external = false,
+  }) : blobs = Map.unmodifiable({
+         for (final e in blobs.entries)
+           e.key: Uint8List.fromList(e.value).asUnmodifiableView(),
+       });
   factory InventoryLibrary.parse(String text) {
     if (utf8.encode(text).length > 16000000)
       throw const FormatException('Library exceeds 16 MB');
     final raw = jsonDecode(text);
+    if (raw is Map &&
+        raw['format'] == 'handy-keep-local' &&
+        raw['version'] == 2) {
+      if (raw['state'] is! Map)
+        throw const FormatException('Invalid inventory library');
+      return InventoryLibrary(
+        validateKeepState(raw['state']),
+        {},
+        external: true,
+      );
+    }
     if (raw is Map && raw['format'] == 'handy-keep-local') {
       if (raw['version'] != 1 || raw['state'] is! Map || raw['assets'] is! Map)
         throw const FormatException('Invalid inventory library');
@@ -51,6 +73,22 @@ class InventoryLibrary {
         if (refs.contains(e.key)) e.key: e.value,
     });
   }
+
+  /// The version 2 file: data only, the bytes are kept elsewhere.
+  String serializeData() {
+    final text = jsonEncode({
+      'format': 'handy-keep-local',
+      'version': 2,
+      'state': state.toJson(),
+    });
+    if (utf8.encode(text).length > 16000000)
+      throw const FormatException('Library exceeds 16 MB');
+    InventoryLibrary.parse(text);
+    return text;
+  }
+
+  /// Ids of every photo and receipt the data names.
+  Set<String> get references => _references(state);
 
   String serialize() {
     final text = jsonEncode({

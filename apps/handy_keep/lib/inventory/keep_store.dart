@@ -1,6 +1,7 @@
 import 'dart:math';
 import 'package:flutter/foundation.dart';
 import 'package:handy_inventory/handy_inventory.dart';
+import 'package:handy_storage/blobs.dart';
 import 'package:handy_storage/documents.dart';
 import '../library.dart';
 
@@ -23,7 +24,17 @@ class AssetEdit {
 /// then shown, so a failed write leaves the screen and the file as they were.
 class KeepStore extends ChangeNotifier {
   final DocumentRepository documents;
-  KeepStore(this.documents);
+
+  /// Where photo and receipt bytes go; without one they are embedded in the
+  /// document as before (16 MB in all).
+  final BlobRepository? blobs;
+  KeepStore(this.documents, {this.blobs});
+
+  /// Ids already written to [blobs], so a save only writes new bytes.
+  final _stored = <String>{};
+
+  /// Photos or receipts the data names but the blob store no longer has.
+  int missing = 0;
 
   InventoryLibrary? library;
   Object? error;
@@ -35,9 +46,25 @@ class KeepStore extends ChangeNotifier {
     notifyListeners();
     try {
       final raw = await documents.load();
-      library = raw == null
+      var next = raw == null
           ? InventoryLibrary(emptyKeepState(), {})
           : InventoryLibrary.parse(raw);
+      _stored.clear();
+      missing = 0;
+      if (next.external) {
+        final loaded = <String, Uint8List>{};
+        for (final id in next.references) {
+          final bytes = await blobs?.read(id);
+          if (bytes == null) {
+            missing++;
+          } else {
+            loaded[id] = bytes;
+            _stored.add(id);
+          }
+        }
+        next = InventoryLibrary(next.state, loaded);
+      }
+      library = next;
     } catch (e) {
       // A corrupt file is kept as it is; the recovery page handles it.
       error = e;
@@ -45,8 +72,32 @@ class KeepStore extends ChangeNotifier {
     notifyListeners();
   }
 
+  /// New bytes first, then the data that names them, then (best effort)
+  /// the bytes it no longer names. A failure before the data is saved
+  /// leaves the old library whole.
   Future<void> _write(InventoryLibrary next) async {
-    await documents.save(next.serialize());
+    final store = blobs;
+    if (store == null) {
+      await documents.save(next.serialize());
+    } else {
+      for (final e in next.blobs.entries) {
+        if (_stored.contains(e.key)) continue;
+        await store.write(e.key, e.value);
+        _stored.add(e.key);
+      }
+      await documents.save(next.serializeData());
+      // Only bytes this run wrote or read and the data has now dropped:
+      // a library set aside by a reset keeps its photos for undo.
+      final keep = next.references;
+      for (final id in _stored.difference(keep).toList()) {
+        try {
+          await store.delete(id);
+          _stored.remove(id);
+        } catch (_) {
+          // Left-over bytes are harmless; the next save tries again.
+        }
+      }
+    }
     library = next;
     notifyListeners();
   }

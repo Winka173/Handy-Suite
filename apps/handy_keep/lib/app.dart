@@ -3,6 +3,7 @@ import 'package:handy_files/handy_files.dart';
 import 'package:handy_inventory/handy_inventory.dart';
 import 'package:handy_notifications/controller.dart';
 import 'package:handy_notifications/handy_notifications.dart';
+import 'package:handy_storage/blobs.dart';
 import 'package:handy_storage/documents.dart';
 import 'package:handy_storage/handy_storage.dart';
 import 'package:handy_ui/kit.dart';
@@ -30,9 +31,13 @@ class KeepApp extends StatefulWidget {
 
   /// Off in host tests: no folder backups.
   final bool device;
+
+  /// Photo and receipt bytes; the device store when [documents] is too.
+  final BlobRepository? blobs;
   const KeepApp({
     super.key,
     this.documents,
+    this.blobs,
     this.files = const SystemHandyFiles(),
     this.camera,
     this.preferences,
@@ -54,6 +59,9 @@ class _KeepAppState extends State<KeepApp> with WidgetsBindingObserver {
   final prefs = ValueNotifier<HandyPreferences?>(null);
   late final store = KeepStore(
     widget.documents ?? localDocuments('handy-keep', maxBytes: 16000000),
+    blobs:
+        widget.blobs ??
+        (widget.documents == null ? localBlobs('handy-keep') : null),
   );
   late final reminders = widget.reminders ?? ReminderController('keep');
   late final scope = KeepScope(

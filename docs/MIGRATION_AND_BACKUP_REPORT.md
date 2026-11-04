@@ -6,6 +6,7 @@ Mỗi thay đổi dữ liệu ghi: phiên bản, cách đọc dữ liệu cũ, k
 | --- | --- | --- | --- | --- |
 | Docs | QR chạy thành thử nghiệm | Không đổi định dạng; cờ `qr-transfer` trong danh sách favorites của cài đặt | Cài đặt cũ đọc nguyên; tính năng không lưu lịch sử | `apps/handy_docs/test/transfer_test.dart` |
 | Keep | Bỏ "Đo bằng ảnh" | Không đổi | Ghi chú đo cũ là văn bản thường, giữ nguyên | `apps/handy_keep/test/measure_test.dart` |
+| Keep | Tệp thư viện trên máy: ảnh tách ra kho byte | `handy-keep-local` 1 → 2 | v1 (ảnh base64 nhúng) đọc được, chuyển khi lưu lần tới; ID ảnh không đổi | `apps/handy_keep/test/blob_storage_test.dart` |
 | Keep | Bộ sưu tập, hồ sơ món, wishlist, ảnh phụ, trường riêng | Trạng thái Keep 3 → 4 | v1–3 đọc nguyên; món cũ không thêm khoá nào khi ghi lại; ID, QR `handy-keep://item/<id>`, hóa đơn, ảnh bìa không đổi | `packages/handy_inventory/test/collections_test.dart` |
 
 ## Keep 3 → 4
@@ -16,6 +17,7 @@ Mỗi thay đổi dữ liệu ghi: phiên bản, cách đọc dữ liệu cũ, k
   chối ZIP v4 vì số phiên bản, không đọc sai.
 - Hạ cấp: app bản cũ không mở được thư viện v4 (từ chối, không ghi đè). Muốn quay
   lại bản cũ thì xuất ZIP trước.
-- Rủi ro còn mở: thư viện Keep (dữ liệu + ảnh) là một JSON tối đa 16 MB; ZIP tối
-  đa 255 tệp, 28 MB ảnh. Bộ sưu tập nhiều ảnh cần tách lưu ảnh (S2c) trước khi
-  phát hành giao diện bộ sưu tập.
+- Từ S2c ảnh không còn nằm trong JSON 16 MB của thư viện. Giới hạn còn lại nằm ở
+  bản sao lưu ZIP: tối đa 255 tệp, 28 MB ảnh mỗi ZIP.
+- Bản lưu dự phòng (Cài đặt → khôi phục) giữ tệp dữ liệu; ảnh của nó vẫn ở kho
+  byte và không bị dọn khi đặt lại, nên hoàn tác thấy lại ảnh.
