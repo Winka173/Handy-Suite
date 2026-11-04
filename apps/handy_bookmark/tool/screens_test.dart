@@ -396,6 +396,25 @@ void main() {
     await t.pumpAndSettle();
     await shot(t, 'phone-5-select');
   });
+  testWidgets('phone duplicates', (t) async {
+    final c = await boot(t, const Size(390, 844));
+    // Saved again from a chat link, and again from another app.
+    for (final (url, title) in [
+      (
+        'https://vnexpress.net/du-lich/mua-dep-nhat-ha-giang?utm_source=zalo',
+        'Mùa đẹp nhất để đi Hà Giang',
+      ),
+      ('https://github.com/flutter/flutter?utm_medium=share', ''),
+    ]) {
+      await c.quickSave(url, title: title, allowDuplicates: true);
+    }
+    await t.pumpAndSettle();
+    Navigator.of(
+      t.element(find.byType(Scaffold).first),
+    ).pushNamed('/duplicates');
+    await t.pumpAndSettle();
+    await shot(t, 'phone-19-duplicates');
+  });
   testWidgets('phone focus', (t) async {
     await boot(t, const Size(390, 844));
     await tapKey(t, 'place-focus');

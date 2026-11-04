@@ -106,7 +106,7 @@ mục, và trạng thái thực hiện. Cột Trạng thái chỉ đổi khi có
 | Chia sẻ vào, Chưa xếp, bộ sưu tập, trùng, tìm, mở link gốc | KEEP_CORE | Có | HAS |
 | Bản đọc offline, Tập trung, kiểm tra link, Bộ lọc đã lưu | KEEP_ADVANCED | Có | HAS |
 | Giới hạn hàng loạt có huỷ/giãn cách | DE-SCOPE mặc định không giới hạn | Đã có: 200 bản đọc/lượt, 500 link/lượt, ≥ 2 s mỗi host, Dừng | HAS |
-| Thẻ ảnh/dòng, gộp trùng có duyệt, xuất bộ sưu tập | ADD | Có thẻ/dòng; gộp trùng thủ công | TODO |
+| Thẻ ảnh/dòng, gộp trùng có duyệt, xuất bộ sưu tập | ADD | Có thẻ/dòng; gộp trùng thủ công | Gộp trùng có duyệt DONE; thẻ ảnh/dòng HAS; xuất theo bộ sưu tập TODO |
 
 ### Spend
 
@@ -346,3 +346,13 @@ chưa commit trên máy). Sau S1/S2a: `handy_docs` (transfer 6/6), `handy_keep`
   món sưu tầm cùng tên không còn "sắp hết"). Món không có `profile` (mọi dữ liệu trước v4)
   vẫn được đoán, nên không ai mất dự đoán đang thấy. Chỉ đổi quy tắc, không đổi dữ liệu.
 - Test: `packages/handy_inventory/test/runout_test.dart`; inventory 62/62, Keep 72/72.
+
+### Bookmark gộp trùng (2026-11-04)
+
+- Engine `duplicates.dart`: `duplicateGroups` (cùng khóa với nhập), `mergeBookmarks`
+  (giữ bản được chọn, không mất nhãn/ghi chú/bộ sưu tập/số lần mở; chỉ gộp cùng trang).
+- App: `settings/duplicates_page.dart`, route `/duplicates`, ô trong Dữ liệu link khi có
+  trùng. Không đổi schema (SaveLibrary v2).
+- Ảnh: `phone-19-duplicates` theo phong cách báo của Bookmark; sửa số ít "1 link".
+- Test: engine `duplicates_test.dart`, app `duplicates_test.dart`; Bookmark 73/73, engine
+  41/41.

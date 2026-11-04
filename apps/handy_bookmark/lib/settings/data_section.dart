@@ -121,6 +121,26 @@ class SaveDataSection extends StatelessWidget {
                   });
                 },
         ),
+        // Shown only while some link is saved more than once.
+        if (duplicateGroups(c.library!) case final groups
+            when groups.isNotEmpty)
+          HandyTile(
+            key: const Key('save-duplicates'),
+            icon: Icons.merge_type,
+            title: tr(
+              context,
+              groups.length == 1
+                  ? '1 link saved twice'
+                  : '${groups.length} links saved twice',
+              '${groups.length} link lưu trùng',
+            ),
+            subtitle: tr(
+              context,
+              'Review and merge each into one.',
+              'Xem lại và gộp mỗi link thành một.',
+            ),
+            onTap: () => Navigator.of(context).pushNamed('/duplicates'),
+          ),
         HandyTile(
           key: const Key('save-integrity'),
           icon: Icons.fact_check_outlined,

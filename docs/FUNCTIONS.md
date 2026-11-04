@@ -194,6 +194,11 @@ Xem [công thức](handy_spend/FORMULAS_AND_ASSUMPTIONS.md) và
 ## Handy Bookmark
 
 Ứng dụng lưu và tổ chức link, hoạt động offline. Chi tiết trạng thái từng phần:
+
+- **Gộp link trùng** (2026-11-04): Cài đặt › Dữ liệu link › "N link lưu trùng" (chỉ hiện
+  khi có). Chọn bản giữ rồi Gộp: nhãn, ghi chú, bộ sưu tập, yêu thích, số lần mở của bản
+  kia chuyển sang; không gộp tự động. Trùng theo đúng quy tắc nhập.
+
 [Handy Bookmark feature matrix](HANDY_BOOKMARK_FEATURE_MATRIX.md).
 
 - Màn Đã lưu: ô tìm, dải Chưa xếp (mỗi link mới có sẵn các bộ sưu tập hay dùng, một

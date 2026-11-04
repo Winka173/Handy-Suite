@@ -2118,3 +2118,21 @@ Run: design-taste-frontend app-screens (giữ `HandyBrand.media`) + frontend-ui-
   phím 1 là Chưa nhớ, 2–4 là Nhớ rồi; không ghi gì vào dữ liệu. Màn kết thúc nói rõ
   "Luyện thêm không đổi lịch ôn của thẻ".
 - Reject: luyện thêm đổi khoảng cách ôn, tự mở vòng luyện, đếm điểm.
+
+## Refactor 2026-11 · Bookmark gộp link trùng có duyệt (hợp đồng)
+
+- Việc: link đã lưu hơn một lần (cùng quy tắc nhập dùng để bỏ trùng) được gom thành nhóm;
+  người dùng chọn bản giữ lại rồi bấm "Gộp N". Không gộp tự động.
+- Lối vào: Cài đặt › Dữ liệu link, ô "N link lưu trùng" chỉ hiện khi có trùng. Route
+  `/duplicates` (web có URL riêng).
+- Mỗi nhóm: tiêu đề Newsreader trên đường kẻ, nút "Gộp N" bên phải; từng bản là một radio
+  với ngày lưu, bộ sưu tập, "có ghi chú", "có bản đọc", "đã lưu trữ". Mặc định giữ bản cũ
+  nhất.
+- Gộp: nhãn hợp lại, ghi chú nối nhau, bộ sưu tập/tiêu đề trống lấy từ bản kia, yêu thích/
+  ghim/đã đọc giữ nếu bản nào có, lưu trữ chỉ khi mọi bản đều lưu trữ, số lần mở cộng dồn,
+  ngày lưu và lời nhắc lấy sớm nhất; vị trí trong thứ tự tay là vị trí của bản đầu tiên.
+  Nếu bản đọc offline thuộc bản bị gỡ, thông báo nói rõ để lưu lại.
+- Trạng thái: không còn trùng ("Mỗi link chỉ lưu một lần."), lỗi ghi (thông báo, dữ liệu
+  không đổi). Một cột, tối đa 720px.
+- Reject: gộp tự động khi lưu, xoá bản trùng không hỏi, coi `www.`/dấu `/` cuối là cùng
+  trang (khác quy tắc nhập).
