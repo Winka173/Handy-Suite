@@ -3,6 +3,12 @@ import 'package:handy_boards_engine/handy_boards_engine.dart';
 import 'package:timezone/timezone.dart' as tz;
 import 'error_catalog.dart';
 
+/// Boards is personal: the assignee label is retired from the default
+/// screens (2026-11). It stays in the data, exports and filters of anyone
+/// who already used it, and shows again wherever a task carries one.
+bool boardsUseAssignee(BoardsState s) =>
+    s.rows('tasks').any((t) => t.str('assignee').isNotEmpty);
+
 String deadlineLabel(BuildContext context, Json deadline, String boardZone) {
   final localizations = MaterialLocalizations.of(context),
       date = DateTime.parse(deadlineDay(deadline, boardZone)),

@@ -2095,3 +2095,14 @@ Run: design-taste-frontend app-screens (giữ `HandyBrand.media`) + frontend-ui-
   thay giá trị environment). Tệp lịch sử hỏng thì bắt đầu lại, tắt.
 - Reject: bật sẵn lịch sử, lưu header/body, phát lại request từ lịch sử (dễ gửi lại dữ
   liệu nhạy cảm), đồng bộ.
+
+## Refactor 2026-11 · lát S9: Boards bỏ "người phụ trách" và "bình luận" khỏi màn cá nhân (hợp đồng)
+
+- Boards là bảng cá nhân. Trình sửa việc không còn ô "Nhãn người phụ trách" trừ khi việc
+  đó đã có nhãn; bộ lọc và điều kiện của chế độ xem đã lưu chỉ có "Nhãn phụ trách" khi
+  bảng có việc mang nhãn (hoặc chế độ xem đang dùng nó). Dữ liệu, chỉ mục, sao lưu, xuất
+  giữ nguyên.
+- "Bình luận" thành "Ghi chú" có ngày: nút Ghi chú trong chi tiết việc ghi một mục vào
+  lịch sử cục bộ như trước (action `comment` giữ nguyên trong dữ liệu, hiện là "Ghi
+  chú"). Không có luồng trả lời, không có người.
+- Reject: xoá dữ liệu người phụ trách cũ, đổi tên action trong dữ liệu, ẩn nhãn đã có.

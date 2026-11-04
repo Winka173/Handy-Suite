@@ -321,12 +321,13 @@ Future<void> editTask(
         'Ước lượng (phút; 0 = chưa rõ)',
         kind: 'number',
       ),
-      const BoardField(
-        'assignee',
-        'Assignee label (local only)',
-        'Nhãn người phụ trách (cục bộ)',
-        optional: true,
-      ),
+      if (t.str('assignee').isNotEmpty)
+        const BoardField(
+          'assignee',
+          'Assignee label (local only)',
+          'Nhãn người phụ trách (cục bộ)',
+          optional: true,
+        ),
       const BoardField(
         'pinned',
         'Pin in Today',

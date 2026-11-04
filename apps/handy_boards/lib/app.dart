@@ -1078,12 +1078,13 @@ class _HomeState extends State<_Home> {
         kind: 'bool',
         optional: true,
       ),
-      const BoardField(
-        'assignee',
-        'Assignee label (exact; empty = any)',
-        'Nhãn phụ trách (chính xác; trống = bất kỳ)',
-        optional: true,
-      ),
+      if (filters['assignee'] != null || boardsUseAssignee(scope.state))
+        const BoardField(
+          'assignee',
+          'Assignee label (exact; empty = any)',
+          'Nhãn phụ trách (chính xác; trống = bất kỳ)',
+          optional: true,
+        ),
       const BoardField(
         'estimateMin',
         'Minimum estimate (minutes)',

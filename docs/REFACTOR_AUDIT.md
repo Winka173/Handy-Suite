@@ -39,7 +39,7 @@ mục, và trạng thái thực hiện. Cột Trạng thái chỉ đổi khi có
 | S6 | Tools: Gần đây/Ghim, preset VAT/giảm giá/% thay đổi; nhóm công cụ theo tình huống | DONE |
 | S7 | Recall demo deck; Habit 20–40 preset; Spend lặp giao dịch/yêu thích | DONE (S7a, S7b, S7c) |
 | S8 | Dev: lỗi JSON theo dòng/cột, copy JSON pointer, lịch sử request có che | DONE |
-| S9 | Boards: bỏ người phụ trách/bình luận khỏi UI mặc định, mẫu bảng | TODO |
+| S9 | Boards: bỏ người phụ trách/bình luận khỏi UI mặc định, mẫu bảng | DONE |
 | S10 | Forms, Widget (sau khi phiên kia commit) | BLOCKED |
 | S11 | Native Android/iOS, store, Ads/IAP, a11y; tài liệu cuối | BLOCKED (thiết bị) |
 
@@ -138,7 +138,7 @@ mục, và trạng thái thực hiện. Cột Trạng thái chỉ đổi khi có
 | --- | --- | --- | --- |
 | Khối danh mục, Kanban/Danh sách/Hôm nay/Lịch, checklist, hạn, lặp, mẫu | KEEP_CORE | Có | HAS |
 | Phụ thuộc, WIP, trường tùy chỉnh | KEEP_ADVANCED | Có | HAS |
-| Người phụ trách, luồng bình luận | RETIRE khỏi UI cá nhân | Có trong chi tiết việc, bộ lọc, xuất | TODO (S9) |
+| Người phụ trách, luồng bình luận | RETIRE khỏi UI cá nhân | Có trong chi tiết việc, bộ lọc, xuất | DONE (S9): ẩn khi chưa dùng; bình luận thành Ghi chú; dữ liệu/xuất giữ |
 | Màu chàm trong hợp đồng cũ | Sửa tài liệu | `UX_REDESIGN.md` ghi #6366F1 | DONE (S1) |
 
 ### Card
@@ -319,3 +319,13 @@ chưa commit trên máy). Sau S1/S2a: `handy_docs` (transfer 6/6), `handy_keep`
 - Test: engine `json_error_test.dart`, `history_test.dart` (không chuỗi bí mật nào trong
   tệp); app `json_error_test.dart`, `history_test.dart`. Dev 45/45, engine 1056 (27 bỏ
   qua có chủ đích).
+
+### S9 (2026-11-04)
+
+- Boards: `boardsUseAssignee` (lib/ui/labels.dart); ô người phụ trách trong trình sửa chỉ
+  hiện khi việc đã có nhãn, bộ lọc và điều kiện chế độ xem chỉ khi bảng dùng nó. Nút
+  "Bình luận" thành "Ghi chú" (cùng `addComment`, action `comment` hiện là "Ghi chú").
+  Không đổi schema, chỉ mục SQLite hay định dạng xuất. Đổi chữ nút, không đổi bố cục nên
+  không chụp lại ảnh.
+- Test: `apps/handy_boards/test/retired_test.dart` (việc cá nhân không có ô, lưu giữ rỗng;
+  việc đã có "Lan" giữ ô, giá trị và bản sao lưu). Boards 43/43, engine 50/50; mẫu bảng đã có sẵn (HAS).

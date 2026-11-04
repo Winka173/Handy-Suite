@@ -763,8 +763,11 @@ are opt-in; generic boards do not require school/project fields.
 - Workspace/board/category creation, editable statuses/WIP; four-category compact
   overview, grid/list, ordering alternatives, contextual capture and task status.
 - Task Markdown (external images blocked; links require consent), all-day/timed
-  IANA deadlines with DST confirmation, priorities, tags, assignee label, pin,
-  checklist/subtasks/dependencies, local comments/history, attachment copies/links.
+  IANA deadlines with DST confirmation, priorities, tags, pin,
+  checklist/subtasks/dependencies, dated notes/history, attachment copies/links.
+  Personal by default (2026-11-04): the assignee label shows only on tasks and
+  boards that already use it (data, filters and exports unchanged); "Comment" is now
+  "Note", the same dated entry in the task's local history.
 - Trash/restore/confirmed hard delete, archive, safe duplicate, cross-board subtree
   move, batch edits and bounded Undo/Redo. Search/filter/sort Unicode/VI.
 - Today/Upcoming/Radar, month calendar, progress with explicit denominator, local

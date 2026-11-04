@@ -324,14 +324,14 @@ class TaskDetail extends StatelessWidget {
                           context,
                           tr(
                             context,
-                            'Add local comment',
-                            'Thêm bình luận cục bộ',
+                            'Add a dated note',
+                            'Thêm ghi chú có ngày',
                           ),
                           [
                             const BoardField(
                               'body',
-                              'Comment',
-                              'Bình luận',
+                              'Note',
+                              'Ghi chú',
                               kind: 'note',
                             ),
                           ],
@@ -348,8 +348,9 @@ class TaskDetail extends StatelessWidget {
                           },
                         ),
                       ),
-                      icon: const Icon(Icons.comment_outlined),
-                      label: Text(tr(context, 'Comment', 'Bình luận')),
+                      key: const Key('task-note'),
+                      icon: const Icon(Icons.edit_note),
+                      label: Text(tr(context, 'Note', 'Ghi chú')),
                     ),
                   ],
                 ),
@@ -717,20 +718,23 @@ class _Heading extends StatelessWidget {
   );
 }
 
-String _action(BuildContext context, String action) => tr(
-  context,
-  action,
-  {
-        'created': 'Đã tạo',
-        'edited': 'Đã sửa',
-        'moved': 'Đã chuyển',
-        'completed': 'Đã hoàn tất',
-        'status changed': 'Đã đổi trạng thái',
-        'trashed': 'Đã chuyển vào thùng rác',
-        'restored': 'Đã khôi phục',
-      }[action] ??
-      action,
-);
+// Comments became dated notes (2026-11); their stored action stays.
+String _action(BuildContext context, String action) => action == 'comment'
+    ? tr(context, 'Note', 'Ghi chú')
+    : tr(
+        context,
+        action,
+        {
+              'created': 'Đã tạo',
+              'edited': 'Đã sửa',
+              'moved': 'Đã chuyển',
+              'completed': 'Đã hoàn tất',
+              'status changed': 'Đã đổi trạng thái',
+              'trashed': 'Đã chuyển vào thùng rác',
+              'restored': 'Đã khôi phục',
+            }[action] ??
+            action,
+      );
 Future<void> moveTaskDialog(
   BuildContext context,
   BoardsScope scope,

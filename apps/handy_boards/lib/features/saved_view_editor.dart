@@ -113,7 +113,14 @@ class _SavedViewState extends State<_SavedViewEditor> {
           'Property',
           'Thuộc tính',
           kind: 'select',
-          options: labels,
+          // The retired assignee label is offered only to boards using it.
+          options: {
+            for (final e in labels.entries)
+              if (e.key != 'assignee' ||
+                  boardsUseAssignee(widget.scope.state) ||
+                  conditions.any((c) => c.containsKey('assignee')))
+                e.key: e.value,
+          },
         ),
       ],
       {'type': initial},
