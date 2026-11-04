@@ -34,7 +34,7 @@ mục, và trạng thái thực hiện. Cột Trạng thái chỉ đổi khi có
 | S2b | Keep Collections: giao diện (4 lối vào, gallery, mẫu, wishlist → đã có, demo gỡ được) | DONE |
 | S2c | Keep: tách ảnh khỏi tệp thư viện JSON 16 MB (cần cho bộ sưu tập nhiều ảnh) | DONE |
 | S3 | Trip: thư viện mẫu tem, Bộ sưu tập tem trong Passport, tạo tem một chạm sau lượt ghé | DONE |
-| S4 | Card: thư viện mẫu lớn (120–200 thiết kế khác nhau thật), contact sheet, kiểm tra trùng | TODO |
+| S4 | Card: thư viện mẫu lớn (120–200 thiết kế khác nhau thật), contact sheet, kiểm tra trùng | DONE (144 mẫu, 55 bố cục) |
 | S5 | Media: thư viện nền/khung/thẻ hướng dẫn 9:16 cho ảnh chụp màn hình | TODO |
 | S6 | Tools: Gần đây/Ghim, preset VAT/giảm giá/% thay đổi; nhóm công cụ theo tình huống | TODO |
 | S7 | Recall demo deck; Habit 20–40 preset; Spend lặp giao dịch/yêu thích | TODO |
@@ -147,7 +147,7 @@ mục, và trạng thái thực hiện. Cột Trạng thái chỉ đổi khi có
 | --- | --- | --- | --- |
 | Canvas, lớp, bắt dính, chữ/ảnh/hình/QR, nhiều mặt, hồ sơ, xuất | KEEP_CORE | Có | HAS |
 | Chữ ký email, trang HTML, dấu cắt | KEEP_ADVANCED | Có | TODO (hạ cấp) |
-| 120–200 mẫu khác nhau thật, thư viện tài nguyên, gallery, đổi màu một chạm | ADD | 11 mẫu | TODO (S4) |
+| 120–200 mẫu khác nhau thật, thư viện tài nguyên, gallery, đổi màu một chạm | ADD | 11 mẫu | Mẫu + gallery DONE (S4); đổi màu một chạm, yêu thích, thư viện hoạ tiết riêng TODO |
 
 ### Forms, Widget
 
@@ -238,3 +238,20 @@ chưa commit trên máy). Sau S1/S2a: `handy_docs` (transfer 6/6), `handy_keep`
 - Test: `packages/handy_trip_engine/test/stamps_test.dart`,
   `apps/handy_trip/test/stamp_styles_test.dart` (40 kiểu khác chữ ký, mọi kiểu vẽ
   được chữ tiếng Việt, giữ tem → Hộ chiếu → mở lại).
+
+### S4 (2026-11-04)
+
+- `handy_card_engine/template_library.dart`: 44 bố cục mới (12 danh thiếp, 6 hồ sơ
+  mạng xã hội, 5 bài vuông, 6 thiệp mời A5, 4 CV A4, 5 thẻ giá, 4 thẻ sự kiện, 4 tờ
+  rơi A5) × 2–3 phong cách = 133 mẫu; cộng 11 mẫu vẽ tay = 144. Đếm thật: 55 bố cục
+  khác nhau; không hai mẫu nào trùng hình học mặt trước (phong cách đổi cả hoạ tiết).
+- Sửa lỗi có sẵn: mẫu "Creator" dựng trên khổ A5 do chỉ số khổ lệch sau khi thêm
+  A5/A4; nay lấy khổ vuông theo id.
+- App: màn chính còn một mẫu mỗi dịp + "Xem cả N mẫu"; Thư viện mẫu có chip dịp và
+  lưới dựng lười.
+- Test: `packages/handy_card_engine/test/template_library_test.dart` (≥140 mẫu, ≥40
+  bố cục, id duy nhất, hình học mặt trước duy nhất, phần tử trong trang, chữ tiếng
+  Việt), `apps/handy_card/test/template_gallery_test.dart`. Bảng tổng hợp:
+  `tool/screens_test.dart` → `contact-sheet-gallery`.
+- Còn lại: đổi màu một chạm cho cả thiết kế, yêu thích mẫu, thư viện hoạ tiết/khung
+  riêng, ảnh minh hoạ gốc cho ô ảnh.

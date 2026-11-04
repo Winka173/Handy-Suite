@@ -2000,3 +2000,21 @@ app-screens (giữ `HandyBrand.trip`) + frontend-ui-engineering.
   chỉ cách làm. Biểu tượng con dấu cạnh mỗi địa điểm mở Xưởng.
 - Trang địa điểm: "Làm tem" / "Sửa tem" cho lượt ghé mới nhất.
 - Không bao giờ: tự tạo lượt ghé, tem cho lượt chưa xác nhận, nhãn "chính thức".
+
+## Refactor 2026-11 · lát S4: Thư viện mẫu Card (hợp đồng)
+
+Run: design-taste-frontend app-screens (giữ `HandyBrand.handyCard`: màu của Card
+chỉ ở chọn/tay nắm; màu thuộc về thiết kế của người dùng) + frontend-ui-engineering.
+
+- Màn chính: "Bắt đầu từ mẫu" chỉ còn một mẫu mỗi dịp (7) và "Xem cả N mẫu".
+- Thư viện mẫu (`/templates`): câu hỏi "mẫu nào hợp dịp này?"; dòng đầu "N mẫu · đổi
+  được mọi chữ, màu và ảnh", chip dịp (Danh thiếp, Mạng xã hội, Thiệp mời, Sự kiện/tờ
+  rơi, Cửa hàng/thẻ giá, CV, Portfolio), lưới bản xem trước dựng lười (2–6 cột theo bề
+  rộng), chạm là tạo thiết kế và mở xưởng.
+- Mẫu: 44 bố cục mới × 2–3 phong cách (Giấy trắng, Giấy kraft, Đêm, Xanh xô thơm, San
+  hô), mỗi phong cách đổi màu, cặp phông và hoạ tiết hình học (gạch, vòng, thanh, lục
+  giác, chấm); không hai mẫu nào trùng hình học mặt trước (test). Mọi phần tử là phần
+  tử thật của scene graph, trường liên hệ gắn hồ sơ.
+- Ô ảnh là chỗ để ảnh của người dùng (khung gạch chéo đến khi có ảnh), không phải
+  ảnh minh hoạ giả.
+- Reject: đếm bản đổi màu là mẫu mới, ảnh/logo/phông tải ngoài, dải ngang 140 mẫu.

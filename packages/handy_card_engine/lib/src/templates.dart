@@ -311,58 +311,65 @@ final cardTemplates = <CardTemplate>[
     r,
     at,
   ) {
-    return _doc('social', 'Creator', cardSizes[6], at, [
-      _el(
-        r,
-        'rect',
-        0,
-        0,
-        1080,
-        1080,
-        props: {'fill': 'FFE9D6', 'fill2': 'FFD1E3', 'angle': 120},
-      ),
-      _el(r, 'image', 390, 180, 300, 300, props: {'mask': 'ellipse'}),
-      _el(
-        r,
-        'text',
-        140,
-        520,
-        800,
-        90,
-        bind: 'name',
-        props: {
-          'text': 'Mai Linh',
-          'size': 72,
-          'weight': 700,
-          'align': 'center',
-        },
-      ),
-      _el(
-        r,
-        'text',
-        140,
-        620,
-        800,
-        50,
-        bind: 'bio',
-        props: {
-          'text': 'Nấu ăn · Du lịch · Sài Gòn',
-          'size': 30,
-          'align': 'center',
-          'color': '4A3F45',
-        },
-      ),
-      _el(
-        r,
-        'qr',
-        440,
-        740,
-        200,
-        200,
-        bind: 'url',
-        props: {'payload': 'https://example.com'},
-      ),
-    ], []);
+    return _doc(
+      'social',
+      'Creator',
+      cardSizes.firstWhere((s) => s.id == 'square'),
+      at,
+      [
+        _el(
+          r,
+          'rect',
+          0,
+          0,
+          1080,
+          1080,
+          props: {'fill': 'FFE9D6', 'fill2': 'FFD1E3', 'angle': 120},
+        ),
+        _el(r, 'image', 390, 180, 300, 300, props: {'mask': 'ellipse'}),
+        _el(
+          r,
+          'text',
+          140,
+          520,
+          800,
+          90,
+          bind: 'name',
+          props: {
+            'text': 'Mai Linh',
+            'size': 72,
+            'weight': 700,
+            'align': 'center',
+          },
+        ),
+        _el(
+          r,
+          'text',
+          140,
+          620,
+          800,
+          50,
+          bind: 'bio',
+          props: {
+            'text': 'Nấu ăn · Du lịch · Sài Gòn',
+            'size': 30,
+            'align': 'center',
+            'color': '4A3F45',
+          },
+        ),
+        _el(
+          r,
+          'qr',
+          440,
+          740,
+          200,
+          200,
+          bind: 'url',
+          props: {'payload': 'https://example.com'},
+        ),
+      ],
+      [],
+    );
   }),
   CardTemplate('portfolio', 'Portfolio', 'Portfolio', 'portfolio', (r, at) {
     return _doc('portfolio', 'Portfolio', cardSizes[0], at, [
@@ -922,4 +929,5 @@ final cardTemplates = <CardTemplate>[
     (r, at) =>
         blankDocument(size: cardSizes[0], at: at, kind: 'custom', name: ''),
   ),
+  ..._library(),
 ];

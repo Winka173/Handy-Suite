@@ -33,5 +33,6 @@ part 'src/html_profile.dart';
 part 'src/project_zip.dart';
 part 'src/presets.dart';
 part 'src/templates.dart';
+part 'src/template_library.dart';
 part 'src/batch.dart';
 part 'src/badge_extension.dart';

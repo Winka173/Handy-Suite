@@ -6,6 +6,7 @@ import '../editor/studio_page.dart';
 import '../profiles/profiles_page.dart';
 import '../scope.dart';
 import 'new_design.dart';
+import 'template_gallery.dart';
 
 /// A side drawn small, as it really is: the same painter as the studio.
 class CardThumb extends StatelessWidget {
@@ -273,25 +274,36 @@ class HomePage extends StatelessWidget {
                   ],
                   HandyLabel(
                     tr(context, 'Start from a layout', 'Bắt đầu từ mẫu'),
+                    trailing: TextButton(
+                      key: const Key('templates-all'),
+                      onPressed: () => Navigator.push(
+                        context,
+                        MaterialPageRoute<void>(
+                          settings: const RouteSettings(name: '/templates'),
+                          builder: (_) => TemplateGalleryPage(scope: scope),
+                        ),
+                      ),
+                      child: Text(
+                        tr(
+                          context,
+                          'All ${cardTemplates.length - 1}',
+                          'Xem cả ${cardTemplates.length - 1} mẫu',
+                        ),
+                      ),
+                    ),
                   ),
                   SizedBox(
                     height: 150,
                     child: ListView(
                       scrollDirection: Axis.horizontal,
                       children: [
-                        for (final t in cardTemplates)
+                        // One per occasion here; the rest are in the gallery.
+                        for (final t in featuredTemplates())
                           _TemplateTile(
                             scope: scope,
                             doc: t.build(lib.registry, DateTime.utc(2026)),
                             title: tr(context, t.en, t.vi),
-                            onTap: () async {
-                              final doc = t.build(lib.registry, lib.clock());
-                              final saved = await lib.saveDesign(
-                                doc.copyWith(name: tr(context, t.en, t.vi)),
-                              );
-                              if (context.mounted)
-                                await openStudio(context, scope, saved.id);
-                            },
+                            onTap: () => startFromTemplate(context, scope, t),
                           ),
                         for (final t in lib.templates.values)
                           _TemplateTile(

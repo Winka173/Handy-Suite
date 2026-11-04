@@ -224,6 +224,21 @@ void main() {
       await shot(t, '$name-8-profile');
     });
   }
+  for (final (name, size) in [
+    ('phone', const Size(390, 844)),
+    ('desktop', const Size(1440, 900)),
+    ('contact-sheet', const Size(1440, 7600)),
+  ]) {
+    testWidgets('$name gallery', (t) async {
+      await boot(t, size, MemoryCardStore());
+      await t.tap(find.byKey(const Key('templates-all')));
+      await t.runAsync(
+        () => Future<void>.delayed(const Duration(milliseconds: 300)),
+      );
+      await t.pumpAndSettle();
+      await shot(t, '$name-gallery');
+    });
+  }
   testWidgets('dark studio', (t) async {
     await boot(t, const Size(1440, 900), await seeded(), theme: 'dark');
     await t.tap(find.textContaining('Thẻ hội nghị').first);

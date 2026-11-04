@@ -725,6 +725,13 @@ liệt kê theo từng app ở trên.
 | `colors`       | HEX / RGB / HSL      | A #RRGGBB colour as RGB and HSL (degrees and percentages).                                                                                                                                                                                                                     |
 | `contrast`     | Độ tương phản màu    | WCAG 2 ratio of a text colour on a background: AA needs 4.5 for normal text, 3 for large; AAA needs 7. Input: text colour; options: background (or both in the input, "#111111 on #FFFFFF").                                                                                   |
 
+## Handy Card
+
+- **Thư viện mẫu** (2026-11-04): 144 mẫu (11 mẫu vẽ tay + 133 mẫu từ 44 bố cục × 2–3
+  phong cách) cho danh thiếp, trang hồ sơ/bài vuông mạng xã hội, thiệp mời A5, tờ rơi A5,
+  thẻ giá, thẻ sự kiện, CV A4, portfolio; lọc theo dịp ở `#/templates`; mọi chữ, màu, ảnh
+  và hình đều sửa được; trường liên hệ gắn hồ sơ. Ô ảnh chờ ảnh của người dùng.
+
 ## Handy Boards
 
 Independent offline app 11. Category, Status and Tag are separate. One canonical
