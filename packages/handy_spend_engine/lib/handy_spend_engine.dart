@@ -16,6 +16,7 @@ part 'src/receipts.dart';
 part 'src/people.dart';
 part 'src/recurring.dart';
 part 'src/templates.dart';
+part 'src/usual.dart';
 part 'src/zip.dart';
 
 Object? _freeze(Object? value, [int depth = 0]) {

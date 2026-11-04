@@ -2065,3 +2065,15 @@ Run: design-taste-frontend app-screens (giữ `HandyBrand.media`) + frontend-ui-
   mẫu" với "Gỡ bộ mẫu" (một chạm, gỡ cả thẻ). Lịch sử ôn nằm trong thẻ nên gỡ bộ là gỡ
   luôn số liệu của nó, không lẫn vào thống kê thật.
 - Reject: tự thêm bộ mẫu khi mở app, bộ mẫu không gỡ được, số liệu giả.
+
+## Refactor 2026-11 · lát S7c: Spend ghi lại một chạm (hợp đồng)
+
+- Dưới dòng ghi nhanh của Hôm nay, khi dòng còn trống: "Ghi lại:" và tối đa 4 chip
+  "Tên · số tiền" cho các khoản chi/thu đã ghi y hệt (cùng tài khoản, nơi, danh mục, số
+  tiền) từ 2 lần trở lên trong 4 tuần. Chạm một chip là ghi lại hôm nay, báo "Đã ghi …"
+  kèm Hoàn tác. Đang gõ thì chip ẩn.
+- "Yêu thích" được suy ra, không phải danh sách người dùng tự giữ. Hoá đơn định kỳ, dòng
+  nhập sao kê, chia tiền, hoàn tiền, khoản chờ và tài khoản đã lưu trữ không tính; khoản
+  tháng (Netflix, Internet) không lọt vào vì cửa sổ là 28 ngày.
+- Chế độ ẩn số: chip hiện "••••". Mỗi chip có nhãn đọc "Ghi lại hôm nay: …".
+- Reject: nút sao để ghim yêu thích, chip hiện khi đang gõ, ghi mà không có Hoàn tác.

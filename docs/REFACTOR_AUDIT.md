@@ -37,7 +37,7 @@ mục, và trạng thái thực hiện. Cột Trạng thái chỉ đổi khi có
 | S4 | Card: thư viện mẫu lớn (120–200 thiết kế khác nhau thật), contact sheet, kiểm tra trùng | DONE (144 mẫu, 55 bố cục) |
 | S5 | Media: thư viện nền/khung/thẻ hướng dẫn 9:16 cho ảnh chụp màn hình | DONE |
 | S6 | Tools: Gần đây/Ghim, preset VAT/giảm giá/% thay đổi; nhóm công cụ theo tình huống | DONE |
-| S7 | Recall demo deck; Habit 20–40 preset; Spend lặp giao dịch/yêu thích | TODO |
+| S7 | Recall demo deck; Habit 20–40 preset; Spend lặp giao dịch/yêu thích | DONE (S7a, S7b, S7c) |
 | S8 | Dev: lỗi JSON theo dòng/cột, copy JSON pointer, lịch sử request có che | TODO |
 | S9 | Boards: bỏ người phụ trách/bình luận khỏi UI mặc định, mẫu bảng | TODO |
 | S10 | Forms, Widget (sau khi phiên kia commit) | BLOCKED |
@@ -114,7 +114,7 @@ mục, và trạng thái thực hiện. Cột Trạng thái chỉ đổi khi có
 | --- | --- | --- | --- |
 | Ghi một dòng, còn tiêu được, tài khoản, chuyển khoản/hoàn tiền/thẻ, ngân sách, định kỳ, sao kê, BigInt | KEEP_CORE | Có | HAS |
 | Kịch bản giả định | RETIRE (đã bỏ 2026-11-03, dữ liệu giữ) | Có | HAS |
-| Lặp giao dịch một chạm, giao dịch yêu thích, giải thích đối chiếu | ADD | "Dùng làm mẫu" qua menu sổ | TODO |
+| Lặp giao dịch một chạm, giao dịch yêu thích, giải thích đối chiếu | ADD | "Dùng làm mẫu" qua menu sổ | Lặp một chạm + yêu thích suy ra DONE (S7c); giải thích đối chiếu TODO |
 
 ### Habit
 
@@ -293,3 +293,14 @@ chưa commit trên máy). Sau S1/S2a: `handy_docs` (transfer 6/6), `handy_keep`
   có "Gỡ bộ mẫu". Lịch sử ôn nằm trong thẻ nên gỡ bộ không để lại số liệu.
 - Test: `apps/handy_recall/test/sample_deck_test.dart` (thêm → ôn một thẻ → gỡ → trống);
   44/44 test Recall xanh.
+
+### S7c (2026-11-04)
+
+- `handy_spend_engine/usual.dart`: `usualEntries` tìm khoản chi/thu ghi y hệt (tài khoản,
+  nơi, danh mục, số tiền) ≥ 2 lần trong 28 ngày, bỏ hoá đơn định kỳ, sao kê, chia tiền,
+  hoàn tiền, khoản chờ, tài khoản lưu trữ. App: chip "Ghi lại:" dưới dòng ghi nhanh, ghi
+  lại hôm nay một chạm, có Hoàn tác. Không thêm trường dữ liệu, không đổi schema.
+- Ảnh thử đầu tiên dùng cửa sổ 60 ngày cho thấy Spotify/FPT Internet thành "yêu thích"
+  (trả hai tháng), nên cửa sổ đổi thành 28 ngày.
+- Test: `packages/handy_spend_engine/test/usual_test.dart`,
+  `apps/handy_spend/test/usual_ui_test.dart`; Spend 51/51, engine 43/43 xanh.

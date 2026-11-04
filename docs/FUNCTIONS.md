@@ -109,6 +109,9 @@ Known limits: [KNOWN_ISSUES](../KNOWN_ISSUES.md). Screenshots: [UI_REVIEW](UI_RE
 
 ## Handy Spend
 
+- **Ghi lại một chạm** (2026-11-04): dưới dòng ghi nhanh, tối đa 4 chip cho khoản đã
+  ghi y hệt từ 2 lần trong 28 ngày (`usualEntries` trong engine); chạm là ghi lại hôm
+  nay, có Hoàn tác. Hoá đơn định kỳ, sao kê, chia tiền, hoàn tiền, khoản chờ không tính.
 - **Ghi bằng một dòng** (Hôm nay): gõ "cà phê 45k", "45.000 bánh mì", "tiền nhà 1tr2" hoặc "+5 triệu lương" rồi Enter. Số có đơn vị (k, tr, triệu, nghìn) hay có dấu nhóm được ưu tiên, nếu không thì lấy số cuối; dấu + là khoản thu. Chữ còn lại thành người nhận; danh mục lấy theo quy tắc rồi theo lần trước cùng chữ đó; tài khoản là tài khoản dùng gần nhất. Dòng xem trước đọc lại cách hiểu trước khi lưu; lưu xong có Hoàn tác.
 
 Theo dõi tài chính offline. Trạng thái

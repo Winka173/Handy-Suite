@@ -159,10 +159,56 @@ class _QuickLineFieldState extends State<QuickLineField> {
     }
   }
 
+  /// Records a usual entry again, today, in one tap; Undo takes it back.
+  Future<void> again(UsualEntry u) async {
+    if (busy) return;
+    setState(() => busy = true);
+    try {
+      final next = buildEntry(
+        s: scope.state,
+        kind: u.kind,
+        account: u.account,
+        entered: u.amount,
+        date: scope.today,
+        pending: false,
+        category: u.category,
+        payee: u.payee,
+      );
+      await scope.controller.changeWithFiles(
+        (s) => applyEntry(s, next),
+        'save_transaction',
+      );
+      if (!mounted) return;
+      scope.announce(
+        context,
+        tr(context, 'Recorded ${reading(next)}', 'Đã ghi ${reading(next)}'),
+      );
+      setState(() => error = null);
+    } catch (e) {
+      if (mounted) setState(() => error = errorText(context, e));
+    } finally {
+      if (mounted) setState(() => busy = false);
+    }
+  }
+
+  String usualLabel(UsualEntry u) => [
+    if (u.payee.isNotEmpty) u.payee else scope.category(u.category)?.name ?? '',
+    moneyText(
+      context,
+      scope,
+      u.amount,
+      scope.account(u.account).currency,
+      sign: u.kind == 'income',
+    ),
+  ].join(' · ');
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final next = draft();
+    final usual = text.text.trim().isEmpty && scope.openAccounts.isNotEmpty
+        ? usualEntries(scope.state, today: scope.today)
+        : const <UsualEntry>[];
     return Padding(
       padding: const EdgeInsets.only(top: HandySpace.l),
       child: Column(
@@ -203,6 +249,36 @@ class _QuickLineFieldState extends State<QuickLineField> {
                   key: const Key('quick-line-reading'),
                   style: theme.textTheme.bodySmall,
                 ),
+              ),
+            ),
+          if (usual.isNotEmpty)
+            Padding(
+              padding: const EdgeInsets.only(top: HandySpace.s),
+              child: Wrap(
+                spacing: HandySpace.s,
+                runSpacing: HandySpace.xs,
+                crossAxisAlignment: WrapCrossAlignment.center,
+                children: [
+                  Text(
+                    tr(context, 'Again:', 'Ghi lại:'),
+                    style: theme.textTheme.bodySmall,
+                  ),
+                  for (final (i, u) in usual.indexed)
+                    Semantics(
+                      button: true,
+                      label: tr(
+                        context,
+                        'Record again today: ${usualLabel(u)}',
+                        'Ghi lại hôm nay: ${usualLabel(u)}',
+                      ),
+                      excludeSemantics: true,
+                      child: ActionChip(
+                        key: Key('usual-$i'),
+                        label: Text(usualLabel(u)),
+                        onPressed: busy ? null : () => again(u),
+                      ),
+                    ),
+                ],
               ),
             ),
         ],
