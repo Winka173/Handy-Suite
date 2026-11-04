@@ -62,7 +62,7 @@ mục, và trạng thái thực hiện. Cột Trạng thái chỉ đổi khi có
 | Markdown, in hai mặt, thư viện tệp UTF-8 | KEEP_ADVANCED | Có, Markdown là ô bắt đầu thứ hai | TODO (hạ cấp) |
 | Gửi tệp bằng QR chạy | RETIRE/FREEZE: Thử nghiệm, mặc định tắt | Ô dưới lưới bắt đầu | DONE (S1) |
 | Giới hạn 50 tệp đã giữ | Nới theo tài nguyên thật | `reader.dart`: 50 tài liệu | TODO (đổi định dạng lưu cần migration) |
-| Preset quét (giấy/hóa đơn/bảng), tên tệp gợi ý từ OCR đã xác nhận, thao tác PDF hàng loạt | ADD | Chưa | TODO |
+| Preset quét (giấy/hóa đơn/bảng), tên tệp gợi ý từ OCR đã xác nhận, thao tác PDF hàng loạt | ADD | Chưa | Preset quét DONE; tên tệp từ OCR, PDF hàng loạt TODO |
 
 ### Media
 
@@ -367,3 +367,11 @@ chưa commit trên máy). Sau S1/S2a: `handy_docs` (transfer 6/6), `handy_keep`
 - Test: engine `palettes_test.dart` (≥ 130 mẫu thư viện nhận ra bảng màu, đổi vai trò đầy
   đủ, giữ màu tự chọn, không tím/chàm); app `palette_test.dart` (đổi rồi Hoàn tác). Card
   5/5, engine 39/39.
+
+### Docs kiểu giấy khi quét (2026-11-04)
+
+- Engine `scanner.dart`: `scanTones` (color/gray/whiten), `ScanPreset`, `scanPresets` (4);
+  `rectifyScan`/`scanPng` nhận `tone` (mặc định color: kết quả cũ không đổi).
+- App `corner_editor.dart`: chip "Đây là gì?" đặt sắc độ và tương phản khởi đầu.
+- Test: engine `scan_presets_test.dart` (xám thật sự xám, làm trắng giữ nét, màu gốc không
+  đổi), app `scan_preset_test.dart` (hóa đơn lưu xám). Docs 59/59, engine 64/64.

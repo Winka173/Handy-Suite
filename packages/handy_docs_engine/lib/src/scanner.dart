@@ -148,10 +148,30 @@ List<double> scanHomography(List<ScanPoint> corners) {
   return List.unmodifiable(rows.map((r) => r[8]));
 }
 
+/// How a straightened page is toned: kept in colour, turned grey, or kept
+/// in colour with the light ground pushed to white (a whiteboard).
+const scanTones = ['color', 'gray', 'whiten'];
+
+/// A kind of paper and the tone and contrast that usually suit it. The
+/// person can still move the contrast after choosing.
+class ScanPreset {
+  final String id, en, vi, tone;
+  final double contrast;
+  const ScanPreset(this.id, this.en, this.vi, this.tone, this.contrast);
+}
+
+const scanPresets = [
+  ScanPreset('original', 'As shot', 'Giữ màu gốc', 'color', 1),
+  ScanPreset('document', 'Document', 'Giấy tờ', 'gray', 1.4),
+  ScanPreset('receipt', 'Receipt', 'Hóa đơn', 'gray', 2),
+  ScanPreset('board', 'Whiteboard', 'Bảng trắng', 'whiten', 1.3),
+];
+
 Future<ScanRaster> rectifyScan(
   ScanRaster source,
   List<ScanPoint> corners, {
   double contrast = 1,
+  String tone = 'color',
   CancellationToken? cancellation,
   void Function(double)? onProgress,
 }) async {
@@ -160,6 +180,8 @@ Future<ScanRaster> rectifyScan(
   validateScanCorners(corners);
   if (!contrast.isFinite || contrast < 1 || contrast > 3)
     throw const FormatException('Contrast range: 1–3');
+  if (!scanTones.contains(tone))
+    throw const FormatException('Unknown scan tone');
   final size = scanOutputSize(source.width, source.height, corners),
       h = scanHomography(corners),
       rgba = Uint8List(size.width * size.height * 4);
@@ -194,14 +216,30 @@ Future<ScanRaster> rectifyScan(
         (x1, y1, fx * fy),
       ];
       final target = (y * size.width + x) * 4;
+      final rgb = [0.0, 0.0, 0.0];
       for (var c = 0; c < 3; c++) {
-        var channel = 0.0;
         for (final p in samples) {
           final at = (p.$2 * source.width + p.$1) * 4,
               alpha = source.rgba[at + 3] / 255;
-          channel += (source.rgba[at + c] * alpha + 255 * (1 - alpha)) * p.$3;
+          rgb[c] += (source.rgba[at + c] * alpha + 255 * (1 - alpha)) * p.$3;
         }
-        rgba[target + c] = ((channel - 128) * contrast + 128)
+      }
+      if (tone == 'gray') {
+        final l = 0.299 * rgb[0] + 0.587 * rgb[1] + 0.114 * rgb[2];
+        rgb[0] = rgb[1] = rgb[2] = l;
+      } else if (tone == 'whiten') {
+        // A lit board is a little grey or blue; lift it to white and leave
+        // the marker strokes, which are far darker, as they are.
+        final l = 0.299 * rgb[0] + 0.587 * rgb[1] + 0.114 * rgb[2];
+        if (l > 150) {
+          final lift = ((l - 150) / 60).clamp(0.0, 1.0);
+          for (var c = 0; c < 3; c++) {
+            rgb[c] += (255 - rgb[c]) * lift;
+          }
+        }
+      }
+      for (var c = 0; c < 3; c++) {
+        rgba[target + c] = ((rgb[c] - 128) * contrast + 128)
             .clamp(0, 255)
             .round();
       }
@@ -694,6 +732,7 @@ Future<Uint8List> scanPng(
   Uint8List bytes,
   List<ScanPoint> corners, {
   double contrast = 1,
+  String tone = 'color',
   CancellationToken? cancellation,
   void Function(double)? onProgress,
 }) async {
@@ -704,6 +743,7 @@ Future<Uint8List> scanPng(
     raster,
     corners,
     contrast: contrast,
+    tone: tone,
     cancellation: cancellation,
     onProgress: onProgress,
   );

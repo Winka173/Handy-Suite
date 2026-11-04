@@ -445,6 +445,10 @@ void main() {
     );
     await t.pumpAndSettle();
     await shot(t, 'phone-5-corners');
+    await t.ensureVisible(find.byKey(const Key('scan-preset-receipt')));
+    await t.tap(find.byKey(const Key('scan-preset-receipt')));
+    await t.pumpAndSettle();
+    await shot(t, 'phone-5b-corners-receipt');
   });
   testWidgets('phone write', (t) async {
     await boot(t, const Size(390, 844));

@@ -2147,3 +2147,11 @@ Run: design-taste-frontend app-screens (giữ `HandyBrand.media`) + frontend-ui-
 - Thiết kế dùng màu riêng: tấm nói rõ "Thiết kế này dùng màu riêng…" và các ô bị mờ.
 - Ô đang dùng viền màu chọn của Card (#1450F5, chỉ dùng cho lựa chọn).
 - Reject: đổi màu từng phần tử tự động, bảng màu ngẫu nhiên, tấm che kín thẻ.
+
+## Refactor 2026-11 · Docs kiểu giấy khi quét (hợp đồng)
+
+- Trong "Sửa bốn góc", dưới ảnh: "Đây là gì?" với bốn chip Giữ màu gốc / Giấy tờ / Hóa
+  đơn / Bảng trắng. Chọn một chip đặt sắc độ (màu, xám, làm trắng nền) và độ tương phản
+  khởi đầu (1 / 1,4 / 2 / 1,3); thanh tương phản vẫn chỉnh được. Một dòng dưới chip nói
+  kiểu đó làm gì. Đặt lại về Giữ màu gốc.
+- Reject: tự đoán loại giấy, đổi màu ảnh gốc, bộ lọc nghệ thuật.

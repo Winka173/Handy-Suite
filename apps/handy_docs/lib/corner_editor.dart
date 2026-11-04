@@ -19,6 +19,9 @@ class _CornerEditorState extends State<CornerEditor> {
   late final Uint8List preview;
   List<ScanPoint> corners = fullScanCorners();
   double contrast = 1, progress = 0;
+
+  /// The kind of paper: it sets the tone and a starting contrast.
+  ScanPreset preset = scanPresets.first;
   bool busy = false;
   String error = '';
   CancellationToken? cancellation;
@@ -49,6 +52,7 @@ class _CornerEditorState extends State<CornerEditor> {
         raster,
         corners,
         contrast: contrast,
+        tone: preset.tone,
         cancellation: token,
         onProgress: (value) {
           if (mounted) setState(() => progress = value);
@@ -98,6 +102,7 @@ class _CornerEditorState extends State<CornerEditor> {
                 ? null
                 : () => setState(() {
                     corners = fullScanCorners();
+                    preset = scanPresets.first;
                     contrast = 1;
                   }),
             child: Text(tr(context, 'Reset', 'Đặt lại')),
@@ -153,6 +158,52 @@ class _CornerEditorState extends State<CornerEditor> {
             ),
           ),
           const SizedBox(height: HandySpace.l),
+          Text(
+            tr(context, 'What is it?', 'Đây là gì?'),
+            style: Theme.of(context).textTheme.labelLarge,
+          ),
+          const SizedBox(height: HandySpace.s),
+          Wrap(
+            spacing: HandySpace.s,
+            runSpacing: HandySpace.s,
+            children: [
+              for (final p in scanPresets)
+                ChoiceChip(
+                  key: Key('scan-preset-${p.id}'),
+                  label: Text(tr(context, p.en, p.vi)),
+                  selected: p.id == preset.id,
+                  onSelected: busy
+                      ? null
+                      : (_) => setState(() {
+                          preset = p;
+                          contrast = p.contrast;
+                        }),
+                ),
+            ],
+          ),
+          const SizedBox(height: HandySpace.xs),
+          Text(
+            switch (preset.tone) {
+              'gray' => tr(
+                context,
+                'Saved in grey: smaller, and text stands out.',
+                'Lưu màu xám: nhẹ hơn, chữ rõ hơn.',
+              ),
+              'whiten' => tr(
+                context,
+                'The board is lifted to white; marker strokes stay.',
+                'Nền bảng được làm trắng; nét bút giữ nguyên.',
+              ),
+              _ => tr(
+                context,
+                'Colours are kept as photographed.',
+                'Giữ nguyên màu như ảnh chụp.',
+              ),
+            },
+            key: const Key('scan-preset-note'),
+            style: Theme.of(context).textTheme.bodySmall,
+          ),
+          const SizedBox(height: HandySpace.m),
           Row(
             children: [
               Text(

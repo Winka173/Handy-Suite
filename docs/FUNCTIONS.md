@@ -303,6 +303,8 @@ Source: `apps/handy_docs/lib`, `packages/handy_docs_engine`, `packages/handy_pdf
 - **Scanner:** trên điện thoại có camera, ô "Quét" của bàn mở camera ngay khi chưa có
   trang nào (2026-11-03); nhập ảnh/camera, crop bốn góc kéo trực tiếp, sửa phối cảnh,
   tương phản, nhiều trang, sắp xếp/xóa trang, ghép PDF, lưu/khôi phục session JSON.
+  Kiểu giấy (2026-11-04): Giữ màu gốc, Giấy tờ (xám, 1,4), Hóa đơn (xám, 2), Bảng trắng
+  (làm trắng nền, giữ nét bút, 1,3); vẫn chỉnh tương phản sau khi chọn.
   "PDF tìm được chữ": OCR từng trang rồi đặt lớp chữ ẩn dưới ảnh. Không AI đám mây.
   Scanner giới hạn cạnh 2048 / 4Mpx mỗi trang, session 16MB/16Mpx.
 - **Lưu chữ nhận dạng thành Word (.docx)**: đoạn cách bằng dòng trống, xuống dòng giữ nguyên,
