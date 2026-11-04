@@ -432,6 +432,10 @@ chuyển sang Handy Tools (2026-11-02); engine phụ đề vẫn nằm trong `ha
 
 ## Handy Tools
 
+- **Tình huống trên bàn** (2026-11-04): gõ "1.000.000 + VAT 10%", "2.400.000 - 15% - 5%"
+  (giảm lần lượt), "120 lên 150" (% thay đổi), "1.350.000 tip 10% chia 3", "450.000 chia 3";
+  bàn trống có các câu mẫu này, mục "Gần đây" (5 công cụ mở gần nhất, chỉ lưu id) và kệ
+  theo tình huống Hằng ngày / Tiền / Văn bản / Thêm.
 - **Sổ tính** (nút trên Băng kết quả): mỗi dòng một phép tính, kết quả thẳng hàng bên phải, chạm để sao chép. Chữ là nhãn; "Tên: số" hay "tên = số" đặt tên để dùng ở dòng dưới; `ans` là dòng ngay trên; "tổng"/"total" cộng các dòng phía trên tới dòng trống; đọc được 45k, 1.2tr, 1.200.000, 10%, 3 x 4. Tối đa 500 dòng, lưu như bản nháp công cụ.
 
 Source: `apps/handy_tools/lib`, `packages/handy_tools_engine`.

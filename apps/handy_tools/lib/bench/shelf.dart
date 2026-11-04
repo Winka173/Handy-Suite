@@ -2,7 +2,21 @@ import 'package:handy_ui/kit.dart';
 import '../specs.dart';
 import 'catalog.dart';
 
-/// Every tool as chips by kind, under the bench on wide screens, so a
+/// Tools by the situation people reach for them in; the rare ones wait
+/// under More. Text transforms are not here: the bench does them on any
+/// pasted text.
+const shelfGroups = [
+  (
+    'Everyday',
+    'Hằng ngày',
+    ['calculate', 'units', 'dates', 'number-words', 'split-bill'],
+  ),
+  ('Money', 'Tiền', ['salary', 'qr', 'loan', 'compound']),
+  ('Text', 'Văn bản', ['literal-replace']),
+  ('More', 'Thêm', ['password', 'draw', 'measure', 'subtitles', 'lunar']),
+];
+
+/// Every tool as chips by situation, under the bench on wide screens, so a
 /// desktop never shows an empty field and any tool is one click away.
 class ToolShelf extends StatelessWidget {
   final ValueChanged<String> onOpen;
@@ -58,12 +72,10 @@ class ToolShelf extends StatelessWidget {
           ),
         ),
         const SizedBox(height: HandySpace.l),
-        group(tr(context, 'Make', 'Tạo mới'), [
-          for (final g in generators) g.$1,
-        ]),
-        for (final k in Category.values)
-          group(categoryLabel(context, k), [
-            for (final s in specs.where((s) => s.category == k)) s.id,
+        for (final (en, vi, ids) in shelfGroups)
+          group(tr(context, en, vi), [
+            for (final id in ids)
+              if (specById[id] != null || generators.any((g) => g.$1 == id)) id,
           ]),
       ],
     );

@@ -15,6 +15,9 @@ class FreeBench extends StatefulWidget {
   final HandyFiles files;
   final List<Recipe> chains;
   final List<String> pinned;
+
+  /// Tools opened last, newest first.
+  final List<String> recent;
   final FocusNode focus;
   final TextEditingController input;
   final void Function(String id, Map<String, String> values) onOpenTool;
@@ -26,6 +29,7 @@ class FreeBench extends StatefulWidget {
     required this.files,
     required this.chains,
     required this.pinned,
+    this.recent = const [],
     required this.focus,
     required this.input,
     required this.onOpenTool,
@@ -193,6 +197,7 @@ class FreeBenchState extends State<FreeBench> {
           BenchExamples(
             onPick: fill,
             pinned: widget.pinned,
+            recent: widget.recent,
             onOpenTool: (id) => widget.onOpenTool(id, const {}),
             onOpenCatalog: widget.onOpenCatalog,
           )

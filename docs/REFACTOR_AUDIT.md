@@ -36,7 +36,7 @@ mục, và trạng thái thực hiện. Cột Trạng thái chỉ đổi khi có
 | S3 | Trip: thư viện mẫu tem, Bộ sưu tập tem trong Passport, tạo tem một chạm sau lượt ghé | DONE |
 | S4 | Card: thư viện mẫu lớn (120–200 thiết kế khác nhau thật), contact sheet, kiểm tra trùng | DONE (144 mẫu, 55 bố cục) |
 | S5 | Media: thư viện nền/khung/thẻ hướng dẫn 9:16 cho ảnh chụp màn hình | DONE |
-| S6 | Tools: Gần đây/Ghim, preset VAT/giảm giá/% thay đổi; nhóm công cụ theo tình huống | TODO |
+| S6 | Tools: Gần đây/Ghim, preset VAT/giảm giá/% thay đổi; nhóm công cụ theo tình huống | DONE |
 | S7 | Recall demo deck; Habit 20–40 preset; Spend lặp giao dịch/yêu thích | TODO |
 | S8 | Dev: lỗi JSON theo dòng/cột, copy JSON pointer, lịch sử request có che | TODO |
 | S9 | Boards: bỏ người phụ trách/bình luận khỏi UI mặc định, mẫu bảng | TODO |
@@ -50,9 +50,9 @@ mục, và trạng thái thực hiện. Cột Trạng thái chỉ đổi khi có
 | Mục | Quyết định | Baseline | Trạng thái |
 | --- | --- | --- | --- |
 | Bàn làm việc gõ là ra kết quả, máy tính, %, đơn vị, lương, ngày, VietQR, chia hóa đơn, dọn chữ, đọc số | KEEP_CORE | Có; một màn "bàn", danh mục Ctrl K | HAS |
-| Phụ đề, bốc thăm, âm lịch, mật khẩu, đo bằng ảnh, sổ tính | KEEP_ADVANCED | Có, nằm trong danh mục cùng cấp | TODO (nhóm "Thêm") |
+| Phụ đề, bốc thăm, âm lịch, mật khẩu, đo bằng ảnh, sổ tính | KEEP_ADVANCED | Có, nằm trong danh mục cùng cấp | DONE (S6): nhóm "Thêm" trên kệ |
 | Ghim | ADD | Có (`pinned` trong catalog) | HAS |
-| Gần đây, sao chép một chạm, lịch sử tính (opt-in), preset VAT/giảm hai lần/% thay đổi | ADD | Chưa | TODO |
+| Gần đây, sao chép một chạm, lịch sử tính (opt-in), preset VAT/giảm hai lần/% thay đổi | ADD | Chưa | DONE (S6) trừ lịch sử tính; sao chép một chạm đã có (Sao chép/Enter vào Băng kết quả) |
 
 ### Docs
 
@@ -267,3 +267,12 @@ chưa commit trên máy). Sau S1/S2a: `handy_docs` (transfer 6/6), `handy_keep`
 - Test: `packages/handy_media_engine/test/frame_shot_test.dart` (khổ, nền hai màu,
   tiêu đề, khổ lạ bị từ chối), `apps/handy_media/test/frame_page_test.dart` (kiểu
   Story ra đúng 9:16, tiêu đề làm ảnh cao thêm).
+
+### S6 (2026-11-04)
+
+- Bàn hiểu cộng/trừ phần trăm nối tiếp, % thay đổi, tip và chia người (máy tính dùng
+  `%` là phép dư, nên trước đây các câu này hỏng). Câu mẫu trên bàn trống là các tình
+  huống này; "Gần đây" lưu 6 id trong bản nháp `recent` của cài đặt (id `recent` thêm
+  vào `toolsPreferenceIds`); kệ màn rộng nhóm theo tình huống.
+- Test: `apps/handy_tools/test/intent_test.dart` (con số qua máy tính của engine),
+  `apps/handy_tools/test/bench_recent_test.dart`.

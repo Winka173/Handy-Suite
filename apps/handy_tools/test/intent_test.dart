@@ -1,6 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:handy_tools/bench/intent.dart';
 import 'package:handy_tools/bench/tape.dart';
+import 'package:handy_tools_engine/handy_tools_engine.dart';
 
 List<String> ids(String s, {bool vi = true}) => [
   for (final r in interpret(s, vi: vi, now: DateTime(2026, 11, 1))) r.toolId,
@@ -127,5 +128,23 @@ void main() {
     expect(tape.counted, 2);
     tape.clear();
     expect(tape.total, isNull);
+  });
+
+  test('percent on, percent off, change and shares', () {
+    String calc(String s) {
+      final r = interpret(s, vi: true).single;
+      expect(r.toolId, 'calculate', reason: s);
+      final tool = tools.firstWhere((t) => t.id == 'calculate');
+      return tool.run(r.values['expression']!);
+    }
+
+    expect(calc('1.000.000 + VAT 10%'), '1100000');
+    expect(calc('2.400.000 - 15% - 5%'), '1938000');
+    expect(calc('120 lên 150'), '25');
+    expect(calc('200 xuống 150'), '-25');
+    expect(calc('1.350.000 tip 10% chia 3'), '495000');
+    expect(calc('450.000 chia 3 người'), '150000');
+    // Plain arithmetic is still arithmetic.
+    expect(ids('100 - 5'), ['calculate']);
   });
 }

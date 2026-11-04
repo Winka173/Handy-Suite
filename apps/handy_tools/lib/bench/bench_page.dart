@@ -36,6 +36,19 @@ class BenchScope {
     this.exportHistory,
   });
 
+  /// Tools opened last, newest first (ids only, never what was typed).
+  List<String> get recent => [
+    for (final id in (read().drafts['recent'] ?? '').split(','))
+      if (id.isNotEmpty) id,
+  ];
+
+  Future<void> noteRecent(String id) {
+    final next = [id, ...recent.where((r) => r != id)].take(6).join(',');
+    final p = read();
+    if (p.drafts['recent'] == next) return Future.value();
+    return save(p.copyWith(drafts: {...p.drafts, 'recent': next}));
+  }
+
   Future<void> togglePin(String id) {
     final pins = [...read().favorites];
     pins.contains(id) ? pins.remove(id) : pins.add(id);
@@ -74,6 +87,14 @@ class _BenchPageState extends State<BenchPage> {
   final free = GlobalKey<FreeBenchState>();
   late bool pinned = widget.scope.read().favorites.contains(widget.toolId);
   BenchScope get scope => widget.scope;
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.toolId case final id?) {
+      scope.noteRecent(id).catchError((Object _) {});
+    }
+  }
 
   @override
   void dispose() {
@@ -198,6 +219,7 @@ class _BenchPageState extends State<BenchPage> {
         files: scope.files,
         chains: p.recipes,
         pinned: p.favorites,
+        recent: scope.recent,
         focus: focus,
         input: input,
         onOpenTool: openTool,

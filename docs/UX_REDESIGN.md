@@ -2035,3 +2035,14 @@ Run: design-taste-frontend app-screens (giữ `HandyBrand.media`) + frontend-ui-
 - Kiểu nhanh khác nhau ở khổ, khung, nền và bo góc, không chỉ đổi màu; mọi giá trị
   sửa được sau khi chọn.
 - Reject: ảnh nền tải từ mạng, logo thương hiệu thiết bị, nền tím/chàm.
+
+## Refactor 2026-11 · lát S6: Tools theo tình huống (hợp đồng)
+
+- Bàn trống: "Thử gõ" là tình huống thật (VAT, giảm hai lần, % thay đổi, tip và chia,
+  lương, đổi đơn vị, khoảng ngày, đọc số), rồi "Gần đây" (5 công cụ mở gần nhất,
+  chỉ lưu id), rồi Đã ghim + Tất cả công cụ.
+- Kệ (màn rộng) theo tình huống: Hằng ngày, Tiền, Văn bản, Thêm (mật khẩu, bốc thăm,
+  đo bằng ảnh, phụ đề, âm lịch). Biến đổi văn bản không có ô riêng: bàn làm trên chữ
+  dán vào.
+- Bàn hiểu "a + VAT p%", "a - p% - q%", "a lên b", "a tip p% chia n", "a chia n" (dấu %
+  của máy tính là phép dư, nên các câu này trước đây ra lỗi hoặc số sai).

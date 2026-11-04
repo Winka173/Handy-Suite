@@ -200,6 +200,65 @@ List<Reading> interpret(String input, {required bool vi, DateTime? now}) {
     }
   }
 
+  // "1.000.000 + VAT 10%", "2.400.000 - 15% - 5%": a percentage added or
+  // taken off, one after another (the calculator's % is a remainder).
+  m = RegExp(
+    '^$_num((?:\\s*[+-]\\s*(?:vat|thuế|thue)?\\s*$_num\\s*%)+)\$',
+    caseSensitive: false,
+  ).firstMatch(s);
+  if (m != null) {
+    final base = normalizeNumber(m[1]!, vi: vi);
+    final steps = [
+      for (final x in RegExp(
+        '([+-])\\s*(?:vat|thuế|thue)?\\s*$_num\\s*%',
+        caseSensitive: false,
+      ).allMatches(m[2]!))
+        (x[1]!, normalizeNumber(x[2]!, vi: vi)),
+    ];
+    if (base != null && steps.every((t) => t.$2 != null)) {
+      final expression = [
+        base,
+        for (final (sign, p) in steps) '* (100 $sign $p) / 100',
+      ].join(' ');
+      return [
+        Reading('calculate', {'expression': expression}),
+      ];
+    }
+  }
+
+  // "120 lên 150", "change 120 to 150": the change in percent.
+  m = RegExp(
+    '^(?:từ\\s+|change\\s+|thay đổi\\s+)?$_num\\s*(?:lên|xuống|→|->|thành|to)\\s*$_num\\s*%?\$',
+    caseSensitive: false,
+  ).firstMatch(s);
+  if (m != null) {
+    final a = normalizeNumber(m[1]!, vi: vi),
+        b = normalizeNumber(m[2]!, vi: vi);
+    if (a != null && b != null && double.tryParse(a) != 0) {
+      return [
+        Reading('calculate', {'expression': '($b - $a) * 100 / $a'}),
+      ];
+    }
+  }
+
+  // "1.350.000 tip 10% chia 3", "450.000 chia 3 người": each share.
+  m = RegExp(
+    '^$_num(?:\\s*\\+?\\s*(?:tip|bo|boa)\\s*$_num\\s*%)?\\s*(?:chia|split)\\s*(\\d+)\\s*(?:người|nguoi|people|ways)?\$',
+    caseSensitive: false,
+  ).firstMatch(s);
+  if (m != null) {
+    final total = normalizeNumber(m[1]!, vi: vi);
+    final tip = m[2] == null ? '0' : normalizeNumber(m[2]!, vi: vi);
+    final n = int.tryParse(m[3]!);
+    if (total != null && tip != null && n != null && n > 0) {
+      return [
+        Reading('calculate', {
+          'expression': '$total * (100 + $tip) / 100 / $n',
+        }),
+      ];
+    }
+  }
+
   final expression = _expression(s, vi: vi);
   if (expression != null) {
     return [

@@ -8,6 +8,8 @@ const Set<String> toolsPreferenceIds = {
   'calculate',
   // The calc notebook's sheet, kept as a draft.
   'notebook',
+  // The tools opened last, newest first, as a comma list (no contents).
+  'recent',
   'units',
   'loan',
   'compound',
