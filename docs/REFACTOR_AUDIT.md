@@ -71,7 +71,7 @@ mục, và trạng thái thực hiện. Cột Trạng thái chỉ đổi khi có
 | Chú thích, hướng dẫn, sửa ảnh nhanh, nối ảnh, che nhạy cảm có duyệt | KEEP_CORE | Có | HAS |
 | GIF/HTML/Markdown, ZIP dự án | KEEP_ADVANCED | Có | TODO (hạ cấp định dạng ít dùng) |
 | Quay màn hình iOS ghi đúng là "trong app" | RETIRE nhãn sai | FUNCTIONS đã ghi "nội dung trong app" | HAS (kiểm lại chuỗi UI ở S5) |
-| Thư viện nền/khung/thẻ 9:16/preset số bước | ADD | 6 màu nền phẳng + khung điện thoại/trình duyệt | Khung DONE (S5): 12 kiểu nhanh, 4 khổ, 6 nền hai màu, tiêu đề; preset số bước/che trong trình chú thích TODO |
+| Thư viện nền/khung/thẻ 9:16/preset số bước | ADD | 6 màu nền phẳng + khung điện thoại/trình duyệt | Khung DONE (S5): 12 kiểu nhanh, 4 khổ, 6 nền hai màu, tiêu đề; preset số bước/che trong trình chú thích: HAS (đã có trước refactor: "Số bước" tự đánh số 1, 2, 3…, "Che kín", và "Tìm chữ nhạy cảm" gợi ý vùng che bằng OCR) |
 
 ### Dev
 
