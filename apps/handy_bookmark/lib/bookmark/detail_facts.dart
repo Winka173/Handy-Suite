@@ -147,8 +147,24 @@ class DetailFacts extends StatelessWidget {
                     OutlinedButton(
                       key: const Key('detail-thumbnail'),
                       onPressed: () => scope.chooseThumbnail(context, b),
-                      child: Text(tr(context, 'Choose a picture', 'Chọn ảnh')),
+                      child: Text(
+                        b.media == null
+                            ? tr(context, 'Choose a picture', 'Chọn ảnh')
+                            : tr(context, 'Choose another', 'Chọn ảnh khác'),
+                      ),
                     ),
+                    if (b.media != null)
+                      TextButton(
+                        key: const Key('detail-thumbnail-reset'),
+                        onPressed: () => scope.resetThumbnail(context, b),
+                        child: Text(
+                          tr(
+                            context,
+                            "Use the page's picture",
+                            'Dùng ảnh của trang',
+                          ),
+                        ),
+                      ),
                   ],
                 ),
               ),

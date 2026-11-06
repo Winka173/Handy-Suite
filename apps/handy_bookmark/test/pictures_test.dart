@@ -138,4 +138,32 @@ void main() {
       expect(find.byType(InteractiveViewer), findsOneWidget);
     });
   });
+
+  testWidgets("a chosen link picture is the person's own; reset brings the "
+      "page's picture back", (t) async {
+    final files = OneFile()..next = ImportedBytes('cover.png', png(600, 400));
+    final (c, _) = await boot(t, files: files);
+    final link = c.library!.bookmarks.first;
+    Navigator.of(
+      t.element(find.byType(Scaffold).first),
+    ).pushNamed('/bookmark/${link.id}');
+    await settle(t);
+    await tapKey(t, 'detail-thumbnail');
+    await t.runAsync(
+      () => Future<void>.delayed(const Duration(milliseconds: 300)),
+    );
+    await settle(t);
+    final chosen = c.library!.bookmarks.firstWhere((b) => b.id == link.id);
+    expect(chosen.media, isNotNull);
+    expect(chosen.isImage, isFalse, reason: 'still a link');
+    expect((c.store as TestStore).ownedMedia.keys, [chosen.media!.id]);
+    expect(mediaInUse(c.library!), {chosen.media!.id});
+    await tapKey(t, 'detail-thumbnail-reset');
+    await settle(t);
+    expect(
+      c.library!.bookmarks.firstWhere((b) => b.id == link.id).media,
+      isNull,
+    );
+    expect(mediaInUse(c.library!), isEmpty);
+  });
 }

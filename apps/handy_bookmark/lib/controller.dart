@@ -539,6 +539,18 @@ class SaveController extends ChangeNotifier {
     return (added: fresh, existing: existing);
   }
 
+  /// Checks, prepares and stores one picture; returns its record. The
+  /// caller then writes the item that uses it.
+  Future<MediaRef> storePicture(Uint8List bytes, {String name = ''}) async {
+    final p = await compute(
+      (({Uint8List bytes, String name}) f) =>
+          preparePicture(f.bytes, name: f.name),
+      (bytes: bytes, name: name),
+    );
+    await store!.putMedia(p.ref.toJson(), p.original, p.preview);
+    return p.ref;
+  }
+
   /// The small preview of a picture the person owns.
   Future<Uint8List?> mediaPreview(String mediaId) {
     if (!_previews.containsKey(mediaId) && _previews.length >= 64)

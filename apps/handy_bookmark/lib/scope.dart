@@ -4,7 +4,6 @@ import 'package:handy_ui/kit.dart';
 import 'controller.dart';
 import 'editors.dart';
 import 'links/link_tasks.dart';
-import 'services/metadata_client.dart' show sanitizeThumbnail;
 import 'services/reminders.dart';
 import 'ui/collection_picker.dart';
 import 'bookmark/picture_view.dart';
@@ -106,22 +105,24 @@ class SaveScope {
   }
 
   /// A picture the person picked (PNG, JPEG or WebP up to 1 MB), cleaned.
+  /// The person's own picture for a link: kept as their data (backed up,
+  /// never evicted like a fetched page picture), shown instead of the
+  /// page's picture until they reset it.
   Future<void> chooseThumbnail(BuildContext context, Bookmark b) =>
       run(context, () async {
         final file = await files.importBytes(
           extensions: ['png', 'jpg', 'jpeg', 'webp'],
-          maxBytes: 1000000,
+          maxBytes: MediaRef.maxBytes,
         );
         if (file == null) return;
-        final image = sanitizeThumbnail(file.bytes);
-        if (image.bytes == null) {
-          throw const FormatException(
-            'Use a PNG, JPEG or WebP picture / Dùng ảnh PNG, JPEG hoặc WebP',
-          );
-        }
-        await c.store!.putThumbnail(b.id, image.bytes!);
-        c.thumbnailChanged(b.id);
+        final ref = await c.storePicture(file.bytes, name: file.name);
+        await put(b.copyWith(media: ref, updatedAt: saveTime()));
       });
+
+  /// Back to the page's own picture. The chosen one stays on the device
+  /// while anything else uses it, and is reclaimed otherwise.
+  Future<void> resetThumbnail(BuildContext context, Bookmark b) =>
+      run(context, () => put(b.copyWith(media: null, updatedAt: saveTime())));
 
   /// Sets or clears a reminder; asks the OS once for permission.
   Future<void> remind(BuildContext context, Bookmark b, DateTime? at) =>
