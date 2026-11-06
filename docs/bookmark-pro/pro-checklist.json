@@ -1,0 +1,86 @@
+{
+  "date": "2026-11-06",
+  "app": "handy_bookmark",
+  "entitlement": {
+    "source": "verified store purchase (LifetimeScope.pro)",
+    "iapConfigured": false,
+    "purchaseTested": false,
+    "restoreTested": false
+  },
+  "ads": {
+    "shown": false,
+    "how": "HandyApp(adsVisible: ValueNotifier(false))"
+  },
+  "features": [
+    {
+      "id": "premiumThemes",
+      "shipped": true,
+      "count": 10,
+      "evidence": ["unit", "widget", "host-golden"]
+    },
+    {
+      "id": "premiumLayouts",
+      "shipped": true,
+      "count": 8,
+      "evidence": ["unit", "widget", "host-golden"]
+    },
+    {
+      "id": "focusSkins",
+      "shipped": true,
+      "count": 4,
+      "evidence": ["widget", "host-golden"]
+    },
+    {
+      "id": "premiumExport",
+      "shipped": true,
+      "designs": 8,
+      "formats": ["pdf", "html"],
+      "outputs": 16,
+      "asked": "12+ templates",
+      "gap": true,
+      "evidence": ["widget", "real-pdf-raster", "html-headless-browser"]
+    },
+    { "id": "smartCollections", "shipped": true, "evidence": ["widget"] },
+    {
+      "id": "autoOrganize",
+      "shipped": true,
+      "presets": 4,
+      "evidence": ["unit", "widget"]
+    },
+    {
+      "id": "advancedBulk",
+      "shipped": true,
+      "actions": ["organizeWithRules", "cleanTitles"],
+      "evidence": ["unit", "widget"]
+    },
+    {
+      "id": "readerHighlights",
+      "shipped": true,
+      "colors": 5,
+      "inBackups": true,
+      "evidence": ["unit", "widget", "host-golden"]
+    },
+    {
+      "id": "deepSearch",
+      "shipped": true,
+      "sources": ["article", "highlight", "picture"],
+      "evidence": ["unit", "widget", "host-golden"]
+    },
+    {
+      "id": "ocrOffline",
+      "shipped": true,
+      "engines": ["mlkit-latin (android, ios)", "windows-ocr"],
+      "web": false,
+      "inBackups": false,
+      "evidence": ["widget-fake-engine", "emulator-apk-launch"],
+      "vietnameseAccuracyMeasured": false
+    }
+  ],
+  "notVerified": [
+    "physical device",
+    "iOS",
+    "store purchase/restore",
+    "device OCR accuracy",
+    "selection-menu Highlight by hand"
+  ]
+}
