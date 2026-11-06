@@ -29,7 +29,14 @@ class ResultsView extends StatelessWidget {
     this.leading = const [],
   });
 
-  bool get cards => controller.preferences['cards'] == true;
+  /// Cards or rows: the collection's own choice, else the app's.
+  bool get cards {
+    final v = view;
+    final own = v.place == Place.collection && v.id != null
+        ? v.collectionView(v.id!)['cards']
+        : null;
+    return own is bool ? own : controller.preferences['cards'] == true;
+  }
 
   @override
   Widget build(BuildContext context) => ListenableBuilder(
@@ -235,10 +242,12 @@ class ResultsView extends StatelessWidget {
     ];
   }
 
-  void _flipCards() => controller.update(
-    (l) => l,
-    prefs: {...controller.preferences, 'cards': !cards},
-  );
+  void _flipCards() => view.place == Place.collection && view.id != null
+      ? view.rememberForCollection('cards', !cards)
+      : controller.update(
+          (l) => l,
+          prefs: {...controller.preferences, 'cards': !cards},
+        );
 
   /// Rows that move: up and down buttons for every input, and a handle to
   /// drag. Pinned links stay above the rest, so a step across is disabled.

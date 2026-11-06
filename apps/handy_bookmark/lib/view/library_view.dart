@@ -46,6 +46,17 @@ class Filters {
     savedAfter: savedAfter,
     savedBefore: savedBefore,
   );
+
+  /// The same filters in another order.
+  Filters withSort(String value) => Filters(
+    platform: platform,
+    contentType: contentType,
+    tag: tag,
+    kind: kind,
+    sort: value,
+    savedAfter: savedAfter,
+    savedBefore: savedBefore,
+  );
   bool get any =>
       kind != null ||
       platform != null ||
@@ -87,8 +98,30 @@ class LibraryView extends ChangeNotifier {
   void show(Place p, [String? which]) {
     place = p;
     id = which;
+    // A collection opens in the order it was last left in.
+    if (p == Place.collection && which != null)
+      filters = filters.withSort(
+        collectionView(which)['sort'] as String? ?? 'newest',
+      );
     selected.clear();
     reload();
+  }
+
+  /// What a collection remembers about how it is shown: 'cards' (bool) and
+  /// 'sort'. Kept in the library's preferences, so backups carry it.
+  Map<String, dynamic> collectionView(String collectionId) => {
+    ...?((c.preferences['collectionViews'] as Map?)?[collectionId] as Map?)
+        ?.cast<String, dynamic>(),
+  };
+
+  /// Remembers [key] for the collection on screen; nothing elsewhere.
+  Future<void> rememberForCollection(String key, Object value) async {
+    if (place != Place.collection || id == null) return;
+    final all = {
+      ...?(c.preferences['collectionViews'] as Map?)?.cast<String, dynamic>(),
+      id!: {...collectionView(id!), key: value},
+    };
+    await c.update((l) => l, prefs: {...c.preferences, 'collectionViews': all});
   }
 
   /// The list is in the person's own order.
@@ -163,6 +196,9 @@ class LibraryView extends ChangeNotifier {
   }
 
   void filter(Filters f) {
+    if (f.sort != filters.sort) {
+      rememberForCollection('sort', f.sort).catchError((_) {});
+    }
     filters = f;
     reload();
   }

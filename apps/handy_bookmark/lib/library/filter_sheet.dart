@@ -57,8 +57,10 @@ Future<void> showFilterSheet(
           platform: clearPlatform ? null : (platform ?? f.platform),
           contentType: clearKind ? null : (contentType ?? f.contentType),
           tag: clearTag ? null : (tag ?? f.tag),
+          kind: f.kind,
           sort: sort ?? f.sort,
           savedAfter: f.savedAfter,
+          savedBefore: f.savedBefore,
         );
         Widget group(String title, List<Widget> chips) => Column(
           crossAxisAlignment: CrossAxisAlignment.start,
