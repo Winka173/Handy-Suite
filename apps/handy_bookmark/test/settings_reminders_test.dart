@@ -15,7 +15,7 @@ void main() {
     await boot(t);
     await openSettings(t);
     await t.scrollUntilVisible(
-      find.text('Data & sync'),
+      find.text('Backup & restore'),
       300,
       scrollable: find.byType(Scrollable).first,
     );

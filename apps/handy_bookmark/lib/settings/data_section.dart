@@ -49,8 +49,8 @@ Future<void> backUp(BuildContext context, SaveScope scope) =>
       );
     });
 
-/// Data & Sync's first panel: Back up, Restore, Import, with what the last
-/// backup held above them. Formats live in [openAdvancedData].
+/// Backup & restore: Back up, Restore, Import and the other formats, with
+/// what the last backup held above them.
 class BackupPanel extends StatelessWidget {
   final SaveScope scope;
   const BackupPanel({super.key, required this.scope});
@@ -99,19 +99,33 @@ class BackupPanel extends StatelessWidget {
         navigates: true,
         onTap: () => scope.importLinks(context),
       ),
+      SettingsRow(
+        key: const Key('set-advanced-data'),
+        icon: Icons.tune,
+        title: tr(
+          context,
+          'Advanced export and import',
+          'Xuất và nhập nâng cao',
+        ),
+        subtitle: 'JSON · CSV · HTML · Markdown · TXT · Pocket · Raindrop',
+        navigates: true,
+        onTap: () => openAdvancedData(context, scope),
+      ),
     ],
   );
 }
 
-/// Data & Sync's last panel: Recently deleted, storage, and the
-/// advanced export and import.
+/// The library's own housekeeping: Recently deleted and storage, then
+/// [extra] rows (the advanced library tools).
 class DataMorePanel extends StatelessWidget {
   final SaveScope scope;
-  const DataMorePanel({super.key, required this.scope});
+  final List<Widget> extra;
+  const DataMorePanel({super.key, required this.scope, this.extra = const []});
   @override
   Widget build(BuildContext context) {
     final deleted = scope.library.trash.length;
     return SettingsPanel(
+      gap: false,
       rows: [
         SettingsRow(
           key: const Key('save-trash'),
@@ -145,18 +159,7 @@ class DataMorePanel extends StatelessWidget {
           navigates: true,
           onTap: () => openStorage(context, scope),
         ),
-        SettingsRow(
-          key: const Key('set-advanced-data'),
-          icon: Icons.tune,
-          title: tr(
-            context,
-            'Advanced export and import',
-            'Xuất và nhập nâng cao',
-          ),
-          subtitle: 'JSON · CSV · HTML · Markdown · TXT · Pocket · Raindrop',
-          navigates: true,
-          onTap: () => openAdvancedData(context, scope),
-        ),
+        ...extra,
       ],
     );
   }
@@ -458,19 +461,21 @@ Future<void> showPrivacy(BuildContext context) => showModalBottomSheet<void>(
   },
 );
 
-/// Deletes every link, collection, tag and reminder on this device, after
-/// a confirmation that names what goes.
+/// Deletes all of the app's data on this device (items, pictures, offline
+/// copies, previews, collections, tags, highlights, reminders and the
+/// library's settings) after a confirmation that names what goes. Backup
+/// files and a sync folder belong to the person and are not touched.
 Future<void> deleteEverything(BuildContext context, SaveScope scope) async {
   final c = scope.c;
   final ok = await confirmHandy(
     context,
-    title: tr(context, 'Delete everything?', 'Xóa toàn bộ?'),
+    title: tr(context, 'Delete all data?', 'Xóa toàn bộ dữ liệu?'),
     message: tr(
       context,
-      'Every link, collection, tag and reminder on this device. Export a backup first if you may want it back.',
-      'Mọi link, bộ sưu tập, thẻ và hẹn nhắc trên máy này. Hãy xuất bản sao lưu trước nếu còn cần.',
+      "Every item, picture, offline copy, collection, tag, highlight and reminder on this device, and the library's settings. Backup files and your sync folder are not touched. Back up first if you may want it back.",
+      'Mọi mục, ảnh, bản đọc offline, bộ sưu tập, thẻ, đoạn đánh dấu và hẹn nhắc trên máy này, cùng cài đặt của thư viện. File sao lưu và thư mục đồng bộ không bị đụng tới. Hãy sao lưu trước nếu còn cần.',
     ),
-    confirmLabel: tr(context, 'Delete everything', 'Xóa hết'),
+    confirmLabel: tr(context, 'Delete all data', 'Xóa toàn bộ'),
     destructive: true,
   );
   if (!ok || !context.mounted) return;
@@ -478,6 +483,8 @@ Future<void> deleteEverything(BuildContext context, SaveScope scope) async {
     await scope.view.change((_) => SaveLibrary(), prefs: {});
     await c.store!.clearThumbnails();
     await c.store!.clearReadingCopies();
+    // No item or Trash item uses a picture any more: they all go now.
+    await c.store!.collectMedia(const {}, grace: Duration.zero);
     await c.refreshReading();
     await scope.reminders.cancelAll();
     c.clearThumbnailMemory();

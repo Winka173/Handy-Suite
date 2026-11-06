@@ -6,6 +6,7 @@ import '../controller.dart';
 import '../home/dateline.dart';
 import '../sync/sync_section.dart';
 import 'data_section.dart';
+import 'help_links.dart';
 import 'library_tools.dart';
 import 'reminders_section.dart';
 import 'settings_parts.dart';
@@ -83,13 +84,12 @@ String weekdayName(BuildContext context, int day) => tr(
 //// Where sync folders are picked; tests replace it.
 BackupFolders syncFolders = systemBackupFolders();
 
-/// Settings in four groups, in the order people look for them:
-/// Appearance (theme, language, the library's name), Reminders (the
-/// opt-in weekly nudge, and any reminders still set on items), Data &
-/// sync (Back up, Restore, Import, Sync, Recently deleted, Storage; file
-/// formats only under Advanced) and Help & about (the guide, privacy,
-/// Pro, the advanced library tools). What cannot be undone comes last.
-/// Every control saves itself.
+/// Settings in nine groups, in the order people look for them:
+/// Appearance (theme, language, looks, the library's name), Reminders,
+/// Library (Recently deleted, Storage, advanced tools), Backup & restore,
+/// Cloud sync, Help & feedback (How to use, the welcome, Send feedback),
+/// Pro, About (privacy policy, terms, licenses, other apps) and, last,
+/// Reset and delete. Every control saves itself.
 class SaveSettingsPage extends StatefulWidget {
   final HandyPreferences Function() read;
   final Future<void> Function(HandyPreferences) save;
@@ -272,83 +272,13 @@ class _SaveSettingsPageState extends State<SaveSettingsPage> {
             ],
           ),
 
-          // 3. Data & sync.
+          // 3. Library.
           SettingsGroup(
-            title: tr(context, 'Data & sync', 'Dữ liệu & đồng bộ'),
-            note: tr(
-              context,
-              'Kept on this device. It leaves only when you back it up, sync it through a folder or share a page.',
-              'Lưu trên máy này. Dữ liệu chỉ rời máy khi bạn sao lưu, đồng bộ qua thư mục hoặc chia sẻ một trang.',
-            ),
+            title: tr(context, 'Library', 'Thư viện'),
             children: [
-              BackupPanel(scope: scope),
-              if (scope.autoBackup != null)
-                KitSection(
-                  child: HandyAutoBackupSection(backup: scope.autoBackup!),
-                ),
-              SyncSection(scope: scope, folders: syncFolders),
-              DataMorePanel(scope: scope),
-            ],
-          ),
-
-          // 4. Help & about, with what cannot be taken back last.
-          SettingsGroup(
-            title: tr(context, 'Help & about', 'Trợ giúp & giới thiệu'),
-            children: [
-              SettingsPanel(
-                gap: false,
-                rows: [
-                  SettingsRow(
-                    key: const Key('set-pro'),
-                    icon: Icons.workspace_premium_outlined,
-                    title: tr(context, 'Explore Pro', 'Khám phá Pro'),
-                    subtitle: tr(
-                      context,
-                      'Themes and smart collections; one payment',
-                      'Giao diện và bộ sưu tập thông minh; trả một lần',
-                    ),
-                    navigates: true,
-                    onTap: () => Navigator.pushNamed(context, '/pro'),
-                  ),
-                  SettingsRow(
-                    key: const Key('set-guide'),
-                    icon: Icons.school_outlined,
-                    title: tr(context, 'Replay the guide', 'Xem lại hướng dẫn'),
-                    subtitle: tr(
-                      context,
-                      'What to save, how to share it here, how to find it',
-                      'Lưu gì, chia sẻ vào đây thế nào, tìm lại ra sao',
-                    ),
-                    navigates: true,
-                    onTap: () => Navigator.pushNamed(context, '/welcome'),
-                  ),
-                  SettingsRow(
-                    key: const Key('save-privacy'),
-                    icon: Icons.privacy_tip_outlined,
-                    title: tr(context, 'Privacy', 'Quyền riêng tư'),
-                    subtitle: tr(
-                      context,
-                      'What stays here, and when something leaves',
-                      'Điều gì ở lại máy, và khi nào dữ liệu rời máy',
-                    ),
-                    navigates: true,
-                    onTap: () => showPrivacy(context),
-                  ),
-                  SettingsRow(
-                    key: const Key('set-about'),
-                    icon: Icons.info_outline,
-                    title: tr(context, 'About', 'Giới thiệu'),
-                    subtitle: tr(
-                      context,
-                      'Open-source licenses and photo credits',
-                      'Giấy phép mã nguồn mở và nguồn ảnh',
-                    ),
-                    navigates: true,
-                    onTap: () => showLicensePage(
-                      context: context,
-                      applicationName: 'Handy Bookmark',
-                    ),
-                  ),
+              DataMorePanel(
+                scope: scope,
+                extra: [
                   SettingsRow(
                     key: const Key('set-library-tools'),
                     icon: Icons.handyman_outlined,
@@ -367,15 +297,186 @@ class _SaveSettingsPageState extends State<SaveSettingsPage> {
                   ),
                 ],
               ),
-              const KitSection(child: HandyProSection()),
-              const KitSection(child: HandyMoreApps(app: 'bookmark')),
-              SettingsPanel(
-                title: tr(context, 'Reset and delete', 'Đặt lại và xóa'),
-                note: tr(
-                  context,
-                  'Deleting cannot be undone. Back up first if you may want it back.',
-                  'Xóa thì không hoàn tác được. Hãy sao lưu trước nếu còn cần.',
+            ],
+          ),
+
+          // 4. Backup & restore.
+          SettingsGroup(
+            title: tr(context, 'Backup & restore', 'Sao lưu & khôi phục'),
+            note: tr(
+              context,
+              'Kept on this device. It leaves only when you back it up, sync it through a folder or share a page.',
+              'Lưu trên máy này. Dữ liệu chỉ rời máy khi bạn sao lưu, đồng bộ qua thư mục hoặc chia sẻ một trang.',
+            ),
+            children: [
+              BackupPanel(scope: scope),
+              if (scope.autoBackup != null)
+                KitSection(
+                  child: HandyAutoBackupSection(backup: scope.autoBackup!),
                 ),
+            ],
+          ),
+
+          // 5. Cloud sync.
+          SettingsGroup(
+            title: tr(context, 'Cloud sync', 'Đồng bộ đám mây'),
+            note: tr(
+              context,
+              'The same library on more than one device.',
+              'Dùng chung một thư viện trên nhiều thiết bị.',
+            ),
+            children: [SyncSection(scope: scope, folders: syncFolders)],
+          ),
+
+          // 6. Help & feedback.
+          SettingsGroup(
+            title: tr(context, 'Help & feedback', 'Trợ giúp & góp ý'),
+            children: [
+              SettingsPanel(
+                gap: false,
+                rows: [
+                  SettingsRow(
+                    key: const Key('set-howto'),
+                    icon: Icons.menu_book_outlined,
+                    title: tr(context, 'How to use', 'Cách dùng'),
+                    subtitle: tr(
+                      context,
+                      'Save, organize, find, read, keep it safe, Pro',
+                      'Lưu, sắp xếp, tìm lại, đọc, giữ an toàn, Pro',
+                    ),
+                    navigates: true,
+                    onTap: () => Navigator.pushNamed(context, '/how-to'),
+                  ),
+                  SettingsRow(
+                    key: const Key('set-guide'),
+                    icon: Icons.school_outlined,
+                    title: tr(
+                      context,
+                      'Replay the welcome',
+                      'Xem lại phần giới thiệu',
+                    ),
+                    subtitle: tr(
+                      context,
+                      'The three screens shown at first start',
+                      'Ba màn hình hiện khi mở app lần đầu',
+                    ),
+                    navigates: true,
+                    onTap: () => Navigator.pushNamed(context, '/welcome'),
+                  ),
+                  SettingsRow(
+                    key: const Key('set-feedback'),
+                    icon: Icons.mail_outline,
+                    title: tr(context, 'Send feedback', 'Gửi góp ý'),
+                    subtitle: feedbackEmail,
+                    navigates: true,
+                    onTap: () => sendFeedback(context),
+                  ),
+                ],
+              ),
+            ],
+          ),
+
+          // 7. Pro.
+          SettingsGroup(
+            title: 'Pro',
+            children: [
+              SettingsPanel(
+                gap: false,
+                rows: [
+                  SettingsRow(
+                    key: const Key('set-pro'),
+                    icon: Icons.workspace_premium_outlined,
+                    title: tr(context, 'Explore Pro', 'Khám phá Pro'),
+                    subtitle: tr(
+                      context,
+                      'Themes, layouts, highlights, deeper search; one payment. Buy or restore a purchase there.',
+                      'Giao diện, kiểu trình bày, đánh dấu, tìm sâu; trả một lần. Mua hoặc khôi phục giao dịch ở đó.',
+                    ),
+                    navigates: true,
+                    onTap: () => Navigator.pushNamed(context, '/pro'),
+                  ),
+                ],
+              ),
+              // Not the kit's Pro section: its words are about removing
+              // ads, and Bookmark shows none. Explore Pro buys and restores.
+            ],
+          ),
+
+          // 8. About & legal.
+          SettingsGroup(
+            title: tr(context, 'About', 'Giới thiệu'),
+            children: [
+              SettingsPanel(
+                gap: false,
+                rows: [
+                  SettingsRow(
+                    key: const Key('save-privacy'),
+                    icon: Icons.privacy_tip_outlined,
+                    title: tr(
+                      context,
+                      'Privacy policy',
+                      'Chính sách quyền riêng tư',
+                    ),
+                    subtitle: privacyPolicyUrl == null
+                        ? tr(
+                            context,
+                            'Not published yet. For now: what stays here, and when something leaves',
+                            'Chưa công bố. Tạm thời: điều gì ở lại máy, và khi nào dữ liệu rời máy',
+                          )
+                        : null,
+                    navigates: true,
+                    onTap: () => privacyPolicyUrl == null
+                        ? showPrivacy(context)
+                        : openLegal(context, privacyPolicyUrl!),
+                  ),
+                  SettingsRow(
+                    key: const Key('set-terms'),
+                    icon: Icons.gavel_outlined,
+                    title: tr(
+                      context,
+                      'Terms of service',
+                      'Điều khoản sử dụng',
+                    ),
+                    subtitle: termsUrl == null
+                        ? tr(context, 'Not published yet', 'Chưa công bố')
+                        : null,
+                    navigates: termsUrl != null,
+                    onTap: termsUrl == null
+                        ? null
+                        : () => openLegal(context, termsUrl!),
+                  ),
+                  SettingsRow(
+                    key: const Key('set-about'),
+                    icon: Icons.info_outline,
+                    title: tr(context, 'Licenses', 'Giấy phép'),
+                    subtitle: tr(
+                      context,
+                      'Open-source licenses and photo credits',
+                      'Giấy phép mã nguồn mở và nguồn ảnh',
+                    ),
+                    navigates: true,
+                    onTap: () => showLicensePage(
+                      context: context,
+                      applicationName: 'Handy Bookmark',
+                    ),
+                  ),
+                ],
+              ),
+              const KitSection(child: HandyMoreApps(app: 'bookmark')),
+            ],
+          ),
+
+          // 9. What cannot be taken back, last.
+          SettingsGroup(
+            title: tr(context, 'Reset and delete', 'Đặt lại và xóa'),
+            note: tr(
+              context,
+              'Deleting cannot be undone. Back up first if you may want it back.',
+              'Xóa thì không hoàn tác được. Hãy sao lưu trước nếu còn cần.',
+            ),
+            children: [
+              SettingsPanel(
+                gap: false,
                 rows: [
                   SettingsRow(
                     key: const Key('settings-reset'),
@@ -394,8 +495,13 @@ class _SaveSettingsPageState extends State<SaveSettingsPage> {
                     destructive: true,
                     title: tr(
                       context,
-                      'Delete all links and collections',
-                      'Xóa mọi link và bộ sưu tập',
+                      'Delete all data',
+                      'Xóa toàn bộ dữ liệu',
+                    ),
+                    subtitle: tr(
+                      context,
+                      'Everything this app keeps on this device',
+                      'Mọi thứ app này lưu trên máy này',
                     ),
                     onTap: () => deleteEverything(context, scope),
                   ),

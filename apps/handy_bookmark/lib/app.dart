@@ -30,6 +30,7 @@ import 'services/share_targets.dart';
 import 'ui/collection_picker.dart';
 import 'library/trash_page.dart';
 import 'settings/duplicates_page.dart';
+import 'settings/how_to_page.dart';
 import 'settings/save_settings.dart';
 import 'shell/save_shell.dart';
 import 'view/library_view.dart';
@@ -338,6 +339,7 @@ class _SaveAppState extends State<SaveApp> with WidgetsBindingObserver {
       },
       ['', 'focus'] => () => FocusPage(scope: scope),
       ['', 'welcome'] => () => WelcomePage(scope: scope),
+      ['', 'how-to'] => () => const HowToPage(),
       ['', 'duplicates'] => () => DuplicatesPage(scope: scope),
       ['', 'trash'] => () => TrashPage(scope: scope),
       ['', 'library'] => () => LibraryPage(scope: scope),

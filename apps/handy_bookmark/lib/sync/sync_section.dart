@@ -4,7 +4,7 @@ import '../scope.dart';
 import '../settings/settings_parts.dart';
 import 'sync_service.dart';
 
-/// Settings › Data & Sync › Sync, through a folder. On a computer the person picks a
+/// Settings › Cloud sync, through a folder. On a computer the person picks a
 /// folder their cloud client keeps in step; every device syncing with that
 /// folder ends up with the same items, pictures and deletions. On phones
 /// and the web this build has no cloud adapter yet and says so.
@@ -81,12 +81,13 @@ class _SyncSectionState extends State<SyncSection> {
         '${MaterialLocalizations.of(context).formatShortDate(t.toLocal())} '
         '${TimeOfDay.fromDateTime(t.toLocal()).format(context)}';
     return SettingsPanel(
-      title: tr(context, 'Sync', 'Đồng bộ'),
+      gap: false,
+      title: tr(context, 'Through a folder', 'Qua một thư mục'),
       note: available
           ? tr(
               context,
-              'Through a folder that OneDrive, Google Drive, Dropbox or iCloud keeps in step. Press Sync now on each computer; nothing syncs by itself, and it is not a backup.',
-              'Qua một thư mục do OneDrive, Google Drive, Dropbox hoặc iCloud giữ đồng bộ. Bấm Đồng bộ ngay trên từng máy; không có gì tự đồng bộ, và đây không phải bản sao lưu.',
+              'One that OneDrive, Google Drive, Dropbox or iCloud keeps in step. Press Sync now on each computer; nothing syncs by itself, and it is not a backup.',
+              'Thư mục do OneDrive, Google Drive, Dropbox hoặc iCloud giữ đồng bộ. Bấm Đồng bộ ngay trên từng máy; không có gì tự đồng bộ, và đây không phải bản sao lưu.',
             )
           : null,
       rows: [

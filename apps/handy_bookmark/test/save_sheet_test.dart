@@ -1,6 +1,7 @@
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:handy_bookmark/controller.dart' show saveTime, SaveController;
+import 'package:handy_bookmark/settings/settings_parts.dart' show SettingsGroup;
 import 'package:handy_bookmark_engine/handy_bookmark_engine.dart';
 import 'package:handy_ui/kit.dart';
 import 'controller_test.dart' show TestStore;
@@ -113,23 +114,32 @@ void main() {
     expect(t.takeException(), isNull);
   });
 
-  testWidgets('settings: four groups, truthful sync and privacy, and the '
-      'irreversible actions last', (t) async {
+  testWidgets('settings: its groups in order, truthful sync and privacy, '
+      'and the irreversible actions last', (t) async {
     await start(t);
     Navigator.of(t.element(find.byType(Scaffold).first)).pushNamed('/settings');
     await t.pumpAndSettle();
     for (final group in [
       'Appearance',
       'Reminders',
-      'Data & sync',
-      'Help & about',
+      'Library',
+      'Backup & restore',
+      'Cloud sync',
+      'Help & feedback',
+      'Pro',
+      'About',
+      'Reset and delete',
     ]) {
+      // By the group itself: "Pro" is also the Pro section's own label.
+      final heading = find.byWidgetPredicate(
+        (w) => w is SettingsGroup && w.title == group,
+      );
       await t.scrollUntilVisible(
-        find.text(group),
+        heading,
         300,
         scrollable: find.byType(Scrollable).first,
       );
-      expect(find.text(group), findsOneWidget);
+      expect(heading, findsOneWidget);
     }
     // Nothing claims a connection that does not exist.
     expect(find.textContaining('Connected'), findsNothing);
