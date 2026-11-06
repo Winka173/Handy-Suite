@@ -92,17 +92,18 @@ Future<void> show(WidgetTester t, String key, [int ms = 1500]) async {
   await pause(t, ms);
 }
 
-/// Files a link from the Not-sorted strip: its chip when the collection is
-/// one of the usual ones, otherwise through "Khác…".
+/// Files a link from Home's Recently saved rows: its chip when the
+/// collection is one of the usual ones, otherwise through "Khác…".
 Future<void> fileInto(WidgetTester t, String id, String collection) async {
-  final strip = find.byKey(const Key('triage'));
-  await t.ensureVisible(strip);
-  await t.pumpAndSettle();
+  final button = find.byKey(Key('file-$id'));
   await t.scrollUntilVisible(
-    find.byKey(Key('triage-$id')),
+    button,
     200,
     scrollable: find
-        .descendant(of: strip, matching: find.byType(Scrollable))
+        .descendant(
+          of: find.byKey(const Key('save-home')),
+          matching: find.byType(Scrollable),
+        )
         .first,
   );
   await pause(t, 600);
@@ -316,11 +317,12 @@ void main() {
     final added = c.library!.bookmarks.firstWhere((b) => b.originalUrl == url);
     await fileInto(t, added.id, 'food');
 
-    // Search narrows the list as you type.
+    // Search (one tap from Home) narrows the list as you type.
+    await tap(t, 'open-search');
     await type(t, 'save-search', 'bánh');
     await t.testTextInput.receiveAction(TextInputAction.search);
     await pause(t, 3000);
-    await t.tap(find.byTooltip('Xóa tìm kiếm').first);
+    await back(t);
     await pause(t, 1200);
 
     // Focus: one unread link at a time.

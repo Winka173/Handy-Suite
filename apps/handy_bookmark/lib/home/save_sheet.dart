@@ -2,12 +2,10 @@ import 'package:handy_ui/kit.dart';
 import '../design/theme.dart';
 import '../scope.dart';
 import '../welcome/motion.dart';
-import 'link_capture.dart';
 
-/// The one Save button's sheet, and the only place to save by hand: a
-/// link first (type it, or Paste, then Save), then a picture. Several
-/// links at once is a quiet text action under them; on phones so is how
-/// to save from other apps, which needs no sheet at all.
+/// The + sheet beside Home's link field: the other ways to save. A
+/// picture first; several links at once and how to save from other apps
+/// stay quiet under it. A single link is typed in the field itself.
 Future<void> showSaveSheet(
   BuildContext context,
   SaveScope scope, {
@@ -36,19 +34,11 @@ Future<void> showSaveSheet(
               Semantics(
                 header: true,
                 child: Text(
-                  tr(sheet, 'Save something', 'Lưu một mục'),
+                  tr(sheet, 'More ways to save', 'Cách lưu khác'),
                   style: theme.textTheme.titleLarge,
                 ),
               ),
               const SizedBox(height: 16),
-              LinkCapture(
-                scope: scope,
-                onSaved: (_, saved) {
-                  close();
-                  Navigator.of(context).pushNamed('/bookmark/${saved.id}');
-                },
-              ),
-              const SizedBox(height: 20),
               _Way(
                 key: const Key('save-photo'),
                 icon: Icons.add_photo_alternate_outlined,

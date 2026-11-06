@@ -77,6 +77,7 @@ void main() {
   });
   testWidgets('phone search', (t) async {
     await boot(t, const Size(390, 844));
+    await tapKey(t, 'open-search');
     await t.enterText(find.byKey(const Key('save-search')), 'bánh');
     await t.runAsync(
       () => Future<void>.delayed(const Duration(milliseconds: 400)),

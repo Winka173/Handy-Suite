@@ -710,9 +710,27 @@ void main() {
     await boot(t, const Size(320, 640));
     await tapKey(t, 'save-new');
     await shot(t, 'small-31-save');
+    await t.tapAt(const Offset(160, 40));
+    await t.pumpAndSettle();
     await t.enterText(find.byKey(const Key('bookmark-inline-url')), 'cà phê');
+    await t.pump();
+    await shot(t, 'small-31-save-typed');
     await tapKey(t, 'bookmark-inline-save');
     await shot(t, 'small-31-save-error');
+  });
+  testWidgets('phone quick save done', (t) async {
+    await boot(t, const Size(390, 844));
+    await t.enterText(
+      find.byKey(const Key('bookmark-inline-url')),
+      'https://www.foody.vn/ha-noi/bun-cha-huong-lien',
+    );
+    await t.pump();
+    await tapKey(t, 'bookmark-inline-save');
+    await t.runAsync(
+      () => Future<void>.delayed(const Duration(milliseconds: 100)),
+    );
+    await t.pump(const Duration(milliseconds: 400));
+    await shot(t, 'phone-32-quick-saved', settle: false);
   });
   testWidgets('phone save sheet dark', (t) async {
     await boot(t, const Size(390, 844), theme: 'dark');

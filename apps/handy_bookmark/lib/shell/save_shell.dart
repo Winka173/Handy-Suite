@@ -8,6 +8,7 @@ import '../home/home_page.dart';
 import '../home/triage_strip.dart';
 import '../home/dateline.dart';
 import '../home/save_sheet.dart';
+import '../home/quick_save.dart';
 import '../library/batch_bar.dart';
 import '../library/results_view.dart';
 import '../scope.dart';
@@ -62,17 +63,27 @@ class _SaveShellState extends State<SaveShell> {
             add(clipboard: true),
         SingleActivator(LogicalKeyboardKey.keyN, control: !meta, meta: meta):
             add,
-        SingleActivator(LogicalKeyboardKey.keyF, control: !meta, meta: meta):
-            searchFocus.requestFocus,
+        SingleActivator(
+          LogicalKeyboardKey.keyF,
+          control: !meta,
+          meta: meta,
+        ): width < 700
+            ? () => Navigator.pushNamed(context, '/find')
+            : searchFocus.requestFocus,
       },
       const SingleActivator(LogicalKeyboardKey.escape): () =>
           v.selecting ? v.clearSelection() : setState(() => current = null),
     };
+    // The same Quick Save row as the phone's Home, in the header.
     final addButtons = [
-      Padding(
-        padding: const EdgeInsets.symmetric(horizontal: HandySpace.s),
-        child: SaveButton(scope: scope, onAdd: add),
+      SizedBox(
+        width: (width * .4).clamp(320, 520),
+        child: QuickSaveBar(
+          scope: scope,
+          onMore: () => showSaveSheet(context, scope, onAdd: add),
+        ),
       ),
+      const SizedBox(width: HandySpace.s),
     ];
     if (width < 700) {
       return CallbackShortcuts(
@@ -100,7 +111,7 @@ class _SaveShellState extends State<SaveShell> {
               toolbarHeight: 68,
               titleSpacing: HandySpace.xl,
               title: Text(
-                libraryName(scope.c),
+                libraryName(scope.c, context),
                 overflow: TextOverflow.ellipsis,
                 style: bookmarkSerif(context, 28),
               ),

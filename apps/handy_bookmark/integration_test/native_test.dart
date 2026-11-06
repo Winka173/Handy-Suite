@@ -107,6 +107,8 @@ void main() {
       }
 
       await snap('save-home');
+      await tester.tap(find.byKey(const Key('open-search')));
+      await tester.pumpAndSettle();
       await tester.enterText(find.byKey(const Key('save-search')), 'flutter');
       await tester.pump(const Duration(milliseconds: 400));
       await tester.runAsync(
@@ -116,6 +118,8 @@ void main() {
       expect(find.textContaining('github.com'), findsWidgets);
       await snap('save-search');
       await tester.tap(find.byTooltip('Clear search').first);
+      await tester.pumpAndSettle();
+      await tester.binding.handlePopRoute();
       await tester.pumpAndSettle();
       expect(find.text('Learning'), findsWidgets);
       await tester.tap(find.byKey(const Key('place-focus')));

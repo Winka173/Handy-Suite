@@ -113,16 +113,9 @@ void main() {
       await tapKey(tester, 'save-text-confirm');
       expect(store.rows, hasLength(1));
       final id = store.rows.keys.single;
-      expect(find.byKey(ValueKey('triage-$id')), findsOneWidget);
-      expect(find.text('1 not sorted yet'), findsOneWidget);
-      await tester.tap(
-        find
-            .descendant(
-              of: find.byKey(ValueKey('triage-$id')),
-              matching: find.text('github.com'),
-            )
-            .first,
-      );
+      expect(find.byKey(ValueKey('recent-$id')), findsOneWidget);
+      expect(find.text('1 item · 1 not sorted'), findsOneWidget);
+      await tester.tap(find.byKey(ValueKey('recent-$id')));
       await tester.pumpAndSettle();
       expect(find.byKey(const Key('save-open-original')), findsOneWidget);
       await tapKey(tester, 'save-open-original');
@@ -141,12 +134,13 @@ void main() {
     await tapKey(tester, 'file-$id');
     await tapKey(tester, 'file-$id-recipes');
     expect(c.library!.bookmarks.single.collectionId, isNull);
-    expect(find.byKey(ValueKey('triage-$id')), findsOneWidget);
+    expect(find.byKey(Key('file-$id')), findsOneWidget);
     store.fail = false;
     await tapKey(tester, 'file-$id');
     await tapKey(tester, 'file-$id-recipes');
     expect(c.library!.bookmarks.single.collectionId, 'recipes');
-    expect(find.text('All sorted', skipOffstage: false), findsOneWidget);
+    // Filed: the row names its collection and the button goes.
+    expect(find.byKey(Key('file-$id')), findsNothing);
   });
 
   testWidgets('a link saved twice asks before adding a copy', (tester) async {
@@ -174,6 +168,7 @@ void main() {
         await c.quickSave('https://example.com/b');
       },
     );
+    await tapKey(tester, 'open-search');
     await tester.enterText(find.byKey(const Key('save-search')), 'example');
     await tester.runAsync(
       () => Future<void>.delayed(const Duration(milliseconds: 250)),
@@ -241,6 +236,7 @@ void main() {
       seed: recipes,
     );
     expect(tester.takeException(), isNull);
+    await tapKey(tester, 'open-search');
     await tester.enterText(find.byKey(const Key('save-search')), 'pho');
     await tester.runAsync(
       () => Future<void>.delayed(const Duration(milliseconds: 250)),
@@ -249,6 +245,8 @@ void main() {
     await tapKey(tester, 'save-filters');
     expect(tester.takeException(), isNull);
     await tester.tapAt(const Offset(10, 10));
+    await tester.pumpAndSettle();
+    await tester.binding.handlePopRoute();
     await tester.pumpAndSettle();
     await tapKey(tester, 'open-settings');
     expect(tester.takeException(), isNull);

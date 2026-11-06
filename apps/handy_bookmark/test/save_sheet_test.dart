@@ -21,42 +21,59 @@ void clipboardHolds(WidgetTester t, String text) {
 }
 
 void main() {
-  testWidgets('the save sheet: Paste fills the field, a word with no link '
-      'says so in place, and a save keeps the sheet open for the next', (
-    t,
-  ) async {
+  testWidgets('Quick Save on Home: + until there is text, then Save; a word '
+      'with no link says so in place and keeps the text; a save clears the '
+      'field and offers View and Undo', (t) async {
     final store = TestStore(), c = await start(t, store: store);
-    await tapKey(t, 'save-new');
     final input = find.byKey(const Key('bookmark-inline-url'));
-
-    // Save stays off until there is something to save.
-    expect(
-      t
-          .widget<FilledButton>(find.byKey(const Key('bookmark-inline-save')))
-          .onPressed,
-      isNull,
-    );
+    expect(input, findsOneWidget, reason: 'the field is on Home');
+    expect(find.byKey(const Key('bookmark-inline-save')), findsNothing);
+    expect(find.byKey(const Key('save-new')), findsOneWidget);
 
     await t.enterText(input, 'pho near the river');
+    await t.pump();
+    expect(find.byKey(const Key('save-new')), findsNothing);
     await tapKey(t, 'bookmark-inline-save');
-    expect(find.textContaining('No link here yet'), findsOneWidget);
+    expect(find.textContaining('No link in this text'), findsOneWidget);
     expect(store.rows, isEmpty);
     expect(t.widget<TextField>(input).controller!.text, 'pho near the river');
 
+    await t.enterText(input, 'javascript:alert(1)');
+    await t.testTextInput.receiveAction(TextInputAction.done);
+    await t.pumpAndSettle();
+    expect(find.textContaining('Only web links'), findsOneWidget);
+    expect(store.rows, isEmpty);
+
+    await tapKey(t, 'quick-clear');
     clipboardHolds(t, '  https://example.org/pho  ');
     await tapKey(t, 'save-paste');
     expect(
       t.widget<TextField>(input).controller!.text,
       'https://example.org/pho',
     );
-    expect(find.textContaining('No link here yet'), findsNothing);
+    expect(find.byKey(const Key('quick-problem')), findsNothing);
 
-    await tapKey(t, 'bookmark-inline-save');
+    // The keyboard's Done saves, once, however fast it is pressed.
+    await t.showKeyboard(input);
+    await t.testTextInput.receiveAction(TextInputAction.done);
+    await t.testTextInput.receiveAction(TextInputAction.done);
+    await t.runAsync(
+      () => Future<void>.delayed(const Duration(milliseconds: 50)),
+    );
+    await t.pumpAndSettle();
     expect(store.rows, hasLength(1));
     expect(c.library!.bookmarks.single.originalUrl, 'https://example.org/pho');
-    expect(find.textContaining('Saved to Not sorted'), findsOneWidget);
-    expect(find.byKey(const Key('save-sheet')), findsOneWidget);
+    expect(find.text('Saved to Not sorted.'), findsOneWidget);
+    expect(find.byKey(const Key('quick-view')), findsOneWidget);
     expect(t.widget<TextField>(input).controller!.text, isEmpty);
+
+    // Undo puts the new save in Trash: nothing is lost by a quick tap.
+    await tapKey(t, 'quick-undo');
+    await t.runAsync(
+      () => Future<void>.delayed(const Duration(milliseconds: 50)),
+    );
+    expect(c.library!.bookmarks, isEmpty);
+    expect(c.library!.trash, hasLength(1));
 
     // The same clipboard text is not offered twice.
     await tapKey(t, 'save-paste');
@@ -68,7 +85,6 @@ void main() {
       t,
       seed: (c) => c.quickSave('https://example.com/a', title: 'Phở Hà Nội'),
     );
-    await tapKey(t, 'save-new');
     await t.enterText(
       find.byKey(const Key('bookmark-inline-url')),
       'https://example.com/a',

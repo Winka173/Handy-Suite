@@ -63,6 +63,10 @@ Future<Bookmark?> saveCapturedLinks(
   SaveScope scope,
   String text, {
   VoidCallback? onSaved,
+  String? collectionId,
+
+  /// When given, called with what was saved instead of the plain message.
+  void Function(List<Bookmark> saved)? onSavedItems,
 }) async {
   final c = scope.c;
   final found = UrlTools.extract(text);
@@ -108,10 +112,16 @@ Future<Bookmark?> saveCapturedLinks(
           final saved = <Bookmark>[];
           final ok = await scope.run(
             context,
-            () async =>
-                saved.addAll(await c.quickSave(text, allowDuplicates: true)),
+            () async => saved.addAll(
+              await c.quickSave(
+                text,
+                allowDuplicates: true,
+                collectionId: collectionId,
+              ),
+            ),
           );
           if (ok) onSaved?.call();
+          if (ok) onSavedItems?.call(saved);
           return saved.firstOrNull;
         default:
           return null;
@@ -121,10 +131,13 @@ Future<Bookmark?> saveCapturedLinks(
   final saved = <Bookmark>[];
   final ok = await scope.run(
     context,
-    () async => saved.addAll(await c.quickSave(text)),
+    () async =>
+        saved.addAll(await c.quickSave(text, collectionId: collectionId)),
   );
   if (ok) onSaved?.call();
-  if (ok && context.mounted) {
+  if (ok && onSavedItems != null) {
+    onSavedItems(saved);
+  } else if (ok && context.mounted) {
     showHandyMessage(
       context,
       saved.length == 1

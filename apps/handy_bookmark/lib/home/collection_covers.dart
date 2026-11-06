@@ -15,10 +15,17 @@ import '../view/library_view.dart';
 class CollectionCovers extends StatelessWidget {
   final SaveScope scope;
   final ValueChanged<SaveCollection> onOpen;
+
+  /// The whole list (Home shows its top-level collections, at most [limit],
+  /// in the person's own order, and a See all).
+  final VoidCallback? onAll;
+  final int? limit;
   const CollectionCovers({
     super.key,
     required this.scope,
     required this.onOpen,
+    this.onAll,
+    this.limit,
   });
 
   @override
@@ -38,14 +45,26 @@ class CollectionCovers extends StatelessWidget {
       children: [
         SectionHead(
           tr(context, 'Collections', 'Bộ sưu tập'),
-          action: IconButton.filledTonal(
-            style: IconButton.styleFrom(
-              backgroundColor: BookmarkPalette.of(context).surface,
-            ),
-            key: const Key('collection-new'),
-            tooltip: tr(context, 'New collection', 'Bộ sưu tập mới'),
-            icon: const Icon(Icons.add),
-            onPressed: () => scope.editCollection(context),
+          action: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              if (onAll != null)
+                TextButton(
+                  key: const Key('home-library'),
+                  onPressed: onAll,
+                  child: Text(tr(context, 'See all', 'Xem tất cả')),
+                ),
+              IconButton.filledTonal(
+                style: IconButton.styleFrom(
+                  backgroundColor: BookmarkPalette.of(context).surface,
+                ),
+                key: const Key('collection-new'),
+                tooltip: tr(context, 'New collection', 'Bộ sưu tập mới'),
+                // A folder, not a plus: the one + on Home is Save.
+                icon: const Icon(Icons.create_new_folder_outlined),
+                onPressed: () => scope.editCollection(context),
+              ),
+            ],
           ),
         ),
         if (l.collections.isEmpty)
@@ -72,7 +91,10 @@ class CollectionCovers extends StatelessWidget {
                 spacing: gap,
                 runSpacing: HandySpace.l,
                 children: [
-                  for (final (col, _) in collectionTree(l))
+                  for (final (col, _) in [
+                    for (final e in collectionTree(l))
+                      if (limit == null || e.$1.parentId == null) e,
+                  ].take(limit ?? 1 << 20))
                     SizedBox(
                       width: width,
                       child: _Cover(
@@ -286,15 +308,19 @@ class _EmptyCover extends StatelessWidget {
         padding: const EdgeInsets.all(14),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             Icon(Icons.folder_outlined, color: ink, size: 22),
-            const Spacer(),
-            Text(
-              tr(context, 'Nothing here yet', 'Chưa có gì'),
-              style: TextStyle(
-                color: ink,
-                fontSize: 13,
-                fontWeight: FontWeight.w600,
+            Flexible(
+              child: Text(
+                tr(context, 'Nothing here yet', 'Chưa có gì'),
+                maxLines: 3,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(
+                  color: ink,
+                  fontSize: 13,
+                  fontWeight: FontWeight.w600,
+                ),
               ),
             ),
           ],

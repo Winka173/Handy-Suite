@@ -1,5 +1,6 @@
 import 'design/identity.dart';
 import 'pro/organize_page.dart';
+import 'library/find_page.dart';
 import 'pro/export/export_studio.dart';
 import 'design/theme.dart';
 import 'design/looks.dart';
@@ -332,6 +333,7 @@ class _SaveAppState extends State<SaveApp> with WidgetsBindingObserver {
       ['', 'duplicates'] => () => DuplicatesPage(scope: scope),
       ['', 'trash'] => () => TrashPage(scope: scope),
       ['', 'library'] => () => LibraryPage(scope: scope),
+      ['', 'find'] => () => FindPage(scope: scope, onExport: export),
       ['', 'looks'] => () => ThemeStudio(scope: scope),
       ['', 'organize'] => () => OrganizePage(scope: scope),
       ['', 'export', final id] => () => ExportStudio(

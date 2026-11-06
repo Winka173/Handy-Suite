@@ -45,6 +45,14 @@ Future<void> library(OpeningController c) async {
   );
 }
 
+/// A sub-collection: Home shows only top-level ones, so go by its route.
+Future<void> openFood(WidgetTester t) async {
+  Navigator.of(
+    t.element(find.byType(Scaffold).first),
+  ).pushNamed('/collection/food');
+  await t.pumpAndSettle();
+}
+
 void main() {
   for (final theme in ['light', 'dark']) {
     testWidgets(
@@ -53,7 +61,7 @@ void main() {
         final handle = tester.ensureSemantics();
         final c = await start(tester, seed: library, theme: theme);
         await meetsAll(tester, 'home');
-        await tapKey(tester, 'collection-food');
+        await openFood(tester);
         await meetsAll(tester, 'collection');
         final id = c.library!.bookmarks
             .firstWhere((b) => b.collectionId == 'food')
@@ -84,7 +92,7 @@ void main() {
   ) async {
     final c = await start(tester, seed: library, size: const Size(320, 640));
     expect(tester.takeException(), isNull);
-    await tapKey(tester, 'collection-food');
+    await openFood(tester);
     expect(tester.takeException(), isNull);
     await tapKey(tester, 'save-view');
     expect(tester.takeException(), isNull, reason: 'cards');

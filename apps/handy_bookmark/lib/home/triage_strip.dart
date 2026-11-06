@@ -157,11 +157,7 @@ class _ShelfCard extends StatelessWidget {
               Padding(
                 padding: const EdgeInsets.fromLTRB(8, 0, 8, 8),
                 child: home == null
-                    ? _PutIn(
-                        controller: controller,
-                        bookmark: b,
-                        onFile: onFile,
-                      )
+                    ? PutIn(controller: controller, bookmark: b, onFile: onFile)
                     : Padding(
                         padding: const EdgeInsets.fromLTRB(4, 0, 4, 6),
                         child: Row(
@@ -192,14 +188,19 @@ class _ShelfCard extends StatelessWidget {
 
 /// The one way to file a new save from the shelf: a small button that
 /// opens the person's usual collections, then every other one.
-class _PutIn extends StatelessWidget {
+class PutIn extends StatelessWidget {
   final SaveController controller;
   final Bookmark bookmark;
   final Future<void> Function(Bookmark, String) onFile;
-  const _PutIn({
+
+  /// An icon-sized button, for rows.
+  final bool compact;
+  const PutIn({
+    super.key,
     required this.controller,
     required this.bookmark,
     required this.onFile,
+    this.compact = false,
   });
 
   Future<void> _file(BuildContext context, String id) async {
@@ -296,25 +297,32 @@ class _PutIn extends StatelessWidget {
   }
 
   @override
-  Widget build(BuildContext context) => SizedBox(
-    height: 48,
-    child: FilledButton.tonalIcon(
-      key: Key('file-${bookmark.id}'),
-      style: FilledButton.styleFrom(
-        minimumSize: const Size.fromHeight(48),
-        padding: const EdgeInsets.symmetric(horizontal: 12),
-        backgroundColor: BookmarkPalette.of(context).tint,
-        foregroundColor: Theme.of(context).brightness == Brightness.dark
-            ? BookmarkPalette.dark.ink
-            : BookmarkPalette.light.pressed,
-        shape: const StadiumBorder(),
-        textStyle: Theme.of(
-          context,
-        ).textTheme.labelLarge?.copyWith(fontWeight: FontWeight.w600),
-      ),
-      onPressed: () => _choose(context),
-      icon: const Icon(Icons.drive_file_move_outline, size: 18),
-      label: Text(tr(context, 'Put in…', 'Xếp vào…')),
-    ),
-  );
+  Widget build(BuildContext context) => compact
+      ? IconButton(
+          key: Key('file-${bookmark.id}'),
+          tooltip: tr(context, 'Put in a collection', 'Xếp vào bộ sưu tập'),
+          onPressed: () => _choose(context),
+          icon: const Icon(Icons.drive_file_move_outline),
+        )
+      : SizedBox(
+          height: 48,
+          child: FilledButton.tonalIcon(
+            key: Key('file-${bookmark.id}'),
+            style: FilledButton.styleFrom(
+              minimumSize: const Size.fromHeight(48),
+              padding: const EdgeInsets.symmetric(horizontal: 12),
+              backgroundColor: BookmarkPalette.of(context).tint,
+              foregroundColor: Theme.of(context).brightness == Brightness.dark
+                  ? BookmarkPalette.dark.ink
+                  : BookmarkPalette.light.pressed,
+              shape: const StadiumBorder(),
+              textStyle: Theme.of(
+                context,
+              ).textTheme.labelLarge?.copyWith(fontWeight: FontWeight.w600),
+            ),
+            onPressed: () => _choose(context),
+            icon: const Icon(Icons.drive_file_move_outline, size: 18),
+            label: Text(tr(context, 'Put in…', 'Xếp vào…')),
+          ),
+        );
 }

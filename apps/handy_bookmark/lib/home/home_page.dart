@@ -1,22 +1,21 @@
 import 'package:handy_ui/kit.dart';
 import '../library/batch_bar.dart';
-import '../library/results_view.dart';
 import '../scope.dart';
-import '../shell/search_box.dart';
 import '../view/library_view.dart';
 import '../shell/share_issues.dart';
-import 'triage_strip.dart';
 import '../links/task_strip.dart';
 import 'collection_covers.dart';
 import 'dateline.dart';
 import 'save_sheet.dart';
 import '../design/theme.dart';
 import 'empty_library.dart';
+import 'home_sections.dart';
+import 'quick_save.dart';
 
-/// The phone's home, as simple as saving is: find something, the two ways
-/// further in (the whole Library, and Focus), what was saved lately, and
-/// the collections as covers. Typing (or choosing Links / Pictures) turns
-/// the home into results; clearing brings it back. One Save button.
+/// The phone's home, a launchpad: the library's name, the Quick Save row
+/// (a link field and the one Save control), a compact reminder of what
+/// waits in Focus, the collections as covers, and the last few saves.
+/// Search and every item live one step in (the search icon, See all).
 class SaveHomePage extends StatelessWidget {
   final SaveScope scope;
   final FocusNode searchFocus;
@@ -43,11 +42,28 @@ class SaveHomePage extends StatelessWidget {
   Widget build(BuildContext context) {
     final v = scope.view;
     return ListenableBuilder(
-      listenable: v,
+      listenable: Listenable.merge([v, scope.c]),
       builder: (context, _) {
-        final searching = v.text.trim().isNotEmpty || v.filters.kind != null;
+        final theme = Theme.of(context);
+        final p = BookmarkPalette.of(context);
         final l = scope.library;
         final empty = l.bookmarks.isEmpty && l.trash.isEmpty;
+        var live = 0, unsorted = 0;
+        for (final b in l.bookmarks) {
+          if (b.isArchived) continue;
+          live++;
+          if (b.collectionId == null) unsorted++;
+        }
+        final n = formatFigure(context, '$live');
+        final subtitle = [
+          tr(context, live == 1 ? '1 item' : '$n items', '$n mục'),
+          if (unsorted > 0)
+            tr(
+              context,
+              '${formatFigure(context, '$unsorted')} not sorted',
+              '${formatFigure(context, '$unsorted')} chưa xếp',
+            ),
+        ].join(' · ');
         return Scaffold(
           appBar: AppBar(
             automaticallyImplyLeading: false,
@@ -56,12 +72,19 @@ class SaveHomePage extends StatelessWidget {
             title: Semantics(
               header: true,
               child: Text(
-                libraryName(scope.c),
+                libraryName(scope.c, context),
                 overflow: TextOverflow.ellipsis,
                 style: bookmarkSerif(context, 28),
               ),
             ),
             actions: [
+              if (!empty)
+                IconButton(
+                  key: const Key('open-search'),
+                  tooltip: tr(context, 'Search', 'Tìm'),
+                  icon: const Icon(Icons.search_rounded),
+                  onPressed: () => Navigator.pushNamed(context, '/find'),
+                ),
               IconButton(
                 key: const Key('open-settings'),
                 tooltip: tr(context, 'Settings', 'Cài đặt'),
@@ -73,210 +96,64 @@ class SaveHomePage extends StatelessWidget {
           ),
           bottomNavigationBar: v.selecting
               ? BatchBar(scope: scope, onExport: onExport)
-              : HandyBottomBar(
-                  child: SaveButton(
-                    scope: scope,
-                    onAdd: onAddFrom,
-                    expand: true,
+              : null,
+          body: ListView(
+            key: const Key('save-home'),
+            padding: const EdgeInsets.fromLTRB(
+              HandySpace.l,
+              HandySpace.xs,
+              HandySpace.l,
+              HandySpace.xxl,
+            ),
+            children: [
+              if (!empty)
+                Padding(
+                  padding: const EdgeInsets.only(bottom: HandySpace.m),
+                  child: Text(
+                    subtitle,
+                    key: const Key('home-subtitle'),
+                    style: theme.textTheme.bodyMedium?.copyWith(color: p.muted),
                   ),
                 ),
-          body: searching
-              ? ResultsView(
+              QuickSaveBar(
+                scope: scope,
+                onMore: () => showSaveSheet(context, scope, onAdd: onAddFrom),
+              ),
+              ShareIssues(controller: scope.c),
+              TaskStrip(
+                tasks: scope.tasks,
+                onBroken: () {
+                  scope.tasks.dismiss();
+                  openPlace(context, Place.broken);
+                },
+              ),
+              if (empty)
+                EmptyLibrary(onPicture: () => scope.addPhoto(context))
+              else ...[
+                const SizedBox(height: HandySpace.l),
+                FocusNudge(
                   scope: scope,
-                  onDetails: (b) =>
-                      Navigator.pushNamed(context, '/bookmark/${b.id}'),
-                  onAdd: onAdd,
-                  leading: [
-                    SearchBox(view: v, focus: searchFocus),
-                    const SizedBox(height: HandySpace.l),
-                  ],
-                )
-              : ListView(
-                  key: const Key('save-home'),
-                  padding: const EdgeInsets.fromLTRB(
-                    HandySpace.l,
-                    HandySpace.xs,
-                    HandySpace.l,
-                    HandySpace.xxl,
-                  ),
-                  children: [
-                    SearchBox(view: v, focus: searchFocus),
-                    if (empty)
-                      EmptyLibrary(
-                        // The same sheet as the Save button: one way in.
-                        onAdd: () =>
-                            showSaveSheet(context, scope, onAdd: onAddFrom),
-                      )
-                    else
-                      HomeDoors(
-                        scope: scope,
-                        onLibrary: () =>
-                            Navigator.pushNamed(context, '/library'),
-                        onFocus: () => Navigator.pushNamed(context, '/focus'),
-                      ),
-                    ShareIssues(controller: scope.c),
-                    TaskStrip(
-                      tasks: scope.tasks,
-                      onBroken: () {
-                        scope.tasks.dismiss();
-                        openPlace(context, Place.broken);
-                      },
-                    ),
-                    TriageStrip(
-                      controller: scope.c,
-                      onFile: scope.file,
-                      onOpen: (b) =>
-                          Navigator.pushNamed(context, '/bookmark/${b.id}'),
-                      onAll: () => openPlace(context, Place.inbox),
-                    ),
-                    if (!empty || l.collections.isNotEmpty)
-                      CollectionCovers(
-                        scope: scope,
-                        onOpen: (col) =>
-                            openPlace(context, Place.collection, col.id),
-                      ),
-                  ],
+                  onOpen: () => Navigator.pushNamed(context, '/focus'),
                 ),
+              ],
+              if (!empty || l.collections.isNotEmpty)
+                CollectionCovers(
+                  scope: scope,
+                  limit: 6,
+                  onAll: () => Navigator.pushNamed(context, '/library'),
+                  onOpen: (col) => openPlace(context, Place.collection, col.id),
+                ),
+              if (!empty)
+                RecentlySaved(
+                  scope: scope,
+                  onOpen: (b) =>
+                      Navigator.pushNamed(context, '/bookmark/${b.id}'),
+                  onAll: () => openPlace(context, Place.all),
+                ),
+            ],
+          ),
         );
       },
-    );
-  }
-}
-
-/// The two ways further in, side by side under the search: the whole
-/// Library (every place, tag and kept list) and Focus (what is not read
-/// yet, one at a time). Stacked when the screen is narrow or the text is
-/// large.
-class HomeDoors extends StatelessWidget {
-  final SaveScope scope;
-  final VoidCallback onLibrary, onFocus;
-  const HomeDoors({
-    super.key,
-    required this.scope,
-    required this.onLibrary,
-    required this.onFocus,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final l = scope.library;
-    var live = 0, unread = 0;
-    for (final b in l.bookmarks) {
-      if (b.isArchived) continue;
-      live++;
-      if (!b.isRead) unread++;
-    }
-    final n = formatFigure(context, '$live');
-    final library = _Door(
-      key: const Key('home-library'),
-      icon: Icons.bookmarks_outlined,
-      title: tr(context, 'Library', 'Thư viện'),
-      // How much is in it; what waits to be sorted is on the shelf below.
-      note: tr(context, n == 1 ? '1 item' : '$n items', '$n mục'),
-      onTap: onLibrary,
-    );
-    final focus = _Door(
-      key: const Key('place-focus'),
-      icon: Icons.center_focus_strong_outlined,
-      title: tr(context, 'Focus', 'Tập trung'),
-      note: unread == 0
-          ? tr(context, 'Everything is read', 'Đã xem hết')
-          : tr(
-              context,
-              '${formatFigure(context, '$unread')} not read yet',
-              '${formatFigure(context, '$unread')} mục chưa xem',
-            ),
-      onTap: onFocus,
-    );
-    final scale = MediaQuery.textScalerOf(context).scale(14) / 14;
-    return Padding(
-      padding: const EdgeInsets.only(top: HandySpace.m),
-      child: LayoutBuilder(
-        builder: (context, box) => box.maxWidth / 2 < 150 * scale
-            ? Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  library,
-                  const SizedBox(height: HandySpace.s),
-                  focus,
-                ],
-              )
-            : IntrinsicHeight(
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    Expanded(child: library),
-                    const SizedBox(width: HandySpace.s),
-                    Expanded(child: focus),
-                  ],
-                ),
-              ),
-      ),
-    );
-  }
-}
-
-class _Door extends StatelessWidget {
-  final IconData icon;
-  final String title, note;
-  final VoidCallback onTap;
-  const _Door({
-    super.key,
-    required this.icon,
-    required this.title,
-    required this.note,
-    required this.onTap,
-  });
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final p = BookmarkPalette.of(context);
-    return Semantics(
-      button: true,
-      child: Material(
-        color: p.surface,
-        borderRadius: BorderRadius.circular(BookmarkRadii.item),
-        clipBehavior: Clip.antiAlias,
-        child: InkWell(
-          onTap: onTap,
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(minHeight: 64),
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(14, 12, 10, 12),
-              child: Row(
-                children: [
-                  Icon(icon, size: 22, color: p.primary),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          title,
-                          style: theme.textTheme.titleSmall?.copyWith(
-                            fontSize: 15,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                        const SizedBox(height: 2),
-                        Text(
-                          note,
-                          style: theme.textTheme.bodySmall?.copyWith(
-                            color: p.muted,
-                            fontFeatures: tabular,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  Icon(Icons.chevron_right, size: 20, color: p.muted),
-                ],
-              ),
-            ),
-          ),
-        ),
-      ),
     );
   }
 }

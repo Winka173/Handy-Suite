@@ -22,6 +22,8 @@ void main() {
       () => Future<void>.delayed(const Duration(milliseconds: 300)),
     );
     await settle(t);
+    // Links / Pictures live in Search, not on the home.
+    await tapKey(t, 'open-search');
     expect(find.text('Pictures 1'), findsOneWidget);
     expect(find.text('Links 2'), findsOneWidget);
     await tapKey(t, 'kind-image');
@@ -35,6 +37,8 @@ void main() {
     await tapKey(t, 'kind-all');
     await settle(t);
     expect(c.library!.bookmarks, hasLength(3));
+    await t.binding.handlePopRoute();
+    await settle(t);
     expect(find.byKey(const Key('save-home')), findsOneWidget);
   });
 

@@ -6,8 +6,9 @@ import '../design/theme.dart';
 /// stacked as if just dropped here, one line on how saving works, one
 /// button, and the guide again for whoever skipped it.
 class EmptyLibrary extends StatelessWidget {
-  final VoidCallback onAdd;
-  const EmptyLibrary({super.key, required this.onAdd});
+  /// Saving a picture; a link goes in the Quick Save row above.
+  final VoidCallback onPicture;
+  const EmptyLibrary({super.key, required this.onPicture});
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -78,26 +79,32 @@ class EmptyLibrary extends StatelessWidget {
             Text(
               tr(
                 context,
-                'In TikTok, Facebook, YouTube or your browser: Share, then Handy Bookmark (under More if it is not listed). Or paste a link here.',
-                'Trong TikTok, Facebook, YouTube hay trình duyệt: bấm Chia sẻ rồi chọn Handy Bookmark (không thấy thì bấm Khác). Hoặc dán link ngay đây.',
+                'Paste a link above. In TikTok, Facebook, YouTube or your browser: Share, then Handy Bookmark (under More if it is not listed).',
+                'Dán link vào ô phía trên. Trong TikTok, Facebook, YouTube hay trình duyệt: bấm Chia sẻ rồi chọn Handy Bookmark (không thấy thì bấm Khác).',
               ),
               textAlign: TextAlign.center,
               style: theme.textTheme.bodyMedium?.copyWith(color: p.muted),
             ),
-            const SizedBox(height: 18),
-            FilledButton.icon(
-              key: const Key('empty-save'),
-              onPressed: onAdd,
-              icon: const Icon(Icons.add),
-              label: Text(
-                tr(context, 'Save your first item', 'Lưu mục đầu tiên'),
-              ),
-            ),
-            const SizedBox(height: 4),
-            TextButton(
-              key: const Key('empty-guide'),
-              onPressed: () => Navigator.pushNamed(context, '/welcome'),
-              child: Text(tr(context, 'See how saving works', 'Xem cách lưu')),
+            const SizedBox(height: 14),
+            // Quiet ways only: the one Save is the row above.
+            Wrap(
+              alignment: WrapAlignment.center,
+              spacing: 4,
+              children: [
+                TextButton.icon(
+                  key: const Key('empty-save'),
+                  onPressed: onPicture,
+                  icon: const Icon(Icons.add_photo_alternate_outlined),
+                  label: Text(tr(context, 'Save a picture', 'Lưu một ảnh')),
+                ),
+                TextButton(
+                  key: const Key('empty-guide'),
+                  onPressed: () => Navigator.pushNamed(context, '/welcome'),
+                  child: Text(
+                    tr(context, 'See how saving works', 'Xem cách lưu'),
+                  ),
+                ),
+              ],
             ),
           ],
         ),

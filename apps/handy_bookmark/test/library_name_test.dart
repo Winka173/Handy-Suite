@@ -9,11 +9,9 @@ import 'widget_test.dart' show tapKey;
 void main() {
   testWidgets('the home names the library and says what waits', (t) async {
     await boot(t);
-    expect(find.text('Handy Bookmark'), findsWidgets);
-    // The day's finding sits on the "Recently saved" shelf (the dateline
-    // was dropped on 2026-11-06); the Library door says how much it holds.
-    expect(find.text('3 not sorted yet'), findsOneWidget);
-    expect(find.text('3 items'), findsOneWidget);
+    expect(find.text('My library'), findsWidgets);
+    // Under the name: how much it holds and how much waits to be sorted.
+    expect(find.text('3 items · 3 not sorted'), findsOneWidget);
     await tapKey(t, 'open-settings');
     await tapKey(t, 'set-library-name');
     await t.enterText(
