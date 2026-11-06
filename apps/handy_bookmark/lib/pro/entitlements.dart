@@ -30,6 +30,7 @@ const shippedProFeatures = {
   ProFeature.advancedBulk,
   ProFeature.readerHighlights,
   ProFeature.deepSearch,
+  ProFeature.ocrOffline,
 };
 
 /// Whether this person owns a verified Pro Lifetime.

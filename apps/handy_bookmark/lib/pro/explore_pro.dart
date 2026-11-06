@@ -65,8 +65,8 @@ class ExplorePro extends StatelessWidget {
         title: tr(context, 'Reading and search', 'Đọc và tìm kiếm'),
         body: tr(
           context,
-          'Highlight passages in the reader in five colours and add notes; they stay with the item in backups. Search also looks inside your offline articles and your highlights, and says where it found each one.',
-          'Đánh dấu đoạn văn trong trình đọc với năm màu và thêm ghi chú; chúng đi cùng mục trong bản sao lưu. Tìm kiếm còn tìm trong bài đã lưu offline và đoạn đánh dấu, và cho biết tìm thấy ở đâu.',
+          'Highlight passages in the reader in five colours and add notes; they stay with the item in backups. Copy the text in a picture, read on this device. Search also looks inside your offline articles, highlights and pictures, and says where it found each one.',
+          'Đánh dấu đoạn văn trong trình đọc với năm màu và thêm ghi chú; chúng đi cùng mục trong bản sao lưu. Chép chữ trong ảnh, đọc ngay trên máy. Tìm kiếm còn tìm trong bài đã lưu offline, đoạn đánh dấu và ảnh, và cho biết tìm thấy ở đâu.',
         ),
       ),
     ];

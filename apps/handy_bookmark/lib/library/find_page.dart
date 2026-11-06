@@ -4,6 +4,8 @@ import '../shell/search_box.dart';
 import '../view/library_view.dart';
 import 'batch_bar.dart';
 import 'deep_matches.dart';
+import '../pro/entitlements.dart';
+import '../pro/picture_text.dart';
 import 'results_view.dart';
 
 /// Search: everything saved, with the search field focused. Leaving
@@ -27,7 +29,15 @@ class _FindPageState extends State<FindPage> {
     view.show(Place.all);
     deep.load();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (mounted) focus.requestFocus();
+      if (!mounted) return;
+      focus.requestFocus();
+      // Pictures not read yet are read in the background (Pro, offline).
+      if (hasPro(context)) {
+        PictureTextQueue.add(widget.scope.c, [
+          for (final b in widget.scope.library.bookmarks)
+            if (b.isImage) b.id,
+        ]);
+      }
     });
   }
 

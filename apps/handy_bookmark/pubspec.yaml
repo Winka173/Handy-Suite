@@ -16,6 +16,7 @@ dependencies:
   handy_notifications: any
   handy_monetization: any
   handy_pdf: any
+  handy_ocr: any
   pdf: 3.13.1
   sqlite3: 3.5.2
   path_provider: 2.1.6

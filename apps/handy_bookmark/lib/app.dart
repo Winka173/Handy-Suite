@@ -1,5 +1,6 @@
 import 'design/identity.dart';
 import 'pro/organize_page.dart';
+import 'pro/picture_text.dart';
 import 'library/find_page.dart';
 import 'pro/export/export_studio.dart';
 import 'design/theme.dart';
@@ -114,6 +115,8 @@ class _SaveAppState extends State<SaveApp> with WidgetsBindingObserver {
     _registerPhotoCredits();
     WidgetsBinding.instance.addObserver(this);
     c.addListener(_changed);
+    // What is already there is not new: only later saves meet the rules.
+    if (c.library != null) _seen = {for (final b in c.library!.bookmarks) b.id};
     _loadPreferences();
     _start();
   }
@@ -211,6 +214,11 @@ class _SaveAppState extends State<SaveApp> with WidgetsBindingObserver {
     final context = navigator.currentContext;
     if (fresh.isEmpty || context == null || !hasPro(context)) return;
     unawaited(organizeNewSaves(c, fresh).catchError((Object _) {}));
+    // New pictures are read for Search in the background (Pro, offline).
+    PictureTextQueue.add(c, [
+      for (final b in l.bookmarks)
+        if (b.isImage && fresh.contains(b.id)) b.id,
+    ]);
   }
 
   void _changed() {

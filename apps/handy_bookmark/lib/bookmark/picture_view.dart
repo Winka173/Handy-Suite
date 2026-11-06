@@ -1,4 +1,5 @@
 import 'dart:math' as math;
+import '../pro/picture_text.dart';
 import 'package:flutter/services.dart';
 import 'package:handy_bookmark_engine/handy_bookmark_engine.dart';
 import 'package:handy_ui/kit.dart';
@@ -91,6 +92,16 @@ class _PictureViewState extends State<PictureView> {
               onPressed: () => Navigator.maybePop(context),
             ),
             titleSpacing: 0,
+            actions: [
+              IconButton(
+                key: const Key('picture-read-text'),
+                tooltip: tr(context, 'Copy text', 'Chép chữ trong ảnh'),
+                icon: const Icon(Icons.document_scanner_outlined),
+                onPressed: () =>
+                    showPictureText(context, widget.controller, widget.item),
+              ),
+              const SizedBox(width: 4),
+            ],
             title: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               mainAxisSize: MainAxisSize.min,
