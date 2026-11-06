@@ -13,6 +13,7 @@ import 'platform/store.dart';
 import 'reader/reader_page.dart';
 import 'scope.dart';
 import 'services/reminders.dart';
+import 'library/trash_page.dart';
 import 'settings/duplicates_page.dart';
 import 'settings/save_settings.dart';
 import 'shell/save_shell.dart';
@@ -222,6 +223,7 @@ class _SaveAppState extends State<SaveApp> with WidgetsBindingObserver {
       },
       ['', 'focus'] => () => FocusPage(scope: scope),
       ['', 'duplicates'] => () => DuplicatesPage(scope: scope),
+      ['', 'trash'] => () => TrashPage(scope: scope),
       ['', 'bookmark', final id] => () => BookmarkPage(scope: scope, id: id),
       ['', 'read', final id] => () => ReaderPage(scope: scope, id: id),
       ['', 'search', final id] => () => ResultsPage(

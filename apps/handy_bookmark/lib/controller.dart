@@ -27,6 +27,7 @@ SaveLibrary _decodeLibrary(Map<String, dynamic> raw) {
     'version': 1,
     ...state,
     'bookmarks': raw['bookmarks'] ?? [],
+    'trash': raw['trash'] ?? [],
   });
 }
 
@@ -71,6 +72,7 @@ class SaveController extends ChangeNotifier {
       store = await openStore();
       final raw = await store!.read();
       library = await compute(_decodeLibrary, raw);
+      final opened = DateTime.now();
       preferences = Map<String, dynamic>.from(
         (raw['state'] as Map?)?['preferences'] as Map? ?? {},
       )..remove('bookmarkOrder');
@@ -95,6 +97,7 @@ class SaveController extends ChangeNotifier {
       );
       changed();
       await drain();
+      await _tidy(opened);
     } catch (_) {
       error = 'storage_failed';
       changed();
@@ -113,12 +116,26 @@ class SaveController extends ChangeNotifier {
         final before = library!,
             next = change(before),
             beforeMap = {for (final b in before.bookmarks) b.id: b},
-            ids = next.bookmarks.map((b) => b.id).toSet();
+            ids = next.bookmarks.map((b) => b.id).toSet(),
+            beforeTrash = {for (final b in before.trash) b.id: b},
+            trashIds = next.trash.map((b) => b.id).toSet();
         final upserts = [
           for (final b in next.bookmarks)
             if (!identical(b, beforeMap[b.id])) b.toJson(),
         ];
-        final state = next.toJson()..remove('bookmarks');
+        // Recently Deleted rows travel in the same transaction, so an item
+        // is never in both places nor in neither.
+        final trashUpserts = [
+          for (final b in next.trash)
+            if (!identical(b, beforeTrash[b.id])) b.toJson(),
+        ];
+        final trashDeletes = [
+          for (final b in before.trash)
+            if (!trashIds.contains(b.id)) b.id,
+        ];
+        final state = next.toJson()
+          ..remove('bookmarks')
+          ..remove('trash');
         state['preferences'] = prefs ?? preferences;
         final deleted = {
           for (final b in before.bookmarks)
@@ -128,6 +145,8 @@ class SaveController extends ChangeNotifier {
           upserts: upserts,
           deletes: deleted.toList(),
           settings: state,
+          trashUpserts: trashUpserts,
+          trashDeletes: trashDeletes,
         );
         library = next;
         // The store atomically retains/restores copies alongside link writes.
@@ -155,6 +174,20 @@ class SaveController extends ChangeNotifier {
       }
     });
     return done.future;
+  }
+
+  /// The defined moment for housekeeping: items in Recently Deleted for 30
+  /// days go for good, and pictures nothing uses any more are reclaimed.
+  /// Never fails the library: a later opening tries again.
+  Future<void> _tidy(DateTime now) async {
+    try {
+      final expired = expireTrash(library!, now);
+      if (!identical(expired, library))
+        await update((l) => expireTrash(l, now));
+      await store!.collectMedia(mediaInUse(library!));
+    } catch (_) {
+      /* Housekeeping only; nothing the person did is lost. */
+    }
   }
 
   Future<List<Bookmark>> quickSave(
@@ -439,6 +472,21 @@ class SaveController extends ChangeNotifier {
       _thumbnails.remove(_thumbnails.keys.first);
     return _thumbnails.putIfAbsent(id, () => store!.thumbnail(id));
   }
+
+  final _previews = <String, Future<Uint8List?>>{};
+
+  /// The small preview of a picture the person owns.
+  Future<Uint8List?> mediaPreview(String mediaId) {
+    if (!_previews.containsKey(mediaId) && _previews.length >= 64)
+      _previews.remove(_previews.keys.first);
+    return _previews.putIfAbsent(
+      mediaId,
+      () => store!.media(mediaId, preview: true),
+    );
+  }
+
+  /// The picture itself, as the person saved it.
+  Future<Uint8List?> mediaOriginal(String mediaId) => store!.media(mediaId);
 
   void thumbnailChanged(String id) {
     _thumbnails.remove(id);

@@ -64,8 +64,9 @@ String ago(BuildContext c, String iso) {
   return formatDay(c, iso.substring(0, 10));
 }
 
-/// The link's own picture when one was fetched or chosen; otherwise its
-/// source's first letter on the app's pale tint.
+/// The item's own picture (an image item, or a preview the person chose),
+/// else the picture fetched from its page, else its source's first letter
+/// on the app's pale tint.
 class LinkThumb extends StatelessWidget {
   final SaveController controller;
   final Bookmark bookmark;
@@ -83,32 +84,34 @@ class LinkThumb extends StatelessWidget {
     final c = HandyColors.of(context);
     final radius = BorderRadius.circular(HandyRadius.control);
     final h = height ?? size;
-    final letter =
-        (sourceName(bookmark.platform).isNotEmpty
-                ? sourceName(bookmark.platform)
-                : bookmark.title.isNotEmpty
-                ? bookmark.title
-                : bookmark.sourceDomain)
-            .characters
-            .first
-            .toUpperCase();
+    final name = sourceName(bookmark.platform).isNotEmpty
+        ? sourceName(bookmark.platform)
+        : bookmark.title.isNotEmpty
+        ? bookmark.title
+        : bookmark.sourceDomain;
+    // An untitled picture has no letter to show.
+    final letter = name.isEmpty ? '' : name.characters.first.toUpperCase();
     final fallback = Container(
       width: size,
       height: h,
       alignment: Alignment.center,
       decoration: BoxDecoration(color: c.select, borderRadius: radius),
       child: ExcludeSemantics(
-        child: Text(
-          letter,
-          style: Theme.of(context).textTheme.titleLarge?.copyWith(
-            color: c.selectInk,
-            fontSize: (h < size ? h : size) * .42,
-          ),
-        ),
+        child: letter.isEmpty
+            ? Icon(Icons.image_outlined, color: c.selectInk, size: h * .42)
+            : Text(
+                letter,
+                style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                  color: c.selectInk,
+                  fontSize: (h < size ? h : size) * .42,
+                ),
+              ),
       ),
     );
     return FutureBuilder<Uint8List?>(
-      future: controller.thumbnail(bookmark.id),
+      future: bookmark.media != null
+          ? controller.mediaPreview(bookmark.media!.id)
+          : controller.thumbnail(bookmark.id),
       builder: (context, snap) => snap.data == null
           ? fallback
           : ClipRRect(

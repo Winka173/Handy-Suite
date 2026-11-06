@@ -74,29 +74,18 @@ class SaveScope {
     if (next != null && context.mounted) await run(context, () => put(next));
   }
 
-  /// Asks, deletes, and offers to undo.
+  /// Moves the item to Recently Deleted and offers Undo. Nothing is lost:
+  /// it stays restorable for 30 days, so there is no question first.
   Future<bool> delete(BuildContext context, Bookmark b) async {
-    final ok = await confirmHandy(
-      context,
-      title: tr(context, 'Delete this link?', 'Xóa link này?'),
-      message: b.title.isEmpty ? b.originalUrl : b.title,
-      confirmLabel: tr(context, 'Delete', 'Xóa'),
-      destructive: true,
-    );
-    if (!ok || !context.mounted) return false;
     final done = await run(
       context,
-      () => view.change(
-        (l) => l.copyWith(
-          bookmarks: [
-            for (final x in l.bookmarks)
-              if (x.id != b.id) x,
-          ],
-        ),
-      ),
+      () => view.change((l) => moveToTrash(l, [b.id], saveTime())),
     );
     if (done && context.mounted)
-      undoMessage(context, tr(context, 'Link deleted.', 'Đã xóa link.'));
+      undoMessage(
+        context,
+        tr(context, 'Moved to Recently Deleted.', 'Đã chuyển vào Thùng rác.'),
+      );
     return done;
   }
 

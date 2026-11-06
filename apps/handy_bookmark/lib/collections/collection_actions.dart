@@ -105,10 +105,15 @@ extension CollectionActions on SaveScope {
             context,
             title: tr(
               context,
-              'Delete ${item.name} and its $count links?',
-              'Xóa ${item.name} và $count link bên trong?',
+              'Delete ${item.name} and move its $count links to Recently Deleted?',
+              'Xóa ${item.name} và chuyển $count link bên trong vào Thùng rác?',
             ),
-            confirmLabel: tr(context, 'Delete all', 'Xóa hết'),
+            message: tr(
+              context,
+              'They can be restored for 30 days; restored links go to Not sorted.',
+              'Có thể khôi phục trong 30 ngày; link khôi phục sẽ vào mục Chưa xếp.',
+            ),
+            confirmLabel: tr(context, 'Delete', 'Xóa'),
             destructive: true,
           )) {
         return false;
@@ -124,25 +129,38 @@ extension CollectionActions on SaveScope {
     if (!context.mounted) return false;
     final ok = await run(
       context,
-      () => view.change(
-        (l) => l.copyWith(
-          collections: [
-            for (final x in l.collections)
-              if (x.id != item.id)
-                x.parentId == item.id ? x.copyWith(parentId: item.parentId) : x,
-          ],
-          bookmarks: [
-            for (final b in l.bookmarks)
-              if (b.collectionId != item.id)
-                b
-              else if (target != 'delete')
-                b.copyWith(
-                  collectionId: target == 'inbox' ? null : target,
-                  updatedAt: saveTime(),
-                ),
-          ],
-        ),
-      ),
+      () => view.change((l) {
+        final now = saveTime();
+        // Its links go to Recently Deleted (when asked), not out of existence.
+        final trashed = target == 'delete'
+            ? moveToTrash(l, [
+                for (final b in l.bookmarks)
+                  if (b.collectionId == item.id) b.id,
+              ], now)
+            : l;
+        return withCollectionTombstones(
+          trashed.copyWith(
+            collections: [
+              for (final x in trashed.collections)
+                if (x.id != item.id)
+                  x.parentId == item.id
+                      ? x.copyWith(parentId: item.parentId)
+                      : x,
+            ],
+            bookmarks: [
+              for (final b in trashed.bookmarks)
+                b.collectionId != item.id
+                    ? b
+                    : b.copyWith(
+                        collectionId: target == 'inbox' ? null : target,
+                        updatedAt: now,
+                      ),
+            ],
+          ),
+          [item.id],
+          now,
+        );
+      }),
     );
     if (ok && context.mounted)
       undoMessage(

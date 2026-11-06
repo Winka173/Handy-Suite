@@ -397,6 +397,23 @@ void main() {
     await t.pumpAndSettle();
     await shot(t, 'phone-5-select');
   });
+  testWidgets('phone trash', (t) async {
+    final c = await boot(t, const Size(390, 844));
+    final ids = [for (final b in c.library!.bookmarks.take(4)) b.id];
+    final now = DateTime.now().toUtc();
+    // Deleted at different times, so the days left differ.
+    for (final (i, id) in ids.indexed) {
+      await c.update(
+        (l) => moveToTrash(l, [
+          id,
+        ], now.subtract(Duration(days: [1, 8, 22, 29][i])).toIso8601String()),
+      );
+    }
+    await t.pumpAndSettle();
+    Navigator.of(t.element(find.byType(Scaffold).first)).pushNamed('/trash');
+    await t.pumpAndSettle();
+    await shot(t, 'phone-20-trash');
+  });
   testWidgets('phone duplicates', (t) async {
     final c = await boot(t, const Size(390, 844));
     // Saved again from a chat link, and again from another app.

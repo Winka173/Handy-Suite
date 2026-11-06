@@ -136,6 +136,15 @@ class PlacesList extends StatelessWidget {
               tr(context, 'Focus', 'Tập trung'),
               onTap: onFocus,
             ),
+            // Only while something is waiting there.
+            if (l.trash.isNotEmpty)
+              row(
+                const Key('place-trash'),
+                Icons.delete_outline,
+                tr(context, 'Recently Deleted', 'Thùng rác'),
+                n: l.trash.length,
+                onTap: () => Navigator.of(context).pushNamed('/trash'),
+              ),
           ],
         ),
         heading(

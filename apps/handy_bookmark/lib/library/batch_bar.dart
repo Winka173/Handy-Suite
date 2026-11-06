@@ -113,19 +113,15 @@ class BatchBar extends StatelessWidget {
             key: const Key('batch-delete'),
             tooltip: tr(context, 'Delete', 'Xóa'),
             icon: const Icon(Icons.delete_outline),
-            onPressed: () async {
-              final ok = await confirmHandy(
+            // Recoverable for 30 days, so no question first; Undo is offered.
+            onPressed: () => apply(
+              tr(
                 context,
-                title: tr(context, 'Delete $n links?', 'Xóa $n link?'),
-                confirmLabel: tr(context, 'Delete', 'Xóa'),
-                destructive: true,
-              );
-              if (ok && context.mounted)
-                await apply(
-                  tr(context, 'Deleted $n links.', 'Đã xóa $n link.'),
-                  v.deleteSelected,
-                );
-            },
+                'Moved $n to Recently Deleted.',
+                'Đã chuyển $n mục vào Thùng rác.',
+              ),
+              v.deleteSelected,
+            ),
           ),
           HandyMenuButton(
             key: const Key('batch-more'),

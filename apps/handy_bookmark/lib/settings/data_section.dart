@@ -20,6 +20,23 @@ class SaveDataSection extends StatelessWidget {
       ),
       children: [
         HandyTile(
+          key: const Key('save-trash'),
+          icon: Icons.delete_outline,
+          title: tr(context, 'Recently Deleted', 'Thùng rác'),
+          subtitle: c.library!.trash.isEmpty
+              ? tr(
+                  context,
+                  'Deleted items wait here for 30 days.',
+                  'Mục bị xóa nằm ở đây 30 ngày.',
+                )
+              : tr(
+                  context,
+                  '${c.library!.trash.length} items, restorable for up to 30 days.',
+                  '${c.library!.trash.length} mục, khôi phục được trong tối đa 30 ngày.',
+                ),
+          onTap: () => Navigator.of(context).pushNamed('/trash'),
+        ),
+        HandyTile(
           key: const Key('save-export'),
           icon: Icons.archive_outlined,
           title: tr(context, 'Export or back up', 'Xuất hoặc sao lưu'),

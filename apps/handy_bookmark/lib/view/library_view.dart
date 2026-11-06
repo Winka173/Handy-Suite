@@ -289,16 +289,12 @@ class LibraryView extends ChangeNotifier {
     );
   }
 
+  /// Moves the selection to Recently Deleted (restorable for 30 days).
   Future<void> deleteSelected() {
     final ids = {...selected};
     selected.clear();
     return change(
-      (l) => l.copyWith(
-        bookmarks: [
-          for (final b in l.bookmarks)
-            if (!ids.contains(b.id)) b,
-        ],
-      ),
+      (l) => moveToTrash(l, ids, DateTime.now().toUtc().toIso8601String()),
     );
   }
 
