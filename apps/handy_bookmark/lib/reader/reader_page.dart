@@ -8,6 +8,8 @@ import '../scope.dart';
 import 'article_view.dart';
 import 'find_bar.dart';
 import 'find_in_text.dart';
+import 'highlights_sheet.dart';
+import '../pro/entitlements.dart';
 import 'reader_session.dart';
 import 'reader_states.dart';
 import 'reading_position.dart';
@@ -49,6 +51,91 @@ class _ReaderPageState extends State<ReaderPage> {
   int? _current;
   int _reveal = 0;
   static const _findLimit = 1000;
+
+  // Highlights: one article view per text version, to jump within it.
+  final _articles = <String, GlobalKey<ArticleViewState>>{};
+  ArticleViewState? get _article => _articles[_version ?? '']?.currentState;
+
+  Map<int, List<(int, int, String)>> _marks(ReadingCopy r) {
+    final blocks = [for (final b in r.blocks) b.text];
+    final out = <int, List<(int, int, String)>>{};
+    for (final h in highlightsOf(scope.c, widget.id)) {
+      final at = anchorHighlight(h, blocks);
+      if (at != null) (out[at.$1] ??= []).add((at.$2, at.$3, h.color));
+    }
+    return out;
+  }
+
+  /// Marks the selected words (Pro); existing highlights stay readable
+  /// and editable without it.
+  Future<void> _highlight(BuildContext context, String text) async {
+    final r = _shown;
+    if (r == null) return;
+    if (!await requirePro(context, ProFeature.readerHighlights) ||
+        !context.mounted)
+      return;
+    final blocks = [for (final b in r.blocks) b.text];
+    final at = locateQuote(text, blocks, _spot?.block ?? 0);
+    if (at == null) {
+      showHandyMessage(
+        context,
+        tr(
+          context,
+          'Could not find those words in the text.',
+          'Không tìm thấy đoạn chữ đó trong bài.',
+        ),
+      );
+      return;
+    }
+    final (block, start, end) = at;
+    final list = highlightsOf(scope.c, widget.id);
+    final h = Highlight(
+      id: DateTime.now().microsecondsSinceEpoch.toRadixString(36),
+      block: block,
+      start: start,
+      end: end,
+      quote: blocks[block].substring(start, end),
+      createdAt: DateTime.now().toUtc().toIso8601String(),
+    );
+    if (list.length >= Highlight.maxPerItem) return;
+    await saveHighlights(scope.c, widget.id, [...list, h]);
+    if (!context.mounted) return;
+    setState(() {});
+    ScaffoldMessenger.maybeOf(context)
+      ?..hideCurrentSnackBar()
+      ..showSnackBar(
+        SnackBar(
+          content: Text(tr(context, 'Highlighted.', 'Đã đánh dấu.')),
+          action: SnackBarAction(
+            key: const Key('highlight-add-note'),
+            label: tr(context, 'Add a note', 'Thêm ghi chú'),
+            onPressed: () async {
+              final next = await editHighlight(context, h);
+              if (next == null) return;
+              await saveHighlights(scope.c, widget.id, [
+                for (final x in highlightsOf(scope.c, widget.id))
+                  x.id == h.id ? next : x,
+              ]);
+              if (mounted) setState(() {});
+            },
+          ),
+        ),
+      );
+  }
+
+  Future<void> _openHighlights(BuildContext context, Bookmark? b) async {
+    final r = _shown;
+    await showHighlights(
+      context,
+      controller: scope.c,
+      id: widget.id,
+      title: r?.title.isNotEmpty == true ? r!.title : (b?.title ?? ''),
+      url: b?.originalUrl ?? r?.url ?? '',
+      blocks: [for (final x in r?.blocks ?? const <ReadingBlock>[]) x.text],
+      onJump: (block) => _article?.jumpTo(block),
+    );
+    if (mounted) setState(() {});
+  }
 
   double get size =>
       ((scope.c.preferences['readerSize'] as num?)?.toDouble() ?? _defaultSize)
@@ -262,6 +349,21 @@ class _ReaderPageState extends State<ReaderPage> {
             appBar: AppBar(
               actions: [
                 IconButton(
+                  key: const Key('reader-highlights'),
+                  tooltip: tr(context, 'Highlights', 'Đoạn đánh dấu'),
+                  onPressed: _shown == null
+                      ? null
+                      : () => _openHighlights(context, b),
+                  // A count in the app's hue, never a red alert.
+                  icon: Badge(
+                    backgroundColor: BookmarkPalette.of(context).primary,
+                    textColor: BookmarkPalette.of(context).onPrimary,
+                    isLabelVisible: highlightsOf(scope.c, widget.id).isNotEmpty,
+                    label: Text('${highlightsOf(scope.c, widget.id).length}'),
+                    child: const Icon(Icons.format_quote_rounded),
+                  ),
+                ),
+                IconButton(
                   key: const Key('reader-find'),
                   tooltip: tr(context, 'Find in article', 'Tìm trong bài'),
                   onPressed: _canFind ? _openFind : null,
@@ -358,8 +460,10 @@ class _ReaderPageState extends State<ReaderPage> {
         final r = _shown;
         if (r == null || !_ready) return const ReaderLoading();
         return ArticleView(
-          key: ValueKey('article-$_version'),
+          key: _articles.putIfAbsent(_version ?? '', GlobalKey.new),
           copy: r,
+          marks: _marks(r),
+          onHighlight: (text) => _highlight(context, text),
           fallbackTitle: b?.title ?? '',
           size: size,
           online: session.online,

@@ -12,3 +12,4 @@ export 'src/collection_page.dart';
 export 'src/collections.dart';
 export 'src/sync.dart';
 export 'src/organize.dart';
+export 'src/highlights.dart';

@@ -28,6 +28,7 @@ const shippedProFeatures = {
   ProFeature.premiumExport,
   ProFeature.autoOrganize,
   ProFeature.advancedBulk,
+  ProFeature.readerHighlights,
 };
 
 /// Whether this person owns a verified Pro Lifetime.

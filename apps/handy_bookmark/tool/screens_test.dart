@@ -548,6 +548,49 @@ void main() {
     await t.pumpAndSettle();
     await shot(t, 'phone-12-reader-dark');
   });
+  testWidgets('phone reader highlights', (t) async {
+    final c = await boot(t, const Size(390, 844), extras: true);
+    final id = c.library!.bookmarks[5].id;
+    final copy = (await t.runAsync(() => c.readingCopy(id)))!;
+    final blocks = [for (final b in copy.blocks) b.text];
+    var made = 0;
+    final marks = [
+      for (final (i, color, note) in [
+        (1, 'yellow', ''),
+        (3, 'green', 'Thử cách này cuối tuần'),
+      ])
+        if (i < blocks.length && blocks[i].length > 30)
+          Highlight(
+            id: 'h${made++}',
+            block: i,
+            start: 0,
+            end: blocks[i].length.clamp(0, 70),
+            quote: blocks[i].substring(0, blocks[i].length.clamp(0, 70)),
+            color: color,
+            note: note,
+            createdAt: '2026-11-06T10:00:00Z',
+          ).toJson(),
+    ];
+    await c.update(
+      (l) => l,
+      prefs: {
+        ...c.preferences,
+        'highlights': {id: marks},
+      },
+    );
+    Navigator.of(
+      t.element(find.byKey(const Key('save-home'))),
+    ).pushNamed('/read/$id');
+    await t.runAsync(
+      () => Future<void>.delayed(const Duration(milliseconds: 100)),
+    );
+    await t.pumpAndSettle();
+    await shot(t, 'phone-33-reader-highlights');
+    await tapKey(t, 'reader-highlights');
+    await shot(t, 'phone-33-highlights-list');
+    await tapKey(t, 'highlight-h1-edit');
+    await shot(t, 'phone-33-highlight-edit');
+  });
   testWidgets('desktop reader', (t) async {
     final c = await boot(t, const Size(1440, 900), extras: true);
     Navigator.of(

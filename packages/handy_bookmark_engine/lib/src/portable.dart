@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'highlights.dart';
 import 'dart:typed_data';
 import 'package:archive/archive.dart';
 import 'package:crypto/crypto.dart';
@@ -44,11 +45,17 @@ class ImportResult {
   /// changes the choice made for a collection already here. Apply with
   /// [mergeCollectionViews].
   final Map<String, Map<String, dynamic>> collectionViews;
+
+  /// Reader highlights for items the import brought, keyed by the ids they
+  /// ended up with (see [readHighlights]). A merge carries them only for
+  /// items it added.
+  final Map<String, List<Highlight>> highlights;
   const ImportResult(
     this.library, [
     this.readingCopies = const {},
     this.pictures = const {},
     this.collectionViews = const {},
+    this.highlights = const {},
   ]);
 }
 
@@ -106,6 +113,9 @@ class ImportPreview {
   /// order), keyed by the file's collection ids. Empty for files from other
   /// apps and for backups made before it was carried.
   final Map<String, Map<String, dynamic>> collectionViews;
+
+  /// Reader highlights in the file, keyed by the file's item ids.
+  final Map<String, List<Highlight>> highlights;
   const ImportPreview({
     required this.library,
     required this.duplicateCount,
@@ -117,6 +127,7 @@ class ImportPreview {
     this.invalidPictures = 0,
     this.missingPictures = 0,
     this.collectionViews = const {},
+    this.highlights = const {},
   });
 
   ImportPreview withPictures(
@@ -141,6 +152,7 @@ class ImportPreview {
       invalidPictures: invalid,
       missingPictures: used.where((id) => !pictures.containsKey(id)).length,
       collectionViews: collectionViews,
+      highlights: highlights,
     );
   }
 
@@ -208,7 +220,13 @@ class ImportPreview {
   }) {
     if (cancelled) return ImportResult(current);
     if (strategy == ImportStrategy.replace)
-      return ImportResult(library, readingCopies, pictures, collectionViews);
+      return ImportResult(
+        library,
+        readingCopies,
+        pictures,
+        collectionViews,
+        highlights,
+      );
     final added = <String, String>{};
     final collections = current.collections.toList(),
         bookmarks = current.bookmarks.toList(),
@@ -344,6 +362,10 @@ class ImportPreview {
       {
         for (final e in collectionViews.entries)
           if (created.contains(e.key)) remap[e.key]!: view(e.value),
+      },
+      {
+        for (final e in highlights.entries)
+          if (added.containsKey(e.key)) added[e.key]!: e.value,
       },
     );
   }
@@ -560,12 +582,14 @@ class SavePortable {
     Map<String, ReadingCopy> readingCopies = const {},
     Map<String, PortablePicture> pictures = const {},
     Object? collectionViews,
+    Object? highlights,
   }) => exportWithReport(
     library,
     format,
     readingCopies: readingCopies,
     pictures: pictures,
     collectionViews: collectionViews,
+    highlights: highlights,
   ).bytes;
 
   /// The view choices worth carrying for [collections]: per collection id,
@@ -647,6 +671,10 @@ class SavePortable {
     /// restore shows each collection as it was. See [readCollectionViews].
     Object? collectionViews,
 
+    /// The person's reader highlights (the `highlights` preference), kept
+    /// for the file's items; see [readHighlights].
+    Object? highlights,
+
     /// Offline copies the caller found stored but could not read; only
     /// reported, in [PortableExport.readingUnreadable].
     int unreadableReadingCopies = 0,
@@ -660,9 +688,15 @@ class SavePortable {
     ], ids);
     // An extra key older versions of the app ignore when they read it, so
     // backups stay readable both ways without a format change.
+    final marks = readHighlights(highlights, ids);
     final libraryJson = {
       ...library.toJson(),
       if (views.isNotEmpty) 'collectionViews': views,
+      if (marks.isNotEmpty)
+        'highlights': {
+          for (final e in marks.entries)
+            e.key: [for (final h in e.value) h.toJson()],
+        },
     };
     var json = jsonEncode(libraryJson);
     final payload = base64Url.encode(utf8.encode(json));
@@ -1306,6 +1340,7 @@ class SavePortable {
       collectionViews: readCollectionViews(json['collectionViews'], [
         for (final c in library.collections) c.id,
       ], _itemIds(library)),
+      highlights: readHighlights(json['highlights'], _itemIds(library)),
     );
   }
 
@@ -1608,6 +1643,7 @@ class SavePortable {
       collectionViews: readCollectionViews(metadata['collectionViews'], [
         for (final c in library.collections) c.id,
       ], _itemIds(library)),
+      highlights: readHighlights(metadata['highlights'], _itemIds(library)),
     );
   }
 }

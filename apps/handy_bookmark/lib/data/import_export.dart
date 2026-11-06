@@ -12,6 +12,7 @@ PortableExport _encode(
     Map<String, PortablePicture>,
     Object?,
     int,
+    Object?,
   )
   v,
 ) => SavePortable.exportWithReport(
@@ -21,6 +22,7 @@ PortableExport _encode(
   pictures: v.$4,
   collectionViews: v.$5,
   unreadableReadingCopies: v.$6,
+  highlights: v.$7,
 );
 ImportPreview _preview((Uint8List, SaveFormat, SaveLibrary) v) =>
     SavePortable.preview(v.$1, v.$2, current: v.$3);
@@ -99,6 +101,7 @@ extension ImportExport on SaveScope {
       pictures,
       c.preferences['collectionViews'],
       reading.unreadable,
+      c.preferences['highlights'],
     ));
   }
 
@@ -522,14 +525,36 @@ extension ImportExport on SaveScope {
       c.preferences['collectionViews'],
       applied!.collectionViews,
     );
-    if (views != null) {
+    // Highlights the file brought, for the items it brought; a highlight
+    // already here with the same id is kept as it is.
+    final marks = applied!.highlights;
+    final Map<String, dynamic>? highlights = marks.isEmpty
+        ? null
+        : {
+            ...?(c.preferences['highlights'] as Map?)?.cast<String, dynamic>(),
+            for (final e in marks.entries)
+              e.key: [
+                ...?((c.preferences['highlights'] as Map?)?[e.key] as List?),
+                for (final h in e.value)
+                  if (!(((c.preferences['highlights'] as Map?)?[e.key]
+                              as List?) ??
+                          const [])
+                      .any((x) => x is Map && x['id'] == h.id))
+                    h.toJson(),
+              ],
+          };
+    if (views != null || highlights != null) {
       try {
         await c.update(
           (l) => l,
-          prefs: {...c.preferences, 'collectionViews': views},
+          prefs: {
+            ...c.preferences,
+            'collectionViews': ?views,
+            'highlights': ?highlights,
+          },
         );
       } catch (_) {
-        /* Views are a preference; the import itself is committed. */
+        /* Views and highlights are preferences; the import is committed. */
       }
     }
     if (context.mounted)

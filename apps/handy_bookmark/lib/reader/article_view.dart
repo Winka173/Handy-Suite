@@ -6,6 +6,7 @@ import 'package:handy_ui/kit.dart';
 import '../design/theme.dart';
 import '../services/metadata_types.dart' show readingMaxHtmlBytes;
 import 'find_in_text.dart';
+import 'highlights_sheet.dart';
 import 'reading_position.dart';
 
 /// The text column: title, where the text came from, the blocks, and what
@@ -26,6 +27,8 @@ class ArticleView extends StatefulWidget {
     this.current,
     this.reveal = 0,
     this.initialSpot,
+    this.marks = const {},
+    this.onHighlight,
   });
   final ReadingCopy copy;
   final String fallbackTitle;
@@ -47,6 +50,12 @@ class ArticleView extends StatefulWidget {
   /// Where to open, when this text was read here before.
   final ReaderSpot? initialSpot;
 
+  /// The person's highlights in place, per block: (start, end, colour).
+  final Map<int, List<(int, int, String)>> marks;
+
+  /// Offered in the selection menu as Highlight, with the selected text.
+  final ValueChanged<String>? onHighlight;
+
   @override
   State<ArticleView> createState() => ArticleViewState();
 }
@@ -60,6 +69,7 @@ class ArticleViewState extends State<ArticleView> {
   Map<int, List<int>> _byBlock = const {};
   bool _moving = false;
   ReaderSpot? _last;
+  String _selected = '';
 
   ReadingCopy get _copy => widget.copy;
   int get _rows => _head + _copy.blocks.length + 1;
@@ -248,29 +258,59 @@ class ArticleViewState extends State<ArticleView> {
     return false;
   }
 
+  /// Brings [block] to the top of the screen (a highlight, from the list).
+  void jumpTo(int block) => _reveal(_head + block);
+
   InlineSpan _spans(int block, String text, TextStyle style) {
-    final hits = _byBlock[block];
-    if (hits == null) return TextSpan(text: text, style: style);
+    final hits = _byBlock[block] ?? const <int>[];
+    final marks = widget.marks[block] ?? const <(int, int, String)>[];
+    if (hits.isEmpty && marks.isEmpty)
+      return TextSpan(text: text, style: style);
     final p = BookmarkPalette.of(context);
-    final children = <InlineSpan>[];
-    var at = 0;
+    // Every place a style starts or stops; a find hit is drawn over a
+    // highlight, the current hit over everything.
+    final cuts = {0, text.length};
     for (final i in hits) {
-      final m = widget.matches[i];
-      if (m.start > at)
-        children.add(TextSpan(text: text.substring(at, m.start)));
-      final on = i == widget.current;
+      cuts
+        ..add(widget.matches[i].start)
+        ..add(widget.matches[i].end);
+    }
+    for (final (a, b, _) in marks) {
+      cuts
+        ..add(a.clamp(0, text.length))
+        ..add(b.clamp(0, text.length));
+    }
+    final points = cuts.toList()..sort();
+    final children = <InlineSpan>[];
+    for (var k = 0; k + 1 < points.length; k++) {
+      final a = points[k], b = points[k + 1];
+      if (a == b) continue;
+      int? hit;
+      for (final i in hits) {
+        final m = widget.matches[i];
+        if (m.start <= a && b <= m.end) hit = i;
+      }
+      String? mark;
+      for (final (x, y, color) in marks) {
+        if (x <= a && b <= y) mark = color;
+      }
+      final on = hit != null && hit == widget.current;
       children.add(
         TextSpan(
-          text: text.substring(m.start, m.end),
-          style: TextStyle(
-            backgroundColor: on ? p.primary : p.warm.withValues(alpha: .3),
-            color: on ? p.onPrimary : null,
-          ),
+          text: text.substring(a, b),
+          style: hit != null
+              ? TextStyle(
+                  backgroundColor: on
+                      ? p.primary
+                      : p.warm.withValues(alpha: .3),
+                  color: on ? p.onPrimary : null,
+                )
+              : mark != null
+              ? TextStyle(backgroundColor: highlightWash(context, mark))
+              : null,
         ),
       );
-      at = m.end;
     }
-    if (at < text.length) children.add(TextSpan(text: text.substring(at)));
     return TextSpan(style: style, children: children);
   }
 
@@ -553,6 +593,23 @@ class ArticleViewState extends State<ArticleView> {
     return NotificationListener<ScrollEndNotification>(
       onNotification: _scrolled,
       child: SelectionArea(
+        onSelectionChanged: (c) => _selected = c?.plainText ?? '',
+        contextMenuBuilder: (context, state) =>
+            AdaptiveTextSelectionToolbar.buttonItems(
+              anchors: state.contextMenuAnchors,
+              buttonItems: [
+                ...state.contextMenuButtonItems,
+                if (widget.onHighlight != null && _selected.trim().isNotEmpty)
+                  ContextMenuButtonItem(
+                    label: tr(context, 'Highlight', 'Đánh dấu'),
+                    onPressed: () {
+                      final text = _selected;
+                      ContextMenuController.removeAny();
+                      widget.onHighlight!(text);
+                    },
+                  ),
+              ],
+            ),
         child: ListView.builder(
           key: const Key('reader-text'),
           controller: _scroll,
