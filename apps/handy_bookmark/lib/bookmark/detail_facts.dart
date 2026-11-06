@@ -53,32 +53,34 @@ class DetailFacts extends StatelessWidget {
             children: [for (final t in b.tags) Chip(label: Text('#$t'))],
           ),
         ],
-        HandyLabel(tr(context, 'Address', 'Địa chỉ')),
-        HandyGroup(
-          children: [
-            ListTile(
-              title: SelectableText(
-                b.originalUrl,
-                maxLines: 3,
-                style: theme.textTheme.bodyMedium,
-              ),
-              subtitle: Text(
-                tr(
-                  context,
-                  'Opened ${b.openedCount} times from here',
-                  'Đã mở ${b.openedCount} lần từ đây',
+        if (b.hasUrl) ...[
+          HandyLabel(tr(context, 'Address', 'Địa chỉ')),
+          HandyGroup(
+            children: [
+              ListTile(
+                title: SelectableText(
+                  b.originalUrl,
+                  maxLines: 3,
+                  style: theme.textTheme.bodyMedium,
                 ),
-                style: TextStyle(color: c.muted),
+                subtitle: Text(
+                  tr(
+                    context,
+                    'Opened ${b.openedCount} times from here',
+                    'Đã mở ${b.openedCount} lần từ đây',
+                  ),
+                  style: TextStyle(color: c.muted),
+                ),
+                trailing: IconButton(
+                  key: const Key('detail-copy'),
+                  tooltip: tr(context, 'Copy address', 'Chép địa chỉ'),
+                  icon: const Icon(Icons.copy),
+                  onPressed: () => copyToClipboard(context, b.originalUrl),
+                ),
               ),
-              trailing: IconButton(
-                key: const Key('detail-copy'),
-                tooltip: tr(context, 'Copy address', 'Chép địa chỉ'),
-                icon: const Icon(Icons.copy),
-                onPressed: () => copyToClipboard(context, b.originalUrl),
-              ),
-            ),
-          ],
-        ),
+            ],
+          ),
+        ],
         if ((b.description ?? '').isNotEmpty || b.note.isNotEmpty) ...[
           HandyLabel(tr(context, 'About it', 'Mô tả và ghi chú')),
           HandyGroup(
@@ -99,55 +101,61 @@ class DetailFacts extends StatelessWidget {
             ],
           ),
         ],
-        HandyLabel(tr(context, 'From the page', 'Thông tin từ trang')),
-        HandyGroup(
-          children: [
-            ListTile(
-              title: Text(_metadataWords(context, b.metadataStatus)),
-              textColor: c.muted,
-            ),
-            Padding(
-              padding: const EdgeInsets.fromLTRB(
-                HandySpace.l,
-                0,
-                HandySpace.l,
-                HandySpace.l,
+        if (b.hasUrl && !b.isImage) ...[
+          HandyLabel(tr(context, 'From the page', 'Thông tin từ trang')),
+          HandyGroup(
+            children: [
+              ListTile(
+                title: Text(_metadataWords(context, b.metadataStatus)),
+                textColor: c.muted,
               ),
-              child: Wrap(
-                spacing: HandySpace.s,
-                runSpacing: HandySpace.s,
-                children: [
-                  fetching
-                      ? TextButton.icon(
-                          key: const Key('detail-metadata-cancel'),
-                          onPressed: () => scope.c.fetching[b.id]?.cancel(),
-                          icon: const SizedBox.square(
-                            dimension: 16,
-                            child: CircularProgressIndicator(strokeWidth: 2),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(
+                  HandySpace.l,
+                  0,
+                  HandySpace.l,
+                  HandySpace.l,
+                ),
+                child: Wrap(
+                  spacing: HandySpace.s,
+                  runSpacing: HandySpace.s,
+                  children: [
+                    fetching
+                        ? TextButton.icon(
+                            key: const Key('detail-metadata-cancel'),
+                            onPressed: () => scope.c.fetching[b.id]?.cancel(),
+                            icon: const SizedBox.square(
+                              dimension: 16,
+                              child: CircularProgressIndicator(strokeWidth: 2),
+                            ),
+                            label: Text(tr(context, 'Stop', 'Dừng')),
+                          )
+                        : OutlinedButton(
+                            key: const Key('detail-metadata'),
+                            onPressed: () => scope.run(
+                              context,
+                              () => scope.c.refreshMetadata(b.id),
+                            ),
+                            child: Text(
+                              tr(
+                                context,
+                                'Read the page',
+                                'Đọc thông tin trang',
+                              ),
+                            ),
                           ),
-                          label: Text(tr(context, 'Stop', 'Dừng')),
-                        )
-                      : OutlinedButton(
-                          key: const Key('detail-metadata'),
-                          onPressed: () => scope.run(
-                            context,
-                            () => scope.c.refreshMetadata(b.id),
-                          ),
-                          child: Text(
-                            tr(context, 'Read the page', 'Đọc thông tin trang'),
-                          ),
-                        ),
-                  OutlinedButton(
-                    key: const Key('detail-thumbnail'),
-                    onPressed: () => scope.chooseThumbnail(context, b),
-                    child: Text(tr(context, 'Choose a picture', 'Chọn ảnh')),
-                  ),
-                ],
+                    OutlinedButton(
+                      key: const Key('detail-thumbnail'),
+                      onPressed: () => scope.chooseThumbnail(context, b),
+                      child: Text(tr(context, 'Choose a picture', 'Chọn ảnh')),
+                    ),
+                  ],
+                ),
               ),
-            ),
-          ],
-        ),
-        DetailLinks(scope: scope, bookmark: b),
+            ],
+          ),
+        ],
+        if (b.hasUrl && !b.isImage) DetailLinks(scope: scope, bookmark: b),
         const SizedBox(height: HandySpace.xl),
         Wrap(
           spacing: HandySpace.s,

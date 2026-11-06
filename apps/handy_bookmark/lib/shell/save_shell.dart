@@ -68,6 +68,12 @@ class _SaveShellState extends State<SaveShell> {
     };
     final addButtons = [
       IconButton(
+        key: const Key('save-photo'),
+        tooltip: tr(context, 'Add a picture', 'Thêm ảnh'),
+        icon: const Icon(Icons.add_photo_alternate_outlined),
+        onPressed: () => scope.addPhoto(context),
+      ),
+      IconButton(
         key: const Key('save-paste'),
         tooltip: tr(context, 'Paste a link', 'Dán link'),
         icon: const Icon(Icons.content_paste),

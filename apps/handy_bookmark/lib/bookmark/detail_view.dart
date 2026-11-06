@@ -4,6 +4,7 @@ import '../links/recall_link.dart';
 import '../scope.dart';
 import '../ui/words.dart';
 import 'detail_facts.dart';
+import 'picture_view.dart';
 import 'reminder_sheet.dart';
 
 /// One link: what it is, and opening it where it came from. Flags, place,
@@ -70,15 +71,22 @@ class DetailView extends StatelessWidget {
         key: const Key('detail'),
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          LayoutBuilder(
-            builder: (context, box) =>
-                LinkThumb(scope.c, b, size: box.maxWidth, height: 180),
-          ),
+          if (b.isImage)
+            PictureHeader(controller: scope.c, item: b)
+          else
+            LayoutBuilder(
+              builder: (context, box) =>
+                  LinkThumb(scope.c, b, size: box.maxWidth, height: 180),
+            ),
           const SizedBox(height: HandySpace.l),
           Semantics(
             header: true,
             child: SelectableText(
-              b.title.isEmpty ? b.sourceDomain : b.title,
+              b.title.isNotEmpty
+                  ? b.title
+                  : b.isImage
+                  ? tr(context, 'Picture', 'Ảnh')
+                  : b.sourceDomain,
               style: theme.textTheme.headlineSmall,
             ),
           ),
@@ -96,17 +104,35 @@ class DetailView extends StatelessWidget {
             spacing: HandySpace.s,
             runSpacing: HandySpace.s,
             children: [
-              FilledButton.icon(
-                key: const Key('save-open-original'),
-                onPressed: () => scope.open(context, b),
-                icon: const Icon(Icons.open_in_new),
-                label: Text(tr(context, 'Open original', 'Mở bản gốc')),
-              ),
-              OutlinedButton(
-                key: const Key('detail-browser'),
-                onPressed: () => scope.open(context, b, browser: true),
-                child: Text(tr(context, 'In the browser', 'Bằng trình duyệt')),
-              ),
+              if (b.isImage)
+                FilledButton.icon(
+                  key: const Key('detail-view-picture'),
+                  onPressed: () => PictureView.open(context, scope.c, b),
+                  icon: const Icon(Icons.fullscreen),
+                  label: Text(tr(context, 'View picture', 'Xem ảnh')),
+                ),
+              if (b.hasUrl && !b.isImage)
+                FilledButton.icon(
+                  key: const Key('save-open-original'),
+                  onPressed: () => scope.open(context, b),
+                  icon: const Icon(Icons.open_in_new),
+                  label: Text(tr(context, 'Open original', 'Mở bản gốc')),
+                ),
+              if (b.hasUrl && b.isImage)
+                OutlinedButton.icon(
+                  key: const Key('save-open-original'),
+                  onPressed: () => scope.open(context, b),
+                  icon: const Icon(Icons.open_in_new),
+                  label: Text(tr(context, 'Open its source', 'Mở nguồn')),
+                ),
+              if (b.hasUrl && !b.isImage)
+                OutlinedButton(
+                  key: const Key('detail-browser'),
+                  onPressed: () => scope.open(context, b, browser: true),
+                  child: Text(
+                    tr(context, 'In the browser', 'Bằng trình duyệt'),
+                  ),
+                ),
             ],
           ),
           const SizedBox(height: HandySpace.l),

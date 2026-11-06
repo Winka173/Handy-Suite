@@ -51,6 +51,13 @@ class SaveHomePage extends StatelessWidget {
               : HandyBottomBar(
                   child: Row(
                     children: [
+                      IconButton.outlined(
+                        key: const Key('save-photo'),
+                        tooltip: tr(context, 'Add a picture', 'Thêm ảnh'),
+                        onPressed: () => scope.addPhoto(context),
+                        icon: const Icon(Icons.add_photo_alternate_outlined),
+                      ),
+                      const SizedBox(width: HandySpace.s),
                       OutlinedButton.icon(
                         key: const Key('save-paste'),
                         onPressed: () => onAddFrom(clipboard: true),

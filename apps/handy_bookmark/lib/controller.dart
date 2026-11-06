@@ -8,6 +8,7 @@ import 'package:handy_core/handy_core.dart';
 import 'package:handy_bookmark_engine/handy_bookmark_engine.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'platform/store.dart';
+import 'services/media_import.dart';
 import 'services/metadata_client.dart';
 import 'services/share_inbox.dart';
 
@@ -474,6 +475,69 @@ class SaveController extends ChangeNotifier {
   }
 
   final _previews = <String, Future<Uint8List?>>{};
+
+  /// Saves pictures (screenshots, photos) as image items, each stored once
+  /// by its content. Every picture is checked and prepared off the UI
+  /// isolate first; nothing is written unless all of [files] are usable,
+  /// and the items appear only after the database committed them. A
+  /// picture already saved as an image item is not saved twice: its item
+  /// is returned instead.
+  Future<({List<Bookmark> added, List<Bookmark> existing})> addPictures(
+    List<({Uint8List bytes, String name})> files, {
+    String? collectionId,
+  }) async {
+    if (files.isEmpty) return (added: <Bookmark>[], existing: <Bookmark>[]);
+    final prepared = <PreparedPicture>[];
+    for (final f in files) {
+      prepared.add(
+        await compute(
+          (({Uint8List bytes, String name}) f) =>
+              preparePicture(f.bytes, name: f.name),
+          f,
+        ),
+      );
+    }
+    final byMedia = {
+      for (final b in library!.bookmarks)
+        if (b.isImage) b.media!.id: b,
+    };
+    final existing = <Bookmark>[];
+    final fresh = <Bookmark>[];
+    final seen = <String>{};
+    for (final p in prepared) {
+      final old = byMedia[p.ref.id];
+      if (old != null) {
+        existing.add(old);
+        continue;
+      }
+      if (!seen.add(p.ref.id)) continue;
+      // Stored before the item that uses it, so the item never points at
+      // a missing picture; a picture whose item then fails to save is
+      // reclaimed later.
+      await store!.putMedia(p.ref.toJson(), p.original, p.preview);
+      final now = saveTime();
+      fresh.add(
+        Bookmark(
+          id: saveId(),
+          kind: 'image',
+          originalUrl: '',
+          normalizedUrl: '',
+          platform: 'image',
+          contentType: 'image',
+          media: p.ref,
+          title: pictureTitle(p.ref.name),
+          collectionId: collectionId,
+          savedAt: now,
+          updatedAt: now,
+          metadataStatus: 'unavailable',
+          metadataSource: 'local',
+        ),
+      );
+    }
+    if (fresh.isNotEmpty)
+      await update((l) => l.copyWith(bookmarks: [...l.bookmarks, ...fresh]));
+    return (added: fresh, existing: existing);
+  }
 
   /// The small preview of a picture the person owns.
   Future<Uint8List?> mediaPreview(String mediaId) {

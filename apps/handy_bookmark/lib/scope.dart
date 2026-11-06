@@ -7,6 +7,7 @@ import 'links/link_tasks.dart';
 import 'services/metadata_client.dart' show sanitizeThumbnail;
 import 'services/reminders.dart';
 import 'ui/collection_picker.dart';
+import 'bookmark/picture_view.dart';
 import 'view/library_view.dart';
 
 /// What every Save screen shares: the controller, the list on screen, the
@@ -139,6 +140,11 @@ class SaveScope {
     Bookmark b, {
     bool browser = false,
   }) async {
+    // A picture without an address opens as itself.
+    if (!b.hasUrl) {
+      if (b.isImage) await PictureView.open(context, c, b);
+      return;
+    }
     final ok = await c.open(b, browser: browser);
     if (!ok && context.mounted) {
       showHandyMessage(
@@ -147,6 +153,31 @@ class SaveScope {
       );
     }
   }
+
+  /// Saves a picture the person picks (JPEG, PNG or WebP up to 25 MB) as
+  /// an image item in Not sorted, or says it is already saved.
+  Future<void> addPhoto(BuildContext context, {String? collectionId}) =>
+      run(context, () async {
+        final file = await files.importBytes(
+          extensions: ['jpg', 'jpeg', 'png', 'webp'],
+          maxBytes: MediaRef.maxBytes,
+        );
+        if (file == null) return;
+        final result = await c.addPictures([
+          (bytes: file.bytes, name: file.name),
+        ], collectionId: collectionId);
+        if (!context.mounted) return;
+        showHandyMessage(
+          context,
+          result.added.isNotEmpty
+              ? tr(context, 'Picture saved.', 'Đã lưu ảnh.')
+              : tr(
+                  context,
+                  'This picture is already saved.',
+                  'Ảnh này đã được lưu.',
+                ),
+        );
+      });
 
   /// Runs a change; on failure says that nothing changed. True on success.
   Future<bool> run(BuildContext context, Future<void> Function() task) async {
