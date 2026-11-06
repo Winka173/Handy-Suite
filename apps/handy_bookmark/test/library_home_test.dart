@@ -29,6 +29,25 @@ Map<String, dynamic> viewOf(NetController c, String id) =>
     {};
 
 void main() {
+  testWidgets('a cover counts the saves not opened yet; opening one '
+      'lowers it, and none shows no pill', (t) async {
+    final (c, _) = await boot(t, seed: pictured);
+    // Food holds two unopened saves, Trips one.
+    expect(find.text('2 new'), findsOneWidget);
+    expect(find.text('1 new'), findsOneWidget);
+    await c.update(
+      (l) => l.copyWith(
+        bookmarks: [
+          for (final b in l.bookmarks)
+            b.collectionId == 'trip' ? b.copyWith(isRead: true) : b,
+        ],
+      ),
+    );
+    await settle(t);
+    expect(find.byKey(const Key('collection-new-trip')), findsNothing);
+    expect(find.text('2 new'), findsOneWidget);
+  });
+
   testWidgets('New collection opens as a sheet over Home, not a page; a '
       'template makes it, and Home shows it with its icon', (t) async {
     final (c, _) = await boot(t);

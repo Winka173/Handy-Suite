@@ -168,9 +168,14 @@ class CollectionCover extends StatelessWidget {
             ...items.where((b) => !hasPicture(b)),
           ].take(3).toList();
     final mark = markOf(collection.icon);
+    // Not opened yet, as Focus counts them.
+    final fresh = items.where((b) => !b.isRead && b.openedCount == 0).length;
+    final freshWords = fresh == 0
+        ? ''
+        : tr(context, ', $fresh not opened', ', $fresh mục chưa xem');
     return Semantics(
       button: onOpen != null,
-      label: '${collection.name}, $count',
+      label: '${collection.name}, $count$freshWords',
       excludeSemantics: true,
       child: InkWell(
         key: Key('collection-${collection.id}'),
@@ -209,11 +214,21 @@ class CollectionCover extends StatelessWidget {
                 ),
               ],
             ),
-            Text(
-              [if (parent != null) parent!, count].join(' · '),
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: theme.textTheme.bodySmall?.copyWith(color: c.muted),
+            Row(
+              children: [
+                Flexible(
+                  child: Text(
+                    [if (parent != null) parent!, count].join(' · '),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: theme.textTheme.bodySmall?.copyWith(color: c.muted),
+                  ),
+                ),
+                if (fresh > 0) ...[
+                  const SizedBox(width: 6),
+                  _New(fresh, key: Key('collection-new-${collection.id}')),
+                ],
+              ],
             ),
           ],
         ),
@@ -339,6 +354,32 @@ class _EmptyCover extends StatelessWidget {
               ),
             ),
           ],
+        ),
+      ),
+    );
+  }
+}
+
+/// How many saves in a collection are not opened yet: a small pale pill
+/// in the app's hue, beside the count.
+class _New extends StatelessWidget {
+  final int count;
+  const _New(this.count, {super.key});
+  @override
+  Widget build(BuildContext context) {
+    final p = BookmarkPalette.of(context);
+    final dark = Theme.of(context).brightness == Brightness.dark;
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
+      decoration: BoxDecoration(
+        color: p.tint,
+        borderRadius: BorderRadius.circular(999),
+      ),
+      child: Text(
+        tr(context, '$count new', '$count mới'),
+        style: Theme.of(context).textTheme.labelSmall?.copyWith(
+          color: dark ? p.ink : p.pressed,
+          fontWeight: FontWeight.w700,
         ),
       ),
     );
