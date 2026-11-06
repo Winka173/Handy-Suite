@@ -23,6 +23,7 @@ enum ProFeature {
 const shippedProFeatures = {
   ProFeature.smartCollections,
   ProFeature.premiumThemes,
+  ProFeature.premiumLayouts,
 };
 
 /// Whether this person owns a verified Pro Lifetime.

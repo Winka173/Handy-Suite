@@ -26,8 +26,8 @@ class ExplorePro extends StatelessWidget {
         title: tr(context, 'Personalisation studio', 'Xưởng giao diện'),
         body: tr(
           context,
-          'Ten themes, each with its own colours, type and surfaces. Try them on your own library first.',
-          'Mười giao diện, mỗi cái có màu, chữ và bề mặt riêng. Thử trên chính thư viện của bạn trước.',
+          'Ten themes and eight ways to lay out a collection (magazine, masonry, film strip, scrapbook and more). Try them on your own library first.',
+          'Mười giao diện và tám kiểu bày bộ sưu tập (tạp chí, xếp gạch, cuộn phim, sổ dán…). Thử trên chính thư viện của bạn trước.',
         ),
         action: tr(context, 'Try the themes', 'Thử các giao diện'),
         onAction: () => Navigator.pushNamed(context, '/looks'),
