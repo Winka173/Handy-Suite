@@ -56,6 +56,105 @@ Object? _freeze(Object? value, [int depth = 0]) {
   throw const FormatException('Saved search must contain JSON values');
 }
 
+/// A picture the person owns: a screenshot or photo saved as an item, or
+/// the preview they chose for a link. Addressed by the SHA-256 of its
+/// original bytes, so the same picture is stored once however many items
+/// use it. Unlike a fetched page thumbnail it is user data, not a cache,
+/// and goes into full backups.
+class MediaRef {
+  static const mimes = {'image/jpeg', 'image/png', 'image/webp'};
+
+  /// Originals larger than this are refused, not resized silently.
+  static const maxBytes = 25 * 1024 * 1024;
+  final String id, mime, name;
+  final int width, height, bytes;
+  MediaRef({
+    required this.id,
+    required this.mime,
+    required this.width,
+    required this.height,
+    required this.bytes,
+    this.name = '',
+  }) {
+    if (!RegExp(r'^[0-9a-f]{64}$').hasMatch(id))
+      throw const FormatException('Invalid media id');
+    if (!mimes.contains(mime))
+      throw const FormatException('Unsupported picture type');
+    if (width < 1 || height < 1 || width > 20000 || height > 20000)
+      throw const FormatException('Invalid picture size');
+    if (bytes < 1 || bytes > maxBytes)
+      throw const FormatException('Picture too large');
+    _bounded(name, 255, 'media name');
+  }
+
+  factory MediaRef.fromJson(Map<String, dynamic> j) => MediaRef(
+    id: _string(j, 'id'),
+    mime: _string(j, 'mime'),
+    width: j['width'] is int
+        ? j['width'] as int
+        : throw const FormatException('Invalid picture width'),
+    height: j['height'] is int
+        ? j['height'] as int
+        : throw const FormatException('Invalid picture height'),
+    bytes: j['bytes'] is int
+        ? j['bytes'] as int
+        : throw const FormatException('Invalid picture bytes'),
+    name: _string(j, 'name'),
+  );
+
+  Map<String, dynamic> toJson() => {
+    'id': id,
+    'mime': mime,
+    'width': width,
+    'height': height,
+    'bytes': bytes,
+    if (name.isNotEmpty) 'name': name,
+  };
+
+  String get extension => switch (mime) {
+    'image/png' => 'png',
+    'image/webp' => 'webp',
+    _ => 'jpg',
+  };
+
+  @override
+  bool operator ==(Object other) =>
+      other is MediaRef &&
+      jsonEncodeSorted(toJson()) == jsonEncodeSorted(other.toJson());
+  @override
+  int get hashCode => id.hashCode;
+}
+
+/// Stable JSON for comparisons.
+String jsonEncodeSorted(Map<String, dynamic> m) =>
+    (m.keys.toList()..sort()).map((k) => '$k=${m[k]}').join('&');
+
+/// Something deleted for good. Kept so a device that was offline cannot
+/// bring the item back when it syncs, and pruned only after long silence.
+class Tombstone {
+  static const entities = {'bookmark', 'collection'};
+  final String entity, id, deletedAt;
+  Tombstone({
+    required this.entity,
+    required String id,
+    required String deletedAt,
+  }) : id = _id(id),
+       deletedAt = _date(deletedAt) {
+    if (!entities.contains(entity))
+      throw const FormatException('Invalid tombstone entity');
+  }
+  factory Tombstone.fromJson(Map<String, dynamic> j) => Tombstone(
+    entity: _string(j, 'entity'),
+    id: _string(j, 'id'),
+    deletedAt: _string(j, 'deletedAt'),
+  );
+  Map<String, dynamic> toJson() => {
+    'entity': entity,
+    'id': id,
+    'deletedAt': deletedAt,
+  };
+}
+
 class Bookmark {
   final String id,
       originalUrl,
@@ -79,6 +178,24 @@ class Bookmark {
 
   /// The last explicit link check, when the person ran one.
   final LinkCheck? linkCheck;
+
+  /// `link`: an address (required), maybe with a picture the person chose.
+  /// `image`: a screenshot or photo (required), maybe with the address it
+  /// came from.
+  final String kind;
+
+  /// The person's own picture: the image of an image item, or a link's
+  /// chosen preview.
+  final MediaRef? media;
+
+  /// Set while the item is in Recently Deleted.
+  final String? deletedAt;
+
+  /// Increases with every local change; sync compares it.
+  final int rev;
+
+  bool get isImage => kind == 'image';
+  bool get hasUrl => originalUrl.isNotEmpty;
 
   Bookmark({
     required String id,
@@ -108,12 +225,33 @@ class Bookmark {
     this.metadataSource = 'local',
     String? reminderAt,
     this.linkCheck,
+    this.kind = 'link',
+    this.media,
+    String? deletedAt,
+    this.rev = 0,
   }) : id = _id(id),
+       deletedAt = deletedAt == null ? null : _date(deletedAt),
        tags = List.unmodifiable(tags),
        savedAt = _date(savedAt),
        updatedAt = _date(updatedAt),
        lastOpenedAt = lastOpenedAt == null ? null : _date(lastOpenedAt),
        reminderAt = reminderAt == null ? null : _date(reminderAt) {
+    if (kind != 'link' && kind != 'image')
+      throw const FormatException('Invalid item kind');
+    if (kind == 'image' && media == null)
+      throw const FormatException('An image item needs its picture');
+    if (rev < 0) throw const FormatException('Negative revision');
+    if (originalUrl.isEmpty) {
+      // Only an image may stand without an address.
+      if (kind != 'image' || normalizedUrl.isNotEmpty || canonicalUrl != null)
+        throw const FormatException('A link needs its address');
+    } else {
+      _validateUrls();
+    }
+    _validateRest();
+  }
+
+  void _validateUrls() {
     UrlTools.normalize(originalUrl);
     if (Uri.parse(originalUrl).userInfo.isNotEmpty ||
         Uri.parse(normalizedUrl).userInfo.isNotEmpty ||
@@ -124,6 +262,9 @@ class Bookmark {
     if (UrlTools.normalize(normalizedUrl).normalizedUrl != normalizedUrl)
       throw const FormatException('normalizedUrl is not normalized');
     if (canonicalUrl != null) UrlTools.normalize(canonicalUrl!);
+  }
+
+  void _validateRest() {
     if (thumbnailUrl != null) {
       UrlTools.normalize(thumbnailUrl!);
       if (Uri.parse(thumbnailUrl!).userInfo.isNotEmpty)
@@ -174,6 +315,18 @@ class Bookmark {
     id: _string(j, 'id'),
     originalUrl: _string(j, 'originalUrl'),
     normalizedUrl: _string(j, 'normalizedUrl', _string(j, 'originalUrl')),
+    kind: _string(j, 'kind', 'link'),
+    media: j['media'] == null
+        ? null
+        : j['media'] is Map
+        ? MediaRef.fromJson(Map<String, dynamic>.from(j['media'] as Map))
+        : throw const FormatException('Invalid media'),
+    deletedAt: _optional(j, 'deletedAt'),
+    rev: j['rev'] == null
+        ? 0
+        : j['rev'] is int
+        ? j['rev'] as int
+        : throw const FormatException('Invalid revision'),
     canonicalUrl: _optional(j, 'canonicalUrl'),
     platform: _string(j, 'platform', 'web'),
     contentType: _string(j, 'contentType', 'link'),
@@ -237,6 +390,12 @@ class Bookmark {
     'metadataSource': metadataSource,
     // Written only once a check ran, so unchecked libraries keep their size.
     if (linkCheck != null) 'linkCheck': linkCheck!.toJson(),
+    // New fields are written only when used, so older items keep their
+    // exact JSON (and older apps can still read libraries without them).
+    if (kind != 'link') 'kind': kind,
+    if (media != null) 'media': media!.toJson(),
+    if (deletedAt != null) 'deletedAt': deletedAt,
+    if (rev != 0) 'rev': rev,
   };
 
   Bookmark copyWith({
@@ -267,6 +426,10 @@ class Bookmark {
     String? metadataSource,
     Object? reminderAt = _unset,
     Object? linkCheck = _unset,
+    String? kind,
+    Object? media = _unset,
+    Object? deletedAt = _unset,
+    int? rev,
   }) {
     final j = toJson();
     final changes = <String, dynamic>{
@@ -288,6 +451,8 @@ class Bookmark {
       'updatedAt': updatedAt,
       'metadataStatus': metadataStatus,
       'metadataSource': metadataSource,
+      'kind': kind,
+      'rev': rev,
     };
     changes.forEach((k, v) {
       if (v != null) j[k] = v;
@@ -307,6 +472,8 @@ class Bookmark {
     });
     if (!identical(linkCheck, _unset))
       j['linkCheck'] = (linkCheck as LinkCheck?)?.toJson();
+    if (!identical(media, _unset)) j['media'] = (media as MediaRef?)?.toJson();
+    if (!identical(deletedAt, _unset)) j['deletedAt'] = deletedAt;
     return Bookmark.fromJson(j);
   }
 }
@@ -570,8 +737,13 @@ List<T> _objects<T>(dynamic value, T Function(Map<String, dynamic>) parse) {
 }
 
 class SaveLibrary {
-  /// Library format. 2 added the manual order and link checks; 1 still reads.
-  static const version = 2;
+  /// Library format. 2 added the manual order and link checks; 3 added
+  /// pictures, Recently Deleted and tombstones. A library that uses none of
+  /// 3's additions is still written as 2. 1 and 2 still read.
+  static const version = 3;
+
+  /// Items in Recently Deleted stay this long before they go for good.
+  static const trashRetention = Duration(days: 30);
   final List<String> tags;
   final List<Bookmark> bookmarks;
   final List<SaveCollection> collections;
@@ -581,6 +753,13 @@ class SaveLibrary {
   /// Bookmark ids in the person's own order. Unknown ids and repeats are
   /// dropped; links that are not listed follow in saving order.
   final List<String> manualOrder;
+
+  /// Recently Deleted: whole items with [Bookmark.deletedAt], kept apart so
+  /// no list, search, count, export or Focus queue can show them by mistake.
+  final List<Bookmark> trash;
+
+  /// Items and collections deleted for good (for sync).
+  final List<Tombstone> tombstones;
   SaveLibrary({
     List<String> tags = const [],
     List<Bookmark> bookmarks = const [],
@@ -588,13 +767,32 @@ class SaveLibrary {
     List<SmartCollection> smartCollections = const [],
     List<SavedSearch> savedSearches = const [],
     List<String> manualOrder = const [],
+    List<Bookmark> trash = const [],
+    List<Tombstone> tombstones = const [],
   }) : tags = List.unmodifiable(tags.toSet()),
+       trash = _trash(trash, collections),
+       tombstones = List.unmodifiable(tombstones),
        bookmarks = List.unmodifiable(bookmarks),
        collections = List.unmodifiable(collections),
        smartCollections = List.unmodifiable(smartCollections),
        savedSearches = List.unmodifiable(savedSearches),
        manualOrder = _order(manualOrder, bookmarks) {
     validate();
+  }
+
+  /// A deleted item whose collection is gone returns to Not sorted.
+  static List<Bookmark> _trash(
+    List<Bookmark> trash,
+    List<SaveCollection> collections,
+  ) {
+    if (trash.isEmpty) return const [];
+    final known = {for (final c in collections) c.id};
+    return List.unmodifiable([
+      for (final b in trash)
+        b.collectionId != null && !known.contains(b.collectionId)
+            ? b.copyWith(collectionId: null)
+            : b,
+    ]);
   }
 
   static List<String> _order(List<String> order, List<Bookmark> bookmarks) {
@@ -608,7 +806,7 @@ class SaveLibrary {
   }
 
   factory SaveLibrary.fromJson(Map<String, dynamic> j) {
-    if (j['version'] != null && j['version'] != 1 && j['version'] != version)
+    if (j['version'] != null && !{1, 2, 3}.contains(j['version']))
       throw const FormatException('Unsupported library version');
     return SaveLibrary(
       tags: _strings(j['tags']),
@@ -620,17 +818,29 @@ class SaveLibrary {
       ),
       savedSearches: _objects(j['savedSearches'], SavedSearch.fromJson),
       manualOrder: _strings(j['manualOrder']),
+      trash: _objects(j['trash'], Bookmark.fromJson),
+      tombstones: _objects(j['tombstones'], Tombstone.fromJson),
     );
   }
+
+  /// Whether anything needs format 3 to be read back.
+  bool get usesVersion3 =>
+      trash.isNotEmpty ||
+      tombstones.isNotEmpty ||
+      bookmarks.any((b) => b.kind != 'link' || b.media != null || b.rev != 0);
+
   Map<String, dynamic> toJson() => {
     'format': 'handy-save',
-    'version': version,
+    'version': usesVersion3 ? version : 2,
     'tags': tags,
     'bookmarks': bookmarks.map((e) => e.toJson()).toList(),
     'collections': collections.map((e) => e.toJson()).toList(),
     'smartCollections': smartCollections.map((e) => e.toJson()).toList(),
     'savedSearches': savedSearches.map((e) => e.toJson()).toList(),
     'manualOrder': manualOrder,
+    if (trash.isNotEmpty) 'trash': trash.map((e) => e.toJson()).toList(),
+    if (tombstones.isNotEmpty)
+      'tombstones': tombstones.map((e) => e.toJson()).toList(),
   };
   SaveLibrary copyWith({
     List<String>? tags,
@@ -639,6 +849,8 @@ class SaveLibrary {
     List<SmartCollection>? smartCollections,
     List<SavedSearch>? savedSearches,
     List<String>? manualOrder,
+    List<Bookmark>? trash,
+    List<Tombstone>? tombstones,
   }) => SaveLibrary(
     tags: tags ?? this.tags,
     bookmarks: bookmarks ?? this.bookmarks,
@@ -646,6 +858,8 @@ class SaveLibrary {
     smartCollections: smartCollections ?? this.smartCollections,
     savedSearches: savedSearches ?? this.savedSearches,
     manualOrder: manualOrder ?? this.manualOrder,
+    trash: trash ?? this.trash,
+    tombstones: tombstones ?? this.tombstones,
   );
 
   /// Every bookmark id in manual order: the listed ones, then the rest in
@@ -671,7 +885,15 @@ class SaveLibrary {
       }
     }
 
-    unique(bookmarks.map((e) => e.id));
+    unique([...bookmarks.map((e) => e.id), ...trash.map((e) => e.id)]);
+    for (final b in bookmarks) {
+      if (b.deletedAt != null)
+        throw const FormatException('A deleted item is not in Trash');
+    }
+    for (final b in trash) {
+      if (b.deletedAt == null)
+        throw const FormatException('A Trash item has no deletion time');
+    }
     unique(collections.map((e) => e.id));
     unique(smartCollections.map((e) => e.id));
     unique(savedSearches.map((e) => e.id));

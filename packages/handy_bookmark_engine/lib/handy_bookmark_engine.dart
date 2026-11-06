@@ -7,3 +7,4 @@ export 'src/portable.dart';
 export 'src/reading.dart';
 export 'src/links.dart';
 export 'src/duplicates.dart';
+export 'src/trash.dart';

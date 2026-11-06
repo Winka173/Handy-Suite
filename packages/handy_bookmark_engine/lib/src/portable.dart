@@ -5,6 +5,7 @@ import 'package:crypto/crypto.dart';
 import 'package:handy_core/portable_zip.dart';
 import 'package:html/parser.dart' as html;
 import 'package:html/dom.dart' show Element;
+import 'duplicates.dart';
 import 'models.dart';
 import 'reading.dart';
 import 'urls.dart';
@@ -13,8 +14,7 @@ enum SaveFormat { json, csv, html, txt, markdown, zip }
 
 enum ImportStrategy { merge, replace }
 
-String _key(Bookmark b) =>
-    UrlTools.normalize(b.canonicalUrl ?? b.normalizedUrl).canonicalUrl;
+String _key(Bookmark b) => sameItemKey(b);
 
 /// A committed import: the next library, and the reading copies to store
 /// under the bookmark ids they ended up with.
@@ -268,9 +268,9 @@ class SavePortable {
       SaveFormat.html =>
         '<!DOCTYPE NETSCAPE-Bookmark-file-1>\n<META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=UTF-8">\n<!-- $_marker$payload -->\n<TITLE>Handy Bookmark</TITLE>\n<H1>Handy Bookmark</H1>\n${_netscapeTree(library, escape)}',
       SaveFormat.txt =>
-        '# $_marker$payload\n${library.bookmarks.map((b) => b.originalUrl).join('\n')}\n',
+        '# $_marker$payload\n${library.bookmarks.where((b) => b.hasUrl).map((b) => b.originalUrl).join('\n')}\n',
       SaveFormat.markdown =>
-        '<!-- $_marker$payload -->\n# Handy Bookmark\n\n${library.bookmarks.map((b) => '- [${(b.title.isEmpty ? b.sourceDomain : b.title).replaceAll(']', '\\]').replaceAll('[', '\\[').replaceAll('\n', ' ')}](<${b.originalUrl.replaceAll('>', '%3E')}>)').join('\n')}\n',
+        '<!-- $_marker$payload -->\n# Handy Bookmark\n\n${library.bookmarks.where((b) => b.hasUrl).map((b) => '- [${(b.title.isEmpty ? b.sourceDomain : b.title).replaceAll(']', '\\]').replaceAll('[', '\\[').replaceAll('\n', ' ')}](<${b.originalUrl.replaceAll('>', '%3E')}>)').join('\n')}\n',
       SaveFormat.zip => '',
     };
     if (format != SaveFormat.zip) {
@@ -340,6 +340,9 @@ class SavePortable {
       }
       out.writeln('<DL><p>');
       for (final b in links[id] ?? <Bookmark>[]) {
+        // A picture without an address has no link to list; the Handy
+        // payload above still carries it.
+        if (!b.hasUrl) continue;
         out.writeln(
           '<DT><A HREF="${escape(b.originalUrl)}" ADD_DATE="${DateTime.parse(b.savedAt).millisecondsSinceEpoch ~/ 1000}" TAGS="${escape(b.tags.join(','))}">${escape(b.title.isEmpty ? b.originalUrl : b.title)}</A>',
         );
@@ -560,7 +563,7 @@ class SavePortable {
     SaveLibrary? current, {
     Object? reading,
   }) {
-    if ((json['version'] != 1 && json['version'] != SaveLibrary.version) ||
+    if (!{1, 2, SaveLibrary.version}.contains(json['version']) ||
         json['format'] != 'handy-save')
       throw const FormatException('Unsupported Handy Bookmark format');
     final values = json['bookmarks'];

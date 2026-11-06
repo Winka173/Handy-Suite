@@ -17,6 +17,9 @@ enum SaveSort {
 class SearchQuery {
   final String text;
   final String? platform, contentType, collectionId;
+
+  /// `link` or `image`; null for both.
+  final String? kind;
   final List<String> tags;
   final bool? isFavorite, isPinned, isArchived, isRead;
 
@@ -29,6 +32,7 @@ class SearchQuery {
     this.platform,
     this.contentType,
     this.collectionId,
+    this.kind,
     List<String> tags = const [],
     this.isFavorite,
     this.isPinned,
@@ -46,6 +50,7 @@ class SearchQuery {
     platform: j['platform'] as String?,
     contentType: j['contentType'] as String?,
     collectionId: j['collectionId'] as String?,
+    kind: j['kind'] as String?,
     tags: List<String>.from(j['tags'] as List? ?? []),
     isFavorite: j['isFavorite'] as bool?,
     isPinned: j['isPinned'] as bool?,
@@ -66,6 +71,7 @@ class SearchQuery {
     'platform': platform,
     'contentType': contentType,
     'collectionId': collectionId,
+    if (kind != null) 'kind': kind,
     'tags': tags,
     'isFavorite': isFavorite,
     'isPinned': isPinned,
@@ -94,6 +100,7 @@ class SearchQuery {
     if (platform != null && b.platform != platform ||
         contentType != null && b.contentType != contentType ||
         collectionId != null && b.collectionId != collectionId ||
+        kind != null && b.kind != kind ||
         isFavorite != null && b.isFavorite != isFavorite ||
         isPinned != null && b.isPinned != isPinned ||
         isArchived != null && b.isArchived != isArchived ||
@@ -108,12 +115,10 @@ class SearchQuery {
       return false;
     final tagSet = b.tags.map((t) => t.toLowerCase()).toSet();
     if (!tags.every((t) => tagSet.contains(t.toLowerCase()))) return false;
-    final haystack = '${_text(b)}\n${collectionName.toLowerCase()}';
-    return text
-        .toLowerCase()
-        .split(RegExp(r'\s+'))
-        .where((s) => s.isNotEmpty)
-        .every(haystack.contains);
+    final haystack = foldSearch('${_text(b)}\n$collectionName');
+    return foldSearch(
+      text,
+    ).split(RegExp(r'\s+')).where((s) => s.isNotEmpty).every(haystack.contains);
   }
 }
 
@@ -230,4 +235,29 @@ extension SmartRuleMatching on SmartRule {
         return false;
     }
   }
+}
+
+const _marked = {
+  'a': 'àáạảãâầấậẩẫăằắặẳẵ',
+  'e': 'èéẹẻẽêềếệểễ',
+  'i': 'ìíịỉĩ',
+  'o': 'òóọỏõôồốộổỗơờớợởỡ',
+  'u': 'ùúụủũưừứựửữ',
+  'y': 'ỳýỵỷỹ',
+  'd': 'đ',
+};
+final _fold = {
+  for (final e in _marked.entries)
+    for (final c in e.value.split('')) c: e.key,
+};
+
+/// Lower case without Vietnamese marks, so "pho ha noi" finds "Phở Hà Nội".
+/// Typed marks still narrow nothing away: both sides are folded.
+String foldSearch(String text) {
+  final out = StringBuffer();
+  for (final r in text.toLowerCase().runes) {
+    final c = String.fromCharCode(r);
+    out.write(_fold[c] ?? c);
+  }
+  return out.toString();
 }

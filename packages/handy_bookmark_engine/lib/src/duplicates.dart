@@ -1,8 +1,13 @@
 import 'models.dart';
 import 'urls.dart';
 
-String _sameKey(Bookmark b) =>
-    UrlTools.normalize(b.canonicalUrl ?? b.normalizedUrl).canonicalUrl;
+/// What makes two items the same: a link's address, or an image item's
+/// picture (an image saved twice is the same bytes, whatever its source).
+String sameItemKey(Bookmark b) => b.isImage
+    ? 'image:${b.media!.id}'
+    : UrlTools.normalize(b.canonicalUrl ?? b.normalizedUrl).canonicalUrl;
+
+String _sameKey(Bookmark b) => sameItemKey(b);
 
 /// Links saved more than once, by the same rule imports use to skip
 /// duplicates (tracking parameters and case dropped; `www.` and a trailing
@@ -70,6 +75,8 @@ SaveLibrary mergeBookmarks(
     siteName: first((b) => b.siteName),
     author: first((b) => b.author),
     collectionId: first((b) => b.collectionId),
+    media:
+        keep.media ?? all.map((b) => b.media).whereType<MediaRef>().firstOrNull,
     tags: [for (final t in all.expand((b) => b.tags).toSet()) t],
     note: notes.join('\n\n'),
     isFavorite: all.any((b) => b.isFavorite),

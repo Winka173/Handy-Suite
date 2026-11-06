@@ -312,7 +312,7 @@ void main() {
       expect(p.library.manualOrder, isEmpty);
       expect(p.library.toJson()['version'], 2);
       expect(
-        () => SaveLibrary.fromJson({...v1, 'version': 3}),
+        () => SaveLibrary.fromJson({...v1, 'version': 4}),
         throwsFormatException,
       );
     });
