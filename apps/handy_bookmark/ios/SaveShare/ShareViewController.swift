@@ -9,6 +9,7 @@ final class ShareViewController: UIViewController {
     private var finished = false
     private var failed = false
     private var parts: [String] = []
+    private var pictures: [ShareQueue.Picture] = []
     private var count = 0
     private let deliveryID = UUID().uuidString.lowercased()
     private func localized(_ english: String, _ vietnamese: String) -> String {
@@ -36,8 +37,10 @@ final class ShareViewController: UIViewController {
         let items = extensionContext?.inputItems as? [NSExtensionItem] ?? []
         let providers = items.flatMap { $0.attachments ?? [] }.filter {
             $0.hasItemConformingToTypeIdentifier("public.url") || $0.hasItemConformingToTypeIdentifier("public.plain-text")
+                || $0.hasItemConformingToTypeIdentifier(UTType.image.identifier)
         }
-        guard !providers.isEmpty, providers.count <= ShareQueue.maxPending else { finish(false); return }
+        guard !providers.isEmpty, providers.count <= ShareQueue.maxPending,
+              providers.filter({ Self.isPicture($0) }).count <= ShareQueue.maxImages else { finish(false); return }
         // Providers are loaded serially; never request remote URL contents.
         load(providers, index: 0)
         DispatchQueue.main.asyncAfter(deadline: .now() + 20) { [weak self] in
@@ -48,13 +51,14 @@ final class ShareViewController: UIViewController {
         guard !finished else { return }
         if index == providers.count {
             do {
-                guard !failed, !parts.isEmpty else { throw ShareQueue.QueueError() }
-                try ShareQueue().enqueue(text: parts.joined(separator: "\n"), title: nil, id: deliveryID)
+                guard !failed, !parts.isEmpty || !pictures.isEmpty else { throw ShareQueue.QueueError() }
+                try ShareQueue().enqueue(text: parts.joined(separator: "\n"), title: nil, id: deliveryID, pictures: pictures)
                 finish(true)
             } catch { finish(false) }
             return
         }
         let provider = providers[index]
+        if Self.isPicture(provider) { loadPicture(provider, providers: providers, index: index); return }
         let type = provider.hasItemConformingToTypeIdentifier("public.url") ? "public.url" : "public.plain-text"
         provider.loadItem(forTypeIdentifier: type, options: nil) { [weak self] item, error in
             DispatchQueue.main.async {
@@ -72,10 +76,42 @@ final class ShareViewController: UIViewController {
             }
         }
     }
+    /// A picture, not a link that happens to point at one.
+    private static func isPicture(_ provider: NSItemProvider) -> Bool {
+        provider.hasItemConformingToTypeIdentifier(UTType.image.identifier)
+            && !provider.hasItemConformingToTypeIdentifier("public.url")
+    }
+
+    private static func mime(_ provider: NSItemProvider) -> String? {
+        if provider.hasItemConformingToTypeIdentifier(UTType.jpeg.identifier) { return "image/jpeg" }
+        if provider.hasItemConformingToTypeIdentifier(UTType.png.identifier) { return "image/png" }
+        if provider.hasItemConformingToTypeIdentifier(UTType.webP.identifier) { return "image/webp" }
+        return nil
+    }
+
+    /// Copies one picture's bytes from the sharing app (a local file the
+    /// system hands over; nothing is fetched). Other formats are refused,
+    /// as are pictures over the size limit.
+    private func loadPicture(_ provider: NSItemProvider, providers: [NSItemProvider], index: Int) {
+        guard let mime = Self.mime(provider) else { finish(false); return }
+        provider.loadFileRepresentation(forTypeIdentifier: UTType.image.identifier) { [weak self] url, error in
+            var data: Data?
+            if let url = url, let size = try? url.resourceValues(forKeys: [.fileSizeKey]).fileSize,
+               size <= ShareQueue.maxImageBytes { data = try? Data(contentsOf: url) }
+            let name = provider.suggestedName ?? url?.lastPathComponent ?? ""
+            DispatchQueue.main.async {
+                guard let self = self, !self.finished else { return }
+                guard error == nil, let data = data else { self.finish(false); return }
+                self.pictures.append(ShareQueue.Picture(data: data, mime: mime, name: name))
+                self.load(providers, index: index + 1)
+            }
+        }
+    }
+
     private func finish(_ success: Bool) {
         guard !finished else { return }; finished = true; failed = !success
         status.text = success
-            ? localized("Queued safely. Open Handy Bookmark to add links to your Inbox.", "Đã lưu vào hàng đợi. Mở Handy Bookmark để thêm liên kết vào hộp thư đến.")
+            ? localized("Queued safely. Open Handy Bookmark to add it to Not sorted.", "Đã lưu vào hàng đợi. Mở Handy Bookmark để thêm vào Chưa xếp.")
             : localized("Could not queue this share. Try again, or open Handy Bookmark and paste the link. Limit: 262144 characters and 100 pending shares.", "Không thể thêm vào hàng đợi. Hãy thử lại hoặc mở Handy Bookmark và dán liên kết. Giới hạn: 262144 ký tự và 100 lượt chờ.")
         done.isHidden = false
         UIAccessibility.post(notification: .announcement, argument: status.text)
