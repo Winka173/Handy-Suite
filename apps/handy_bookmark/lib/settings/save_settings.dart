@@ -3,6 +3,7 @@ import 'package:handy_ui/kit.dart';
 import '../scope.dart';
 import '../controller.dart';
 import '../home/dateline.dart';
+import '../sync/sync_section.dart';
 import 'data_section.dart';
 
 /// The library's name, shown at the top of the home. Empty restores the
@@ -74,6 +75,9 @@ String weekdayName(BuildContext context, int day) => tr(
     'Chủ Nhật',
   ][day - 1],
 );
+
+/// Where sync folders are picked; tests replace it.
+BackupFolders syncFolders = systemBackupFolders();
 
 /// Save's settings: the shared page with how links open, what is fetched,
 /// reminders, and the data tools.
@@ -305,6 +309,7 @@ class SaveSettingsPage extends StatelessWidget {
           ),
           if (scope.autoBackup != null)
             HandyAutoBackupSection(backup: scope.autoBackup!),
+          SyncSection(scope: scope, folders: syncFolders),
           SaveDataSection(scope: scope),
         ],
         onReset: () => save(HandyPreferences()),
