@@ -2,6 +2,8 @@ import 'dart:math';
 
 import 'package:handy_bookmark_engine/handy_bookmark_engine.dart';
 import 'package:handy_ui/kit.dart';
+import 'collections/identity.dart';
+import 'collections/identity_pickers.dart';
 import 'ui/collection_picker.dart';
 
 String _newId() => List.generate(
@@ -351,10 +353,21 @@ class _BookmarkEditorState extends State<BookmarkEditor> {
   );
 }
 
+/// New or Edit collection: a live preview of its cover first, then its
+/// name, ready starts (new only), its colour, its icon or emoji, where it
+/// sits and a note. [preview] draws the cover for a draft (the Home
+/// cover, with the collection's own saves when editing); without it the
+/// editor shows no preview.
 class CollectionEditor extends StatefulWidget {
   final SaveCollection? initial;
   final SaveLibrary library;
-  const CollectionEditor({super.key, this.initial, required this.library});
+  final Widget Function(SaveCollection draft, int hue)? preview;
+  const CollectionEditor({
+    super.key,
+    this.initial,
+    required this.library,
+    this.preview,
+  });
   @override
   State<CollectionEditor> createState() => _CollectionEditorState();
 }
@@ -365,28 +378,65 @@ class _CollectionEditorState extends State<CollectionEditor> {
   late final String _id;
   late String _parent;
 
-  /// Kept as they were; the app shows each collection in its own place's
-  /// colour, so the editor no longer asks for one.
-  late final String _color, _icon;
+  /// The chosen colour (null: Auto) and mark (null: none).
+  int? _hue;
+  CollectionMark? _mark;
+
+  /// The template whose name is in the field, so picking another one
+  /// replaces it but a name the person typed is kept.
+  String? _templateName;
   String? _error;
-  static const _colors = [
-    '#6366F1',
-    '#0EA5E9',
-    '#10B981',
-    '#F59E0B',
-    '#EF4444',
-    '#EC4899',
-  ];
   @override
   void initState() {
     super.initState();
     final c = widget.initial;
     _id = c?.id ?? _newId();
-    _name = TextEditingController(text: c?.name ?? '');
+    _name = TextEditingController(text: c?.name ?? '')
+      ..addListener(() => setState(() {}));
     _description = TextEditingController(text: c?.description ?? '');
     _parent = c?.parentId ?? '';
-    _color = c?.color ?? _colors.first;
-    _icon = c?.icon ?? 'folder';
+    _hue = c == null ? null : chosenHue(c.color);
+    _mark = c == null ? null : markOf(c.icon);
+  }
+
+  SaveCollection _draft(String name) => SaveCollection(
+    id: _id,
+    name: name,
+    description: _description.text.trim(),
+    parentId: _parent.isEmpty ? null : _parent,
+    color: _hue == null
+        ? (widget.initial == null || chosenHue(widget.initial!.color) != null
+              ? storeHue(null)
+              : widget.initial!.color)
+        : storeHue(_hue),
+    icon: _mark == null
+        ? (widget.initial == null || markOf(widget.initial!.icon) != null
+              ? storeMark(null)
+              : widget.initial!.icon)
+        : storeMark(_mark),
+    position: widget.initial?.position ?? widget.library.collections.length,
+  );
+
+  /// The library as it would be with this draft in it.
+  SaveLibrary _with(SaveCollection draft) => widget.library.copyWith(
+    collections: [
+      for (final c in widget.library.collections)
+        if (c.id != draft.id) c,
+      draft,
+    ],
+  );
+
+  void _pickTemplate(CollectionTemplate t) {
+    final name = tr(context, t.en, t.vi);
+    setState(() {
+      final current = _name.text.trim();
+      if (current.isEmpty || current == _templateName) {
+        _name.text = name;
+        _templateName = name;
+      }
+      _mark = IconMark(t.icon);
+      _hue = t.hue % usableHues(context);
+    });
   }
 
   @override
@@ -411,24 +461,8 @@ class _CollectionEditorState extends State<CollectionEditor> {
   void _save() {
     if (!_form.currentState!.validate()) return;
     try {
-      final result = SaveCollection(
-        id: _id,
-        name: _name.text.trim(),
-        description: _description.text.trim(),
-        parentId: _parent.isEmpty ? null : _parent,
-        color: _color,
-        icon: _icon,
-        position: widget.initial?.position ?? widget.library.collections.length,
-      );
-      widget.library
-          .copyWith(
-            collections: [
-              for (final c in widget.library.collections)
-                if (c.id != result.id) c,
-              result,
-            ],
-          )
-          .validate();
+      final result = _draft(_name.text.trim());
+      _with(result).validate();
       Navigator.pop(context, result);
     } catch (_) {
       setState(() => _error = _invalid(context));
@@ -437,6 +471,22 @@ class _CollectionEditorState extends State<CollectionEditor> {
 
   @override
   Widget build(BuildContext context) {
+    final typed = _name.text.trim();
+    final draft = _draft(
+      typed.isEmpty ? tr(context, 'New collection', 'Bộ sưu tập mới') : typed,
+    );
+    // A parent chosen inside this collection makes no valid library; the
+    // form says so on Save, and the preview keeps the colours it had.
+    int hueWith(SaveCollection c) {
+      try {
+        return collectionHueIn(_with(c), _id);
+      } on FormatException {
+        return collectionHueIn(_with(c.copyWith(parentId: null)), _id);
+      }
+    }
+
+    final hue = hueWith(draft);
+    final autoHue = hueWith(draft.copyWith(color: storeHue(null)));
     return _EditorPage(
       title: widget.initial == null
           ? tr(context, 'New collection', 'Bộ sưu tập mới')
@@ -445,14 +495,44 @@ class _CollectionEditorState extends State<CollectionEditor> {
       save: _save,
       error: _error,
       children: [
+        if (widget.preview case final preview?)
+          Align(
+            alignment: AlignmentDirectional.centerStart,
+            child: SizedBox(
+              key: const Key('collection-preview'),
+              width: 168,
+              child: preview(draft, hue),
+            ),
+          ),
         TextFormField(
           key: const Key('collection-name'),
           controller: _name,
           maxLength: 8192,
+          // The limit guards the data; a counter to 8192 says nothing.
+          buildCounter:
+              (_, {required currentLength, required isFocused, maxLength}) =>
+                  null,
           decoration: InputDecoration(labelText: tr(context, 'Name', 'Tên')),
           validator: (v) => v == null || v.trim().isEmpty
               ? tr(context, 'Enter a name', 'Nhập tên')
               : null,
+        ),
+        if (widget.initial == null)
+          TemplatePicker(
+            taken: {
+              for (final c in widget.library.collections) c.name.toLowerCase(),
+            },
+            onPick: _pickTemplate,
+          ),
+        HuePicker(
+          value: _hue,
+          autoHue: autoHue,
+          onChanged: (v) => setState(() => _hue = v),
+        ),
+        MarkPicker(
+          value: _mark,
+          hue: hue,
+          onChanged: (v) => setState(() => _mark = v),
         ),
         DropdownButtonFormField<String>(
           key: const Key('collection-parent'),
@@ -494,6 +574,9 @@ class _CollectionEditorState extends State<CollectionEditor> {
           key: const Key('collection-description'),
           controller: _description,
           maxLength: 65536,
+          buildCounter:
+              (_, {required currentLength, required isFocused, maxLength}) =>
+                  null,
           minLines: 2,
           maxLines: 5,
           decoration: InputDecoration(

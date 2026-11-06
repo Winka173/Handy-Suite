@@ -2,6 +2,7 @@ import 'dart:typed_data';
 import 'package:handy_bookmark_engine/handy_bookmark_engine.dart';
 import 'package:handy_ui/kit.dart';
 import '../collections/collection_actions.dart';
+import '../collections/identity.dart';
 import '../controller.dart';
 import '../scope.dart';
 import '../design/theme.dart';
@@ -96,7 +97,7 @@ class CollectionCovers extends StatelessWidget {
                   ].take(limit ?? 1 << 20))
                     SizedBox(
                       width: width,
-                      child: _Cover(
+                      child: CollectionCover(
                         scope: scope,
                         collection: col,
                         parent: col.parentId == null
@@ -117,7 +118,11 @@ class CollectionCovers extends StatelessWidget {
   }
 }
 
-class _Cover extends StatelessWidget {
+/// A collection as it stands on the shelf: its cover (the chosen picture,
+/// else up to three of its saves, else its colour and mark) over its name
+/// and count. Without [onOpen] it is a still picture, as in the editor's
+/// preview.
+class CollectionCover extends StatelessWidget {
   final SaveScope scope;
   final SaveCollection collection;
   final String? parent;
@@ -126,8 +131,9 @@ class _Cover extends StatelessWidget {
 
   /// The picture the person chose for this cover, if it is still here.
   final Bookmark? cover;
-  final VoidCallback onOpen;
-  const _Cover({
+  final VoidCallback? onOpen;
+  const CollectionCover({
+    super.key,
     required this.scope,
     required this.collection,
     required this.parent,
@@ -161,14 +167,17 @@ class _Cover extends StatelessWidget {
             ...items.where(hasPicture),
             ...items.where((b) => !hasPicture(b)),
           ].take(3).toList();
+    final mark = markOf(collection.icon);
     return Semantics(
-      button: true,
+      button: onOpen != null,
       label: '${collection.name}, $count',
       excludeSemantics: true,
       child: InkWell(
         key: Key('collection-${collection.id}'),
         onTap: onOpen,
-        onLongPress: () => scope.editCollection(context, collection),
+        onLongPress: onOpen == null
+            ? null
+            : () => scope.editCollection(context, collection),
         borderRadius: BorderRadius.circular(BookmarkRadii.collection),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -178,15 +187,15 @@ class _Cover extends StatelessWidget {
               child: ClipRRect(
                 borderRadius: BorderRadius.circular(BookmarkRadii.collection),
                 child: shown.isEmpty
-                    ? _EmptyCover(name: collection.name, hue: hue)
+                    ? _EmptyCover(hue: hue, mark: mark)
                     : _mosaic(shown),
               ),
             ),
             const SizedBox(height: 10),
             Row(
               children: [
-                HandyDot(hue, size: 9),
-                const SizedBox(width: 6),
+                CollectionBadge(hue: hue, mark: mark, size: 9),
+                SizedBox(width: mark == null ? 6 : 8),
                 Expanded(
                   child: Text(
                     collection.name,
@@ -288,12 +297,12 @@ class _CoverCell extends StatelessWidget {
   }
 }
 
-/// A collection with nothing in it yet: its own colour, a folder and its
-/// first letter, so even an empty shelf has a face.
+/// A collection with nothing in it yet: its own colour and its mark (or a
+/// folder), so even an empty shelf has a face.
 class _EmptyCover extends StatelessWidget {
-  final String name;
   final int hue;
-  const _EmptyCover({required this.name, required this.hue});
+  final CollectionMark? mark;
+  const _EmptyCover({required this.hue, this.mark});
   @override
   Widget build(BuildContext context) {
     final h = HandyPalette.of(context, hue);
@@ -309,7 +318,14 @@ class _EmptyCover extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Icon(Icons.folder_outlined, color: ink, size: 22),
+            switch (mark) {
+              EmojiMark(:final emoji) => Text(
+                emoji,
+                style: const TextStyle(fontSize: 34, height: 1),
+              ),
+              IconMark(:final icon) => Icon(icon, color: ink, size: 30),
+              null => Icon(Icons.folder_outlined, color: ink, size: 22),
+            },
             Flexible(
               child: Text(
                 tr(context, 'Nothing here yet', 'Chưa có gì'),

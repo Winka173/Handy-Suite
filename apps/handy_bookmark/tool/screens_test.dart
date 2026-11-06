@@ -795,6 +795,38 @@ void main() {
     await boot(t, const Size(390, 844), theme: 'dark');
     await shot(t, 'phone-1-home-dark');
   });
+  testWidgets('phone new collection', (t) async {
+    await boot(t, const Size(390, 844));
+    await tapKey(t, 'collection-new');
+    await shot(t, 'phone-51-collection-new');
+    await tapKey(t, 'template-play-4');
+    await scrolled(t, 'phone-51-collection-template', 1);
+  });
+  testWidgets('phone new collection dark emoji', (t) async {
+    await boot(t, const Size(390, 844), theme: 'dark');
+    await tapKey(t, 'collection-new');
+    await t.enterText(find.byKey(const Key('collection-name')), 'Phở Hà Nội');
+    await t.pump();
+    await t.scrollUntilVisible(
+      find.byKey(const Key('mark-emoji')),
+      200,
+      scrollable: find.byType(Scrollable).first,
+    );
+    await t.enterText(find.byKey(const Key('mark-emoji')), '🍜');
+    await t.pumpAndSettle();
+    await t.tap(find.byKey(const Key('hue-3')));
+    await t.pumpAndSettle();
+    await t.drag(find.byType(Scrollable).first, const Offset(0, 2000));
+    await t.pumpAndSettle();
+    await shot(t, 'phone-52-collection-dark');
+  });
+  testWidgets('small new collection large text', (t) async {
+    t.platformDispatcher.textScaleFactorTestValue = 2;
+    addTearDown(t.platformDispatcher.clearTextScaleFactorTestValue);
+    await boot(t, const Size(320, 640));
+    await tapKey(t, 'collection-new');
+    await scrolled(t, 'small-53-collection-large', 3);
+  });
   testWidgets('phone save sheet dark', (t) async {
     await boot(t, const Size(390, 844), theme: 'dark');
     await tapKey(t, 'save-new');

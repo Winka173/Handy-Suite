@@ -3,6 +3,7 @@ import 'package:handy_bookmark_engine/handy_bookmark_engine.dart';
 import 'package:handy_ui/kit.dart';
 import '../controller.dart';
 import '../editors.dart';
+import '../home/collection_covers.dart' show CollectionCover;
 import '../scope.dart';
 import '../ui/collection_picker.dart';
 
@@ -16,7 +17,30 @@ extension CollectionActions on SaveScope {
       context,
       MaterialPageRoute(
         fullscreenDialog: initial == null,
-        builder: (_) => CollectionEditor(initial: initial, library: library),
+        builder: (_) => CollectionEditor(
+          initial: initial,
+          library: library,
+          // The Home cover itself, with this collection's own saves.
+          preview: (draft, hue) => CollectionCover(
+            scope: this,
+            collection: draft,
+            parent: draft.parentId == null
+                ? null
+                : library.collections
+                      .where((c) => c.id == draft.parentId)
+                      .firstOrNull
+                      ?.name,
+            hue: hue,
+            items: initial == null
+                ? const []
+                : ([
+                    for (final b in library.bookmarks)
+                      if (b.collectionId == initial.id && !b.isArchived) b,
+                  ]..sort((a, b) => b.savedAt.compareTo(a.savedAt))),
+            cover: initial == null ? null : view.chosenCover(initial.id),
+            onOpen: null,
+          ),
+        ),
       ),
     );
     if (edited == null || !context.mounted) return;

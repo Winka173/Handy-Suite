@@ -1,5 +1,6 @@
 import 'package:handy_bookmark_engine/handy_bookmark_engine.dart';
 import 'package:handy_ui/kit.dart';
+import '../collections/identity.dart';
 
 /// Collections in tree order with their depth.
 List<(SaveCollection, int)> collectionTree(SaveLibrary l) {
@@ -21,22 +22,10 @@ List<(SaveCollection, int)> collectionTree(SaveLibrary l) {
   return out;
 }
 
-/// The identity colour of a collection: its top-level collection's place
-/// among the top-level ones, so neighbours differ and children match their
-/// parent.
-int collectionHue(SaveLibrary l, String id) {
-  final byId = {for (final c in l.collections) c.id: c};
-  var root = byId[id];
-  for (var i = 0; root?.parentId != null && i < 32; i++) {
-    root = byId[root!.parentId];
-  }
-  final roots = [
-    for (final c in l.collections)
-      if (c.parentId == null) c,
-  ]..sort((a, b) => a.position.compareTo(b.position));
-  final at = roots.indexWhere((c) => c.id == root?.id);
-  return at < 0 ? HandyPalette.forKey(id) : at;
-}
+/// The identity colour of a collection: the one chosen in its editor (or
+/// its parent's), else its top-level collection's place among the
+/// top-level ones, so neighbours differ and children match their parent.
+int collectionHue(SaveLibrary l, String id) => collectionHueIn(l, id);
 
 /// The collection a link is in, with its colour, or null.
 (SaveCollection, int)? collectionOf(SaveLibrary? l, String? id) {

@@ -2202,3 +2202,30 @@ hướng dẫn phải trông như chính phần hướng dẫn. Cùng màu teal 
 thay thế theo nguồn khi không có ảnh. Màn chính: tên thư viện (serif), tìm kiếm dạng viên thuốc,
 dải "Mới lưu" (mục chưa xếp đi trước, một nút "Xếp vào…"), bìa collection, nơi chốn, nút Lưu ở
 đáy. Theme riêng của app qua `HandyApp(themeOverride:)`, không đổi theme các app khác.
+
+## Hợp đồng: Handy Bookmark · tạo và sửa bộ sưu tập (2026-11-07)
+
+- Việc: đặt một chỗ mới cho đồ đã lưu và làm nó nhận ra được ngay trên Trang chủ.
+  Câu hỏi: "Bộ này sẽ trông thế nào trên kệ?" Hành động chính: Lưu (thanh dưới, như mọi
+  trình sửa).
+- Đặc trưng: **bìa xem trước thật** ở đầu form, vẽ bằng đúng widget bìa của Trang chủ
+  (sửa: ảnh của chính các mục trong bộ; tạo mới: bìa trống mang màu và biểu tượng). Gõ
+  tên, chọn màu, chọn biểu tượng thì bìa đổi theo ngay.
+- Thứ tự: Bìa → Tên → Bắt đầu từ mẫu (chỉ khi tạo mới) → Màu → Biểu tượng → Nằm trong →
+  Ghi chú.
+- Mẫu: Công thức nấu ăn, Du lịch, Cần mua, Đọc sau, Xem sau, Công việc, Ý tưởng, Quà tặng.
+  Chạm một mẫu sẽ điền tên (khi tên còn trống hoặc đang là tên mẫu), biểu tượng và màu.
+  Mẫu trùng tên một bộ đã có thì ẩn.
+- Màu: "Tự động" (theo vị trí, như trước) và các màu nhận diện của `HandyPalette` mà app
+  dùng được (bỏ những màu gần teal). Màu chỉ hiện ở chấm hoặc nền nhạt cạnh tên, không bao
+  giờ tô biểu tượng. Lưu dạng `hue:N` trong trường `color`; giá trị cũ (hex) nghĩa là Tự
+  động. Bộ con không chọn màu thì theo màu bộ cha.
+- Biểu tượng: "Không có", 16 biểu tượng nét mảnh màu mực, hoặc một emoji do người dùng gõ
+  (một ký tự). Lưu trong trường `icon` (`emoji:X` hoặc tên biểu tượng); `folder` cũ nghĩa
+  là không có. Hiện trên bìa trống và trong vòng tròn nền nhạt thay cho chấm cạnh tên.
+- Trạng thái: tên trống thì báo ngay dưới ô; emoji nhiều hơn một ký tự thì chỉ giữ ký tự
+  đầu; sửa bộ đã có thì không có phần mẫu.
+- Bố cục: một cột ở mọi độ rộng (cột đọc của mọi trình sửa), bìa rộng 168 px canh trái.
+  Ô chọn 44 px, có nhãn đọc màn hình (tên màu, tên biểu tượng, trạng thái đang chọn).
+- Bỏ: 32 màu cầu vồng, biểu tượng tô màu theo loại, bảng emoji tự làm, gradient trên bìa,
+  bước wizard nhiều trang.

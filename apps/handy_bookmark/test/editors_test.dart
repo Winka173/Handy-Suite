@@ -1,5 +1,6 @@
 import 'package:handy_ui/kit.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:handy_bookmark/collections/identity.dart';
 import 'package:handy_bookmark/editors.dart';
 import 'package:handy_bookmark_engine/handy_bookmark_engine.dart';
 
@@ -55,16 +56,30 @@ Future<void> _open(
   await tester.pumpAndSettle();
 }
 
+/// Scrolls the editor until [finder] is built and on screen: the form is a
+/// lazy list, so a field far down does not exist until it is near.
+Future<void> _reach(WidgetTester tester, Finder finder) async {
+  if (finder.evaluate().isEmpty) {
+    await tester.scrollUntilVisible(
+      finder,
+      200,
+      scrollable: find.byType(Scrollable).first,
+    );
+  }
+  await tester.ensureVisible(finder);
+  await tester.pumpAndSettle();
+}
+
 Future<void> _enter(WidgetTester tester, String key, String text) async {
   final finder = find.byKey(Key(key));
-  await tester.ensureVisible(finder);
+  await _reach(tester, finder);
   await tester.enterText(finder, text);
   await tester.pump();
 }
 
 Future<void> _choose(WidgetTester tester, String key, String text) async {
   final finder = find.byKey(Key(key));
-  await tester.ensureVisible(finder);
+  await _reach(tester, finder);
   await tester.tap(finder);
   await tester.pumpAndSettle();
   await tester.tap(find.text(text).last);
@@ -194,14 +209,109 @@ void main() {
     );
     await _enter(tester, 'collection-name', 'Reading');
     await _choose(tester, 'collection-parent', 'Parent');
-    // Colour and icon are no longer asked for (2026-11-06).
-    expect(find.byKey(const Key('collection-icon')), findsNothing);
     await tester.tap(find.byKey(const Key('editor-save')));
     await tester.pumpAndSettle();
     final edited = result as SaveCollection;
     expect(edited.parentId, 'parent');
     expect(edited.icon, 'folder');
     expect(edited.id, isNotEmpty);
+  });
+
+  testWidgets('a template fills the name, icon and colour; a typed name '
+      'is kept when another template is picked', (tester) async {
+    Object? result;
+    await _open(
+      tester,
+      CollectionEditor(library: SaveLibrary()),
+      (v) => result = v,
+    );
+    await tester.tap(find.byKey(const Key('template-restaurant-1')));
+    await tester.pumpAndSettle();
+    expect(find.text('Recipes'), findsWidgets);
+    await tester.tap(find.byKey(const Key('template-luggage-0')));
+    await tester.pumpAndSettle();
+    expect(
+      tester
+          .widget<TextFormField>(find.byKey(const Key('collection-name')))
+          .controller!
+          .text,
+      'Trips',
+      reason: 'a template name gives way to the next template',
+    );
+    await _enter(tester, 'collection-name', 'Đà Lạt 2027');
+    await _reach(tester, find.byKey(const Key('template-shopping-2')));
+    await tester.tap(find.byKey(const Key('template-shopping-2')));
+    await tester.pumpAndSettle();
+    await tester.ensureVisible(find.byKey(const Key('editor-save')));
+    await tester.tap(find.byKey(const Key('editor-save')));
+    await tester.pumpAndSettle();
+    final made = result as SaveCollection;
+    expect(made.name, 'Đà Lạt 2027', reason: 'a typed name is kept');
+    expect(made.icon, 'shopping');
+    expect(made.color, 'hue:2');
+  });
+
+  testWidgets('a colour and one emoji are kept; more than one character '
+      'keeps the first', (tester) async {
+    Object? result;
+    await _open(
+      tester,
+      CollectionEditor(library: SaveLibrary()),
+      (v) => result = v,
+    );
+    await _enter(tester, 'collection-name', 'Phở');
+    await _reach(tester, find.byKey(const Key('hue-3')));
+    await tester.tap(find.byKey(const Key('hue-3')));
+    await tester.pumpAndSettle();
+    await _reach(tester, find.byKey(const Key('mark-emoji')));
+    await tester.enterText(find.byKey(const Key('mark-emoji')), '🍜🍲');
+    await tester.pumpAndSettle();
+    expect(find.text('🍜'), findsWidgets);
+    await tester.tap(find.byKey(const Key('editor-save')));
+    await tester.pumpAndSettle();
+    final made = result as SaveCollection;
+    expect(made.color, 'hue:3');
+    expect(made.icon, 'emoji:🍜');
+  });
+
+  testWidgets('editing an older collection leaves its stored colour and '
+      'icon as they were; no templates when editing', (tester) async {
+    final old = SaveCollection(
+      id: 'old',
+      name: 'Old',
+      color: '#0EA5E9',
+      icon: 'folder',
+    );
+    Object? result;
+    await _open(
+      tester,
+      CollectionEditor(
+        initial: old,
+        library: SaveLibrary(collections: [old]),
+      ),
+      (v) => result = v,
+    );
+    expect(find.byKey(const Key('collection-templates')), findsNothing);
+    await tester.tap(find.byKey(const Key('editor-save')));
+    await tester.pumpAndSettle();
+    final kept = result as SaveCollection;
+    expect(kept.color, '#0EA5E9');
+    expect(kept.icon, 'folder');
+  });
+
+  test('a chosen colour wins over position, and a child takes its '
+      "parent's choice", () {
+    final a = SaveCollection(id: 'a', name: 'A', position: 0);
+    final b = SaveCollection(id: 'b', name: 'B', position: 1, color: 'hue:4');
+    final c = SaveCollection(id: 'c', name: 'C', parentId: 'b');
+    final l = SaveLibrary(collections: [a, b, c]);
+    expect(collectionHueIn(l, 'a'), 0);
+    expect(collectionHueIn(l, 'b'), 4);
+    expect(collectionHueIn(l, 'c'), 4);
+    expect(markOf('emoji:🍜🍲'), isA<EmojiMark>());
+    expect((markOf('emoji:🍜🍲')! as EmojiMark).emoji, '🍜');
+    expect(markOf('folder'), isNull);
+    expect(chosenHue('#6366F1'), isNull);
   });
 
   testWidgets(
