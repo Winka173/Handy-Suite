@@ -5,7 +5,7 @@ import '../bookmark/add_link.dart';
 import '../bookmark/detail_view.dart';
 import '../home/home_page.dart';
 import '../home/triage_strip.dart';
-import '../home/link_capture.dart';
+import '../home/save_sheet.dart';
 import '../library/batch_bar.dart';
 import '../library/results_view.dart';
 import '../scope.dart';
@@ -67,23 +67,9 @@ class _SaveShellState extends State<SaveShell> {
           v.selecting ? v.clearSelection() : setState(() => current = null),
     };
     final addButtons = [
-      IconButton(
-        key: const Key('save-photo'),
-        tooltip: tr(context, 'Add a picture', 'Thêm ảnh'),
-        icon: const Icon(Icons.add_photo_alternate_outlined),
-        onPressed: () => scope.addPhoto(context),
-      ),
-      IconButton(
-        key: const Key('save-paste'),
-        tooltip: tr(context, 'Paste a link', 'Dán link'),
-        icon: const Icon(Icons.content_paste),
-        onPressed: () => add(clipboard: true),
-      ),
-      IconButton(
-        key: const Key('save-add'),
-        tooltip: tr(context, 'Add links', 'Thêm link'),
-        icon: const Icon(Icons.add_link),
-        onPressed: add,
+      Padding(
+        padding: const EdgeInsets.symmetric(horizontal: HandySpace.s),
+        child: SaveButton(scope: scope, onAdd: add),
       ),
     ];
     if (width < 700) {
@@ -158,7 +144,6 @@ class _SaveShellState extends State<SaveShell> {
                     onDetails: (b) => details(b, side),
                     onAdd: add,
                     leading: [
-                      if (v.text.isEmpty) LinkCapture(scope: scope),
                       SearchBox(view: v, focus: searchFocus),
                       ShareIssues(controller: scope.c),
                       if (v.place == Place.all &&

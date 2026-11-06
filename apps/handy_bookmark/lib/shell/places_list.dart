@@ -20,6 +20,9 @@ class PlacesList extends StatelessWidget {
 
   /// Marks the current place (sidebar); the phone list has none.
   final bool marking;
+
+  /// The collections' tree; the phone's home shows them as covers instead.
+  final bool collections;
   const PlacesList({
     super.key,
     required this.scope,
@@ -27,6 +30,7 @@ class PlacesList extends StatelessWidget {
     required this.onFocus,
     required this.onSearch,
     this.marking = true,
+    this.collections = true,
   });
 
   @override
@@ -147,65 +151,67 @@ class PlacesList extends StatelessWidget {
               ),
           ],
         ),
-        heading(
-          tr(context, 'Collections', 'Bộ sưu tập'),
-          trailing: IconButton(
-            key: const Key('collection-new'),
-            tooltip: tr(context, 'New collection', 'Bộ sưu tập mới'),
-            icon: const Icon(Icons.add),
-            onPressed: () => scope.editCollection(context),
-          ),
-        ),
-        if (l.collections.isEmpty)
-          Text(
-            tr(
-              context,
-              'Group links by topic: Recipes, Trips, To buy…',
-              'Gom link theo chủ đề: Công thức, Du lịch, Cần mua…',
+        if (collections) ...[
+          heading(
+            tr(context, 'Collections', 'Bộ sưu tập'),
+            trailing: IconButton(
+              key: const Key('collection-new'),
+              tooltip: tr(context, 'New collection', 'Bộ sưu tập mới'),
+              icon: const Icon(Icons.add),
+              onPressed: () => scope.editCollection(context),
             ),
-            style: theme.textTheme.bodyMedium?.copyWith(color: c.muted),
-          )
-        else
-          HandyGroup(
-            children: [
-              for (final (col, depth) in collectionTree(l))
-                row(
-                  Key('collection-${col.id}'),
-                  Icons.folder,
-                  col.name,
-                  hue: collectionHue(l, col.id),
-                  n: inCollection[col.id] ?? 0,
-                  id: col.id,
-                  place: Place.collection,
-                  indent: depth * 20.0,
-                  menu: HandyMenuButton(
-                    key: Key('collection-menu-${col.id}'),
-                    items: [
-                      HandyMenuItem(
-                        Icons.edit_outlined,
-                        tr(context, 'Edit', 'Sửa'),
-                        () => scope.editCollection(context, col),
-                        key: const Key('collection-edit'),
-                      ),
-                      HandyMenuItem(
-                        Icons.delete_outline,
-                        tr(context, 'Delete', 'Xóa'),
-                        () async {
-                          if (await scope.deleteCollection(context, col) &&
-                              v.place == Place.collection &&
-                              v.id == col.id)
-                            onPick(Place.all);
-                        },
-                        key: const Key('collection-delete'),
-                        destructive: true,
-                      ),
-                    ],
-                  ),
-                ),
-            ],
           ),
-        // Smart collections and saved searches are both "a list I kept":
-        // one group since 2026-11-03, each row with its own icon.
+          if (l.collections.isEmpty)
+            Text(
+              tr(
+                context,
+                'Group links by topic: Recipes, Trips, To buy…',
+                'Gom link theo chủ đề: Công thức, Du lịch, Cần mua…',
+              ),
+              style: theme.textTheme.bodyMedium?.copyWith(color: c.muted),
+            )
+          else
+            HandyGroup(
+              children: [
+                for (final (col, depth) in collectionTree(l))
+                  row(
+                    Key('collection-${col.id}'),
+                    Icons.folder,
+                    col.name,
+                    hue: collectionHue(l, col.id),
+                    n: inCollection[col.id] ?? 0,
+                    id: col.id,
+                    place: Place.collection,
+                    indent: depth * 20.0,
+                    menu: HandyMenuButton(
+                      key: Key('collection-menu-${col.id}'),
+                      items: [
+                        HandyMenuItem(
+                          Icons.edit_outlined,
+                          tr(context, 'Edit', 'Sửa'),
+                          () => scope.editCollection(context, col),
+                          key: const Key('collection-edit'),
+                        ),
+                        HandyMenuItem(
+                          Icons.delete_outline,
+                          tr(context, 'Delete', 'Xóa'),
+                          () async {
+                            if (await scope.deleteCollection(context, col) &&
+                                v.place == Place.collection &&
+                                v.id == col.id)
+                              onPick(Place.all);
+                          },
+                          key: const Key('collection-delete'),
+                          destructive: true,
+                        ),
+                      ],
+                    ),
+                  ),
+              ],
+            ),
+          // Smart collections and saved searches are both "a list I kept":
+          // one group since 2026-11-03, each row with its own icon.
+        ],
         heading(
           tr(context, 'Saved filters', 'Bộ lọc đã lưu'),
           trailing: IconButton(

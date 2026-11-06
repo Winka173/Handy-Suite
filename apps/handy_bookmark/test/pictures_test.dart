@@ -109,6 +109,7 @@ void main() {
       final files = OneFile()
         ..next = ImportedBytes('Bản đồ quán.png', png(1200, 800));
       final (c, _) = await boot(t, files: files);
+      await tapKey(t, 'save-new');
       await tapKey(t, 'save-photo');
       await t.runAsync(
         () => Future<void>.delayed(const Duration(milliseconds: 300)),

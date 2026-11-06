@@ -304,6 +304,7 @@ void main() {
     const url = 'https://www.youtube.com/watch?v=banhcuon-thanh-tri';
     await tap(t, 'place-all');
     await pause(t, 1000);
+    await tap(t, 'save-new');
     await tap(t, 'save-add');
     await type(t, 'save-text-input', url);
     await pause(t, 1000);

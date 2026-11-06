@@ -95,6 +95,7 @@ void main() {
       final store = TestStore();
       final c = await start(tester, store: store);
       expect(find.text('Save your first link'), findsOneWidget);
+      await tapKey(tester, 'save-new');
       await tapKey(tester, 'save-add');
       await tester.enterText(
         find.byKey(const Key('save-text-input')),
@@ -103,6 +104,7 @@ void main() {
       await tester.tap(find.text('Cancel'));
       await tester.pumpAndSettle();
       expect(store.rows, isEmpty);
+      await tapKey(tester, 'save-new');
       await tapKey(tester, 'save-add');
       await tester.enterText(
         find.byKey(const Key('save-text-input')),
@@ -141,7 +143,7 @@ void main() {
     store.fail = false;
     await tapKey(tester, 'file-$id-recipes');
     expect(c.library!.bookmarks.single.collectionId, 'recipes');
-    expect(find.text('All sorted'), findsOneWidget);
+    expect(find.text('All sorted', skipOffstage: false), findsOneWidget);
   });
 
   testWidgets('a link saved twice asks before adding a copy', (tester) async {
@@ -149,6 +151,7 @@ void main() {
       tester,
       seed: (c) => c.quickSave('https://example.com/a'),
     );
+    await tapKey(tester, 'save-new');
     await tapKey(tester, 'save-add');
     await tester.enterText(
       find.byKey(const Key('save-text-input')),

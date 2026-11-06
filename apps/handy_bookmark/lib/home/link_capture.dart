@@ -1,10 +1,14 @@
+import 'package:handy_bookmark_engine/handy_bookmark_engine.dart';
 import 'package:handy_ui/kit.dart';
 import '../scope.dart';
 import '../bookmark/add_link.dart';
 
 class LinkCapture extends StatefulWidget {
   final SaveScope scope;
-  const LinkCapture({super.key, required this.scope});
+
+  /// After a save: shows the link (by default its page).
+  final void Function(BuildContext context, Bookmark saved)? onSaved;
+  const LinkCapture({super.key, required this.scope, this.onSaved});
   @override
   State<LinkCapture> createState() => _LinkCaptureState();
 }
@@ -30,8 +34,13 @@ class _LinkCaptureState extends State<LinkCapture> {
           if (mounted) text.clear();
         },
       );
-      if (show != null && mounted)
-        await Navigator.pushNamed(context, '/bookmark/${show.id}');
+      if (show != null && mounted) {
+        if (widget.onSaved != null) {
+          widget.onSaved!(context, show);
+        } else {
+          await Navigator.pushNamed(context, '/bookmark/${show.id}');
+        }
+      }
     } finally {
       if (mounted) setState(() => busy = false);
     }

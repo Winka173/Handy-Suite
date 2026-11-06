@@ -50,6 +50,7 @@ void main() {
     final filesA = CaptureFiles()
       ..next = ImportedBytes('Bảng giá cà phê.jpg', photo());
     final (a, _) = await boot(t, files: filesA);
+    await tapKey(t, 'save-new');
     await tapKey(t, 'save-photo');
     await wait(t);
     final picture = a.library!.bookmarks.firstWhere((b) => b.isImage);

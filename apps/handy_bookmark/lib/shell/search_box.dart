@@ -1,6 +1,42 @@
 import 'package:handy_ui/kit.dart';
 import '../view/library_view.dart';
 
+/// All / Links / Pictures, with how many of each, once the library holds
+/// both kinds (until then the choice means nothing).
+class KindChips extends StatelessWidget {
+  final LibraryView view;
+  const KindChips({super.key, required this.view});
+  @override
+  Widget build(BuildContext context) {
+    final items = [
+      for (final b in view.c.library?.bookmarks ?? const [])
+        if (!b.isArchived) b,
+    ];
+    final pictures = items.where((b) => b.isImage).length;
+    final links = items.length - pictures;
+    if (pictures == 0 || links == 0) return const SizedBox.shrink();
+    final now = view.filters.kind;
+    Widget chip(String? kind, String label, int n) => ChoiceChip(
+      key: Key('kind-${kind ?? 'all'}'),
+      label: Text('$label $n'),
+      selected: now == kind,
+      onSelected: (_) => view.filter(view.filters.withKind(kind)),
+    );
+    return Padding(
+      padding: const EdgeInsets.only(top: HandySpace.s),
+      child: Wrap(
+        spacing: HandySpace.s,
+        runSpacing: HandySpace.s,
+        children: [
+          chip(null, tr(context, 'All', 'Tất cả'), items.length),
+          chip('link', tr(context, 'Links', 'Link'), links),
+          chip('image', tr(context, 'Pictures', 'Ảnh'), pictures),
+        ],
+      ),
+    );
+  }
+}
+
 /// Finds links by title, description, note, address, website, source, tag
 /// or collection. Typing narrows the current list as you go.
 class SearchBox extends StatefulWidget {
@@ -70,6 +106,7 @@ class _SearchBoxState extends State<SearchBox> {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         _field(context),
+        KindChips(view: widget.view),
         HandyReveal(
           child: input.text.isNotEmpty || recent.isEmpty
               ? const SizedBox(width: double.infinity)
@@ -108,7 +145,7 @@ class _SearchBoxState extends State<SearchBox> {
     decoration: InputDecoration(
       counterText: '',
       prefixIcon: const Icon(Icons.search),
-      hintText: tr(context, 'Find a saved link', 'Tìm link đã lưu'),
+      hintText: tr(context, 'Find a link or picture', 'Tìm link hoặc ảnh'),
       suffixIcon: input.text.isEmpty
           ? null
           : IconButton(

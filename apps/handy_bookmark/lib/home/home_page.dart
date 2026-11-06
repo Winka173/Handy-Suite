@@ -8,10 +8,12 @@ import '../view/library_view.dart';
 import '../shell/share_issues.dart';
 import 'triage_strip.dart';
 import '../links/task_strip.dart';
-import 'link_capture.dart';
+import 'collection_covers.dart';
+import 'save_sheet.dart';
 
-/// The phone's home: find a link, file what is new, or go to a place.
-/// Typing turns the home into results; clearing brings it back.
+/// The phone's home: find something, file what is new, browse the library
+/// by its covers, or go to a place. Typing (or choosing Links / Pictures)
+/// turns the home into results; clearing brings it back. One Save button.
 class SaveHomePage extends StatelessWidget {
   final SaveScope scope;
   final FocusNode searchFocus;
@@ -40,7 +42,7 @@ class SaveHomePage extends StatelessWidget {
     return ListenableBuilder(
       listenable: v,
       builder: (context, _) {
-        final searching = v.text.trim().isNotEmpty;
+        final searching = v.text.trim().isNotEmpty || v.filters.kind != null;
         return Scaffold(
           appBar: const HandyTopBar(
             mark: Icons.bookmark_outline,
@@ -49,31 +51,10 @@ class SaveHomePage extends StatelessWidget {
           bottomNavigationBar: v.selecting
               ? BatchBar(scope: scope, onExport: onExport)
               : HandyBottomBar(
-                  child: Row(
-                    children: [
-                      IconButton.outlined(
-                        key: const Key('save-photo'),
-                        tooltip: tr(context, 'Add a picture', 'Thêm ảnh'),
-                        onPressed: () => scope.addPhoto(context),
-                        icon: const Icon(Icons.add_photo_alternate_outlined),
-                      ),
-                      const SizedBox(width: HandySpace.s),
-                      OutlinedButton.icon(
-                        key: const Key('save-paste'),
-                        onPressed: () => onAddFrom(clipboard: true),
-                        icon: const Icon(Icons.content_paste),
-                        label: Text(tr(context, 'Paste', 'Dán link')),
-                      ),
-                      const SizedBox(width: HandySpace.m),
-                      Expanded(
-                        child: FilledButton.icon(
-                          key: const Key('save-add'),
-                          onPressed: onAdd,
-                          icon: const Icon(Icons.add_link),
-                          label: Text(tr(context, 'Add links', 'Thêm link')),
-                        ),
-                      ),
-                    ],
+                  child: SaveButton(
+                    scope: scope,
+                    onAdd: onAddFrom,
+                    expand: true,
                   ),
                 ),
           body: searching
@@ -96,7 +77,6 @@ class SaveHomePage extends StatelessWidget {
                     HandySpace.xxl,
                   ),
                   children: [
-                    LinkCapture(scope: scope),
                     SearchBox(view: v, focus: searchFocus),
                     ShareIssues(controller: scope.c),
                     TaskStrip(
@@ -114,9 +94,16 @@ class SaveHomePage extends StatelessWidget {
                       onAll: () => openPlace(context, Place.inbox),
                     ),
                     const SizedBox(height: HandySpace.xl),
+                    CollectionCovers(
+                      scope: scope,
+                      onOpen: (col) =>
+                          openPlace(context, Place.collection, col.id),
+                    ),
+                    const SizedBox(height: HandySpace.xl),
                     PlacesList(
                       scope: scope,
                       marking: false,
+                      collections: false,
                       onPick: (p, [id]) => openPlace(context, p, id),
                       onFocus: () => Navigator.pushNamed(context, '/focus'),
                       onSearch: (s) =>

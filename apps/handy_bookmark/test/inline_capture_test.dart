@@ -8,6 +8,7 @@ void main() {
     'inline URL save keeps failed input and duplicate review never silently adds a second link',
     (t) async {
       final store = TestStore(), c = await start(t, store: store);
+      await tapKey(t, 'save-new');
       final input = find.byKey(const Key('bookmark-inline-url'));
       await t.enterText(input, 'https://example.org/article');
       store.fail = true;

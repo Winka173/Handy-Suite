@@ -21,17 +21,33 @@ enum Place {
 /// Optional narrowing on top of the place (the Filters sheet).
 class Filters {
   final String? platform, contentType, tag;
+
+  /// 'link' or 'image' (the All / Links / Pictures chips); null for both.
+  final String? kind;
   final String sort;
   final String? savedAfter, savedBefore;
   const Filters({
     this.platform,
     this.contentType,
     this.tag,
+    this.kind,
     this.sort = 'newest',
     this.savedAfter,
     this.savedBefore,
   });
+
+  /// The same filters showing only links, only pictures, or both.
+  Filters withKind(String? value) => Filters(
+    platform: platform,
+    contentType: contentType,
+    tag: tag,
+    kind: value,
+    sort: sort,
+    savedAfter: savedAfter,
+    savedBefore: savedBefore,
+  );
   bool get any =>
+      kind != null ||
       platform != null ||
       contentType != null ||
       tag != null ||
@@ -131,6 +147,7 @@ class LibraryView extends ChangeNotifier {
       platform: q['platform'] as String?,
       contentType: q['contentType'] as String?,
       tag: rest.firstOrNull,
+      kind: q['kind'] as String?,
       sort: q['sort'] as String? ?? 'newest',
       savedAfter: q['savedAfter'] as String?,
       savedBefore: q['savedBefore'] as String?,
@@ -155,6 +172,7 @@ class LibraryView extends ChangeNotifier {
       text: text,
       platform: filters.platform,
       contentType: filters.contentType,
+      kind: filters.kind,
       collectionId: place == Place.collection ? id : null,
       tags: [
         if (place == Place.tag) id!,

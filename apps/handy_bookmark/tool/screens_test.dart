@@ -441,6 +441,7 @@ void main() {
   });
   testWidgets('phone add', (t) async {
     await boot(t, const Size(390, 844));
+    await tapKey(t, 'save-new');
     await tapKey(t, 'save-add');
     await t.enterText(
       find.byKey(const Key('save-text-input')),

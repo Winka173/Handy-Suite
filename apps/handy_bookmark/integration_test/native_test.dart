@@ -128,6 +128,8 @@ void main() {
       await snap('save-settings');
       await tester.binding.handlePopRoute();
       await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const Key('save-new')));
+      await tester.pumpAndSettle();
       await tester.tap(find.byKey(const Key('save-add')));
       await tester.pumpAndSettle();
       await snap('save-quick-add');
