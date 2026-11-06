@@ -152,13 +152,13 @@ class _WelcomePageState extends State<WelcomePage>
 
   _Page _page(BuildContext context) => switch (step) {
     _Step.scattered => _Page(
-      before: tr(context, 'Saved ', 'Lưu '),
-      words: tr(context, 'all over the place', 'mỗi nơi một ít'),
-      after: '.',
+      before: tr(context, 'Saved everywhere.\n', 'Lưu khắp nơi.\n'),
+      words: tr(context, 'Found nowhere.', 'Tìm chẳng thấy.'),
+      after: '',
       body: tr(
         context,
-        'A recipe on TikTok, a trip on Facebook, a lesson on YouTube, a screenshot in your photos… and when you need one, it is nowhere to be found.',
-        'Món ngon trên TikTok, lịch trình trên Facebook, bài học trên YouTube, ảnh chụp màn hình trong máy… đến lúc cần thì chẳng nhớ ở đâu.',
+        'On TikTok, Facebook, YouTube, in your screenshots…',
+        'Trên TikTok, Facebook, YouTube, trong ảnh chụp màn hình…',
       ),
       primary: tr(context, 'Bring it together', 'Gom về một chỗ'),
       onPrimary: () => _go(1),
@@ -180,8 +180,8 @@ class _WelcomePageState extends State<WelcomePage>
       after: '.',
       body: tr(
         context,
-        'Handy Bookmark keeps links and pictures on your device, sorted into collections. No account, no ads.',
-        'Handy Bookmark giữ link và ảnh ngay trên máy bạn, xếp theo bộ sưu tập. Không tài khoản, không quảng cáo.',
+        'On your device, in collections. No account, no ads.',
+        'Ngay trên máy, xếp theo bộ sưu tập. Không tài khoản, không quảng cáo.',
       ),
       primary: tr(context, 'Show me how', 'Chỉ tôi cách lưu'),
       onPrimary: () => _go(2),
@@ -336,10 +336,18 @@ class _WelcomePageState extends State<WelcomePage>
     );
   }
 
-  Widget _words(BuildContext context, _Page p, {required bool wide}) {
+  /// The step's title and its one line. [center]: the phone story steps,
+  /// where the words head the page above the picture.
+  Widget _words(
+    BuildContext context,
+    _Page p, {
+    required bool wide,
+    bool center = false,
+  }) {
+    final align = center ? TextAlign.center : TextAlign.start;
     final title = TextStyle(
       fontFamily: handyFontFamily('Newsreader'),
-      fontSize: wide ? 46 : 32,
+      fontSize: wide ? 46 : (center ? 36 : 32),
       height: 1.08,
       letterSpacing: -.6,
       fontWeight: FontWeight.w500,
@@ -348,7 +356,9 @@ class _WelcomePageState extends State<WelcomePage>
     return HandySwap(
       child: Column(
         key: ValueKey('words-$at-$practiced'),
-        crossAxisAlignment: CrossAxisAlignment.start,
+        crossAxisAlignment: center
+            ? CrossAxisAlignment.center
+            : CrossAxisAlignment.start,
         mainAxisSize: MainAxisSize.min,
         children: [
           Reveal(
@@ -358,6 +368,7 @@ class _WelcomePageState extends State<WelcomePage>
               words: p.words,
               after: p.after,
               style: title,
+              textAlign: align,
             ),
           ),
           SizedBox(height: wide ? 16 : 10),
@@ -366,6 +377,7 @@ class _WelcomePageState extends State<WelcomePage>
             to: .5,
             child: Text(
               p.body,
+              textAlign: align,
               style: TextStyle(
                 fontSize: wide ? 18 : 16,
                 height: 1.5,
@@ -521,33 +533,50 @@ class _WelcomePageState extends State<WelcomePage>
     );
   }
 
+  /// Phones, the two story steps: a short title and one line at the top,
+  /// the picture as large as the screen allows, the button at the foot.
+  /// With little height or large text the page scrolls instead.
   Widget _narrow(BuildContext context, _Page p) => LayoutBuilder(
-    builder: (context, box) => SingleChildScrollView(
-      child: Column(
-        children: [
-          _bar(context),
-          SizedBox(
-            height: (box.maxHeight * .52).clamp(220.0, 560.0),
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              child: _scene(),
-            ),
-          ),
-          Padding(
-            padding: const EdgeInsets.fromLTRB(20, 8, 20, 16),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                _words(context, p, wide: false),
-                const SizedBox(height: 18),
-                _actions(context, p, wide: false),
-              ],
-            ),
-          ),
-        ],
-      ),
-    ),
+    builder: (context, box) {
+      final words = Padding(
+        padding: const EdgeInsets.fromLTRB(20, 8, 20, 0),
+        child: _words(context, p, wide: false, center: true),
+      );
+      Widget scene(double? height) => SizedBox(
+        height: height,
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(12, 12, 12, 4),
+          child: _scene(),
+        ),
+      );
+      final actions = Padding(
+        padding: const EdgeInsets.fromLTRB(20, 8, 20, 16),
+        child: _actions(context, p, wide: false),
+      );
+      final roomy =
+          box.maxHeight >= 600 &&
+          MediaQuery.textScalerOf(context).scale(16) <= 16 * 1.3;
+      if (roomy) {
+        return Column(
+          children: [
+            _bar(context),
+            words,
+            Expanded(child: scene(null)),
+            actions,
+          ],
+        );
+      }
+      return SingleChildScrollView(
+        child: Column(
+          children: [
+            _bar(context),
+            words,
+            scene((box.maxHeight * .52).clamp(220.0, 560.0)),
+            actions,
+          ],
+        ),
+      );
+    },
   );
 
   Widget _wide(BuildContext context, _Page p) => Column(

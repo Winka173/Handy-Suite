@@ -125,6 +125,7 @@ class Highlighted extends StatelessWidget {
   final String before, words, after;
   final TextStyle style;
   final double from, to;
+  final TextAlign textAlign;
   const Highlighted({
     super.key,
     required this.before,
@@ -133,6 +134,7 @@ class Highlighted extends StatelessWidget {
     required this.style,
     this.from = .3,
     this.to = .7,
+    this.textAlign = TextAlign.start,
   });
   @override
   Widget build(BuildContext context) {
@@ -142,6 +144,7 @@ class Highlighted extends StatelessWidget {
       label: '$before$words$after',
       excludeSemantics: true,
       child: Text.rich(
+        textAlign: textAlign,
         TextSpan(
           style: style,
           children: [

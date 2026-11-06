@@ -37,13 +37,15 @@ screen composition is used.
 The progress bar has five segments, or four where the device has no notifications. Back and Skip
 are on every step.
 
-1. **"Saved all over the place."** Four photo cards (TikTok, Facebook, YouTube, Photos) fly in
-   one after another with an overshoot and land scattered. A search pill reads "train
-   timetable… · 0 results", and the cards fade to grey. Primary: **Bring it together**. Below
-   it: **I have links in another app**, which opens import.
+1. **"Saved everywhere. / Found nowhere."** (VI "Lưu khắp nơi. / Tìm chẳng thấy.") with one
+   line under it: "On TikTok, Facebook, YouTube, in your screenshots…". Four photo cards
+   (TikTok, Facebook, YouTube, Photos) fly in one after another with an overshoot and land
+   scattered. A search pill reads "train timetable… · 0 results", and the cards fade to grey.
+   Primary: **Bring it together**. Below it: **I have links in another app**, which opens import.
 2. **"One place for all of it."** The same cards travel, in colour, into a Handy Bookmark library
    (name, All / Links / Pictures chips, two collections) and settle in a grid. This uses one
-   scene widget across both steps, so the cards really move. Primary: **Show me how**.
+   scene widget across both steps, so the cards really move. One line: "On your device, in
+   collections. No account, no ads." Primary: **Show me how**.
 3. **"Try saving a video."** The practice follows what really happens. Everything is dark
    (a 74 % scrim) except the one thing to tap, which sits in a **lit window**. The window has a
    soft cyan glow spilling out of it, a white edge and a breathing ring, and a white label
@@ -75,6 +77,10 @@ are on every step.
    and a notification drops in: "5 things you saved recently are still waiting." **Turn on the
    nudge** asks for permission and turns on the weekly nudge setting. **Not now** finishes.
 
+Version 2.3 (the same day): the owner found step 1 too wordy next to Tuckii, whose story steps
+are a two-line title, one line and a picture. Steps 1 and 2 now have a short two-line title
+and one line, at the top on phones, with the picture as large as the screen allows.
+
 Version 2.2 (the same day): the owner asked why Facebook and TikTok hide Handy Bookmark behind
 More. The practice now shows the app's own list and More first, then the phone's sheet with the
 collections that Handy Bookmark now offers in its top row (Android sharing shortcuts,
@@ -100,9 +106,10 @@ screen, and the rings became the lit window described above.
 
 ## Layout
 
-- **Under 700 px, steps 1–2:** the progress bar, then the scene (52 % of the height, 220–560 px),
-  then the title, body and a full-width 56 px button. The page scrolls when large text needs
-  more room.
+- **Under 700 px, steps 1–2:** the progress bar, then the title (36 px, two short lines) and one
+  line, centred, at the top. The scene takes all the height left, and a full-width 56 px button
+  sits at the foot. Below 600 px of height, or with text above 130 %, the page scrolls instead,
+  with the scene at 52 % of the height (220–560 px).
 - **Under 700 px, steps 3–5:** the step is the whole screen at real size, edge to edge under the
   status bar, with no drawn phone. The bar floats on top: white over the video and the lock
   screen, ink on paper. The title, body and buttons come up in a paper panel from the bottom.

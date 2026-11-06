@@ -66,7 +66,7 @@ void main() {
   testWidgets('an empty library opens the guide; Skip remembers it', (t) async {
     final store = TestStore();
     final c = await open(t, store: store);
-    expect(find.textContaining('all over the place'), findsOneWidget);
+    expect(find.textContaining('Found nowhere'), findsOneWidget);
     await tapKey(t, 'welcome-skip');
     await settle(t);
     expect(find.byType(WelcomePage), findsNothing);
@@ -137,7 +137,7 @@ void main() {
     final c = await open(t);
     await tapKey(t, 'welcome-next-0');
     await tapKey(t, 'welcome-back');
-    expect(find.textContaining('all over the place'), findsOneWidget);
+    expect(find.textContaining('Found nowhere'), findsOneWidget);
     await t.binding.handlePopRoute();
     await settle(t);
     expect(find.byType(WelcomePage), findsNothing);
@@ -152,7 +152,7 @@ void main() {
     await settle(t);
     await tapKey(t, 'set-guide');
     await settle(t);
-    expect(find.textContaining('all over the place'), findsOneWidget);
+    expect(find.textContaining('Found nowhere'), findsOneWidget);
     await tapKey(t, 'welcome-skip');
     await settle(t);
     expect(c.library!.bookmarks, hasLength(1), reason: 'nothing changed');
