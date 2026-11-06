@@ -53,6 +53,7 @@ void main() {
       await shot(t, 'lib-$label-home');
       await tapKey(t, 'collection-food');
       await shot(t, 'lib-$label-collection');
+      await tapKey(t, 'list-more');
       await tapKey(t, 'save-view');
       await shot(t, 'lib-$label-gallery');
     });
@@ -183,6 +184,7 @@ void main() {
     await boot(t, const Size(390, 844));
     await tapKey(t, 'home-library');
     await tapKey(t, 'place-all');
+    await tapKey(t, 'list-more');
     await tapKey(t, 'save-layout');
     await shot(t, 'pro-layouts-picker');
     await tapKey(t, 'layout-magazine');

@@ -1,4 +1,5 @@
 import 'dart:ui' show Size;
+import 'package:flutter/material.dart' show Key, Offset, Text;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:handy_bookmark/view/library_view.dart';
 import 'package:handy_bookmark_engine/handy_bookmark_engine.dart';
@@ -19,28 +20,73 @@ Future<void> twoCollections(NetController c) => c.update(
 );
 
 void main() {
+  testWidgets('a collection shows the ones inside it and makes a new one '
+      'inside from its options', (t) async {
+    final (c, _) = await boot(
+      t,
+      seed: (c) async {
+        await twoCollections(c);
+        await c.update(
+          (l) => l.copyWith(
+            collections: [
+              ...l.collections,
+              SaveCollection(id: 'dn', name: 'Da Nang', parentId: 'trip'),
+            ],
+          ),
+        );
+      },
+    );
+    await tapKey(t, 'home-library');
+    await tapKey(t, 'collection-trip');
+    await settle(t);
+    expect(find.byKey(const Key('sub-dn')), findsOneWidget);
+    expect(find.textContaining('1 collection inside'), findsOneWidget);
+    await tapKey(t, 'list-more');
+    await tapKey(t, 'collection-sub');
+    await t.enterText(find.byKey(const Key('collection-name')), 'Hoi An');
+    await tapKey(t, 'editor-save');
+    await settle(t);
+    final made = c.library!.collections.firstWhere((x) => x.name == 'Hoi An');
+    expect(made.parentId, 'trip');
+    expect(find.byKey(Key('sub-${made.id}')), findsOneWidget);
+  });
+
   testWidgets('cards or rows is remembered per collection', (t) async {
     final (c, _) = await boot(
       t,
       size: const Size(1280, 800),
       seed: twoCollections,
     );
+    // The choice is a labelled row in the list's options sheet.
+    Future<String> offered() async {
+      await tapKey(t, 'list-more');
+      final words = find.descendant(
+        of: find.byKey(const Key('save-view')),
+        matching: find.byType(Text),
+      );
+      final text = t.widget<Text>(words.first).data!;
+      await t.tapAt(const Offset(640, 20));
+      await settle(t);
+      return text;
+    }
+
     await tapKey(t, 'collection-food');
     await settle(t);
-    expect(find.byTooltip('Show as cards'), findsOneWidget);
+    expect(await offered(), 'Show as cards');
+    await tapKey(t, 'list-more');
     await tapKey(t, 'save-view');
     await settle(t);
-    expect(find.byTooltip('Show as rows'), findsOneWidget);
+    expect(await offered(), 'Show as rows');
     final views = c.preferences['collectionViews'] as Map;
     expect((views['food'] as Map)['cards'], isTrue);
     expect(c.preferences['cards'], isNot(true), reason: 'the app default');
 
     await tapKey(t, 'collection-trip');
     await settle(t);
-    expect(find.byTooltip('Show as cards'), findsOneWidget);
+    expect(await offered(), 'Show as cards');
     await tapKey(t, 'collection-food');
     await settle(t);
-    expect(find.byTooltip('Show as rows'), findsOneWidget);
+    expect(await offered(), 'Show as rows');
   });
 
   testWidgets('a collection opens in the order it was last left in', (t) async {

@@ -279,6 +279,7 @@ void main() {
     // A collection, as rows and then as cards.
     await tap(t, 'collection-trip');
     await pause(t, 1800);
+    await tap(t, 'list-more');
     await tap(t, 'save-view');
     await pause(t, 3000);
 
@@ -290,6 +291,7 @@ void main() {
     await tap(t, 'detail-favorite');
     await pause(t, 1500);
     if (!side) await back(t);
+    await tap(t, 'list-more');
     await tap(t, 'save-view');
     await pause(t, 1200);
 

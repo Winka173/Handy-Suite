@@ -120,6 +120,7 @@ void main() {
       },
     );
     await tapKey(t, 'collection-food');
+    await tapKey(t, 'list-more');
     await tapKey(t, 'save-layout');
     await tapKey(t, 'layout-magazine');
     expect(find.text('Use with Pro'), findsOneWidget);

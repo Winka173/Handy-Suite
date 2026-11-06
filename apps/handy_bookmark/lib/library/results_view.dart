@@ -3,6 +3,9 @@ import '../pro/entitlements.dart';
 import '../pro/layout_picker.dart';
 import '../pro/layouts.dart';
 import 'package:handy_ui/kit.dart';
+import '../collections/collection_actions.dart';
+import '../collections/identity.dart';
+import '../ui/collection_picker.dart';
 import '../collections/cover_chooser.dart';
 import '../collections/share_collection.dart';
 import '../controller.dart';
@@ -68,6 +71,12 @@ class ResultsView extends StatelessWidget {
       final c = HandyColors.of(context);
       final rows = v.results;
       final wide = MediaQuery.sizeOf(context).width >= 600;
+      final children = v.place == Place.collection && v.id != null
+          ? ([
+              for (final c in controller.library!.collections)
+                if (c.parentId == v.id) c,
+            ]..sort((a, b) => a.position.compareTo(b.position)))
+          : const <SaveCollection>[];
       final header = Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
@@ -135,11 +144,21 @@ class ResultsView extends StatelessWidget {
                                   '${formatFigure(context, '${v.total}')} found',
                                   '${formatFigure(context, '${v.total}')} kết quả',
                                 )
-                              : tr(
-                                  context,
-                                  '${formatFigure(context, '${v.total}')} saved',
-                                  '${formatFigure(context, '${v.total}')} mục',
-                                ),
+                              : [
+                                  tr(
+                                    context,
+                                    '${formatFigure(context, '${v.total}')} saved',
+                                    '${formatFigure(context, '${v.total}')} mục',
+                                  ),
+                                  if (children.isNotEmpty)
+                                    tr(
+                                      context,
+                                      children.length == 1
+                                          ? '1 collection inside'
+                                          : '${children.length} collections inside',
+                                      '${children.length} bộ con',
+                                    ),
+                                ].join(' · '),
                           style: theme.textTheme.bodySmall?.copyWith(
                             color: c.muted,
                             fontFeatures: tabular,
@@ -171,6 +190,39 @@ class ResultsView extends StatelessWidget {
               );
             },
           ),
+          // The collections inside this one, to step into.
+          if (children.isNotEmpty)
+            Padding(
+              padding: const EdgeInsets.only(top: HandySpace.s),
+              child: SingleChildScrollView(
+                key: const Key('sub-collections'),
+                scrollDirection: Axis.horizontal,
+                clipBehavior: Clip.none,
+                child: Row(
+                  children: [
+                    for (final sub in children)
+                      Padding(
+                        padding: const EdgeInsetsDirectional.only(
+                          end: HandySpace.s,
+                        ),
+                        child: ActionChip(
+                          key: Key('sub-${sub.id}'),
+                          avatar: CollectionBadge(
+                            hue: collectionHue(controller.library!, sub.id),
+                            mark: markOf(sub.icon),
+                            size: 8,
+                          ),
+                          label: Text(sub.name),
+                          onPressed: () => Navigator.pushNamed(
+                            context,
+                            '/collection/${sub.id}',
+                          ),
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+            ),
           if (v.filters.narrows) FilterChips(view: v),
           const SizedBox(height: HandySpace.s),
         ],
@@ -297,87 +349,175 @@ class ResultsView extends StatelessWidget {
     },
   );
 
-  /// The order, filters, rows or cards, and the list's other tools.
+  /// The order and the filters in words, then everything else for this
+  /// list in one labelled sheet (the "…").
   List<Widget> _tools(BuildContext context) {
     final v = view;
-    final collection = v.place == Place.collection && v.id != null;
-    final pictured =
-        collection &&
-        controller.library!.bookmarks.any(
-          (b) => b.collectionId == v.id && !b.isArchived && hasPicture(b),
-        );
     return [
       SortButton(view: v),
-      IconButton(
+      TextButton.icon(
         key: const Key('save-filters'),
-        tooltip: tr(context, 'Filter', 'Lọc'),
-        isSelected: v.filters.narrows,
-        icon: const Icon(Icons.tune),
+        icon: const Icon(Icons.tune, size: 20),
+        label: Text(
+          v.filters.narrows
+              ? tr(context, 'Filtered', 'Đang lọc')
+              : tr(context, 'Filter', 'Lọc'),
+        ),
         onPressed: () => showFilterSheet(context, controller.library!, v),
       ),
       IconButton(
-        key: const Key('save-layout'),
-        tooltip: tr(context, 'Layouts', 'Bố cục'),
-        icon: const Icon(Icons.dashboard_customize_outlined),
-        onPressed: () => showLayoutPicker(
-          context,
-          data: LayoutData(
-            controller: controller,
-            rows: view.results,
-            onOpen: (_) {},
-            onDetails: (_) {},
-            onToggle: (_) {},
-          ),
-          current: layout,
-          cards: cards,
-          choose: _chooseLayout,
-        ),
-      ),
-      IconButton(
-        key: const Key('save-view'),
-        tooltip: cards
-            ? tr(context, 'Show as rows', 'Xem dạng dòng')
-            : tr(context, 'Show as cards', 'Xem dạng thẻ'),
-        icon: Icon(cards ? Icons.view_list_outlined : Icons.grid_view_outlined),
-        onPressed: _flipCards,
-      ),
-      HandyMenuButton(
         key: const Key('list-more'),
-        items: [
-          if (collection)
-            HandyMenuItem(
-              Icons.ios_share,
-              tr(context, 'Share as a page', 'Chia sẻ thành trang'),
-              () => scope.shareCollection(context, v.id!),
-              key: const Key('collection-share'),
-            ),
-          if (collection)
-            HandyMenuItem(
-              Icons.auto_awesome_outlined,
-              tr(context, 'Design an export', 'Thiết kế bản xuất'),
-              () => Navigator.pushNamed(context, '/export/${v.id}'),
-              key: const Key('collection-export'),
-            ),
-          if (pictured)
-            HandyMenuItem(
-              Icons.photo_outlined,
-              tr(context, 'Choose cover', 'Chọn ảnh bìa'),
-              () => chooseCover(context, scope, v.id!),
-              key: const Key('collection-cover'),
-            ),
-          HandyMenuItem(
-            Icons.link_off,
-            tr(
-              context,
-              'Check links in this list',
-              'Kiểm tra link trong danh sách này',
-            ),
-            v.total == 0 ? null : () => scope.checkHere(context),
-            key: const Key('check-here'),
-          ),
-        ],
+        tooltip: tr(context, 'More for this list', 'Tùy chọn danh sách'),
+        icon: const Icon(Icons.more_horiz),
+        onPressed: () => _options(context),
       ),
     ];
+  }
+
+  /// The list's options as a sheet of labelled rows: how it looks first,
+  /// then (in a collection) the collection's own actions, then the check.
+  Future<void> _options(BuildContext context) {
+    final v = view;
+    final collection = v.place == Place.collection && v.id != null;
+    final l = controller.library!;
+    final self = collection
+        ? l.collections.where((c) => c.id == v.id).firstOrNull
+        : null;
+    final pictured =
+        collection &&
+        l.bookmarks.any(
+          (b) => b.collectionId == v.id && !b.isArchived && hasPicture(b),
+        );
+    void layouts(BuildContext context) => showLayoutPicker(
+      context,
+      data: LayoutData(
+        controller: controller,
+        rows: view.results,
+        onOpen: (_) {},
+        onDetails: (_) {},
+        onToggle: (_) {},
+      ),
+      current: layout,
+      cards: cards,
+      choose: _chooseLayout,
+    );
+    return showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      showDragHandle: true,
+      useSafeArea: true,
+      constraints: const BoxConstraints(maxWidth: 560),
+      builder: (sheet) {
+        Widget row(
+          Key key,
+          IconData icon,
+          String title,
+          void Function(BuildContext context)? onTap, {
+          String? subtitle,
+        }) => ListTile(
+          key: key,
+          leading: Icon(icon),
+          title: Text(title),
+          subtitle: subtitle == null ? null : Text(subtitle),
+          enabled: onTap != null,
+          onTap: onTap == null
+              ? null
+              : () {
+                  Navigator.pop(sheet);
+                  onTap(context);
+                },
+        );
+        return SingleChildScrollView(
+          padding: const EdgeInsets.only(bottom: HandySpace.l),
+          child: Column(
+            key: const Key('list-options'),
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Padding(
+                padding: const EdgeInsets.fromLTRB(20, 0, 20, HandySpace.s),
+                child: Text(
+                  placeTitle(sheet, l, v.place, v.id),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: bookmarkSerif(sheet, 24),
+                ),
+              ),
+              row(
+                const Key('save-view'),
+                cards ? Icons.view_list_outlined : Icons.grid_view_outlined,
+                cards
+                    ? tr(sheet, 'Show as rows', 'Xem dạng dòng')
+                    : tr(sheet, 'Show as cards', 'Xem dạng thẻ'),
+                (_) => _flipCards(),
+              ),
+              row(
+                const Key('save-layout'),
+                Icons.dashboard_customize_outlined,
+                tr(sheet, 'Layouts', 'Bố cục'),
+                layouts,
+                subtitle: tr(
+                  sheet,
+                  'Magazine, timeline, moodboard… (Pro)',
+                  'Tạp chí, dòng thời gian, moodboard… (Pro)',
+                ),
+              ),
+              if (self != null) ...[
+                const Divider(),
+                row(
+                  const Key('collection-edit'),
+                  Icons.edit_outlined,
+                  tr(sheet, 'Edit collection', 'Sửa bộ sưu tập'),
+                  (context) => scope.editCollection(context, self),
+                  subtitle: tr(
+                    sheet,
+                    'Name, icon, colour',
+                    'Tên, biểu tượng, màu',
+                  ),
+                ),
+                row(
+                  const Key('collection-sub'),
+                  Icons.create_new_folder_outlined,
+                  tr(sheet, 'New collection inside', 'Bộ sưu tập con mới'),
+                  (context) => scope.newSubCollection(context, self.id),
+                ),
+                row(
+                  const Key('collection-share'),
+                  Icons.ios_share,
+                  tr(sheet, 'Share as a page', 'Chia sẻ thành trang'),
+                  (context) => scope.shareCollection(context, self.id),
+                ),
+                row(
+                  const Key('collection-export'),
+                  Icons.auto_awesome_outlined,
+                  tr(sheet, 'Design an export', 'Thiết kế bản xuất'),
+                  (context) =>
+                      Navigator.pushNamed(context, '/export/${self.id}'),
+                ),
+                if (pictured)
+                  row(
+                    const Key('collection-cover'),
+                    Icons.photo_outlined,
+                    tr(sheet, 'Choose cover', 'Chọn ảnh bìa'),
+                    (context) => chooseCover(context, scope, self.id),
+                  ),
+              ],
+              const Divider(),
+              row(
+                const Key('check-here'),
+                Icons.link_off,
+                tr(
+                  sheet,
+                  'Check links in this list',
+                  'Kiểm tra link trong danh sách này',
+                ),
+                v.total == 0 ? null : (context) => scope.checkHere(context),
+              ),
+            ],
+          ),
+        );
+      },
+    );
   }
 
   /// Stores a layout (null: back to cards or rows) where this list keeps

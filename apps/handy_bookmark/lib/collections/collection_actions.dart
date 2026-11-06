@@ -11,11 +11,22 @@ extension CollectionActions on SaveScope {
   Future<void> editCollection(
     BuildContext context, [
     SaveCollection? initial,
-  ]) async {
+  ]) => _collectionSheet(context, initial: initial);
+
+  /// A new collection inside [parentId].
+  Future<void> newSubCollection(BuildContext context, String parentId) =>
+      _collectionSheet(context, parentId: parentId);
+
+  Future<void> _collectionSheet(
+    BuildContext context, {
+    SaveCollection? initial,
+    String? parentId,
+  }) async {
     final edited = await showCollectionSheet(
       context,
       initial: initial,
       library: library,
+      parentId: parentId,
     );
     if (edited == null || !context.mounted) return;
     await run(

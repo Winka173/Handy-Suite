@@ -361,7 +361,15 @@ class _BookmarkEditorState extends State<BookmarkEditor> {
 class CollectionEditor extends StatefulWidget {
   final SaveCollection? initial;
   final SaveLibrary library;
-  const CollectionEditor({super.key, this.initial, required this.library});
+
+  /// For a new collection: the one it starts inside.
+  final String? parentId;
+  const CollectionEditor({
+    super.key,
+    this.initial,
+    required this.library,
+    this.parentId,
+  });
   @override
   State<CollectionEditor> createState() => _CollectionEditorState();
 }
@@ -371,13 +379,15 @@ Future<SaveCollection?> showCollectionSheet(
   BuildContext context, {
   SaveCollection? initial,
   required SaveLibrary library,
+  String? parentId,
 }) => showModalBottomSheet<SaveCollection>(
   context: context,
   isScrollControlled: true,
   showDragHandle: true,
   useSafeArea: true,
   constraints: const BoxConstraints(maxWidth: 560),
-  builder: (_) => CollectionEditor(initial: initial, library: library),
+  builder: (_) =>
+      CollectionEditor(initial: initial, library: library, parentId: parentId),
 );
 
 class _CollectionEditorState extends State<CollectionEditor> {
@@ -406,10 +416,11 @@ class _CollectionEditorState extends State<CollectionEditor> {
     _name = TextEditingController(text: c?.name ?? '')
       ..addListener(() => setState(() {}));
     _description = TextEditingController(text: c?.description ?? '');
-    _parent = c?.parentId ?? '';
+    _parent = c?.parentId ?? widget.parentId ?? '';
     _hue = c == null ? null : chosenHue(c.color);
     _mark = c == null ? null : markOf(c.icon);
-    _more = c != null && (c.parentId != null || c.description.isNotEmpty);
+    // Open when it already sits inside one, so where it goes is seen.
+    _more = _parent.isNotEmpty || (c != null && c.description.isNotEmpty);
   }
 
   SaveCollection _draft(String name) => SaveCollection(

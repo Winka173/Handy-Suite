@@ -20,10 +20,7 @@ void main() {
           tags: ['soup'],
           bookmarks: [
             for (final (i, b) in l.bookmarks.indexed)
-              b.copyWith(
-                tags: i == 0 ? ['soup'] : null,
-                isFavorite: i == 1,
-              ),
+              b.copyWith(tags: i == 0 ? ['soup'] : null, isFavorite: i == 1),
           ],
         ),
       ),

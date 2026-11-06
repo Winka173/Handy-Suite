@@ -403,6 +403,7 @@ void main() {
     await boot(t, const Size(390, 844));
     await tapKey(t, 'collection-food');
     await shot(t, 'phone-2-collection');
+    await tapKey(t, 'list-more');
     await tapKey(t, 'save-view');
     await shot(t, 'phone-3-cards');
   });
@@ -796,6 +797,16 @@ void main() {
     await boot(t, const Size(390, 844), theme: 'dark');
     await shot(t, 'phone-1-home-dark');
   });
+  testWidgets('phone collection tools', (t) async {
+    await boot(t, const Size(390, 844));
+    Navigator.of(
+      t.element(find.byType(Scaffold).first),
+    ).pushNamed('/collection/trip');
+    await t.pumpAndSettle();
+    await shot(t, 'phone-56-collection-tools');
+    await tapKey(t, 'list-more');
+    await shot(t, 'phone-56-collection-options');
+  });
   for (final theme in ['light', 'dark'])
     testWidgets('phone search start $theme', (t) async {
       await boot(t, const Size(390, 844), theme: theme);
@@ -1159,6 +1170,7 @@ void main() {
     await shot(t, 'phone-item-4-row-menu');
     await t.tapAt(const Offset(10, 10));
     await t.pumpAndSettle();
+    await tapKey(t, 'list-more');
     await tapKey(t, 'save-view');
     await tapKey(t, 'details-${food.first}');
     await shot(t, 'phone-item-5-card-menu');
