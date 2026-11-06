@@ -18,6 +18,7 @@ import 'bookmark/bookmark_page.dart';
 import 'controller.dart';
 import 'data/import_export.dart';
 import 'focus/focus_page.dart';
+import 'home/file_shared_sheet.dart';
 import 'library/library_page.dart';
 import 'library/results_page.dart';
 import 'links/link_tasks.dart';
@@ -222,10 +223,36 @@ class _SaveAppState extends State<SaveApp> with WidgetsBindingObserver {
     ]);
   }
 
+  /// Whether the "Saved, put it in?" sheet is open.
+  bool _filing = false;
+
+  /// After a Share without a collection has been saved: ask where it goes.
+  /// Shares that arrive while the sheet is open wait for the next one.
+  void _fileShared() {
+    if (_filing || c.sharedToFile.isEmpty) return;
+    _filing = true;
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      final context = navigator.currentState?.overlay?.context;
+      if (!mounted || context == null) {
+        _filing = false;
+        return;
+      }
+      final ids = [...c.sharedToFile];
+      c.sharedToFile.clear();
+      try {
+        await showFileShared(context, scope, ids);
+      } finally {
+        _filing = false;
+      }
+      if (mounted) _fileShared();
+    });
+  }
+
   void _changed() {
     if (mounted) setState(() {});
     _organizeNew();
     _offerCollections();
+    _fileShared();
     _sync?.cancel();
     _sync = Timer(const Duration(milliseconds: 300), () async {
       final p = c.preferences;

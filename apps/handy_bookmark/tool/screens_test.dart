@@ -8,6 +8,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import '../test/welcome_test.dart' show StillMotion;
 import 'package:handy_files/handy_files.dart';
+import 'package:handy_bookmark/view/library_view.dart' show hasPicture;
 import 'package:handy_bookmark/app.dart';
 import 'package:handy_bookmark/pro/entitlements.dart';
 import 'package:handy_bookmark/links/batch_size.dart';
@@ -795,6 +796,23 @@ void main() {
     await boot(t, const Size(390, 844), theme: 'dark');
     await shot(t, 'phone-1-home-dark');
   });
+  for (final theme in ['light', 'dark'])
+    testWidgets('phone shared where to $theme', (t) async {
+      final c = await boot(t, const Size(390, 844), theme: theme);
+      // As after a Share from another app: saved, now asking where.
+      final shared = c.library!.bookmarks.firstWhere(
+        (b) => b.collectionId == null && hasPicture(b),
+        orElse: () =>
+            c.library!.bookmarks.firstWhere((b) => b.collectionId == null),
+      );
+      c.sharedToFile.add(shared.id);
+      await c.update((l) => l);
+      await t.pumpAndSettle();
+      await shot(t, 'phone-54-shared-where-$theme');
+      await t.tap(find.byKey(const Key('file-shared-food')));
+      await t.pumpAndSettle();
+      await shot(t, 'phone-54-shared-chosen-$theme');
+    });
   testWidgets('phone new collection', (t) async {
     await boot(t, const Size(390, 844));
     await tapKey(t, 'collection-new');

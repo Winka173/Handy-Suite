@@ -3,6 +3,7 @@ import 'dart:math';
 import 'package:handy_bookmark_engine/handy_bookmark_engine.dart';
 import 'package:handy_ui/kit.dart';
 import 'collections/identity.dart';
+import 'design/clipping.dart';
 import 'collections/identity_pickers.dart';
 import 'ui/collection_picker.dart';
 
@@ -485,7 +486,6 @@ class _CollectionEditorState extends State<CollectionEditor> {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
     final typed = _name.text.trim();
     final draft = _draft(
       typed.isEmpty ? tr(context, 'New collection', 'Bộ sưu tập mới') : typed,
@@ -524,15 +524,15 @@ class _CollectionEditorState extends State<CollectionEditor> {
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                Semantics(
-                  header: true,
-                  child: Text(
-                    creating
-                        ? tr(context, 'New collection', 'Bộ sưu tập mới')
-                        : tr(context, 'Edit collection', 'Sửa bộ sưu tập'),
-                    style: theme.textTheme.titleLarge,
-                  ),
-                ),
+                creating
+                    ? SheetTitle(
+                        before: tr(context, 'A new ', 'Bộ sưu tập '),
+                        words: tr(context, 'collection', 'mới'),
+                      )
+                    : SheetTitle(
+                        before: tr(context, 'Edit ', 'Sửa '),
+                        words: tr(context, 'collection', 'bộ sưu tập'),
+                      ),
                 gap,
                 Row(
                   children: [
@@ -631,6 +631,7 @@ class _CollectionEditorState extends State<CollectionEditor> {
                 gap,
                 FilledButton(
                   key: const Key('editor-save'),
+                  style: sheetButtonStyle(context),
                   onPressed: _save,
                   child: Text(
                     creating
