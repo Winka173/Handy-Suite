@@ -1199,7 +1199,6 @@ void main() {
     debugDisableShadows = true;
     await t.tapAt(const Offset(10, 10));
     await t.pumpAndSettle();
-    await tapKey(t, 'detail-notes');
     await tapKey(t, 'detail-tools');
     await t.scrollUntilVisible(
       find.byKey(const Key('detail-unpin')),

@@ -1,5 +1,6 @@
 import 'package:handy_bookmark_engine/handy_bookmark_engine.dart';
 import 'package:handy_ui/kit.dart';
+import 'detail_notes.dart';
 import '../design/theme.dart';
 import '../links/recall_link.dart';
 import '../scope.dart';
@@ -56,8 +57,8 @@ class DetailToolHead extends StatelessWidget {
   );
 }
 
-/// The person's note and tags (folded), the library's tools (folded), then
-/// Edit and Delete. Edit and delete close the view.
+/// The person's tags and note (open, editable in place), the library's
+/// tools (folded), then Edit and Delete. Edit and delete close the view.
 class DetailFacts extends StatelessWidget {
   final SaveScope scope;
   final Bookmark bookmark;
@@ -72,58 +73,15 @@ class DetailFacts extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final b = bookmark;
-    final theme = Theme.of(context);
     final p = BookmarkPalette.of(context);
-    final note = b.note.trim();
-    final tags = b.tags.map((t) => '#$t').join(' ');
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         const SizedBox(height: HandySpace.xl),
-        if (note.isNotEmpty || b.tags.isNotEmpty) ...[
-          DetailFold(
-            toggleKey: const Key('detail-notes'),
-            title: note.isNotEmpty && b.tags.isNotEmpty
-                ? tr(context, 'Note and tags', 'Ghi chú và thẻ')
-                : note.isNotEmpty
-                ? tr(context, 'Your note', 'Ghi chú của bạn')
-                : tr(context, 'Tags', 'Thẻ'),
-            // The first words show while folded, so nothing hides.
-            summary: [
-              if (note.isNotEmpty) note.split('\n').first,
-              if (tags.isNotEmpty) tags,
-            ].join(' · '),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                if (note.isNotEmpty)
-                  Container(
-                    padding: const EdgeInsets.all(HandySpace.l),
-                    decoration: BoxDecoration(
-                      color: p.sageTint,
-                      borderRadius: BorderRadius.circular(BookmarkRadii.thumb),
-                    ),
-                    child: SelectableText(
-                      b.note,
-                      key: const Key('detail-note'),
-                      style: theme.textTheme.bodyLarge?.copyWith(color: p.ink),
-                    ),
-                  ),
-                if (note.isNotEmpty && b.tags.isNotEmpty)
-                  const SizedBox(height: HandySpace.m),
-                if (b.tags.isNotEmpty)
-                  Wrap(
-                    spacing: HandySpace.s,
-                    runSpacing: HandySpace.s,
-                    children: [
-                      for (final t in b.tags) Chip(label: Text('#$t')),
-                    ],
-                  ),
-              ],
-            ),
-          ),
-          const SizedBox(height: HandySpace.s),
-        ],
+        // Open on the page: tags to add or remove, a note that saves
+        // itself.
+        DetailNotes(scope: scope, bookmark: b),
+        const SizedBox(height: HandySpace.xl),
         _Tools(scope: scope, bookmark: b),
         const SizedBox(height: HandySpace.l),
         Wrap(

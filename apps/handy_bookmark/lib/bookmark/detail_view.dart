@@ -301,6 +301,17 @@ class _Actions extends StatelessWidget {
           label: tr(context, 'Rename', 'Đổi tên'),
           onTap: () => scope.rename(context, b),
         ),
+        // Reads the page again (title, picture, description) when asked.
+        if (b.hasUrl && !b.isImage && _isWeb(b.originalUrl))
+          RoundAction(
+            key: const Key('detail-refresh'),
+            icon: Icons.refresh_rounded,
+            label: tr(context, 'Refresh', 'Làm mới'),
+            onTap: () {
+              if (scope.c.fetching.containsKey(b.id)) return;
+              scope.run(context, () => scope.c.refreshMetadata(b.id));
+            },
+          ),
         if (b.hasUrl || b.isImage)
           // Its own context, so an iPad or Mac sheet points at it.
           Builder(
