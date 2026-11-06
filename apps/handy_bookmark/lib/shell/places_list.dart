@@ -1,6 +1,6 @@
 import 'package:handy_bookmark_engine/handy_bookmark_engine.dart';
+import '../pro/entitlements.dart';
 import 'package:handy_ui/kit.dart';
-import 'package:handy_monetization/handy_monetization.dart';
 import '../collections/collection_actions.dart';
 import '../links/link_actions.dart';
 import '../library/place_title.dart';
@@ -236,7 +236,7 @@ class PlacesList extends StatelessWidget {
         // are made here only, and only with Pro.
         if (l.smartCollections.isNotEmpty ||
             l.savedSearches.isNotEmpty ||
-            LifetimeScope.maybeOf(context)?.pro == true) ...[
+            hasPro(context)) ...[
           const SizedBox(height: HandySpace.l),
           _Advanced(
             open: marking && v.place == Place.smart,

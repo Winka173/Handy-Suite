@@ -9,13 +9,23 @@ import 'package:handy_ui/kit.dart';
 /// inversion. The one hue is the app's teal, the same as the first-run
 /// guide, so the app reads as the guide's continuation.
 @immutable
-class BookmarkPalette {
+class BookmarkPalette extends ThemeExtension<BookmarkPalette> {
   final Color canvas, surface, raised, sunk;
   final Color primary, pressed, tint, onPrimary;
   final Color ink, muted, line, control;
   final Color sage, sageTint, warm;
   final Color danger, dangerTint, warning, warningTint;
+
+  /// The face of the editorial moments (library and collection names,
+  /// an item's title); a theme may set a sans or a display face instead.
+  final String display;
+
+  /// Surfaces carry a hairline edge (an editorial or minimal theme)
+  /// instead of parting by tone alone.
+  final bool edges;
   const BookmarkPalette({
+    this.display = 'Newsreader',
+    this.edges = false,
     required this.canvas,
     required this.surface,
     required this.raised,
@@ -81,8 +91,19 @@ class BookmarkPalette {
     warningTint: Color(0xFF3A2F1C),
   );
 
-  static BookmarkPalette of(BuildContext context) =>
-      Theme.of(context).brightness == Brightness.dark ? dark : light;
+  /// The palette of the theme in force (a chosen look, or the default).
+  static BookmarkPalette of(BuildContext context) {
+    final theme = Theme.of(context);
+    return theme.extension<BookmarkPalette>() ??
+        (theme.brightness == Brightness.dark ? dark : light);
+  }
+
+  @override
+  BookmarkPalette copyWith() => this;
+
+  @override
+  BookmarkPalette lerp(BookmarkPalette? other, double t) =>
+      other == null || t < .5 ? this : other;
 }
 
 /// Corners step down from the largest surface to the smallest control.
@@ -101,7 +122,7 @@ abstract final class BookmarkRadii {
 /// The serif kept for a few editorial moments: the library's name, an
 /// item's title on its own page, the guide.
 TextStyle bookmarkSerif(BuildContext context, double size) => TextStyle(
-  fontFamily: handyFontFamily('Newsreader'),
+  fontFamily: handyFontFamily(BookmarkPalette.of(context).display),
   fontSize: size,
   height: 1.12,
   letterSpacing: -.4,
@@ -110,9 +131,9 @@ TextStyle bookmarkSerif(BuildContext context, double size) => TextStyle(
 );
 
 /// Finishes the kit theme with the library's palette and shapes.
-ThemeData bookmarkTheme(ThemeData base) {
+ThemeData bookmarkTheme(ThemeData base, [BookmarkPalette? palette]) {
   final dark = base.brightness == Brightness.dark;
-  final p = dark ? BookmarkPalette.dark : BookmarkPalette.light;
+  final p = palette ?? (dark ? BookmarkPalette.dark : BookmarkPalette.light);
   final colors = HandyColors(
     select: p.tint,
     selectInk: dark ? p.ink : p.pressed,
@@ -191,7 +212,7 @@ ThemeData bookmarkTheme(ThemeData base) {
   return base.copyWith(
     colorScheme: scheme,
     textTheme: textTheme,
-    extensions: [colors],
+    extensions: [colors, p],
     scaffoldBackgroundColor: p.canvas,
     canvasColor: p.canvas,
     dividerColor: p.line,
@@ -268,7 +289,10 @@ ThemeData bookmarkTheme(ThemeData base) {
       color: p.surface,
       elevation: 0,
       margin: EdgeInsets.zero,
-      shape: round(BookmarkRadii.item),
+      shape: round(
+        BookmarkRadii.item,
+        p.edges ? BorderSide(color: p.line) : BorderSide.none,
+      ),
     ),
     listTileTheme: base.listTileTheme.copyWith(
       iconColor: p.muted,

@@ -1,4 +1,5 @@
 import 'package:handy_storage/handy_storage.dart';
+import '../design/looks.dart';
 import 'package:handy_ui/kit.dart';
 import '../scope.dart';
 import '../controller.dart';
@@ -195,6 +196,20 @@ class _SaveSettingsPageState extends State<SaveSettingsPage> {
                     ),
                   ),
                   SettingsRow(
+                    key: const Key('set-looks'),
+                    icon: Icons.palette_outlined,
+                    title: tr(context, 'Themes', 'Giao diện'),
+                    subtitle: tr(
+                      context,
+                      lookById(c.preferences['look'] as String?)?.en ??
+                          libraryLook.en,
+                      lookById(c.preferences['look'] as String?)?.vi ??
+                          libraryLook.vi,
+                    ),
+                    navigates: true,
+                    onTap: () => Navigator.pushNamed(context, '/looks'),
+                  ),
+                  SettingsRow(
                     key: const Key('set-library-name'),
                     icon: Icons.edit_outlined,
                     title: tr(context, 'Library name', 'Tên thư viện'),
@@ -283,6 +298,18 @@ class _SaveSettingsPageState extends State<SaveSettingsPage> {
               SettingsPanel(
                 gap: false,
                 rows: [
+                  SettingsRow(
+                    key: const Key('set-pro'),
+                    icon: Icons.workspace_premium_outlined,
+                    title: tr(context, 'Explore Pro', 'Khám phá Pro'),
+                    subtitle: tr(
+                      context,
+                      'Themes and smart collections; one payment',
+                      'Giao diện và bộ sưu tập thông minh; trả một lần',
+                    ),
+                    navigates: true,
+                    onTap: () => Navigator.pushNamed(context, '/pro'),
+                  ),
                   SettingsRow(
                     key: const Key('set-guide'),
                     icon: Icons.school_outlined,

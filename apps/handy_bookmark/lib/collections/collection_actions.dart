@@ -1,4 +1,4 @@
-import 'package:handy_monetization/handy_monetization.dart';
+import '../pro/entitlements.dart';
 import 'package:handy_bookmark_engine/handy_bookmark_engine.dart';
 import 'package:handy_ui/kit.dart';
 import '../controller.dart';
@@ -214,34 +214,9 @@ extension CollectionActions on SaveScope {
     BuildContext context, [
     SmartCollection? initial,
   ]) async {
-    if (LifetimeScope.maybeOf(context)?.pro != true) {
-      await showDialog<void>(
-        context: context,
-        builder: (context) => AlertDialog(
-          title: Text(
-            tr(
-              context,
-              'Saved filters are in Pro',
-              'Bộ lọc đã lưu có trong bản Pro',
-            ),
-          ),
-          content: Text(
-            tr(
-              context,
-              'A smart collection fills itself from rules, like "videos saved this week". Pro Lifetime is a one-time purchase in Settings.',
-              'Bộ sưu tập thông minh tự gom link theo điều kiện, ví dụ "video lưu trong tuần này". Pro Lifetime mua một lần trong Cài đặt.',
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: Text(tr(context, 'Close', 'Đóng')),
-            ),
-          ],
-        ),
-      );
+    if (!await requirePro(context, ProFeature.smartCollections) ||
+        !context.mounted)
       return;
-    }
     final value = await Navigator.push<SmartCollection>(
       context,
       MaterialPageRoute(

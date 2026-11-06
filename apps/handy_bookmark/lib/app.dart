@@ -1,5 +1,9 @@
 import 'design/identity.dart';
 import 'design/theme.dart';
+import 'design/looks.dart';
+import 'pro/entitlements.dart';
+import 'pro/explore_pro.dart';
+import 'pro/theme_studio.dart';
 import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
@@ -287,7 +291,8 @@ class _SaveAppState extends State<SaveApp> with WidgetsBindingObserver {
         );
       }
       if (c.library == null) return const HandyLoading();
-      return page();
+      // The chosen look (a premium one only while Pro is verified).
+      return LookScope(chosen: c.preferences['look'] as String?, child: page());
     },
   );
 
@@ -308,6 +313,11 @@ class _SaveAppState extends State<SaveApp> with WidgetsBindingObserver {
       ['', 'duplicates'] => () => DuplicatesPage(scope: scope),
       ['', 'trash'] => () => TrashPage(scope: scope),
       ['', 'library'] => () => LibraryPage(scope: scope),
+      ['', 'looks'] => () => ThemeStudio(scope: scope),
+      ['', 'pro'] => () => ExplorePro(
+        scope: scope,
+        focus: s.arguments is ProFeature ? s.arguments as ProFeature : null,
+      ),
       ['', 'bookmark', final id] => () => BookmarkPage(scope: scope, id: id),
       ['', 'read', final id] => () => ReaderPage(scope: scope, id: id),
       ['', 'search', final id] => () => ResultsPage(

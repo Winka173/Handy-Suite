@@ -27,6 +27,10 @@ void main() {
       '$ui/Geist-Medium.ttf',
       '$ui/Geist-Bold.ttf',
     ]);
+    await _font('packages/handy_ui/Bricolage', [
+      '$ui/BricolageGrotesque-Medium.ttf',
+      '$ui/BricolageGrotesque-Display.ttf',
+    ]);
     final sdk = Platform.environment['FLUTTER_ROOT']!;
     await _font('Newsreader', [
       for (final f in Directory('fonts').listSync())
@@ -149,6 +153,28 @@ void main() {
         await t.pumpAndSettle();
         await shot(t, 'lib-$label-cover-home');
       }
+    });
+  }
+
+  for (final (label, size, theme) in [
+    ('phone', const Size(390, 844), 'light'),
+    ('phone-dark', const Size(390, 844), 'dark'),
+  ]) {
+    testWidgets('$label pro looks', (t) async {
+      final c = await boot(t, size, theme: theme);
+      final nav = Navigator.of(t.element(find.byKey(const Key('save-home'))));
+      nav.pushNamed('/looks');
+      await t.pumpAndSettle();
+      await shot(t, 'pro-$label-looks');
+      await tapKey(t, 'look-ink-paper');
+      await shot(t, 'pro-$label-preview-ink');
+      await tapKey(t, 'look-next');
+      await shot(t, 'pro-$label-preview-midnight');
+      await tapKey(t, 'look-keep');
+      nav.pushNamed('/pro');
+      await t.pumpAndSettle();
+      await shot(t, 'pro-$label-explore');
+      expect(c.preferences['look'], isNull);
     });
   }
 }

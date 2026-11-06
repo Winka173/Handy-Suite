@@ -1,4 +1,4 @@
-import 'package:handy_monetization/handy_monetization.dart';
+import '../pro/entitlements.dart';
 import 'package:handy_bookmark_engine/handy_bookmark_engine.dart';
 import 'package:handy_ui/kit.dart';
 import '../controller.dart';
@@ -135,34 +135,9 @@ extension LinkActions on SaveScope {
 
   /// Saved searches are part of Pro; without it, say so plainly.
   Future<void> saveSearch(BuildContext context) async {
-    if (LifetimeScope.maybeOf(context)?.pro != true) {
-      await showDialog<void>(
-        context: context,
-        builder: (context) => AlertDialog(
-          title: Text(
-            tr(
-              context,
-              'Saved filters are in Pro',
-              'Bộ lọc đã lưu có trong bản Pro',
-            ),
-          ),
-          content: Text(
-            tr(
-              context,
-              'Keep a search with its place and filters, and come back to it in one tap. Pro Lifetime is a one-time purchase in Settings.',
-              'Giữ một tìm kiếm cùng nơi và bộ lọc, rồi mở lại chỉ với một chạm. Pro Lifetime mua một lần trong Cài đặt.',
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: Text(tr(context, 'Close', 'Đóng')),
-            ),
-          ],
-        ),
-      );
+    if (!await requirePro(context, ProFeature.smartCollections) ||
+        !context.mounted)
       return;
-    }
     final name = await _name(
       context,
       tr(context, 'Save this search', 'Lưu tìm kiếm này'),
