@@ -98,6 +98,13 @@ void main() {
       await store.close();
       final db = sqlite3.open('${directory.path}/library.sqlite');
       db.execute('DROP TABLE reading_trash');
+      // ... and without what version 4 added.
+      db.execute('DROP TABLE trash');
+      db.execute('DROP TABLE media');
+      db.execute('DROP INDEX idx_kind');
+      db.execute('DROP INDEX idx_media');
+      db.execute('ALTER TABLE bookmarks DROP COLUMN kind');
+      db.execute('ALTER TABLE bookmarks DROP COLUMN media_id');
       db.userVersion = 2;
       db.close();
       store = await NativeBookmarkStore.open(

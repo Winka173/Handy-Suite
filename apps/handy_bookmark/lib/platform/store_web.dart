@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:js_interop';
+import 'dart:js_interop_unsafe';
 import 'dart:typed_data';
 
 import 'package:handy_bookmark_engine/handy_bookmark_engine.dart';
@@ -61,14 +62,17 @@ typedef _Guard = void Function(void Function());
 /// IndexedDB records are independent; a library is never serialized into one
 /// localStorage value. Browser quota/eviction still requires portable backups.
 class BrowserBookmarkStore implements BookmarkStore {
-  /// 3 adds deleted-copy retention; upgrade does not rewrite existing records.
-  static const _version = 3;
+  /// 3 adds deleted-copy retention; 4 adds Recently Deleted and owned
+  /// pictures. Upgrades add stores and never rewrite existing records.
+  static const _version = 4;
   static const _names = [
     'bookmarks',
     'state',
     'thumbnails',
     'reading',
     'readingTrash',
+    'trash',
+    'media',
   ];
   static const _cacheBudget = 20000000;
   final web.IDBDatabase _database;
@@ -232,14 +236,27 @@ class BrowserBookmarkStore implements BookmarkStore {
 
   @override
   Future<Map<String, dynamic>> read() =>
-      _run(['bookmarks', 'state'], 'readonly', (tx, result, guard) {
+      _run(['bookmarks', 'state', 'trash'], 'readonly', (tx, result, guard) {
         var bookmarks = <Map<String, dynamic>>[];
+        var trash = <Map<String, dynamic>>[];
         var state = <String, dynamic>{};
+        void done() => result({
+          'bookmarks': bookmarks,
+          if (trash.isNotEmpty) 'trash': trash,
+          'state': state,
+        });
         final all = tx.objectStore('bookmarks').getAll();
         all.onsuccess = ((web.Event _) {
           guard(() {
             bookmarks = _records(all).map(_bookmark).toList();
-            result({'bookmarks': bookmarks, 'state': state});
+            done();
+          });
+        }).toJS;
+        final deleted = tx.objectStore('trash').getAll();
+        deleted.onsuccess = ((web.Event _) {
+          guard(() {
+            trash = _records(deleted).map(_bookmark).toList();
+            done();
           });
         }).toJS;
         final current = tx.objectStore('state').get('current'.toJS);
@@ -248,7 +265,7 @@ class BrowserBookmarkStore implements BookmarkStore {
             final raw = current.result;
             if (raw != null)
               state = _object(jsonDecode((raw as JSString).toDart));
-            result({'bookmarks': bookmarks, 'state': state});
+            done();
           });
         }).toJS;
       });
@@ -259,9 +276,25 @@ class BrowserBookmarkStore implements BookmarkStore {
     List<String> deletes = const [],
     Map<String, dynamic>? settings,
     bool replace = false,
+    List<Map<String, dynamic>> trashUpserts = const [],
+    List<String> trashDeletes = const [],
   }) async {
     // Validate/encode before opening a transaction; no async gap may make an
     // IndexedDB transaction inactive between its clear and subsequent puts.
+    final deletedRows = <String, JSAny>{};
+    final intoTrash = <String, int>{};
+    for (final record in trashUpserts) {
+      final item = Bookmark.fromJson(record);
+      if (item.deletedAt == null)
+        throw const FormatException('A Trash row needs its deletion time');
+      deletedRows[item.id] = {
+        'id': item.id,
+        'payload': jsonEncode(record),
+      }.jsify()!;
+      intoTrash[item.id] = DateTime.parse(
+        item.deletedAt!,
+      ).add(trashRetention).millisecondsSinceEpoch;
+    }
     final rows = <String, JSAny>{};
     final urls = <String, String>{};
     for (final record in upserts) {
@@ -278,6 +311,7 @@ class BrowserBookmarkStore implements BookmarkStore {
       final thumbnails = tx.objectStore('thumbnails');
       final reading = tx.objectStore('reading');
       final trash = tx.objectStore('readingTrash');
+      final deleted = tx.objectStore('trash');
       final now = DateTime.now().millisecondsSinceEpoch;
       void upsert(String id) {
         bookmarks.put(rows[id]!);
@@ -306,6 +340,10 @@ class BrowserBookmarkStore implements BookmarkStore {
         thumbnails.clear();
         reading.clear();
         trash.clear();
+        deleted.clear();
+      }
+      for (final row in deletedRows.values) {
+        deleted.put(row);
       }
       for (final id in deletes) {
         final link = bookmarks.get(id.toJS);
@@ -324,7 +362,11 @@ class BrowserBookmarkStore implements BookmarkStore {
                     {
                       'id': id,
                       'url': payload['normalizedUrl'],
-                      'expiresAt': now + readingUndoRetention.inMilliseconds,
+                      // Into Recently Deleted: as long as it can be
+                      // restored; any other delete: the Undo window.
+                      'expiresAt':
+                          intoTrash[id] ??
+                          now + readingUndoRetention.inMilliseconds,
                       'copy': value,
                     }.jsify()!,
                   );
@@ -340,6 +382,12 @@ class BrowserBookmarkStore implements BookmarkStore {
       }
       for (final id in rows.keys) {
         if (!deletes.contains(id)) upsert(id);
+      }
+      // Leaving Trash. A restored item (also in [rows]) took its copy back
+      // in upsert; one deleted for good loses it.
+      for (final id in trashDeletes) {
+        deleted.delete(id.toJS);
+        if (!rows.containsKey(id)) trash.delete(id.toJS);
       }
       final expired = trash.openCursor();
       expired.onsuccess = ((web.Event _) {
@@ -638,6 +686,108 @@ class BrowserBookmarkStore implements BookmarkStore {
       tx.objectStore('reading').clear();
       tx.objectStore('readingTrash').clear();
       result(true);
+    });
+  }
+
+  @override
+  Future<void> putMedia(
+    Map<String, dynamic> ref,
+    Uint8List original,
+    Uint8List preview,
+  ) async {
+    checkMedia(ref, original, preview);
+    final id = ref['id'] as String;
+    // Raw bytes, not base64: a large picture costs its size in quota.
+    final record =
+        {
+              'id': id,
+              'mime': ref['mime'],
+              'bytes': original.length,
+              'width': ref['width'],
+              'height': ref['height'],
+              'createdAt': DateTime.now().millisecondsSinceEpoch,
+            }.jsify()!
+            as JSObject;
+    record.setProperty('original'.toJS, original.toJS);
+    record.setProperty('preview'.toJS, preview.toJS);
+    await _run<bool>(['media'], 'readwrite', (tx, result, guard) {
+      final store = tx.objectStore('media');
+      final existing = store.getKey(id.toJS);
+      existing.onsuccess = ((web.Event _) {
+        guard(() {
+          if (existing.result == null) store.put(record);
+          result(true);
+        });
+      }).toJS;
+    });
+  }
+
+  @override
+  Future<Uint8List?> media(String id, {bool preview = false}) =>
+      _run(['media'], 'readonly', (tx, result, guard) {
+        final request = tx.objectStore('media').get(id.toJS);
+        request.onsuccess = ((web.Event _) {
+          guard(() {
+            final raw = request.result;
+            if (raw == null) return result(null);
+            final data = (raw as JSObject).getProperty(
+              (preview ? 'preview' : 'original').toJS,
+            );
+            result((data as JSUint8Array).toDart);
+          });
+        }).toJS;
+      });
+
+  @override
+  Future<Map<String, int>> mediaIndex() =>
+      _run(['media'], 'readonly', (tx, result, guard) {
+        final out = <String, int>{};
+        final cursor = tx.objectStore('media').openCursor();
+        cursor.onsuccess = ((web.Event _) {
+          guard(() {
+            final c = cursor.result as web.IDBCursorWithValue?;
+            if (c == null) return result(out);
+            final v = c.value as JSObject;
+            out[(v.getProperty('id'.toJS) as JSString).toDart] =
+                (v.getProperty('bytes'.toJS) as JSNumber).toDartInt;
+            c.continue_();
+          });
+        }).toJS;
+      });
+
+  @override
+  Future<int> collectMedia(
+    Set<String> keep, {
+    Duration grace = mediaGrace,
+  }) async {
+    final snapshot = await read();
+    final used = {
+      ...keep,
+      for (final b in [
+        ...snapshot['bookmarks'] as List,
+        ...snapshot['trash'] as List? ?? const [],
+      ])
+        if ((b as Map)['media'] != null) (b['media'] as Map)['id'] as String,
+    };
+    final before = DateTime.now().subtract(grace).millisecondsSinceEpoch;
+    return _run<int>(['media'], 'readwrite', (tx, result, guard) {
+      var removed = 0;
+      final cursor = tx.objectStore('media').openCursor();
+      cursor.onsuccess = ((web.Event _) {
+        guard(() {
+          final c = cursor.result as web.IDBCursorWithValue?;
+          if (c == null) return result(removed);
+          final v = c.value as JSObject;
+          final id = (v.getProperty('id'.toJS) as JSString).toDart;
+          final created =
+              (v.getProperty('createdAt'.toJS) as JSNumber).toDartInt;
+          if (!used.contains(id) && created < before) {
+            c.delete();
+            removed++;
+          }
+          c.continue_();
+        });
+      }).toJS;
     });
   }
 

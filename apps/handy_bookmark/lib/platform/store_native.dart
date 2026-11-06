@@ -6,6 +6,8 @@ import 'dart:typed_data';
 import 'package:path_provider/path_provider.dart';
 import 'package:sqlite3/sqlite3.dart';
 import 'package:crypto/crypto.dart';
+import 'package:handy_bookmark_engine/handy_bookmark_engine.dart'
+    show foldSearch;
 import 'store.dart';
 
 Future<void> preserveAndResetStore() async {
@@ -188,14 +190,51 @@ class NativeBookmarkStore implements BookmarkStore {
     List<String> deletes = const [],
     Map<String, dynamic>? settings,
     bool replace = false,
+    List<Map<String, dynamic>> trashUpserts = const [],
+    List<String> trashDeletes = const [],
   }) async {
     await call('write', {
       'upserts': upserts,
       'deletes': deletes,
       'settings': settings,
       'replace': replace,
+      'trashUpserts': trashUpserts,
+      'trashDeletes': trashDeletes,
     });
   }
+
+  @override
+  Future<void> putMedia(
+    Map<String, dynamic> ref,
+    Uint8List original,
+    Uint8List preview,
+  ) async {
+    checkMedia(ref, original, preview);
+    await call('putMedia', {
+      'ref': jsonEncode(ref),
+      'original': original,
+      'preview': preview,
+    });
+  }
+
+  @override
+  Future<Uint8List?> media(String id, {bool preview = false}) async =>
+      await call('media', {'id': id, 'preview': preview}) as Uint8List?;
+
+  @override
+  Future<Map<String, int>> mediaIndex() async =>
+      Map<String, int>.from(await call('mediaIndex') as Map);
+
+  @override
+  Future<int> collectMedia(
+    Set<String> keep, {
+    Duration grace = mediaGrace,
+  }) async =>
+      await call('collectMedia', {
+            'keep': keep.toList(),
+            'before': DateTime.now().subtract(grace).millisecondsSinceEpoch,
+          })
+          as int;
 
   @override
   Future<Map<String, dynamic>> search(
@@ -297,7 +336,7 @@ void _databaseWorker(List<dynamic> start) async {
       db.execute('BEGIN IMMEDIATE');
       try {
         db.execute(
-          'CREATE TABLE bookmarks(id TEXT PRIMARY KEY, normalized_url TEXT NOT NULL, canonical_url TEXT, domain TEXT, platform TEXT, content_type TEXT, collection_id TEXT, favorite INTEGER NOT NULL, archived INTEGER NOT NULL, read_state INTEGER NOT NULL, pinned INTEGER NOT NULL, saved_at TEXT, updated_at TEXT, last_opened_at TEXT, opened_count INTEGER, payload TEXT NOT NULL)',
+          'CREATE TABLE bookmarks(id TEXT PRIMARY KEY, normalized_url TEXT NOT NULL, canonical_url TEXT, domain TEXT, platform TEXT, content_type TEXT, collection_id TEXT, favorite INTEGER NOT NULL, archived INTEGER NOT NULL, read_state INTEGER NOT NULL, pinned INTEGER NOT NULL, saved_at TEXT, updated_at TEXT, last_opened_at TEXT, opened_count INTEGER, payload TEXT NOT NULL, kind TEXT NOT NULL DEFAULT \'link\', media_id TEXT)',
         );
         db.execute(
           'CREATE TABLE settings(key TEXT PRIMARY KEY, payload TEXT NOT NULL)',
@@ -330,6 +369,7 @@ void _databaseWorker(List<dynamic> start) async {
         db.execute('CREATE INDEX idx_tags ON bookmark_tags(tag)');
         _createReadingCopies(db);
         _createReadingTrash(db);
+        _createItemsV4(db);
         db.userVersion = schemaVersion;
         db.execute('COMMIT');
       } catch (_) {
@@ -337,11 +377,24 @@ void _databaseWorker(List<dynamic> start) async {
         rethrow;
       }
     } else if (version < schemaVersion) {
-      // Additive 1/2 → 3 migration; keep links, copies and settings unchanged.
+      // Additive 1 → 2 → 3 → 4; links, copies and settings stay unchanged.
       db.execute('BEGIN IMMEDIATE');
       try {
-        if (version == 1) _createReadingCopies(db);
-        _createReadingTrash(db);
+        if (version < 2) _createReadingCopies(db);
+        if (version < 3) _createReadingTrash(db);
+        if (version < 4) {
+          db.execute(
+            "ALTER TABLE bookmarks ADD COLUMN kind TEXT NOT NULL DEFAULT 'link'",
+          );
+          db.execute('ALTER TABLE bookmarks ADD COLUMN media_id TEXT');
+          _createItemsV4(db);
+          // Rebuilt below with text that ignores Vietnamese marks.
+          try {
+            db.execute('DELETE FROM bookmark_search');
+          } catch (_) {
+            /* No search index yet (no FTS5): nothing to rebuild. */
+          }
+        }
         db.userVersion = schemaVersion;
         db.execute('COMMIT');
       } catch (_) {
@@ -407,6 +460,11 @@ void _databaseWorker(List<dynamic> start) async {
                 for (final row in db.select('SELECT payload FROM bookmarks'))
                   jsonDecode(row['payload'] as String),
               ],
+              if (db.select('SELECT 1 FROM trash LIMIT 1').isNotEmpty)
+                'trash': [
+                  for (final row in db.select('SELECT payload FROM trash'))
+                    jsonDecode(row['payload'] as String),
+                ],
               'state': setting.isEmpty
                   ? <String, dynamic>{}
                   : jsonDecode(setting.first['payload'] as String),
@@ -422,17 +480,33 @@ void _databaseWorker(List<dynamic> start) async {
               ]);
               if (args['replace'] == true) {
                 db.execute('DELETE FROM reading_trash');
+                db.execute('DELETE FROM trash');
                 db.execute('DELETE FROM bookmarks');
                 db.execute('DELETE FROM collections');
                 db.execute('DELETE FROM tags');
                 if (fts) db.execute('DELETE FROM bookmark_search');
               }
+              // An item moving into Recently Deleted keeps its offline copy
+              // for as long as it can be restored; any other delete keeps it
+              // for the short Undo window.
+              final intoTrash = {
+                for (final b in args['trashUpserts'] as List? ?? const [])
+                  (b as Map)['id'] as String: b['deletedAt'] as String,
+              };
               for (final id in args['deletes'] as List) {
+                final deletedAt = intoTrash[id];
                 db.execute(
                   'INSERT OR REPLACE INTO reading_trash '
                   'SELECT r.bookmark_id,b.normalized_url,r.saved_at,r.bytes,r.payload,? '
                   'FROM reading_copies r JOIN bookmarks b ON b.id=r.bookmark_id WHERE b.id=?',
-                  [now + readingUndoRetention.inMilliseconds, id],
+                  [
+                    deletedAt == null
+                        ? now + readingUndoRetention.inMilliseconds
+                        : DateTime.parse(
+                            deletedAt,
+                          ).add(trashRetention).millisecondsSinceEpoch,
+                    id,
+                  ],
                 );
                 if (fts)
                   db.execute(
@@ -442,8 +516,20 @@ void _databaseWorker(List<dynamic> start) async {
                   );
                 db.execute('DELETE FROM bookmarks WHERE id=?', [id]);
               }
+              for (final value in args['trashUpserts'] as List? ?? const []) {
+                final b = value as Map;
+                db.execute(
+                  'INSERT INTO trash VALUES(?,?,?,?) ON CONFLICT(id) DO UPDATE SET deleted_at=excluded.deleted_at,media_id=excluded.media_id,payload=excluded.payload',
+                  [
+                    b['id'],
+                    b['deletedAt'],
+                    (b['media'] as Map?)?['id'],
+                    jsonEncode(b),
+                  ],
+                );
+              }
               final statement = db.prepare(
-                'INSERT INTO bookmarks VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?) ON CONFLICT(id) DO UPDATE SET normalized_url=excluded.normalized_url,canonical_url=excluded.canonical_url,domain=excluded.domain,platform=excluded.platform,content_type=excluded.content_type,collection_id=excluded.collection_id,favorite=excluded.favorite,archived=excluded.archived,read_state=excluded.read_state,pinned=excluded.pinned,saved_at=excluded.saved_at,updated_at=excluded.updated_at,last_opened_at=excluded.last_opened_at,opened_count=excluded.opened_count,payload=excluded.payload',
+                'INSERT INTO bookmarks(id,normalized_url,canonical_url,domain,platform,content_type,collection_id,favorite,archived,read_state,pinned,saved_at,updated_at,last_opened_at,opened_count,payload,kind,media_id) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?) ON CONFLICT(id) DO UPDATE SET normalized_url=excluded.normalized_url,canonical_url=excluded.canonical_url,domain=excluded.domain,platform=excluded.platform,content_type=excluded.content_type,collection_id=excluded.collection_id,favorite=excluded.favorite,archived=excluded.archived,read_state=excluded.read_state,pinned=excluded.pinned,saved_at=excluded.saved_at,updated_at=excluded.updated_at,last_opened_at=excluded.last_opened_at,opened_count=excluded.opened_count,payload=excluded.payload,kind=excluded.kind,media_id=excluded.media_id',
               );
               try {
                 for (final value in args['upserts'] as List) {
@@ -465,6 +551,8 @@ void _databaseWorker(List<dynamic> start) async {
                     b['lastOpenedAt'],
                     b['openedCount'],
                     jsonEncode(b),
+                    b['kind'] ?? 'link',
+                    (b['media'] as Map?)?['id'],
                   ]);
                   // Undo restores only the same ID AND URL. Never replace a
                   // newer copy or attach a deleted article to a different URL.
@@ -502,6 +590,15 @@ void _databaseWorker(List<dynamic> start) async {
                 }
               } finally {
                 statement.close();
+              }
+              // Leaving Trash: restored items already took their copy back
+              // above; an item deleted for good loses it now.
+              for (final id in args['trashDeletes'] as List? ?? const []) {
+                db.execute('DELETE FROM trash WHERE id=?', [id]);
+                db.execute(
+                  'DELETE FROM reading_trash WHERE bookmark_id=? AND NOT EXISTS(SELECT 1 FROM bookmarks WHERE id=?)',
+                  [id, id],
+                );
               }
               if (args['settings'] != null) {
                 final state = args['settings'] as Map;
@@ -648,6 +745,49 @@ void _databaseWorker(List<dynamic> start) async {
               rethrow;
             }
             result = true;
+          case 'putMedia':
+            final ref = jsonDecode(args['ref'] as String) as Map;
+            db.execute('INSERT OR IGNORE INTO media VALUES(?,?,?,?,?,?,?,?)', [
+              ref['id'],
+              ref['mime'],
+              ref['bytes'],
+              ref['width'],
+              ref['height'],
+              args['original'],
+              args['preview'],
+              DateTime.now().millisecondsSinceEpoch,
+            ]);
+            result = true;
+          case 'media':
+            final rows = db.select(
+              args['preview'] == true
+                  ? 'SELECT preview AS data FROM media WHERE id=?'
+                  : 'SELECT original AS data FROM media WHERE id=?',
+              [args['id']],
+            );
+            result = rows.isEmpty ? null : rows.first['data'];
+          case 'mediaIndex':
+            result = {
+              for (final row in db.select('SELECT id,bytes FROM media'))
+                row['id'] as String: row['bytes'] as int,
+            };
+          case 'collectMedia':
+            db.execute('BEGIN IMMEDIATE');
+            try {
+              // Never a picture an item or a Trash item uses, nor one stored
+              // moments ago whose item is still being written.
+              db.execute(
+                'DELETE FROM media WHERE created_at<? AND id NOT IN(SELECT value FROM json_each(?)) '
+                'AND id NOT IN(SELECT media_id FROM bookmarks WHERE media_id IS NOT NULL) '
+                'AND id NOT IN(SELECT media_id FROM trash WHERE media_id IS NOT NULL)',
+                [args['before'], jsonEncode(args['keep'])],
+              );
+              result = db.updatedRows;
+              db.execute('COMMIT');
+            } catch (_) {
+              db.execute('ROLLBACK');
+              rethrow;
+            }
           case 'integrity':
             result =
                 db.select('PRAGMA quick_check').first.values.first as String;
@@ -674,8 +814,23 @@ void _databaseWorker(List<dynamic> start) async {
   }
 }
 
-/// SQLite `user_version`. 3 retains deleted copies for atomic Undo.
-const schemaVersion = 3;
+/// SQLite `user_version`. 3 retains deleted copies for atomic Undo; 4 adds
+/// image items, owned pictures and Recently Deleted.
+const schemaVersion = 4;
+
+void _createItemsV4(Database db) {
+  db.execute('CREATE INDEX IF NOT EXISTS idx_kind ON bookmarks(kind)');
+  db.execute('CREATE INDEX IF NOT EXISTS idx_media ON bookmarks(media_id)');
+  db.execute(
+    'CREATE TABLE trash(id TEXT PRIMARY KEY,deleted_at TEXT NOT NULL,media_id TEXT,payload TEXT NOT NULL)',
+  );
+  db.execute('CREATE INDEX idx_trash_media ON trash(media_id)');
+  // Content-addressed: the same picture is stored once. Originals are user
+  // data (backed up); previews are made from them and can be remade.
+  db.execute(
+    'CREATE TABLE media(id TEXT PRIMARY KEY,mime TEXT NOT NULL,bytes INTEGER NOT NULL,width INTEGER NOT NULL,height INTEGER NOT NULL,original BLOB NOT NULL,preview BLOB NOT NULL,created_at INTEGER NOT NULL)',
+  );
+}
 
 void _createReadingTrash(Database db) => db.execute(
   'CREATE TABLE reading_trash(bookmark_id TEXT PRIMARY KEY,normalized_url TEXT NOT NULL,saved_at TEXT NOT NULL,bytes INTEGER NOT NULL,payload TEXT NOT NULL,expires_at INTEGER NOT NULL)',
@@ -692,15 +847,18 @@ List _manualOrder(Map state) =>
     (state['preferences'] as Map?)?['bookmarkOrder'] as List? ??
     const [];
 
-String _searchText(Map b) => [
-  b['title'],
-  b['originalUrl'],
-  b['description'],
-  b['note'],
-  b['sourceDomain'],
-  b['platform'],
-  ...(b['tags'] as List? ?? []),
-].whereType<String>().join(' ');
+String _searchText(Map b) => foldSearch(
+  [
+    b['title'],
+    b['originalUrl'],
+    b['description'],
+    b['note'],
+    b['sourceDomain'],
+    b['platform'],
+    (b['media'] as Map?)?['name'],
+    ...(b['tags'] as List? ?? []),
+  ].whereType<String>().join(' '),
+);
 Map<String, dynamic> _query(
   Database db,
   Map q,
@@ -717,7 +875,7 @@ Map<String, dynamic> _query(
       'id IN (SELECT id FROM bookmark_search WHERE bookmark_search MATCH ?)',
     );
     values.add(
-      text
+      foldSearch(text)
           .split(RegExp(r'\s+'))
           .map((v) => '"${v.replaceAll('"', '""')}"*')
           .join(' AND '),
@@ -744,6 +902,7 @@ Map<String, dynamic> _query(
     'isArchived': 'archived',
     'isRead': 'read_state',
     'isPinned': 'pinned',
+    'kind': 'kind',
   }.entries) {
     if (q[entry.key] != null) {
       where.add('${entry.value}=?');

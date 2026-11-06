@@ -45,6 +45,13 @@ void main() {
     final db = sqlite3.open(path);
     db.execute('DROP TABLE reading_copies');
     db.execute('DROP TABLE reading_trash');
+    // ... and without what version 4 added.
+    db.execute('DROP TABLE trash');
+    db.execute('DROP TABLE media');
+    db.execute('DROP INDEX idx_kind');
+    db.execute('DROP INDEX idx_media');
+    db.execute('ALTER TABLE bookmarks DROP COLUMN kind');
+    db.execute('ALTER TABLE bookmarks DROP COLUMN media_id');
     db.userVersion = 1;
     db.close();
 

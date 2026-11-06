@@ -133,7 +133,7 @@ void main() {
     expect(await store!.integrity(), 'ok');
     final db = sqlite3.open(path);
     try {
-      expect(db.userVersion, 3);
+      expect(db.userVersion, 4);
       final names = db
           .select("SELECT name FROM sqlite_master WHERE type='table'")
           .map((r) => r['name'])
@@ -149,6 +149,9 @@ void main() {
           'thumbnails',
           'bookmark_search',
           'reading_copies',
+          'reading_trash',
+          'trash',
+          'media',
         ]),
       );
       final indexes = db

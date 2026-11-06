@@ -9,10 +9,19 @@ class TestStore implements BookmarkStore {
   final rows = <String, Map<String, dynamic>>{};
   Map<String, dynamic> state = {};
   final reading = <String, Map<String, dynamic>>{};
+
+  /// Recently Deleted rows, and offline copies kept while an item is there.
+  final trash = <String, Map<String, dynamic>>{};
+  final trashedCopies = <String, Map<String, dynamic>>{};
+
+  /// Pictures: id → (original, preview, stored at).
+  final ownedMedia = <String, (Uint8List, Uint8List, DateTime)>{};
+  DateTime Function() now = DateTime.now;
   bool fail = false;
   @override
   Future<Map<String, dynamic>> read() async => {
     'bookmarks': rows.values.toList(),
+    'trash': trash.values.toList(),
     'state': state,
   };
   @override
@@ -21,18 +30,78 @@ class TestStore implements BookmarkStore {
     List<String> deletes = const [],
     Map<String, dynamic>? settings,
     bool replace = false,
+    List<Map<String, dynamic>> trashUpserts = const [],
+    List<String> trashDeletes = const [],
   }) async {
     if (fail) throw StateError('Disk full');
     if (replace) {
       rows.clear();
       reading.clear();
+      trash.clear();
+      trashedCopies.clear();
     }
+    final intoTrash = {for (final b in trashUpserts) b['id'] as String};
     for (final id in deletes) {
+      final copy = reading.remove(id);
+      if (copy != null && intoTrash.contains(id)) trashedCopies[id] = copy;
       rows.remove(id);
-      reading.remove(id);
     }
-    for (final b in upserts) rows[b['id'] as String] = Map.of(b);
+    for (final b in trashUpserts) trash[b['id'] as String] = Map.of(b);
+    for (final b in upserts) {
+      final id = b['id'] as String;
+      rows[id] = Map.of(b);
+      final kept = trashedCopies.remove(id);
+      if (kept != null) reading.putIfAbsent(id, () => kept);
+    }
+    for (final id in trashDeletes) {
+      trash.remove(id);
+      if (!rows.containsKey(id)) trashedCopies.remove(id);
+    }
     if (settings != null) state = Map.of(settings);
+  }
+
+  @override
+  Future<void> putMedia(
+    Map<String, dynamic> ref,
+    Uint8List original,
+    Uint8List preview,
+  ) async {
+    if (fail) throw StateError('Disk full');
+    checkMedia(ref, original, preview);
+    ownedMedia.putIfAbsent(
+      ref['id'] as String,
+      () => (original, preview, now()),
+    );
+  }
+
+  @override
+  Future<Uint8List?> media(String id, {bool preview = false}) async {
+    final m = ownedMedia[id];
+    return m == null ? null : (preview ? m.$2 : m.$1);
+  }
+
+  @override
+  Future<Map<String, int>> mediaIndex() async => {
+    for (final e in ownedMedia.entries) e.key: e.value.$1.length,
+  };
+
+  @override
+  Future<int> collectMedia(
+    Set<String> keep, {
+    Duration grace = mediaGrace,
+  }) async {
+    final used = {
+      ...keep,
+      for (final b in [...rows.values, ...trash.values])
+        if (b['media'] != null) (b['media'] as Map)['id'] as String,
+    };
+    final before = now().subtract(grace);
+    final gone = [
+      for (final e in ownedMedia.entries)
+        if (!used.contains(e.key) && e.value.$3.isBefore(before)) e.key,
+    ];
+    gone.forEach(ownedMedia.remove);
+    return gone.length;
   }
 
   @override

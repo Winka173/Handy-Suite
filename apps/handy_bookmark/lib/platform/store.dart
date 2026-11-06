@@ -11,6 +11,12 @@ abstract interface class BookmarkStore {
     List<String> deletes = const [],
     Map<String, dynamic>? settings,
     bool replace = false,
+
+    /// Recently Deleted rows, written in the same transaction. An id in
+    /// [deletes] and [trashUpserts] moves into Trash with its offline copy;
+    /// an id in [trashDeletes] and [upserts] is restored with it.
+    List<Map<String, dynamic>> trashUpserts = const [],
+    List<String> trashDeletes = const [],
   });
   Future<Map<String, dynamic>> search(
     Map<String, dynamic> query, {
@@ -38,6 +44,48 @@ abstract interface class BookmarkStore {
   /// Every copy, for a full backup.
   Future<Map<String, Map<String, dynamic>>> readingCopies();
   Future<void> clearReadingCopies();
+
+  /// Stores a picture the person owns (content-addressed: storing the same
+  /// one again does nothing). Call before writing the item that uses it.
+  Future<void> putMedia(
+    Map<String, dynamic> ref,
+    Uint8List original,
+    Uint8List preview,
+  );
+
+  /// The original bytes, or the small preview.
+  Future<Uint8List?> media(String id, {bool preview = false});
+
+  /// Every stored picture with its original size in bytes.
+  Future<Map<String, int>> mediaIndex();
+
+  /// Reclaims pictures that neither [keep], an item, nor a Trash item uses
+  /// and that were stored more than [grace] ago. Returns how many went.
+  Future<int> collectMedia(Set<String> keep, {Duration grace = mediaGrace});
+}
+
+/// Deleted items wait this long in Recently Deleted (the engine's rule).
+const trashRetention = Duration(days: 30);
+
+/// A picture stored this recently is never reclaimed: its item may still
+/// be on its way to the database.
+const mediaGrace = Duration(minutes: 10);
+
+/// A preview may not exceed this many bytes.
+const maxMediaPreviewBytes = 600 * 1024;
+
+/// Refuses a picture whose record and bytes disagree, before any write.
+void checkMedia(
+  Map<String, dynamic> ref,
+  Uint8List original,
+  Uint8List preview,
+) {
+  if (original.isEmpty || original.length != ref['bytes'])
+    throw const FormatException('Picture size does not match its record');
+  if (original.length > 25 * 1024 * 1024)
+    throw const FormatException('Picture too large');
+  if (preview.isEmpty || preview.length > maxMediaPreviewBytes)
+    throw const FormatException('Preview too large');
 }
 
 /// One stored reading copy may not exceed this many bytes of JSON.
