@@ -259,8 +259,12 @@ class _QuickSaveBarState extends State<QuickSaveBar> {
               'Save a picture, several links…',
               'Lưu ảnh, nhiều link…',
             ),
+            // The theme draws plain icon buttons in ink; a filled one takes
+            // the same colours as the Save button it turns into.
             style: IconButton.styleFrom(
               fixedSize: const Size(52, 52),
+              backgroundColor: p.primary,
+              foregroundColor: p.onPrimary,
               shape: RoundedRectangleBorder(borderRadius: radius),
             ),
             onPressed: busy ? null : widget.onMore,

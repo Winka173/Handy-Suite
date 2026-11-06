@@ -791,6 +791,10 @@ void main() {
     await t.pump(const Duration(milliseconds: 400));
     await shot(t, 'phone-32-quick-saved', settle: false);
   });
+  testWidgets('phone home dark', (t) async {
+    await boot(t, const Size(390, 844), theme: 'dark');
+    await shot(t, 'phone-1-home-dark');
+  });
   testWidgets('phone save sheet dark', (t) async {
     await boot(t, const Size(390, 844), theme: 'dark');
     await tapKey(t, 'save-new');

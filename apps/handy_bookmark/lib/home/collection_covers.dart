@@ -54,10 +54,9 @@ class CollectionCovers extends StatelessWidget {
                   onPressed: onAll,
                   child: Text(tr(context, 'See all', 'Xem tất cả')),
                 ),
-              IconButton.filledTonal(
-                style: IconButton.styleFrom(
-                  backgroundColor: BookmarkPalette.of(context).surface,
-                ),
+              // Plain, like Search and Settings above: the one filled
+              // button on Home is Save.
+              IconButton(
                 key: const Key('collection-new'),
                 tooltip: tr(context, 'New collection', 'Bộ sưu tập mới'),
                 // A folder, not a plus: the one + on Home is Save.
