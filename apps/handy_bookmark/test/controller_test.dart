@@ -137,7 +137,6 @@ void main() {
       await c.initialize();
       expect(store.rows.length, 2);
       expect(inbox.acknowledgments, ['one']);
-      expect(c.adsVisible.value, isFalse);
       inbox.pending = [
         const SharedLink(
           'two',

@@ -13,6 +13,7 @@ dependencies:
   handy_files: any
   handy_storage: any
   handy_ui: any
+  handy_ads: any
   handy_workflow: any
   image_picker: 1.2.4
   flutter_markdown_plus: 1.0.12

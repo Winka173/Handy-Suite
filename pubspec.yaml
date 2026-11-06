@@ -35,6 +35,7 @@ workspace:
   - packages/handy_media_engine
   - packages/handy_store
   - packages/handy_monetization
+  - packages/handy_ads
   - packages/handy_scan
   - packages/handy_ocr
   - packages/handy_pdf

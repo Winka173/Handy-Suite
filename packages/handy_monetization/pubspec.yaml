@@ -9,7 +9,6 @@ dependencies:
     sdk: flutter
   handy_core: any
   handy_store: any
-  google_mobile_ads: 9.2.0
 dev_dependencies:
   flutter_test:
     sdk: flutter

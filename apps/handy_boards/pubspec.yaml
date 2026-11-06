@@ -12,6 +12,7 @@ dependencies:
   handy_core: any
   handy_files: any
   handy_monetization: any
+  handy_ads: any
   handy_notifications: any
   handy_home_widget: any
   archive: 4.5.2

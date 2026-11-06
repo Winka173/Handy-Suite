@@ -1,0 +1,12 @@
+name: handy_ads
+description: The Google Mobile Ads banner and consent form for Handy apps that show ads.
+version: 0.1.0
+publish_to: none
+resolution: workspace
+environment:
+  sdk: ^3.12.0
+dependencies:
+  flutter:
+    sdk: flutter
+  google_mobile_ads: 9.2.0
+  handy_monetization: any

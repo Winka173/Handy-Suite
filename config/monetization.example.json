@@ -98,14 +98,10 @@
   "bookmark": {
     "android": {
       "productId": "",
-      "androidPublicKey": "",
-      "bannerAdUnitId": "",
-      "adsEnabled": false
+      "androidPublicKey": ""
     },
     "ios": {
-      "productId": "",
-      "bannerAdUnitId": "",
-      "adsEnabled": false
+      "productId": ""
     },
     "windows": {
       "productId": ""

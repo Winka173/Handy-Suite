@@ -9,6 +9,7 @@ dependencies:
   flutter:
     sdk: flutter
   handy_ui: any
+  handy_ads: any
   handy_workflow: any
   handy_core: any
   handy_files: any

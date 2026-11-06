@@ -13,6 +13,7 @@ dependencies:
   handy_files: any
   handy_notifications: any
   handy_monetization: any
+  handy_ads: any
   sqlite3: 3.5.2
   path_provider: 2.1.6
   web: 1.1.1

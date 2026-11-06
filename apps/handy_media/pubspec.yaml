@@ -17,6 +17,7 @@ dependencies:
   handy_ocr: any
   handy_storage: any
   handy_ui: any
+  handy_ads: any
   image: 4.12.0
   archive: 4.5.2
   crypto: 3.0.8

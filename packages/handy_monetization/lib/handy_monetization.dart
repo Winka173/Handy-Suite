@@ -2,7 +2,6 @@ import 'dart:async';
 import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:handy_store/handy_store.dart';
 
 String get monetizationPlatform => kIsWeb
@@ -249,11 +248,17 @@ class LifetimeSettings extends StatelessWidget {
           style: Theme.of(context).textTheme.titleMedium,
         ),
         Text(
-          _tr(
-            context,
-            'One-time purchase removes supported advertisements in this app. Ownership belongs to this store account and does not transfer between stores. Core tools remain available for free.',
-            'Mua một lần để bỏ quảng cáo được hỗ trợ trong app này. Quyền sở hữu thuộc tài khoản cửa hàng này, không chuyển giữa các cửa hàng. Các công cụ chính vẫn dùng miễn phí.',
-          ),
+          HandyAdSlot.provider == null
+              ? _tr(
+                  context,
+                  'One-time purchase unlocks the Pro features of this app. There are no ads. Ownership belongs to this store account and does not transfer between stores. Core tools remain free.',
+                  'Mua một lần để mở các tính năng Pro của app này. App không có quảng cáo. Quyền sở hữu thuộc tài khoản cửa hàng này, không chuyển giữa các cửa hàng. Các công cụ chính vẫn miễn phí.',
+                )
+              : _tr(
+                  context,
+                  'One-time purchase removes supported advertisements in this app. Ownership belongs to this store account and does not transfer between stores. Core tools remain available for free.',
+                  'Mua một lần để bỏ quảng cáo được hỗ trợ trong app này. Quyền sở hữu thuộc tài khoản cửa hàng này, không chuyển giữa các cửa hàng. Các công cụ chính vẫn dùng miễn phí.',
+                ),
         ),
         if (!model.configured)
           Text(
@@ -310,11 +315,9 @@ class LifetimeSettings extends StatelessWidget {
             ],
           ),
         if (model.busy) const LinearProgressIndicator(),
-        if (model.config.adsEnabled)
+        if (model.config.adsEnabled && HandyAdSlot.provider != null)
           TextButton(
-            onPressed: () => ConsentForm.showPrivacyOptionsForm((error) {
-              model.privacyChanged();
-            }),
+            onPressed: () => showAdPrivacyChoices(model),
             child: Text(
               _tr(
                 context,
@@ -328,115 +331,34 @@ class LifetimeSettings extends StatelessWidget {
   }
 }
 
-/// Opens the UMP privacy options form; ads reload with the new choice.
-void showAdPrivacyChoices(LifetimeController model) =>
-    ConsentForm.showPrivacyOptionsForm((error) => model.privacyChanged());
+/// Where ads come from. The ad SDK lives in `package:handy_ads`, which an
+/// app installs at start (`installHandyAds()`); an app that never installs
+/// it carries no advertising SDK, banner or consent form at all.
+abstract class AdProvider {
+  /// The banner for this app's ad unit, shown only to Free users when the
+  /// app's config enables ads.
+  Widget banner(LifetimeController model);
 
-/// No ad request happens before UMP permits it; no app/user document content is sent.
-class LifetimeBanner extends StatefulWidget {
-  const LifetimeBanner({super.key});
-  @override
-  State<LifetimeBanner> createState() => _LifetimeBannerState();
+  /// The consent platform's privacy options; ads reload with the choice.
+  void privacyOptions(LifetimeController model);
 }
 
-class _LifetimeBannerState extends State<LifetimeBanner> {
-  BannerAd? ad;
-  bool loading = false, loaded = false;
-  LifetimeController? model;
-  int seenRevision = -1;
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    model = LifetimeScope.maybeOf(context);
-    if (model != null && seenRevision != model!.adRevision) {
-      seenRevision = model!.adRevision;
-      ad?.dispose();
-      ad = null;
-      loaded = false;
-    }
-    if (model == null || model!.pro || !model!.config.adsEnabled) {
-      ad?.dispose();
-      ad = null;
-      loaded = false;
-      return;
-    }
-    if (!loading && ad == null) {
-      loading = true;
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (mounted) load();
-      });
-    }
-  }
+abstract final class HandyAdSlot {
+  static AdProvider? provider;
+}
 
-  Future<void> load() async {
-    try {
-      final completer = Completer<void>();
-      ConsentInformation.instance.requestConsentInfoUpdate(
-        ConsentRequestParameters(),
-        () => completer.complete(),
-        (error) => completer.complete(),
-      );
-      await completer.future.timeout(const Duration(seconds: 15));
-      final form = Completer<void>();
-      ConsentForm.loadAndShowConsentFormIfRequired((error) => form.complete());
-      await form.future.timeout(const Duration(seconds: 20));
-      if (!await ConsentInformation.instance.canRequestAds() ||
-          !mounted ||
-          model!.pro)
-        return;
-      await MobileAds.instance.initialize();
-      if (!mounted || model!.pro) return;
-      ad = BannerAd(
-        adUnitId: model!.config.adUnitId,
-        size: AdSize.banner,
-        request: const AdRequest(nonPersonalizedAds: true),
-        listener: BannerAdListener(
-          onAdLoaded: (value) {
-            if (!mounted || model!.pro) {
-              value.dispose();
-              return;
-            }
-            setState(() => loaded = true);
-          },
-          onAdFailedToLoad: (value, error) {
-            value.dispose();
-            if (mounted)
-              setState(() {
-                ad = null;
-                loaded = false;
-              });
-          },
-        ),
-      );
-      await ad!.load();
-    } catch (_) {
-      /* Core offline tools remain usable when consent/ads are unavailable. */
-    } finally {
-      loading = false;
-    }
-  }
+/// Opens the ad privacy options, when an ad provider is installed.
+void showAdPrivacyChoices(LifetimeController model) =>
+    HandyAdSlot.provider?.privacyOptions(model);
 
-  @override
-  void dispose() {
-    ad?.dispose();
-    super.dispose();
-  }
-
+/// The ad banner, or nothing: no provider, Pro, or ads off for this app.
+class LifetimeBanner extends StatelessWidget {
+  const LifetimeBanner({super.key});
   @override
   Widget build(BuildContext context) {
-    final state = LifetimeScope.maybeOf(context);
-    if (state == null || state.pro || !loaded || ad == null)
+    final model = LifetimeScope.maybeOf(context), ads = HandyAdSlot.provider;
+    if (model == null || ads == null || model.pro || !model.config.adsEnabled)
       return const SizedBox.shrink();
-    return SafeArea(
-      top: false,
-      child: Center(
-        heightFactor: 1,
-        child: SizedBox(
-          width: ad!.size.width.toDouble(),
-          height: ad!.size.height.toDouble(),
-          child: AdWidget(ad: ad!),
-        ),
-      ),
-    );
+    return ads.banner(model);
   }
 }

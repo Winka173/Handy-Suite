@@ -17,6 +17,7 @@ dependencies:
   handy_workflow: any
   handy_ui: any
   handy_monetization: any
+  handy_ads: any
   handy_scan: any
   handy_media_engine: any
 dev_dependencies:

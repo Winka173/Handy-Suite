@@ -12,7 +12,6 @@ Future<Bookmark?> addLinks(
   bool fromClipboard = false,
 }) async {
   final c = scope.c;
-  c.adsVisible.value = false;
   var initial = '';
   if (fromClipboard) {
     try {

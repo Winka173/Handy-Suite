@@ -34,7 +34,6 @@ class SaveController extends ChangeNotifier {
   final Future<BookmarkStore> Function() openStore;
   final SaveShareInbox inbox;
   final MetadataClient metadata;
-  final ValueNotifier<bool> adsVisible = ValueNotifier(false);
   BookmarkStore? store;
   SaveLibrary? library;
   Map<String, dynamic> preferences = {};
@@ -163,7 +162,6 @@ class SaveController extends ChangeNotifier {
     String? title,
     bool allowDuplicates = false,
   }) async {
-    adsVisible.value = false;
     try {
       final urls = UrlTools.extract(text);
       if (urls.isEmpty) throw const FormatException('No URL');
@@ -230,7 +228,6 @@ class SaveController extends ChangeNotifier {
     draining = true;
     try {
       final pending = await inbox.drain();
-      if (pending.isEmpty && highlighted == null) adsVisible.value = true;
       for (final share in pending) {
         try {
           await quickSave(share.text, title: share.title);
@@ -296,7 +293,6 @@ class SaveController extends ChangeNotifier {
         updatedAt: saveTime(),
       ),
     );
-    adsVisible.value = false;
     final mode = browser
         ? 'external'
         : preferences['openingMode'] as String? ?? 'system';
@@ -460,7 +456,6 @@ class SaveController extends ChangeNotifier {
     for (final t in fetching.values) t.cancel();
     inbox.dispose();
     metadata.dispose();
-    adsVisible.dispose();
     if (store != null) unawaited(store!.close());
     super.dispose();
   }

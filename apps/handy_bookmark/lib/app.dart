@@ -214,10 +214,6 @@ class _SaveAppState extends State<SaveApp> with WidgetsBindingObserver {
     final parts = (s.name ?? '/').split('/');
     final Widget Function()? page = switch (parts) {
       ['', 'settings'] => () {
-        // Ads may show again once Settings is up (never while saving).
-        WidgetsBinding.instance.addPostFrameCallback(
-          (_) => c.adsVisible.value = true,
-        );
         return SaveSettingsPage(
           read: () => prefs.value!,
           save: _save,
@@ -276,7 +272,6 @@ class _SaveAppState extends State<SaveApp> with WidgetsBindingObserver {
       accent: saveAccent,
       theme: p?.theme ?? 'system',
       locale: p?.locale ?? 'system',
-      adsVisible: c.adsVisible,
       navigatorKey: navigator,
       onGenerateRoute: _route,
       home: p == null
