@@ -3,6 +3,7 @@ import '../scope.dart';
 import '../shell/search_box.dart';
 import '../view/library_view.dart';
 import 'batch_bar.dart';
+import 'deep_matches.dart';
 import 'results_view.dart';
 
 /// Search: everything saved, with the search field focused. Leaving
@@ -18,11 +19,13 @@ class FindPage extends StatefulWidget {
 class _FindPageState extends State<FindPage> {
   late final view = widget.scope.view;
   final focus = FocusNode();
+  late final deep = DeepIndex(widget.scope.c);
 
   @override
   void initState() {
     super.initState();
     view.show(Place.all);
+    deep.load();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) focus.requestFocus();
     });
@@ -39,6 +42,7 @@ class _FindPageState extends State<FindPage> {
   @override
   void dispose() {
     focus.dispose();
+    deep.dispose();
     super.dispose();
   }
 
@@ -64,6 +68,7 @@ class _FindPageState extends State<FindPage> {
             SearchBox(view: view, focus: focus),
             const SizedBox(height: HandySpace.l),
           ],
+          trailing: [DeepMatches(scope: widget.scope, index: deep)],
         ),
       ),
     ),

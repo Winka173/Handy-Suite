@@ -27,6 +27,9 @@ class ResultsView extends StatelessWidget {
   final ValueChanged<Bookmark> onDetails;
   final VoidCallback onAdd;
   final List<Widget> leading;
+
+  /// Shown after the results (Search's matches found inside items).
+  final List<Widget> trailing;
   const ResultsView({
     super.key,
     required this.scope,
@@ -34,6 +37,7 @@ class ResultsView extends StatelessWidget {
     required this.onAdd,
     this.current,
     this.leading = const [],
+    this.trailing = const [],
   });
 
   /// Cards or rows: the collection's own choice, else the app's.
@@ -286,6 +290,7 @@ class ResultsView extends StatelessWidget {
                   ),
                 ),
               ),
+            ...trailing,
           ],
         ),
       );

@@ -1,4 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:handy_bookmark/pro/entitlements.dart';
 import 'package:handy_bookmark/reader/article_view.dart';
 import 'package:handy_bookmark/reader/highlights_sheet.dart';
 import 'package:handy_bookmark_engine/handy_bookmark_engine.dart';
@@ -66,6 +67,30 @@ void main() {
     t.widget<ArticleView>(find.byType(ArticleView)).onHighlight!('the broth');
     await settle(t);
     expect(find.byKey(const Key('explore-pro')), findsOneWidget);
+    expect(highlightsOf(c, id), hasLength(1));
+  });
+
+  testWidgets('with Pro, Highlight marks the words where they are on screen '
+      'and offers a note', (t) async {
+    debugProOverride = true;
+    addTearDown(() => debugProOverride = null);
+    final (c, _, id) = await boot(
+      t,
+      seed: (c, id) => c.putReadingCopies({id: copyOf(longArticle(6))}),
+    );
+    await openReader(t, id);
+    t.widget<ArticleView>(find.byType(ArticleView)).onHighlight!(
+      'skim it often',
+    );
+    await settle(t);
+    final h = highlightsOf(c, id).single;
+    expect(h.quote, 'skim it often');
+    expect(find.text('Highlighted.'), findsOneWidget);
+    final view = t.widget<ArticleView>(find.byType(ArticleView));
+    expect(view.marks[h.block], [(h.start, h.end, 'yellow')]);
+    // Words that are not in the text make nothing up.
+    view.onHighlight!('not in this article');
+    await settle(t);
     expect(highlightsOf(c, id), hasLength(1));
   });
 }

@@ -29,11 +29,16 @@ const shippedProFeatures = {
   ProFeature.autoOrganize,
   ProFeature.advancedBulk,
   ProFeature.readerHighlights,
+  ProFeature.deepSearch,
 };
 
 /// Whether this person owns a verified Pro Lifetime.
 bool hasPro(BuildContext context) =>
-    LifetimeScope.maybeOf(context)?.pro == true;
+    debugProOverride ?? LifetimeScope.maybeOf(context)?.pro == true;
+
+/// Tests only: answers [hasPro] without a store. Never set in the app.
+@visibleForTesting
+bool? debugProOverride;
 
 /// The one gate: true when Pro is verified; otherwise opens Explore Pro
 /// (at [feature]'s pillar) and reports whether Pro became verified there.

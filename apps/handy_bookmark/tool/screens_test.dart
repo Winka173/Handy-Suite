@@ -9,6 +9,7 @@ import 'package:flutter_test/flutter_test.dart';
 import '../test/welcome_test.dart' show StillMotion;
 import 'package:handy_files/handy_files.dart';
 import 'package:handy_bookmark/app.dart';
+import 'package:handy_bookmark/pro/entitlements.dart';
 import 'package:handy_bookmark/links/batch_size.dart';
 import 'package:handy_bookmark_engine/handy_bookmark_engine.dart';
 import 'package:handy_storage/handy_storage.dart';
@@ -590,6 +591,21 @@ void main() {
     await shot(t, 'phone-33-highlights-list');
     await tapKey(t, 'highlight-h1-edit');
     await shot(t, 'phone-33-highlight-edit');
+  });
+  testWidgets('phone deep search', (t) async {
+    // A review shot of the Pro view; the store is not in host renders.
+    // ignore: invalid_use_of_visible_for_testing_member
+    debugProOverride = true;
+    // ignore: invalid_use_of_visible_for_testing_member
+    addTearDown(() => debugProOverride = null);
+    await boot(t, const Size(390, 844), extras: true);
+    await tapKey(t, 'open-search');
+    await t.enterText(find.byKey(const Key('save-search')), 'dong van');
+    await t.runAsync(
+      () => Future<void>.delayed(const Duration(milliseconds: 400)),
+    );
+    await t.pumpAndSettle();
+    await shot(t, 'phone-34-deep-search');
   });
   testWidgets('desktop reader', (t) async {
     final c = await boot(t, const Size(1440, 900), extras: true);
