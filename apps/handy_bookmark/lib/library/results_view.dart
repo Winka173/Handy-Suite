@@ -1,4 +1,7 @@
 import 'package:handy_bookmark_engine/handy_bookmark_engine.dart';
+import '../pro/entitlements.dart';
+import '../pro/layout_picker.dart';
+import '../pro/layouts.dart';
 import 'package:handy_ui/kit.dart';
 import '../collections/cover_chooser.dart';
 import '../collections/share_collection.dart';
@@ -34,6 +37,16 @@ class ResultsView extends StatelessWidget {
   });
 
   /// Cards or rows: the collection's own choice, else the app's.
+  /// A Pro layout chosen here (the collection's own, else the app's).
+  String? get layout {
+    final v = view;
+    final own = v.place == Place.collection && v.id != null
+        ? v.collectionView(v.id!)['layout']
+        : null;
+    final id = own ?? controller.preferences['layout'];
+    return id is String ? id : null;
+  }
+
   bool get cards {
     final v = view;
     final own = v.place == Place.collection && v.id != null
@@ -179,6 +192,18 @@ class ResultsView extends StatelessWidget {
         );
       } else if (rows.isEmpty) {
         body = _empty(context);
+      } else if (layoutById(layout) case final premium? when hasPro(context)) {
+        body = premium.build(
+          context,
+          LayoutData(
+            controller: controller,
+            rows: rows,
+            selected: v.selected,
+            onOpen: controller.open,
+            onDetails: onDetails,
+            onToggle: (b) => v.toggle(b.id),
+          ),
+        );
       } else if (cards) {
         body = LayoutBuilder(
           builder: (context, box) {
@@ -286,6 +311,24 @@ class ResultsView extends StatelessWidget {
         onPressed: () => showFilterSheet(context, controller.library!, v),
       ),
       IconButton(
+        key: const Key('save-layout'),
+        tooltip: tr(context, 'Layouts', 'Bố cục'),
+        icon: const Icon(Icons.dashboard_customize_outlined),
+        onPressed: () => showLayoutPicker(
+          context,
+          data: LayoutData(
+            controller: controller,
+            rows: view.results,
+            onOpen: (_) {},
+            onDetails: (_) {},
+            onToggle: (_) {},
+          ),
+          current: layout,
+          cards: cards,
+          choose: _chooseLayout,
+        ),
+      ),
+      IconButton(
         key: const Key('save-view'),
         tooltip: cards
             ? tr(context, 'Show as rows', 'Xem dạng dòng')
@@ -325,12 +368,27 @@ class ResultsView extends StatelessWidget {
     ];
   }
 
-  void _flipCards() => view.place == Place.collection && view.id != null
-      ? view.rememberForCollection('cards', !cards)
-      : controller.update(
-          (l) => l,
-          prefs: {...controller.preferences, 'cards': !cards},
-        );
+  /// Stores a layout (null: back to cards or rows) where this list keeps
+  /// its view: on the collection, or for the app.
+  Future<void> _chooseLayout(String? id, {bool? asCards}) async {
+    final v = view;
+    if (v.place == Place.collection && v.id != null) {
+      await v.setCollectionView(v.id!, 'layout', id);
+      if (asCards != null) await v.setCollectionView(v.id!, 'cards', asCards);
+    } else {
+      await controller.update(
+        (l) => l,
+        prefs: {
+          ...controller.preferences,
+          'layout': ?id,
+          if (asCards != null) 'cards': asCards,
+        }..removeWhere((k, val) => k == 'layout' && id == null),
+      );
+    }
+  }
+
+  /// The quick cards/rows switch also leaves any Pro layout.
+  void _flipCards() => _chooseLayout(null, asCards: !cards);
 
   /// What an empty list says: nothing matched, or nothing is here yet.
   Widget _empty(BuildContext context) {

@@ -593,6 +593,9 @@ class SavePortable {
         if (v['sort'] is String && sorts.contains(v['sort'])) 'sort': v['sort'],
         if (v['cover'] is String && ids.contains(v['cover']))
           'cover': v['cover'],
+        if (v['layout'] is String &&
+            RegExp(r'^[a-z][a-z-]{0,39}$').hasMatch(v['layout'] as String))
+          'layout': v['layout'],
       };
       if (view.isNotEmpty) out[e.key as String] = view;
     }

@@ -177,4 +177,17 @@ void main() {
       expect(c.preferences['look'], isNull);
     });
   }
+
+  testWidgets('phone pro layouts', (t) async {
+    await boot(t, const Size(390, 844));
+    await tapKey(t, 'home-library');
+    await tapKey(t, 'place-all');
+    await tapKey(t, 'save-layout');
+    await shot(t, 'pro-layouts-picker');
+    await tapKey(t, 'layout-magazine');
+    for (var i = 0; i < 8; i++) {
+      await shot(t, 'pro-layout-$i');
+      if (i < 7) await tapKey(t, 'layout-next');
+    }
+  });
 }
