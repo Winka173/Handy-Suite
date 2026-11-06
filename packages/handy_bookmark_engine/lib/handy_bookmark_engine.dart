@@ -8,3 +8,4 @@ export 'src/reading.dart';
 export 'src/links.dart';
 export 'src/duplicates.dart';
 export 'src/trash.dart';
+export 'src/collection_page.dart';

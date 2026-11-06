@@ -1,5 +1,6 @@
 import 'package:handy_bookmark_engine/handy_bookmark_engine.dart';
 import 'package:handy_ui/kit.dart';
+import '../collections/share_collection.dart';
 import '../controller.dart';
 import '../links/link_actions.dart';
 import '../links/task_strip.dart';
@@ -220,6 +221,13 @@ class ResultsView extends StatelessWidget {
       HandyMenuButton(
         key: const Key('list-more'),
         items: [
+          if (v.place == Place.collection && v.id != null)
+            HandyMenuItem(
+              Icons.ios_share,
+              tr(context, 'Share as a page', 'Chia sẻ thành trang'),
+              () => scope.shareCollection(context, v.id!),
+              key: const Key('collection-share'),
+            ),
           if (!wide && v.canSaveSearch && v.place != Place.smart)
             HandyMenuItem(
               Icons.saved_search,

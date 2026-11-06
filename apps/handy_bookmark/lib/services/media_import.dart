@@ -97,6 +97,9 @@ PreparedPicture preparePicture(Uint8List bytes, {String name = ''}) {
       : upright;
   // JPEG has no transparency: put see-through pictures on white once.
   final flat = small.hasAlpha ? _onWhite(small) : small;
+  // The preview is what leaves the device in a shared page: no camera,
+  // place or time data rides along (the original keeps its own bytes).
+  flat.exif = img.ExifData();
   var quality = 82;
   var preview = img.encodeJpg(flat, quality: quality);
   while (preview.length > 600 * 1024 && quality > 40) {
