@@ -1,4 +1,5 @@
 import 'design/identity.dart';
+import 'pro/export/export_studio.dart';
 import 'design/theme.dart';
 import 'design/looks.dart';
 import 'pro/entitlements.dart';
@@ -314,6 +315,10 @@ class _SaveAppState extends State<SaveApp> with WidgetsBindingObserver {
       ['', 'trash'] => () => TrashPage(scope: scope),
       ['', 'library'] => () => LibraryPage(scope: scope),
       ['', 'looks'] => () => ThemeStudio(scope: scope),
+      ['', 'export', final id] => () => ExportStudio(
+        scope: scope,
+        collectionId: id,
+      ),
       ['', 'pro'] => () => ExplorePro(
         scope: scope,
         focus: s.arguments is ProFeature ? s.arguments as ProFeature : null,

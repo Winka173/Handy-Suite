@@ -346,6 +346,13 @@ class ResultsView extends StatelessWidget {
               () => scope.shareCollection(context, v.id!),
               key: const Key('collection-share'),
             ),
+          if (collection)
+            HandyMenuItem(
+              Icons.auto_awesome_outlined,
+              tr(context, 'Design an export', 'Thiết kế bản xuất'),
+              () => Navigator.pushNamed(context, '/export/${v.id}'),
+              key: const Key('collection-export'),
+            ),
           if (pictured)
             HandyMenuItem(
               Icons.photo_outlined,

@@ -24,6 +24,8 @@ const shippedProFeatures = {
   ProFeature.smartCollections,
   ProFeature.premiumThemes,
   ProFeature.premiumLayouts,
+  ProFeature.focusSkins,
+  ProFeature.premiumExport,
 };
 
 /// Whether this person owns a verified Pro Lifetime.
