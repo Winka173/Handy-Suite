@@ -1,122 +1,130 @@
-# Handy Bookmark: the first-run guide
+# Handy Bookmark: the first-run guide (version 2)
 
-Contract written 2026-11-06, before code, following `design-taste-frontend`
-(`references/app-screens.md`) and `frontend-ui-engineering`. What was learned from Tuckii is in
-`TUCKII_OBSERVATION.md`; nothing of its look or wording is used.
+This is version 2, written on 2026-11-06 after the owner reviewed version 1 on BlueStacks. The
+owner judged version 1 too plain next to Tuckii: grey and black, text-only cards, faint motion,
+and a form where a rehearsal should be. They decided:
 
-## Inventory (data and jobs)
+- **no character**;
+- **real, licensed photographs** for the samples;
+- **practice on a simulated phone only**, as Tuckii does: nothing typed during the guide is
+  saved.
 
-- **Who:** one person who has just installed the app, on a phone (Android or iPhone), sometimes
-  on Windows or the web. They give a first run about a minute.
-- **What they have:** nothing yet (0 items, 0 collections), or, when replaying from Settings, a
-  library of 50–3,000 links.
-- **What they will save:** links shared from TikTok, YouTube, Facebook, Shopee, Zalo and the
-  browser; screenshots and photos; a link copied to the clipboard.
-- **The jobs, in order:** learn the one gesture that matters (Share → Handy Bookmark); make a
-  first save that **stays**; know where it went (Not sorted); optionally give it a place.
-  Switchers: bring links from another app (import).
-- **The product's own things:** the newspaper ledger face (Newsreader titles, paper ground
-  `#FAF8F3`, ink rules), the hue `#0E7490`, the **Not sorted strip** (the app's signature
-  element), sources written as words, never logos.
+What Tuckii does is recorded in `TUCKII_OBSERVATION.md`. None of its art, wording, mascot or
+screen composition is used.
 
 ## The question and the finding
 
-- Question: "How do I keep things here, and where do they go?"
-- Finding, shown on the last step: "Your first save is waiting in Not sorted."
+- Question: "How do I keep things here, and how do I get them back?"
+- Finding, on the find step: "Type a few letters, accents optional; tap to open the original."
 
-## Face and signature
+## Look
 
-- Face: **the clipping.** Every saved thing in the guide is a newspaper clipping: a headline
-  in Newsreader, a source line under an ink rule ("TikTok · 3 weeks ago"). The guide opens
-  with today's real date as a dateline, like a front page.
-- Signature: the person's **real** first save becomes a clipping that drops into the Not
-  sorted strip, and filing it slides it under a collection's name.
+- **Colour:** the app's teal `#0E7490` is used fully here, on the primary button, the progress
+  bar, the glow rings, the coach labels and the success check, with its pale tint `#D7EEF3` as a
+  band under each title's key words. The ground is the brand's warm paper. Source labels carry
+  each platform's own colour, as a name and never a logo.
+- **Type:** Newsreader titles (46 px wide, 32 px on phones), Geist body text, and buttons taken
+  from the theme's label style.
+- **Objects:** cards are white with a 16 px radius and a soft shadow, because they float. Photos
+  have a 10 px radius. The pretend phone is a dark frame with a 48 px radius.
+- **Photographs:** five open-licence photos (bún chả, phở, guitars, Ga Hà Nội, Hội An lanterns),
+  resized to 720 px with EXIF dropped. Two others were rejected because brand logos dominate
+  them. Credits are in `apps/handy_bookmark/assets/welcome/CREDITS.txt` and in Settings ›
+  Licenses.
 
 ## Flow
 
-A single route `/welcome` with four steps and a four-segment progress line ("Step 2 of 4"
-for screen readers). Skip is in the top bar on every step.
+The progress bar has five segments, or four where the device has no notifications. Back and Skip
+are on every step.
 
-1. **Keep it once. Find it again.** Four sample clippings (a recipe from TikTok, running shoes
-   on Shopee, a guitar lesson on YouTube, a train timetable screenshot) lie scattered, then
-   settle into one ledger column. One sentence: links from any app and screenshots, kept
-   together on this device. Primary **Show me how**; secondary **I have links in another
-   app** (opens import).
-2. **Save from any app.** A drawn share row (Copy link · Messages · Handy Bookmark, ours
-   ringed in the hue) and a clipping sliding from it into a small Not sorted tray. The
-   sentence depends on the platform: Android "Tap Share, then Handy Bookmark"; iOS adds
-   "if it isn't in the row, look under More"; Windows and web "Copy a link anywhere, then
-   press Ctrl V here" with key caps instead of the share row. Primary **Try it now**.
-3. **Save your first one.** Real controls: a link field with Save, **Paste** (reads the
-   clipboard only when tapped), **Choose a picture**. On Android and iOS a quiet line: "Or
-   share from another app now; this page will notice." The step watches the library: the
-   first item that was not there when the step opened (pasted, picked or shared) moves the
-   guide to step 4 with that item. Secondary **Later**.
-4. **Saved. It's in Not sorted.** The person's item as a clipping (its picture when it has
-   one, its title, source · domain) at the head of a Not sorted strip. One sentence:
-   everything lands here first; give it a place now or whenever you like. Chips: the
-   person's usual collections, or four suggestions (Recipes, To buy, Read later, Trips) that
-   create the collection on tap and file the item; the clipping slides under the chosen
-   name and the line reads "Filed in Recipes". Primary **Go to my library**.
+1. **"Saved all over the place."** Four photo cards (TikTok, Facebook, YouTube, Photos) fly in
+   one after another with an overshoot and land scattered. A search pill reads "train
+   timetable… · 0 results", and the cards fade to grey. Primary: **Bring it together**. Below
+   it: **I have links in another app**, which opens import.
+2. **"One place for all of it."** The same cards travel, in colour, into a Handy Bookmark library
+   (name, All / Links / Pictures chips, two collections) and settle in a grid. This uses one
+   scene widget across both steps, so the cards really move. Primary: **Show me how**.
+3. **"Try saving a video."** A pretend phone shows a phở video. Each stage lights one thing, with
+   a coach label beside it:
+   - **Share** has a breathing ring and the label "Tap Share";
+   - the share row slides up, the screen dims, and Handy Bookmark is ringed;
+   - Handy Bookmark's save sheet appears: preview, "Put it in" with four collections, "Pick
+     this" on Good food;
+   - Save starts disabled. Once a collection is chosen it is ringed, with "Now tap Save";
+   - a check pops (elastic) with an expanding ring: "Saved to Good food · Title, picture and
+     source filled in", with a haptic tap.
 
-Finishing, skipping or leaving marks the guide done (`guideDone` in the library's
-preferences, so a restored backup does not show it again). Settings → Help → **How to save**
-replays it.
+   The button appears only after the save. The text then says it was practice and that nothing
+   was saved.
 
-## When it shows
+4. **"Find it in a moment."** On the pretend phone a search types "pho bo" without accents. The
+   key just typed lights on a drawn keyboard, the list narrows to the phở save, and "Open in
+   TikTok" grows in.
+5. **"A gentle weekly nudge?"** Phones only. A lock screen over the Hội An photo, 19:00 Sunday,
+   and a notification drops in: "5 things you saved recently are still waiting." **Turn on the
+   nudge** asks for permission and turns on the weekly nudge setting. **Not now** finishes.
 
-On start, only when the library has no items and nothing in Recently Deleted, and the guide
-was never finished. A person who upgrades with links never sees it unasked.
+## Motion
 
-## States
+- One clock per step, 1.5 s, restarted on every step.
+- Parts arrive in order:
+  - the title rises with a soft overshoot (0–35 %);
+  - the tint band draws in under the key words (30–70 %);
+  - the body follows (12–50 %);
+  - the button scales in last (60–95 %).
+- Glow rings breathe on a 1.3 s loop around the next thing to tap.
+- Under the system's reduce-motion setting everything is at rest at once: rings are still,
+  cards sit in place, and buttons are there immediately.
 
-- Saving fails: the existing "Not saved … Nothing changed." message; the step stays.
-- Link already saved: the duplicate dialog as usual; choosing the old link counts as the
-  first save and goes to step 4 with it.
-- Picture already saved: "This picture is already saved." and the step stays.
-- A share that could not be read: the Not sorted issues line appears on step 3.
-- Web: no share line; pictures through the browser's file picker.
-- Filing fails: the chip stays unselected and the message says nothing changed.
-- Large text (200 %): every step scrolls; the illustration shrinks first; buttons never clip.
+## Layout
 
-## Layout (320–1440)
+- **Under 700 px:** the progress bar, then the scene (52 % of the height, 220–560 px), then the
+  title, body and a full-width 56 px button. The page scrolls when large text needs more room.
+- **700 px and up:** words and buttons on the left (flex 5), the scene on the right (flex 6),
+  with content at most 1180 px wide. The pretend phone keeps its own size; the reader's text
+  size applies outside it, never inside the drawn phone.
 
-- Under 700 px: one column. Progress and Skip on top, illustration (max 280 px tall, 200 px
-  at 320 px wide), title, sentence, then the actions in the bottom bar.
-- 700 px and wider: content centred at most 1040 px; text and actions on the left (max
-  440 px), illustration on the right, both top-aligned to the title's line.
-- Margins 16 px on phones, 24 px from 700 px.
+## When it shows, and what it keeps
+
+- It opens on start only on an empty library that never finished the guide (`guideDone` in the
+  library preferences). It can be replayed from Settings › Help › How to save, or at
+  `/welcome`.
+- It saves nothing. The only thing it can change is the weekly nudge setting, and only when the
+  person turns it on.
 
 ## Platform behaviour
 
-- Android back and Esc: previous step; on step 1 they leave (marked done).
-- Enter on desktop: the step's primary action (not while typing in the link field, where
-  Enter saves the link).
-- iOS swipe back leaves the route (marked done); the home is underneath.
-- Web URL `#/welcome`; replay works by URL too.
-- A light haptic tick when the first save lands (phones only).
-
-## Motion (continuity only, zero under reduced motion)
-
-- Step 1: the pile settles into the column (stagger 70 ms, 520 ms each, ease-out).
-- Step 2: one clipping slides from the share row into the tray, once.
-- Step 4: the clipping drops into the strip (320 ms); filing slides it under the name.
-- Between steps: `HandySwap`. Buttons are visible and active from the first frame; nothing
-  waits for an animation.
+- Android back and Esc go to the previous step; on step 1 they leave.
+- Enter triggers the step's primary button once it is shown.
+- iOS swipe-back leaves the guide.
+- The nudge step appears only where the reminders plug-in is supported (Android and iOS), never
+  on Windows or the web.
 
 ## Accessibility
 
-- Each step's title is a header in semantics; the progress line reads "Step n of 4".
-- The illustrations are decorative and excluded from semantics, except the person's own
-  clipping on step 4, which reads its title and source.
-- All controls are 44 px or taller, keyboard-reachable in reading order; focus moves to the
-  title when the step changes.
-- Contrast 4.5:1 for every word, including the clipping's source line.
+- Titles are headers. The progress bar reads "Step n of N".
+- The pretend phone in the practice step is interactive, and each target has a label (Share,
+  Handy Bookmark, Good food, Save). The other scenes are pictures and are hidden from screen
+  readers.
+- Skip is always available.
 
 ## Rejected
 
-A mascot; sticker outlines and hard offset shadows; marker highlights under words; a carousel
-of feature slides with dots; a paywall or Pro mention; asking for notifications (no revisit
-reminder exists yet); a practice that throws away what the person did; a demo hand cursor;
-Skip hidden on early screens; buttons held back until an animation ends; confetti or a
-full-screen tick.
+Tuckii's mascot, art and wording; a paywall; a character of our own (the owner chose not to);
+drawn illustrations instead of photos (the owner chose photos); saving during the guide (the
+owner chose practice only); photos where a brand logo dominates.
+
+## Checked
+
+- `test/welcome_test.dart` (8 tests):
+  - Skip is remembered;
+  - existing libraries are never guided;
+  - the practice keeps its order (Save stays disabled until a collection is picked) and saves
+    nothing;
+  - back;
+  - replay from Settings;
+  - no overflow at 320 px with text at 200 %, at 390 px, and at 1280 px.
+- Screenshots of every stage at 390, 320 and 1280 px were rendered and reviewed. The dim behind
+  the sheets was measured: brightness 107 drops to 48.
+- The guide was run end to end on BlueStacks (Android 11) by tapping over adb. That is an
+  emulator, not a phone.

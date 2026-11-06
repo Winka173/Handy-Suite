@@ -1,19 +1,26 @@
-import 'dart:async';
+import 'dart:ui' show AccessibilityFeatures;
 import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:handy_bookmark/app.dart';
 import 'package:handy_bookmark/controller.dart';
-import 'package:handy_bookmark/services/share_inbox.dart';
 import 'package:handy_bookmark/welcome/welcome_page.dart';
 import 'package:handy_storage/handy_storage.dart';
 import 'controller_test.dart' show TestStore, TestInbox;
 import 'new_flows_test.dart' show OneFile, settle;
 import 'widget_test.dart' show Preferences, tapKey;
 
+/// The guide's glow rings breathe for ever; with motion reduced (as a
+/// person can ask for) they hold still, so frames settle.
+class StillMotion implements AccessibilityFeatures {
+  @override
+  bool get disableAnimations => true;
+  @override
+  dynamic noSuchMethod(Invocation i) => false;
+}
+
 Future<SaveController> open(
   WidgetTester t, {
   TestStore? store,
-  TestInbox? inbox,
   Size size = const Size(400, 900),
   double textScale = 1,
   List<String> urls = const [],
@@ -21,12 +28,14 @@ Future<SaveController> open(
   t.view.physicalSize = size;
   t.view.devicePixelRatio = 1;
   t.platformDispatcher.textScaleFactorTestValue = textScale;
+  t.platformDispatcher.accessibilityFeaturesTestValue = StillMotion();
   addTearDown(t.view.resetPhysicalSize);
   addTearDown(t.view.resetDevicePixelRatio);
   addTearDown(t.platformDispatcher.clearTextScaleFactorTestValue);
+  addTearDown(t.platformDispatcher.clearAccessibilityFeaturesTestValue);
   final c = SaveController(
     open: () async => store ?? TestStore(),
-    shares: inbox ?? TestInbox(),
+    shares: TestInbox(),
   );
   await t.runAsync(c.initialize);
   for (final u in urls) {
@@ -45,18 +54,25 @@ Future<SaveController> open(
   return c;
 }
 
+/// Plays the practice save on the pretend phone.
+Future<void> practise(WidgetTester t) async {
+  await tapKey(t, 'practice-share');
+  await tapKey(t, 'practice-target');
+  await tapKey(t, 'practice-col-food');
+  await tapKey(t, 'practice-save');
+  await settle(t);
+}
+
 void main() {
   testWidgets('an empty library opens the guide; Skip remembers it', (t) async {
     final store = TestStore();
     final c = await open(t, store: store);
-    expect(find.text('Keep it once. Find it again.'), findsOneWidget);
-    expect(find.bySemanticsLabel('Step 1 of 4'), findsOneWidget);
+    expect(find.textContaining('all over the place'), findsOneWidget);
     await tapKey(t, 'welcome-skip');
     await settle(t);
     expect(find.byType(WelcomePage), findsNothing);
     expect(c.preferences[guideDoneKey], isTrue);
 
-    // Started again on the same data: the guide stays closed.
     await t.pumpWidget(const SizedBox());
     final again = await open(t, store: store);
     expect(again.preferences[guideDoneKey], isTrue);
@@ -68,69 +84,44 @@ void main() {
     expect(find.byType(WelcomePage), findsNothing);
   });
 
-  testWidgets('a real first save stays, and filing it creates the collection', (
+  testWidgets('the practice save goes step by step and saves nothing', (
     t,
   ) async {
     final c = await open(t);
     await tapKey(t, 'welcome-next-0');
-    expect(find.text('Save from any app.'), findsOneWidget);
+    expect(find.textContaining('all of it'), findsOneWidget);
     await tapKey(t, 'welcome-next-1');
-    expect(find.text('Save your first one.'), findsOneWidget);
-    expect(find.text('Your first save goes here.'), findsOneWidget);
+    expect(find.textContaining('a video'), findsOneWidget);
+    expect(find.byKey(const Key('welcome-next-2')), findsNothing);
 
-    await t.enterText(
-      find.byKey(const Key('welcome-url')),
-      'https://example.com/bun-cha',
-    );
-    await t.pump();
-    await tapKey(t, 'welcome-url-save');
+    // Save cannot be pressed before a collection is chosen.
+    await tapKey(t, 'practice-share');
+    await tapKey(t, 'practice-target');
+    await t.tap(find.byKey(const Key('practice-save')), warnIfMissed: false);
     await settle(t);
-    expect(find.text("Saved. It's in Not sorted."), findsOneWidget);
-    final saved = c.library!.bookmarks.single;
-    expect(saved.collectionId, isNull);
-    expect(find.byKey(ValueKey('welcome-saved-${saved.id}')), findsOneWidget);
-
-    await tapKey(t, 'welcome-start-0');
+    expect(find.text('Saved to Good food'), findsNothing);
+    await tapKey(t, 'practice-col-food');
+    await tapKey(t, 'practice-save');
     await settle(t);
-    final recipes = c.library!.collections.single;
-    expect(recipes.name, 'Recipes');
-    expect(c.library!.bookmarks.single.collectionId, recipes.id);
-    expect(find.text('Saved and filed.'), findsOneWidget);
+    expect(find.text('Saved to Good food'), findsOneWidget);
 
+    await tapKey(t, 'welcome-next-2');
+    expect(find.textContaining('in a moment'), findsOneWidget);
     await tapKey(t, 'welcome-next-3');
+    if (find.byKey(const Key('welcome-later')).evaluate().isNotEmpty) {
+      await tapKey(t, 'welcome-later');
+    }
     await settle(t);
     expect(find.byType(WelcomePage), findsNothing);
     expect(c.preferences[guideDoneKey], isTrue);
-    expect(c.library!.bookmarks, hasLength(1), reason: 'the save is kept');
+    expect(c.library!.bookmarks, isEmpty, reason: 'practice saves nothing');
   });
-
-  testWidgets(
-    'a link shared from another app while waiting moves the guide on',
-    (t) async {
-      final inbox = TestInbox();
-      final c = await open(t, inbox: inbox);
-      await tapKey(t, 'welcome-next-0');
-      await tapKey(t, 'welcome-next-1');
-      inbox.pending = [
-        const SharedLink(
-          's1',
-          'https://shopee.vn/giay-chay-bo',
-          'Giày chạy bộ',
-        ),
-      ];
-      unawaited(c.drain());
-      await settle(t);
-      expect(find.text("Saved. It's in Not sorted."), findsOneWidget);
-      expect(find.text('Giày chạy bộ'), findsWidgets);
-      expect(inbox.acknowledgments, ['s1']);
-    },
-  );
 
   testWidgets('back steps back; on the first step it leaves', (t) async {
     final c = await open(t);
     await tapKey(t, 'welcome-next-0');
     await tapKey(t, 'welcome-back');
-    expect(find.text('Keep it once. Find it again.'), findsOneWidget);
+    expect(find.textContaining('all over the place'), findsOneWidget);
     await t.binding.handlePopRoute();
     await settle(t);
     expect(find.byType(WelcomePage), findsNothing);
@@ -139,29 +130,21 @@ void main() {
 
   testWidgets('Settings replays it for someone with links', (t) async {
     final c = await open(t, urls: ['https://a.com/one']);
-    final nav = Navigator.of(t.element(find.byType(Navigator).first));
-    nav.pushNamed('/settings');
+    Navigator.of(
+      t.element(find.byType(Navigator).first),
+    ).pushNamed('/settings');
     await settle(t);
     await tapKey(t, 'set-guide');
     await settle(t);
-    expect(find.text('Keep it once. Find it again.'), findsOneWidget);
-    await tapKey(t, 'welcome-next-0');
-    await tapKey(t, 'welcome-next-1');
-    await t.enterText(
-      find.byKey(const Key('welcome-url')),
-      'https://b.org/two',
-    );
-    await t.pump();
-    await tapKey(t, 'welcome-url-save');
+    expect(find.textContaining('all over the place'), findsOneWidget);
+    await tapKey(t, 'welcome-skip');
     await settle(t);
-    // Only the new save counts, not the links already there.
-    expect(find.text('Page two'), findsNothing);
-    expect(find.text("Saved. It's in Not sorted."), findsOneWidget);
-    expect(c.library!.bookmarks, hasLength(2));
+    expect(c.library!.bookmarks, hasLength(1), reason: 'nothing changed');
   });
 
   for (final (size, scale) in [
     (const Size(320, 640), 2.0),
+    (const Size(390, 844), 1.0),
     (const Size(1280, 800), 1.0),
   ]) {
     testWidgets('every step fits at ${size.width.toInt()} px, text ×$scale', (
@@ -172,16 +155,12 @@ void main() {
         expect(t.takeException(), isNull);
         await tapKey(t, 'welcome-next-$i');
       }
+      await practise(t);
       expect(t.takeException(), isNull);
-      await t.enterText(
-        find.byKey(const Key('welcome-url')),
-        'https://example.com/a-rather-long-address/for-a-small-screen',
-      );
-      await t.pump();
-      await tapKey(t, 'welcome-url-save');
-      await settle(t);
+      await tapKey(t, 'welcome-next-2');
       expect(t.takeException(), isNull);
-      expect(find.byKey(const Key('welcome-next-3')), findsOneWidget);
+      await tapKey(t, 'welcome-next-3');
+      expect(t.takeException(), isNull);
     });
   }
 }

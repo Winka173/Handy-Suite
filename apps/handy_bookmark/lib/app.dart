@@ -1,5 +1,7 @@
 import 'design/identity.dart';
 import 'dart:async';
+import 'package:flutter/foundation.dart';
+import 'package:flutter/services.dart';
 import 'package:handy_files/handy_files.dart';
 import 'package:handy_storage/handy_storage.dart';
 import 'package:handy_ui/kit.dart';
@@ -20,6 +22,20 @@ import 'settings/save_settings.dart';
 import 'shell/save_shell.dart';
 import 'view/library_view.dart';
 import 'welcome/welcome_page.dart';
+
+bool _photoCredits = false;
+
+/// The guide's photographs are CC BY / CC BY-SA: their credits show in
+/// Settings > Licenses beside the fonts'.
+void _registerPhotoCredits() {
+  if (_photoCredits) return;
+  _photoCredits = true;
+  LicenseRegistry.addLicense(() async* {
+    yield LicenseEntryWithLineBreaks([
+      'Handy Bookmark guide photographs',
+    ], await rootBundle.loadString('assets/welcome/CREDITS.txt'));
+  });
+}
 
 /// Save's hue in the suite palette (docs/UX_REDESIGN.md).
 const saveAccent = Color(0xFF0E7490);
@@ -82,6 +98,7 @@ class _SaveAppState extends State<SaveApp> with WidgetsBindingObserver {
   @override
   void initState() {
     super.initState();
+    _registerPhotoCredits();
     WidgetsBinding.instance.addObserver(this);
     c.addListener(_changed);
     _loadPreferences();

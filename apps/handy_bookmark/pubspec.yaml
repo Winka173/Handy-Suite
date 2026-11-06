@@ -45,3 +45,4 @@ flutter:
   assets:
     - fonts/Newsreader-OFL.txt
     - assets/icon.png
+    - assets/welcome/

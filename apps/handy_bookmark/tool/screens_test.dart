@@ -6,6 +6,7 @@ import 'dart:ui' as ui;
 import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
+import '../test/welcome_test.dart' show StillMotion;
 import 'package:handy_files/handy_files.dart';
 import 'package:handy_bookmark/app.dart';
 import 'package:handy_bookmark/links/batch_size.dart';
@@ -463,15 +464,17 @@ void main() {
     await boot(t, const Size(390, 844), empty: true);
     await shot(t, 'phone-10-empty');
   });
-  // The first-run guide, step by step, on a phone, dark, and wide.
-  for (final (label, size, theme) in [
-    ('phone', const Size(390, 844), 'light'),
-    ('phone-dark', const Size(390, 844), 'dark'),
-    ('narrow', const Size(320, 640), 'light'),
-    ('desktop', const Size(1280, 800), 'light'),
+  // The first-run guide, step by step, on a phone, narrow and wide. Motion
+  // is reduced so each shot is a step's resting frame.
+  for (final (label, size) in [
+    ('phone', const Size(390, 844)),
+    ('narrow', const Size(320, 640)),
+    ('desktop', const Size(1280, 800)),
   ]) {
     testWidgets('$label welcome', (t) async {
-      final c = await boot(t, size, empty: true, theme: theme);
+      t.platformDispatcher.accessibilityFeaturesTestValue = StillMotion();
+      addTearDown(t.platformDispatcher.clearAccessibilityFeaturesTestValue);
+      await boot(t, size, empty: true);
       Navigator.of(
         t.element(find.byType(Scaffold).first),
       ).pushNamed('/welcome');
@@ -483,19 +486,18 @@ void main() {
       await tapKey(t, 'welcome-next-0');
       await shot(t, '$label-21-welcome-2');
       await tapKey(t, 'welcome-next-1');
-      await shot(t, '$label-21-welcome-3');
-      // A link arrives from another app's Share while the step waits.
-      await c.quickSave(
-        'https://www.tiktok.com/@bepnha/video/7301',
-        title: 'Bún chả Hà Nội trong 15 phút',
-      );
-      await t.runAsync(
-        () => Future<void>.delayed(const Duration(milliseconds: 50)),
-      );
-      await t.pumpAndSettle();
-      await shot(t, '$label-21-welcome-4');
-      await tapKey(t, 'welcome-start-0');
-      await shot(t, '$label-21-welcome-5-filed');
+      await shot(t, '$label-21-welcome-3-video');
+      await tapKey(t, 'practice-share');
+      await shot(t, '$label-21-welcome-4-share');
+      await tapKey(t, 'practice-target');
+      await tapKey(t, 'practice-col-food');
+      await shot(t, '$label-21-welcome-5-collection');
+      await tapKey(t, 'practice-save');
+      await shot(t, '$label-21-welcome-6-saved');
+      await tapKey(t, 'welcome-next-2');
+      await shot(t, '$label-21-welcome-7-find');
+      await tapKey(t, 'welcome-next-3');
+      await shot(t, '$label-21-welcome-8-nudge');
     });
   }
   testWidgets('films', (t) async {

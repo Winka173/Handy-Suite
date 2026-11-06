@@ -1,6 +1,6 @@
 import 'package:handy_ui/kit.dart';
 import '../scope.dart';
-import '../welcome/scenes.dart';
+import '../welcome/motion.dart';
 import 'link_capture.dart';
 
 /// The one Save button's sheet: type or paste a link, paste from the

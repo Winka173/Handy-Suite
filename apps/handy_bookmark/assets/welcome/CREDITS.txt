@@ -1,0 +1,16 @@
+Photographs used in Handy Bookmark's first-run guide (resized to 720 px; nothing else changed).
+
+bun-cha.jpg: "Bun-cha-hanoi" by Valentin Orange, CC BY-SA 4.0, via Wikimedia Commons.
+  https://commons.wikimedia.org/w/index.php?curid=89254951  License: https://creativecommons.org/licenses/by-sa/4.0/
+
+pho.jpg: "Nam pho bowl" by Wesoree, CC BY-SA 4.0, via Wikimedia Commons.
+  https://commons.wikimedia.org/w/index.php?curid=140534833  License: https://creativecommons.org/licenses/by-sa/4.0/
+
+guitars.jpg: "Acoustic guitars in store 20180625" by Santeri Viinamäki, CC BY-SA 4.0, via Wikimedia Commons.
+  https://commons.wikimedia.org/w/index.php?curid=76919878  License: https://creativecommons.org/licenses/by-sa/4.0/
+
+ga-ha-noi.jpg: "Hanoi train station from trackside" by shankar s., CC BY 2.0, via Wikimedia Commons.
+  https://commons.wikimedia.org/w/index.php?curid=73416778  License: https://creativecommons.org/licenses/by/2.0/
+
+hoi-an.jpg: "Hoi An lantern lampion (38834258624)" by dronepicr, CC BY 2.0, via Wikimedia Commons.
+  https://commons.wikimedia.org/w/index.php?curid=65466255  License: https://creativecommons.org/licenses/by/2.0/
