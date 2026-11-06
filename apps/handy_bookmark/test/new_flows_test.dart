@@ -142,6 +142,7 @@ void main() {
       uri: Uri.parse('https://a.com/one'),
     );
     await openDetail(t, id);
+    await tapKey(t, 'detail-tools');
     expect(find.byKey(const Key('detail-read-offline')), findsNothing);
     await t.ensureVisible(find.byKey(const Key('detail-copy-save')));
     await t.pumpAndSettle();
@@ -182,6 +183,7 @@ void main() {
       const LinkProbe(status: 200, permanentUrl: 'https://b.org/2026/two'),
     ];
     await openDetail(t, id);
+    await tapKey(t, 'detail-tools');
     await tapKey(t, 'detail-check');
     await settle(t, 200);
     expect(
@@ -208,6 +210,7 @@ void main() {
   ) async {
     final (c, net) = await boot(t, web: true);
     await openDetail(t, idOf(c, 'https://a.com/one'));
+    await tapKey(t, 'detail-tools');
     expect(find.text('Not available in the browser.'), findsWidgets);
     await tapKey(t, 'detail-copy-save');
     expect(find.text('Not available in the browser'), findsOneWidget);

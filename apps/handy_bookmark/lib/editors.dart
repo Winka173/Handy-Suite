@@ -307,7 +307,7 @@ class _BookmarkEditorState extends State<BookmarkEditor> {
         items: [
           DropdownMenuItem(
             value: '',
-            child: Text(tr(context, 'Inbox', 'Hộp thư đến')),
+            child: Text(tr(context, 'Not sorted', 'Chưa xếp')),
           ),
           for (final c in widget.library.collections)
             DropdownMenuItem(
@@ -317,25 +317,30 @@ class _BookmarkEditorState extends State<BookmarkEditor> {
         ],
         onChanged: (value) => setState(() => _collection = value ?? ''),
       ),
-      SwitchListTile.adaptive(
-        title: Text(tr(context, 'Favorite', 'Yêu thích')),
-        value: _favorite,
-        onChanged: (v) => setState(() => _favorite = v),
-      ),
-      SwitchListTile.adaptive(
-        title: Text(tr(context, 'Pinned', 'Đã ghim')),
-        value: _pinned,
-        onChanged: (v) => setState(() => _pinned = v),
-      ),
-      SwitchListTile.adaptive(
-        title: Text(tr(context, 'Archived', 'Đã lưu trữ')),
-        value: _archived,
-        onChanged: (v) => setState(() => _archived = v),
-      ),
-      SwitchListTile.adaptive(
-        title: Text(tr(context, 'Read', 'Đã đọc')),
-        value: _read,
-        onChanged: (v) => setState(() => _read = v),
+      // The item's states, together in one soft panel.
+      _Panel(
+        children: [
+          SwitchListTile.adaptive(
+            title: Text(tr(context, 'Favorite', 'Yêu thích')),
+            value: _favorite,
+            onChanged: (v) => setState(() => _favorite = v),
+          ),
+          SwitchListTile.adaptive(
+            title: Text(tr(context, 'Pinned', 'Đã ghim')),
+            value: _pinned,
+            onChanged: (v) => setState(() => _pinned = v),
+          ),
+          SwitchListTile.adaptive(
+            title: Text(tr(context, 'Archived', 'Đã lưu trữ')),
+            value: _archived,
+            onChanged: (v) => setState(() => _archived = v),
+          ),
+          SwitchListTile.adaptive(
+            title: Text(tr(context, 'Read', 'Đã đọc')),
+            value: _read,
+            onChanged: (v) => setState(() => _read = v),
+          ),
+        ],
       ),
     ],
   );
@@ -776,7 +781,7 @@ class _SmartCollectionEditorState extends State<SmartCollectionEditor> {
         items: [
           DropdownMenuItem(
             value: '',
-            child: Text(tr(context, 'Inbox', 'Hộp thư đến')),
+            child: Text(tr(context, 'Not sorted', 'Chưa xếp')),
           ),
           for (final c in widget.library.collections)
             DropdownMenuItem(
@@ -988,5 +993,18 @@ class _SmartCollectionEditorState extends State<SmartCollectionEditor> {
         ),
       ),
     ],
+  );
+}
+
+/// Switches grouped on one rounded surface, parted by tone from the page.
+class _Panel extends StatelessWidget {
+  final List<Widget> children;
+  const _Panel({required this.children});
+  @override
+  Widget build(BuildContext context) => Material(
+    color: Theme.of(context).colorScheme.surface,
+    borderRadius: BorderRadius.circular(16),
+    clipBehavior: Clip.antiAlias,
+    child: Column(mainAxisSize: MainAxisSize.min, children: children),
   );
 }

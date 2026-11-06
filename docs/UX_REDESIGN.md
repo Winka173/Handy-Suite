@@ -1600,7 +1600,7 @@ app đặt cạnh nhau đọc như một bộ giao diện mẫu. Nay mỗi app �
 | Media    | true-black-flat    | Bricolage                    | Mở tối trên đen tuyền, không viền; ảnh mang màu                        |
 | Keep     | framed-sheet       | Be Vietnam Pro               | Nền bìa các-tông, thùng trắng có nhãn                                  |
 | Recall   | accent-ladder      | Lexend                       | Màu app leo từ nền nhạt tới nút chính                                  |
-| Bookmark | achromatic-ledger  | Newsreader cho tiêu đề       | Nền giấy báo, không ô logo, chỉ mực                                    |
+| Bookmark | warm modern library | Geist; Newsreader cho tên thư viện và collection | Nền ngà ấm, mặt trắng tách bằng tông, góc 12–26, ảnh là chính (2026-11-06) |
 | Spend    | pastel-consumer    | Geist                        | Con số "còn được tiêu" trên ô xanh nhạt bo 24, không viền              |
 | Habit    | editorial-greeting | Nunito                       | Lời chào là tiêu đề; mảng một bậc tông, số ở độ đậm thường             |
 | Trip     | achromatic-ledger  | Archivo                      | Tiêu đề chữ hoa nhỏ kiểu bảng giờ tàu; màu chỉ ở việc đã xác nhận      |
@@ -2193,3 +2193,12 @@ Hợp đồng đầy đủ (bản tiếng Anh): `docs/bookmark-redesign/ONBOARDI
   `guideDone` nằm trong tuỳ chọn của thư viện. Route `/welcome`.
 - Bỏ: mascot, viền sticker, gạch highlight, carousel có chấm, paywall, xin quyền thông
   báo, bài tập giả bị xoá sau đó, bàn tay demo, giấu Bỏ qua, nút chờ animation.
+
+## Hợp đồng: Handy Bookmark · Warm Modern Library (2026-11-06)
+
+Hợp đồng đầy đủ (tiếng Anh): `docs/bookmark-redesign/VISUAL_DESIGN.md`. Tóm tắt: app sau phần
+hướng dẫn phải trông như chính phần hướng dẫn. Cùng màu teal `#0E7490`, nền ngà ấm `#F6F4EE`
+(tối: than ấm `#171D1C`, không đen tuyền), thẻ 16, bìa collection 20, sheet 26, ảnh là chính, mặt
+thay thế theo nguồn khi không có ảnh. Màn chính: tên thư viện (serif), tìm kiếm dạng viên thuốc,
+dải "Mới lưu" (mục chưa xếp đi trước, một nút "Xếp vào…"), bìa collection, nơi chốn, nút Lưu ở
+đáy. Theme riêng của app qua `HandyApp(themeOverride:)`, không đổi theme các app khác.

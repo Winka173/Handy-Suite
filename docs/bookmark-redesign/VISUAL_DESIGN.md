@@ -1,64 +1,109 @@
-# Handy Bookmark: visual design
+# Handy Bookmark: visual design (Warm Modern Library)
 
-Written 2026-11-06 with `design-taste-frontend` (app-screen run) and `frontend-ui-engineering`.
-The app keeps the brand fixed in `lib/design/identity.dart` (`bookmarkIdentity`): Newsreader
-titles over Geist text, paper ground `#FAF8F3`, ink rules under headings (`HandyHeading.rule`),
-open rows between hairlines, tight corners (2 px cards, 4 px controls), one hue `#0E7490`.
+Written 2026-11-06. This replaces the "clippings on a front page" direction: square 2 px cards, ink
+rules above every section, and a serif on every title. Next to the first-run guide that direction
+read as an older, different product. The owner asked for the app to match the guide: warm,
+image-first, softly rounded and uncluttered.
 
-## The face: clippings on a front page
+The guide (`lib/welcome/`, `ONBOARDING_FLOW.md`) is unchanged. The app now continues it: the same
+teal, the same warm paper ground, the same 16 px floating cards and the same photographs.
 
-Every saved thing can be drawn as a newspaper clipping: its title in the title face over an ink
-rule, its source in words below. The first-run guide is built from clippings
-(`ONBOARDING_FLOW.md`), and collection covers set titles the same way when an item has no
-picture, so a collection of plain links still has a cover that says what is in it. Sources are
-words, never logos; pictures are the person's own (image items, chosen pictures) or fetched page
-pictures when they turned page reading on.
+## Contract
 
-## Home (phone, under 700 px)
+- **Job:** keep things found anywhere (links, screenshots, photos) and get them back by sight.
+- **The question on home:** "What did I save, where is it, and how do I save more?"
+- **The finding:** how many saves still have no place ("4 not sorted yet"), next to the one
+  action that fixes it ("Put in…").
+- **Primary action:** Save, a single full-width button at the foot of the home.
+- **Signature element:** the "Recently saved" shelf, with the person's own pictures large. Saves
+  without a collection come first with one "Put in…" button.
+- **Patterns rejected:**
+  - ink rules above sections;
+  - chip clouds on every card;
+  - 1 px outlines around every row;
+  - serif in controls and lists;
+  - pure-black dark theme;
+  - flat geometric picture stand-ins;
+  - a different look after onboarding.
 
-Question: "What have I kept, and where does the new stuff go?"
+## Tokens (`apps/handy_bookmark/lib/design/theme.dart`)
 
-1. Top bar: the name and Settings.
-2. Search: "Find a link or picture". Under it, **All · Links · Pictures** with counts, shown
-   only once the library holds both kinds. Choosing Links or Pictures turns the home into
-   results, like typing does.
-3. Share problems and link-check notices, when there are any.
-4. **Not sorted** strip (the signature element): new saves as cards with the usual
-   collections one tap away.
-5. **Collections as covers**: a grid (2 columns on phones, up to 5 on wide panes; 180 px per
-   column) of every collection in tree order. A cover is a mosaic of the collection's newest
-   three items (pictures first; an item without a picture is its title set in Newsreader on a
-   raised paper tint), then its colour dot and name, then "Parent · 3 links · 2 pictures".
-   Tap opens it, long-press edits it, + makes a new one. Empty collections say so on the cover.
-6. Places: Not sorted, All, Favourites, Not read yet, Archive, Focus, Recently Deleted, saved
-   filters, tags.
-7. One **Save** button across the bottom bar. Its sheet holds a link field, Paste a link,
-   Several links, A picture, and on phones "Save from other apps with Share" (opens the guide).
+| Role                | Light     | Dark      | Use                                       |
+| ------------------- | --------- | --------- | ----------------------------------------- |
+| canvas              | `#F6F4EE` | `#171D1C` | page ground (warm ivory / warm charcoal)  |
+| surface             | `#FFFFFF` | `#222A29` | cards, sheets, dialogs                    |
+| raised              | `#EFEDE6` | `#2B3432` | chips, quiet fills                        |
+| primary             | `#0E7490` | `#7CC8D8` | the one action, links, selection          |
+| pressed / tint      | `#0B5A70` / `#D9EEF2` | `#9AD6E3` / `#21424A` | pressed state; selected fill, "Put in…" |
+| ink / muted         | `#1C2627` / `#5B6767` | `#EEF2EF` / `#B0BEBA` | text (muted holds 4.5:1 on canvas and surface) |
+| line / control      | `#E3E2DA` / `#C9CCC4` | `#34403E` / `#4A5856` | rare dividers; field and switch edges |
+| sage / warm         | `#557A66` / `#C97A5B` | `#9CC2AC` / `#E2A188` | categorisation; the favourite star |
+| danger / warning    | `#B03A36` / `#8A5A14` | `#F0A29C` / `#E8C07A` | with their pale tints, for notices only |
 
-## Wide (700 px and up)
+The app keeps its own teal `#0E7490` (from `docs/UX_REDESIGN.md`, and the guide's). The supplement
+proposed `#176F6B` as a starting point. It was not taken: it would have put the app and the guide
+in two different teals.
 
-The sidebar of places, the list, and on 1100 px+ the detail column stay as before; the three
-add icons in the top bar are now the same single **Save** button and sheet. Keyboard: Ctrl/⌘ V
-pastes, Ctrl/⌘ N adds, Ctrl/⌘ F searches, Esc clears the selection.
+**Shapes** (`BookmarkRadii`). Larger surfaces get rounder corners:
 
-## Rejected
+| Thing                      | Radius |
+| -------------------------- | ------ |
+| sheet                      | 26     |
+| dialog, Focus card         | 22     |
+| collection cover           | 20     |
+| item card                  | 16     |
+| field, button              | 14     |
+| list thumbnail             | 12     |
+| chip and search            | pill   |
+| icon actions               | round  |
 
-Coloured icon tiles per collection, a hero banner or greeting, a feature carousel, gradients,
-shadows on resting cards, letter-in-a-box placeholders on covers, a floating action button
-competing with the bottom bar, violet or indigo.
+**Type.**
+- Geist for all the work: section titles 19/600, item titles 14–15.5/600, meta 12.5 muted.
+- Newsreader only for editorial moments: the library's name (28), a collection's name (26),
+  empty-state headlines, and the guide.
+
+**Surfaces** part by tone: white on ivory, or a lighter charcoal on charcoal. Only things that
+float get a shadow: sheets, menus, the empty-state photo stack. Dividers appear only inside a
+grouped list.
+
+**Pictures.** A save shows its stored preview. Without one it shows a `SourceFace`: a pale field of
+its source's identity colour, the content type's icon (play for video, bag for a shop item, pin for
+a place), and the source's name. Never a fake photograph. Only previews are decoded in lists.
+
+## Screens
+
+- **Home (phone):**
+  - library name (serif), dateline, pill search;
+  - "Recently saved" shelf (168 px picture cards; unsorted first, each with "Put in…" opening a
+    sheet of the usual collections, then "Another collection…"; sorted ones show their collection);
+  - collections as 20 px covers made of their pictures, an empty collection as its colour and a
+    folder;
+  - places; Save at the foot.
+  - Empty library: the guide's three photos stacked, "Save something worth keeping", Save, and
+    "See how saving works".
+- **Results / collection:**
+  - a collection opens with its newest picture beside its name (serif) and the count;
+  - tools (filter, view, more) share the row on wide screens and sit under the name on phones;
+  - a search says "n found", not the place's total.
+  - Gallery: two cards a row at 390 px, one at 320 px or large text, 1.28 photos, two-line title,
+    one source line, a "…" button for details.
+  - List: 60 px thumbnails, titles bolder when unread, rows grouped on one rounded surface.
+- **Wide (700 px and up):**
+  - serif library name in the bar; places on the canvas;
+  - no vertical rules; the open item sits on its own rounded raised sheet.
 
 ## States
 
-- No collections: one sentence with examples under the Collections heading.
-- Collection with nothing in it: the cover says "Empty".
-- No pictures in the library: the kind chips are hidden.
-- Kind filter with no match: the results view's empty state with Clear filters.
-- Large text: covers keep their 4:3 picture and cut the name to one line; the grid stays
-  two columns down to 320 px.
+Empty library, empty collection, all sorted ("All sorted"), no-match search ("0 found"), no picture
+(source face), unreadable picture (source face), loading (progress bar), list error (notice with
+Try again), large text (cards go to one column; the shelf grows), 320 px (tools wrap under the
+title).
 
 ## Checked
 
-Widget tests: `test/home_test.dart` (kind chips narrow and restore, hidden without pictures,
-covers open their collection, the Save sheet holds every way to add) and the existing suite.
-Screens rendered with `tool/screens_test.dart` (phone, tablet, desktop) and reviewed; not run
-on a device.
+- Rendered and reviewed, light and dark:
+  - home and collection at 320, 390, 900 and 1440 px;
+  - home and collection at 200 % text;
+  - search with matches and with none.
+- The review shots use the guide's licensed photos as fixture pictures and leave the other saves
+  without pictures, so both faces are seen. These are host renders, not device evidence.

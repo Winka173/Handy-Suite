@@ -1,4 +1,5 @@
 import 'design/identity.dart';
+import 'design/theme.dart';
 import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
@@ -41,6 +42,8 @@ void _registerPhotoCredits() {
 
 /// Save's hue in the suite palette (docs/UX_REDESIGN.md).
 const saveAccent = Color(0xFF0E7490);
+
+final _noAds = ValueNotifier<bool>(false);
 
 class SaveApp extends StatefulWidget {
   final SaveController? controller;
@@ -192,9 +195,11 @@ class _SaveAppState extends State<SaveApp> with WidgetsBindingObserver {
     _sync?.cancel();
     _sync = Timer(const Duration(milliseconds: 300), () async {
       final p = c.preferences;
-      if (c.library == null ||
-          (p['notifications'] != true && p['revisit'] != true))
-        return;
+      if (c.library == null) return;
+      final on = p['notifications'] == true || p['revisit'] == true;
+      // With every reminder off, what was scheduled is cancelled once
+      // (sync cancels all of ours when nothing is wanted), then left be.
+      if (!on && _remindersCleared) return;
       try {
         await reminders.sync(
           c.library!.bookmarks,
@@ -209,11 +214,16 @@ class _SaveAppState extends State<SaveApp> with WidgetsBindingObserver {
                 )
               : null,
         );
+        _remindersCleared = !on;
       } catch (_) {
-        c.notice = 'notifications_unavailable';
+        // Turned off: tried again on the next change, without a message.
+        if (on) c.notice = 'notifications_unavailable';
       }
     });
   }
+
+  /// Every reminder is off and the scheduled ones were cancelled.
+  bool _remindersCleared = false;
 
   Future<void> _loadPreferences() async {
     try {
@@ -341,6 +351,9 @@ class _SaveAppState extends State<SaveApp> with WidgetsBindingObserver {
     final p = prefs.value;
     return HandyApp(
       brand: bookmarkIdentity,
+      themeOverride: bookmarkTheme,
+      // Handy Bookmark carries no ads, whatever the shared config says.
+      adsVisible: _noAds,
       app: 'bookmark',
       title: 'Handy Bookmark',
       accent: saveAccent,

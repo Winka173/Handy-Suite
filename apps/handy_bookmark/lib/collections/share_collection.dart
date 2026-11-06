@@ -3,6 +3,7 @@ import 'package:flutter/foundation.dart';
 import 'package:handy_bookmark_engine/handy_bookmark_engine.dart';
 import 'package:handy_ui/kit.dart';
 import 'package:image/image.dart' as img;
+import '../design/theme.dart';
 import '../scope.dart';
 
 /// At most this many pictures go into one shared page.
@@ -44,52 +45,125 @@ extension ShareCollection on SaveScope {
     final col = library.collections.where((c) => c.id == id).firstOrNull;
     if (col == null) return;
     var notes = false;
-    final ok = await showDialog<bool>(
+    final ok = await showModalBottomSheet<bool>(
       context: context,
+      isScrollControlled: true,
+      showDragHandle: true,
+      useSafeArea: true,
+      constraints: const BoxConstraints(maxWidth: 560),
       builder: (context) => StatefulBuilder(
-        builder: (context, set) => AlertDialog(
-          title: Text(
-            tr(
-              context,
-              'Share ${col.name} as a page',
-              'Chia sẻ ${col.name} thành một trang',
+        builder: (context, set) {
+          final theme = Theme.of(context);
+          final p = BookmarkPalette.of(context);
+          Widget point(IconData icon, String text) => Padding(
+            padding: const EdgeInsets.only(bottom: 10),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Icon(icon, size: 20, color: p.sage),
+                const SizedBox(width: 12),
+                Expanded(child: Text(text, style: theme.textTheme.bodyMedium)),
+              ],
             ),
-          ),
-          scrollable: true,
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                tr(
-                  context,
-                  'One file anyone can open: titles, links, sources and pictures of this collection and the ones inside it. Pictures are saved again small, without camera, place or time data. Tags, reminders and other collections stay here.',
-                  'Một file ai cũng mở được: tiêu đề, link, nguồn và ảnh của bộ sưu tập này cùng các bộ sưu tập bên trong. Ảnh được lưu lại cỡ nhỏ, không kèm dữ liệu máy ảnh, vị trí hay thời gian. Thẻ, hẹn nhắc và bộ sưu tập khác ở lại máy.',
+          );
+          return SingleChildScrollView(
+            padding: const EdgeInsets.fromLTRB(20, 0, 20, 16),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Semantics(
+                  header: true,
+                  child: Text(
+                    tr(context, 'Share “${col.name}”', 'Chia sẻ “${col.name}”'),
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: theme.textTheme.titleLarge,
+                  ),
                 ),
-              ),
-              SwitchListTile.adaptive(
-                key: const Key('share-notes'),
-                contentPadding: EdgeInsets.zero,
-                title: Text(
-                  tr(context, 'Include my notes', 'Kèm ghi chú của tôi'),
+                const SizedBox(height: 4),
+                Text(
+                  tr(
+                    context,
+                    'As one page anyone can open in a browser.',
+                    'Thành một trang ai cũng mở được bằng trình duyệt.',
+                  ),
+                  style: theme.textTheme.bodyMedium?.copyWith(color: p.muted),
                 ),
-                value: notes,
-                onChanged: (v) => set(() => notes = v),
-              ),
-            ],
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context, false),
-              child: Text(tr(context, 'Cancel', 'Hủy')),
+                const SizedBox(height: 20),
+                point(
+                  Icons.check,
+                  tr(
+                    context,
+                    'Titles, links and where they are from, with the collections inside it',
+                    'Tiêu đề, link và nguồn, cùng các bộ sưu tập bên trong',
+                  ),
+                ),
+                point(
+                  Icons.check,
+                  tr(
+                    context,
+                    'Pictures, made small, without camera, place or time data',
+                    'Ảnh, thu nhỏ, không kèm dữ liệu máy ảnh, vị trí hay thời gian',
+                  ),
+                ),
+                point(
+                  Icons.remove,
+                  tr(
+                    context,
+                    'Tags, reminders and your other collections stay here',
+                    'Thẻ, hẹn nhắc và các bộ sưu tập khác ở lại máy',
+                  ),
+                ),
+                const SizedBox(height: 6),
+                Material(
+                  color: theme.brightness == Brightness.dark
+                      ? p.raised
+                      : p.canvas,
+                  borderRadius: BorderRadius.circular(BookmarkRadii.item),
+                  clipBehavior: Clip.antiAlias,
+                  child: SwitchListTile.adaptive(
+                    key: const Key('share-notes'),
+                    title: Text(
+                      tr(context, 'Include my notes', 'Kèm ghi chú của tôi'),
+                    ),
+                    subtitle: Text(
+                      notes
+                          ? tr(
+                              context,
+                              'Your notes go into the page',
+                              'Ghi chú sẽ nằm trong trang',
+                            )
+                          : tr(
+                              context,
+                              'Your notes stay private',
+                              'Ghi chú vẫn là của riêng bạn',
+                            ),
+                    ),
+                    value: notes,
+                    onChanged: (v) => set(() => notes = v),
+                  ),
+                ),
+                const SizedBox(height: 12),
+                HandyNotice(
+                  tr(
+                    context,
+                    'Whoever gets the file can see every link in it, and pass it on.',
+                    'Ai nhận được file đều thấy mọi link bên trong, và có thể gửi tiếp.',
+                  ),
+                  tone: HandyTone.warning,
+                ),
+                const SizedBox(height: 16),
+                FilledButton.icon(
+                  key: const Key('share-page'),
+                  onPressed: () => Navigator.pop(context, true),
+                  icon: const Icon(Icons.ios_share_rounded, size: 20),
+                  label: Text(tr(context, 'Share page', 'Chia sẻ trang')),
+                ),
+              ],
             ),
-            FilledButton(
-              key: const Key('share-page'),
-              onPressed: () => Navigator.pop(context, true),
-              child: Text(tr(context, 'Share', 'Chia sẻ')),
-            ),
-          ],
-        ),
+          );
+        },
       ),
     );
     if (ok != true || !context.mounted) return;

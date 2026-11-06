@@ -50,6 +50,10 @@ class HandyApp extends StatelessWidget {
 
   /// Watches the app's routes (for example to hide ads above the home).
   final List<NavigatorObserver> navigatorObservers;
+
+  /// The app's own finishing touches on the kit theme (both brightnesses).
+  /// Optional: apps without one get the kit theme unchanged.
+  final ThemeData Function(ThemeData theme)? themeOverride;
   const HandyApp({
     super.key,
     required this.app,
@@ -63,7 +67,11 @@ class HandyApp extends StatelessWidget {
     this.onGenerateRoute,
     this.navigatorKey,
     this.navigatorObservers = const [],
+    this.themeOverride,
   });
+  ThemeData _finish(ThemeData theme) =>
+      themeOverride == null ? theme : themeOverride!(theme);
+
   @override
   Widget build(BuildContext context) {
     final b = brand ?? HandyBrand.current;
@@ -76,8 +84,8 @@ class HandyApp extends StatelessWidget {
         navigatorObservers: navigatorObservers,
         title: title,
         debugShowCheckedModeBanner: false,
-        theme: buildHandyTheme(accent, Brightness.light, b),
-        darkTheme: buildHandyTheme(accent, Brightness.dark, b),
+        theme: _finish(buildHandyTheme(accent, Brightness.light, b)),
+        darkTheme: _finish(buildHandyTheme(accent, Brightness.dark, b)),
         themeMode: switch (theme) {
           'dark' => ThemeMode.dark,
           'light' => ThemeMode.light,

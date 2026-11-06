@@ -66,7 +66,12 @@ Future<void> showFilterSheet(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             const SizedBox(height: HandySpace.l),
-            Text(title, style: Theme.of(context).textTheme.titleSmall),
+            Text(
+              title,
+              style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+              ),
+            ),
             const SizedBox(height: HandySpace.s),
             Wrap(
               spacing: HandySpace.s,
@@ -82,19 +87,14 @@ Future<void> showFilterSheet(
             ),
             child: ListView(
               shrinkWrap: true,
-              padding: const EdgeInsets.fromLTRB(
-                HandySpace.l,
-                0,
-                HandySpace.l,
-                HandySpace.xl,
-              ),
+              padding: const EdgeInsets.fromLTRB(20, 0, 20, HandySpace.l),
               children: [
                 Row(
                   children: [
                     Expanded(
                       child: Text(
                         tr(context, 'Filter and sort', 'Lọc và sắp xếp'),
-                        style: Theme.of(context).textTheme.titleMedium,
+                        style: Theme.of(context).textTheme.titleLarge,
                       ),
                     ),
                     TextButton(
@@ -182,6 +182,13 @@ Future<void> showFilterSheet(
                         ),
                       ),
                   ]),
+                const SizedBox(height: HandySpace.xl),
+                // Choices apply at once; this only closes the sheet.
+                FilledButton(
+                  key: const Key('filter-done'),
+                  onPressed: () => Navigator.pop(context),
+                  child: Text(tr(context, 'Done', 'Xong')),
+                ),
               ],
             ),
           ),

@@ -108,7 +108,8 @@ class LibraryView extends ChangeNotifier {
   }
 
   /// What a collection remembers about how it is shown: 'cards' (bool) and
-  /// 'sort'. Kept in the library's preferences, so backups carry it.
+  /// 'sort'. Kept in the library's preferences; backups carry it (as
+  /// `collectionViews`, since 2026-11-06).
   Map<String, dynamic> collectionView(String collectionId) => {
     ...?((c.preferences['collectionViews'] as Map?)?[collectionId] as Map?)
         ?.cast<String, dynamic>(),

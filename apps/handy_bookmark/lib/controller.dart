@@ -491,16 +491,51 @@ class SaveController extends ChangeNotifier {
   }
 
   /// Every valid stored copy, for a full backup.
-  Future<Map<String, ReadingCopy>> allReadingCopies() async {
+  Future<Map<String, ReadingCopy>> allReadingCopies() async =>
+      (await readingCopiesForBackup()).copies;
+
+  /// Every valid stored copy, and how many could not be read. A damaged
+  /// copy is left out of the backup rather than failing it, but counted,
+  /// so the backup never claims to hold it. When the copies cannot be read
+  /// at all, every copy the index knows of counts as unreadable.
+  Future<({Map<String, ReadingCopy> copies, int unreadable})>
+  readingCopiesForBackup() async {
+    final Map<String, Map<String, dynamic>> raw;
+    try {
+      raw = await store!.readingCopies();
+    } catch (_) {
+      return (copies: <String, ReadingCopy>{}, unreadable: readingIds.length);
+    }
     final out = <String, ReadingCopy>{};
-    for (final e in (await store!.readingCopies()).entries) {
+    var unreadable = 0;
+    for (final e in raw.entries) {
       try {
         out[e.key] = ReadingCopy.fromJson(e.value);
       } on FormatException {
-        // A damaged copy is left out of the backup rather than failing it.
+        unreadable++;
+      } on TypeError {
+        unreadable++;
       }
     }
-    return out;
+    return (copies: out, unreadable: unreadable);
+  }
+
+  /// What the last automatic backup held and left out; null before the
+  /// first one. Kept in this device's settings, never in a backup.
+  BackupReport? get lastBackup =>
+      BackupReport.fromJson(preferences[lastBackupKey]);
+  static const lastBackupKey = 'lastBackup';
+
+  /// Keeps [report] as [lastBackup]. A failure here never fails the backup.
+  Future<void> recordBackup(BackupReport report) async {
+    try {
+      await update(
+        (l) => l,
+        prefs: {...preferences, lastBackupKey: report.toJson()},
+      );
+    } catch (_) {
+      /* The backup itself was built; only its report is not kept. */
+    }
   }
 
   /// Re-reads visible copies after import, reset, deletion or Undo.

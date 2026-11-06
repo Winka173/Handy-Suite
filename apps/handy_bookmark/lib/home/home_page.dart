@@ -11,6 +11,8 @@ import '../links/task_strip.dart';
 import 'collection_covers.dart';
 import 'dateline.dart';
 import 'save_sheet.dart';
+import '../design/theme.dart';
+import 'empty_library.dart';
 
 /// The phone's home: find something, file what is new, browse the library
 /// by its covers, or go to a place. Typing (or choosing Links / Pictures)
@@ -45,9 +47,27 @@ class SaveHomePage extends StatelessWidget {
       builder: (context, _) {
         final searching = v.text.trim().isNotEmpty || v.filters.kind != null;
         return Scaffold(
-          appBar: HandyTopBar(
-            mark: Icons.bookmark_outline,
-            name: libraryName(scope.c),
+          appBar: AppBar(
+            automaticallyImplyLeading: false,
+            toolbarHeight: 64,
+            titleSpacing: HandySpace.l,
+            title: Semantics(
+              header: true,
+              child: Text(
+                libraryName(scope.c),
+                overflow: TextOverflow.ellipsis,
+                style: bookmarkSerif(context, 28),
+              ),
+            ),
+            actions: [
+              IconButton(
+                key: const Key('open-settings'),
+                tooltip: tr(context, 'Settings', 'Cài đặt'),
+                icon: const Icon(Icons.settings_outlined),
+                onPressed: () => Navigator.pushNamed(context, '/settings'),
+              ),
+              const SizedBox(width: HandySpace.s),
+            ],
           ),
           bottomNavigationBar: v.selecting
               ? BatchBar(scope: scope, onExport: onExport)
@@ -73,13 +93,16 @@ class SaveHomePage extends StatelessWidget {
                   key: const Key('save-home'),
                   padding: const EdgeInsets.fromLTRB(
                     HandySpace.l,
-                    HandySpace.l,
+                    0,
                     HandySpace.l,
                     HandySpace.xxl,
                   ),
                   children: [
                     HomeDateline(controller: scope.c),
                     SearchBox(view: v, focus: searchFocus),
+                    if (scope.library.bookmarks.isEmpty &&
+                        scope.library.trash.isEmpty)
+                      EmptyLibrary(onAdd: onAdd),
                     ShareIssues(controller: scope.c),
                     TaskStrip(
                       tasks: scope.tasks,
@@ -95,13 +118,12 @@ class SaveHomePage extends StatelessWidget {
                           Navigator.pushNamed(context, '/bookmark/${b.id}'),
                       onAll: () => openPlace(context, Place.inbox),
                     ),
-                    const SizedBox(height: HandySpace.xl),
                     CollectionCovers(
                       scope: scope,
                       onOpen: (col) =>
                           openPlace(context, Place.collection, col.id),
                     ),
-                    const SizedBox(height: HandySpace.xl),
+                    const SizedBox(height: HandySpace.l),
                     PlacesList(
                       scope: scope,
                       marking: false,

@@ -4,7 +4,9 @@ import 'package:handy_ui/kit.dart';
 import '../collections/collection_actions.dart';
 import '../controller.dart';
 import '../scope.dart';
+import '../design/theme.dart';
 import '../ui/collection_picker.dart';
+import '../ui/visual.dart';
 
 /// The library as a shelf: every collection with a cover made from what is
 /// in it (its newest pictures, or its newest titles set like a front page
@@ -33,9 +35,12 @@ class CollectionCovers extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        HandyLabel(
+        SectionHead(
           tr(context, 'Collections', 'Bộ sưu tập'),
-          trailing: IconButton(
+          action: IconButton.filledTonal(
+            style: IconButton.styleFrom(
+              backgroundColor: BookmarkPalette.of(context).surface,
+            ),
             key: const Key('collection-new'),
             tooltip: tr(context, 'New collection', 'Bộ sưu tập mới'),
             icon: const Icon(Icons.add),
@@ -56,7 +61,10 @@ class CollectionCovers extends StatelessWidget {
         else
           LayoutBuilder(
             builder: (context, box) {
-              final columns = (box.maxWidth / 180).floor().clamp(2, 5);
+              final columns = (box.maxWidth / 170).floor().clamp(
+                box.maxWidth < 300 ? 1 : 2,
+                5,
+              );
               const gap = HandySpace.m;
               final width = (box.maxWidth - gap * (columns - 1)) / columns;
               return Wrap(
@@ -126,44 +134,33 @@ class _Cover extends StatelessWidget {
         key: Key('collection-${collection.id}'),
         onTap: onOpen,
         onLongPress: () => scope.editCollection(context, collection),
-        borderRadius: BorderRadius.circular(HandyRadius.card),
+        borderRadius: BorderRadius.circular(BookmarkRadii.collection),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             AspectRatio(
               aspectRatio: 4 / 3,
-              child: DecoratedBox(
-                decoration: BoxDecoration(
-                  color: theme.colorScheme.surface,
-                  border: Border.all(color: c.border),
-                  borderRadius: BorderRadius.circular(HandyRadius.card),
-                ),
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(HandyRadius.card),
-                  child: shown.isEmpty
-                      ? Center(
-                          child: Text(
-                            tr(context, 'Empty', 'Chưa có gì'),
-                            style: theme.textTheme.bodySmall?.copyWith(
-                              color: c.muted,
-                            ),
-                          ),
-                        )
-                      : _mosaic(shown),
-                ),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(BookmarkRadii.collection),
+                child: shown.isEmpty
+                    ? _EmptyCover(name: collection.name, hue: hue)
+                    : _mosaic(shown),
               ),
             ),
-            const SizedBox(height: HandySpace.s),
+            const SizedBox(height: 10),
             Row(
               children: [
-                HandyDot(hue, size: 8),
-                const SizedBox(width: HandySpace.xs),
+                HandyDot(hue, size: 9),
+                const SizedBox(width: 6),
                 Expanded(
                   child: Text(
                     collection.name,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    style: theme.textTheme.titleSmall,
+                    style: theme.textTheme.titleSmall?.copyWith(
+                      fontSize: 15,
+                      fontWeight: FontWeight.w600,
+                    ),
                   ),
                 ),
               ],
@@ -188,7 +185,7 @@ class _Cover extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Expanded(child: cell(shown[0])),
-          const SizedBox(width: 2),
+          const SizedBox(width: 3),
           Expanded(child: cell(shown[1])),
         ],
       ),
@@ -196,14 +193,14 @@ class _Cover extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Expanded(flex: 3, child: cell(shown[0])),
-          const SizedBox(width: 2),
+          const SizedBox(width: 3),
           Expanded(
             flex: 2,
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 Expanded(child: cell(shown[1])),
-                const SizedBox(height: 2),
+                const SizedBox(height: 3),
                 Expanded(child: cell(shown[2])),
               ],
             ),
@@ -252,6 +249,43 @@ class _CoverCell extends StatelessWidget {
               excludeFromSemantics: true,
               errorBuilder: (_, _, _) => typeset,
             ),
+    );
+  }
+}
+
+/// A collection with nothing in it yet: its own colour, a folder and its
+/// first letter, so even an empty shelf has a face.
+class _EmptyCover extends StatelessWidget {
+  final String name;
+  final int hue;
+  const _EmptyCover({required this.name, required this.hue});
+  @override
+  Widget build(BuildContext context) {
+    final h = HandyPalette.of(context, hue);
+    final dark = Theme.of(context).brightness == Brightness.dark;
+    final ink = dark ? Color.lerp(h.mark, Colors.white, .35)! : h.mark;
+    return ColoredBox(
+      color: dark
+          ? Color.lerp(BookmarkPalette.dark.raised, h.mark, .22)!
+          : Color.lerp(Colors.white, h.mark, .14)!,
+      child: Padding(
+        padding: const EdgeInsets.all(14),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Icon(Icons.folder_outlined, color: ink, size: 22),
+            const Spacer(),
+            Text(
+              tr(context, 'Nothing here yet', 'Chưa có gì'),
+              style: TextStyle(
+                color: ink,
+                fontSize: 13,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }

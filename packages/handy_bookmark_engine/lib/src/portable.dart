@@ -8,6 +8,8 @@ import 'package:html/dom.dart' show Element;
 import 'duplicates.dart';
 import 'models.dart';
 import 'reading.dart';
+import 'search.dart';
+import 'trash.dart';
 import 'urls.dart';
 
 enum SaveFormat { json, csv, html, txt, markdown, zip }
@@ -31,11 +33,51 @@ class ImportResult {
 
   /// Pictures to store before the library, keyed by their id.
   final Map<String, PortablePicture> pictures;
+
+  /// How collections the import brought are shown (see
+  /// [SavePortable.readCollectionViews]), keyed by the ids they ended up
+  /// with. Only collections the import created or replaced: a merge never
+  /// changes the choice made for a collection already here. Apply with
+  /// [mergeCollectionViews].
+  final Map<String, Map<String, dynamic>> collectionViews;
   const ImportResult(
     this.library, [
     this.readingCopies = const {},
     this.pictures = const {},
+    this.collectionViews = const {},
   ]);
+}
+
+/// The person's per-collection view choices after an import: what they had,
+/// with [incoming] laid over it. A choice the file does not mention is kept
+/// (an older backup carries none), so nothing is reset silently. Null when
+/// there is nothing to change.
+Map<String, dynamic>? mergeCollectionViews(
+  Object? current,
+  Map<String, Map<String, dynamic>> incoming,
+) {
+  if (incoming.isEmpty) return null;
+  return {
+    if (current is Map)
+      for (final e in current.entries)
+        if (e.key is String && e.value is Map) e.key as String: e.value,
+    for (final e in incoming.entries) e.key: {...e.value},
+  };
+}
+
+/// The trimmed, lower-case names from the top collection down to [id]:
+/// how collections are recognised as "the same" across libraries.
+String? _path(String id, Map<String, SaveCollection> byId) {
+  final names = <String>[];
+  final seen = <String>{};
+  String? at = id;
+  while (at != null) {
+    final c = byId[at];
+    if (c == null || !seen.add(at)) return null;
+    names.add(c.name.trim().toLowerCase());
+    at = c.parentId;
+  }
+  return names.reversed.join('\u0000');
 }
 
 class ImportPreview {
@@ -54,6 +96,11 @@ class ImportPreview {
   /// Pictures that failed their check, and pictures items use that the file
   /// does not hold (an older or partial backup).
   final int invalidPictures, missingPictures;
+
+  /// How each collection in the file was shown (gallery or list, and its
+  /// order), keyed by the file's collection ids. Empty for files from other
+  /// apps and for backups made before it was carried.
+  final Map<String, Map<String, dynamic>> collectionViews;
   const ImportPreview({
     required this.library,
     required this.duplicateCount,
@@ -64,6 +111,7 @@ class ImportPreview {
     this.pictures = const {},
     this.invalidPictures = 0,
     this.missingPictures = 0,
+    this.collectionViews = const {},
   });
 
   ImportPreview withPictures(
@@ -87,7 +135,28 @@ class ImportPreview {
       },
       invalidPictures: invalid,
       missingPictures: used.where((id) => !pictures.containsKey(id)).length,
+      collectionViews: collectionViews,
     );
+  }
+
+  /// Collections in the file that have the same name, at the same place in
+  /// the tree, as one already in [current]: the file's id to the existing
+  /// one. A second Pocket or Raindrop import finds its earlier collections
+  /// here. Names compare trimmed and ignoring case.
+  Map<String, String> sameNamedCollections(SaveLibrary current) {
+    final mine = {for (final c in current.collections) c.id: c};
+    final existing = <String, String>{};
+    for (final c in [
+      ...current.collections,
+    ]..sort((a, b) => a.position.compareTo(b.position))) {
+      final p = _path(c.id, mine);
+      if (p != null) existing.putIfAbsent(p, () => c.id);
+    }
+    final theirs = {for (final c in library.collections) c.id: c};
+    return {
+      for (final c in library.collections)
+        if (existing[_path(c.id, theirs)] case final id?) c.id: id,
+    };
   }
 
   int get validCount => library.bookmarks.length;
@@ -107,18 +176,34 @@ class ImportPreview {
     SaveLibrary current, {
     ImportStrategy strategy = ImportStrategy.merge,
     bool cancelled = false,
-  }) => apply(current, strategy: strategy, cancelled: cancelled).library;
+    bool reuseCollections = false,
+  }) => apply(
+    current,
+    strategy: strategy,
+    cancelled: cancelled,
+    reuseCollections: reuseCollections,
+  ).library;
 
   /// [commit], plus the reading copies re-keyed to the merged ids. Copies of
   /// links skipped as duplicates are left out.
+  ///
+  /// A merge adds the file's collections beside the person's own. A file
+  /// collection with the same name and place as one already here
+  /// ([sameNamedCollections]) is not added again when no new link would go
+  /// into it (or below it): its links were all duplicates, and a second,
+  /// empty copy of the tree is only clutter. With [reuseCollections] every
+  /// such collection is joined to the existing one instead, so new links
+  /// land in it; nothing about the existing collection itself (name, colour,
+  /// place, view) changes. Off by default.
   ImportResult apply(
     SaveLibrary current, {
     ImportStrategy strategy = ImportStrategy.merge,
     bool cancelled = false,
+    bool reuseCollections = false,
   }) {
     if (cancelled) return ImportResult(current);
     if (strategy == ImportStrategy.replace)
-      return ImportResult(library, readingCopies, pictures);
+      return ImportResult(library, readingCopies, pictures, collectionViews);
     final added = <String, String>{};
     final collections = current.collections.toList(),
         bookmarks = current.bookmarks.toList(),
@@ -134,12 +219,35 @@ class ImportPreview {
       return next;
     }
 
+    // Which links are new, so which file collections will hold one.
+    final urls = current.bookmarks.map(_key).toSet();
+    final incoming = [
+      for (final b in library.bookmarks)
+        if (urls.add(_key(b))) b,
+    ];
+    final parents = {for (final c in library.collections) c.id: c.parentId};
+    final holding = <String>{};
+    for (final b in incoming) {
+      String? at = b.collectionId;
+      while (at != null && holding.add(at)) {
+        at = parents[at];
+      }
+    }
+    final same = sameNamedCollections(current);
     final collectionIds = current.collections.map((e) => e.id).toSet(),
-        remap = <String, String>{};
+        remap = <String, String>{},
+        created = <String>{};
     for (final c in library.collections) {
-      remap[c.id] = available(c.id, collectionIds);
+      final existing = same[c.id];
+      if (existing != null && (reuseCollections || !holding.contains(c.id))) {
+        remap[c.id] = existing;
+      } else {
+        remap[c.id] = available(c.id, collectionIds);
+        created.add(c.id);
+      }
     }
     for (final c in library.collections) {
+      if (!created.contains(c.id)) continue;
       collections.add(
         c.copyWith(
           id: remap[c.id],
@@ -147,19 +255,16 @@ class ImportPreview {
         ),
       );
     }
-    final urls = current.bookmarks.map(_key).toSet(),
-        ids = current.bookmarks.map((b) => b.id).toSet();
-    for (final b in library.bookmarks) {
-      if (urls.add(_key(b))) {
-        final id = available(b.id, ids);
-        added[b.id] = id;
-        bookmarks.add(
-          b.copyWith(
-            id: id,
-            collectionId: b.collectionId == null ? null : remap[b.collectionId],
-          ),
-        );
-      }
+    final ids = current.bookmarks.map((b) => b.id).toSet();
+    for (final b in incoming) {
+      final id = available(b.id, ids);
+      added[b.id] = id;
+      bookmarks.add(
+        b.copyWith(
+          id: id,
+          collectionId: b.collectionId == null ? null : remap[b.collectionId],
+        ),
+      );
     }
     final smartIds = smart.map((e) => e.id).toSet();
     for (final s in library.smartCollections) {
@@ -215,6 +320,134 @@ class ImportPreview {
         for (final e in pictures.entries)
           if (addedMedia.contains(e.key)) e.key: e.value,
       },
+      // Only for collections this merge created: a collection already here
+      // keeps the way the person shows it.
+      {
+        for (final e in collectionViews.entries)
+          if (created.contains(e.key)) remap[e.key]!: e.value,
+      },
+    );
+  }
+}
+
+/// What a backup left out, and why.
+enum OmissionReason {
+  /// It did not fit the file's size limit (30 MB for the library and
+  /// offline copies, 256 MB with pictures). It is still on this device.
+  tooLarge,
+
+  /// An item uses it but this device does not have it (or not whole).
+  missing,
+
+  /// It is stored here but could not be read back.
+  unreadable,
+
+  /// The chosen format cannot carry it (pictures need a ZIP; CSV, HTML,
+  /// TXT and Markdown carry no offline copies).
+  format,
+}
+
+/// One kind of thing a backup left out: offline copies or pictures, how
+/// many, why, and (for pictures left out for size) how many bytes.
+class BackupOmission {
+  /// 'readingCopies' or 'pictures'.
+  final String what;
+  final OmissionReason reason;
+  final int count, bytes;
+  const BackupOmission(this.what, this.reason, this.count, [this.bytes = 0]);
+
+  Map<String, dynamic> toJson() => {
+    'what': what,
+    'reason': reason.name,
+    'count': count,
+    if (bytes > 0) 'bytes': bytes,
+  };
+
+  /// Null for anything malformed (a report is advisory; it never blocks).
+  static BackupOmission? fromJson(Object? j) {
+    if (j is! Map) return null;
+    final what = j['what'], count = j['count'], bytes = j['bytes'] ?? 0;
+    final reason = OmissionReason.values
+        .where((r) => r.name == j['reason'])
+        .firstOrNull;
+    if (what is! String || count is! int || bytes is! int || reason == null)
+      return null;
+    return BackupOmission(what, reason, count, bytes);
+  }
+
+  @override
+  bool operator ==(Object other) =>
+      other is BackupOmission &&
+      other.what == what &&
+      other.reason == reason &&
+      other.count == count &&
+      other.bytes == bytes;
+  @override
+  int get hashCode => Object.hash(what, reason, count, bytes);
+  @override
+  String toString() => 'BackupOmission($what, ${reason.name}, $count)';
+}
+
+/// What one backup held and left out, kept so Settings can say it later
+/// (an automatic backup runs unseen). Advisory: it never blocks a backup.
+class BackupReport {
+  /// When the backup was built (UTC, ISO 8601).
+  final String at;
+  final bool automatic;
+  final int links, picturesIncluded, readingIncluded;
+  final List<BackupOmission> omissions;
+  BackupReport({
+    required this.at,
+    required this.automatic,
+    required this.links,
+    this.picturesIncluded = 0,
+    this.readingIncluded = 0,
+    List<BackupOmission> omissions = const [],
+  }) : omissions = List.unmodifiable(omissions);
+
+  factory BackupReport.of(
+    PortableExport export, {
+    required String at,
+    required bool automatic,
+    required int links,
+  }) => BackupReport(
+    at: at,
+    automatic: automatic,
+    links: links,
+    picturesIncluded: export.picturesIncluded,
+    readingIncluded: export.readingIncluded,
+    omissions: export.omissions,
+  );
+
+  /// Nothing was left out: only then is it a full backup.
+  bool get complete => omissions.isEmpty;
+
+  /// How many [what] ('pictures' or 'readingCopies') were left out.
+  int left(String what) =>
+      omissions.where((o) => o.what == what).fold(0, (n, o) => n + o.count);
+
+  Map<String, dynamic> toJson() => {
+    'at': at,
+    'automatic': automatic,
+    'links': links,
+    'picturesIncluded': picturesIncluded,
+    'readingIncluded': readingIncluded,
+    'omissions': [for (final o in omissions) o.toJson()],
+  };
+
+  /// Null for anything malformed or missing.
+  static BackupReport? fromJson(Object? j) {
+    if (j is! Map) return null;
+    final at = j['at'], links = j['links'], list = j['omissions'];
+    if (at is! String || links is! int || list is! List) return null;
+    int count(String key) => j[key] is int ? j[key] as int : 0;
+    return BackupReport(
+      at: at,
+      automatic: j['automatic'] == true,
+      links: links,
+      picturesIncluded: count('picturesIncluded'),
+      readingIncluded: count('readingIncluded'),
+      omissions: [for (final o in list) ?BackupOmission.fromJson(o)],
     );
   }
 }
@@ -228,6 +461,18 @@ class PortableExport {
   /// not available to export (missing on this device).
   final int picturesIncluded, picturesOmitted, picturesMissing;
   final int omittedPictureBytes;
+
+  /// Offline copies stored here that could not be read, so could not go in
+  /// (counted by the caller, which reads them; see [SavePortable.export]).
+  final int readingUnreadable;
+
+  /// Pictures items use that the format cannot carry (every format but
+  /// ZIP).
+  final int picturesNotCarried;
+
+  /// Of [readingOmitted], those left out because the format carries no
+  /// copies (CSV, HTML, TXT, Markdown) rather than for size.
+  final int readingNotCarried;
   const PortableExport(
     this.bytes,
     this.readingIncluded,
@@ -236,11 +481,43 @@ class PortableExport {
     this.picturesOmitted = 0,
     this.picturesMissing = 0,
     this.omittedPictureBytes = 0,
+    this.readingUnreadable = 0,
+    this.picturesNotCarried = 0,
+    this.readingNotCarried = 0,
   });
 
-  /// Everything the library holds is in the file.
-  bool get complete =>
-      readingOmitted == 0 && picturesOmitted == 0 && picturesMissing == 0;
+  /// Everything the library holds is in the file. Only then may a backup
+  /// be called full or complete.
+  bool get complete => omissions.isEmpty;
+
+  /// What was left out, by kind and reason; empty when [complete].
+  List<BackupOmission> get omissions => [
+    if (readingOmitted - readingNotCarried > 0)
+      BackupOmission(
+        'readingCopies',
+        OmissionReason.tooLarge,
+        readingOmitted - readingNotCarried,
+      ),
+    if (readingNotCarried > 0)
+      BackupOmission('readingCopies', OmissionReason.format, readingNotCarried),
+    if (readingUnreadable > 0)
+      BackupOmission(
+        'readingCopies',
+        OmissionReason.unreadable,
+        readingUnreadable,
+      ),
+    if (picturesOmitted > 0)
+      BackupOmission(
+        'pictures',
+        OmissionReason.tooLarge,
+        picturesOmitted,
+        omittedPictureBytes,
+      ),
+    if (picturesMissing > 0)
+      BackupOmission('pictures', OmissionReason.missing, picturesMissing),
+    if (picturesNotCarried > 0)
+      BackupOmission('pictures', OmissionReason.format, picturesNotCarried),
+  ];
 }
 
 class SavePortable {
@@ -263,12 +540,38 @@ class SavePortable {
     SaveFormat format, {
     Map<String, ReadingCopy> readingCopies = const {},
     Map<String, PortablePicture> pictures = const {},
+    Object? collectionViews,
   }) => exportWithReport(
     library,
     format,
     readingCopies: readingCopies,
     pictures: pictures,
+    collectionViews: collectionViews,
   ).bytes;
+
+  /// The view choices worth carrying for [collections]: per collection id,
+  /// `cards` (bool) and `sort` (a [SaveSort] name). Anything else (unknown
+  /// collections, keys or values) is dropped, never an error: a view is a
+  /// preference, and a damaged one must not stop a restore.
+  static Map<String, Map<String, dynamic>> readCollectionViews(
+    Object? raw,
+    Iterable<String> collections,
+  ) {
+    if (raw is! Map) return const {};
+    final known = collections.toSet();
+    final sorts = {for (final s in SaveSort.values) s.name};
+    final out = <String, Map<String, dynamic>>{};
+    for (final e in raw.entries) {
+      final v = e.value;
+      if (e.key is! String || !known.contains(e.key) || v is! Map) continue;
+      final view = <String, dynamic>{
+        if (v['cards'] is bool) 'cards': v['cards'],
+        if (v['sort'] is String && sorts.contains(v['sort'])) 'sort': v['sort'],
+      };
+      if (view.isNotEmpty) out[e.key as String] = view;
+    }
+    return out;
+  }
 
   /// Reading copies that fit next to the library inside [budget] bytes,
   /// newest first; a copy too large to fit is skipped, smaller ones still go.
@@ -302,9 +605,26 @@ class SavePortable {
 
     /// The bytes of the pictures items use (ZIP only).
     Map<String, PortablePicture> pictures = const {},
+
+    /// The person's per-collection views (the `collectionViews`
+    /// preference); carried in every format with a Handy payload, so a
+    /// restore shows each collection as it was. See [readCollectionViews].
+    Object? collectionViews,
+
+    /// Offline copies the caller found stored but could not read; only
+    /// reported, in [PortableExport.readingUnreadable].
+    int unreadableReadingCopies = 0,
   }) {
     library.validate();
-    final libraryJson = library.toJson();
+    final views = readCollectionViews(collectionViews, [
+      for (final c in library.collections) c.id,
+    ]);
+    // An extra key older versions of the app ignore when they read it, so
+    // backups stay readable both ways without a format change.
+    final libraryJson = {
+      ...library.toJson(),
+      if (views.isNotEmpty) 'collectionViews': views,
+    };
     var json = jsonEncode(libraryJson);
     final payload = base64Url.encode(utf8.encode(json));
     final ids = {for (final b in library.bookmarks) b.id};
@@ -323,8 +643,15 @@ class SavePortable {
       if (format == SaveFormat.json && copies.isNotEmpty)
         json = jsonEncode({...libraryJson, 'readingCopies': copies});
     }
-    PortableExport report(Uint8List bytes) =>
-        PortableExport(bytes, copies.length, offered - copies.length);
+    final carriesCopies = format == SaveFormat.json || format == SaveFormat.zip;
+    PortableExport report(Uint8List bytes) => PortableExport(
+      bytes,
+      copies.length,
+      offered - copies.length,
+      readingUnreadable: unreadableReadingCopies,
+      readingNotCarried: carriesCopies ? 0 : offered,
+      picturesNotCarried: mediaInUse(library).length,
+    );
     String escape(String s) =>
         const HtmlEscape(HtmlEscapeMode.attribute).convert(s);
     final text = switch (format) {
@@ -346,7 +673,7 @@ class SavePortable {
           '',
           '',
           '',
-          jsonEncode({...library.toJson(), 'bookmarks': []}),
+          jsonEncode({...libraryJson, 'bookmarks': []}),
         ],
         for (final b in library.bookmarks)
           [
@@ -462,6 +789,7 @@ class SavePortable {
       picturesOmitted: omitted,
       picturesMissing: missing,
       omittedPictureBytes: omittedBytes,
+      readingUnreadable: unreadableReadingCopies,
     );
   }
 
@@ -937,6 +1265,9 @@ class SavePortable {
       invalidCount: p.invalidCount,
       readingCopies: copies,
       invalidCopies: invalidCopies,
+      collectionViews: readCollectionViews(json['collectionViews'], [
+        for (final c in library.collections) c.id,
+      ]),
     );
   }
 
@@ -1230,6 +1561,15 @@ class SavePortable {
             ...metadata,
             'bookmarks': bookmarks.map((e) => e.toJson()).toList(),
           });
-    return _preview(library, current, invalid);
+    final p = _preview(library, current, invalid);
+    if (metadata == null) return p;
+    return ImportPreview(
+      library: p.library,
+      duplicateCount: p.duplicateCount,
+      invalidCount: p.invalidCount,
+      collectionViews: readCollectionViews(metadata['collectionViews'], [
+        for (final c in library.collections) c.id,
+      ]),
+    );
   }
 }

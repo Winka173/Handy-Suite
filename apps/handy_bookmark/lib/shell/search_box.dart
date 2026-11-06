@@ -144,8 +144,15 @@ class _SearchBoxState extends State<SearchBox> {
     },
     decoration: InputDecoration(
       counterText: '',
-      prefixIcon: const Icon(Icons.search),
-      hintText: tr(context, 'Find a link or picture', 'Tìm link hoặc ảnh'),
+      prefixIcon: const Padding(
+        padding: EdgeInsetsDirectional.only(start: 6),
+        child: Icon(Icons.search),
+      ),
+      hintText: tr(context, 'Search your library', 'Tìm trong thư viện'),
+      contentPadding: const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
+      border: _pill(context),
+      enabledBorder: _pill(context),
+      focusedBorder: _pill(context, focused: true),
       suffixIcon: input.text.isEmpty
           ? null
           : IconButton(
@@ -159,4 +166,15 @@ class _SearchBoxState extends State<SearchBox> {
             ),
     ),
   );
+
+  OutlineInputBorder _pill(BuildContext context, {bool focused = false}) =>
+      OutlineInputBorder(
+        borderRadius: BorderRadius.circular(999),
+        borderSide: focused
+            ? BorderSide(
+                color: Theme.of(context).colorScheme.primary,
+                width: 1.5,
+              )
+            : BorderSide.none,
+      );
 }

@@ -6,7 +6,7 @@ import '../view/library_view.dart';
 String placeTitle(BuildContext c, SaveLibrary l, Place p, String? id) =>
     switch (p) {
       Place.inbox => tr(c, 'Not sorted', 'Chưa xếp'),
-      Place.all => tr(c, 'All links', 'Tất cả link'),
+      Place.all => tr(c, 'Everything', 'Tất cả mục'),
       Place.favorites => tr(c, 'Favourites', 'Yêu thích'),
       Place.unread => tr(c, 'Not read yet', 'Chưa đọc'),
       Place.archive => tr(c, 'Archive', 'Lưu trữ'),

@@ -1,4 +1,5 @@
 import 'package:flutter/services.dart';
+import '../design/theme.dart';
 import 'package:handy_bookmark_engine/handy_bookmark_engine.dart';
 import 'package:handy_ui/kit.dart';
 import '../bookmark/add_link.dart';
@@ -94,11 +95,25 @@ class _SaveShellState extends State<SaveShell> {
         child: ListenableBuilder(
           listenable: v,
           builder: (context, _) => Scaffold(
-            appBar: HandyTopBar(
-              mark: Icons.bookmark_outline,
-              name: libraryName(scope.c),
-              nameIsTitle: false,
-              actions: addButtons,
+            appBar: AppBar(
+              automaticallyImplyLeading: false,
+              toolbarHeight: 68,
+              titleSpacing: HandySpace.xl,
+              title: Text(
+                libraryName(scope.c),
+                overflow: TextOverflow.ellipsis,
+                style: bookmarkSerif(context, 28),
+              ),
+              actions: [
+                ...addButtons,
+                IconButton(
+                  key: const Key('open-settings'),
+                  tooltip: tr(context, 'Settings', 'Cài đặt'),
+                  icon: const Icon(Icons.settings_outlined),
+                  onPressed: () => Navigator.pushNamed(context, '/settings'),
+                ),
+                const SizedBox(width: HandySpace.m),
+              ],
             ),
             bottomNavigationBar: HandySwap(
               child: v.selecting
@@ -137,7 +152,6 @@ class _SaveShellState extends State<SaveShell> {
                     ],
                   ),
                 ),
-                const VerticalDivider(width: 1),
                 Expanded(
                   child: ResultsView(
                     scope: scope,
@@ -163,17 +177,25 @@ class _SaveShellState extends State<SaveShell> {
                   ),
                 ),
                 if (side) ...[
-                  const VerticalDivider(width: 1),
-                  SizedBox(
+                  // The open item on its own raised sheet beside the list.
+                  Container(
                     width: 440,
+                    margin: const EdgeInsets.fromLTRB(0, 8, 16, 16),
+                    clipBehavior: Clip.antiAlias,
+                    decoration: BoxDecoration(
+                      color: BookmarkPalette.of(context).surface,
+                      borderRadius: BorderRadius.circular(
+                        BookmarkRadii.collection,
+                      ),
+                    ),
                     child: HandySwap(
                       child: current == null
                           ? HandyEmpty(
                               key: const ValueKey('none'),
                               title: tr(
                                 context,
-                                'Pick a link to see it here',
-                                'Chọn một link để xem ở đây',
+                                'Pick something to see it here',
+                                'Chọn một mục để xem ở đây',
                               ),
                             )
                           : ListView(

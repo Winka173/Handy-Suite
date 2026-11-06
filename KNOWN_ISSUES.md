@@ -196,8 +196,14 @@ Every app still uses a `com.example.*` package id, which no store accepts
 - Sync on phones is not available: only a folder kept in step by a cloud client on a computer.
   Sync trusts each device's clock; a badly wrong clock can win or lose edits. Tombstones are kept
   365 days.
-- Importing Pocket or Raindrop twice adds new collections even when ones with the same name
-  exist (links are not duplicated).
+- Importing Pocket or Raindrop twice no longer adds empty copies of collections that already
+  exist by name and place; the preview offers to put new links into them (off by default, so a
+  same-named collection that gets new links is still created separately). Links are never
+  duplicated.
+- Backups now carry each collection's view and sort (`collectionViews`). The automatic backup
+  records what it left out (pictures or offline copies too large, missing or unreadable) and is
+  only called complete when nothing was. Offline copies of items in Recently Deleted are not in
+  backups. Folder sync carries no preferences: views stay on the device where they were set.
 - Previews stored before 2026-11-06 may still carry EXIF on the device; shared pages re-encode
   every picture, so nothing leaves with it.
 - The weekly nudge is rescheduled when the library changes; a library left untouched for

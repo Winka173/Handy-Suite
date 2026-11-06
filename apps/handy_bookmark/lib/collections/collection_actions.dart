@@ -43,47 +43,103 @@ extension CollectionActions on SaveScope {
         .length;
     var target = 'inbox';
     if (count > 0) {
-      final choice = await showDialog<String>(
+      final choice = await showModalBottomSheet<String>(
         context: context,
-        builder: (context) => SimpleDialog(
-          title: Text(tr(context, 'Delete ${item.name}?', 'Xóa ${item.name}?')),
-          children: [
-            Padding(
-              padding: const EdgeInsets.fromLTRB(
-                HandySpace.xl,
-                0,
-                HandySpace.xl,
-                HandySpace.m,
-              ),
-              child: Text(
-                tr(
-                  context,
-                  'It holds $count links. Where should they go?',
-                  'Bộ này có $count link. Chuyển chúng đi đâu?',
+        isScrollControlled: true,
+        showDragHandle: true,
+        useSafeArea: true,
+        constraints: const BoxConstraints(maxWidth: 560),
+        builder: (context) {
+          final theme = Theme.of(context);
+          final c = HandyColors.of(context);
+          Widget option(
+            Key key,
+            IconData icon,
+            String title,
+            String note,
+            String value, {
+            bool danger = false,
+          }) => ListTile(
+            key: key,
+            leading: Icon(icon, color: danger ? c.negative : null),
+            title: Text(
+              title,
+              style: danger ? TextStyle(color: c.negative) : null,
+            ),
+            subtitle: Text(note),
+            onTap: () => Navigator.pop(context, value),
+          );
+          return SingleChildScrollView(
+            padding: const EdgeInsets.fromLTRB(12, 0, 12, 16),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(8, 0, 8, 12),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Semantics(
+                        header: true,
+                        child: Text(
+                          tr(
+                            context,
+                            'Delete ${item.name}?',
+                            'Xóa ${item.name}?',
+                          ),
+                          style: theme.textTheme.titleLarge,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        tr(
+                          context,
+                          'It holds $count items. Where should they go?',
+                          'Bộ này có $count mục. Chuyển chúng đi đâu?',
+                        ),
+                        style: theme.textTheme.bodyMedium?.copyWith(
+                          color: c.muted,
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
-              ),
+                option(
+                  const Key('delcol-inbox'),
+                  Icons.inbox_outlined,
+                  tr(context, 'To Not sorted', 'Về Chưa xếp'),
+                  tr(
+                    context,
+                    'Keep them, without a collection',
+                    'Giữ lại, không thuộc bộ nào',
+                  ),
+                  'inbox',
+                ),
+                option(
+                  const Key('delcol-move'),
+                  Icons.drive_file_move_outline,
+                  tr(context, 'To another collection…', 'Sang bộ khác…'),
+                  tr(context, 'Choose where next', 'Chọn nơi chuyển đến'),
+                  'move',
+                ),
+                const SizedBox(height: 8),
+                option(
+                  const Key('delcol-delete'),
+                  Icons.delete_outline,
+                  tr(context, 'Delete them too…', 'Xóa luôn các mục…'),
+                  tr(
+                    context,
+                    'They wait 30 days in Recently Deleted',
+                    'Chúng nằm 30 ngày trong Thùng rác',
+                  ),
+                  'delete',
+                  danger: true,
+                ),
+              ],
             ),
-            SimpleDialogOption(
-              key: const Key('delcol-inbox'),
-              onPressed: () => Navigator.pop(context, 'inbox'),
-              child: Text(tr(context, 'To Not sorted', 'Về Chưa xếp')),
-            ),
-            SimpleDialogOption(
-              key: const Key('delcol-move'),
-              onPressed: () => Navigator.pop(context, 'move'),
-              child: Text(
-                tr(context, 'To another collection…', 'Sang bộ khác…'),
-              ),
-            ),
-            SimpleDialogOption(
-              key: const Key('delcol-delete'),
-              onPressed: () => Navigator.pop(context, 'delete'),
-              child: Text(
-                tr(context, 'Delete them too…', 'Xóa luôn các link…'),
-              ),
-            ),
-          ],
-        ),
+          );
+        },
       );
       if (choice == null || !context.mounted) return false;
       target = choice;
@@ -105,13 +161,13 @@ extension CollectionActions on SaveScope {
             context,
             title: tr(
               context,
-              'Delete ${item.name} and move its $count links to Recently Deleted?',
-              'Xóa ${item.name} và chuyển $count link bên trong vào Thùng rác?',
+              'Delete ${item.name} and move its $count items to Recently Deleted?',
+              'Xóa ${item.name} và chuyển $count mục bên trong vào Thùng rác?',
             ),
             message: tr(
               context,
-              'They can be restored for 30 days; restored links go to Not sorted.',
-              'Có thể khôi phục trong 30 ngày; link khôi phục sẽ vào mục Chưa xếp.',
+              'They can be restored for 30 days; restored items go to Not sorted.',
+              'Có thể khôi phục trong 30 ngày; mục khôi phục sẽ vào Chưa xếp.',
             ),
             confirmLabel: tr(context, 'Delete', 'Xóa'),
             destructive: true,

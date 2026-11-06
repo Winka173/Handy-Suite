@@ -10,6 +10,8 @@ import 'bookmark_tile.dart';
 import 'filter_sheet.dart';
 import 'link_card.dart';
 import 'place_title.dart';
+import '../design/theme.dart';
+import '../ui/visual.dart';
 
 /// The links of the current place, as rows or cards. More load as the end
 /// comes into view; a new place or filter fades the list over.
@@ -59,27 +61,11 @@ class ResultsView extends StatelessWidget {
               v.show(Place.broken);
             },
           ),
-          Row(
-            children: [
-              Expanded(
-                child: Semantics(
-                  header: true,
-                  child: Text(
-                    placeTitle(context, controller.library!, v.place, v.id),
-                    style: theme.textTheme.titleLarge,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ),
-              ),
-              Text(
-                formatFigure(context, '${v.total}'),
-                style: theme.textTheme.bodyMedium?.copyWith(
-                  color: c.muted,
-                  fontFeatures: tabular,
-                ),
-              ),
-              ...[
+          // On a phone the name gets the whole width and the tools sit
+          // under it; on wider screens they share one row.
+          Builder(
+            builder: (context) {
+              final tools = <Widget>[
                 if (wide && v.canSaveSearch && v.place != Place.smart)
                   IconButton(
                     key: const Key('save-search-here'),
@@ -92,8 +78,90 @@ class ResultsView extends StatelessWidget {
                     onPressed: () => scope.saveSearch(context),
                   ),
                 ..._tools(context),
-              ],
-            ],
+              ];
+              final title = Row(
+                children: [
+                  // A collection opens with its face: its newest picture beside
+                  // its name, set in the library's serif.
+                  if (v.place == Place.collection && rows.isNotEmpty)
+                    Padding(
+                      padding: const EdgeInsetsDirectional.only(end: 14),
+                      child: SizedBox(
+                        width: 60,
+                        height: 60,
+                        child: ItemPicture(
+                          controller,
+                          rows.firstWhere(
+                            (b) => b.media != null || b.thumbnailUrl != null,
+                            orElse: () => rows.first,
+                          ),
+                          radius: 18,
+                          compact: true,
+                        ),
+                      ),
+                    ),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Semantics(
+                          header: true,
+                          child: Text(
+                            placeTitle(
+                              context,
+                              controller.library!,
+                              v.place,
+                              v.id,
+                            ),
+                            style: v.place == Place.collection
+                                ? bookmarkSerif(context, 26)
+                                : theme.textTheme.headlineSmall,
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                        Text(
+                          // A search says how many it found, not how many
+                          // the place holds.
+                          v.text.trim().isNotEmpty || v.filters.any
+                              ? tr(
+                                  context,
+                                  '${formatFigure(context, '${v.total}')} found',
+                                  '${formatFigure(context, '${v.total}')} kết quả',
+                                )
+                              : tr(
+                                  context,
+                                  '${formatFigure(context, '${v.total}')} saved',
+                                  '${formatFigure(context, '${v.total}')} mục',
+                                ),
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            color: c.muted,
+                            fontFeatures: tabular,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              );
+              if (wide)
+                return Row(
+                  children: [
+                    Expanded(child: title),
+                    ...tools,
+                  ],
+                );
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  title,
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    children: tools,
+                  ),
+                ],
+              );
+            },
           ),
           if (v.filters.any) FilterChips(view: v),
           const SizedBox(height: HandySpace.s),
@@ -122,26 +190,36 @@ class ResultsView extends StatelessWidget {
         body = _empty(context);
       } else if (cards) {
         body = LayoutBuilder(
-          builder: (context, box) => GridView.builder(
-            shrinkWrap: true,
-            physics: const NeverScrollableScrollPhysics(),
-            gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: (box.maxWidth / 260).floor().clamp(1, 6),
-              mainAxisSpacing: HandySpace.m,
-              crossAxisSpacing: HandySpace.m,
-              mainAxisExtent: 204,
-            ),
-            itemCount: rows.length,
-            itemBuilder: (context, i) => LinkCard(
-              controller: controller,
-              bookmark: rows[i],
-              selected: v.selected.contains(rows[i].id),
-              selecting: v.selecting,
-              onOpen: () => controller.open(rows[i]),
-              onDetails: () => onDetails(rows[i]),
-              onToggle: () => v.toggle(rows[i].id),
-            ),
-          ),
+          builder: (context, box) {
+            // Two photo-forward cards a row on a phone; one when the screen
+            // is narrow or the text is large; more as the window widens.
+            final scale = MediaQuery.textScalerOf(context).scale(14) / 14;
+            const gap = 12.0;
+            final columns = (box.maxWidth / (165 * scale.clamp(1.0, 2.0)))
+                .floor()
+                .clamp(1, 6);
+            final width = (box.maxWidth - gap * (columns - 1)) / columns;
+            return GridView.builder(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: columns,
+                mainAxisSpacing: gap,
+                crossAxisSpacing: gap,
+                mainAxisExtent: width / 1.28 + 74 * scale.clamp(1.0, 2.2),
+              ),
+              itemCount: rows.length,
+              itemBuilder: (context, i) => LinkCard(
+                controller: controller,
+                bookmark: rows[i],
+                selected: v.selected.contains(rows[i].id),
+                selecting: v.selecting,
+                onOpen: () => controller.open(rows[i]),
+                onDetails: () => onDetails(rows[i]),
+                onToggle: () => v.toggle(rows[i].id),
+              ),
+            );
+          },
         );
       } else {
         body = HandyGroup(

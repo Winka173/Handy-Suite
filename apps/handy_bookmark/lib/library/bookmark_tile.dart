@@ -2,6 +2,7 @@ import 'package:handy_bookmark_engine/handy_bookmark_engine.dart';
 import 'package:handy_ui/kit.dart';
 import '../controller.dart';
 import '../ui/collection_picker.dart';
+import '../ui/visual.dart';
 import '../ui/words.dart';
 
 /// One saved link: its picture, title, where it is from and when. Tapping
@@ -51,17 +52,20 @@ class BookmarkTile extends StatelessWidget {
                 width: 48,
                 child: Checkbox(value: selected, onChanged: (_) => onToggle()),
               )
-            : LinkThumb(controller, b),
+            : SizedBox(
+                width: 60,
+                height: 60,
+                child: ItemPicture(controller, b, compact: true),
+              ),
         title: Text(
           b.title.isEmpty ? b.sourceDomain : b.title,
           maxLines: 2,
           overflow: TextOverflow.ellipsis,
-          // The index reads in the news face, like a paper's contents.
+          // Unread saves stand a little bolder than ones already read.
           style: Theme.of(context).textTheme.titleMedium?.copyWith(
-            fontFamily: Theme.of(context).textTheme.titleLarge?.fontFamily,
-            fontSize: 17,
+            fontSize: 15.5,
             height: 1.3,
-            fontWeight: b.isRead ? FontWeight.w400 : FontWeight.w500,
+            fontWeight: b.isRead ? FontWeight.w500 : FontWeight.w600,
           ),
         ),
         subtitle: Text.rich(

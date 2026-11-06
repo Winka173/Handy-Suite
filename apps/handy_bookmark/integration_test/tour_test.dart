@@ -106,6 +106,7 @@ Future<void> fileInto(WidgetTester t, String id, String collection) async {
         .first,
   );
   await pause(t, 600);
+  await tap(t, 'file-$id');
   final chip = 'file-$id-$collection';
   if (find.byKey(Key(chip)).evaluate().isEmpty) {
     await tap(t, 'file-$id-other');

@@ -42,16 +42,30 @@ Future<DateTime?> pickReminder(BuildContext context) async {
               HandySpace.l,
               HandySpace.s,
             ),
-            child: Text(
-              tr(context, 'Remind me', 'Nhắc tôi'),
-              style: Theme.of(context).textTheme.titleMedium,
+            child: Semantics(
+              header: true,
+              child: Text(
+                tr(context, 'Remind me', 'Nhắc tôi'),
+                style: Theme.of(context).textTheme.titleLarge,
+              ),
             ),
           ),
-          for (final (id, label, _) in presets)
+          for (final (id, label, at) in presets)
             ListTile(
               key: Key('remind-$id'),
+              contentPadding: const EdgeInsets.symmetric(
+                horizontal: HandySpace.l,
+              ),
               leading: const Icon(Icons.schedule),
               title: Text(label),
+              trailing: id == 'today'
+                  ? Text(
+                      MaterialLocalizations.of(
+                        context,
+                      ).formatTimeOfDay(TimeOfDay.fromDateTime(at)),
+                      style: Theme.of(context).textTheme.bodySmall,
+                    )
+                  : null,
               onTap: () => Navigator.pop(context, id),
             ),
           ListTile(

@@ -149,6 +149,7 @@ void main() {
       t.element(find.byType(Scaffold).first),
     ).pushNamed('/bookmark/${link.id}');
     await settle(t);
+    await tapKey(t, 'detail-tools');
     await tapKey(t, 'detail-thumbnail');
     await t.runAsync(
       () => Future<void>.delayed(const Duration(milliseconds: 300)),

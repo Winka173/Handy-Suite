@@ -156,6 +156,14 @@ const _links = [
   ),
 ];
 
+const _photos = {
+  0: 'pho',
+  1: 'bun-cha',
+  3: 'hoi-an',
+  5: 'ga-ha-noi',
+  7: 'guitars',
+};
+
 Future<NetController> boot(
   WidgetTester t,
   Size size, {
@@ -209,8 +217,16 @@ Future<NetController> boot(
     final ids = c.library!.bookmarks.map((b) => b.id).toList();
     if (extras) await _extras(c, ids);
     await t.runAsync(() async {
-      for (final (i, l) in _links.indexed) {
-        if (l.$4 != 0) store.pictures[ids[i]] = await picture(l.$4, l.$5);
+      // Fixture pictures: the guide's licensed photos (see
+      // assets/welcome/CREDITS.txt) on some saves, none on the rest, so the
+      // shots show both real thumbnails and the no-picture face.
+      for (final (i, _) in _links.indexed) {
+        final photo = _photos[i];
+        if (photo != null) {
+          store.pictures[ids[i]] = File(
+            'assets/welcome/$photo.jpg',
+          ).readAsBytesSync();
+        }
       }
     });
   }
@@ -505,6 +521,8 @@ void main() {
         c.library!.bookmarks.where((b) => b.collectionId == null).toList()
           ..sort((a, b) => b.savedAt.compareTo(a.savedAt));
     await film(t, 'phone-file', () async {
+      await t.tap(find.byKey(Key('file-${first.first.id}')));
+      await t.pumpAndSettle();
       await t.tap(find.byKey(Key('file-${first.first.id}-food')));
       await t.pump();
     }, frames: 20);
@@ -541,6 +559,7 @@ void main() {
       t.element(find.byKey(const Key('save-home'))),
     ).pushNamed('/bookmark/${c.library!.bookmarks[5].id}');
     await t.pumpAndSettle();
+    await tapKey(t, 'detail-tools');
     await t.scrollUntilVisible(
       find.byKey(const Key('detail-check')),
       300,
@@ -654,5 +673,127 @@ void main() {
     await shot(t, 'phone-batch-review');
     await tapKey(t, 'link-batch-cancel');
     expect(await pending, isNull);
+  });
+  // Save, Trash and Settings (Warm Modern Library, 2026-11-06).
+  Future<void> scrolled(WidgetTester t, String name, int pages) async {
+    await shot(t, '$name-0');
+    for (var i = 1; i <= pages; i++) {
+      await t.drag(find.byType(Scrollable).first, const Offset(0, -640));
+      await t.pumpAndSettle();
+      await shot(t, '$name-$i');
+    }
+  }
+
+  for (final theme in ['light', 'dark']) {
+    testWidgets('phone settings $theme', (t) async {
+      await boot(t, const Size(390, 844), theme: theme);
+      Navigator.of(
+        t.element(find.byKey(const Key('save-home'))),
+      ).pushNamed('/settings');
+      await t.pumpAndSettle();
+      await scrolled(t, 'phone-30-settings-$theme', 6);
+    });
+  }
+  testWidgets('small save sheet', (t) async {
+    await boot(t, const Size(320, 640));
+    await tapKey(t, 'save-new');
+    await shot(t, 'small-31-save');
+    await t.enterText(find.byKey(const Key('bookmark-inline-url')), 'cà phê');
+    await tapKey(t, 'bookmark-inline-save');
+    await shot(t, 'small-31-save-error');
+  });
+  testWidgets('phone save sheet dark', (t) async {
+    await boot(t, const Size(390, 844), theme: 'dark');
+    await tapKey(t, 'save-new');
+    await shot(t, 'phone-31-save-dark');
+  });
+  testWidgets('phone trash dark', (t) async {
+    final c = await boot(t, const Size(390, 844), theme: 'dark');
+    final now = DateTime.now().toUtc();
+    for (final (i, b) in c.library!.bookmarks.take(3).indexed) {
+      await c.update(
+        (l) => moveToTrash(l, [
+          b.id,
+        ], now.subtract(Duration(days: [2, 15, 29][i])).toIso8601String()),
+      );
+    }
+    await t.pumpAndSettle();
+    Navigator.of(t.element(find.byType(Scaffold).first)).pushNamed('/trash');
+    await t.pumpAndSettle();
+    await shot(t, 'phone-32-trash-dark');
+  });
+  testWidgets('phone trash empty', (t) async {
+    await boot(t, const Size(390, 844));
+    Navigator.of(t.element(find.byType(Scaffold).first)).pushNamed('/trash');
+    await t.pumpAndSettle();
+    await shot(t, 'phone-33-trash-empty');
+  });
+  testWidgets('phone share collection', (t) async {
+    await boot(t, const Size(390, 844));
+    await tapKey(t, 'collection-food');
+    await tapKey(t, 'list-more');
+    await tapKey(t, 'collection-share');
+    await shot(t, 'phone-34-share');
+  });
+  testWidgets('phone filter sheet', (t) async {
+    await boot(t, const Size(390, 844));
+    await tapKey(t, 'collection-food');
+    await tapKey(t, 'save-filters');
+    await shot(t, 'phone-35-filters');
+  });
+  // Detail, picture and Focus in both themes (Warm Modern Library).
+  Future<String> addPicture(WidgetTester t, NetController c) async {
+    final bytes = File('assets/welcome/pho.jpg').readAsBytesSync();
+    unawaited(
+      c.addPictures([
+        (bytes: bytes, name: 'Phở Thìn Lò Đúc.jpg'),
+      ], collectionId: 'food'),
+    );
+    for (
+      var i = 0;
+      i < 50 && !c.library!.bookmarks.any((b) => b.isImage);
+      i++
+    ) {
+      await t.runAsync(
+        () => Future<void>.delayed(const Duration(milliseconds: 100)),
+      );
+      await t.pump();
+    }
+    await t.pumpAndSettle();
+    return c.library!.bookmarks.firstWhere((b) => b.isImage).id;
+  }
+
+  Future<void> openItem(WidgetTester t, String id) async {
+    Navigator.of(
+      t.element(find.byKey(const Key('save-home'))),
+    ).pushNamed('/bookmark/$id');
+    await t.runAsync(
+      () => Future<void>.delayed(const Duration(milliseconds: 150)),
+    );
+    await t.pumpAndSettle();
+  }
+
+  testWidgets('phone detail dark', (t) async {
+    final c = await boot(t, const Size(390, 844), theme: 'dark');
+    await openItem(t, c.library!.bookmarks.first.id);
+    await shot(t, 'phone-40-detail-dark');
+  });
+  for (final theme in ['light', 'dark']) {
+    testWidgets('phone picture detail $theme', (t) async {
+      final c = await boot(t, const Size(390, 844), theme: theme);
+      await openItem(t, await addPicture(t, c));
+      await shot(t, 'phone-41-picture-detail-$theme');
+      await tapKey(t, 'detail-view-picture');
+      await t.runAsync(
+        () => Future<void>.delayed(const Duration(milliseconds: 200)),
+      );
+      await t.pumpAndSettle();
+      await shot(t, 'phone-42-picture-view-$theme');
+    });
+  }
+  testWidgets('phone focus dark', (t) async {
+    await boot(t, const Size(390, 844), theme: 'dark');
+    await tapKey(t, 'place-focus');
+    await shot(t, 'phone-43-focus-dark');
   });
 }

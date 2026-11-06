@@ -76,12 +76,14 @@ String weekdayName(BuildContext context, int day) => tr(
   ][day - 1],
 );
 
-/// Where sync folders are picked; tests replace it.
+//// Where sync folders are picked; tests replace it.
 BackupFolders syncFolders = systemBackupFolders();
 
-/// Save's settings: the shared page with how links open, what is fetched,
-/// reminders, and the data tools.
-class SaveSettingsPage extends StatelessWidget {
+/// Settings in four groups, in the order people look for them: how the
+/// app looks and behaves, reminders, their data, then help and the rarer
+/// tools. What cannot be undone sits apart at the very bottom. Every
+/// control saves itself.
+class SaveSettingsPage extends StatefulWidget {
   final HandyPreferences Function() read;
   final Future<void> Function(HandyPreferences) save;
   final SaveScope scope;
@@ -93,30 +95,126 @@ class SaveSettingsPage extends StatelessWidget {
   });
 
   @override
+  State<SaveSettingsPage> createState() => _SaveSettingsPageState();
+}
+
+class _SaveSettingsPageState extends State<SaveSettingsPage> {
+  // Kept here as well, so a choice shows at once even before the
+  // device's preferences report back.
+  late String theme = widget.read().theme, locale = widget.read().locale;
+  SaveScope get scope => widget.scope;
+
+  Future<void> _device(HandyPreferences next, VoidCallback local) async {
+    try {
+      await widget.save(next);
+      if (mounted) setState(local);
+    } catch (_) {
+      if (mounted)
+        showHandyMessage(
+          context,
+          tr(context, 'Could not save.', 'Chưa lưu được.'),
+        );
+    }
+  }
+
+  Future<void> _resetPreferences() async {
+    final ok = await confirmHandy(
+      context,
+      title: tr(context, 'Reset preferences?', 'Đặt lại cài đặt?'),
+      message: tr(
+        context,
+        'Language and appearance go back to how they started. Your links, pictures and collections are kept.',
+        'Ngôn ngữ và giao diện trở về như ban đầu. Link, ảnh và bộ sưu tập vẫn được giữ.',
+      ),
+      confirmLabel: tr(context, 'Reset preferences', 'Đặt lại cài đặt'),
+      destructive: true,
+    );
+    if (!ok || !mounted) return;
+    await _device(HandyPreferences(), () {
+      theme = 'system';
+      locale = 'system';
+    });
+  }
+
+  @override
   Widget build(BuildContext context) => ListenableBuilder(
     listenable: scope.c,
     builder: (context, _) {
       final c = scope.c;
       final p = c.preferences;
+      final system = tr(context, 'System', 'Hệ thống');
       Future<void> set(String key, Object value) => scope.run(
         context,
         () => c.update((l) => l, prefs: {...c.preferences, key: value}),
       );
-      return HandySettingsPage(
-        appName: 'Handy Bookmark',
-        theme: read().theme,
-        locale: read().locale,
-        onTheme: (v) => save(read().copyWith(theme: v)),
-        onLocale: (v) => save(read().copyWith(locale: v)),
-        sections: [
+      Widget segmented(
+        Key key,
+        String value,
+        List<(String, String)> options,
+        ValueChanged<String> onChanged,
+      ) => SegmentedButton<String>(
+        key: key,
+        showSelectedIcon: false,
+        segments: [
+          for (final o in options)
+            ButtonSegment(value: o.$1, label: Text(o.$2)),
+        ],
+        selected: {value},
+        onSelectionChanged: (s) => onChanged(s.first),
+      );
+      return HandyPage(
+        title: tr(context, 'Settings', 'Cài đặt'),
+        children: [
+          // Personalise.
+          _GroupHead(tr(context, 'Personalise', 'Cá nhân hóa'), first: true),
+          HandySettingsSection(
+            title: tr(context, 'Look and language', 'Giao diện và ngôn ngữ'),
+            children: [
+              HandySettingRow(
+                stackBelow: 600,
+                label: tr(context, 'Appearance', 'Giao diện'),
+                control: segmented(
+                  const Key('settings-theme'),
+                  theme,
+                  [
+                    ('system', system),
+                    ('light', tr(context, 'Light', 'Sáng')),
+                    ('dark', tr(context, 'Dark', 'Tối')),
+                  ],
+                  (v) => _device(
+                    widget.read().copyWith(theme: v),
+                    () => theme = v,
+                  ),
+                ),
+              ),
+              HandySettingRow(
+                stackBelow: 600,
+                label: tr(context, 'Language', 'Ngôn ngữ'),
+                control: segmented(
+                  const Key('settings-locale'),
+                  locale,
+                  [('system', system), ('en', 'English'), ('vi', 'Tiếng Việt')],
+                  (v) => _device(
+                    widget.read().copyWith(locale: v),
+                    () => locale = v,
+                  ),
+                ),
+              ),
+            ],
+          ),
           HandySettingsSection(
             title: tr(context, 'Your library', 'Thư viện của bạn'),
             children: [
-              ListTile(
+              HandyTile(
                 key: const Key('set-library-name'),
-                title: Text(tr(context, 'Name', 'Tên')),
-                subtitle: Text(libraryName(c)),
-                trailing: const Icon(Icons.edit_outlined),
+                icon: Icons.edit_outlined,
+                title: libraryName(c),
+                subtitle: tr(
+                  context,
+                  'The name at the top of the home',
+                  'Tên hiện ở đầu trang chính',
+                ),
+                navigates: true,
                 onTap: () async {
                   final name = await _askName(context, c);
                   if (name != null) await set('libraryName', name);
@@ -125,16 +223,11 @@ class SaveSettingsPage extends StatelessWidget {
             ],
           ),
           HandySettingsSection(
-            title: tr(context, 'Opening links', 'Mở link'),
-            description: tr(
-              context,
-              'Where a saved link opens when you tap it.',
-              'Link đã lưu mở ở đâu khi bạn chạm vào.',
-            ),
+            title: tr(context, 'Opening and finding', 'Mở và tìm'),
             children: [
               HandySettingRow(
                 stackBelow: 600,
-                label: tr(context, 'Open with', 'Mở bằng'),
+                label: tr(context, 'Open links with', 'Mở link bằng'),
                 control: SegmentedButton<String>(
                   key: const Key('set-open'),
                   showSelectedIcon: false,
@@ -159,120 +252,29 @@ class SaveSettingsPage extends StatelessWidget {
               SwitchListTile.adaptive(
                 key: const Key('set-cards'),
                 title: Text(
-                  tr(context, 'Show links as cards', 'Hiện link dạng thẻ'),
+                  tr(context, 'Show lists as cards', 'Hiện danh sách dạng thẻ'),
+                ),
+                subtitle: Text(
+                  tr(
+                    context,
+                    'Bigger pictures, fewer items per screen',
+                    'Ảnh to hơn, ít mục hơn mỗi màn hình',
+                  ),
                 ),
                 value: p['cards'] == true,
                 onChanged: (v) => set('cards', v),
               ),
-            ],
-          ),
-          HandySettingsSection(
-            title: tr(context, 'Page details', 'Thông tin trang'),
-            description: tr(
-              context,
-              'Off: Save keeps only what was shared, and contacts no website. On: it reads the public page for a title and picture after you save.',
-              'Tắt: Save chỉ giữ những gì được chia sẻ, không liên hệ website nào. Bật: Save đọc trang công khai để lấy tiêu đề và ảnh sau khi lưu.',
-            ),
-            children: [
-              SwitchListTile.adaptive(
-                key: const Key('set-metadata'),
-                title: Text(
-                  tr(
-                    context,
-                    'Read pages after saving',
-                    'Đọc trang sau khi lưu',
-                  ),
-                ),
-                value: p['automaticMetadata'] == true,
-                onChanged: (v) => set('automaticMetadata', v),
-              ),
-            ],
-          ),
-          HandySettingsSection(
-            title: tr(context, 'Reminders and search', 'Hẹn nhắc và tìm kiếm'),
-            children: [
-              if (scope.reminders.supported)
-                SwitchListTile.adaptive(
-                  key: const Key('set-reminders'),
-                  title: Text(tr(context, 'Notify me', 'Thông báo cho tôi')),
-                  subtitle: Text(
-                    tr(
-                      context,
-                      'The next 50 reminders, without link titles.',
-                      '50 hẹn nhắc gần nhất, không kèm tiêu đề link.',
-                    ),
-                  ),
-                  value: p['notifications'] == true,
-                  onChanged: (v) async {
-                    final allowed = !v || await scope.reminders.request();
-                    await set('notifications', v && allowed);
-                  },
-                ),
-              if (scope.reminders.supported)
-                SwitchListTile.adaptive(
-                  key: const Key('set-revisit'),
-                  title: Text(tr(context, 'Weekly nudge', 'Nhắc mỗi tuần')),
-                  subtitle: Text(
-                    revisitWhen(
-                      context,
-                      p['revisitDay'] as int? ?? DateTime.sunday,
-                      p['revisitHour'] as int? ?? 19,
-                    ),
-                  ),
-                  value: p['revisit'] == true,
-                  onChanged: (v) async {
-                    final allowed = !v || await scope.reminders.request();
-                    await set('revisit', v && allowed);
-                  },
-                ),
-              if (scope.reminders.supported && p['revisit'] == true)
-                HandySettingRow(
-                  stackBelow: 600,
-                  label: tr(context, 'When', 'Lúc nào'),
-                  control: Wrap(
-                    spacing: HandySpace.s,
-                    children: [
-                      DropdownButton<int>(
-                        key: const Key('set-revisit-day'),
-                        value: p['revisitDay'] as int? ?? DateTime.sunday,
-                        items: [
-                          for (var d = 1; d <= 7; d++)
-                            DropdownMenuItem(
-                              value: d,
-                              child: Text(weekdayName(context, d)),
-                            ),
-                        ],
-                        onChanged: (d) => set('revisitDay', d!),
-                      ),
-                      DropdownButton<int>(
-                        key: const Key('set-revisit-hour'),
-                        value: p['revisitHour'] as int? ?? 19,
-                        items: [
-                          for (var h = 7; h <= 22; h++)
-                            DropdownMenuItem(
-                              value: h,
-                              child: Text('${h.toString().padLeft(2, '0')}:00'),
-                            ),
-                        ],
-                        onChanged: (h) => set('revisitHour', h!),
-                      ),
-                    ],
-                  ),
-                ),
-              if (!scope.reminders.supported)
-                ListTile(
-                  title: Text(
-                    tr(
-                      context,
-                      'Notifications are not available here; reminders show on each link.',
-                      'Nền tảng này chưa có thông báo; hẹn nhắc vẫn hiện trên từng link.',
-                    ),
-                  ),
-                ),
               SwitchListTile.adaptive(
                 key: const Key('set-history'),
                 title: Text(
                   tr(context, 'Remember searches', 'Nhớ các lần tìm'),
+                ),
+                subtitle: Text(
+                  tr(
+                    context,
+                    'Turning it off forgets them',
+                    'Tắt đi sẽ xóa các lần tìm đã nhớ',
+                  ),
                 ),
                 value: p['recentSearchesEnabled'] == true,
                 onChanged: (v) => scope.run(
@@ -290,30 +292,268 @@ class SaveSettingsPage extends StatelessWidget {
             ],
           ),
           HandySettingsSection(
-            title: tr(context, 'Help', 'Trợ giúp'),
+            title: tr(context, 'Page details', 'Thông tin trang'),
+            description: tr(
+              context,
+              'Off: only what was shared is kept, and no website is contacted. On: after you save, the app reads the public page for its title and picture.',
+              'Tắt: chỉ giữ những gì được chia sẻ, không liên hệ website nào. Bật: sau khi lưu, app đọc trang công khai để lấy tiêu đề và ảnh.',
+            ),
             children: [
-              ListTile(
-                key: const Key('set-guide'),
-                leading: const Icon(Icons.school_outlined),
-                title: Text(tr(context, 'How to save', 'Cách lưu')),
-                subtitle: Text(
+              SwitchListTile.adaptive(
+                key: const Key('set-metadata'),
+                title: Text(
                   tr(
                     context,
-                    'The first-run guide: share, paste or add a picture.',
-                    'Hướng dẫn lần đầu: chia sẻ, dán link hoặc thêm ảnh.',
+                    'Read pages after saving',
+                    'Đọc trang sau khi lưu',
                   ),
                 ),
-                onTap: () => Navigator.pushNamed(context, '/welcome'),
+                value: p['automaticMetadata'] == true,
+                onChanged: (v) => set('automaticMetadata', v),
               ),
             ],
           ),
+
+          // Reminders.
+          _GroupHead(tr(context, 'Reminders', 'Nhắc nhở')),
+          HandySettingsSection(
+            title: tr(context, 'Notifications', 'Thông báo'),
+            description: scope.reminders.supported
+                ? tr(
+                    context,
+                    'Reminders never show a link\'s title on the lock screen.',
+                    'Thông báo không bao giờ hiện tiêu đề link trên màn hình khóa.',
+                  )
+                : null,
+            children: [
+              if (scope.reminders.supported) ...[
+                SwitchListTile.adaptive(
+                  key: const Key('set-reminders'),
+                  title: Text(tr(context, 'Remind me', 'Nhắc tôi')),
+                  subtitle: Text(
+                    tr(
+                      context,
+                      'For reminders you set on an item. The next 50 are scheduled.',
+                      'Cho các hẹn nhắc bạn đặt trên từng mục. Lên lịch 50 hẹn gần nhất.',
+                    ),
+                  ),
+                  value: p['notifications'] == true,
+                  onChanged: (v) async {
+                    final allowed = !v || await scope.reminders.request();
+                    await set('notifications', v && allowed);
+                  },
+                ),
+                SwitchListTile.adaptive(
+                  key: const Key('set-revisit'),
+                  title: Text(tr(context, 'Weekly nudge', 'Nhắc mỗi tuần')),
+                  subtitle: Text(
+                    revisitWhen(
+                      context,
+                      p['revisitDay'] as int? ?? DateTime.sunday,
+                      p['revisitHour'] as int? ?? 19,
+                    ),
+                  ),
+                  value: p['revisit'] == true,
+                  onChanged: (v) async {
+                    final allowed = !v || await scope.reminders.request();
+                    await set('revisit', v && allowed);
+                  },
+                ),
+                if (p['revisit'] == true)
+                  HandySettingRow(
+                    stackBelow: 360,
+                    label: tr(context, 'When', 'Lúc nào'),
+                    control: Wrap(
+                      spacing: HandySpace.m,
+                      children: [
+                        DropdownButton<int>(
+                          key: const Key('set-revisit-day'),
+                          value: p['revisitDay'] as int? ?? DateTime.sunday,
+                          underline: const SizedBox.shrink(),
+                          borderRadius: BorderRadius.circular(16),
+                          items: [
+                            for (var d = 1; d <= 7; d++)
+                              DropdownMenuItem(
+                                value: d,
+                                child: Text(weekdayName(context, d)),
+                              ),
+                          ],
+                          onChanged: (d) => set('revisitDay', d!),
+                        ),
+                        DropdownButton<int>(
+                          key: const Key('set-revisit-hour'),
+                          value: p['revisitHour'] as int? ?? 19,
+                          underline: const SizedBox.shrink(),
+                          borderRadius: BorderRadius.circular(16),
+                          items: [
+                            for (var h = 7; h <= 22; h++)
+                              DropdownMenuItem(
+                                value: h,
+                                child: Text(
+                                  '${h.toString().padLeft(2, '0')}:00',
+                                ),
+                              ),
+                          ],
+                          onChanged: (h) => set('revisitHour', h!),
+                        ),
+                      ],
+                    ),
+                  ),
+              ] else
+                HandyTile(
+                  icon: Icons.notifications_off_outlined,
+                  title: tr(context, 'Not available here', 'Chưa có ở đây'),
+                  subtitle: tr(
+                    context,
+                    'This device or browser cannot show notifications. Reminders still show on each item and in the home.',
+                    'Thiết bị hoặc trình duyệt này không hiện được thông báo. Hẹn nhắc vẫn hiện trên từng mục và ở trang chính.',
+                  ),
+                  subtitleLines: 4,
+                ),
+            ],
+          ),
+
+          // Your data.
+          _GroupHead(
+            tr(context, 'Your data', 'Dữ liệu của bạn'),
+            note: tr(
+              context,
+              'Kept on this device. It leaves only when you export it, sync it through a folder or share a page.',
+              'Lưu trên máy này. Dữ liệu chỉ rời máy khi bạn xuất file, đồng bộ qua thư mục hoặc chia sẻ một trang.',
+            ),
+          ),
+          SaveStorageSection(scope: scope),
+          SaveBackupSection(scope: scope),
           if (scope.autoBackup != null)
             HandyAutoBackupSection(backup: scope.autoBackup!),
           SyncSection(scope: scope, folders: syncFolders),
-          SaveDataSection(scope: scope),
+
+          // About & advanced.
+          _GroupHead(tr(context, 'Help and advanced', 'Trợ giúp và nâng cao')),
+          HandySettingsSection(
+            title: tr(context, 'Help', 'Trợ giúp'),
+            children: [
+              HandyTile(
+                key: const Key('set-guide'),
+                icon: Icons.school_outlined,
+                title: tr(context, 'How to save', 'Cách lưu'),
+                subtitle: tr(
+                  context,
+                  'The short guide: share, paste or add a picture.',
+                  'Hướng dẫn ngắn: chia sẻ, dán link hoặc thêm ảnh.',
+                ),
+                navigates: true,
+                onTap: () => Navigator.pushNamed(context, '/welcome'),
+              ),
+              HandyTile(
+                key: const Key('save-privacy'),
+                icon: Icons.privacy_tip_outlined,
+                title: tr(context, 'Privacy', 'Quyền riêng tư'),
+                subtitle: tr(
+                  context,
+                  'What stays here, and when something leaves',
+                  'Điều gì ở lại máy, và khi nào dữ liệu rời máy',
+                ),
+                navigates: true,
+                onTap: () => showPrivacy(context),
+              ),
+            ],
+          ),
+          SaveLibraryTools(scope: scope),
+          const HandyProSection(),
+          const HandyMoreApps(app: 'bookmark'),
+          HandySettingsSection(
+            title: tr(context, 'About', 'Giới thiệu'),
+            children: [
+              HandyTile(
+                icon: Icons.description_outlined,
+                title: tr(
+                  context,
+                  'Open-source licenses',
+                  'Giấy phép mã nguồn mở',
+                ),
+                navigates: true,
+                onTap: () => showLicensePage(
+                  context: context,
+                  applicationName: 'Handy Bookmark',
+                ),
+              ),
+            ],
+          ),
+
+          // Apart, last: what cannot be taken back.
+          const SizedBox(height: HandySpace.xl),
+          HandySettingsSection(
+            title: tr(context, 'Reset and delete', 'Đặt lại và xóa'),
+            description: tr(
+              context,
+              'Deleting cannot be undone. Export a backup first if you may want it back.',
+              'Xóa thì không hoàn tác được. Hãy xuất bản sao lưu trước nếu còn cần.',
+            ),
+            children: [
+              HandyTile(
+                key: const Key('settings-reset'),
+                icon: Icons.settings_backup_restore,
+                title: tr(context, 'Reset preferences', 'Đặt lại cài đặt'),
+                subtitle: tr(
+                  context,
+                  'Language and appearance. Your library stays.',
+                  'Ngôn ngữ và giao diện. Thư viện vẫn giữ.',
+                ),
+                onTap: _resetPreferences,
+              ),
+              HandyTile(
+                key: const Key('save-reset'),
+                icon: Icons.delete_forever_outlined,
+                destructive: true,
+                title: tr(
+                  context,
+                  'Delete all links and collections',
+                  'Xóa mọi link và bộ sưu tập',
+                ),
+                onTap: () => deleteEverything(context, scope),
+              ),
+            ],
+          ),
         ],
-        onReset: () => save(HandyPreferences()),
       );
     },
   );
+}
+
+/// A group's name over its sections: larger than the sections' own
+/// titles, with an optional sentence that sums the group up.
+class _GroupHead extends StatelessWidget {
+  final String title;
+  final String? note;
+  final bool first;
+  const _GroupHead(this.title, {this.note, this.first = false});
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Padding(
+      padding: EdgeInsets.only(top: first ? HandySpace.s : 56),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Semantics(
+            header: true,
+            child: Text(
+              title,
+              style: theme.textTheme.headlineSmall?.copyWith(fontSize: 22),
+            ),
+          ),
+          if (note != null) ...[
+            const SizedBox(height: HandySpace.xs),
+            Text(
+              note!,
+              style: theme.textTheme.bodyMedium?.copyWith(
+                color: HandyColors.of(context).muted,
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
 }

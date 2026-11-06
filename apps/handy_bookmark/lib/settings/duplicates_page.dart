@@ -1,5 +1,6 @@
 import 'package:handy_bookmark_engine/handy_bookmark_engine.dart';
 import 'package:handy_ui/kit.dart';
+import '../design/theme.dart';
 import '../scope.dart';
 
 /// Links saved more than once: each group lists its copies, the person
@@ -51,23 +52,39 @@ class _DuplicatesPageState extends State<DuplicatesPage> {
       final l = scope.c.library!;
       final groups = duplicateGroups(l);
       final theme = Theme.of(context);
-      final c = HandyColors.of(context);
+      final p = BookmarkPalette.of(context);
       final names = {for (final x in l.collections) x.id: x.name};
       return Scaffold(
         appBar: AppBar(
           title: Text(tr(context, 'Saved twice', 'Link lưu trùng')),
         ),
         body: groups.isEmpty
-            ? HandyEmpty(
+            ? ListView(
                 key: const Key('duplicates-none'),
-                title: tr(
-                  context,
-                  'Every link is saved once.',
-                  'Mỗi link chỉ lưu một lần.',
-                ),
+                padding: const EdgeInsets.fromLTRB(16, 48, 16, 32),
+                children: [
+                  HandyContent(
+                    maxWidth: 420,
+                    child: Column(
+                      children: [
+                        Icon(Icons.done_all, size: 32, color: p.sage),
+                        const SizedBox(height: 16),
+                        Text(
+                          tr(
+                            context,
+                            'Every link is saved once.',
+                            'Mỗi link chỉ lưu một lần.',
+                          ),
+                          textAlign: TextAlign.center,
+                          style: theme.textTheme.titleLarge,
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
               )
             : ListView(
-                padding: const EdgeInsets.all(HandySpace.l),
+                padding: const EdgeInsets.fromLTRB(16, 4, 16, 32),
                 children: [
                   HandyContent(
                     maxWidth: 720,
@@ -81,79 +98,125 @@ class _DuplicatesPageState extends State<DuplicatesPage> {
                             'Chọn bản giữ lại. Nhãn, ghi chú, bộ sưu tập, yêu thích và số lần mở của các bản kia chuyển sang bản này.',
                           ),
                           style: theme.textTheme.bodyMedium?.copyWith(
-                            color: c.muted,
+                            color: p.muted,
                           ),
                         ),
                         for (final (gi, group) in groups.indexed) ...[
-                          HandyLabel(
-                            group.first.title.isNotEmpty
-                                ? group.first.title
-                                : group.first.sourceDomain,
-                            trailing: FilledButton.tonal(
-                              key: Key('duplicates-merge-$gi'),
-                              onPressed: () => merge(group),
-                              child: Text(
-                                tr(
-                                  context,
-                                  'Merge ${group.length}',
-                                  'Gộp ${group.length}',
-                                ),
-                              ),
+                          const SizedBox(height: 16),
+                          Material(
+                            color: p.surface,
+                            borderRadius: BorderRadius.circular(
+                              BookmarkRadii.item,
                             ),
-                          ),
-                          HandyGroup(
-                            children: [
-                              RadioGroup<String>(
-                                groupValue:
-                                    keep[group.first.id] ?? group.first.id,
-                                onChanged: (v) =>
-                                    setState(() => keep[group.first.id] = v!),
-                                child: Column(
-                                  children: [
-                                    for (final b in group)
-                                      RadioListTile<String>(
-                                        key: Key('duplicates-keep-${b.id}'),
-                                        value: b.id,
-                                        title: Text(
-                                          b.title.isNotEmpty
-                                              ? b.title
-                                              : b.originalUrl,
-                                          maxLines: 1,
-                                          overflow: TextOverflow.ellipsis,
+                            clipBehavior: Clip.antiAlias,
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.stretch,
+                              children: [
+                                Padding(
+                                  padding: const EdgeInsets.fromLTRB(
+                                    16,
+                                    14,
+                                    16,
+                                    4,
+                                  ),
+                                  child: Semantics(
+                                    header: true,
+                                    child: Text(
+                                      group.first.title.isNotEmpty
+                                          ? group.first.title
+                                          : group.first.sourceDomain,
+                                      maxLines: 2,
+                                      overflow: TextOverflow.ellipsis,
+                                      style: theme.textTheme.titleMedium,
+                                    ),
+                                  ),
+                                ),
+                                RadioGroup<String>(
+                                  groupValue:
+                                      keep[group.first.id] ?? group.first.id,
+                                  onChanged: (v) =>
+                                      setState(() => keep[group.first.id] = v!),
+                                  child: Column(
+                                    children: [
+                                      for (final b in group)
+                                        RadioListTile<String>(
+                                          key: Key('duplicates-keep-${b.id}'),
+                                          value: b.id,
+                                          title: Text(
+                                            b.title.isNotEmpty
+                                                ? b.title
+                                                : b.originalUrl,
+                                            maxLines: 1,
+                                            overflow: TextOverflow.ellipsis,
+                                          ),
+                                          subtitle: Text(
+                                            [
+                                              tr(
+                                                context,
+                                                'saved ${formatDay(context, b.savedAt.substring(0, 10))}',
+                                                'lưu ${formatDay(context, b.savedAt.substring(0, 10))}',
+                                              ),
+                                              if (b.collectionId != null &&
+                                                  names[b.collectionId] != null)
+                                                names[b.collectionId]!,
+                                              if (b.note.isNotEmpty)
+                                                tr(
+                                                  context,
+                                                  'note',
+                                                  'có ghi chú',
+                                                ),
+                                              if (scope.c.readingIds
+                                                  .containsKey(b.id))
+                                                tr(
+                                                  context,
+                                                  'offline copy',
+                                                  'có bản đọc',
+                                                ),
+                                              if (b.isArchived)
+                                                tr(
+                                                  context,
+                                                  'archived',
+                                                  'đã lưu trữ',
+                                                ),
+                                            ].join(' · '),
+                                          ),
                                         ),
-                                        subtitle: Text(
-                                          [
-                                            tr(
-                                              context,
-                                              'saved ${formatDay(context, b.savedAt.substring(0, 10))}',
-                                              'lưu ${formatDay(context, b.savedAt.substring(0, 10))}',
-                                            ),
-                                            if (b.collectionId != null &&
-                                                names[b.collectionId] != null)
-                                              names[b.collectionId]!,
-                                            if (b.note.isNotEmpty)
-                                              tr(context, 'note', 'có ghi chú'),
-                                            if (scope.c.readingIds.containsKey(
-                                              b.id,
-                                            ))
-                                              tr(
-                                                context,
-                                                'offline copy',
-                                                'có bản đọc',
-                                              ),
-                                            if (b.isArchived)
-                                              tr(
-                                                context,
-                                                'archived',
-                                                'đã lưu trữ',
-                                              ),
-                                          ].join(' · '),
+                                    ],
+                                  ),
+                                ),
+                                Padding(
+                                  padding: const EdgeInsets.fromLTRB(
+                                    16,
+                                    4,
+                                    16,
+                                    16,
+                                  ),
+                                  child: Align(
+                                    alignment: AlignmentDirectional.centerEnd,
+                                    child: FilledButton.tonal(
+                                      key: Key('duplicates-merge-$gi'),
+                                      style: FilledButton.styleFrom(
+                                        backgroundColor: p.tint,
+                                        foregroundColor:
+                                            theme.brightness == Brightness.dark
+                                            ? p.ink
+                                            : p.pressed,
+                                        minimumSize: const Size(48, 44),
+                                        shape: const StadiumBorder(),
+                                      ),
+                                      onPressed: () => merge(group),
+                                      child: Text(
+                                        tr(
+                                          context,
+                                          'Merge ${group.length} into one',
+                                          'Gộp ${group.length} thành một',
                                         ),
                                       ),
-                                  ],
+                                    ),
+                                  ),
                                 ),
-                              ),
-                            ],
+                              ],
+                            ),
                           ),
                         ],
                       ],

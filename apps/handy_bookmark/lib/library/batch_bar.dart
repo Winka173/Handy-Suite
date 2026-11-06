@@ -93,7 +93,7 @@ class BatchBar extends StatelessWidget {
               final id = await pickCollection(context, scope.library);
               if (id == null || !context.mounted) return;
               await apply(
-                tr(context, 'Moved $n links.', 'Đã chuyển $n link.'),
+                tr(context, 'Moved $n items.', 'Đã chuyển $n mục.'),
                 () => v.batch(
                   (b) => b.copyWith(collectionId: id.isEmpty ? null : id),
                 ),
@@ -105,7 +105,7 @@ class BatchBar extends StatelessWidget {
             tooltip: tr(context, 'Archive', 'Lưu trữ'),
             icon: const Icon(Icons.archive_outlined),
             onPressed: () => apply(
-              tr(context, 'Archived $n links.', 'Đã lưu trữ $n link.'),
+              tr(context, 'Archived $n items.', 'Đã lưu trữ $n mục.'),
               () => v.batch((b) => b.copyWith(isArchived: true)),
             ),
           ),

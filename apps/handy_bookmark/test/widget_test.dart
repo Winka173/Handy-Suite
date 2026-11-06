@@ -94,7 +94,7 @@ void main() {
     (tester) async {
       final store = TestStore();
       final c = await start(tester, store: store);
-      expect(find.text('Save your first link'), findsOneWidget);
+      expect(find.text('Save something worth keeping'), findsOneWidget);
       await tapKey(tester, 'save-new');
       await tapKey(tester, 'save-add');
       await tester.enterText(
@@ -137,10 +137,13 @@ void main() {
     final c = await start(tester, store: store, seed: recipes);
     final id = c.library!.bookmarks.single.id;
     store.fail = true;
+    // One "Put in…" button opens the usual collections.
+    await tapKey(tester, 'file-$id');
     await tapKey(tester, 'file-$id-recipes');
     expect(c.library!.bookmarks.single.collectionId, isNull);
     expect(find.byKey(ValueKey('triage-$id')), findsOneWidget);
     store.fail = false;
+    await tapKey(tester, 'file-$id');
     await tapKey(tester, 'file-$id-recipes');
     expect(c.library!.bookmarks.single.collectionId, 'recipes');
     expect(find.text('All sorted', skipOffstage: false), findsOneWidget);

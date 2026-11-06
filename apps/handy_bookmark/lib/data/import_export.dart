@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:handy_bookmark_engine/handy_bookmark_engine.dart';
 import 'package:handy_ui/kit.dart';
+import '../controller.dart';
 import '../scope.dart';
 
 PortableExport _encode(
@@ -9,6 +10,8 @@ PortableExport _encode(
     SaveFormat,
     Map<String, ReadingCopy>,
     Map<String, PortablePicture>,
+    Object?,
+    int,
   )
   v,
 ) => SavePortable.exportWithReport(
@@ -16,6 +19,8 @@ PortableExport _encode(
   v.$2,
   readingCopies: v.$3,
   pictures: v.$4,
+  collectionViews: v.$5,
+  unreadableReadingCopies: v.$6,
 );
 ImportPreview _preview((Uint8List, SaveFormat, SaveLibrary) v) =>
     SavePortable.preview(v.$1, v.$2, current: v.$3);
@@ -33,8 +38,8 @@ String formatName(BuildContext c, SaveFormat f) => switch (f) {
   ),
   SaveFormat.zip => tr(
     c,
-    'Full backup with pictures and offline copies (ZIP)',
-    'Sao lưu đầy đủ, kèm ảnh và bản đọc offline (ZIP)',
+    'Backup with pictures and offline copies (ZIP)',
+    'Bản sao lưu kèm ảnh và bản đọc offline (ZIP)',
   ),
   SaveFormat.html => tr(
     c,
@@ -48,19 +53,50 @@ String formatName(BuildContext c, SaveFormat f) => switch (f) {
 
 /// Saving the library somewhere else, and bringing a file in.
 extension ImportExport on SaveScope {
-  /// The full ZIP backup, offline copies included; what automatic backups
-  /// write.
+  /// What automatic backups write: the ZIP backup with pictures, offline
+  /// copies and how each collection is shown. What it had to leave out
+  /// (too large, missing or unreadable here) is kept as
+  /// [SaveController.lastBackup], so Settings can say so; it is only a
+  /// full backup when that report is complete.
   Future<Uint8List> fullBackup() async {
-    final copies = c.readingIds.isNotEmpty
-        ? await c.allReadingCopies()
-        : const <String, ReadingCopy>{};
-    final pictures = await _pictures(library);
-    return (await compute(_encode, (
-      library,
-      SaveFormat.zip,
-      copies,
+    final lib = library;
+    final out = await backupWithReport(lib);
+    await c.recordBackup(
+      BackupReport.of(
+        out,
+        at: saveTime(),
+        automatic: true,
+        links: lib.bookmarks.length,
+      ),
+    );
+    return out.bytes;
+  }
+
+  /// [lib] (the whole library unless given) as a [format] file, with the
+  /// count of everything it holds and leaves out
+  /// ([PortableExport.omissions]). Nothing is recorded.
+  Future<PortableExport> backupWithReport([
+    SaveLibrary? lib,
+    SaveFormat format = SaveFormat.zip,
+  ]) async {
+    lib ??= library;
+    // Offline copies are always asked for: the index on screen may be
+    // stale, and a copy is never left out silently.
+    final full = format == SaveFormat.json || format == SaveFormat.zip;
+    final reading = full
+        ? await c.readingCopiesForBackup()
+        : (copies: const <String, ReadingCopy>{}, unreadable: 0);
+    final pictures = format == SaveFormat.zip
+        ? await _pictures(lib)
+        : const <String, PortablePicture>{};
+    return compute(_encode, (
+      lib,
+      format,
+      reading.copies,
       pictures,
-    ))).bytes;
+      c.preferences['collectionViews'],
+      reading.unreadable,
+    ));
   }
 
   /// The bytes of every picture [lib]'s items (and Trash items) use that
@@ -108,15 +144,8 @@ extension ImportExport on SaveScope {
         tombstones: const [],
       );
     await run(context, () async {
-      // Full backups carry offline copies within the 30 MB budget.
-      final full = format == SaveFormat.json || format == SaveFormat.zip;
-      final copies = full && c.readingIds.isNotEmpty
-          ? await c.allReadingCopies()
-          : const <String, ReadingCopy>{};
-      final pictures = format == SaveFormat.zip
-          ? await _pictures(lib)
-          : const <String, PortablePicture>{};
-      final out = await compute(_encode, (lib, format, copies, pictures));
+      // JSON and ZIP carry offline copies within the 30 MB budget.
+      final out = await backupWithReport(lib, format);
       final bytes = out.bytes;
       final uri = await files.exportBytes(
         'handy-bookmark.${format == SaveFormat.markdown ? 'md' : format.name}',
@@ -167,6 +196,12 @@ extension ImportExport on SaveScope {
                 context,
                 '${out.picturesMissing} pictures are missing on this device and could not be included.',
                 '${out.picturesMissing} ảnh không còn trên máy nên không thể đưa vào.',
+              ),
+            if (out.readingUnreadable > 0)
+              tr(
+                context,
+                '${out.readingUnreadable} offline copies could not be read on this device and were left out.',
+                '${out.readingUnreadable} bản đọc offline không đọc được trên máy nên bị bỏ ra.',
               ),
             if (format != SaveFormat.zip &&
                 lib.bookmarks.any((b) => b.media != null))
@@ -225,54 +260,83 @@ extension ImportExport on SaveScope {
     final archived = preview.library.bookmarks.where((b) => b.isArchived);
     final adding = preview.fresh(baseline);
     final fresh = adding.length;
+    // Collections in the file that already exist here by name and place
+    // (a second import of the same export): the person chooses whether new
+    // links join them; by default they stay separate.
+    final same = preview.sameNamedCollections(baseline);
+    final sameNames = {
+      for (final c in baseline.collections)
+        if (same.values.contains(c.id)) c.name,
+    }.toList();
+    var reuse = false;
     final ok = await showDialog<bool>(
       context: context,
-      builder: (context) => AlertDialog(
-        title: Text(
-          tr(
-            context,
-            'Bring in $fresh links from $name?',
-            'Nhập $fresh link từ $name?',
-          ),
-        ),
-        scrollable: true,
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              tr(
-                context,
-                '${preview.validCount} in the file: ${archived.length} archived (they arrive archived and read), ${preview.duplicateCount} already saved here, ${preview.invalidCount} could not be read.',
-                '${preview.validCount} link trong file: ${archived.length} đã lưu trữ (nhập vào sẽ ở Lưu trữ, đã đọc), ${preview.duplicateCount} đã có sẵn, ${preview.invalidCount} không đọc được.',
-              ),
+      builder: (context) => StatefulBuilder(
+        builder: (context, setDialog) => AlertDialog(
+          title: Text(
+            tr(
+              context,
+              'Bring in $fresh links from $name?',
+              'Nhập $fresh link từ $name?',
             ),
-            const SizedBox(height: HandySpace.m),
-            Text(where),
-            const SizedBox(height: HandySpace.m),
-            for (final b in adding.take(5))
+          ),
+          scrollable: true,
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
               Text(
-                '· ${b.title.isEmpty ? b.sourceDomain : b.title}',
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
+                tr(
+                  context,
+                  '${preview.validCount} in the file: ${archived.length} archived (they arrive archived and read), ${preview.duplicateCount} already saved here, ${preview.invalidCount} could not be read.',
+                  '${preview.validCount} link trong file: ${archived.length} đã lưu trữ (nhập vào sẽ ở Lưu trữ, đã đọc), ${preview.duplicateCount} đã có sẵn, ${preview.invalidCount} không đọc được.',
+                ),
               ),
+              const SizedBox(height: HandySpace.m),
+              Text(where),
+              const SizedBox(height: HandySpace.m),
+              for (final b in adding.take(5))
+                Text(
+                  '· ${b.title.isEmpty ? b.sourceDomain : b.title}',
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              if (sameNames.isNotEmpty) ...[
+                const SizedBox(height: HandySpace.m),
+                CheckboxListTile(
+                  key: Key('${name.toLowerCase()}-reuse'),
+                  contentPadding: EdgeInsets.zero,
+                  controlAffinity: ListTileControlAffinity.leading,
+                  value: reuse,
+                  onChanged: (v) => setDialog(() => reuse = v ?? false),
+                  title: Text(
+                    tr(
+                      context,
+                      'Add to my collections with the same name',
+                      'Thêm vào bộ sưu tập cùng tên đã có',
+                    ),
+                  ),
+                  subtitle: Text(sameNames.take(4).join(', ')),
+                ),
+              ],
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context, false),
+              child: Text(tr(context, 'Cancel', 'Hủy')),
+            ),
+            FilledButton(
+              key: Key('${name.toLowerCase()}-add'),
+              onPressed: fresh == 0 ? null : () => Navigator.pop(context, true),
+              child: Text(tr(context, 'Add $fresh links', 'Thêm $fresh link')),
+            ),
           ],
         ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: Text(tr(context, 'Cancel', 'Hủy')),
-          ),
-          FilledButton(
-            key: Key('${name.toLowerCase()}-add'),
-            onPressed: fresh == 0 ? null : () => Navigator.pop(context, true),
-            child: Text(tr(context, 'Add $fresh links', 'Thêm $fresh link')),
-          ),
-        ],
       ),
     );
     if (ok != true || !context.mounted) return;
-    await view.change((l) => preview.commit(l));
+    await view.change((l) => preview.commit(l, reuseCollections: reuse));
     if (context.mounted)
       undoMessage(
         context,
@@ -442,6 +506,22 @@ extension ImportExport on SaveScope {
       await c.putReadingCopies(applied!.readingCopies);
     } catch (_) {
       copiesFailed = true;
+    }
+    // How the file's collections were shown. Choices the file does not
+    // mention stay as they are; a failure here loses no links.
+    final views = mergeCollectionViews(
+      c.preferences['collectionViews'],
+      applied!.collectionViews,
+    );
+    if (views != null) {
+      try {
+        await c.update(
+          (l) => l,
+          prefs: {...c.preferences, 'collectionViews': views},
+        );
+      } catch (_) {
+        /* Views are a preference; the import itself is committed. */
+      }
     }
     if (context.mounted)
       undoMessage(

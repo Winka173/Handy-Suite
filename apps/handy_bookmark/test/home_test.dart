@@ -56,7 +56,14 @@ void main() {
       ),
     );
     expect(find.text('3 links'), findsOneWidget);
-    expect(find.text('Món ngon'), findsOneWidget);
+    // The cover names it (the shelf above shows it on each card too).
+    expect(
+      find.descendant(
+        of: find.byKey(const Key('collection-food')),
+        matching: find.text('Món ngon'),
+      ),
+      findsOneWidget,
+    );
     await tapKey(t, 'collection-food');
     await settle(t);
     expect(find.text('Page one'), findsWidgets);
