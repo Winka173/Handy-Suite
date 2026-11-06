@@ -13,6 +13,7 @@ import 'platform/store.dart';
 import 'reader/reader_page.dart';
 import 'scope.dart';
 import 'services/reminders.dart';
+import 'services/revisit.dart';
 import 'library/trash_page.dart';
 import 'settings/duplicates_page.dart';
 import 'settings/save_settings.dart';
@@ -131,8 +132,11 @@ class _SaveAppState extends State<SaveApp> with WidgetsBindingObserver {
       return;
     }
     _pendingOpen = null;
-    if (c.library!.bookmarks.any((b) => b.id == id))
+    if (id == revisitPayload) {
+      nav.pushNamed('/focus');
+    } else if (c.library!.bookmarks.any((b) => b.id == id)) {
       nav.pushNamed('/bookmark/$id');
+    }
   }
 
   /// After any change: rebuild, and keep the OS reminders in step.
@@ -140,12 +144,23 @@ class _SaveAppState extends State<SaveApp> with WidgetsBindingObserver {
     if (mounted) setState(() {});
     _sync?.cancel();
     _sync = Timer(const Duration(milliseconds: 300), () async {
-      if (c.library == null || c.preferences['notifications'] != true) return;
+      final p = c.preferences;
+      if (c.library == null ||
+          (p['notifications'] != true && p['revisit'] != true))
+        return;
       try {
         await reminders.sync(
           c.library!.bookmarks,
-          enabled: true,
+          enabled: p['notifications'] == true,
           vietnamese: prefs.value?.locale == 'vi',
+          revisit: p['revisit'] == true
+              ? planRevisit(
+                  c.library!.bookmarks,
+                  now: DateTime.now(),
+                  weekday: p['revisitDay'] as int? ?? DateTime.sunday,
+                  hour: p['revisitHour'] as int? ?? 19,
+                )
+              : null,
         );
       } catch (_) {
         c.notice = 'notifications_unavailable';

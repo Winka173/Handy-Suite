@@ -4,6 +4,7 @@ import 'package:handy_notifications/native.dart';
 import 'package:handy_notifications/handy_notifications.dart';
 import 'package:handy_bookmark_engine/handy_bookmark_engine.dart';
 import 'package:timezone/timezone.dart' as tz;
+import 'revisit.dart';
 
 class SaveReminders {
   final DeviceNotifications permissions = DeviceNotifications();
@@ -36,10 +37,14 @@ class SaveReminders {
 
   Future<bool> request() =>
       supported ? permissions.allowed(true) : Future.value(false);
+
+  /// Schedules the person's link reminders (when [enabled]) and the weekly
+  /// nudge (when [revisit] is set), and cancels everything else of ours.
   Future<void> sync(
     List<Bookmark> bookmarks, {
     required bool enabled,
     required bool vietnamese,
+    ({DateTime at, int count})? revisit,
   }) async {
     if (!supported) return;
     if (_ready != null) await _ready;
@@ -62,12 +67,41 @@ class SaveReminders {
     };
     if (wanted.length != limited.length)
       throw StateError('Reminder identifier collision');
+    final nudge = ReminderRequest(
+      'save:$revisitPayload',
+      tz.TZDateTime.utc(2000),
+    ).id;
     for (final notification in pending) {
-      if (notification.payload != null && !wanted.containsKey(notification.id))
+      if (notification.payload != null &&
+          !wanted.containsKey(notification.id) &&
+          !(revisit != null && notification.id == nudge))
         await permissions.plugin.cancel(id: notification.id);
     }
-    if (!enabled || !await permissions.allowed(false)) return;
+    if ((!enabled && revisit == null) || !await permissions.allowed(false))
+      return;
     final location = await deviceLocation();
+    if (revisit != null)
+      await permissions.plugin.zonedSchedule(
+        id: nudge,
+        title: 'Handy Bookmark',
+        body: revisitText(revisit.count, vietnamese: vietnamese),
+        scheduledDate: tz.TZDateTime.from(revisit.at, location),
+        notificationDetails: const NotificationDetails(
+          android: AndroidNotificationDetails(
+            'handy-save-revisit',
+            'Weekly nudge',
+            channelDescription: 'A weekly count of new saves not seen yet',
+            importance: Importance.low,
+          ),
+          iOS: DarwinNotificationDetails(
+            presentAlert: true,
+            presentSound: false,
+          ),
+        ),
+        androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
+        payload: revisitPayload,
+      );
+    if (!enabled) return;
     for (final entry in wanted.entries) {
       final b = entry.value;
       await permissions.plugin.zonedSchedule(

@@ -3,6 +3,35 @@ import 'package:handy_ui/kit.dart';
 import '../scope.dart';
 import 'data_section.dart';
 
+/// "Sundays at 19:00, only when new saves wait unread. A count, no titles."
+String revisitWhen(BuildContext context, int day, int hour) => tr(
+  context,
+  '${weekdayName(context, day)}s at ${hour.toString().padLeft(2, '0')}:00, only when new saves wait unread. A count, never titles.',
+  '${weekdayName(context, day)} lúc ${hour.toString().padLeft(2, '0')}:00, chỉ khi có mục mới lưu chưa xem. Chỉ ghi số lượng, không ghi tiêu đề.',
+);
+
+String weekdayName(BuildContext context, int day) => tr(
+  context,
+  const [
+    'Monday',
+    'Tuesday',
+    'Wednesday',
+    'Thursday',
+    'Friday',
+    'Saturday',
+    'Sunday',
+  ][day - 1],
+  const [
+    'Thứ Hai',
+    'Thứ Ba',
+    'Thứ Tư',
+    'Thứ Năm',
+    'Thứ Sáu',
+    'Thứ Bảy',
+    'Chủ Nhật',
+  ][day - 1],
+);
+
 /// Save's settings: the shared page with how links open, what is fetched,
 /// reminders, and the data tools.
 class SaveSettingsPage extends StatelessWidget {
@@ -116,8 +145,59 @@ class SaveSettingsPage extends StatelessWidget {
                     final allowed = !v || await scope.reminders.request();
                     await set('notifications', v && allowed);
                   },
-                )
-              else
+                ),
+              if (scope.reminders.supported)
+                SwitchListTile.adaptive(
+                  key: const Key('set-revisit'),
+                  title: Text(tr(context, 'Weekly nudge', 'Nhắc mỗi tuần')),
+                  subtitle: Text(
+                    revisitWhen(
+                      context,
+                      p['revisitDay'] as int? ?? DateTime.sunday,
+                      p['revisitHour'] as int? ?? 19,
+                    ),
+                  ),
+                  value: p['revisit'] == true,
+                  onChanged: (v) async {
+                    final allowed = !v || await scope.reminders.request();
+                    await set('revisit', v && allowed);
+                  },
+                ),
+              if (scope.reminders.supported && p['revisit'] == true)
+                HandySettingRow(
+                  stackBelow: 600,
+                  label: tr(context, 'When', 'Lúc nào'),
+                  control: Wrap(
+                    spacing: HandySpace.s,
+                    children: [
+                      DropdownButton<int>(
+                        key: const Key('set-revisit-day'),
+                        value: p['revisitDay'] as int? ?? DateTime.sunday,
+                        items: [
+                          for (var d = 1; d <= 7; d++)
+                            DropdownMenuItem(
+                              value: d,
+                              child: Text(weekdayName(context, d)),
+                            ),
+                        ],
+                        onChanged: (d) => set('revisitDay', d!),
+                      ),
+                      DropdownButton<int>(
+                        key: const Key('set-revisit-hour'),
+                        value: p['revisitHour'] as int? ?? 19,
+                        items: [
+                          for (var h = 7; h <= 22; h++)
+                            DropdownMenuItem(
+                              value: h,
+                              child: Text('${h.toString().padLeft(2, '0')}:00'),
+                            ),
+                        ],
+                        onChanged: (h) => set('revisitHour', h!),
+                      ),
+                    ],
+                  ),
+                ),
+              if (!scope.reminders.supported)
                 ListTile(
                   title: Text(
                     tr(
