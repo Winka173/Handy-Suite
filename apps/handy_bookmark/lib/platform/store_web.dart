@@ -61,9 +61,15 @@ typedef _Guard = void Function(void Function());
 /// IndexedDB records are independent; a library is never serialized into one
 /// localStorage value. Browser quota/eviction still requires portable backups.
 class BrowserBookmarkStore implements BookmarkStore {
-  /// IndexedDB version. 2 added the `reading` store (offline copies).
-  static const _version = 2;
-  static const _names = ['bookmarks', 'state', 'thumbnails', 'reading'];
+  /// 3 adds deleted-copy retention; upgrade does not rewrite existing records.
+  static const _version = 3;
+  static const _names = [
+    'bookmarks',
+    'state',
+    'thumbnails',
+    'reading',
+    'readingTrash',
+  ];
   static const _cacheBudget = 20000000;
   final web.IDBDatabase _database;
   bool _closed = false;
@@ -256,29 +262,95 @@ class BrowserBookmarkStore implements BookmarkStore {
   }) async {
     // Validate/encode before opening a transaction; no async gap may make an
     // IndexedDB transaction inactive between its clear and subsequent puts.
-    final rows = <JSAny>[];
+    final rows = <String, JSAny>{};
+    final urls = <String, String>{};
     for (final record in upserts) {
       final bookmark = Bookmark.fromJson(record);
-      rows.add({'id': bookmark.id, 'payload': jsonEncode(record)}.jsify()!);
+      rows[bookmark.id] = {
+        'id': bookmark.id,
+        'payload': jsonEncode(record),
+      }.jsify()!;
+      urls[bookmark.id] = bookmark.normalizedUrl;
     }
     final state = settings == null ? null : jsonEncode(settings);
     await _run<bool>(_names, 'readwrite', (tx, result, guard) {
       final bookmarks = tx.objectStore('bookmarks');
       final thumbnails = tx.objectStore('thumbnails');
       final reading = tx.objectStore('reading');
+      final trash = tx.objectStore('readingTrash');
+      final now = DateTime.now().millisecondsSinceEpoch;
+      void upsert(String id) {
+        bookmarks.put(rows[id]!);
+        final retained = trash.get(id.toJS);
+        retained.onsuccess = ((web.Event _) {
+          guard(() {
+            final raw = retained.result.dartify();
+            if (raw is Map &&
+                raw['url'] == urls[id] &&
+                (raw['expiresAt'] as num) > now) {
+              final existing = reading.get(id.toJS);
+              existing.onsuccess = ((web.Event _) {
+                guard(() {
+                  if (existing.result == null)
+                    reading.put(_object(raw['copy']).jsify()!);
+                });
+              }).toJS;
+            }
+            trash.delete(id.toJS);
+          });
+        }).toJS;
+      }
+
       if (replace) {
         bookmarks.clear();
         thumbnails.clear();
         reading.clear();
+        trash.clear();
       }
       for (final id in deletes) {
-        bookmarks.delete(id.toJS);
-        thumbnails.delete(id.toJS);
-        reading.delete(id.toJS);
+        final link = bookmarks.get(id.toJS);
+        link.onsuccess = ((web.Event _) {
+          guard(() {
+            final original = link.result.dartify();
+            final article = reading.get(id.toJS);
+            article.onsuccess = ((web.Event _) {
+              guard(() {
+                final value = article.result.dartify();
+                if (original is Map && value != null) {
+                  final payload = _object(
+                    jsonDecode(original['payload'] as String),
+                  );
+                  trash.put(
+                    {
+                      'id': id,
+                      'url': payload['normalizedUrl'],
+                      'expiresAt': now + readingUndoRetention.inMilliseconds,
+                      'copy': value,
+                    }.jsify()!,
+                  );
+                }
+                bookmarks.delete(id.toJS);
+                thumbnails.delete(id.toJS);
+                reading.delete(id.toJS);
+                if (rows.containsKey(id)) upsert(id);
+              });
+            }).toJS;
+          });
+        }).toJS;
       }
-      for (final row in rows) {
-        bookmarks.put(row);
+      for (final id in rows.keys) {
+        if (!deletes.contains(id)) upsert(id);
       }
+      final expired = trash.openCursor();
+      expired.onsuccess = ((web.Event _) {
+        guard(() {
+          final cursor = expired.result as web.IDBCursorWithValue?;
+          if (cursor == null) return;
+          final value = _object(cursor.value.dartify());
+          if ((value['expiresAt'] as num) <= now) cursor.delete();
+          cursor.continue_();
+        });
+      }).toJS;
       if (state != null)
         tx.objectStore('state').put(state.toJS, 'current'.toJS);
       result(true);
@@ -558,8 +630,13 @@ class BrowserBookmarkStore implements BookmarkStore {
 
   @override
   Future<void> clearReadingCopies() async {
-    await _run<bool>(['reading'], 'readwrite', (tx, result, guard) {
+    await _run<bool>(['reading', 'readingTrash'], 'readwrite', (
+      tx,
+      result,
+      guard,
+    ) {
       tx.objectStore('reading').clear();
+      tx.objectStore('readingTrash').clear();
       result(true);
     });
   }

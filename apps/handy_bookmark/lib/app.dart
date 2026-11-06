@@ -1,3 +1,4 @@
+import 'design/identity.dart';
 import 'dart:async';
 import 'package:handy_files/handy_files.dart';
 import 'package:handy_storage/handy_storage.dart';
@@ -269,7 +270,7 @@ class _SaveAppState extends State<SaveApp> with WidgetsBindingObserver {
   Widget build(BuildContext context) {
     final p = prefs.value;
     return HandyApp(
-      brand: HandyBrand.bookmark,
+      brand: bookmarkIdentity,
       app: 'bookmark',
       title: 'Handy Bookmark',
       accent: saveAccent,

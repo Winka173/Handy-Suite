@@ -176,7 +176,12 @@ class LinkTasks extends ChangeNotifier {
 
   /// Checks each link (HEAD, then GET) and records ok / moved / gone /
   /// unreachable with the date. Never changes an address by itself.
-  Future<LinkJobReport> checkLinks(Iterable<String> ids) {
+  Future<LinkJobReport> checkLinks(
+    Iterable<String> ids, {
+    int limit = maxChecks,
+  }) {
+    if (limit < 1 || limit > maxChecks)
+      throw RangeError.range(limit, 1, maxChecks);
     final found = <String, (String, LinkCheck)>{};
     Future<void> save() async {
       if (found.isEmpty) return;
@@ -199,7 +204,7 @@ class LinkTasks extends ChangeNotifier {
       );
     }
 
-    return _run(LinkJob.check, ids, maxChecks, (b, token) async {
+    return _run(LinkJob.check, ids, limit, (b, token) async {
       final probe = await _patient(
         () => c.metadata.probe(b.originalUrl, cancellation: token),
         (p) => p.error,
@@ -214,29 +219,35 @@ class LinkTasks extends ChangeNotifier {
   }
 
   /// Fetches each page and keeps its readable text as an offline copy.
-  Future<LinkJobReport> saveCopies(Iterable<String> ids) =>
-      _run(LinkJob.reading, ids, maxCopies, (b, token) async {
-        final page = await _patient(
-          () => c.metadata.fetchPage(b.originalUrl, cancellation: token),
-          (p) => p.errorCode,
-          token,
-        );
-        token.check();
-        if (page.html == null) return _tally('failed');
-        final copy = await compute(_extract, (
-          page.html!,
-          (page.uri ?? Uri.parse(b.originalUrl)).toString(),
-          saveTime(),
-          b.title,
-        ));
-        token.check();
-        if (copy == null) return _tally('noText');
-        try {
-          await c.putReadingCopies({b.id: copy});
-          _tally('saved');
-        } catch (_) {
-          // Deleted meanwhile, or storage refused: nothing half-written.
-          _tally('failed');
-        }
-      });
+  Future<LinkJobReport> saveCopies(
+    Iterable<String> ids, {
+    int limit = maxCopies,
+  }) {
+    if (limit < 1 || limit > maxCopies)
+      throw RangeError.range(limit, 1, maxCopies);
+    return _run(LinkJob.reading, ids, limit, (b, token) async {
+      final page = await _patient(
+        () => c.metadata.fetchPage(b.originalUrl, cancellation: token),
+        (p) => p.errorCode,
+        token,
+      );
+      token.check();
+      if (page.html == null) return _tally('failed');
+      final copy = await compute(_extract, (
+        page.html!,
+        (page.uri ?? Uri.parse(b.originalUrl)).toString(),
+        saveTime(),
+        b.title,
+      ));
+      token.check();
+      if (copy == null) return _tally('noText');
+      try {
+        await c.putReadingCopies({b.id: copy});
+        _tally('saved');
+      } catch (_) {
+        // Deleted meanwhile, or storage refused: nothing half-written.
+        _tally('failed');
+      }
+    });
+  }
 }

@@ -131,12 +131,20 @@ class SaveController extends ChangeNotifier {
           settings: state,
         );
         library = next;
-        // Deleting a link deletes its reading copy in the same transaction.
-        if (readingIds.isNotEmpty && deleted.isNotEmpty)
-          readingIds = {
-            for (final e in readingIds.entries)
-              if (!deleted.contains(e.key)) e.key: e.value,
-          };
+        // The store atomically retains/restores copies alongside link writes.
+        // An index refresh is optional UI state: its failure must not turn a
+        // committed write into a reported storage failure.
+        if (deleted.isNotEmpty ||
+            upserts.any((b) => !beforeMap.containsKey(b['id']))) {
+          try {
+            readingIds = await store!.readingIndex();
+          } catch (_) {
+            readingIds = {
+              for (final e in readingIds.entries)
+                if (ids.contains(e.key)) e.key: e.value,
+            };
+          }
+        }
         if (prefs != null) preferences = Map.of(prefs);
         error = null;
         changed();
@@ -420,8 +428,7 @@ class SaveController extends ChangeNotifier {
     return out;
   }
 
-  /// Re-reads which copies exist (after an import, a reset or a delete,
-  /// since deleting a link deletes its copy).
+  /// Re-reads visible copies after import, reset, deletion or Undo.
   Future<void> refreshReading() async {
     try {
       readingIds = await store!.readingIndex();

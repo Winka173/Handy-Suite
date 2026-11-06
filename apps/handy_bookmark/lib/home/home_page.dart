@@ -8,6 +8,7 @@ import '../view/library_view.dart';
 import '../shell/share_issues.dart';
 import 'triage_strip.dart';
 import '../links/task_strip.dart';
+import 'link_capture.dart';
 
 /// The phone's home: find a link, file what is new, or go to a place.
 /// Typing turns the home into results; clearing brings it back.
@@ -88,6 +89,7 @@ class SaveHomePage extends StatelessWidget {
                     HandySpace.xxl,
                   ),
                   children: [
+                    LinkCapture(scope: scope),
                     SearchBox(view: v, focus: searchFocus),
                     ShareIssues(controller: scope.c),
                     TaskStrip(

@@ -24,7 +24,7 @@ void main() {
     if (await dir.exists()) await dir.delete(recursive: true);
   });
 
-  test('a schema 1 database migrates to 2 and keeps every row', () async {
+  test('a schema 1 database migrates to current and keeps every row', () async {
     var store = await NativeBookmarkStore.open(path);
     await store.write(
       upserts: [
@@ -44,6 +44,7 @@ void main() {
     // Turn it back into what version 1 wrote.
     final db = sqlite3.open(path);
     db.execute('DROP TABLE reading_copies');
+    db.execute('DROP TABLE reading_trash');
     db.userVersion = 1;
     db.close();
 
@@ -68,7 +69,7 @@ void main() {
     }
     final check = sqlite3.open(path);
     try {
-      expect(check.userVersion, 2);
+      expect(check.userVersion, schemaVersion);
       expect(
         check.select('SELECT count(*) AS n FROM reading_copies').first['n'],
         1,

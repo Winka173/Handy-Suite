@@ -8,6 +8,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:handy_files/handy_files.dart';
 import 'package:handy_bookmark/app.dart';
+import 'package:handy_bookmark/links/batch_size.dart';
 import 'package:handy_bookmark_engine/handy_bookmark_engine.dart';
 import 'package:handy_storage/handy_storage.dart';
 import 'package:handy_ui/kit.dart';
@@ -585,5 +586,18 @@ void main() {
       );
       await t.pump();
     });
+  });
+  testWidgets('phone bounded batch review', (t) async {
+    await boot(t, const Size(390, 844));
+    final pending = chooseLinkBatch(
+      t.element(find.byType(Scaffold).first),
+      count: 80,
+      maximum: 200,
+      reading: true,
+    );
+    await t.pumpAndSettle();
+    await shot(t, 'phone-batch-review');
+    await tapKey(t, 'link-batch-cancel');
+    expect(await pending, isNull);
   });
 }

@@ -3,6 +3,8 @@ import 'package:handy_bookmark_engine/handy_bookmark_engine.dart';
 import 'package:handy_ui/kit.dart';
 import '../controller.dart';
 import '../scope.dart';
+import 'link_tasks.dart';
+import 'batch_size.dart';
 
 /// Says plainly that a network tool is off in the browser, and why.
 Future<void> showNotInBrowser(BuildContext context) => showDialog<void>(
@@ -54,13 +56,21 @@ extension LinkActions on SaveScope {
     final list = ids.toList();
     if (list.isEmpty || !await _ready(context)) return;
     if (!context.mounted) return;
-    await run(context, () => tasks.checkLinks(list));
+    final limit = await chooseLinkBatch(
+      context,
+      count: list.toSet().length,
+      maximum: LinkTasks.maxChecks,
+      reading: false,
+    );
+    if (limit == null || !context.mounted) return;
+    await run(context, () => tasks.checkLinks(list, limit: limit));
   }
 
   /// Checks every link the current list holds (a collection, All links…).
   Future<void> checkHere(BuildContext context) async {
-    if (!await _ready(context) || !context.mounted) return;
-    await run(context, () async => tasks.checkLinks(await view.allIds()));
+    if (!context.mounted) return;
+    final ids = await view.allIds();
+    if (context.mounted) await checkLinks(context, ids);
   }
 
   /// Saves offline reading copies of [ids].
@@ -68,7 +78,14 @@ extension LinkActions on SaveScope {
     final list = ids.toList();
     if (list.isEmpty || !await _ready(context)) return;
     if (!context.mounted) return;
-    final report = await tasks.saveCopies(list);
+    final limit = await chooseLinkBatch(
+      context,
+      count: list.toSet().length,
+      maximum: LinkTasks.maxCopies,
+      reading: true,
+    );
+    if (limit == null || !context.mounted) return;
+    final report = await tasks.saveCopies(list, limit: limit);
     if (list.length == 1 && context.mounted && !report.cancelled) {
       showHandyMessage(
         context,

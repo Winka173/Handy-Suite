@@ -329,17 +329,19 @@ void _databaseWorker(List<dynamic> start) async {
         }
         db.execute('CREATE INDEX idx_tags ON bookmark_tags(tag)');
         _createReadingCopies(db);
+        _createReadingTrash(db);
         db.userVersion = schemaVersion;
         db.execute('COMMIT');
       } catch (_) {
         db.execute('ROLLBACK');
         rethrow;
       }
-    } else if (version == 1) {
-      // 1 → 2: offline reading copies. Existing rows are untouched.
+    } else if (version < schemaVersion) {
+      // Additive 1/2 → 3 migration; keep links, copies and settings unchanged.
       db.execute('BEGIN IMMEDIATE');
       try {
-        _createReadingCopies(db);
+        if (version == 1) _createReadingCopies(db);
+        _createReadingTrash(db);
         db.userVersion = schemaVersion;
         db.execute('COMMIT');
       } catch (_) {
@@ -414,13 +416,24 @@ void _databaseWorker(List<dynamic> start) async {
               indexedOrder = null;
             db.execute('BEGIN IMMEDIATE');
             try {
+              final now = DateTime.now().millisecondsSinceEpoch;
+              db.execute('DELETE FROM reading_trash WHERE expires_at<=?', [
+                now,
+              ]);
               if (args['replace'] == true) {
+                db.execute('DELETE FROM reading_trash');
                 db.execute('DELETE FROM bookmarks');
                 db.execute('DELETE FROM collections');
                 db.execute('DELETE FROM tags');
                 if (fts) db.execute('DELETE FROM bookmark_search');
               }
               for (final id in args['deletes'] as List) {
+                db.execute(
+                  'INSERT OR REPLACE INTO reading_trash '
+                  'SELECT r.bookmark_id,b.normalized_url,r.saved_at,r.bytes,r.payload,? '
+                  'FROM reading_copies r JOIN bookmarks b ON b.id=r.bookmark_id WHERE b.id=?',
+                  [now + readingUndoRetention.inMilliseconds, id],
+                );
                 if (fts)
                   db.execute(
                     'DELETE FROM bookmark_search WHERE rowid='
@@ -452,6 +465,17 @@ void _databaseWorker(List<dynamic> start) async {
                     b['lastOpenedAt'],
                     b['openedCount'],
                     jsonEncode(b),
+                  ]);
+                  // Undo restores only the same ID AND URL. Never replace a
+                  // newer copy or attach a deleted article to a different URL.
+                  db.execute(
+                    'INSERT OR IGNORE INTO reading_copies '
+                    'SELECT bookmark_id,saved_at,bytes,payload FROM reading_trash '
+                    'WHERE bookmark_id=? AND normalized_url=?',
+                    [b['id'], b['normalizedUrl']],
+                  );
+                  db.execute('DELETE FROM reading_trash WHERE bookmark_id=?', [
+                    b['id'],
                   ]);
                   db.execute('DELETE FROM bookmark_tags WHERE bookmark_id=?', [
                     b['id'],
@@ -614,7 +638,15 @@ void _databaseWorker(List<dynamic> start) async {
                 row['bookmark_id'] as String: row['payload'] as String,
             };
           case 'clearReading':
-            db.execute('DELETE FROM reading_copies');
+            db.execute('BEGIN IMMEDIATE');
+            try {
+              db.execute('DELETE FROM reading_copies');
+              db.execute('DELETE FROM reading_trash');
+              db.execute('COMMIT');
+            } catch (_) {
+              db.execute('ROLLBACK');
+              rethrow;
+            }
             result = true;
           case 'integrity':
             result =
@@ -642,8 +674,12 @@ void _databaseWorker(List<dynamic> start) async {
   }
 }
 
-/// SQLite `user_version`. 2 added `reading_copies`.
-const schemaVersion = 2;
+/// SQLite `user_version`. 3 retains deleted copies for atomic Undo.
+const schemaVersion = 3;
+
+void _createReadingTrash(Database db) => db.execute(
+  'CREATE TABLE reading_trash(bookmark_id TEXT PRIMARY KEY,normalized_url TEXT NOT NULL,saved_at TEXT NOT NULL,bytes INTEGER NOT NULL,payload TEXT NOT NULL,expires_at INTEGER NOT NULL)',
+);
 
 void _createReadingCopies(Database db) => db.execute(
   'CREATE TABLE reading_copies(bookmark_id TEXT PRIMARY KEY REFERENCES bookmarks(id) ON DELETE CASCADE,saved_at TEXT NOT NULL,bytes INTEGER NOT NULL,payload TEXT NOT NULL)',

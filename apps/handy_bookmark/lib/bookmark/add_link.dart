@@ -88,6 +88,17 @@ Future<Bookmark?> addLinks(
     ),
   );
   if (text == null || text.trim().isEmpty || !context.mounted) return null;
+  return saveCapturedLinks(context, scope, text);
+}
+
+/// Reuses duplicate review for dialog, clipboard and inline capture.
+Future<Bookmark?> saveCapturedLinks(
+  BuildContext context,
+  SaveScope scope,
+  String text, {
+  VoidCallback? onSaved,
+}) async {
+  final c = scope.c;
   final found = UrlTools.extract(text);
   if (found.isEmpty) {
     showHandyMessage(
@@ -147,11 +158,12 @@ Future<Bookmark?> addLinks(
           return null;
         case 'copy':
           final saved = <Bookmark>[];
-          await scope.run(
+          final ok = await scope.run(
             context,
             () async =>
                 saved.addAll(await c.quickSave(text, allowDuplicates: true)),
           );
+          if (ok) onSaved?.call();
           return saved.firstOrNull;
         default:
           return null;
@@ -163,6 +175,7 @@ Future<Bookmark?> addLinks(
     context,
     () async => saved.addAll(await c.quickSave(text)),
   );
+  if (ok) onSaved?.call();
   if (ok && context.mounted) {
     showHandyMessage(
       context,

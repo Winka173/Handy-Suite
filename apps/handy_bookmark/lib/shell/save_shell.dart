@@ -5,6 +5,7 @@ import '../bookmark/add_link.dart';
 import '../bookmark/detail_view.dart';
 import '../home/home_page.dart';
 import '../home/triage_strip.dart';
+import '../home/link_capture.dart';
 import '../library/batch_bar.dart';
 import '../library/results_view.dart';
 import '../scope.dart';
@@ -151,6 +152,7 @@ class _SaveShellState extends State<SaveShell> {
                     onDetails: (b) => details(b, side),
                     onAdd: add,
                     leading: [
+                      if (v.text.isEmpty) LinkCapture(scope: scope),
                       SearchBox(view: v, focus: searchFocus),
                       ShareIssues(controller: scope.c),
                       if (v.place == Place.all &&

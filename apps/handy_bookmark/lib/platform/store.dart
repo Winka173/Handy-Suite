@@ -24,7 +24,8 @@ abstract interface class BookmarkStore {
   Future<void> close();
 
   /// Offline reading copies live apart from the bookmark rows (schema 2) so
-  /// lists never carry their text. Deleting a bookmark deletes its copy.
+  /// lists never carry their text. Deleted copies are hidden and retained for
+  /// [readingUndoRetention]; restoring the same ID and URL restores the copy.
   Future<Map<String, dynamic>?> readingCopy(String id);
 
   /// Stores copies in one transaction; every id must be a saved bookmark.
@@ -41,6 +42,10 @@ abstract interface class BookmarkStore {
 
 /// One stored reading copy may not exceed this many bytes of JSON.
 const maxReadingCopyBytes = 2000000;
+
+/// Deleted content is not a cache: retain it for recovery, then prune only the
+/// expired deleted copies on a subsequent write. Active articles are untouched.
+const readingUndoRetention = Duration(days: 7);
 
 Future<BookmarkStore> openBookmarkStore() => platform.openStore();
 Future<void> preserveAndResetBookmarkStore() =>

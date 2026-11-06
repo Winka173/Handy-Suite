@@ -35,6 +35,9 @@
   pages from a local server through test seams; no live website, emulator or device
   run is claimed. The extractor is a heuristic: app-rendered pages (many social
   sites), sign-in walls and paywalls give no copy; images are never kept; one copy
-  keeps at most 200,000 characters. Deleting a link deletes its copy, and Undo brings
-  the link back without the copy. A check of 403/429/5xx or a network failure is
+  keeps at most 200,000 characters. Schema 3 retains deleted reading copies for
+  seven days, hidden from active reads and backups. Restoring the same ID and URL
+  restores its exact copy atomically; the one-step UI Undo still does not survive
+  app restart. Expired deleted copies are pruned on a later write. A check of
+  403/429/5xx or a network failure is
   "could not tell", never "gone"; checks never change an address by themselves.
