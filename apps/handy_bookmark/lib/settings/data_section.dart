@@ -65,6 +65,17 @@ class SaveDataSection extends StatelessWidget {
           ),
           onTap: () => scope.importPocket(context),
         ),
+        HandyTile(
+          key: const Key('save-import-raindrop'),
+          icon: Icons.move_to_inbox_outlined,
+          title: tr(context, 'Import from Raindrop', 'Nhập từ Raindrop'),
+          subtitle: tr(
+            context,
+            'Raindrop.io CSV or HTML: folders, tags, notes and favourites kept',
+            'File CSV hoặc HTML của Raindrop.io: giữ thư mục, thẻ, ghi chú và yêu thích',
+          ),
+          onTap: () => scope.importRaindrop(context),
+        ),
         if (scope.view.canUndo)
           HandyTile(
             key: const Key('save-undo'),

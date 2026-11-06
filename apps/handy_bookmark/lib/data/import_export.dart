@@ -19,6 +19,9 @@ PortableExport _encode(
 );
 ImportPreview _preview((Uint8List, SaveFormat, SaveLibrary) v) =>
     SavePortable.preview(v.$1, v.$2, current: v.$3);
+ImportPreview _raindrop((Uint8List, SaveLibrary) v) =>
+    SavePortable.previewRaindrop(v.$1, current: v.$2);
+
 ImportPreview _pocket((Uint8List, SaveLibrary) v) =>
     SavePortable.previewPocket(v.$1, current: v.$2);
 
@@ -180,14 +183,44 @@ extension ImportExport on SaveScope {
   /// Pocket's export (CSV, or the older ril_export.html): shows what it
   /// holds, then adds the new links into a "Pocket" collection. Only adds;
   /// nothing is replaced, and Undo takes it back.
-  Future<void> importPocket(BuildContext context) => run(context, () async {
+  Future<void> importPocket(BuildContext context) => _importService(
+    context,
+    name: 'Pocket',
+    read: _pocket,
+    where: tr(
+      context,
+      'They go into a new collection named Pocket, with their tags and the date you saved them.',
+      'Chúng vào bộ sưu tập mới tên Pocket, giữ thẻ và ngày bạn đã lưu.',
+    ),
+  );
+
+  /// Raindrop.io's export (CSV or HTML): folders become collections
+  /// (nested ones too), with tags, notes, excerpts, dates and favourites.
+  Future<void> importRaindrop(BuildContext context) => _importService(
+    context,
+    name: 'Raindrop',
+    read: _raindrop,
+    where: tr(
+      context,
+      'Its folders become collections here; tags, notes, excerpts, favourites and saved dates are kept. Covers are not downloaded.',
+      'Thư mục thành bộ sưu tập; giữ thẻ, ghi chú, đoạn trích, yêu thích và ngày lưu. Không tải ảnh bìa.',
+    ),
+  );
+
+  /// Shows what another app's export holds, then adds only what is new.
+  Future<void> _importService(
+    BuildContext context, {
+    required String name,
+    required ImportPreview Function((Uint8List, SaveLibrary)) read,
+    required String where,
+  }) => run(context, () async {
     final file = await files.importBytes(
       extensions: ['csv', 'html', 'htm'],
       maxBytes: SavePortable.maxImportBytes,
     );
     if (file == null) return;
     final baseline = library;
-    final preview = await compute(_pocket, (file.bytes, baseline));
+    final preview = await compute(read, (file.bytes, baseline));
     if (!context.mounted) return;
     final archived = preview.library.bookmarks.where((b) => b.isArchived);
     final adding = preview.fresh(baseline);
@@ -198,8 +231,8 @@ extension ImportExport on SaveScope {
         title: Text(
           tr(
             context,
-            'Bring in $fresh links from Pocket?',
-            'Nhập $fresh link từ Pocket?',
+            'Bring in $fresh links from $name?',
+            'Nhập $fresh link từ $name?',
           ),
         ),
         scrollable: true,
@@ -215,13 +248,7 @@ extension ImportExport on SaveScope {
               ),
             ),
             const SizedBox(height: HandySpace.m),
-            Text(
-              tr(
-                context,
-                'They go into a new collection named Pocket, with their tags and the date you saved them.',
-                'Chúng vào bộ sưu tập mới tên Pocket, giữ thẻ và ngày bạn đã lưu.',
-              ),
-            ),
+            Text(where),
             const SizedBox(height: HandySpace.m),
             for (final b in adding.take(5))
               Text(
@@ -237,7 +264,7 @@ extension ImportExport on SaveScope {
             child: Text(tr(context, 'Cancel', 'Hủy')),
           ),
           FilledButton(
-            key: const Key('pocket-add'),
+            key: Key('${name.toLowerCase()}-add'),
             onPressed: fresh == 0 ? null : () => Navigator.pop(context, true),
             child: Text(tr(context, 'Add $fresh links', 'Thêm $fresh link')),
           ),
@@ -251,8 +278,8 @@ extension ImportExport on SaveScope {
         context,
         tr(
           context,
-          '$fresh links added from Pocket.',
-          'Đã thêm $fresh link từ Pocket.',
+          '$fresh links added from $name.',
+          'Đã thêm $fresh link từ $name.',
         ),
       );
   });

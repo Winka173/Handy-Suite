@@ -755,6 +755,131 @@ class SavePortable {
     );
   }
 
+  /// Reads a Raindrop.io export. Its CSV
+  /// (`id,title,note,excerpt,url,folder,tags,created,cover,highlights,favorite`)
+  /// keeps folders as collections (`Parent/Child` becomes a nested pair,
+  /// Unsorted stays Not sorted), tags (comma-separated), the note, the
+  /// excerpt as the description, highlights after the note, the created
+  /// date and favourites. Covers are not fetched. Its HTML export is a
+  /// browser bookmarks file and reads like one, folders included.
+  static ImportPreview previewRaindrop(
+    Uint8List bytes, {
+    SaveLibrary? current,
+  }) {
+    if (bytes.length > maxImportBytes)
+      throw const FormatException('Import exceeds 30 MB byte limit');
+    if (bytes.isEmpty) throw const FormatException('Import is empty');
+    final text = utf8
+        .decode(bytes, allowMalformed: false)
+        .replaceFirst(RegExp('^\uFEFF'), '');
+    if (text.trimLeft().startsWith('<'))
+      return preview(bytes, SaveFormat.html, current: current);
+    final rows = _csvDecode(text);
+    if (rows.isEmpty) throw const FormatException('CSV is empty');
+    final headers = rows.first.map((h) => h.trim().toLowerCase()).toList();
+    if (!headers.contains('url') ||
+        !headers.contains('folder') ||
+        !(headers.contains('excerpt') || headers.contains('highlights')))
+      throw const FormatException('This is not a Raindrop export');
+    final collections = <String, SaveCollection>{};
+    String? folder(String raw) {
+      final parts = [
+        for (final p in raw.split('/'))
+          if (p.trim().isNotEmpty) p.trim(),
+      ];
+      if (parts.isEmpty || (parts.length == 1 && parts.single == 'Unsorted'))
+        return null;
+      String? parent;
+      for (var i = 0; i < parts.length; i++) {
+        final path = parts.take(i + 1).join('/');
+        final made = collections[path] ??= SaveCollection(
+          id: 'raindrop_${collections.length}',
+          name: parts[i].length > 512 ? parts[i].substring(0, 512) : parts[i],
+          parentId: parent,
+          position: collections.length,
+        );
+        parent = made.id;
+      }
+      return parent;
+    }
+
+    String? when(String raw) {
+      final t = DateTime.tryParse(raw.trim());
+      return t?.toUtc().toIso8601String();
+    }
+
+    var invalid = 0;
+    final bookmarks = <Bookmark>[];
+    for (final row in rows.skip(1)) {
+      if (row.every((c) => c.trim().isEmpty)) continue;
+      if (row.length != headers.length) {
+        invalid++;
+        continue;
+      }
+      String get(String key) {
+        final i = headers.indexOf(key);
+        return i < 0 ? '' : row[i].trim();
+      }
+
+      try {
+        var title = get('title');
+        if (title == get('url')) title = '';
+        if (title.length > 2048) title = title.substring(0, 2048);
+        final highlights = get('highlights');
+        var note = [
+          get('note'),
+          if (highlights.isNotEmpty) highlights,
+        ].where((s) => s.isNotEmpty).join('\n\n');
+        if (note.length > 60000) note = note.substring(0, 60000);
+        var excerpt = get('excerpt');
+        if (excerpt.length > 4000) excerpt = excerpt.substring(0, 4000);
+        final b = _bookmark(
+          get('url'),
+          bookmarks.length,
+          title: title,
+          note: note,
+          tags: {
+            for (final t in get('tags').split(','))
+              if (t.trim().isNotEmpty) t.trim(),
+          }.toList(),
+          collectionId: folder(get('folder')),
+          savedAt: when(get('created')),
+        );
+        bookmarks.add(
+          b.copyWith(
+            description: excerpt.isEmpty ? null : excerpt,
+            isFavorite: get('favorite').toLowerCase() == 'true',
+          ),
+        );
+      } on FormatException {
+        invalid++;
+      }
+    }
+    if (bookmarks.isEmpty && invalid == 0)
+      throw const FormatException('No Raindrop links found');
+    final used = {for (final b in bookmarks) b.collectionId};
+    // A parent stays when any child holds a link.
+    final keep = <String>{};
+    for (final c in collections.values) {
+      if (!used.contains(c.id)) continue;
+      String? at = c.id;
+      while (at != null && keep.add(at)) {
+        at = collections.values.firstWhere((x) => x.id == at).parentId;
+      }
+    }
+    return _preview(
+      SaveLibrary(
+        bookmarks: bookmarks,
+        collections: [
+          for (final c in collections.values)
+            if (keep.contains(c.id)) c,
+        ],
+      ),
+      current,
+      invalid,
+    );
+  }
+
   static Map<String, dynamic> _object(dynamic value) {
     if (value is! Map) throw const FormatException('Expected JSON object');
     return Map<String, dynamic>.from(value);
