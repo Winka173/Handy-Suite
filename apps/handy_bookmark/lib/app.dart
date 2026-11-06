@@ -1,4 +1,5 @@
 import 'design/identity.dart';
+import 'pro/organize_page.dart';
 import 'pro/export/export_studio.dart';
 import 'design/theme.dart';
 import 'design/looks.dart';
@@ -195,8 +196,25 @@ class _SaveAppState extends State<SaveApp> with WidgetsBindingObserver {
     unawaited(c.inbox.offerCollections(targets));
   }
 
+  Set<String>? _seen;
+
+  /// New saves meet the person's Auto-organize rules (Pro, opt-in).
+  void _organizeNew() {
+    final l = c.library;
+    if (l == null) return;
+    final ids = {for (final b in l.bookmarks) b.id};
+    final before = _seen;
+    _seen = ids;
+    if (before == null) return;
+    final fresh = ids.difference(before);
+    final context = navigator.currentContext;
+    if (fresh.isEmpty || context == null || !hasPro(context)) return;
+    unawaited(organizeNewSaves(c, fresh).catchError((Object _) {}));
+  }
+
   void _changed() {
     if (mounted) setState(() {});
+    _organizeNew();
     _offerCollections();
     _sync?.cancel();
     _sync = Timer(const Duration(milliseconds: 300), () async {
@@ -315,6 +333,7 @@ class _SaveAppState extends State<SaveApp> with WidgetsBindingObserver {
       ['', 'trash'] => () => TrashPage(scope: scope),
       ['', 'library'] => () => LibraryPage(scope: scope),
       ['', 'looks'] => () => ThemeStudio(scope: scope),
+      ['', 'organize'] => () => OrganizePage(scope: scope),
       ['', 'export', final id] => () => ExportStudio(
         scope: scope,
         collectionId: id,

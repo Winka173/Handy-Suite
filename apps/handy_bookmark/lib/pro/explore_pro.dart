@@ -54,11 +54,11 @@ class ExplorePro extends StatelessWidget {
         title: tr(context, 'Smart organisation', 'Sắp xếp thông minh'),
         body: tr(
           context,
-          'Smart collections that fill themselves from rules: a site, a kind, a tag, unread.',
-          'Bộ sưu tập thông minh tự gom theo quy tắc: trang web, loại, thẻ, chưa đọc.',
+          'Auto organize puts new saves where they belong by their source; batch tools clean titles and file many at once, with a dry run and Undo; smart collections fill themselves from rules.',
+          'Tự sắp xếp đưa mục mới về đúng chỗ theo nguồn; công cụ hàng loạt dọn tiêu đề và xếp nhiều mục cùng lúc, có chạy thử và Hoàn tác; bộ sưu tập thông minh tự gom theo quy tắc.',
         ),
-        action: tr(context, 'Open the Library', 'Mở Thư viện'),
-        onAction: () => Navigator.pushNamed(context, '/library'),
+        action: tr(context, 'Set up Auto organize', 'Thiết lập Tự sắp xếp'),
+        onAction: () => Navigator.pushNamed(context, '/organize'),
       ),
       _Pillar(
         key: const Key('pro-pillar-reading'),

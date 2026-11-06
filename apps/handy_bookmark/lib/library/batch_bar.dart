@@ -1,4 +1,5 @@
 import 'package:flutter/services.dart';
+import '../pro/organize_page.dart';
 import 'package:handy_ui/kit.dart';
 import '../links/link_actions.dart';
 import '../scope.dart';
@@ -131,6 +132,18 @@ class BatchBar extends StatelessWidget {
                 tr(context, 'Select everything here', 'Chọn tất cả ở đây'),
                 v.selectAll,
                 key: const Key('batch-all'),
+              ),
+              HandyMenuItem(
+                Icons.auto_fix_high_outlined,
+                tr(context, 'Organize with rules', 'Xếp theo quy tắc'),
+                () => showOrganizePreview(context, scope, ids: v.selected),
+                key: const Key('batch-organize'),
+              ),
+              HandyMenuItem(
+                Icons.cleaning_services_outlined,
+                tr(context, 'Clean up titles', 'Dọn tiêu đề'),
+                () => showTitleCleanup(context, scope, v.selected),
+                key: const Key('batch-clean-titles'),
               ),
               HandyMenuItem(
                 Icons.tag,
