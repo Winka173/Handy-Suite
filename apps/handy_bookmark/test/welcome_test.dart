@@ -91,7 +91,9 @@ void main() {
     await tapKey(t, 'welcome-next-0');
     expect(find.textContaining('all of it'), findsOneWidget);
     await tapKey(t, 'welcome-next-1');
-    expect(find.textContaining('a video'), findsOneWidget);
+    // On a phone the practice is the whole screen: the task, no button.
+    expect(find.textContaining('save this video'), findsOneWidget);
+    expect(find.text('Tap Share'), findsOneWidget, reason: 'the lit word');
     expect(find.byKey(const Key('welcome-next-2')), findsNothing);
 
     // Save cannot be pressed before a collection is chosen.
@@ -100,10 +102,13 @@ void main() {
     await t.tap(find.byKey(const Key('practice-save')), warnIfMissed: false);
     await settle(t);
     expect(find.text('Saved to Good food'), findsNothing);
+    expect(find.text('Put it in Good food'), findsOneWidget);
     await tapKey(t, 'practice-col-food');
+    expect(find.text('Now tap Save'), findsOneWidget);
     await tapKey(t, 'practice-save');
     await settle(t);
     expect(find.text('Saved to Good food'), findsOneWidget);
+    expect(find.textContaining('all it takes'), findsOneWidget);
 
     await tapKey(t, 'welcome-next-2');
     expect(find.textContaining('in a moment'), findsOneWidget);

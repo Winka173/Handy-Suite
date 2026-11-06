@@ -317,12 +317,14 @@ class Coach extends StatelessWidget {
           Icon(icon, size: 16, color: Colors.white),
           const SizedBox(width: 6),
         ],
-        Text(
-          text,
-          style: const TextStyle(
-            color: Colors.white,
-            fontSize: 13,
-            fontWeight: FontWeight.w600,
+        Flexible(
+          child: Text(
+            text,
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 13,
+              fontWeight: FontWeight.w600,
+            ),
           ),
         ),
       ],
@@ -336,9 +338,39 @@ class Coach extends StatelessWidget {
 class PhoneFrame extends StatelessWidget {
   final Widget screen;
   final bool interactive;
-  const PhoneFrame({super.key, required this.screen, this.interactive = false});
+
+  /// No frame: the screen fills the space at its real size (on a phone
+  /// the guide becomes the screen), scaled down only below [minHeight].
+  final bool bare;
+  final double minHeight;
+  const PhoneFrame({
+    super.key,
+    required this.screen,
+    this.interactive = false,
+    this.bare = false,
+    this.minHeight = 560,
+  });
   @override
   Widget build(BuildContext context) {
+    if (bare) {
+      return ExcludeSemantics(
+        child: MediaQuery(
+          data: MediaQuery.of(
+            context,
+          ).copyWith(textScaler: TextScaler.noScaling),
+          child: LayoutBuilder(
+            builder: (context, box) => FittedBox(
+              alignment: Alignment.topCenter,
+              child: SizedBox(
+                width: box.maxWidth,
+                height: math.max(box.maxHeight, minHeight),
+                child: screen,
+              ),
+            ),
+          ),
+        ),
+      );
+    }
     final framed = Container(
       width: 384,
       height: 744,
@@ -365,4 +397,271 @@ class PhoneFrame extends StatelessWidget {
     );
     return interactive ? body : ExcludeSemantics(child: body);
   }
+}
+
+/// Darkens everything except the one thing to tap next, which sits in a
+/// lit window with a glowing edge and a word beside it. When the target
+/// changes the window glides to it (following a sheet as it slides up);
+/// with no target the dark lifts. Taps pass through to the screen.
+class Spotlight extends StatefulWidget {
+  final GlobalKey? target;
+  final String? label;
+  final double radius;
+
+  /// Where the word goes; by default below a target in the top half of
+  /// the screen and above one in the bottom half.
+  final bool? labelBelow;
+  final Widget child;
+  const Spotlight({
+    super.key,
+    required this.target,
+    this.label,
+    this.radius = 14,
+    this.labelBelow,
+    required this.child,
+  });
+  @override
+  State<Spotlight> createState() => _SpotlightState();
+}
+
+class _SpotlightState extends State<Spotlight> with TickerProviderStateMixin {
+  late final AnimationController move = AnimationController(
+    vsync: this,
+    duration: const Duration(milliseconds: 520),
+  )..addListener(_track);
+  late final AnimationController glow = AnimationController(
+    vsync: this,
+    duration: const Duration(milliseconds: 1400),
+  );
+  Rect? from, at;
+  bool fadeIn = true, fadeOut = false;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (move.value == 0 && !move.isAnimating) _start();
+    _syncGlow();
+  }
+
+  @override
+  void didUpdateWidget(Spotlight old) {
+    super.didUpdateWidget(old);
+    if (old.target != widget.target) {
+      from = _shown;
+      fadeIn = old.target == null;
+      fadeOut = widget.target == null;
+      _start();
+    }
+    _syncGlow();
+  }
+
+  void _start() {
+    if (moves(context)) {
+      move.forward(from: 0);
+    } else {
+      move.value = 1;
+    }
+    WidgetsBinding.instance.addPostFrameCallback((_) => _track());
+  }
+
+  void _syncGlow() {
+    if (widget.target != null && moves(context)) {
+      if (!glow.isAnimating) glow.repeat();
+    } else {
+      glow.stop();
+    }
+  }
+
+  /// Where the target is now, in this widget's own coordinates.
+  void _track() {
+    if (!mounted || widget.target == null) return;
+    final box = widget.target!.currentContext?.findRenderObject();
+    final me = context.findRenderObject();
+    if (box is! RenderBox || me is! RenderBox) return;
+    if (!box.attached || !box.hasSize || !me.hasSize) return;
+    final r = box.localToGlobal(Offset.zero, ancestor: me) & box.size;
+    if (r != at) setState(() => at = r);
+  }
+
+  double get _t => Curves.easeInOutCubic.transform(move.value);
+
+  Rect? get _shown {
+    if (fadeOut) return from;
+    if (from == null || at == null) return at;
+    return Rect.lerp(from, at, _t);
+  }
+
+  double get _dark => fadeOut ? 1 - _t : (fadeIn ? _t : 1);
+
+  @override
+  void dispose() {
+    move.dispose();
+    glow.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    WidgetsBinding.instance.addPostFrameCallback((_) => _track());
+    return LayoutBuilder(
+      builder: (context, box) => Stack(
+        fit: StackFit.expand,
+        children: [
+          widget.child,
+          IgnorePointer(
+            child: AnimatedBuilder(
+              animation: Listenable.merge([move, glow]),
+              builder: (context, _) => CustomPaint(
+                painter: _SpotPainter(
+                  hole: _shown,
+                  radius: widget.radius,
+                  dark: _dark,
+                  glow: glow.value,
+                  still: !moves(context),
+                ),
+              ),
+            ),
+          ),
+          if (widget.label != null)
+            AnimatedBuilder(
+              animation: move,
+              builder: (context, _) => Stack(
+                fit: StackFit.expand,
+                children: [
+                  if (_shown != null && !fadeOut) _label(box.biggest, _shown!),
+                ],
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+
+  /// The word beside the window: below it in the top half of the screen,
+  /// above it in the bottom half, kept on screen.
+  Widget _label(Size size, Rect hole) {
+    final below = widget.labelBelow ?? hole.center.dy < size.height / 2;
+    final x = (hole.center.dx / size.width * 2 - 1).clamp(-1.0, 1.0);
+    final pill = IgnorePointer(
+      child: Opacity(
+        opacity: Curves.easeOut.transform(
+          ((move.value - .55) / .45).clamp(0.0, 1.0),
+        ),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 9),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(999),
+            boxShadow: const [
+              BoxShadow(
+                color: Color(0x6600B8D9),
+                blurRadius: 18,
+                spreadRadius: 1,
+              ),
+            ],
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(
+                below ? Icons.arrow_upward : Icons.arrow_downward,
+                size: 18,
+                color: GuideColors.teal,
+              ),
+              const SizedBox(width: 6),
+              Flexible(
+                child: Text(
+                  widget.label!,
+                  style: const TextStyle(
+                    color: GuideColors.ink,
+                    fontSize: 15,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+    return Positioned(
+      left: 12,
+      right: 12,
+      top: below ? hole.bottom + 22 : null,
+      bottom: below ? null : size.height - hole.top + 22,
+      child: Align(alignment: Alignment(x, 0), child: pill),
+    );
+  }
+}
+
+class _SpotPainter extends CustomPainter {
+  final Rect? hole;
+  final double radius, dark, glow;
+  final bool still;
+  const _SpotPainter({
+    required this.hole,
+    required this.radius,
+    required this.dark,
+    required this.glow,
+    required this.still,
+  });
+
+  static const _light = Color(0xFF7FE3F5);
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    if (dark <= 0) return;
+    final scrim = Paint()
+      ..color = Color.fromRGBO(4, 12, 16, .74 * dark.clamp(0, 1));
+    final full = Offset.zero & size;
+    if (hole == null) {
+      canvas.drawRect(full, scrim);
+      return;
+    }
+    final window = RRect.fromRectAndRadius(
+      hole!.inflate(8),
+      Radius.circular(radius + 8),
+    );
+    canvas.drawPath(
+      Path()
+        ..fillType = PathFillType.evenOdd
+        ..addRect(full)
+        ..addRRect(window),
+      scrim,
+    );
+    final a = dark.clamp(0.0, 1.0);
+    // The light: a soft glow spilling out of the window, then a crisp edge.
+    canvas.drawRRect(
+      window.inflate(2),
+      Paint()
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 12
+        ..color = _light.withValues(alpha: a)
+        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 14),
+    );
+    canvas.drawRRect(
+      window,
+      Paint()
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 2.5
+        ..color = Colors.white.withValues(alpha: a),
+    );
+    if (still) return;
+    final g = Curves.easeOut.transform(glow);
+    canvas.drawRRect(
+      window.inflate(3 + 18 * g),
+      Paint()
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 3 * (1 - g)
+        ..color = _light.withValues(alpha: (1 - g) * .9 * a),
+    );
+  }
+
+  @override
+  bool shouldRepaint(_SpotPainter old) =>
+      old.hole != hole ||
+      old.dark != dark ||
+      old.glow != glow ||
+      old.radius != radius ||
+      old.still != still;
 }

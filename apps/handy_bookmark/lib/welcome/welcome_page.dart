@@ -57,7 +57,11 @@ class _WelcomePageState extends State<WelcomePage>
     if (clock.value == 0 && !clock.isAnimating) _play();
   }
 
-  void _play() => moves(context) ? clock.forward(from: 0) : clock.value = 1;
+  void _play() {
+    // The search needs time to be typed; the other steps are quicker.
+    clock.duration = Duration(milliseconds: step == _Step.find ? 2400 : 1500);
+    moves(context) ? clock.forward(from: 0) : clock.value = 1;
+  }
 
   @override
   void dispose() {
@@ -132,12 +136,12 @@ class _WelcomePageState extends State<WelcomePage>
             clock: clock,
             child: Scaffold(
               backgroundColor: GuideColors.paper,
-              body: SafeArea(
-                child: LayoutBuilder(
-                  builder: (context, box) => box.maxWidth < 700
-                      ? _narrow(context, page)
-                      : _wide(context, page),
-                ),
+              body: LayoutBuilder(
+                builder: (context, box) => box.maxWidth >= 700
+                    ? SafeArea(child: _wide(context, page))
+                    : step.index >= _Step.practice.index
+                    ? _full(context, page)
+                    : SafeArea(child: _narrow(context, page)),
               ),
             ),
           ),
@@ -183,19 +187,23 @@ class _WelcomePageState extends State<WelcomePage>
       onPrimary: () => _go(2),
     ),
     _Step.practice => _Page(
-      before: tr(context, 'Try saving ', 'Thử lưu '),
-      words: tr(context, 'a video', 'một video'),
+      before: practiced
+          ? tr(context, 'That is ', 'Chỉ ')
+          : tr(context, 'Try saving ', 'Thử lưu '),
+      words: practiced
+          ? tr(context, 'all it takes', 'vậy thôi')
+          : tr(context, 'a video', 'một video'),
       after: '.',
       body: practiced
           ? tr(
               context,
-              'That is all it takes, from any app. This was practice: nothing was saved.',
-              'Chỉ vậy thôi, từ bất kỳ app nào. Đây là bản tập: chưa có gì được lưu.',
+              'From any app: Share, then Handy Bookmark. This was practice: nothing was saved.',
+              'Từ bất kỳ app nào: Chia sẻ, rồi chọn Handy Bookmark. Đây là bản tập, chưa có gì được lưu.',
             )
           : tr(
               context,
-              'Follow the glow on the phone. It is practice; nothing is saved.',
-              'Làm theo vòng sáng trên điện thoại. Đây là bản tập, không lưu gì thật.',
+              'Tap what is lit on the phone. It is practice; nothing is saved.',
+              'Bấm vào chỗ đang sáng trên điện thoại. Đây là bản tập, không lưu gì thật.',
             ),
       primary: practiced ? tr(context, 'Next', 'Tiếp') : null,
       onPrimary: () => _go(3),
@@ -234,13 +242,17 @@ class _WelcomePageState extends State<WelcomePage>
     ),
   };
 
-  Widget _scene() => switch (step) {
+  /// The step's picture. [full]: a phone's whole screen, real size, with
+  /// [top] left clear for the bar.
+  Widget _scene({bool full = false, double top = 48}) => switch (step) {
     _Step.scattered || _Step.gathered => StoryScene(
       key: const ValueKey('story'),
       gathered: step == _Step.gathered,
     ),
     _Step.practice => Rehearsal(
       key: const ValueKey('practice'),
+      framed: !full,
+      top: full ? top : 44,
       onStage: (s) {
         if (s == PracticeStage.saved) {
           setState(() => practiced = true);
@@ -248,66 +260,81 @@ class _WelcomePageState extends State<WelcomePage>
         }
       },
     ),
-    _Step.find => const FindScene(key: ValueKey('find')),
-    _Step.nudge => const NudgeScene(key: ValueKey('nudge')),
+    _Step.find => FindScene(
+      key: const ValueKey('find'),
+      bare: full,
+      top: full ? top + 8 : 48,
+    ),
+    _Step.nudge => NudgeScene(
+      key: const ValueKey('nudge'),
+      bare: full,
+      top: full ? top : 48,
+    ),
   };
 
-  Widget _bar(BuildContext context) => Padding(
-    padding: const EdgeInsets.fromLTRB(4, 4, 8, 4),
-    child: Row(
-      children: [
-        SizedBox(
-          width: 48,
-          child: at == 0
-              ? null
-              : IconButton(
-                  key: const Key('welcome-back'),
-                  tooltip: tr(context, 'Back', 'Quay lại'),
-                  color: GuideColors.ink,
-                  onPressed: _back,
-                  icon: const Icon(Icons.arrow_back),
-                ),
-        ),
-        Expanded(
-          child: Semantics(
-            label: tr(
-              context,
-              'Step ${at + 1} of ${steps.length}',
-              'Bước ${at + 1} trên ${steps.length}',
-            ),
-            child: ExcludeSemantics(
-              child: Row(
-                children: [
-                  for (var i = 0; i < steps.length; i++) ...[
-                    if (i > 0) const SizedBox(width: 6),
-                    Expanded(
-                      child: AnimatedContainer(
-                        duration: HandyMotion.of(context, HandyMotion.long),
-                        height: 5,
-                        decoration: BoxDecoration(
-                          color: i <= at
-                              ? GuideColors.teal
-                              : const Color(0xFFE2E4E6),
-                          borderRadius: BorderRadius.circular(3),
+  Widget _bar(BuildContext context, {bool light = false}) {
+    final ink = light ? Colors.white : GuideColors.ink;
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(4, 4, 8, 4),
+      child: Row(
+        children: [
+          SizedBox(
+            width: 48,
+            child: at == 0
+                ? null
+                : IconButton(
+                    key: const Key('welcome-back'),
+                    tooltip: tr(context, 'Back', 'Quay lại'),
+                    color: ink,
+                    onPressed: _back,
+                    icon: const Icon(Icons.arrow_back),
+                  ),
+          ),
+          Expanded(
+            child: Semantics(
+              label: tr(
+                context,
+                'Step ${at + 1} of ${steps.length}',
+                'Bước ${at + 1} trên ${steps.length}',
+              ),
+              child: ExcludeSemantics(
+                child: Row(
+                  children: [
+                    for (var i = 0; i < steps.length; i++) ...[
+                      if (i > 0) const SizedBox(width: 6),
+                      Expanded(
+                        child: AnimatedContainer(
+                          duration: HandyMotion.of(context, HandyMotion.long),
+                          height: 5,
+                          decoration: BoxDecoration(
+                            color: i <= at
+                                ? (light
+                                      ? const Color(0xFF7FE3F5)
+                                      : GuideColors.teal)
+                                : (light
+                                      ? const Color(0x59FFFFFF)
+                                      : const Color(0xFFE2E4E6)),
+                            borderRadius: BorderRadius.circular(3),
+                          ),
                         ),
                       ),
-                    ),
+                    ],
                   ],
-                ],
+                ),
               ),
             ),
           ),
-        ),
-        const SizedBox(width: 8),
-        TextButton(
-          key: const Key('welcome-skip'),
-          style: TextButton.styleFrom(foregroundColor: GuideColors.ink),
-          onPressed: _finish,
-          child: Text(tr(context, 'Skip', 'Bỏ qua')),
-        ),
-      ],
-    ),
-  );
+          const SizedBox(width: 8),
+          TextButton(
+            key: const Key('welcome-skip'),
+            style: TextButton.styleFrom(foregroundColor: ink),
+            onPressed: _finish,
+            child: Text(tr(context, 'Skip', 'Bỏ qua')),
+          ),
+        ],
+      ),
+    );
+  }
 
   Widget _words(BuildContext context, _Page p, {required bool wide}) {
     final title = TextStyle(
@@ -392,6 +419,106 @@ class _WelcomePageState extends State<WelcomePage>
               if (p.secondary != null) Center(child: p.secondary),
             ],
           );
+  }
+
+  /// On a phone, from the practice on: the step is the whole screen at
+  /// real size (so the things to tap are their real size), the bar floats
+  /// on top, and the words arrive in a panel from below once the picture
+  /// has played (after the save, in the practice).
+  Widget _full(BuildContext context, _Page p) {
+    final pad = MediaQuery.paddingOf(context);
+    const barHeight = 56.0;
+    final dark = step == _Step.nudge || (step == _Step.practice && !practiced);
+    final panel = step != _Step.practice || practiced;
+    final from = switch (step) {
+      _Step.find => .72,
+      _Step.nudge => .55,
+      _ => 0.0,
+    };
+    return AnnotatedRegion<SystemUiOverlayStyle>(
+      value: dark ? SystemUiOverlayStyle.light : SystemUiOverlayStyle.dark,
+      child: ColoredBox(
+        color: step == _Step.find ? GuideColors.paper : Colors.black,
+        child: Stack(
+          fit: StackFit.expand,
+          children: [
+            _scene(full: true, top: pad.top + barHeight),
+            if (dark)
+              Positioned(
+                top: 0,
+                left: 0,
+                right: 0,
+                height: pad.top + barHeight + 32,
+                child: const IgnorePointer(
+                  child: DecoratedBox(
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        begin: Alignment.topCenter,
+                        end: Alignment.bottomCenter,
+                        colors: [Color(0x99000000), Color(0x00000000)],
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            Positioned(
+              top: pad.top,
+              left: pad.left,
+              right: pad.right,
+              child: _bar(context, light: dark),
+            ),
+            if (panel)
+              Positioned(
+                left: 0,
+                right: 0,
+                bottom: 0,
+                child: Reveal(
+                  from: from,
+                  to: from + .25,
+                  rise: 80,
+                  child: ConstrainedBox(
+                    constraints: BoxConstraints(
+                      maxHeight: MediaQuery.sizeOf(context).height * .62,
+                    ),
+                    child: DecoratedBox(
+                      decoration: const BoxDecoration(
+                        color: GuideColors.paper,
+                        borderRadius: BorderRadius.vertical(
+                          top: Radius.circular(28),
+                        ),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Color(0x40000000),
+                            blurRadius: 30,
+                            offset: Offset(0, -6),
+                          ),
+                        ],
+                      ),
+                      child: SingleChildScrollView(
+                        padding: EdgeInsets.fromLTRB(
+                          20 + pad.left,
+                          24,
+                          20 + pad.right,
+                          16 + pad.bottom,
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            _words(context, p, wide: false),
+                            const SizedBox(height: 18),
+                            _actions(context, p, wide: false),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+          ],
+        ),
+      ),
+    );
   }
 
   Widget _narrow(BuildContext context, _Page p) => LayoutBuilder(

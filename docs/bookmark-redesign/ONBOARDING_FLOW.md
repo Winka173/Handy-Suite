@@ -44,25 +44,34 @@ are on every step.
 2. **"One place for all of it."** The same cards travel, in colour, into a Handy Bookmark library
    (name, All / Links / Pictures chips, two collections) and settle in a grid. This uses one
    scene widget across both steps, so the cards really move. Primary: **Show me how**.
-3. **"Try saving a video."** A pretend phone shows a phở video. Each stage lights one thing, with
-   a coach label beside it:
-   - **Share** has a breathing ring and the label "Tap Share";
-   - the share row slides up, the screen dims, and Handy Bookmark is ringed;
-   - Handy Bookmark's save sheet appears: preview, "Put it in" with four collections, "Pick
-     this" on Good food;
-   - Save starts disabled. Once a collection is chosen it is ringed, with "Now tap Save";
-   - a check pops (elastic) with an expanding ring: "Saved to Good food · Title, picture and
-     source filled in", with a haptic tap.
+3. **"Try saving a video."** A phở video with the task "Try it: save this video". Everything is
+   dark (a 74 % scrim) except the one thing to tap, which sits in a **lit window**. The window
+   has a soft cyan glow spilling out of it, a white edge and a breathing ring, and a white label
+   beside it. When the next target appears, the window glides to it and follows a sheet as it
+   slides up. Taps pass through the dark.
+   - **Share** is lit, with "Tap Share" above it.
+   - The share row slides up and Handy Bookmark is lit, with "Tap Handy Bookmark" below it.
+   - Handy Bookmark's save sheet shows a preview, then "Put it in" with four 56 px collection
+     rows. Good food is lit, with "Put it in Good food" below it.
+   - Save starts disabled. Once a collection is chosen, Save is lit, with "Now tap Save" above
+     it.
+   - A check pops (elastic) with an expanding ring and a haptic tap: "Saved to Good food ·
+     Title, picture and source filled in". The dark lifts.
 
-   The button appears only after the save. The text then says it was practice and that nothing
-   was saved.
+   The words and the button appear only after the save: "That is all it takes" says how to save
+   from any app and that this was practice, so nothing was saved.
 
-4. **"Find it in a moment."** On the pretend phone a search types "pho bo" without accents. The
-   key just typed lights on a drawn keyboard, the list narrows to the phở save, and "Open in
-   TikTok" grows in.
+4. **"Find it in a moment."** A search types "pho bo" without accents. The key just typed lights
+   on a drawn keyboard, the list narrows to the phở save, and "Open in TikTok" grows in. On
+   phones the words follow once the search has played (2.4 s step).
 5. **"A gentle weekly nudge?"** Phones only. A lock screen over the Hội An photo, 19:00 Sunday,
    and a notification drops in: "5 things you saved recently are still waiting." **Turn on the
    nudge** asks for permission and turns on the weekly nudge setting. **Not now** finishes.
+
+Version 2.1 (the same day): on BlueStacks the owner found the pretend phone too small to tap
+reliably, and the glow rings too faint. Tuckii runs its practice on the whole screen at real
+size and dims everything except the target. So from step 3 on, phones show the step full
+screen, and the rings became the lit window described above.
 
 ## Motion
 
@@ -72,14 +81,22 @@ are on every step.
   - the tint band draws in under the key words (30–70 %);
   - the body follows (12–50 %);
   - the button scales in last (60–95 %).
-- Glow rings breathe on a 1.3 s loop around the next thing to tap.
-- Under the system's reduce-motion setting everything is at rest at once: rings are still,
-  cards sit in place, and buttons are there immediately.
+- In the practice the lit window glides between targets (520 ms), and its ring breathes on a
+  1.4 s loop.
+- Under the system's reduce-motion setting everything is at rest at once: the window jumps and
+  its ring is still, cards sit in place, and buttons are there immediately.
 
 ## Layout
 
-- **Under 700 px:** the progress bar, then the scene (52 % of the height, 220–560 px), then the
-  title, body and a full-width 56 px button. The page scrolls when large text needs more room.
+- **Under 700 px, steps 1–2:** the progress bar, then the scene (52 % of the height, 220–560 px),
+  then the title, body and a full-width 56 px button. The page scrolls when large text needs
+  more room.
+- **Under 700 px, steps 3–5:** the step is the whole screen at real size, edge to edge under the
+  status bar, with no drawn phone. The bar floats on top: white over the video and the lock
+  screen, ink on paper. The title, body and buttons come up in a paper panel from the bottom.
+  The panel is at most 62 % of the height and scrolls. The practice clamps text to 130 % so its
+  real-size sheets still fit; the find and nudge pictures are scaled down only when the screen
+  is shorter than they need.
 - **700 px and up:** words and buttons on the left (flex 5), the scene on the right (flex 6),
   with content at most 1180 px wide. The pretend phone keeps its own size; the reader's text
   size applies outside it, never inside the drawn phone.
@@ -119,8 +136,8 @@ owner chose practice only); photos where a brand logo dominates.
 - `test/welcome_test.dart` (8 tests):
   - Skip is remembered;
   - existing libraries are never guided;
-  - the practice keeps its order (Save stays disabled until a collection is picked) and saves
-    nothing;
+  - the practice keeps its order (Save stays disabled until a collection is picked), names each
+    lit target, and saves nothing;
   - back;
   - replay from Settings;
   - no overflow at 320 px with text at 200 %, at 390 px, and at 1280 px.

@@ -5,7 +5,10 @@ import 'samples.dart';
 /// Finding it again: the search types "pho bo" without accents and the
 /// list narrows to the saved video, which offers to open the original.
 class FindScene extends StatelessWidget {
-  const FindScene({super.key});
+  /// [bare]: the real-size screen of a phone guide, with [top] left clear.
+  final bool bare;
+  final double top;
+  const FindScene({super.key, this.bare = false, this.top = 48});
   @override
   Widget build(BuildContext context) {
     final clock = Beat.of(context);
@@ -13,6 +16,9 @@ class FindScene extends StatelessWidget {
     // Three saves on screen, so the keyboard fits under them.
     final all = [samples[0], pho, samples[1]];
     return PhoneFrame(
+      bare: bare,
+      // Search, three saves and the keyboard.
+      minHeight: top + 540,
       screen: ColoredBox(
         color: GuideColors.paper,
         child: AnimatedBuilder(
@@ -25,7 +31,7 @@ class FindScene extends StatelessWidget {
               ((clock.value - .7) / .25).clamp(0.0, 1.0),
             );
             return Padding(
-              padding: const EdgeInsets.fromLTRB(16, 48, 16, 16),
+              padding: EdgeInsets.fromLTRB(16, top, 16, 16),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -258,16 +264,20 @@ class _Row extends StatelessWidget {
 
 /// The weekly nudge as it would arrive: a count, never a title.
 class NudgeScene extends StatelessWidget {
-  const NudgeScene({super.key});
+  final bool bare;
+  final double top;
+  const NudgeScene({super.key, this.bare = false, this.top = 48});
   @override
   Widget build(BuildContext context) => PhoneFrame(
+    bare: bare,
+    minHeight: 480,
     screen: Stack(
       fit: StackFit.expand,
       children: [
         Image.asset('assets/welcome/hoi-an.jpg', fit: BoxFit.cover),
         const ColoredBox(color: Color(0x73000000)),
         Positioned(
-          top: 70,
+          top: top + 22,
           left: 0,
           right: 0,
           child: Column(
@@ -293,7 +303,7 @@ class NudgeScene extends StatelessWidget {
           ),
         ),
         Positioned(
-          top: 230,
+          top: top + 182,
           left: 14,
           right: 14,
           child: Reveal(
