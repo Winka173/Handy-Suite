@@ -54,6 +54,14 @@ Future<SaveController> open(
   return c;
 }
 
+/// Swipes the phone's app row from its visible start (its centre is past
+/// the edge).
+Future<void> swipeApps(WidgetTester t) async {
+  final start = t.getTopLeft(find.byKey(const Key('practice-apps')));
+  await t.dragFrom(start + const Offset(60, 30), const Offset(-400, 0));
+  await t.pumpAndSettle();
+}
+
 /// Plays the practice save on the pretend phone.
 Future<void> practise(WidgetTester t) async {
   await tapKey(t, 'practice-share');
@@ -105,7 +113,12 @@ void main() {
     expect(find.textContaining('own list first'), findsOneWidget);
     expect(find.text('Not here? Tap More'), findsOneWidget);
     await tapKey(t, 'practice-more');
-    expect(find.text('Tap Good food: straight in'), findsOneWidget);
+    // As on a real phone, Handy Bookmark is past the edge: swipe to it.
+    expect(find.text('Swipe to find Handy Bookmark'), findsOneWidget);
+    expect(find.text('Tap Handy Bookmark'), findsNothing);
+    await swipeApps(t);
+    await t.pumpAndSettle();
+    expect(find.text('Tap Handy Bookmark'), findsOneWidget);
     await tapKey(t, 'practice-direct');
     await settle(t);
     expect(find.text('Saved to Good food'), findsOneWidget);
@@ -135,6 +148,8 @@ void main() {
     await tapKey(t, 'welcome-next-1');
     await tapKey(t, 'practice-share');
     await tapKey(t, 'practice-more');
+    await swipeApps(t);
+    await t.pumpAndSettle();
     await tapKey(t, 'practice-target');
     await settle(t);
     expect(find.text('Saved to Not sorted'), findsOneWidget);

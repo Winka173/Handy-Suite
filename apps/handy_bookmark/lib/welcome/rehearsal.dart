@@ -3,12 +3,12 @@ import 'package:handy_ui/kit.dart';
 import 'motion.dart';
 import 'samples.dart';
 
-enum PracticeStage { video, apps, share, saved }
+enum PracticeStage { video, apps, share, found, saved }
 
 /// A practice save, the way it really goes: a video, the app's own share
 /// list (where Handy Bookmark is never listed, so: More), then the phone's
 /// share sheet, where the person's collections sit in the top row and
-/// Handy Bookmark among the apps. Everything is dark except the one thing
+/// Handy Bookmark sits further along the apps, found by swiping the row. Everything is dark except the one thing
 /// to tap, in a lit window with a word beside it. Nothing is written.
 ///
 /// [framed] draws it inside a pretend phone (wide screens). Unframed it
@@ -33,6 +33,7 @@ class _RehearsalState extends State<Rehearsal> {
   PracticeStage stage = PracticeStage.video;
   String? into;
   final share = GlobalKey(), more = GlobalKey(), direct = GlobalKey();
+  final appsRow = GlobalKey(), ours = GlobalKey();
 
   void _go(PracticeStage next) {
     if (moves(context)) {
@@ -60,9 +61,20 @@ class _RehearsalState extends State<Rehearsal> {
           30,
           false,
         ),
+        // As on a real phone: the app is further along, past the edge.
         PracticeStage.share => (
-          direct,
-          tr(context, 'Tap Good food: straight in', 'Bấm Món ngon: vào thẳng'),
+          appsRow,
+          tr(
+            context,
+            'Swipe to find Handy Bookmark',
+            'Vuốt sang để tìm Handy Bookmark',
+          ),
+          18,
+          false,
+        ),
+        PracticeStage.found => (
+          ours,
+          tr(context, 'Tap Handy Bookmark', 'Bấm Handy Bookmark'),
           18,
           false,
         ),
@@ -81,7 +93,7 @@ class _RehearsalState extends State<Rehearsal> {
       'TikTok shows its own list first',
       'TikTok hiện danh sách riêng trước',
     ),
-    PracticeStage.share => tr(
+    PracticeStage.share || PracticeStage.found => tr(
       context,
       'Now your phone’s share list',
       'Đây là danh sách chia sẻ của máy',
@@ -114,10 +126,20 @@ class _RehearsalState extends State<Rehearsal> {
                 child: _AppsSheet(moreKey: more, onMore: _more),
               ),
               _SlideUp(
-                show: stage == PracticeStage.share,
+                show:
+                    stage == PracticeStage.share ||
+                    stage == PracticeStage.found,
                 time: time,
                 child: _ShareSheet(
                   directKey: direct,
+                  rowKey: appsRow,
+                  oursKey: ours,
+                  hint: stage == PracticeStage.share,
+                  onFound: _found,
+                  // The lit window keeps up with the app as the row moves.
+                  onScroll: () {
+                    if (stage == PracticeStage.found) setState(() {});
+                  },
                   onPick: (String? collection) => _saved(collection),
                 ),
               ),
@@ -167,8 +189,12 @@ class _RehearsalState extends State<Rehearsal> {
     if (stage == PracticeStage.apps) _go(PracticeStage.share);
   }
 
+  void _found() {
+    if (stage == PracticeStage.share) _go(PracticeStage.found);
+  }
+
   void _saved(String? collection) {
-    if (stage != PracticeStage.share) return;
+    if (stage != PracticeStage.share && stage != PracticeStage.found) return;
     into = collection;
     _go(PracticeStage.saved);
   }
@@ -428,10 +454,77 @@ class _AppsSheet extends StatelessWidget {
 /// The phone's own share sheet (drawn plainly; every phone's looks
 /// different): the top row holds direct targets, among them the person's
 /// collections that Handy Bookmark offers there; the apps follow.
-class _ShareSheet extends StatelessWidget {
-  final GlobalKey directKey;
+/// The phone's own share sheet: what is shared, the person's collections
+/// and people in the top row, then the apps in a row that scrolls
+/// sideways, where Handy Bookmark sits past the edge. While [hint], the
+/// row nudges once to show it moves; [onFound] fires when the app is in
+/// full view.
+class _ShareSheet extends StatefulWidget {
+  final GlobalKey directKey, rowKey, oursKey;
+  final bool hint;
+  final VoidCallback onFound, onScroll;
   final ValueChanged<String?> onPick;
-  const _ShareSheet({required this.directKey, required this.onPick});
+  const _ShareSheet({
+    required this.directKey,
+    required this.rowKey,
+    required this.oursKey,
+    required this.hint,
+    required this.onFound,
+    required this.onScroll,
+    required this.onPick,
+  });
+  @override
+  State<_ShareSheet> createState() => _ShareSheetState();
+}
+
+class _ShareSheetState extends State<_ShareSheet> {
+  final row = ScrollController();
+  bool _nudged = false;
+
+  @override
+  void didUpdateWidget(_ShareSheet old) {
+    super.didUpdateWidget(old);
+    if (widget.hint && !old.hint) _nudge();
+  }
+
+  @override
+  void dispose() {
+    row.dispose();
+    super.dispose();
+  }
+
+  /// Once, after the sheet has risen: the row slides a little and back.
+  Future<void> _nudge() async {
+    if (_nudged || !moves(context)) return;
+    _nudged = true;
+    await Future<void>.delayed(const Duration(milliseconds: 700));
+    if (!mounted || !row.hasClients || !widget.hint) return;
+    await row.animateTo(
+      56,
+      duration: const Duration(milliseconds: 420),
+      curve: Curves.easeOutCubic,
+    );
+    if (!mounted || !row.hasClients || !widget.hint) return;
+    await row.animateTo(
+      0,
+      duration: const Duration(milliseconds: 420),
+      curve: Curves.easeInOutCubic,
+    );
+  }
+
+  /// Whether Handy Bookmark is wholly inside the row's view.
+  void _check() {
+    widget.onScroll();
+    final tile = widget.oursKey.currentContext?.findRenderObject();
+    final view = widget.rowKey.currentContext?.findRenderObject();
+    if (tile is! RenderBox || view is! RenderBox) return;
+    if (!tile.hasSize || !view.hasSize) return;
+    final at = tile.localToGlobal(Offset.zero, ancestor: view);
+    if (at.dx >= -1 && at.dx + tile.size.width <= view.size.width + 1) {
+      widget.onFound();
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final food = tr(context, 'Good food', 'Món ngon');
@@ -476,7 +569,6 @@ class _ShareSheet extends StatelessWidget {
           ],
         ),
         label: name,
-        strong: at != null,
       );
       return Semantics(
         button: true,
@@ -484,7 +576,7 @@ class _ShareSheet extends StatelessWidget {
         excludeSemantics: true,
         child: GestureDetector(
           key: key,
-          onTap: () => onPick(name),
+          onTap: () => widget.onPick(name),
           behavior: HitTestBehavior.opaque,
           child: tile,
         ),
@@ -493,6 +585,7 @@ class _ShareSheet extends StatelessWidget {
 
     Widget app(IconData icon, String label, {bool ours = false}) {
       final tile = _tile(
+        key: ours ? widget.oursKey : null,
         face: Container(
           width: 56,
           height: 56,
@@ -517,29 +610,44 @@ class _ShareSheet extends StatelessWidget {
         child: GestureDetector(
           key: const Key('practice-target'),
           // The app itself saves to Not sorted.
-          onTap: () => onPick(null),
+          onTap: () => widget.onPick(null),
           behavior: HitTestBehavior.opaque,
           child: tile,
         ),
       );
     }
 
-    final friend = ExcludeSemantics(
+    Widget person(String initial, String name, Color color) => ExcludeSemantics(
       child: _tile(
         face: _circle(
-          const Text(
-            'L',
-            style: TextStyle(
+          Text(
+            initial,
+            style: const TextStyle(
               color: Colors.white,
               fontSize: 22,
               fontWeight: FontWeight.w600,
             ),
           ),
-          color: const Color(0xFFB5838D),
+          color: color,
         ),
-        label: 'Lan',
+        label: name,
       ),
     );
+
+    // The phone's usual apps first, as on a real phone; Handy Bookmark is
+    // the eighth, past the edge of any phone screen.
+    final apps = [
+      app(Icons.chat_bubble_outline, tr(context, 'Messages', 'Tin nhắn')),
+      app(Icons.mail_outline, 'Email'),
+      app(Icons.sticky_note_2_outlined, tr(context, 'Notes', 'Ghi chú')),
+      app(Icons.share_outlined, tr(context, 'Nearby', 'Gần đây')),
+      app(Icons.bluetooth, 'Bluetooth'),
+      app(Icons.print_outlined, tr(context, 'Print', 'In')),
+      app(Icons.folder_outlined, tr(context, 'Files', 'Tệp')),
+      app(Icons.bookmark, 'Handy Bookmark', ours: true),
+      app(Icons.calendar_today_outlined, tr(context, 'Calendar', 'Lịch')),
+      app(Icons.copy_rounded, tr(context, 'Copy', 'Sao chép')),
+    ];
 
     return _Sheet(
       child: Column(
@@ -555,30 +663,35 @@ class _ShareSheet extends StatelessWidget {
                 food,
                 const Color(0xFFD9480F),
                 key: const Key('practice-direct'),
-                at: directKey,
+                at: widget.directKey,
               ),
               collection(trips, const Color(0xFF2B8A3E)),
-              friend,
-              const SizedBox(width: 64),
+              person('L', 'Lan', const Color(0xFFB5838D)),
+              person('M', 'Minh', const Color(0xFF5C7C99)),
             ],
           ),
           const SizedBox(height: 14),
           const Divider(height: 1),
           const SizedBox(height: 14),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              app(
-                Icons.chat_bubble_outline,
-                tr(context, 'Messages', 'Tin nhắn'),
+          NotificationListener<ScrollNotification>(
+            onNotification: (_) {
+              _check();
+              return false;
+            },
+            child: SingleChildScrollView(
+              key: widget.rowKey,
+              controller: row,
+              scrollDirection: Axis.horizontal,
+              child: Row(
+                key: const Key('practice-apps'),
+                children: [
+                  for (final (i, a) in apps.indexed) ...[
+                    if (i > 0) const SizedBox(width: 18),
+                    a,
+                  ],
+                ],
               ),
-              app(Icons.mail_outline, 'Email'),
-              app(Icons.bookmark, 'Handy Bookmark', ours: true),
-              app(
-                Icons.sticky_note_2_outlined,
-                tr(context, 'Notes', 'Ghi chú'),
-              ),
-            ],
+            ),
           ),
           const SizedBox(height: 8),
         ],

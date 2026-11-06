@@ -30,17 +30,27 @@ class _Row extends StatelessWidget {
   // Built whole (a few dozen items at most), so every choice can be reached
   // by focus and scrolled into view; as tall as its tallest item, so large
   // text is never cut.
-  Widget build(BuildContext context) => SingleChildScrollView(
-    scrollDirection: Axis.horizontal,
-    clipBehavior: Clip.none,
-    child: Row(
-      children: [
-        for (final (i, c) in children.indexed) ...[
-          if (i > 0) const SizedBox(width: HandySpace.xs),
-          c,
-        ],
-      ],
-    ),
+  // On a wide sheet the choices wrap onto more lines; on a phone they
+  // scroll sideways, cut at the sheet's own edge.
+  Widget build(BuildContext context) => LayoutBuilder(
+    builder: (context, box) => box.maxWidth >= 440
+        ? Wrap(
+            spacing: HandySpace.xs,
+            runSpacing: HandySpace.xs,
+            children: children,
+          )
+        : SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            clipBehavior: Clip.hardEdge,
+            child: Row(
+              children: [
+                for (final (i, c) in children.indexed) ...[
+                  if (i > 0) const SizedBox(width: HandySpace.xs),
+                  c,
+                ],
+              ],
+            ),
+          ),
   );
 }
 

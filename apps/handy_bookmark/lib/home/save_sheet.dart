@@ -1,4 +1,5 @@
 import 'package:handy_ui/kit.dart';
+import 'share_how_to.dart';
 import '../design/theme.dart';
 import '../scope.dart';
 import '../welcome/motion.dart';
@@ -73,9 +74,10 @@ Future<void> showSaveSheet(
                   if (canReceiveShares)
                     TextButton.icon(
                       key: const Key('save-how'),
+                      // The steps on one short sheet, not the whole guide.
                       onPressed: () {
                         close();
-                        Navigator.of(context).pushNamed('/welcome');
+                        showShareHowTo(context);
                       },
                       icon: const Icon(Icons.ios_share_rounded, size: 20),
                       label: Text(

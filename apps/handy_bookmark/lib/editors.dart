@@ -527,131 +527,150 @@ class _CollectionEditorState extends State<CollectionEditor> {
         padding: EdgeInsets.only(
           bottom: MediaQuery.viewInsetsOf(context).bottom,
         ),
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.fromLTRB(20, 0, 20, 16),
-          child: Form(
-            key: _form,
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                creating
-                    ? SheetTitle(
-                        before: tr(context, 'A new ', 'Bộ sưu tập '),
-                        words: tr(context, 'collection', 'mới'),
-                      )
-                    : SheetTitle(
-                        before: tr(context, 'Edit ', 'Sửa '),
-                        words: tr(context, 'collection', 'bộ sưu tập'),
+        // The fields scroll; the error and the button stay at the foot.
+        child: Form(
+          key: _form,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Flexible(
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.fromLTRB(20, 0, 20, 8),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      creating
+                          ? SheetTitle(
+                              before: tr(context, 'A new ', 'Bộ sưu tập '),
+                              words: tr(context, 'collection', 'mới'),
+                            )
+                          : SheetTitle(
+                              before: tr(context, 'Edit ', 'Sửa '),
+                              words: tr(context, 'collection', 'bộ sưu tập'),
+                            ),
+                      gap,
+                      Row(
+                        children: [
+                          CollectionBadge(
+                            key: const Key('collection-badge'),
+                            hue: hue,
+                            mark: _mark,
+                            size: 22,
+                            always: true,
+                          ),
+                          const SizedBox(width: HandySpace.m),
+                          Expanded(
+                            child: TextFormField(
+                              key: const Key('collection-name'),
+                              controller: _name,
+                              autofocus: creating,
+                              maxLength: 8192,
+                              textCapitalization: TextCapitalization.sentences,
+                              // The limit guards the data; a counter says nothing.
+                              buildCounter: noCounter,
+                              decoration: InputDecoration(
+                                hintText: tr(context, 'Name', 'Tên'),
+                                isDense: true,
+                              ),
+                              onFieldSubmitted: (_) => _save(),
+                              validator: (v) => v == null || v.trim().isEmpty
+                                  ? tr(context, 'Enter a name', 'Nhập tên')
+                                  : null,
+                            ),
+                          ),
+                        ],
                       ),
-                gap,
-                Row(
-                  children: [
-                    CollectionBadge(
-                      key: const Key('collection-badge'),
-                      hue: hue,
-                      mark: _mark,
-                      size: 22,
-                      always: true,
-                    ),
-                    const SizedBox(width: HandySpace.m),
-                    Expanded(
-                      child: TextFormField(
-                        key: const Key('collection-name'),
-                        controller: _name,
-                        autofocus: creating,
-                        maxLength: 8192,
-                        textCapitalization: TextCapitalization.sentences,
-                        // The limit guards the data; a counter says nothing.
-                        buildCounter: noCounter,
-                        decoration: InputDecoration(
-                          hintText: tr(context, 'Name', 'Tên'),
-                          isDense: true,
+                      if (creating) ...[
+                        gap,
+                        TemplateRow(
+                          taken: {
+                            for (final c in widget.library.collections)
+                              c.name.toLowerCase(),
+                          },
+                          onPick: _pickTemplate,
                         ),
-                        onFieldSubmitted: (_) => _save(),
-                        validator: (v) => v == null || v.trim().isEmpty
-                            ? tr(context, 'Enter a name', 'Nhập tên')
-                            : null,
+                      ],
+                      gap,
+                      MarkRow(
+                        value: _mark,
+                        hue: hue,
+                        onChanged: (v) => setState(() => _mark = v),
+                      ),
+                      gap,
+                      HueRow(
+                        value: _hue,
+                        autoHue: autoHue,
+                        onChanged: (v) => setState(() => _hue = v),
+                      ),
+                      const SizedBox(height: HandySpace.s),
+                      Align(
+                        alignment: AlignmentDirectional.centerStart,
+                        child: TextButton.icon(
+                          key: const Key('collection-more'),
+                          onPressed: () => setState(() => _more = !_more),
+                          icon: Icon(
+                            _more ? Icons.expand_less : Icons.expand_more,
+                            size: 20,
+                          ),
+                          label: Text(
+                            tr(context, 'More options', 'Thêm tùy chọn'),
+                          ),
+                        ),
+                      ),
+                      if (_more) ...[
+                        const SizedBox(height: HandySpace.s),
+                        _parentField(context),
+                        gap,
+                        TextFormField(
+                          key: const Key('collection-description'),
+                          controller: _description,
+                          maxLength: 65536,
+                          buildCounter: noCounter,
+                          minLines: 2,
+                          maxLines: 4,
+                          decoration: InputDecoration(
+                            labelText: tr(
+                              context,
+                              'Note (optional)',
+                              'Ghi chú (không bắt buộc)',
+                            ),
+                            floatingLabelBehavior: FloatingLabelBehavior.always,
+                          ),
+                        ),
+                      ],
+                    ],
+                  ),
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(20, 8, 20, 16),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    if (_error != null) ...[
+                      Semantics(
+                        liveRegion: true,
+                        child: HandyNotice(_error!, tone: HandyTone.error),
+                      ),
+                      const SizedBox(height: HandySpace.m),
+                    ],
+                    FilledButton(
+                      key: const Key('editor-save'),
+                      style: sheetButtonStyle(context),
+                      onPressed: _save,
+                      child: Text(
+                        creating
+                            ? tr(context, 'Create', 'Tạo')
+                            : tr(context, 'Save', 'Lưu'),
                       ),
                     ),
                   ],
                 ),
-                if (creating) ...[
-                  gap,
-                  TemplateRow(
-                    taken: {
-                      for (final c in widget.library.collections)
-                        c.name.toLowerCase(),
-                    },
-                    onPick: _pickTemplate,
-                  ),
-                ],
-                gap,
-                MarkRow(
-                  value: _mark,
-                  hue: hue,
-                  onChanged: (v) => setState(() => _mark = v),
-                ),
-                gap,
-                HueRow(
-                  value: _hue,
-                  autoHue: autoHue,
-                  onChanged: (v) => setState(() => _hue = v),
-                ),
-                const SizedBox(height: HandySpace.s),
-                Align(
-                  alignment: AlignmentDirectional.centerStart,
-                  child: TextButton.icon(
-                    key: const Key('collection-more'),
-                    onPressed: () => setState(() => _more = !_more),
-                    icon: Icon(
-                      _more ? Icons.expand_less : Icons.expand_more,
-                      size: 20,
-                    ),
-                    label: Text(tr(context, 'More options', 'Thêm tùy chọn')),
-                  ),
-                ),
-                if (_more) ...[
-                  const SizedBox(height: HandySpace.s),
-                  _parentField(context),
-                  gap,
-                  TextFormField(
-                    key: const Key('collection-description'),
-                    controller: _description,
-                    maxLength: 65536,
-                    buildCounter: noCounter,
-                    minLines: 2,
-                    maxLines: 4,
-                    decoration: InputDecoration(
-                      labelText: tr(
-                        context,
-                        'Note (optional)',
-                        'Ghi chú (không bắt buộc)',
-                      ),
-                      floatingLabelBehavior: FloatingLabelBehavior.always,
-                    ),
-                  ),
-                ],
-                if (_error != null) ...[
-                  gap,
-                  Semantics(
-                    liveRegion: true,
-                    child: HandyNotice(_error!, tone: HandyTone.error),
-                  ),
-                ],
-                gap,
-                FilledButton(
-                  key: const Key('editor-save'),
-                  style: sheetButtonStyle(context),
-                  onPressed: _save,
-                  child: Text(
-                    creating
-                        ? tr(context, 'Create', 'Tạo')
-                        : tr(context, 'Save', 'Lưu'),
-                  ),
-                ),
-              ],
-            ),
+              ),
+            ],
           ),
         ),
       ),

@@ -1,4 +1,5 @@
 import 'package:handy_bookmark_engine/handy_bookmark_engine.dart';
+import '../design/theme.dart';
 import '../pro/entitlements.dart';
 import 'package:handy_ui/kit.dart';
 import '../collections/collection_actions.dart';
@@ -73,39 +74,47 @@ class PlacesList extends StatelessWidget {
       int? hue,
     }) {
       final on = marking && place != null && v.place == place && v.id == id;
-      return ListTile(
-        key: key,
-        selected: on,
-        selectedTileColor: c.select,
-        selectedColor: theme.colorScheme.onSurface,
-        contentPadding: EdgeInsets.only(
-          left: HandySpace.l + indent,
-          right: menu == null ? HandySpace.l : HandySpace.xs,
-        ),
-        // A collection shows its colour as a dot where the icon would be;
-        // the fixed places keep their grey icons.
-        leading: hue == null
-            ? Icon(icon, size: 20, color: on ? c.selectInk : c.muted)
-            : SizedBox(
-                width: 20,
-                child: Center(child: HandyDot(hue, size: 10)),
-              ),
-        title: Text(title, maxLines: 1, overflow: TextOverflow.ellipsis),
-        trailing: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            if (n != null)
-              Text(
-                '$n',
-                style: theme.textTheme.bodyMedium?.copyWith(
-                  color: c.muted,
-                  fontFeatures: tabular,
+      // The chosen place is a rounded pill inset in its row, so the
+      // group's hairlines run in the gap and never cross it.
+      return Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
+        child: ListTile(
+          key: key,
+          selected: on,
+          selectedTileColor: c.select,
+          selectedColor: theme.colorScheme.onSurface,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(BookmarkRadii.item),
+          ),
+          contentPadding: EdgeInsets.only(
+            left: HandySpace.l - 6 + indent,
+            right: menu == null ? HandySpace.l - 6 : HandySpace.xs,
+          ),
+          // A collection shows its colour as a dot where the icon would be;
+          // the fixed places keep their grey icons.
+          leading: hue == null
+              ? Icon(icon, size: 20, color: on ? c.selectInk : c.muted)
+              : SizedBox(
+                  width: 20,
+                  child: Center(child: HandyDot(hue, size: 10)),
                 ),
-              ),
-            ?menu,
-          ],
+          title: Text(title, maxLines: 1, overflow: TextOverflow.ellipsis),
+          trailing: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              if (n != null)
+                Text(
+                  '$n',
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    color: c.muted,
+                    fontFeatures: tabular,
+                  ),
+                ),
+              ?menu,
+            ],
+          ),
+          onTap: onTap ?? () => onPick(place!, id),
         ),
-        onTap: onTap ?? () => onPick(place!, id),
       );
     }
 

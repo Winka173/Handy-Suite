@@ -516,7 +516,12 @@ void main() {
       await shot(t, '$label-21-welcome-4-apps');
       await tapKey(t, 'practice-more');
       await shot(t, '$label-21-welcome-5-share');
-      await tapKey(t, 'practice-direct');
+      // Handy Bookmark is past the edge of the phone's app row.
+      final apps = t.getTopLeft(find.byKey(const Key('practice-apps')));
+      await t.dragFrom(apps + const Offset(60, 30), const Offset(-400, 0));
+      await t.pumpAndSettle();
+      await shot(t, '$label-21-welcome-5b-found');
+      await tapKey(t, 'practice-target');
       await shot(t, '$label-21-welcome-6-saved');
       await tapKey(t, 'welcome-next-2');
       await shot(t, '$label-21-welcome-7-find');
@@ -796,6 +801,18 @@ void main() {
   testWidgets('phone home dark', (t) async {
     await boot(t, const Size(390, 844), theme: 'dark');
     await shot(t, 'phone-1-home-dark');
+  });
+  testWidgets('phone share how to', (t) async {
+    await boot(t, const Size(390, 844));
+    await tapKey(t, 'save-new');
+    await tapKey(t, 'save-how');
+    await shot(t, 'phone-57-share-how-to');
+  });
+  testWidgets('desktop new collection', (t) async {
+    await boot(t, const Size(1440, 900));
+    await t.tap(find.byKey(const Key('collection-new')).first);
+    await t.pumpAndSettle();
+    await shot(t, 'desktop-58-collection-new');
   });
   testWidgets('phone collection tools', (t) async {
     await boot(t, const Size(390, 844));
