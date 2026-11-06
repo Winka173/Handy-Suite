@@ -101,3 +101,18 @@ tình huống và Gần đây; Habit 32 gợi ý; Recall bộ mẫu và luyện 
 và giải thích đối chiếu; Dev chỉ chỗ lỗi JSON, chép JSON Pointer, lịch sử gửi opt-in;
 Boards mặc định cá nhân; Bookmark gộp link trùng có duyệt; Docs kiểu giấy khi quét và
 500 tệp đã giữ. Trạng thái từng mục: [REFACTOR_AUDIT](docs/REFACTOR_AUDIT.md).
+
+## Handy Bookmark redesign (2026-11-06)
+
+Per-feature status with proof: `docs/bookmark-redesign/FEATURE_QA_MATRIX.md`. In short:
+
+- **Done, host-tested:** no ads; picture items and owned pictures (backed up, previews without
+  EXIF); Recently Deleted for 30 days with tombstones; visual home with one Save button and
+  All / Links / Pictures; first-run guide with a real first save; Focus swipe deck; per-collection
+  view and order; Raindrop import; collection shared as one page; named library and dateline;
+  storage use; sync protocol (simulated devices).
+- **Code only:** Android image share (APK builds); weekly nudge notification; folder sync on
+  computers (host tests with real files).
+- **Blocked:** iOS share extension images (no Mac: not compiled); iCloud Drive and Google Drive
+  sync on phones (container, OAuth client, devices).
+- Nothing in this redesign has been run on an emulator or a device yet.

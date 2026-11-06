@@ -190,3 +190,16 @@ consumable one; Card switches palettes only for designs drawn in one of its ten
 palettes; Bookmark merges only links that imports would also call the same.
 Every app still uses a `com.example.*` package id, which no store accepts
 (`docs/ANDROID_IOS_RELEASE_CHECKLIST.md`).
+
+## Handy Bookmark (2026-11-06)
+
+- Sync on phones is not available: only a folder kept in step by a cloud client on a computer.
+  Sync trusts each device's clock; a badly wrong clock can win or lose edits. Tombstones are kept
+  365 days.
+- Importing Pocket or Raindrop twice adds new collections even when ones with the same name
+  exist (links are not duplicated).
+- Previews stored before 2026-11-06 may still carry EXIF on the device; shared pages re-encode
+  every picture, so nothing leaves with it.
+- The weekly nudge is rescheduled when the library changes; a library left untouched for
+  weeks gets one nudge, not one a week.
+- iOS image sharing is written but has never been compiled.

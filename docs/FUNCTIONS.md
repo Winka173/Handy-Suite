@@ -833,3 +833,16 @@ indexed search with asynchronous file bodies; cancellable native streamed ZIP/PD
 large staged ZIP restore; EN/VI owned error catalog; opt-in Android/iOS home widget
 payload and launcher shortcuts (iOS native source unverified without Mac). No extra
 production seed data. Exact test/device coverage stays in the Boards matrix.
+
+## Handy Bookmark: pictures, sharing and sync limits (2026-11-06)
+
+- Picture items: JPEG, PNG or WebP, at most 25 MB and 50 megapixels each (checked from the
+  header before decoding); the original is kept byte for byte, a preview of at most 640 px
+  and 600 KB is written without EXIF.
+- Share into the app: at most 20 pictures per share, 25 MB each (Android and iOS queues).
+- Recently Deleted keeps items 30 days; deleted-for-good tombstones are kept 365 days.
+- ZIP backups with pictures: at most 256 MB (`maxBackupBytes`), 65,535 entries.
+- A shared collection page embeds at most 200 pictures, each re-encoded at most 480 px
+  without metadata; notes only when asked; no external resources.
+- Sync (`handy-bookmark/library.json` plus `media/<sha256>`): up to 3 attempts when another
+  device writes in between; pictures are checked against their hash on arrival.
