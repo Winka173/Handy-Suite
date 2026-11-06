@@ -3,8 +3,20 @@ import 'package:handy_bookmark_engine/handy_bookmark_engine.dart';
 import 'package:handy_ui/kit.dart';
 import '../scope.dart';
 
-PortableExport _encode((SaveLibrary, SaveFormat, Map<String, ReadingCopy>) v) =>
-    SavePortable.exportWithReport(v.$1, v.$2, readingCopies: v.$3);
+PortableExport _encode(
+  (
+    SaveLibrary,
+    SaveFormat,
+    Map<String, ReadingCopy>,
+    Map<String, PortablePicture>,
+  )
+  v,
+) => SavePortable.exportWithReport(
+  v.$1,
+  v.$2,
+  readingCopies: v.$3,
+  pictures: v.$4,
+);
 ImportPreview _preview((Uint8List, SaveFormat, SaveLibrary) v) =>
     SavePortable.preview(v.$1, v.$2, current: v.$3);
 ImportPreview _pocket((Uint8List, SaveLibrary) v) =>
@@ -13,13 +25,13 @@ ImportPreview _pocket((Uint8List, SaveLibrary) v) =>
 String formatName(BuildContext c, SaveFormat f) => switch (f) {
   SaveFormat.json => tr(
     c,
-    'Full backup with offline copies (JSON)',
-    'Sao lưu đầy đủ, kèm bản đọc offline (JSON)',
+    'Library and offline copies, no pictures (JSON)',
+    'Thư viện và bản đọc offline, không kèm ảnh (JSON)',
   ),
   SaveFormat.zip => tr(
     c,
-    'Full backup with offline copies (ZIP)',
-    'Sao lưu đầy đủ, kèm bản đọc offline (ZIP)',
+    'Full backup with pictures and offline copies (ZIP)',
+    'Sao lưu đầy đủ, kèm ảnh và bản đọc offline (ZIP)',
   ),
   SaveFormat.html => tr(
     c,
@@ -39,7 +51,26 @@ extension ImportExport on SaveScope {
     final copies = c.readingIds.isNotEmpty
         ? await c.allReadingCopies()
         : const <String, ReadingCopy>{};
-    return (await compute(_encode, (library, SaveFormat.zip, copies))).bytes;
+    final pictures = await _pictures(library);
+    return (await compute(_encode, (
+      library,
+      SaveFormat.zip,
+      copies,
+      pictures,
+    ))).bytes;
+  }
+
+  /// The bytes of every picture [lib]'s items (and Trash items) use that
+  /// this device still has.
+  Future<Map<String, PortablePicture>> _pictures(SaveLibrary lib) async {
+    final out = <String, PortablePicture>{};
+    for (final id in mediaInUse(lib)) {
+      final original = await c.store!.media(id);
+      final preview = await c.store!.media(id, preview: true);
+      if (original != null && preview != null)
+        out[id] = PortablePicture(original, preview);
+    }
+    return out;
   }
 
   /// Exports the whole library, or only the selected links.
@@ -63,12 +94,15 @@ extension ImportExport on SaveScope {
     );
     if (format == null || !context.mounted) return;
     var lib = library;
+    // Only what was picked: never Recently Deleted along with it.
     if (selected)
       lib = lib.copyWith(
         bookmarks: [
           for (final b in lib.bookmarks)
             if (view.selected.contains(b.id)) b,
         ],
+        trash: const [],
+        tombstones: const [],
       );
     await run(context, () async {
       // Full backups carry offline copies within the 30 MB budget.
@@ -76,7 +110,10 @@ extension ImportExport on SaveScope {
       final copies = full && c.readingIds.isNotEmpty
           ? await c.allReadingCopies()
           : const <String, ReadingCopy>{};
-      final out = await compute(_encode, (lib, format, copies));
+      final pictures = format == SaveFormat.zip
+          ? await _pictures(lib)
+          : const <String, PortablePicture>{};
+      final out = await compute(_encode, (lib, format, copies, pictures));
       final bytes = out.bytes;
       final uri = await files.exportBytes(
         'handy-bookmark.${format == SaveFormat.markdown ? 'md' : format.name}',
@@ -109,6 +146,31 @@ extension ImportExport on SaveScope {
                 context,
                 '${out.readingOmitted} offline copies left out to stay under 30 MB.',
                 '${out.readingOmitted} bản đọc offline bị bỏ ra để file dưới 30 MB.',
+              ),
+            if (out.picturesIncluded > 0)
+              tr(
+                context,
+                '${out.picturesIncluded} pictures included.',
+                'Kèm ${out.picturesIncluded} ảnh.',
+              ),
+            if (out.picturesOmitted > 0)
+              tr(
+                context,
+                '${out.picturesOmitted} pictures (${(out.omittedPictureBytes / 1048576).toStringAsFixed(0)} MB) left out to stay under 256 MB; they are still on this device.',
+                '${out.picturesOmitted} ảnh (${(out.omittedPictureBytes / 1048576).toStringAsFixed(0)} MB) bị bỏ ra để file dưới 256 MB; ảnh vẫn còn trên máy.',
+              ),
+            if (out.picturesMissing > 0)
+              tr(
+                context,
+                '${out.picturesMissing} pictures are missing on this device and could not be included.',
+                '${out.picturesMissing} ảnh không còn trên máy nên không thể đưa vào.',
+              ),
+            if (format != SaveFormat.zip &&
+                lib.bookmarks.any((b) => b.media != null))
+              tr(
+                context,
+                'Pictures need a ZIP backup.',
+                'Muốn giữ ảnh, hãy sao lưu dạng ZIP.',
               ),
           ].join(' '),
         );
@@ -200,7 +262,8 @@ extension ImportExport on SaveScope {
   Future<void> importLinks(BuildContext context) => run(context, () async {
     final file = await files.importBytes(
       extensions: ['json', 'zip', 'html', 'htm', 'csv', 'txt', 'md', 'hseal'],
-      maxBytes: SavePortable.maxImportBytes,
+      // A ZIP with pictures may be larger; the reader checks each format.
+      maxBytes: SavePortable.maxBackupBytes,
     );
     if (file == null || !context.mounted) return;
     // A password-locked automatic backup opens to the same ZIP.
@@ -242,6 +305,34 @@ extension ImportExport on SaveScope {
                 '${preview.duplicateCount} link đã có sẵn và ${preview.invalidCount} link không đọc được.',
               ),
             ),
+            if (preview.pictures.isNotEmpty ||
+                preview.invalidPictures > 0 ||
+                preview.missingPictures > 0) ...[
+              const SizedBox(height: HandySpace.s),
+              Text(
+                key: const Key('import-pictures'),
+                [
+                  if (preview.pictures.isNotEmpty)
+                    tr(
+                      context,
+                      'With ${preview.pictures.length} pictures.',
+                      'Kèm ${preview.pictures.length} ảnh.',
+                    ),
+                  if (preview.invalidPictures > 0)
+                    tr(
+                      context,
+                      '${preview.invalidPictures} damaged pictures left out.',
+                      '${preview.invalidPictures} ảnh hỏng, bỏ qua.',
+                    ),
+                  if (preview.missingPictures > 0)
+                    tr(
+                      context,
+                      '${preview.missingPictures} pictures are not in this file; those items come without them.',
+                      '${preview.missingPictures} ảnh không có trong file; các mục đó sẽ thiếu ảnh.',
+                    ),
+                ].join(' '),
+              ),
+            ],
             if (preview.readingCopies.isNotEmpty ||
                 preview.invalidCopies > 0) ...[
               const SizedBox(height: HandySpace.s),
@@ -298,6 +389,15 @@ extension ImportExport on SaveScope {
           destructive: true,
         )) {
       return;
+    }
+    // Pictures first, so no item ever points at a missing one. Those a merge
+    // ends up not needing are reclaimed later.
+    for (final e in preview.pictures.entries) {
+      final ref = [
+        ...preview.library.bookmarks,
+        ...preview.library.trash,
+      ].firstWhere((b) => b.media?.id == e.key).media!;
+      await c.store!.putMedia(ref.toJson(), e.value.original, e.value.preview);
     }
     ImportResult? applied;
     await view.change((l) {

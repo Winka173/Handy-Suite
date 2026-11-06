@@ -44,5 +44,21 @@ Database and key names (`handy-save*`) keep their old names on purpose.
 | `apps/handy_bookmark/test/store_v4_browser_test.dart`, `reading_undo_browser_test.dart` | Real IndexedDB in Chrome (`dart test -p chrome -j 1`; the files share one browser database, so they must run one at a time)                                                                                           |
 | `packages/handy_bookmark_engine/test/items_trash_test.dart`                             | Model, Trash rules on a fixed clock, tombstones, picture references, search, duplicates, exports                                                                                                                      |
 
-Full backup with pictures (ZIP) and restore of Trash are the next slice; until then a JSON
-or ZIP export carries Trash items and picture records but not picture bytes.
+## Backups
+
+| Format                                           | Carries                                                                                                                                                                                                                                   | Limit                                                                                         |
+| ------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------- |
+| ZIP (manifest 3 when pictures are in it, else 2) | Library, Recently Deleted, tombstones, offline copies, and every picture items or Trash items use: the original exactly as saved plus its preview, each listed in the manifest with its size and checked on import against its SHA-256 id | Library and copies 30 MB; whole file 256 MB (`decodeBackupZip`, 65,535 entries max, no ZIP64) |
+| JSON                                             | Library, Recently Deleted, tombstones, offline copies, picture records but not their bytes                                                                                                                                                | 30 MB                                                                                         |
+| HTML, CSV, Markdown, TXT                         | Links (pictures without an address are left out of the visible list; the Handy payload keeps their records)                                                                                                                               | 30 MB                                                                                         |
+
+- What does not fit or is missing is counted in the export message (pictures included,
+  left out with their size, missing on this device); nothing is dropped silently.
+- Import shows pictures carried, damaged (left out), and missing from the file before
+  anything changes. Pictures are stored before the items that use them.
+- Replace restores Recently Deleted and tombstones from the file; a merge adds new items and
+  the pictures they use and keeps the current Recently Deleted.
+- Test: `apps/handy_bookmark/test/backup_restore_test.dart` (device A exports a ZIP with a
+  picture and a deleted link, device B restores it: same ids, identical picture bytes,
+  Trash restored); `packages/handy_bookmark_engine/test/backup_pictures_test.dart`
+  (tampered picture refused, budget and missing counts, merge keeps Trash, old ZIPs read).

@@ -34,6 +34,39 @@ Map<String, Uint8List> decodePortableZip(
   }
 }
 
+/// The same checks as [decodePortableZip] for a full backup that carries
+/// pictures: up to [maxTotalBytes] (at most 512 MB) and [maxEntries] (at
+/// most 65,535, the format's own limit without ZIP64). Callers still pass a
+/// strict path allowlist and a per-entry cap.
+Map<String, Uint8List> decodeBackupZip(
+  Uint8List bytes, {
+  required bool Function(String) isAllowedPath,
+  required int maxEntries,
+  required int maxEntryBytes,
+  required int maxTotalBytes,
+}) {
+  if (maxEntries < 1 ||
+      maxEntries > 65535 ||
+      maxEntryBytes < 1 ||
+      maxTotalBytes < 22 ||
+      maxTotalBytes > 512 * 1024 * 1024) {
+    throw ArgumentError('Invalid backup ZIP limits');
+  }
+  try {
+    return _decode(
+      bytes,
+      isAllowedPath,
+      maxEntries,
+      maxEntryBytes,
+      maxTotalBytes,
+    );
+  } on FormatException {
+    rethrow;
+  } catch (_) {
+    throw const FormatException('Malformed backup ZIP');
+  }
+}
+
 Map<String, Uint8List> _decode(
   Uint8List bytes,
   bool Function(String) isAllowedPath,

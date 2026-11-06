@@ -18,10 +18,24 @@ String _key(Bookmark b) => sameItemKey(b);
 
 /// A committed import: the next library, and the reading copies to store
 /// under the bookmark ids they ended up with.
+/// A picture's bytes in a backup: the original exactly as saved, and its
+/// preview.
+class PortablePicture {
+  final Uint8List original, preview;
+  const PortablePicture(this.original, this.preview);
+}
+
 class ImportResult {
   final SaveLibrary library;
   final Map<String, ReadingCopy> readingCopies;
-  const ImportResult(this.library, [this.readingCopies = const {}]);
+
+  /// Pictures to store before the library, keyed by their id.
+  final Map<String, PortablePicture> pictures;
+  const ImportResult(
+    this.library, [
+    this.readingCopies = const {},
+    this.pictures = const {},
+  ]);
 }
 
 class ImportPreview {
@@ -33,6 +47,13 @@ class ImportPreview {
   /// [library]. Copies that failed validation are counted in [invalidCopies].
   final Map<String, ReadingCopy> readingCopies;
   final int invalidCopies;
+
+  /// Pictures a ZIP backup carried, each checked against its content id.
+  final Map<String, PortablePicture> pictures;
+
+  /// Pictures that failed their check, and pictures items use that the file
+  /// does not hold (an older or partial backup).
+  final int invalidPictures, missingPictures;
   const ImportPreview({
     required this.library,
     required this.duplicateCount,
@@ -40,7 +61,35 @@ class ImportPreview {
     this.warnings = const [],
     this.readingCopies = const {},
     this.invalidCopies = 0,
+    this.pictures = const {},
+    this.invalidPictures = 0,
+    this.missingPictures = 0,
   });
+
+  ImportPreview withPictures(
+    Map<String, PortablePicture> pictures, {
+    int invalid = 0,
+  }) {
+    final used = {
+      for (final b in [...library.bookmarks, ...library.trash])
+        if (b.media != null) b.media!.id,
+    };
+    return ImportPreview(
+      library: library,
+      duplicateCount: duplicateCount,
+      invalidCount: invalidCount,
+      warnings: warnings,
+      readingCopies: readingCopies,
+      invalidCopies: invalidCopies,
+      pictures: {
+        for (final e in pictures.entries)
+          if (used.contains(e.key)) e.key: e.value,
+      },
+      invalidPictures: invalid,
+      missingPictures: used.where((id) => !pictures.containsKey(id)).length,
+    );
+  }
+
   int get validCount => library.bookmarks.length;
 
   /// The links a merge into [current] would add (not already saved, not
@@ -69,7 +118,7 @@ class ImportPreview {
   }) {
     if (cancelled) return ImportResult(current);
     if (strategy == ImportStrategy.replace)
-      return ImportResult(library, readingCopies);
+      return ImportResult(library, readingCopies, pictures);
     final added = <String, String>{};
     final collections = current.collections.toList(),
         bookmarks = current.bookmarks.toList(),
@@ -142,6 +191,10 @@ class ImportPreview {
             for (final id in library.manualOrder)
               if (added.containsKey(id)) added[id]!,
           ];
+    final addedMedia = {
+      for (final b in bookmarks)
+        if (added.containsValue(b.id) && b.media != null) b.media!.id,
+    };
     return ImportResult(
       SaveLibrary(
         tags: {...current.tags, ...library.tags}.toList(),
@@ -150,25 +203,57 @@ class ImportPreview {
         smartCollections: smart,
         savedSearches: searches,
         manualOrder: order,
+        // A merge adds; it never empties the person's Recently Deleted.
+        trash: current.trash,
+        tombstones: current.tombstones,
       ),
       {
         for (final e in readingCopies.entries)
           if (added.containsKey(e.key)) added[e.key]!: e.value,
       },
+      {
+        for (final e in pictures.entries)
+          if (addedMedia.contains(e.key)) e.key: e.value,
+      },
     );
   }
 }
 
-/// Bytes of an export and how many reading copies fit its budget.
+/// Bytes of an export and how much of the person's material fit its budget.
 class PortableExport {
   final Uint8List bytes;
   final int readingIncluded, readingOmitted;
-  const PortableExport(this.bytes, this.readingIncluded, this.readingOmitted);
+
+  /// Pictures written into a ZIP, left out for space, and used by items but
+  /// not available to export (missing on this device).
+  final int picturesIncluded, picturesOmitted, picturesMissing;
+  final int omittedPictureBytes;
+  const PortableExport(
+    this.bytes,
+    this.readingIncluded,
+    this.readingOmitted, {
+    this.picturesIncluded = 0,
+    this.picturesOmitted = 0,
+    this.picturesMissing = 0,
+    this.omittedPictureBytes = 0,
+  });
+
+  /// Everything the library holds is in the file.
+  bool get complete =>
+      readingOmitted == 0 && picturesOmitted == 0 && picturesMissing == 0;
 }
 
 class SavePortable {
   /// The ZIP reader has the same 30 MB aggregate ceiling. No bookmark count cap.
   static const maxImportBytes = 30000000;
+
+  /// A ZIP backup with pictures may grow to this; the library and reading
+  /// copies inside it still keep the 30 MB budget.
+  static const maxBackupBytes = 256 * 1024 * 1024;
+
+  static final _picturePath = RegExp(
+    r'^media/([0-9a-f]{64})(\.preview\.jpg|\.(jpg|png|webp))$',
+  );
   static const _marker = 'HANDY_BOOKMARK_V1:';
 
   /// Exports [library]. Full backups (JSON, ZIP) also carry [readingCopies]
@@ -177,7 +262,13 @@ class SavePortable {
     SaveLibrary library,
     SaveFormat format, {
     Map<String, ReadingCopy> readingCopies = const {},
-  }) => exportWithReport(library, format, readingCopies: readingCopies).bytes;
+    Map<String, PortablePicture> pictures = const {},
+  }) => exportWithReport(
+    library,
+    format,
+    readingCopies: readingCopies,
+    pictures: pictures,
+  ).bytes;
 
   /// Reading copies that fit next to the library inside [budget] bytes,
   /// newest first; a copy too large to fit is skipped, smaller ones still go.
@@ -208,6 +299,9 @@ class SavePortable {
     SaveLibrary library,
     SaveFormat format, {
     Map<String, ReadingCopy> readingCopies = const {},
+
+    /// The bytes of the pictures items use (ZIP only).
+    Map<String, PortablePicture> pictures = const {},
   }) {
     library.validate();
     final libraryJson = library.toJson();
@@ -299,16 +393,76 @@ class SavePortable {
         },
       }),
     );
+    // Pictures: those items (and Trash items) use, newest item first, until
+    // the backup budget is reached. What does not fit is counted, never
+    // dropped silently.
+    final wanted = <MediaRef>[];
+    final seen = <String>{};
+    for (final b in [
+      ...library.bookmarks,
+      ...library.trash,
+    ]..sort((a, b) => b.savedAt.compareTo(a.savedAt))) {
+      if (b.media != null && seen.add(b.media!.id)) wanted.add(b.media!);
+    }
+    final media = <String, Map<String, dynamic>>{};
+    final mediaFiles = <String, List<int>>{};
+    var mediaBytes = 0, omitted = 0, omittedBytes = 0, missing = 0;
+    final room = maxBackupBytes - total - 64 * 1024;
+    for (final ref in wanted) {
+      final pic = pictures[ref.id];
+      if (pic == null) {
+        missing++;
+        continue;
+      }
+      final cost = pic.original.length + pic.preview.length + 512;
+      if (mediaBytes + cost > room) {
+        omitted++;
+        omittedBytes += pic.original.length;
+        continue;
+      }
+      mediaBytes += cost;
+      final original = 'media/${ref.id}.${ref.extension}';
+      final preview = 'media/${ref.id}.preview.jpg';
+      mediaFiles[original] = pic.original;
+      mediaFiles[preview] = pic.preview;
+      media[ref.id] = {
+        'original': original,
+        'bytes': pic.original.length,
+        'preview': preview,
+        'previewSha256': sha256.convert(pic.preview).toString(),
+        'previewBytes': pic.preview.length,
+      };
+    }
+    final withMedia = mediaFiles.isEmpty
+        ? manifest
+        : utf8.encode(
+            jsonEncode({
+              ...jsonDecode(utf8.decode(manifest)) as Map,
+              'version': 3,
+              'media': media,
+            }),
+          );
     final archive = Archive()
-      ..addFile(ArchiveFile('manifest.json', manifest.length, manifest));
+      ..addFile(ArchiveFile('manifest.json', withMedia.length, withMedia));
     for (final f in files.entries) {
+      archive.addFile(ArchiveFile(f.key, f.value.length, f.value));
+    }
+    for (final f in mediaFiles.entries) {
       archive.addFile(ArchiveFile(f.key, f.value.length, f.value));
     }
     // Stored entries avoid compression-ratio rejections for large repetitive libraries.
     final encoded = ZipEncoder().encode(archive, level: 0);
-    if (encoded.length > maxImportBytes)
-      throw const FormatException('ZIP exceeds 30 MB portable limit');
-    return report(Uint8List.fromList(encoded));
+    if (encoded.length > (mediaFiles.isEmpty ? maxImportBytes : maxBackupBytes))
+      throw const FormatException('ZIP exceeds its portable limit');
+    return PortableExport(
+      Uint8List.fromList(encoded),
+      copies.length,
+      offered - copies.length,
+      picturesIncluded: media.length,
+      picturesOmitted: omitted,
+      picturesMissing: missing,
+      omittedPictureBytes: omittedBytes,
+    );
   }
 
   static String _netscapeTree(
@@ -361,18 +515,32 @@ class SavePortable {
     SaveFormat format, {
     SaveLibrary? current,
   }) {
-    if (bytes.length > maxImportBytes)
-      throw const FormatException('Import exceeds 30 MB byte limit');
+    if (bytes.length >
+        (format == SaveFormat.zip ? maxBackupBytes : maxImportBytes))
+      throw const FormatException('Import exceeds its byte limit');
     if (bytes.isEmpty) throw const FormatException('Import is empty');
     if (format == SaveFormat.zip) {
-      final files = decodePortableZip(
+      final files = decodeBackupZip(
         bytes,
         isAllowedPath: (p) =>
-            {'manifest.json', 'library.json', 'reading.json'}.contains(p),
-        maxEntries: 3,
+            {'manifest.json', 'library.json', 'reading.json'}.contains(p) ||
+            _picturePath.hasMatch(p),
+        maxEntries: 3 + 2 * 20000,
         maxEntryBytes: maxImportBytes,
-        maxTotalBytes: maxImportBytes,
+        maxTotalBytes: maxBackupBytes,
       );
+      var textBytes = 0;
+      for (final e in files.entries) {
+        if (_picturePath.hasMatch(e.key)) {
+          if (e.value.length > MediaRef.maxBytes)
+            throw const FormatException('ZIP picture exceeds 25 MB');
+        } else {
+          textBytes += e.value.length;
+        }
+      }
+      // The library and its reading copies keep their 30 MB budget.
+      if (textBytes > maxImportBytes)
+        throw const FormatException('ZIP library exceeds 30 MB');
       if (!files.containsKey('manifest.json') ||
           !files.containsKey('library.json'))
         throw const FormatException('Missing ZIP manifest or library');
@@ -381,14 +549,22 @@ class SavePortable {
       );
       final version = manifest['version'];
       if (manifest['format'] != 'handy-save-zip' ||
-          (version != 1 && version != 2))
+          !{1, 2, 3}.contains(version))
         throw const FormatException('Unsupported ZIP manifest');
       final entries = _object(manifest['files']);
-      // Version 1 holds only the library; version 2 may add reading copies.
+      final media = manifest['media'] == null
+          ? <String, dynamic>{}
+          : _object(manifest['media']);
+      if (version != 3 && media.isNotEmpty)
+        throw const FormatException('Unexpected ZIP pictures');
+      final pictureFiles = files.keys.where(_picturePath.hasMatch).length;
+      // Version 1 holds only the library; 2 may add reading copies; 3 may
+      // add pictures (an original and a preview each).
       if (!entries.containsKey('library.json') ||
           (version == 1 && entries.length != 1) ||
           entries.keys.any((k) => k != 'library.json' && k != 'reading.json') ||
-          files.length != entries.length + 1)
+          files.length != entries.length + 1 + pictureFiles ||
+          pictureFiles != media.length * 2)
         throw const FormatException('Unexpected ZIP manifest entries');
       for (final name in entries.keys) {
         final info = _object(entries[name]), data = files[name]!;
@@ -396,20 +572,46 @@ class SavePortable {
             info['sha256'] != sha256.convert(data).toString())
           throw const FormatException('ZIP digest mismatch');
       }
+      // Each picture must be exactly what its id names.
+      final pictures = <String, PortablePicture>{};
+      var invalidPictures = 0;
+      for (final e in media.entries) {
+        try {
+          final info = _object(e.value);
+          final original = files[info['original']];
+          final preview = files[info['preview']];
+          if (original == null ||
+              preview == null ||
+              original.length != info['bytes'] ||
+              sha256.convert(original).toString() != e.key ||
+              preview.length != info['previewBytes'] ||
+              sha256.convert(preview).toString() != info['previewSha256'])
+            throw const FormatException('Picture does not match its id');
+          pictures[e.key] = PortablePicture(original, preview);
+        } on FormatException {
+          invalidPictures++;
+        } on TypeError {
+          invalidPictures++;
+        }
+      }
       return _jsonPreview(
         _object(jsonDecode(utf8.decode(files['library.json']!))),
         current,
         reading: files['reading.json'] == null
             ? null
             : jsonDecode(utf8.decode(files['reading.json']!)),
-      );
+      ).withPictures(pictures, invalid: invalidPictures);
     }
     final text = utf8
         .decode(bytes, allowMalformed: false)
         .replaceFirst(RegExp('^\uFEFF'), '');
     if (format == SaveFormat.json)
-      return _jsonPreview(_object(jsonDecode(text)), current);
-    if (format == SaveFormat.csv) return _csvPreview(text, current);
+      return _jsonPreview(
+        _object(jsonDecode(text)),
+        current,
+      ).withPictures(const {});
+    if (format == SaveFormat.csv)
+      return _csvPreview(text, current).withPictures(const {});
     final embedded = RegExp('$_marker([A-Za-z0-9_=-]+)').firstMatch(text);
     if (embedded != null) {
       try {
@@ -418,7 +620,7 @@ class SavePortable {
             jsonDecode(utf8.decode(base64Url.decode(embedded.group(1)!))),
           ),
           current,
-        );
+        ).withPictures(const {});
       } on FormatException {
         throw const FormatException('Corrupted Handy Bookmark metadata');
       }
