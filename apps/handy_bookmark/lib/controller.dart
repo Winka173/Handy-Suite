@@ -202,10 +202,12 @@ class SaveController extends ChangeNotifier {
       final saved = <Bookmark>[];
       await update((current) {
         final list = [...current.bookmarks],
+            // Picture items have no address and never match a link.
             known = {
-              for (final b in current.bookmarks) b.normalizedUrl: b,
               for (final b in current.bookmarks)
-                UrlTools.normalize(b.originalUrl).canonicalUrl: b,
+                if (b.hasUrl) b.normalizedUrl: b,
+              for (final b in current.bookmarks)
+                if (b.hasUrl) UrlTools.normalize(b.originalUrl).canonicalUrl: b,
             };
         for (final u in urls) {
           final existing = known[u.normalizedUrl] ?? known[u.canonicalUrl];
@@ -264,7 +266,18 @@ class SaveController extends ChangeNotifier {
       final pending = await inbox.drain();
       for (final share in pending) {
         try {
-          await quickSave(share.text, title: share.title);
+          // Pictures first, then any link alongside them; the delivery is
+          // acknowledged (and its files deleted) only after both committed.
+          if (share.images.isNotEmpty) {
+            await addPictures([
+              for (final i in share.images)
+                (bytes: await inbox.readImage(i.path), name: i.name),
+            ]);
+            if (UrlTools.extract(share.text).isNotEmpty)
+              await quickSave(share.text, title: share.title);
+          } else {
+            await quickSave(share.text, title: share.title);
+          }
           await inbox.acknowledge(share.id);
         } catch (_) {
           if (!invalidShares.any((s) => s.id == share.id))
@@ -314,6 +327,7 @@ class SaveController extends ChangeNotifier {
     ),
   );
   Future<bool> open(Bookmark b, {bool browser = false}) async {
+    if (!b.hasUrl) return false;
     final u = UrlTools.normalize(b.originalUrl);
     if (!{
       'https',

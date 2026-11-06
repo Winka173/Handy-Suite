@@ -115,8 +115,10 @@ Future<Bookmark?> saveCapturedLinks(
     final old = scope.library.bookmarks
         .where(
           (b) =>
-              b.normalizedUrl == u.normalizedUrl ||
-              UrlTools.normalize(b.originalUrl).canonicalUrl == u.canonicalUrl,
+              b.hasUrl &&
+              (b.normalizedUrl == u.normalizedUrl ||
+                  UrlTools.normalize(b.originalUrl).canonicalUrl ==
+                      u.canonicalUrl),
         )
         .firstOrNull;
     if (old != null) {

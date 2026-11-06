@@ -110,7 +110,7 @@ class LinkTasks extends ChangeNotifier {
     final wanted = ids.toSet();
     final all = [
       for (final b in c.library!.bookmarks)
-        if (wanted.contains(b.id)) b,
+        if (wanted.contains(b.id) && b.hasUrl) b,
     ];
     final queue = all.take(cap).toList();
     final token = CancellationToken();

@@ -177,7 +177,7 @@ class BatchBar extends StatelessWidget {
                 () async {
                   final urls = [
                     for (final b in scope.library.bookmarks)
-                      if (v.selected.contains(b.id)) b.originalUrl,
+                      if (v.selected.contains(b.id) && b.hasUrl) b.originalUrl,
                   ];
                   await Clipboard.setData(ClipboardData(text: urls.join('\n')));
                   if (context.mounted)

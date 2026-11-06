@@ -1,7 +1,7 @@
 import 'package:handy_ui/kit.dart';
 import '../controller.dart';
 
-/// Links shared to Save that could not be read. Each can be dismissed; the
+/// Links and pictures shared to Save that could not be saved. Each can be dismissed; the
 /// system's share queue keeps them until then.
 class ShareIssues extends StatelessWidget {
   final SaveController controller;
@@ -17,8 +17,8 @@ class ShareIssues extends StatelessWidget {
               child: HandyNotice(
                 tr(
                   context,
-                  '${bad.length} shared items had no link Save could read.',
-                  '${bad.length} mục được chia sẻ không có link đọc được.',
+                  '${bad.length} shared items could not be saved.',
+                  '${bad.length} mục được chia sẻ không lưu được.',
                 ),
                 tone: HandyTone.warning,
                 action: TextButton(
@@ -27,7 +27,12 @@ class ShareIssues extends StatelessWidget {
                     final ok = await confirmHandy(
                       context,
                       title: tr(context, 'Dismiss them?', 'Bỏ các mục này?'),
-                      message: [for (final s in bad.take(3)) s.text].join('\n'),
+                      message: [
+                        for (final s in bad.take(3))
+                          s.text.trim().isNotEmpty
+                              ? s.text
+                              : [for (final i in s.images) i.name].join(', '),
+                      ].join('\n'),
                       confirmLabel: tr(context, 'Dismiss', 'Bỏ'),
                     );
                     if (ok) {

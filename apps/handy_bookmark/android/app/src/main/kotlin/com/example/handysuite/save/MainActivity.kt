@@ -27,7 +27,7 @@ class MainActivity : FlutterActivity() {
         receive(intent)
     }
     private fun receive(intent: Intent) {
-        try { if (queue.receive(intent)) channel?.invokeMethod("incoming", null) }
+        try { if (queue.receive(intent, contentResolver)) channel?.invokeMethod("incoming", null) }
         catch (_: Exception) {
             Toast.makeText(this, if (resources.configuration.locales[0].language == "vi")
                 "Không thể nhận liên kết. Hãy mở Handy Save và thử dán liên kết (tối đa 262144 ký tự, 100 lượt chờ)."
