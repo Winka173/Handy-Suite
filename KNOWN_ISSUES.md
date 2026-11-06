@@ -203,3 +203,8 @@ Every app still uses a `com.example.*` package id, which no store accepts
 - The weekly nudge is rescheduled when the library changes; a library left untouched for
   weeks gets one nudge, not one a week.
 - iOS image sharing is written but has never been compiled.
+- Collections in the share sheet's top row (sharing shortcuts) need Android 10 or later and
+  show only after the person has collections; the system decides how many direct targets to
+  show and in what order. Apps such as TikTok, Facebook and Chrome open their own share list
+  first, and no app can add itself there: the person taps More. Checked on BlueStacks
+  (Android 11) through Chrome's More; not yet on a phone, or from TikTok or Facebook.

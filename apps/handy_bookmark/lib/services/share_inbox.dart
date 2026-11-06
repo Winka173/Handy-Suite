@@ -10,7 +10,17 @@ class SharedLink {
   /// Pictures the share carried, already copied into the app's private
   /// queue: their files, types and original names.
   final List<({String path, String mime, String name})> images;
-  const SharedLink(this.id, this.text, this.title, [this.images = const []]);
+
+  /// The collection it was shared into, when the person picked one of
+  /// their collections in the share sheet's top row.
+  final String? collection;
+  const SharedLink(
+    this.id,
+    this.text,
+    this.title, [
+    this.images = const [],
+    this.collection,
+  ]);
 }
 
 List<({String path, String mime, String name})> _images(Object? raw) => [
@@ -63,10 +73,32 @@ class SaveShareInbox {
             r['text'] as String,
             r['title'] as String?,
             _images(r['images']),
+            r['collection'] as String?,
           ),
       ];
     } on MissingPluginException {
       return [];
+    }
+  }
+
+  /// Offers these collections in the top row of the system share sheet
+  /// (Android 10+); elsewhere nothing happens. Only names and colours go
+  /// to the system, never links.
+  Future<void> offerCollections(
+    List<({String id, String name, int color})> targets,
+  ) async {
+    if (kIsWeb || defaultTargetPlatform != TargetPlatform.android) return;
+    try {
+      await channel.invokeMethod<bool>('shareTargets', {
+        'targets': [
+          for (final t in targets)
+            {'id': t.id, 'name': t.name, 'color': t.color},
+        ],
+      });
+    } on MissingPluginException {
+      // A host test or an older build: the plain share still works.
+    } on PlatformException {
+      // The system declined (rate limit); offered again on the next change.
     }
   }
 

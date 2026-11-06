@@ -50,8 +50,8 @@ class TriageStrip extends StatelessWidget {
                   Text(
                     tr(
                       context,
-                      'In YouTube, TikTok, Facebook, Shopee or your browser, tap Share and pick Handy Bookmark. Or copy a link and press Paste below.',
-                      'Ở YouTube, TikTok, Facebook, Shopee hay trình duyệt, bấm Chia sẻ rồi chọn Handy Bookmark. Hoặc chép link rồi bấm Dán link bên dưới.',
+                      'In YouTube, TikTok, Facebook, Shopee or your browser, tap Share (then More, if it is not listed) and pick Handy Bookmark. Or copy a link and press Paste below.',
+                      'Ở YouTube, TikTok, Facebook, Shopee hay trình duyệt, bấm Chia sẻ (không thấy thì bấm Khác) rồi chọn Handy Bookmark. Hoặc chép link rồi bấm Dán link bên dưới.',
                     ),
                   ),
                 ],

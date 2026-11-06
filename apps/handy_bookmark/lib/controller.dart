@@ -191,16 +191,23 @@ class SaveController extends ChangeNotifier {
     }
   }
 
+  /// Saves the links in [text]. With [collectionId] (a share sent to one
+  /// of the person's collections) new links go into it, and a link already
+  /// saved but not yet sorted is moved into it.
   Future<List<Bookmark>> quickSave(
     String text, {
     String? title,
     bool allowDuplicates = false,
+    String? collectionId,
   }) async {
     try {
       final urls = UrlTools.extract(text);
       if (urls.isEmpty) throw const FormatException('No URL');
       final saved = <Bookmark>[];
       await update((current) {
+        final into = current.collections.any((c) => c.id == collectionId)
+            ? collectionId
+            : null;
         final list = [...current.bookmarks],
             // Picture items have no address and never match a link.
             known = {
@@ -212,7 +219,18 @@ class SaveController extends ChangeNotifier {
         for (final u in urls) {
           final existing = known[u.normalizedUrl] ?? known[u.canonicalUrl];
           if (existing != null && !allowDuplicates) {
-            saved.add(existing);
+            if (into != null && existing.collectionId == null) {
+              final moved = existing.copyWith(
+                collectionId: into,
+                updatedAt: saveTime(),
+              );
+              list[list.indexWhere((b) => b.id == existing.id)] = moved;
+              known[u.normalizedUrl] = moved;
+              known[u.canonicalUrl] = moved;
+              saved.add(moved);
+            } else {
+              saved.add(existing);
+            }
             continue;
           }
           final now = saveTime(),
@@ -231,6 +249,7 @@ class SaveController extends ChangeNotifier {
                 updatedAt: now,
                 metadataStatus: 'unavailable',
                 metadataSource: title == null ? 'fallback' : 'share',
+                collectionId: into,
               );
           list.add(b);
           known[b.normalizedUrl] = b;
@@ -269,14 +288,26 @@ class SaveController extends ChangeNotifier {
           // Pictures first, then any link alongside them; the delivery is
           // acknowledged (and its files deleted) only after both committed.
           if (share.images.isNotEmpty) {
+            final into =
+                library!.collections.any((c) => c.id == share.collection)
+                ? share.collection
+                : null;
             await addPictures([
               for (final i in share.images)
                 (bytes: await inbox.readImage(i.path), name: i.name),
-            ]);
+            ], collectionId: into);
             if (UrlTools.extract(share.text).isNotEmpty)
-              await quickSave(share.text, title: share.title);
+              await quickSave(
+                share.text,
+                title: share.title,
+                collectionId: share.collection,
+              );
           } else {
-            await quickSave(share.text, title: share.title);
+            await quickSave(
+              share.text,
+              title: share.title,
+              collectionId: share.collection,
+            );
           }
           await inbox.acknowledge(share.id);
         } catch (_) {

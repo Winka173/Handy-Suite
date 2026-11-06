@@ -16,6 +16,8 @@ import 'reader/reader_page.dart';
 import 'scope.dart';
 import 'services/reminders.dart';
 import 'services/revisit.dart';
+import 'services/share_targets.dart';
+import 'ui/collection_picker.dart';
 import 'library/trash_page.dart';
 import 'settings/duplicates_page.dart';
 import 'settings/save_settings.dart';
@@ -157,8 +159,36 @@ class _SaveAppState extends State<SaveApp> with WidgetsBindingObserver {
   }
 
   /// After any change: rebuild, and keep the OS reminders in step.
+  String? _offered;
+
+  /// Keeps the share sheet's top row in step with the library: the four
+  /// collections saved into most recently, each in its own colour. Sent
+  /// only when that set changes (the system limits how often apps may).
+  void _offerCollections() {
+    final l = c.library, context = navigator.currentContext;
+    if (!widget.device || l == null || context == null) return;
+    final targets = [
+      for (final col in shareTargets(l))
+        (
+          id: col.id,
+          name: col.name,
+          color: HandyPalette.of(
+            context,
+            collectionHue(l, col.id),
+          ).mark.toARGB32(),
+        ),
+    ];
+    final key = [
+      for (final t in targets) '${t.id}|${t.name}|${t.color}',
+    ].join(';');
+    if (key == _offered) return;
+    _offered = key;
+    unawaited(c.inbox.offerCollections(targets));
+  }
+
   void _changed() {
     if (mounted) setState(() {});
+    _offerCollections();
     _sync?.cancel();
     _sync = Timer(const Duration(milliseconds: 300), () async {
       final p = c.preferences;

@@ -57,9 +57,8 @@ Future<SaveController> open(
 /// Plays the practice save on the pretend phone.
 Future<void> practise(WidgetTester t) async {
   await tapKey(t, 'practice-share');
-  await tapKey(t, 'practice-target');
-  await tapKey(t, 'practice-col-food');
-  await tapKey(t, 'practice-save');
+  await tapKey(t, 'practice-more');
+  await tapKey(t, 'practice-direct');
   await settle(t);
 }
 
@@ -96,19 +95,18 @@ void main() {
     expect(find.text('Tap Share'), findsOneWidget, reason: 'the lit word');
     expect(find.byKey(const Key('welcome-next-2')), findsNothing);
 
-    // Save cannot be pressed before a collection is chosen.
+    // As in real apps: their own list first (no Handy Bookmark), More,
+    // then the phone's list with the collections in the top row.
     await tapKey(t, 'practice-share');
-    await tapKey(t, 'practice-target');
-    await t.tap(find.byKey(const Key('practice-save')), warnIfMissed: false);
-    await settle(t);
-    expect(find.text('Saved to Good food'), findsNothing);
-    expect(find.text('Put it in Good food'), findsOneWidget);
-    await tapKey(t, 'practice-col-food');
-    expect(find.text('Now tap Save'), findsOneWidget);
-    await tapKey(t, 'practice-save');
+    expect(find.textContaining('own list first'), findsOneWidget);
+    expect(find.text('Not here? Tap More'), findsOneWidget);
+    await tapKey(t, 'practice-more');
+    expect(find.text('Tap Good food: straight in'), findsOneWidget);
+    await tapKey(t, 'practice-direct');
     await settle(t);
     expect(find.text('Saved to Good food'), findsOneWidget);
     expect(find.textContaining('all it takes'), findsOneWidget);
+    expect(find.textContaining('pin it'), findsOneWidget);
 
     await tapKey(t, 'welcome-next-2');
     expect(find.textContaining('in a moment'), findsOneWidget);
@@ -120,6 +118,19 @@ void main() {
     expect(find.byType(WelcomePage), findsNothing);
     expect(c.preferences[guideDoneKey], isTrue);
     expect(c.library!.bookmarks, isEmpty, reason: 'practice saves nothing');
+  });
+
+  testWidgets('Handy Bookmark itself, in the practice, goes to Not sorted', (
+    t,
+  ) async {
+    await open(t);
+    await tapKey(t, 'welcome-next-0');
+    await tapKey(t, 'welcome-next-1');
+    await tapKey(t, 'practice-share');
+    await tapKey(t, 'practice-more');
+    await tapKey(t, 'practice-target');
+    await settle(t);
+    expect(find.text('Saved to Not sorted'), findsOneWidget);
   });
 
   testWidgets('back steps back; on the first step it leaves', (t) async {

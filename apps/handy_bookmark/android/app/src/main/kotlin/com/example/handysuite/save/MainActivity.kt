@@ -43,6 +43,9 @@ class MainActivity : FlutterActivity() {
                     when (call.method) {
                         "drain" -> result.success(queue.drain())
                         "ack" -> result.success(queue.ack(call.argument<String>("id") ?: ""))
+                        "shareTargets" -> result.success(
+                            ShareTargets.publish(this, call.argument<List<Map<*, *>>>("targets") ?: emptyList())
+                        )
                         else -> result.notImplemented()
                     }
                 } catch (_: Exception) { result.error("SHARE_QUEUE_ERROR", "Unable to access pending shares", null) }

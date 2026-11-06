@@ -488,11 +488,10 @@ void main() {
       await tapKey(t, 'welcome-next-1');
       await shot(t, '$label-21-welcome-3-video');
       await tapKey(t, 'practice-share');
-      await shot(t, '$label-21-welcome-4-share');
-      await tapKey(t, 'practice-target');
-      await tapKey(t, 'practice-col-food');
-      await shot(t, '$label-21-welcome-5-collection');
-      await tapKey(t, 'practice-save');
+      await shot(t, '$label-21-welcome-4-apps');
+      await tapKey(t, 'practice-more');
+      await shot(t, '$label-21-welcome-5-share');
+      await tapKey(t, 'practice-direct');
       await shot(t, '$label-21-welcome-6-saved');
       await tapKey(t, 'welcome-next-2');
       await shot(t, '$label-21-welcome-7-find');

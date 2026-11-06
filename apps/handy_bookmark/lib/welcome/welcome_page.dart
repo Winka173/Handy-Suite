@@ -197,8 +197,8 @@ class _WelcomePageState extends State<WelcomePage>
       body: practiced
           ? tr(
               context,
-              'From any app: Share, then Handy Bookmark. This was practice: nothing was saved.',
-              'Từ bất kỳ app nào: Chia sẻ, rồi chọn Handy Bookmark. Đây là bản tập, chưa có gì được lưu.',
+              'In TikTok or Facebook: Share, then More. Recent collections sit in the top row; Handy Bookmark itself saves to Not sorted. Press and hold it to pin it first. Nothing was saved.',
+              'Trong TikTok, Facebook: bấm Chia sẻ, rồi Khác. Collection dùng gần đây nằm ở hàng đầu; chọn Handy Bookmark thì vào Chưa xếp. Nhấn giữ nó để ghim lên đầu. Bản tập, chưa lưu gì.',
             )
           : tr(
               context,
@@ -253,7 +253,7 @@ class _WelcomePageState extends State<WelcomePage>
       key: const ValueKey('practice'),
       framed: !full,
       top: full ? top : 44,
-      onStage: (s) {
+      onStage: (s, _) {
         if (s == PracticeStage.saved) {
           setState(() => practiced = true);
           _play();

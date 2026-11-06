@@ -44,22 +44,29 @@ are on every step.
 2. **"One place for all of it."** The same cards travel, in colour, into a Handy Bookmark library
    (name, All / Links / Pictures chips, two collections) and settle in a grid. This uses one
    scene widget across both steps, so the cards really move. Primary: **Show me how**.
-3. **"Try saving a video."** A phở video with the task "Try it: save this video". Everything is
-   dark (a 74 % scrim) except the one thing to tap, which sits in a **lit window**. The window
-   has a soft cyan glow spilling out of it, a white edge and a breathing ring, and a white label
-   beside it. When the next target appears, the window glides to it and follows a sheet as it
-   slides up. Taps pass through the dark.
-   - **Share** is lit, with "Tap Share" above it.
-   - The share row slides up and Handy Bookmark is lit, with "Tap Handy Bookmark" below it.
-   - Handy Bookmark's save sheet shows a preview, then "Put it in" with four 56 px collection
-     rows. Good food is lit, with "Put it in Good food" below it.
-   - Save starts disabled. Once a collection is chosen, Save is lit, with "Now tap Save" above
-     it.
-   - A check pops (elastic) with an expanding ring and a haptic tap: "Saved to Good food ·
-     Title, picture and source filled in". The dark lifts.
+3. **"Try saving a video."** The practice follows what really happens. Everything is dark
+   (a 74 % scrim) except the one thing to tap, which sits in a **lit window**. The window has a
+   soft cyan glow spilling out of it, a white edge and a breathing ring, and a white label
+   beside it. It glides from one target to the next and follows each sheet as it slides up.
+   Taps pass through the dark. A line at the top says what is on screen.
+   - **The video.** Share is lit: "Tap Share".
+   - **The app's own list** (drawn plainly: friends, Copy link, Message, Save video, More). As
+     in TikTok, Facebook or Chrome, Handy Bookmark is not in it. More is lit: "Not here? Tap
+     More". The top line reads "TikTok shows its own list first".
+   - **The phone's share sheet.** The top row holds direct targets: the person's collections
+     (Good food, Trips, each in its colour with the app's badge) and a contact. The apps row
+     includes Handy Bookmark. Good food is lit: "Tap Good food: straight in". Tapping Handy
+     Bookmark instead also works, and says "Saved to Not sorted", as the real app does.
+   - **Saved.** A check pops (elastic) with an expanding ring and a haptic tap: "Saved to Good
+     food · From the share list, in one tap". The dark lifts.
 
-   The words and the button appear only after the save: "That is all it takes" says how to save
-   from any app and that this was practice, so nothing was saved.
+   The words and the button appear only after the save. They say to tap Share, then More, in
+   TikTok or Facebook. They say recent collections sit in the top row, that Handy Bookmark
+   itself saves to Not sorted, and to press and hold it to pin it first. Then: nothing was
+   saved.
+
+   There is no save sheet with a collection picker: the real share goes straight in, so the
+   practice does not pretend otherwise (version 2.1 had one; removed in 2.2).
 
 4. **"Find it in a moment."** A search types "pho bo" without accents. The key just typed lights
    on a drawn keyboard, the list narrows to the phở save, and "Open in TikTok" grows in. On
@@ -67,6 +74,11 @@ are on every step.
 5. **"A gentle weekly nudge?"** Phones only. A lock screen over the Hội An photo, 19:00 Sunday,
    and a notification drops in: "5 things you saved recently are still waiting." **Turn on the
    nudge** asks for permission and turns on the weekly nudge setting. **Not now** finishes.
+
+Version 2.2 (the same day): the owner asked why Facebook and TikTok hide Handy Bookmark behind
+More. The practice now shows the app's own list and More first, then the phone's sheet with the
+collections that Handy Bookmark now offers in its top row (Android sharing shortcuts,
+`ShareTargets.kt`).
 
 Version 2.1 (the same day): on BlueStacks the owner found the pretend phone too small to tap
 reliably, and the glow rings too faint. Tuckii runs its practice on the whole screen at real
@@ -133,11 +145,12 @@ owner chose practice only); photos where a brand logo dominates.
 
 ## Checked
 
-- `test/welcome_test.dart` (8 tests):
+- `test/welcome_test.dart` (9 tests):
   - Skip is remembered;
   - existing libraries are never guided;
-  - the practice keeps its order (Save stays disabled until a collection is picked), names each
-    lit target, and saves nothing;
+  - the practice keeps its real order (Share, More, a collection in the top row), names each lit
+    target, and saves nothing;
+  - Handy Bookmark itself, in the practice, goes to Not sorted;
   - back;
   - replay from Settings;
   - no overflow at 320 px with text at 200 %, at 390 px, and at 1280 px.

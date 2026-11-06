@@ -122,6 +122,8 @@ class ShareQueue(private val directory: File) {
             .put("receivedAt", Instant.now().toString())
         if (images.length() > 0) record.put("images", images)
         if (!title.isNullOrBlank()) record.put("title", title)
+        // Shared through one of the person's collections in the share sheet.
+        ShareTargets.collection(intent)?.let { record.put("collection", it) }
         val atomic = AtomicFile(File(directory, "$id.json"))
         val stream = atomic.startWrite()
         try { stream.write(record.toString().toByteArray(Charsets.UTF_8)); atomic.finishWrite(stream) }
@@ -145,6 +147,7 @@ class ShareQueue(private val directory: File) {
         buildMap {
             put("id", json.getString("id")); put("text", text); put("receivedAt", json.getString("receivedAt"))
             if (json.has("title")) put("title", json.getString("title"))
+            json.optString("collection").takeIf { it.isNotEmpty() && it.length <= 512 }?.let { put("collection", it) }
             json.optJSONArray("images")?.let { list ->
                 val folder = File(directory, "${json.getString("id")}.d")
                 put("images", (0 until list.length()).map { i ->
