@@ -5,6 +5,7 @@ import '../bookmark/add_link.dart';
 import '../bookmark/detail_view.dart';
 import '../home/home_page.dart';
 import '../home/triage_strip.dart';
+import '../home/dateline.dart';
 import '../home/save_sheet.dart';
 import '../library/batch_bar.dart';
 import '../library/results_view.dart';
@@ -95,7 +96,7 @@ class _SaveShellState extends State<SaveShell> {
           builder: (context, _) => Scaffold(
             appBar: HandyTopBar(
               mark: Icons.bookmark_outline,
-              name: 'Handy Bookmark',
+              name: libraryName(scope.c),
               nameIsTitle: false,
               actions: addButtons,
             ),
@@ -144,6 +145,8 @@ class _SaveShellState extends State<SaveShell> {
                     onDetails: (b) => details(b, side),
                     onAdd: add,
                     leading: [
+                      if (v.place == Place.all && v.text.isEmpty)
+                        HomeDateline(controller: scope.c),
                       SearchBox(view: v, focus: searchFocus),
                       ShareIssues(controller: scope.c),
                       if (v.place == Place.all &&

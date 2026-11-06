@@ -1,7 +1,50 @@
 import 'package:handy_storage/handy_storage.dart';
 import 'package:handy_ui/kit.dart';
 import '../scope.dart';
+import '../controller.dart';
+import '../home/dateline.dart';
 import 'data_section.dart';
+
+/// The library's name, shown at the top of the home. Empty restores the
+/// app's name.
+Future<String?> _askName(BuildContext context, SaveController c) {
+  final text = TextEditingController(
+    text: c.preferences['libraryName'] as String? ?? '',
+  );
+  return showDialog<String>(
+    context: context,
+    builder: (context) => AlertDialog(
+      title: Text(tr(context, 'Name your library', 'Đặt tên thư viện')),
+      content: TextField(
+        key: const Key('library-name-input'),
+        controller: text,
+        autofocus: true,
+        maxLength: 40,
+        decoration: InputDecoration(
+          labelText: tr(context, 'Name', 'Tên'),
+          hintText: tr(context, "Lan's saves", 'Kho của Lan'),
+          helperText: tr(
+            context,
+            'Leave empty to show Handy Bookmark.',
+            'Để trống để hiện Handy Bookmark.',
+          ),
+        ),
+        onSubmitted: (v) => Navigator.pop(context, v.trim()),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(context),
+          child: Text(tr(context, 'Cancel', 'Hủy')),
+        ),
+        FilledButton(
+          key: const Key('library-name-save'),
+          onPressed: () => Navigator.pop(context, text.text.trim()),
+          child: Text(tr(context, 'Save', 'Lưu')),
+        ),
+      ],
+    ),
+  );
+}
 
 /// "Sundays at 19:00, only when new saves wait unread. A count, no titles."
 String revisitWhen(BuildContext context, int day, int hour) => tr(
@@ -62,6 +105,21 @@ class SaveSettingsPage extends StatelessWidget {
         onTheme: (v) => save(read().copyWith(theme: v)),
         onLocale: (v) => save(read().copyWith(locale: v)),
         sections: [
+          HandySettingsSection(
+            title: tr(context, 'Your library', 'Thư viện của bạn'),
+            children: [
+              ListTile(
+                key: const Key('set-library-name'),
+                title: Text(tr(context, 'Name', 'Tên')),
+                subtitle: Text(libraryName(c)),
+                trailing: const Icon(Icons.edit_outlined),
+                onTap: () async {
+                  final name = await _askName(context, c);
+                  if (name != null) await set('libraryName', name);
+                },
+              ),
+            ],
+          ),
           HandySettingsSection(
             title: tr(context, 'Opening links', 'Mở link'),
             description: tr(

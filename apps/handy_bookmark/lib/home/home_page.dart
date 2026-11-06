@@ -9,6 +9,7 @@ import '../shell/share_issues.dart';
 import 'triage_strip.dart';
 import '../links/task_strip.dart';
 import 'collection_covers.dart';
+import 'dateline.dart';
 import 'save_sheet.dart';
 
 /// The phone's home: find something, file what is new, browse the library
@@ -44,9 +45,9 @@ class SaveHomePage extends StatelessWidget {
       builder: (context, _) {
         final searching = v.text.trim().isNotEmpty || v.filters.kind != null;
         return Scaffold(
-          appBar: const HandyTopBar(
+          appBar: HandyTopBar(
             mark: Icons.bookmark_outline,
-            name: 'Handy Bookmark',
+            name: libraryName(scope.c),
           ),
           bottomNavigationBar: v.selecting
               ? BatchBar(scope: scope, onExport: onExport)
@@ -77,6 +78,7 @@ class SaveHomePage extends StatelessWidget {
                     HandySpace.xxl,
                   ),
                   children: [
+                    HomeDateline(controller: scope.c),
                     SearchBox(view: v, focus: searchFocus),
                     ShareIssues(controller: scope.c),
                     TaskStrip(

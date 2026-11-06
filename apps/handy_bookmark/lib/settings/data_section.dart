@@ -2,6 +2,7 @@ import 'package:handy_bookmark_engine/handy_bookmark_engine.dart';
 import 'package:handy_ui/kit.dart';
 import '../data/import_export.dart';
 import '../scope.dart';
+import 'storage_summary.dart';
 
 /// Backups, upkeep and, last, deleting everything.
 class SaveDataSection extends StatelessWidget {
@@ -19,6 +20,7 @@ class SaveDataSection extends StatelessWidget {
         'Mọi thứ chỉ nằm trên máy này. File xuất có thể chứa địa chỉ riêng tư.',
       ),
       children: [
+        StorageSummary(controller: c),
         HandyTile(
           key: const Key('save-trash'),
           icon: Icons.delete_outline,
@@ -90,7 +92,16 @@ class SaveDataSection extends StatelessWidget {
         HandyTile(
           key: const Key('save-thumbnails'),
           icon: Icons.image_not_supported_outlined,
-          title: tr(context, 'Clear saved pictures', 'Xóa ảnh đã lưu'),
+          title: tr(
+            context,
+            'Clear downloaded page pictures',
+            'Xóa ảnh xem trước tải từ trang',
+          ),
+          subtitle: tr(
+            context,
+            'Only the pictures fetched from pages. Your own pictures stay.',
+            'Chỉ ảnh lấy từ trang web. Ảnh của bạn vẫn còn.',
+          ),
           onTap: () => scope.run(context, () async {
             await c.store!.clearThumbnails();
             c.clearThumbnailMemory();
@@ -99,8 +110,8 @@ class SaveDataSection extends StatelessWidget {
                 context,
                 tr(
                   context,
-                  'Pictures cleared. Links are untouched.',
-                  'Đã xóa ảnh. Link vẫn còn nguyên.',
+                  'Page pictures cleared. Your links and pictures are untouched.',
+                  'Đã xóa ảnh xem trước. Link và ảnh của bạn vẫn còn nguyên.',
                 ),
               );
           }),
