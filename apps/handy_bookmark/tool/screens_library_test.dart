@@ -190,4 +190,15 @@ void main() {
       if (i < 7) await tapKey(t, 'layout-next');
     }
   });
+
+  for (final (label, theme) in [('phone', 'light'), ('phone-dark', 'dark')]) {
+    testWidgets('$label focus skins', (t) async {
+      await boot(t, const Size(390, 844), theme: theme);
+      await tapKey(t, 'place-focus');
+      await tapKey(t, 'focus-skins');
+      await t.drag(find.byKey(const Key('skin-film')), const Offset(-200, 0));
+      await t.pumpAndSettle();
+      await shot(t, 'pro-$label-focus-skins');
+    });
+  }
 }

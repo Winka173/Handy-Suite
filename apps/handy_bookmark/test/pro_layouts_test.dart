@@ -2,11 +2,16 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:handy_bookmark/controller.dart';
 import 'package:handy_bookmark/design/identity.dart';
 import 'package:handy_bookmark/design/theme.dart';
+import 'package:handy_bookmark/pro/focus_skins.dart';
 import 'package:handy_bookmark/pro/layouts.dart';
+import 'package:handy_bookmark/scope.dart';
+import 'package:handy_bookmark/view/library_view.dart';
+import 'package:handy_bookmark/services/reminders.dart';
+import 'package:handy_bookmark/links/link_tasks.dart';
 import 'package:handy_bookmark_engine/handy_bookmark_engine.dart';
 import 'package:handy_ui/kit.dart';
 import 'controller_test.dart' show TestStore, TestInbox;
-import 'new_flows_test.dart' show settle;
+import 'new_flows_test.dart' show settle, OneFile;
 import 'widget_test.dart' show start, tapKey;
 
 void main() {
@@ -126,5 +131,47 @@ void main() {
     await tapKey(t, 'layout-keep');
     final views = c.preferences['collectionViews'] as Map? ?? const {};
     expect((views['food'] as Map?)?['layout'], isNull);
+  });
+
+  testWidgets('every Focus card style draws at 320 px x2 text, and a Pro '
+      'style asks for Pro first', (t) async {
+    final c = await start(
+      t,
+      size: const Size(320, 700),
+      textScale: 2,
+      seed: (c) async {
+        await c.quickSave(
+          'https://vnexpress.net/a',
+          title: 'Mùa đẹp nhất để đi Hà Giang: lịch trình bốn ngày',
+        );
+      },
+    );
+    final view = LibraryView(c);
+    addTearDown(view.dispose);
+    final scope = SaveScope(
+      c: c,
+      view: view,
+      files: OneFile(),
+      reminders: SaveReminders(),
+      tasks: LinkTasks(c),
+    );
+    for (final s in focusSkins) {
+      await t.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: SizedBox(
+              width: 300,
+              height: 460,
+              child: Builder(
+                builder: (context) =>
+                    s.build(context, scope, c.library!.bookmarks.first, null),
+              ),
+            ),
+          ),
+        ),
+      );
+      await t.pump();
+      expect(t.takeException(), isNull, reason: s.id);
+    }
   });
 }

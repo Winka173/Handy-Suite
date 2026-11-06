@@ -1,4 +1,6 @@
 import 'dart:typed_data';
+import '../pro/focus_skins.dart';
+import '../pro/entitlements.dart';
 import 'package:handy_bookmark_engine/handy_bookmark_engine.dart';
 import 'package:handy_ui/kit.dart';
 import '../design/theme.dart';
@@ -41,6 +43,34 @@ class FocusCard extends StatelessWidget {
     final p = BookmarkPalette.of(context);
     final dark = Theme.of(context).brightness == Brightness.dark;
     final b = bookmark;
+    final shadow = lifted
+        ? [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: dark ? .28 : .10),
+              blurRadius: 28,
+              offset: const Offset(0, 10),
+            ),
+          ]
+        : null;
+    // A Pro card style, while Pro is verified; otherwise the standard card.
+    final skin = focusSkinById(scope.c.preferences['focusSkin']);
+    if (skin != null && hasPro(context)) {
+      return DecoratedBox(
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(BookmarkRadii.focus),
+          boxShadow: shadow,
+        ),
+        child: Material(
+          borderRadius: BorderRadius.circular(BookmarkRadii.focus),
+          clipBehavior: Clip.antiAlias,
+          child: FutureBuilder<Uint8List?>(
+            future: _picture(),
+            builder: (context, snap) =>
+                skin.build(context, scope, b, snap.data),
+          ),
+        ),
+      );
+    }
     return DecoratedBox(
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(BookmarkRadii.focus),

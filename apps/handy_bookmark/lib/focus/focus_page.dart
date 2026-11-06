@@ -1,4 +1,5 @@
 import 'dart:math' as math;
+import '../pro/focus_skins.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:handy_bookmark_engine/handy_bookmark_engine.dart';
@@ -180,6 +181,21 @@ class _FocusPageState extends State<FocusPage>
               scrolledUnderElevation: 0,
               title: Text(tr(context, 'Focus', 'Tập trung')),
               actions: [
+                IconButton(
+                  key: const Key('focus-skins'),
+                  tooltip: tr(context, 'Card style', 'Kiểu thẻ'),
+                  icon: const Icon(Icons.style_outlined),
+                  onPressed: () => showFocusSkins(
+                    context,
+                    widget.scope,
+                    b,
+                    b == null
+                        ? null
+                        : (b.media != null
+                              ? widget.scope.c.mediaPreview(b.media!.id)
+                              : widget.scope.c.thumbnail(b.id)),
+                  ),
+                ),
                 if (b != null)
                   Padding(
                     padding: const EdgeInsets.only(right: HandySpace.l),
