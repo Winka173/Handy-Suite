@@ -147,6 +147,24 @@ class SaveSettingsPage extends StatelessWidget {
               ),
             ],
           ),
+          HandySettingsSection(
+            title: tr(context, 'Help', 'Trợ giúp'),
+            children: [
+              ListTile(
+                key: const Key('set-guide'),
+                leading: const Icon(Icons.school_outlined),
+                title: Text(tr(context, 'How to save', 'Cách lưu')),
+                subtitle: Text(
+                  tr(
+                    context,
+                    'The first-run guide: share, paste or add a picture.',
+                    'Hướng dẫn lần đầu: chia sẻ, dán link hoặc thêm ảnh.',
+                  ),
+                ),
+                onTap: () => Navigator.pushNamed(context, '/welcome'),
+              ),
+            ],
+          ),
           if (scope.autoBackup != null)
             HandyAutoBackupSection(backup: scope.autoBackup!),
           SaveDataSection(scope: scope),

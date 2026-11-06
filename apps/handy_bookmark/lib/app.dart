@@ -18,6 +18,7 @@ import 'settings/duplicates_page.dart';
 import 'settings/save_settings.dart';
 import 'shell/save_shell.dart';
 import 'view/library_view.dart';
+import 'welcome/welcome_page.dart';
 
 /// Save's hue in the suite palette (docs/UX_REDESIGN.md).
 const saveAccent = Color(0xFF0E7490);
@@ -30,6 +31,9 @@ class SaveApp extends StatefulWidget {
 
   /// Off in host tests: no folder backups.
   final bool device;
+
+  /// Opens the first-run guide on an empty library (off in most tests).
+  final bool guide;
   const SaveApp({
     super.key,
     this.controller,
@@ -37,6 +41,7 @@ class SaveApp extends StatefulWidget {
     this.files = const SystemHandyFiles(),
     this.reminders,
     this.device = true,
+    this.guide = true,
   });
   @override
   State<SaveApp> createState() => _SaveAppState();
@@ -113,6 +118,10 @@ class _SaveAppState extends State<SaveApp> with WidgetsBindingObserver {
     if (_pendingOpen != null) _openFromNotification(_pendingOpen!);
     scope.autoBackup?.attach();
     if (mounted) setState(() {});
+    if (widget.guide && c.library != null && shouldShowGuide(scope))
+      WidgetsBinding.instance.addPostFrameCallback(
+        (_) => navigator.currentState?.pushNamed('/welcome'),
+      );
   }
 
   void _openFromNotification(String id) {
@@ -222,6 +231,7 @@ class _SaveAppState extends State<SaveApp> with WidgetsBindingObserver {
         );
       },
       ['', 'focus'] => () => FocusPage(scope: scope),
+      ['', 'welcome'] => () => WelcomePage(scope: scope),
       ['', 'duplicates'] => () => DuplicatesPage(scope: scope),
       ['', 'trash'] => () => TrashPage(scope: scope),
       ['', 'bookmark', final id] => () => BookmarkPage(scope: scope, id: id),

@@ -81,6 +81,7 @@ void main() {
       });
       await tester.pumpWidget(
         SaveApp(
+          guide: false,
           controller: controller,
           preferences: DevicePreferencesRepository(
             'handy-save-qa',

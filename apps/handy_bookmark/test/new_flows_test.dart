@@ -78,6 +78,7 @@ Future<(NetController, FakeNet)> boot(
       controller: c,
       files: files ?? OneFile(),
       preferences: Preferences()..value = HandyPreferences(locale: 'en'),
+      guide: false,
     ),
   );
   await settle(t);

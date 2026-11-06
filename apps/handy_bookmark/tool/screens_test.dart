@@ -221,6 +221,7 @@ Future<NetController> boot(
         files: files ?? OneFile(),
         preferences: Preferences()
           ..value = HandyPreferences(locale: 'vi', theme: theme),
+        guide: false,
       ),
     ),
   );
@@ -461,6 +462,41 @@ void main() {
     await boot(t, const Size(390, 844), empty: true);
     await shot(t, 'phone-10-empty');
   });
+  // The first-run guide, step by step, on a phone, dark, and wide.
+  for (final (label, size, theme) in [
+    ('phone', const Size(390, 844), 'light'),
+    ('phone-dark', const Size(390, 844), 'dark'),
+    ('narrow', const Size(320, 640), 'light'),
+    ('desktop', const Size(1280, 800), 'light'),
+  ]) {
+    testWidgets('$label welcome', (t) async {
+      final c = await boot(t, size, empty: true, theme: theme);
+      Navigator.of(
+        t.element(find.byType(Scaffold).first),
+      ).pushNamed('/welcome');
+      await t.runAsync(
+        () => Future<void>.delayed(const Duration(milliseconds: 50)),
+      );
+      await t.pumpAndSettle();
+      await shot(t, '$label-21-welcome-1');
+      await tapKey(t, 'welcome-next-0');
+      await shot(t, '$label-21-welcome-2');
+      await tapKey(t, 'welcome-next-1');
+      await shot(t, '$label-21-welcome-3');
+      // A link arrives from another app's Share while the step waits.
+      await c.quickSave(
+        'https://www.tiktok.com/@bepnha/video/7301',
+        title: 'Bún chả Hà Nội trong 15 phút',
+      );
+      await t.runAsync(
+        () => Future<void>.delayed(const Duration(milliseconds: 50)),
+      );
+      await t.pumpAndSettle();
+      await shot(t, '$label-21-welcome-4');
+      await tapKey(t, 'welcome-start-0');
+      await shot(t, '$label-21-welcome-5-filed');
+    });
+  }
   testWidgets('films', (t) async {
     final c = await boot(t, const Size(390, 844));
     final first =

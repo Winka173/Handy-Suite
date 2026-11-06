@@ -50,6 +50,7 @@ Future<OpeningController> start(
         controller: c,
         preferences: Preferences()
           ..value = HandyPreferences(locale: 'en', theme: theme),
+        guide: false,
       ),
     ),
   );

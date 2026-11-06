@@ -2174,3 +2174,22 @@ Run: design-taste-frontend app-screens (giữ `HandyBrand.media`) + frontend-ui-
   mẫu đã thích, chip "Đã thích N" đứng ngay sau "Tất cả", mới thích trước. Bỏ thích mẫu
   cuối thì quay về Tất cả. Danh sách lưu trong cài đặt của app (chỉ id).
 - Reject: đếm lượt thích, gợi ý theo thích, đồng bộ.
+
+## Hợp đồng: Handy Bookmark · hướng dẫn lần đầu (2026-11-06)
+
+Hợp đồng đầy đủ (bản tiếng Anh): `docs/bookmark-redesign/ONBOARDING_FLOW.md`.
+
+- Câu hỏi: "Lưu đồ ở đây thế nào, và nó đi đâu?" Phát hiện ở bước cuối: "Món đầu tiên
+  của bạn đang chờ ở Chưa xếp."
+- Khuôn mặt: **mẩu báo**: mỗi thứ đã lưu là một mẩu cắt báo (tiêu đề Newsreader, gạch
+  mực, dòng nguồn bằng chữ). Đặc trưng: món lưu **thật** đầu tiên rơi vào dải Chưa xếp,
+  xếp chỗ thì trượt xuống dưới tên bộ sưu tập.
+- Bốn bước, Bỏ qua ở mọi bước: (1) Lưu một lần, tìm lại được ngay: bốn mẩu từ TikTok,
+  Shopee, YouTube, ảnh chụp màn hình xếp vào một cột; (2) Lưu từ bất kỳ app nào: hàng
+  Chia sẻ vẽ lại (máy tính: Ctrl V); (3) Lưu món đầu tiên: ô link, Dán link, Chọn ảnh, hoặc
+  chia sẻ từ app khác và trang tự nhận ra; (4) Đã lưu, đang ở Chưa xếp: chip bộ sưu tập
+  của người dùng hoặc bốn gợi ý (tạo khi chọn).
+- Chỉ tự mở khi thư viện trống và chưa từng xong; Cài đặt → Trợ giúp → Cách lưu mở lại.
+  `guideDone` nằm trong tuỳ chọn của thư viện. Route `/welcome`.
+- Bỏ: mascot, viền sticker, gạch highlight, carousel có chấm, paywall, xin quyền thông
+  báo, bài tập giả bị xoá sau đó, bàn tay demo, giấu Bỏ qua, nút chờ animation.
