@@ -353,24 +353,31 @@ class _BookmarkEditorState extends State<BookmarkEditor> {
   );
 }
 
-/// New or Edit collection: a live preview of its cover first, then its
-/// name, ready starts (new only), its colour, its icon or emoji, where it
-/// sits and a note. [preview] draws the cover for a draft (the Home
-/// cover, with the collection's own saves when editing); without it the
-/// editor shows no preview.
+/// New or Edit collection, as a sheet from the bottom (see
+/// [showCollectionSheet]): a live badge beside the name, ready starts (new
+/// only), the icon and the colour as one sideways row each, then Inside and
+/// a note behind "More options". Returns the collection on Create/Save.
 class CollectionEditor extends StatefulWidget {
   final SaveCollection? initial;
   final SaveLibrary library;
-  final Widget Function(SaveCollection draft, int hue)? preview;
-  const CollectionEditor({
-    super.key,
-    this.initial,
-    required this.library,
-    this.preview,
-  });
+  const CollectionEditor({super.key, this.initial, required this.library});
   @override
   State<CollectionEditor> createState() => _CollectionEditorState();
 }
+
+/// Opens [CollectionEditor] as a sheet and returns what it saved.
+Future<SaveCollection?> showCollectionSheet(
+  BuildContext context, {
+  SaveCollection? initial,
+  required SaveLibrary library,
+}) => showModalBottomSheet<SaveCollection>(
+  context: context,
+  isScrollControlled: true,
+  showDragHandle: true,
+  useSafeArea: true,
+  constraints: const BoxConstraints(maxWidth: 560),
+  builder: (_) => CollectionEditor(initial: initial, library: library),
+);
 
 class _CollectionEditorState extends State<CollectionEditor> {
   final _form = GlobalKey<FormState>();
@@ -381,6 +388,10 @@ class _CollectionEditorState extends State<CollectionEditor> {
   /// The chosen colour (null: Auto) and mark (null: none).
   int? _hue;
   CollectionMark? _mark;
+
+  /// Inside and the note; open from the start when editing one that has
+  /// either.
+  late bool _more;
 
   /// The template whose name is in the field, so picking another one
   /// replaces it but a name the person typed is kept.
@@ -397,6 +408,7 @@ class _CollectionEditorState extends State<CollectionEditor> {
     _parent = c?.parentId ?? '';
     _hue = c == null ? null : chosenHue(c.color);
     _mark = c == null ? null : markOf(c.icon);
+    _more = c != null && (c.parentId != null || c.description.isNotEmpty);
   }
 
   SaveCollection _draft(String name) => SaveCollection(
@@ -459,7 +471,9 @@ class _CollectionEditorState extends State<CollectionEditor> {
   }
 
   void _save() {
-    if (!_form.currentState!.validate()) return;
+    // Inside is checked even while More options is closed.
+    if (!_validParent(_parent)) setState(() => _more = true);
+    if (!_form.currentState!.validate() || !_validParent(_parent)) return;
     try {
       final result = _draft(_name.text.trim());
       _with(result).validate();
@@ -471,12 +485,13 @@ class _CollectionEditorState extends State<CollectionEditor> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     final typed = _name.text.trim();
     final draft = _draft(
       typed.isEmpty ? tr(context, 'New collection', 'Bộ sưu tập mới') : typed,
     );
     // A parent chosen inside this collection makes no valid library; the
-    // form says so on Save, and the preview keeps the colours it had.
+    // form says so on Save, and the badge keeps the colour it had.
     int hueWith(SaveCollection c) {
       try {
         return collectionHueIn(_with(c), _id);
@@ -487,109 +502,184 @@ class _CollectionEditorState extends State<CollectionEditor> {
 
     final hue = hueWith(draft);
     final autoHue = hueWith(draft.copyWith(color: storeHue(null)));
-    return _EditorPage(
-      title: widget.initial == null
-          ? tr(context, 'New collection', 'Bộ sưu tập mới')
-          : tr(context, 'Edit collection', 'Sửa bộ sưu tập'),
-      form: _form,
-      save: _save,
-      error: _error,
-      children: [
-        if (widget.preview case final preview?)
-          Align(
-            alignment: AlignmentDirectional.centerStart,
-            child: SizedBox(
-              key: const Key('collection-preview'),
-              width: 168,
-              child: preview(draft, hue),
-            ),
-          ),
-        TextFormField(
-          key: const Key('collection-name'),
-          controller: _name,
-          maxLength: 8192,
-          // The limit guards the data; a counter to 8192 says nothing.
-          buildCounter:
-              (_, {required currentLength, required isFocused, maxLength}) =>
-                  null,
-          decoration: InputDecoration(labelText: tr(context, 'Name', 'Tên')),
-          validator: (v) => v == null || v.trim().isEmpty
-              ? tr(context, 'Enter a name', 'Nhập tên')
-              : null,
+    final creating = widget.initial == null;
+    const gap = SizedBox(height: HandySpace.l);
+    Widget? noCounter(
+      BuildContext _, {
+      required int currentLength,
+      required bool isFocused,
+      int? maxLength,
+    }) => null;
+    return Material(
+      type: MaterialType.transparency,
+      child: Padding(
+        padding: EdgeInsets.only(
+          bottom: MediaQuery.viewInsetsOf(context).bottom,
         ),
-        if (widget.initial == null)
-          TemplatePicker(
-            taken: {
-              for (final c in widget.library.collections) c.name.toLowerCase(),
-            },
-            onPick: _pickTemplate,
-          ),
-        HuePicker(
-          value: _hue,
-          autoHue: autoHue,
-          onChanged: (v) => setState(() => _hue = v),
-        ),
-        MarkPicker(
-          value: _mark,
-          hue: hue,
-          onChanged: (v) => setState(() => _mark = v),
-        ),
-        DropdownButtonFormField<String>(
-          key: const Key('collection-parent'),
-          initialValue: _parent,
-          isExpanded: true,
-          decoration: InputDecoration(
-            labelText: tr(context, 'Inside', 'Nằm trong'),
-            helperText: tr(
-              context,
-              'Optional: put it inside another collection',
-              'Không bắt buộc: đặt trong một bộ sưu tập khác',
-            ),
-          ),
-          items: [
-            DropdownMenuItem(
-              value: '',
-              child: Text(tr(context, 'None', 'Không có')),
-            ),
-            for (final (c, depth) in collectionTree(widget.library))
-              if (c.id != _id)
-                DropdownMenuItem(
-                  value: c.id,
-                  child: Padding(
-                    padding: EdgeInsetsDirectional.only(start: depth * 16.0),
-                    child: Text(c.name, overflow: TextOverflow.ellipsis),
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.fromLTRB(20, 0, 20, 16),
+          child: Form(
+            key: _form,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Semantics(
+                  header: true,
+                  child: Text(
+                    creating
+                        ? tr(context, 'New collection', 'Bộ sưu tập mới')
+                        : tr(context, 'Edit collection', 'Sửa bộ sưu tập'),
+                    style: theme.textTheme.titleLarge,
                   ),
                 ),
-          ],
-          onChanged: (v) => setState(() => _parent = v ?? ''),
-          validator: (v) => _validParent(v)
-              ? null
-              : tr(
-                  context,
-                  'Choose a parent outside this collection',
-                  'Chọn bộ sưu tập cha không nằm trong bộ sưu tập này',
+                gap,
+                Row(
+                  children: [
+                    CollectionBadge(
+                      key: const Key('collection-badge'),
+                      hue: hue,
+                      mark: _mark,
+                      size: 22,
+                      always: true,
+                    ),
+                    const SizedBox(width: HandySpace.m),
+                    Expanded(
+                      child: TextFormField(
+                        key: const Key('collection-name'),
+                        controller: _name,
+                        autofocus: creating,
+                        maxLength: 8192,
+                        textCapitalization: TextCapitalization.sentences,
+                        // The limit guards the data; a counter says nothing.
+                        buildCounter: noCounter,
+                        decoration: InputDecoration(
+                          hintText: tr(context, 'Name', 'Tên'),
+                          isDense: true,
+                        ),
+                        onFieldSubmitted: (_) => _save(),
+                        validator: (v) => v == null || v.trim().isEmpty
+                            ? tr(context, 'Enter a name', 'Nhập tên')
+                            : null,
+                      ),
+                    ),
+                  ],
                 ),
-        ),
-        TextFormField(
-          key: const Key('collection-description'),
-          controller: _description,
-          maxLength: 65536,
-          buildCounter:
-              (_, {required currentLength, required isFocused, maxLength}) =>
-                  null,
-          minLines: 2,
-          maxLines: 5,
-          decoration: InputDecoration(
-            labelText: tr(
-              context,
-              'Note (optional)',
-              'Ghi chú (không bắt buộc)',
+                if (creating) ...[
+                  gap,
+                  TemplateRow(
+                    taken: {
+                      for (final c in widget.library.collections)
+                        c.name.toLowerCase(),
+                    },
+                    onPick: _pickTemplate,
+                  ),
+                ],
+                gap,
+                MarkRow(
+                  value: _mark,
+                  hue: hue,
+                  onChanged: (v) => setState(() => _mark = v),
+                ),
+                gap,
+                HueRow(
+                  value: _hue,
+                  autoHue: autoHue,
+                  onChanged: (v) => setState(() => _hue = v),
+                ),
+                const SizedBox(height: HandySpace.s),
+                Align(
+                  alignment: AlignmentDirectional.centerStart,
+                  child: TextButton.icon(
+                    key: const Key('collection-more'),
+                    onPressed: () => setState(() => _more = !_more),
+                    icon: Icon(
+                      _more ? Icons.expand_less : Icons.expand_more,
+                      size: 20,
+                    ),
+                    label: Text(tr(context, 'More options', 'Thêm tùy chọn')),
+                  ),
+                ),
+                if (_more) ...[
+                  const SizedBox(height: HandySpace.s),
+                  _parentField(context),
+                  gap,
+                  TextFormField(
+                    key: const Key('collection-description'),
+                    controller: _description,
+                    maxLength: 65536,
+                    buildCounter: noCounter,
+                    minLines: 2,
+                    maxLines: 4,
+                    decoration: InputDecoration(
+                      labelText: tr(
+                        context,
+                        'Note (optional)',
+                        'Ghi chú (không bắt buộc)',
+                      ),
+                      floatingLabelBehavior: FloatingLabelBehavior.always,
+                    ),
+                  ),
+                ],
+                if (_error != null) ...[
+                  gap,
+                  Semantics(
+                    liveRegion: true,
+                    child: HandyNotice(_error!, tone: HandyTone.error),
+                  ),
+                ],
+                gap,
+                FilledButton(
+                  key: const Key('editor-save'),
+                  onPressed: _save,
+                  child: Text(
+                    creating
+                        ? tr(context, 'Create', 'Tạo')
+                        : tr(context, 'Save', 'Lưu'),
+                  ),
+                ),
+              ],
             ),
           ),
         ),
-      ],
+      ),
     );
   }
+
+  Widget _parentField(BuildContext context) => DropdownButtonFormField<String>(
+    key: const Key('collection-parent'),
+    initialValue: _parent,
+    isExpanded: true,
+    decoration: InputDecoration(
+      labelText: tr(context, 'Inside', 'Nằm trong'),
+      floatingLabelBehavior: FloatingLabelBehavior.always,
+      helperText: tr(
+        context,
+        'Optional: put it inside another collection',
+        'Không bắt buộc: đặt trong một bộ sưu tập khác',
+      ),
+    ),
+    items: [
+      DropdownMenuItem(value: '', child: Text(tr(context, 'None', 'Không có'))),
+      for (final (c, depth) in collectionTree(widget.library))
+        if (c.id != _id)
+          DropdownMenuItem(
+            value: c.id,
+            child: Padding(
+              padding: EdgeInsetsDirectional.only(start: depth * 16.0),
+              child: Text(c.name, overflow: TextOverflow.ellipsis),
+            ),
+          ),
+    ],
+    onChanged: (v) => setState(() => _parent = v ?? ''),
+    validator: (v) => _validParent(v)
+        ? null
+        : tr(
+            context,
+            'Choose a parent outside this collection',
+            'Chọn bộ sưu tập cha không nằm trong bộ sưu tập này',
+          ),
+  );
 }
 
 class _RuleDraft {

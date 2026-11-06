@@ -179,6 +179,9 @@ void main() {
       ),
       (v) => result = v,
     );
+    // Inside sits under More options in the sheet.
+    await tester.tap(find.byKey(const Key('collection-more')));
+    await tester.pumpAndSettle();
     await _choose(tester, 'collection-parent', 'Child');
     await tester.tap(find.byKey(const Key('editor-save')));
     await tester.pumpAndSettle();
@@ -208,6 +211,8 @@ void main() {
       (v) => result = v,
     );
     await _enter(tester, 'collection-name', 'Reading');
+    await tester.tap(find.byKey(const Key('collection-more')));
+    await tester.pumpAndSettle();
     await _choose(tester, 'collection-parent', 'Parent');
     await tester.tap(find.byKey(const Key('editor-save')));
     await tester.pumpAndSettle();
@@ -263,7 +268,9 @@ void main() {
     await _reach(tester, find.byKey(const Key('hue-3')));
     await tester.tap(find.byKey(const Key('hue-3')));
     await tester.pumpAndSettle();
-    await _reach(tester, find.byKey(const Key('mark-emoji')));
+    await _reach(tester, find.byKey(const Key('mark-emoji-open')));
+    await tester.tap(find.byKey(const Key('mark-emoji-open')));
+    await tester.pumpAndSettle();
     await tester.enterText(find.byKey(const Key('mark-emoji')), '🍜🍲');
     await tester.pumpAndSettle();
     expect(find.text('🍜'), findsWidgets);

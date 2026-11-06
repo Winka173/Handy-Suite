@@ -800,23 +800,22 @@ void main() {
     await tapKey(t, 'collection-new');
     await shot(t, 'phone-51-collection-new');
     await tapKey(t, 'template-play-4');
-    await scrolled(t, 'phone-51-collection-template', 1);
+    await shot(t, 'phone-51-collection-template');
+    await tapKey(t, 'collection-more');
+    await shot(t, 'phone-51-collection-more');
   });
   testWidgets('phone new collection dark emoji', (t) async {
     await boot(t, const Size(390, 844), theme: 'dark');
     await tapKey(t, 'collection-new');
     await t.enterText(find.byKey(const Key('collection-name')), 'Phở Hà Nội');
     await t.pump();
-    await t.scrollUntilVisible(
-      find.byKey(const Key('mark-emoji')),
-      200,
-      scrollable: find.byType(Scrollable).first,
-    );
-    await t.enterText(find.byKey(const Key('mark-emoji')), '🍜');
-    await t.pumpAndSettle();
+    await t.ensureVisible(find.byKey(const Key('hue-3')));
     await t.tap(find.byKey(const Key('hue-3')));
     await t.pumpAndSettle();
-    await t.drag(find.byType(Scrollable).first, const Offset(0, 2000));
+    await t.ensureVisible(find.byKey(const Key('mark-emoji-open')));
+    await t.tap(find.byKey(const Key('mark-emoji-open')));
+    await t.pumpAndSettle();
+    await t.enterText(find.byKey(const Key('mark-emoji')), '🍜');
     await t.pumpAndSettle();
     await shot(t, 'phone-52-collection-dark');
   });
@@ -825,7 +824,7 @@ void main() {
     addTearDown(t.platformDispatcher.clearTextScaleFactorTestValue);
     await boot(t, const Size(320, 640));
     await tapKey(t, 'collection-new');
-    await scrolled(t, 'small-53-collection-large', 3);
+    await shot(t, 'small-53-collection-large');
   });
   testWidgets('phone save sheet dark', (t) async {
     await boot(t, const Size(390, 844), theme: 'dark');

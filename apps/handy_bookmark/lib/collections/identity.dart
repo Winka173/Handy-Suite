@@ -174,17 +174,22 @@ class CollectionBadge extends StatelessWidget {
 
   /// The dot's size; a mark takes about two and a half times it.
   final double size;
+
+  /// Always a round badge, with a folder when there is no mark (the
+  /// editor's preview), instead of falling back to the dot.
+  final bool always;
   const CollectionBadge({
     super.key,
     required this.hue,
     this.mark,
     this.size = 9,
+    this.always = false,
   });
 
   @override
   Widget build(BuildContext context) {
     final m = mark;
-    if (m == null) return HandyDot(hue, size: size);
+    if (m == null && !always) return HandyDot(hue, size: size);
     final box = (size * 2.4).clamp(18.0, 40.0);
     final ink = BookmarkPalette.of(context).ink;
     return ExcludeSemantics(
@@ -202,6 +207,11 @@ class CollectionBadge extends StatelessWidget {
             style: TextStyle(fontSize: box * .58, height: 1),
           ),
           IconMark(:final icon) => Icon(icon, size: box * .6, color: ink),
+          null => Icon(
+            Icons.folder_outlined,
+            size: box * .55,
+            color: HandyPalette.of(context, hue).mark,
+          ),
         },
       ),
     );

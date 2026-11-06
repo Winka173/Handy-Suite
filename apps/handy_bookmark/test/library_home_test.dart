@@ -29,6 +29,23 @@ Map<String, dynamic> viewOf(NetController c, String id) =>
     {};
 
 void main() {
+  testWidgets('New collection opens as a sheet over Home, not a page; a '
+      'template makes it, and Home shows it with its icon', (t) async {
+    final (c, _) = await boot(t);
+    await tapKey(t, 'collection-new');
+    expect(find.byType(BottomSheet), findsOneWidget);
+    expect(find.text('My library'), findsOneWidget, reason: 'Home stays');
+    await tapKey(t, 'template-book-3');
+    await tapKey(t, 'editor-save');
+    await settle(t);
+    expect(find.byType(BottomSheet), findsNothing);
+    final made = c.library!.collections.single;
+    expect(made.name, 'Read later');
+    expect(made.icon, 'book');
+    expect(made.color, 'hue:3');
+    expect(find.byKey(Key('collection-${made.id}')), findsOneWidget);
+  });
+
   testWidgets('the phone home is short; every place is one tap away in '
       'the Library', (t) async {
     await boot(t, seed: pictured);

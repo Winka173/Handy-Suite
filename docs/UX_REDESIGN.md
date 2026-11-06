@@ -2205,27 +2205,25 @@ dải "Mới lưu" (mục chưa xếp đi trước, một nút "Xếp vào…"),
 
 ## Hợp đồng: Handy Bookmark · tạo và sửa bộ sưu tập (2026-11-07)
 
-- Việc: đặt một chỗ mới cho đồ đã lưu và làm nó nhận ra được ngay trên Trang chủ.
-  Câu hỏi: "Bộ này sẽ trông thế nào trên kệ?" Hành động chính: Lưu (thanh dưới, như mọi
-  trình sửa).
-- Đặc trưng: **bìa xem trước thật** ở đầu form, vẽ bằng đúng widget bìa của Trang chủ
-  (sửa: ảnh của chính các mục trong bộ; tạo mới: bìa trống mang màu và biểu tượng). Gõ
-  tên, chọn màu, chọn biểu tượng thì bìa đổi theo ngay.
-- Thứ tự: Bìa → Tên → Bắt đầu từ mẫu (chỉ khi tạo mới) → Màu → Biểu tượng → Nằm trong →
-  Ghi chú.
+- Việc: đặt một chỗ mới cho đồ đã lưu và làm nó nhận ra được ngay trên Trang chủ, mà
+  không rời màn đang xem. Hành động chính: Tạo (sửa: Lưu), nút rộng ở cuối khung.
+- Hình thức: **khung trượt từ dưới lên** (không mở trang mới), cao vừa nội dung, kéo
+  xuống hoặc Back để huỷ. Điện thoại rộng hết; từ 600 px khung rộng tối đa 560 px.
+- Đặc trưng: **huy hiệu xem trước** 52 px cạnh ô Tên: màu và biểu tượng đổi ngay khi
+  chọn, đúng như sẽ hiện cạnh tên trên Trang chủ.
+- Thứ tự: Tiêu đề → [huy hiệu | Tên] → Mẫu (chỉ khi tạo mới, một hàng chip vuốt ngang)
+  → Biểu tượng (một hàng vuốt ngang, ô cuối là emoji) → Màu (Tự động + 6 màu, một hàng)
+  → "Thêm tùy chọn" (Nằm trong, Ghi chú; tự mở khi bộ đang sửa đã có) → Tạo/Lưu.
 - Mẫu: Công thức nấu ăn, Du lịch, Cần mua, Đọc sau, Xem sau, Công việc, Ý tưởng, Quà tặng.
-  Chạm một mẫu sẽ điền tên (khi tên còn trống hoặc đang là tên mẫu), biểu tượng và màu.
-  Mẫu trùng tên một bộ đã có thì ẩn.
-- Màu: "Tự động" (theo vị trí, như trước) và các màu nhận diện của `HandyPalette` mà app
-  dùng được (bỏ những màu gần teal). Màu chỉ hiện ở chấm hoặc nền nhạt cạnh tên, không bao
-  giờ tô biểu tượng. Lưu dạng `hue:N` trong trường `color`; giá trị cũ (hex) nghĩa là Tự
-  động. Bộ con không chọn màu thì theo màu bộ cha.
-- Biểu tượng: "Không có", 16 biểu tượng nét mảnh màu mực, hoặc một emoji do người dùng gõ
-  (một ký tự). Lưu trong trường `icon` (`emoji:X` hoặc tên biểu tượng); `folder` cũ nghĩa
-  là không có. Hiện trên bìa trống và trong vòng tròn nền nhạt thay cho chấm cạnh tên.
-- Trạng thái: tên trống thì báo ngay dưới ô; emoji nhiều hơn một ký tự thì chỉ giữ ký tự
-  đầu; sửa bộ đã có thì không có phần mẫu.
-- Bố cục: một cột ở mọi độ rộng (cột đọc của mọi trình sửa), bìa rộng 168 px canh trái.
-  Ô chọn 44 px, có nhãn đọc màn hình (tên màu, tên biểu tượng, trạng thái đang chọn).
-- Bỏ: 32 màu cầu vồng, biểu tượng tô màu theo loại, bảng emoji tự làm, gradient trên bìa,
-  bước wizard nhiều trang.
+  Điền tên (khi tên trống hoặc đang là tên mẫu), biểu tượng, màu. Mẫu trùng tên bộ đã có
+  thì ẩn.
+- Màu: "Tự động" (theo vị trí) và các màu nhận diện của `HandyPalette` mà app dùng được.
+  Chỉ hiện ở chấm hoặc nền nhạt cạnh tên, không tô biểu tượng. Lưu `hue:N` trong `color`;
+  giá trị cũ (hex) nghĩa là Tự động và được giữ nguyên khi lưu. Bộ con theo màu bộ cha.
+- Biểu tượng: "Không có", 16 biểu tượng nét mảnh màu mực, hoặc một emoji (một ký tự).
+  Lưu trong `icon` (`emoji:X` hoặc tên biểu tượng); `folder` cũ nghĩa là không có.
+- Trạng thái: tên trống báo ngay dưới ô; bộ cha tạo vòng lặp báo khi Lưu; bàn phím mở thì
+  khung cuộn, nút Tạo vẫn tới được.
+- Ô chọn 44 px, có nhãn đọc màn hình (tên màu, tên biểu tượng, đang chọn).
+- Bỏ: trang toàn màn hình cho một cái tên, 32 màu cầu vồng, biểu tượng tô màu theo loại,
+  bảng emoji tự làm, gradient, wizard nhiều bước, lưới 16 biểu tượng chiếm nửa màn.
