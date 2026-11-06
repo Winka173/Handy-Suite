@@ -797,6 +797,14 @@ void main() {
     await shot(t, 'phone-1-home-dark');
   });
   for (final theme in ['light', 'dark'])
+    testWidgets('phone search start $theme', (t) async {
+      await boot(t, const Size(390, 844), theme: theme);
+      await tapKey(t, 'open-search');
+      FocusManager.instance.primaryFocus?.unfocus();
+      await t.pumpAndSettle();
+      await scrolled(t, 'phone-55-search-start-$theme', 1);
+    });
+  for (final theme in ['light', 'dark'])
     testWidgets('phone shared where to $theme', (t) async {
       final c = await boot(t, const Size(390, 844), theme: theme);
       // As after a Share from another app: saved, now asking where.

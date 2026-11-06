@@ -216,3 +216,85 @@ class Clipping extends StatelessWidget {
     );
   }
 }
+
+/// A saved thing as a standing clipping, as in the onboarding's cards:
+/// its picture (4:3), its source by name, its title in Newsreader.
+class ClippingTile extends StatelessWidget {
+  final SaveController controller;
+  final Bookmark bookmark;
+  final VoidCallback onTap;
+  const ClippingTile({
+    super.key,
+    required this.controller,
+    required this.bookmark,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final p = BookmarkPalette.of(context);
+    final b = bookmark;
+    final dark = Theme.of(context).brightness == Brightness.dark;
+    final title = b.title.isEmpty ? b.sourceDomain : b.title;
+    return Semantics(
+      button: true,
+      label: title,
+      excludeSemantics: true,
+      // The onboarding's soft, wide shadow (none on dark grounds).
+      child: DecoratedBox(
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(16),
+          boxShadow: dark
+              ? null
+              : const [
+                  BoxShadow(
+                    color: Color(0x1F0B2A33),
+                    blurRadius: 18,
+                    offset: Offset(0, 8),
+                  ),
+                ],
+        ),
+        child: Material(
+          color: p.surface,
+          borderRadius: BorderRadius.circular(16),
+          child: InkWell(
+            key: Key('clip-${b.id}'),
+            borderRadius: BorderRadius.circular(16),
+            onTap: onTap,
+            child: Padding(
+              padding: const EdgeInsets.all(8),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(10),
+                    child: AspectRatio(
+                      aspectRatio: 4 / 3,
+                      // Only the mark: the source is named just below.
+                      child: ItemPicture(controller, b, compact: true),
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  SourceTag(b),
+                  const SizedBox(height: 6),
+                  Text(
+                    title,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      fontFamily: handyFontFamily('Newsreader'),
+                      fontSize: 16,
+                      height: 1.15,
+                      fontWeight: FontWeight.w500,
+                      color: p.ink,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}

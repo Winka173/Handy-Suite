@@ -2243,3 +2243,14 @@ dải "Mới lưu" (mục chưa xếp đi trước, một nút "Xếp vào…"),
 - Danh sách: chấm màu cạnh tên, biểu tượng chỉ khi bộ đó có; số mục là dòng phụ.
 - Bỏ: chọn trước rồi mới lưu (mất link nếu app bị đóng), giới hạn số link miễn phí mỗi
   ngày, màn "Saved!" chặn thêm một bước.
+
+## Hợp đồng: Handy Bookmark · Tìm, trước khi gõ (2026-11-07)
+
+- Câu hỏi: "Thư viện của tôi có gì, bắt đầu tìm từ đâu?" Trước đây màn Tìm mở ra là cả danh
+  sách với tiêu đề "Tất cả mục" và hàng biểu tượng không chữ.
+- Khi ô tìm trống và chưa có bộ lọc: ô tìm → một khối chia bốn số (Bộ sưu tập, Đã lưu, Yêu
+  thích, Chưa xem; mỗi số mở đúng chỗ của nó) → Thẻ (chip "#thẻ số lượng", mở trang thẻ) →
+  Mới lưu (lưới mẩu báo như onboarding: ảnh 4:3, nhãn nguồn, tiêu đề Newsreader; 2 cột ở
+  điện thoại, tới 5 cột ở màn rộng, hai hàng). Gõ một chữ hoặc chọn chip thì ra kết quả như cũ.
+- Thư viện trống: các số là 0, và một câu nói Tìm sẽ tìm theo tiêu đề, trang, thẻ, ghi chú.
+- Bỏ: con số "phù phiếm", biểu đồ, ô tìm kiếm có minh hoạ, đám mây thẻ nhiều màu.
