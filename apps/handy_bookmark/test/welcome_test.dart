@@ -87,9 +87,13 @@ void main() {
     t,
   ) async {
     final c = await open(t);
+    expect(find.bySemanticsLabel('Step 1 of 3'), findsOneWidget);
+    // The first button brings the cards together on the same stage.
     await tapKey(t, 'welcome-next-0');
     expect(find.textContaining('all of it'), findsOneWidget);
+    expect(find.bySemanticsLabel('Step 1 of 3'), findsOneWidget);
     await tapKey(t, 'welcome-next-1');
+    expect(find.bySemanticsLabel('Step 2 of 3'), findsOneWidget);
     // On a phone the practice is the whole screen: the task, no button.
     expect(find.textContaining('save this video'), findsOneWidget);
     expect(find.text('Tap Share'), findsOneWidget, reason: 'the lit word');
@@ -110,14 +114,17 @@ void main() {
 
     await tapKey(t, 'welcome-next-2');
     expect(find.textContaining('in a moment'), findsOneWidget);
+    expect(find.bySemanticsLabel('Step 3 of 3'), findsOneWidget);
+    // The find stage's button finishes: no notification step, no
+    // permission asked during the first run.
+    expect(find.text('Start saving'), findsOneWidget);
     await tapKey(t, 'welcome-next-3');
-    if (find.byKey(const Key('welcome-later')).evaluate().isNotEmpty) {
-      await tapKey(t, 'welcome-later');
-    }
     await settle(t);
+    expect(find.byKey(const Key('welcome-later')), findsNothing);
     expect(find.byType(WelcomePage), findsNothing);
     expect(c.preferences[guideDoneKey], isTrue);
     expect(c.library!.bookmarks, isEmpty, reason: 'practice saves nothing');
+    expect(c.preferences['revisit'], isNot(true), reason: 'nudge stays off');
   });
 
   testWidgets('Handy Bookmark itself, in the practice, goes to Not sorted', (
@@ -135,7 +142,13 @@ void main() {
 
   testWidgets('back steps back; on the first step it leaves', (t) async {
     final c = await open(t);
+    expect(find.byKey(const Key('welcome-back')), findsNothing);
     await tapKey(t, 'welcome-next-0');
+    await tapKey(t, 'welcome-next-1');
+    // From the practice, back returns to the gathered library.
+    await tapKey(t, 'welcome-back');
+    expect(find.textContaining('all of it'), findsOneWidget);
+    // Then to the scattered cards, the same stage.
     await tapKey(t, 'welcome-back');
     expect(find.textContaining('Found nowhere'), findsOneWidget);
     await t.binding.handlePopRoute();

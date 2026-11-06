@@ -2,6 +2,7 @@ import 'dart:math';
 
 import 'package:handy_bookmark_engine/handy_bookmark_engine.dart';
 import 'package:handy_ui/kit.dart';
+import 'ui/collection_picker.dart';
 
 String _newId() => List.generate(
   16,
@@ -237,7 +238,7 @@ class _BookmarkEditorState extends State<BookmarkEditor> {
         minLines: 2,
         maxLines: 5,
         decoration: InputDecoration(
-          labelText: tr(context, 'Description', 'Mô tả'),
+          labelText: tr(context, 'Note (optional)', 'Ghi chú (không bắt buộc)'),
         ),
       ),
       TextFormField(
@@ -325,11 +326,15 @@ class _BookmarkEditorState extends State<BookmarkEditor> {
             value: _favorite,
             onChanged: (v) => setState(() => _favorite = v),
           ),
-          SwitchListTile.adaptive(
-            title: Text(tr(context, 'Pinned', 'Đã ghim')),
-            value: _pinned,
-            onChanged: (v) => setState(() => _pinned = v),
-          ),
+          // Pins are retired (2026-11-06): a save pinned before keeps its
+          // switch so it can be unpinned; nothing new is pinned.
+          if (widget.initial.isPinned)
+            SwitchListTile.adaptive(
+              key: const Key('bookmark-pinned'),
+              title: Text(tr(context, 'Pinned', 'Đã ghim')),
+              value: _pinned,
+              onChanged: (v) => setState(() => _pinned = v),
+            ),
           SwitchListTile.adaptive(
             title: Text(tr(context, 'Archived', 'Đã lưu trữ')),
             value: _archived,
@@ -358,7 +363,11 @@ class _CollectionEditorState extends State<CollectionEditor> {
   final _form = GlobalKey<FormState>();
   late final TextEditingController _name, _description;
   late final String _id;
-  late String _parent, _color, _icon;
+  late String _parent;
+
+  /// Kept as they were; the app shows each collection in its own place's
+  /// colour, so the editor no longer asks for one.
+  late final String _color, _icon;
   String? _error;
   static const _colors = [
     '#6366F1',
@@ -368,14 +377,6 @@ class _CollectionEditorState extends State<CollectionEditor> {
     '#EF4444',
     '#EC4899',
   ];
-  static const _icons = {
-    'folder': Icons.folder_outlined,
-    'work': Icons.work_outline,
-    'learning': Icons.school_outlined,
-    'shopping': Icons.shopping_bag_outlined,
-    'travel': Icons.flight_outlined,
-    'heart': Icons.favorite_outline,
-  };
   @override
   void initState() {
     super.initState();
@@ -436,22 +437,6 @@ class _CollectionEditorState extends State<CollectionEditor> {
 
   @override
   Widget build(BuildContext context) {
-    final colorNames = [
-      tr(context, 'Indigo', 'Chàm'),
-      tr(context, 'Blue', 'Xanh dương'),
-      tr(context, 'Green', 'Xanh lá'),
-      tr(context, 'Amber', 'Hổ phách'),
-      tr(context, 'Red', 'Đỏ'),
-      tr(context, 'Pink', 'Hồng'),
-    ];
-    final iconNames = {
-      'folder': tr(context, 'Folder', 'Thư mục'),
-      'work': tr(context, 'Work', 'Công việc'),
-      'learning': tr(context, 'Learning', 'Học tập'),
-      'shopping': tr(context, 'Shopping', 'Mua sắm'),
-      'travel': tr(context, 'Travel', 'Du lịch'),
-      'heart': tr(context, 'Heart', 'Trái tim'),
-    };
     return _EditorPage(
       title: widget.initial == null
           ? tr(context, 'New collection', 'Bộ sưu tập mới')
@@ -469,33 +454,31 @@ class _CollectionEditorState extends State<CollectionEditor> {
               ? tr(context, 'Enter a name', 'Nhập tên')
               : null,
         ),
-        TextFormField(
-          key: const Key('collection-description'),
-          controller: _description,
-          maxLength: 65536,
-          minLines: 2,
-          maxLines: 5,
-          decoration: InputDecoration(
-            labelText: tr(context, 'Description', 'Mô tả'),
-          ),
-        ),
         DropdownButtonFormField<String>(
           key: const Key('collection-parent'),
           initialValue: _parent,
           isExpanded: true,
           decoration: InputDecoration(
-            labelText: tr(context, 'Parent collection', 'Bộ sưu tập cha'),
+            labelText: tr(context, 'Inside', 'Nằm trong'),
+            helperText: tr(
+              context,
+              'Optional: put it inside another collection',
+              'Không bắt buộc: đặt trong một bộ sưu tập khác',
+            ),
           ),
           items: [
             DropdownMenuItem(
               value: '',
               child: Text(tr(context, 'None', 'Không có')),
             ),
-            for (final c in widget.library.collections)
+            for (final (c, depth) in collectionTree(widget.library))
               if (c.id != _id)
                 DropdownMenuItem(
                   value: c.id,
-                  child: Text(c.name, overflow: TextOverflow.ellipsis),
+                  child: Padding(
+                    padding: EdgeInsetsDirectional.only(start: depth * 16.0),
+                    child: Text(c.name, overflow: TextOverflow.ellipsis),
+                  ),
                 ),
           ],
           onChanged: (v) => setState(() => _parent = v ?? ''),
@@ -507,49 +490,19 @@ class _CollectionEditorState extends State<CollectionEditor> {
                   'Chọn bộ sưu tập cha không nằm trong bộ sưu tập này',
                 ),
         ),
-        Text(
-          tr(context, 'Color', 'Màu sắc'),
-          style: Theme.of(context).textTheme.titleSmall,
-        ),
-        Wrap(
-          spacing: 8,
-          runSpacing: 8,
-          children: [
-            for (var i = 0; i < _colors.length; i++)
-              ChoiceChip(
-                label: Text(colorNames[i]),
-                avatar: CircleAvatar(
-                  backgroundColor: Color(
-                    int.parse(_colors[i].substring(1), radix: 16) | 0xff000000,
-                  ),
-                  radius: 8,
-                ),
-                selected: _color == _colors[i],
-                onSelected: (_) => setState(() => _color = _colors[i]),
-              ),
-          ],
-        ),
-        DropdownButtonFormField<String>(
-          isExpanded: true,
-          key: const Key('collection-icon'),
-          initialValue: _icons.containsKey(_icon) ? _icon : null,
+        TextFormField(
+          key: const Key('collection-description'),
+          controller: _description,
+          maxLength: 65536,
+          minLines: 2,
+          maxLines: 5,
           decoration: InputDecoration(
-            labelText: tr(context, 'Icon', 'Biểu tượng'),
+            labelText: tr(
+              context,
+              'Note (optional)',
+              'Ghi chú (không bắt buộc)',
+            ),
           ),
-          items: [
-            for (final entry in _icons.entries)
-              DropdownMenuItem(
-                value: entry.key,
-                child: Row(
-                  children: [
-                    Icon(entry.value),
-                    const SizedBox(width: 12),
-                    Text(iconNames[entry.key]!),
-                  ],
-                ),
-              ),
-          ],
-          onChanged: (v) => setState(() => _icon = v ?? 'folder'),
         ),
       ],
     );

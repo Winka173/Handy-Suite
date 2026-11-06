@@ -59,6 +59,9 @@ extension ImportExport on SaveScope {
   /// [SaveController.lastBackup], so Settings can say so; it is only a
   /// full backup when that report is complete.
   Future<Uint8List> fullBackup() async {
+    // What has had its 30 days in Recently Deleted goes first, so the
+    // backup never brings it back.
+    await c.tidy();
     final lib = library;
     final out = await backupWithReport(lib);
     await c.recordBackup(
@@ -80,12 +83,12 @@ extension ImportExport on SaveScope {
     SaveFormat format = SaveFormat.zip,
   ]) async {
     lib ??= library;
-    // Offline copies are always asked for: the index on screen may be
-    // stale, and a copy is never left out silently.
+    // Offline copies (of items and of those in Recently Deleted) are always
+    // asked for: the index on screen may be stale, and a copy is never left
+    // out silently. A format that cannot carry them still counts them.
     final full = format == SaveFormat.json || format == SaveFormat.zip;
-    final reading = full
-        ? await c.readingCopiesForBackup()
-        : (copies: const <String, ReadingCopy>{}, unreadable: 0);
+    final read = await c.readingCopiesForBackup();
+    final reading = full ? read : (copies: read.copies, unreadable: 0);
     final pictures = format == SaveFormat.zip
         ? await _pictures(lib)
         : const <String, PortablePicture>{};
@@ -173,11 +176,17 @@ extension ImportExport on SaveScope {
                 '${out.readingIncluded} offline copies included.',
                 'Kèm ${out.readingIncluded} bản đọc offline.',
               ),
-            if (out.readingOmitted > 0)
+            if (out.readingOmitted - out.readingNotCarried > 0)
               tr(
                 context,
-                '${out.readingOmitted} offline copies left out to stay under 30 MB.',
-                '${out.readingOmitted} bản đọc offline bị bỏ ra để file dưới 30 MB.',
+                '${out.readingOmitted - out.readingNotCarried} offline copies left out to stay under 30 MB.',
+                '${out.readingOmitted - out.readingNotCarried} bản đọc offline bị bỏ ra để file dưới 30 MB.',
+              ),
+            if (out.readingNotCarried > 0)
+              tr(
+                context,
+                '${out.readingNotCarried} offline copies need a JSON or ZIP backup; they are still on this device.',
+                '${out.readingNotCarried} bản đọc offline cần bản sao lưu JSON hoặc ZIP; chúng vẫn còn trên máy.',
               ),
             if (out.picturesIncluded > 0)
               tr(

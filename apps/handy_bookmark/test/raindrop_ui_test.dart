@@ -21,6 +21,7 @@ void main() {
       );
     final (c, _) = await boot(t, size: const Size(1440, 900), files: files);
     await tapKey(t, 'open-settings');
+    await tapKey(t, 'set-advanced-data');
     await tapKey(t, 'save-import-raindrop');
     await settle(t, 300);
     expect(find.text('Bring in 2 links from Raindrop?'), findsOneWidget);

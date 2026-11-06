@@ -98,7 +98,7 @@ class SaveController extends ChangeNotifier {
       );
       changed();
       await drain();
-      await _tidy(opened);
+      await tidy(opened);
     } catch (_) {
       error = 'storage_failed';
       changed();
@@ -177,17 +177,27 @@ class SaveController extends ChangeNotifier {
     return done.future;
   }
 
-  /// The defined moment for housekeeping: items in Recently Deleted for 30
-  /// days go for good, and pictures nothing uses any more are reclaimed.
-  /// Never fails the library: a later opening tries again.
-  Future<void> _tidy(DateTime now) async {
+  /// Housekeeping, at defined moments (opening the library, before an
+  /// automatic backup): items in Recently Deleted for 30 days go for good,
+  /// deletions remembered for sync longer than [tombstoneRetention] are
+  /// forgotten, and pictures that neither an item nor a Trash item uses
+  /// are reclaimed. Never fails the library: a later moment tries again.
+  Future<void> tidy([DateTime? at]) async {
+    final now = at ?? DateTime.now();
+    SaveLibrary next(SaveLibrary l) =>
+        pruneTombstones(expireTrash(l, now), now);
     try {
-      final expired = expireTrash(library!, now);
-      if (!identical(expired, library))
-        await update((l) => expireTrash(l, now));
-      await store!.collectMedia(mediaInUse(library!));
+      if (library == null || store == null) return;
+      if (!identical(next(library!), library)) await update(next);
     } catch (_) {
       /* Housekeeping only; nothing the person did is lost. */
+    }
+    try {
+      // Live and Trash pictures are kept (the store also checks its own
+      // rows), and so is any picture stored within [mediaGrace].
+      await store?.collectMedia(mediaInUse(library!));
+    } catch (_) {
+      /* Reclaiming space can wait. */
     }
   }
 
@@ -472,14 +482,18 @@ class SaveController extends ChangeNotifier {
     }
   }
 
+  /// Stores [copies] for items in the library or in Recently Deleted (a
+  /// restored backup brings both); only the first show as readable.
   Future<void> putReadingCopies(Map<String, ReadingCopy> copies) async {
     if (copies.isEmpty) return;
     await store!.putReadingCopies({
       for (final e in copies.entries) e.key: e.value.toJson(),
     });
+    final live = {for (final b in library?.bookmarks ?? <Bookmark>[]) b.id};
     readingIds = {
       ...readingIds,
-      for (final e in copies.entries) e.key: e.value.savedAt,
+      for (final e in copies.entries)
+        if (live.contains(e.key)) e.key: e.value.savedAt,
     };
     changed();
   }
@@ -494,7 +508,8 @@ class SaveController extends ChangeNotifier {
   Future<Map<String, ReadingCopy>> allReadingCopies() async =>
       (await readingCopiesForBackup()).copies;
 
-  /// Every valid stored copy, and how many could not be read. A damaged
+  /// Every valid stored copy (of items and of those in Recently Deleted),
+  /// and how many could not be read. A damaged
   /// copy is left out of the backup rather than failing it, but counted,
   /// so the backup never claims to hold it. When the copies cannot be read
   /// at all, every copy the index knows of counts as unreadable.

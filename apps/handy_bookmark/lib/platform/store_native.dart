@@ -704,9 +704,36 @@ void _databaseWorker(List<dynamic> start) async {
               for (final e in (args['copies'] as Map).entries) {
                 final payload = e.value as String;
                 final saved = (jsonDecode(payload) as Map)['savedAt'];
+                if (db.select('SELECT 1 FROM bookmarks WHERE id=?', [
+                  e.key,
+                ]).isNotEmpty) {
+                  db.execute(
+                    'INSERT INTO reading_copies VALUES(?,?,?,?) ON CONFLICT(bookmark_id) DO UPDATE SET saved_at=excluded.saved_at,bytes=excluded.bytes,payload=excluded.payload',
+                    [e.key, saved, payload.length, payload],
+                  );
+                  continue;
+                }
+                // An item in Recently Deleted (a restored backup): its copy
+                // waits beside it, as if it had been deleted here, and
+                // comes back when the item is restored.
+                final row = db.select(
+                  'SELECT deleted_at,payload FROM trash WHERE id=?',
+                  [e.key],
+                );
+                if (row.isEmpty) throw StateError('Item not found');
                 db.execute(
-                  'INSERT INTO reading_copies VALUES(?,?,?,?) ON CONFLICT(bookmark_id) DO UPDATE SET saved_at=excluded.saved_at,bytes=excluded.bytes,payload=excluded.payload',
-                  [e.key, saved, payload.length, payload],
+                  'INSERT OR REPLACE INTO reading_trash VALUES(?,?,?,?,?,?)',
+                  [
+                    e.key,
+                    (jsonDecode(row.first['payload'] as String)
+                        as Map)['normalizedUrl'],
+                    saved,
+                    payload.length,
+                    payload,
+                    DateTime.parse(
+                      row.first['deleted_at'] as String,
+                    ).add(trashRetention).millisecondsSinceEpoch,
+                  ],
                 );
               }
               db.execute('COMMIT');
@@ -728,9 +755,17 @@ void _databaseWorker(List<dynamic> start) async {
                 row['bookmark_id'] as String: row['saved_at'] as String,
             };
           case 'readingAll':
+            // Copies of items, and of items in Recently Deleted (restorable
+            // with them); not those kept only for a short Undo.
             result = {
               for (final row in db.select(
-                'SELECT bookmark_id,payload FROM reading_copies',
+                'SELECT bookmark_id,payload FROM reading_copies '
+                'UNION ALL '
+                'SELECT r.bookmark_id,r.payload FROM reading_trash r '
+                'JOIN trash t ON t.id=r.bookmark_id '
+                "WHERE r.expires_at>? AND r.normalized_url=json_extract(t.payload,'\$.normalizedUrl') "
+                'AND NOT EXISTS(SELECT 1 FROM reading_copies c WHERE c.bookmark_id=r.bookmark_id)',
+                [DateTime.now().millisecondsSinceEpoch],
               ))
                 row['bookmark_id'] as String: row['payload'] as String,
             };

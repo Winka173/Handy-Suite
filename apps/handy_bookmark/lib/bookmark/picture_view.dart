@@ -243,11 +243,15 @@ class PictureHeader extends StatelessWidget {
   final SaveController controller;
   final Bookmark item;
   final double maxHeight;
+
+  /// Sits on the picture's top corner (the detail's "…").
+  final Widget? corner;
   const PictureHeader({
     super.key,
     required this.controller,
     required this.item,
     this.maxHeight = 460,
+    this.corner,
   });
 
   @override
@@ -260,30 +264,39 @@ class PictureHeader extends StatelessWidget {
         final width = math.min(box.maxWidth, maxHeight * ratio);
         final height = width / ratio;
         return Center(
-          child: Semantics(
-            button: true,
-            label: tr(context, 'View the picture', 'Xem ảnh'),
-            child: SizedBox(
-              width: width,
-              height: height,
-              child: Material(
-                color: p.sunk,
-                borderRadius: BorderRadius.circular(BookmarkRadii.collection),
-                clipBehavior: Clip.antiAlias,
-                child: InkWell(
-                  key: const Key('detail-picture'),
-                  onTap: () => PictureView.open(context, controller, item),
-                  child: FutureBuilder<Uint8List?>(
-                    future: controller.mediaPreview(media.id),
-                    builder: (context, snap) => snap.data == null
-                        ? const SizedBox.expand()
-                        : Ink.image(
-                            image: MemoryImage(snap.data!),
-                            fit: BoxFit.cover,
-                          ),
+          child: SizedBox(
+            width: width,
+            height: height,
+            child: Stack(
+              fit: StackFit.expand,
+              children: [
+                Semantics(
+                  button: true,
+                  label: tr(context, 'View the picture', 'Xem ảnh'),
+                  child: Material(
+                    color: p.sunk,
+                    borderRadius: BorderRadius.circular(
+                      BookmarkRadii.collection,
+                    ),
+                    clipBehavior: Clip.antiAlias,
+                    child: InkWell(
+                      key: const Key('detail-picture'),
+                      onTap: () => PictureView.open(context, controller, item),
+                      child: FutureBuilder<Uint8List?>(
+                        future: controller.mediaPreview(media.id),
+                        builder: (context, snap) => snap.data == null
+                            ? const SizedBox.expand()
+                            : Ink.image(
+                                image: MemoryImage(snap.data!),
+                                fit: BoxFit.cover,
+                              ),
+                      ),
+                    ),
                   ),
                 ),
-              ),
+                if (corner != null)
+                  PositionedDirectional(top: 6, end: 6, child: corner!),
+              ],
             ),
           ),
         );

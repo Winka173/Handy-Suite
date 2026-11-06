@@ -95,7 +95,9 @@ extension CollectionActions on SaveScope {
                       Text(
                         tr(
                           context,
-                          'It holds $count items. Where should they go?',
+                          count == 1
+                              ? 'It holds 1 item. Where should it go?'
+                              : 'It holds $count items. Where should they go?',
                           'Bộ này có $count mục. Chuyển chúng đi đâu?',
                         ),
                         style: theme.textTheme.bodyMedium?.copyWith(
@@ -144,14 +146,12 @@ extension CollectionActions on SaveScope {
       if (choice == null || !context.mounted) return false;
       target = choice;
       if (choice == 'move') {
+        // Offer the tree as it will be once this one is gone (its
+        // subcollections moved up a level), so the picker never meets a
+        // missing parent.
         final id = await pickCollection(
           context,
-          library.copyWith(
-            collections: [
-              for (final x in library.collections)
-                if (x.id != item.id) x,
-            ],
-          ),
+          removeCollection(library, item.id, now: saveTime()),
         );
         if (id == null || !context.mounted) return false;
         target = id.isEmpty ? 'inbox' : id;
@@ -185,38 +185,21 @@ extension CollectionActions on SaveScope {
     if (!context.mounted) return false;
     final ok = await run(
       context,
-      () => view.change((l) {
-        final now = saveTime();
-        // Its links go to Recently Deleted (when asked), not out of existence.
-        final trashed = target == 'delete'
-            ? moveToTrash(l, [
-                for (final b in l.bookmarks)
-                  if (b.collectionId == item.id) b.id,
-              ], now)
-            : l;
-        return withCollectionTombstones(
-          trashed.copyWith(
-            collections: [
-              for (final x in trashed.collections)
-                if (x.id != item.id)
-                  x.parentId == item.id
-                      ? x.copyWith(parentId: item.parentId)
-                      : x,
-            ],
-            bookmarks: [
-              for (final b in trashed.bookmarks)
-                b.collectionId != item.id
-                    ? b
-                    : b.copyWith(
-                        collectionId: target == 'inbox' ? null : target,
-                        updatedAt: now,
-                      ),
-            ],
-          ),
-          [item.id],
-          now,
-        );
-      }),
+      () => view.change(
+        (l) => removeCollection(
+          l,
+          item.id,
+          now: saveTime(),
+          // Its items go to Recently Deleted (when asked), to another
+          // collection, or stay in Not sorted; subcollections move up.
+          contents: switch (target) {
+            'delete' => CollectionContents.trash,
+            'inbox' => CollectionContents.unfile,
+            _ => CollectionContents.move,
+          },
+          moveTo: target == 'delete' || target == 'inbox' ? null : target,
+        ),
+      ),
     );
     if (ok && context.mounted)
       undoMessage(

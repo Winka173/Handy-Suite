@@ -133,14 +133,22 @@ void main() {
     await openItem(t, id);
     expect(find.byKey(const Key('save-open-original')), findsOneWidget);
     expect(find.byType(FilledButton).evaluate().length, greaterThan(0));
-    for (final key in ['detail-favorite', 'detail-move', 'detail-copy']) {
+    for (final key in [
+      'detail-favorite',
+      'detail-move',
+      'detail-rename',
+      'detail-share',
+      'detail-reader',
+    ]) {
       expect(find.byKey(Key(key)), findsOneWidget, reason: key);
     }
-    expect(find.byKey(const Key('detail-pin')), findsNothing);
+    // Copy link waits in the "…"; reminders and pins are no longer made here.
+    for (final key in ['detail-copy', 'detail-remind', 'detail-pin']) {
+      expect(find.byKey(Key(key)), findsNothing, reason: key);
+    }
     expect(find.byKey(const Key('detail-check')), findsNothing);
     await tapKey(t, 'detail-tools');
     for (final key in [
-      'detail-pin',
       'detail-read',
       'detail-archive',
       'detail-metadata',
@@ -149,12 +157,33 @@ void main() {
     ]) {
       expect(find.byKey(Key(key)), findsOneWidget, reason: key);
     }
-    await tapKey(t, 'detail-pin');
-    expect(c.library!.bookmarks.firstWhere((b) => b.id == id).isPinned, isTrue);
-    // The folded header carries the state, so it shows without opening.
-    await tapKey(t, 'detail-tools');
     expect(find.byKey(const Key('detail-pin')), findsNothing);
+    expect(find.byKey(const Key('detail-unpin')), findsNothing);
+  });
+
+  testWidgets('an item pinned before pins were retired shows its state and '
+      'one Unpin; nothing else changes', (t) async {
+    final (c, _) = await start(t);
+    final id = c.library!.bookmarks.first.id;
+    await t.runAsync(
+      () => c.update(
+        (l) => l.copyWith(
+          bookmarks: [
+            for (final b in l.bookmarks)
+              b.id == id ? b.copyWith(isPinned: true) : b,
+          ],
+        ),
+      ),
+    );
+    await openItem(t, id);
+    // The folded header carries the state, so it shows without opening.
     expect(find.text('Pinned'), findsOneWidget);
+    await tapKey(t, 'detail-tools');
+    await tapKey(t, 'detail-unpin');
+    final after = c.library!.bookmarks.firstWhere((b) => b.id == id);
+    expect(after.isPinned, isFalse);
+    expect(after.title, 'Page one');
+    expect(find.byKey(const Key('detail-unpin')), findsNothing);
   });
 
   for (final theme in ['light', 'dark']) {

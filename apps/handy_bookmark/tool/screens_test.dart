@@ -13,9 +13,13 @@ import 'package:handy_bookmark/links/batch_size.dart';
 import 'package:handy_bookmark_engine/handy_bookmark_engine.dart';
 import 'package:handy_storage/handy_storage.dart';
 import 'package:handy_ui/kit.dart';
+import 'package:image/image.dart' as img;
 import '../test/controller_test.dart' show TestStore;
 import '../test/link_tasks_test.dart' show FakeNet;
 import '../test/new_flows_test.dart' show NetController, OneFile;
+import '../test/reader_test.dart' show GatedNet;
+import 'package:handy_bookmark/reader/reading_position.dart';
+import 'package:handy_bookmark/services/metadata_client.dart';
 import '../test/widget_test.dart' show Preferences;
 
 Future<void> _font(String family, List<String> paths) async {
@@ -386,8 +390,10 @@ void main() {
   ]) {
     testWidgets('$label home', (t) async {
       final c = await boot(t, size);
-      if (size.width >= 1100)
+      if (size.width >= 1100) {
         await tapKey(t, 'details-${c.library!.bookmarks.first.id}');
+        await tapKey(t, 'item-details');
+      }
       await shot(t, '$label-1-home');
     });
   }
@@ -511,8 +517,8 @@ void main() {
       await shot(t, '$label-21-welcome-6-saved');
       await tapKey(t, 'welcome-next-2');
       await shot(t, '$label-21-welcome-7-find');
+      // The find stage's button finishes the guide (no nudge stage).
       await tapKey(t, 'welcome-next-3');
-      await shot(t, '$label-21-welcome-8-nudge');
     });
   }
   testWidgets('films', (t) async {
@@ -570,6 +576,9 @@ void main() {
   });
   testWidgets('phone places with saved searches', (t) async {
     await boot(t, const Size(390, 844), extras: true);
+    // Since 2026-11-06 the kept lists wait in Library > Advanced.
+    await tapKey(t, 'home-library');
+    await tapKey(t, 'library-advanced');
     await t.scrollUntilVisible(
       find.byKey(const Key('search-videos')),
       300,
@@ -599,11 +608,13 @@ void main() {
     await t.pumpAndSettle();
     await tapKey(t, 'task-broken');
     await tapKey(t, 'details-${c.library!.bookmarks[5].id}');
+    await tapKey(t, 'item-details');
     await shot(t, 'desktop-16-broken');
   });
   testWidgets('phone check running', (t) async {
     final net = FakeNet()..gate = Completer<void>();
     final c = await boot(t, const Size(390, 844), extras: true, net: net);
+    await tapKey(t, 'home-library');
     await tapKey(t, 'place-all');
     await t.longPress(
       find.byKey(ValueKey('bookmark-${c.library!.bookmarks[3].id}')),
@@ -644,6 +655,7 @@ void main() {
       t.element(find.byKey(const Key('save-home'))),
     ).pushNamed('/settings');
     await t.pumpAndSettle();
+    await tapKey(t, 'set-advanced-data');
     await tapKey(t, 'save-import-pocket');
     await t.runAsync(
       () => Future<void>.delayed(const Duration(milliseconds: 400)),
@@ -654,10 +666,10 @@ void main() {
   testWidgets('desktop film', (t) async {
     final c = await boot(t, const Size(1440, 900));
     await tapKey(t, 'details-${c.library!.bookmarks[0].id}');
+    await tapKey(t, 'item-details');
+    await tapKey(t, 'details-${c.library!.bookmarks[5].id}');
     await film(t, 'desktop-pick', () async {
-      await t.tap(
-        find.byKey(Key('details-${c.library!.bookmarks[5].id}')).first,
-      );
+      await t.tap(find.byKey(const Key('item-details')).last);
       await t.pump();
     });
   });
@@ -796,4 +808,293 @@ void main() {
     await tapKey(t, 'place-focus');
     await shot(t, 'phone-43-focus-dark');
   });
+
+  // Reader: reading online, the find bar.
+  Future<void> openRead(WidgetTester t, String id) async {
+    ReadingPositions.instance = ReadingPositions(MemorySpotStore());
+    Navigator.of(t.element(find.byType(Scaffold).first)).pushNamed('/read/$id');
+    for (var i = 0; i < 6; i++) {
+      await t.runAsync(
+        () => Future<void>.delayed(const Duration(milliseconds: 50)),
+      );
+      await t.pump(const Duration(milliseconds: 50));
+    }
+  }
+
+  testWidgets('phone reader online', (t) async {
+    final net = GatedNet()..pageGate = Completer<void>();
+    final c = await boot(t, const Size(390, 844), extras: true, net: net);
+    final b = c.library!.bookmarks[3];
+    net.pages[b.originalUrl] = PageResult(
+      html: _tripArticle,
+      uri: Uri.parse(b.originalUrl),
+    );
+    await openRead(t, b.id);
+    await t.pump(const Duration(milliseconds: 600));
+    await shot(t, 'phone-50-reader-online-loading', settle: false);
+    net.pageGate!.complete();
+    for (var i = 0; i < 20; i++) {
+      await t.runAsync(
+        () => Future<void>.delayed(const Duration(milliseconds: 50)),
+      );
+      await t.pump();
+    }
+    await t.pumpAndSettle();
+    await shot(t, 'phone-51-reader-online');
+  });
+  testWidgets('phone reader failed', (t) async {
+    final c = await boot(t, const Size(390, 844), extras: true);
+    await openRead(t, c.library!.bookmarks[3].id);
+    await t.pumpAndSettle();
+    await shot(t, 'phone-52-reader-failed');
+  });
+  testWidgets('phone reader find', (t) async {
+    final c = await boot(t, const Size(390, 844), extras: true);
+    await openRead(t, c.library!.bookmarks[5].id);
+    await t.pumpAndSettle();
+    await t.tap(find.byKey(const Key('reader-find')));
+    await t.pumpAndSettle();
+    await t.enterText(find.byKey(const Key('reader-find-field')), 'đèo');
+    await t.pumpAndSettle();
+    await t.tap(find.byKey(const Key('reader-find-next')));
+    await t.pumpAndSettle();
+    await shot(t, 'phone-53-reader-find');
+  });
+  testWidgets('small reader find dark 200%', (t) async {
+    t.platformDispatcher.textScaleFactorTestValue = 2;
+    addTearDown(t.platformDispatcher.clearTextScaleFactorTestValue);
+    final c = await boot(t, const Size(320, 640), theme: 'dark', extras: true);
+    await openRead(t, c.library!.bookmarks[5].id);
+    await t.pumpAndSettle();
+    await t.tap(find.byKey(const Key('reader-find')));
+    await t.pumpAndSettle();
+    await t.enterText(find.byKey(const Key('reader-find-field')), 'hà giang');
+    await t.pumpAndSettle();
+    await shot(t, 'small-54-reader-find-dark-200');
+  });
+
+  // Settings, Reminders: items that still carry a reminder (2026-11-06):
+  // one past, two coming.
+  for (final theme in ['light', 'dark']) {
+    testWidgets('phone existing reminders $theme', (t) async {
+      final c = await boot(t, const Size(390, 844), theme: theme);
+      final now = DateTime.now().toUtc();
+      final due = {
+        0: now.add(const Duration(days: 2, hours: 3)),
+        3: now.subtract(const Duration(days: 1)),
+        5: now.add(const Duration(days: 9)),
+      };
+      await c.update(
+        (l) => l.copyWith(
+          bookmarks: [
+            for (final (i, b) in l.bookmarks.indexed)
+              due[i] == null
+                  ? b
+                  : b.copyWith(reminderAt: due[i]!.toIso8601String()),
+          ],
+        ),
+      );
+      await t.pumpAndSettle();
+      Navigator.of(
+        t.element(find.byType(Scaffold).first),
+      ).pushNamed('/settings');
+      await t.pumpAndSettle();
+      await t.scrollUntilVisible(
+        find.byKey(const Key('reminders-cancel-all')),
+        200,
+        scrollable: find.byType(Scrollable).first,
+      );
+      await t.drag(find.byType(Scrollable).first, const Offset(0, 420));
+      await t.pumpAndSettle();
+      await shot(t, 'phone-44-reminders-$theme');
+    });
+  }
+  // Focus with no pictures at all: the typographic poster.
+  Future<void> openFocus(WidgetTester t) async {
+    Navigator.of(t.element(find.byType(Scaffold).first)).pushNamed('/focus');
+    await t.runAsync(
+      () => Future<void>.delayed(const Duration(milliseconds: 100)),
+    );
+    await t.pumpAndSettle();
+  }
+
+  for (final theme in ['light', 'dark']) {
+    testWidgets('phone focus image-less $theme', (t) async {
+      final c = await boot(t, const Size(390, 844), theme: theme);
+      (c.store! as PictureStore).pictures.clear();
+      c.clearThumbnailMemory();
+      await openFocus(t);
+      await shot(t, 'phone-45-focus-poster-$theme');
+      await tapKey(t, 'focus-later');
+      await t.runAsync(
+        () => Future<void>.delayed(const Duration(milliseconds: 200)),
+      );
+      await t.pumpAndSettle();
+      await shot(t, 'phone-45-focus-poster-$theme-2');
+    });
+  }
+  testWidgets('small focus image-less large text', (t) async {
+    t.platformDispatcher.textScaleFactorTestValue = 2;
+    addTearDown(t.platformDispatcher.clearTextScaleFactorTestValue);
+    final c = await boot(t, const Size(320, 640), theme: 'dark');
+    (c.store! as PictureStore).pictures.clear();
+    c.clearThumbnailMemory();
+    await openFocus(t);
+    await shot(t, 'small-45-focus-poster-large-text');
+  });
+  testWidgets('settings advanced views', (t) async {
+    await boot(t, const Size(390, 844), extras: true);
+    Navigator.of(t.element(find.byType(Scaffold).first)).pushNamed('/settings');
+    await t.pumpAndSettle();
+    await tapKey(t, 'set-library-tools');
+    await scrolled(t, 'phone-46-tools', 2);
+    Navigator.of(t.element(find.byType(Scaffold).last)).pop();
+    await t.pumpAndSettle();
+    await t.scrollUntilVisible(
+      find.byKey(const Key('set-advanced-data')),
+      -200,
+      scrollable: find.byType(Scrollable).first,
+    );
+    await tapKey(t, 'set-advanced-data');
+    await shot(t, 'phone-47-advanced-data');
+    Navigator.of(t.element(find.byType(Scaffold).last)).pop();
+    await t.pumpAndSettle();
+    await tapKey(t, 'set-storage');
+    await shot(t, 'phone-48-storage');
+  });
+  testWidgets('small settings large text', (t) async {
+    t.platformDispatcher.textScaleFactorTestValue = 2;
+    addTearDown(t.platformDispatcher.clearTextScaleFactorTestValue);
+    await boot(t, const Size(320, 640));
+    Navigator.of(t.element(find.byType(Scaffold).first)).pushNamed('/settings');
+    await t.pumpAndSettle();
+    await scrolled(t, 'small-49-settings-large', 4);
+  });
+  // Item detail, rename, the item menu and sharing (final simplification).
+  Future<void> openOne(WidgetTester t, String id) async {
+    Navigator.of(
+      t.element(find.byType(Scaffold).first),
+    ).pushNamed('/bookmark/$id');
+    await t.runAsync(
+      () => Future<void>.delayed(const Duration(milliseconds: 150)),
+    );
+    await t.pumpAndSettle();
+  }
+
+  testWidgets('item rename phone', (t) async {
+    final c = await boot(t, const Size(390, 844));
+    await openOne(t, c.library!.bookmarks.first.id);
+    await tapKey(t, 'detail-rename');
+    await shot(t, 'phone-item-1-rename');
+    await t.enterText(find.byKey(const Key('rename-field')), '');
+    await t.pumpAndSettle();
+    await shot(t, 'phone-item-2-rename-empty');
+  });
+  testWidgets('item rename small dark', (t) async {
+    final c = await boot(t, const Size(320, 640), theme: 'dark');
+    await openOne(t, c.library!.bookmarks[1].id);
+    await tapKey(t, 'detail-rename');
+    await shot(t, 'small-item-3-rename-dark');
+  });
+  testWidgets('item menus', (t) async {
+    final c = await boot(t, const Size(390, 844));
+    final food = [
+      for (final b in c.library!.bookmarks)
+        if (b.collectionId == 'food') b.id,
+    ];
+    await tapKey(t, 'collection-food');
+    // Menus float: draw their real shadow, not the test stand-in.
+    debugDisableShadows = false;
+    await tapKey(t, 'details-${food.last}');
+    await shot(t, 'phone-item-4-row-menu');
+    await t.tapAt(const Offset(10, 10));
+    await t.pumpAndSettle();
+    await tapKey(t, 'save-view');
+    await tapKey(t, 'details-${food.first}');
+    await shot(t, 'phone-item-5-card-menu');
+    debugDisableShadows = true;
+  });
+  testWidgets('item detail more and folds', (t) async {
+    final c = await boot(t, const Size(390, 844));
+    final id = c.library!.bookmarks.first.id;
+    await c.update(
+      (l) => l.copyWith(
+        bookmarks: [
+          for (final b in l.bookmarks)
+            b.id == id
+                ? b.copyWith(
+                    note: 'Hỏi quán xin công thức nước dùng.\nĐi sớm trước 7h.',
+                    isPinned: true,
+                  )
+                : b,
+        ],
+      ),
+    );
+    await openOne(t, id);
+    await tapKey(t, 'detail-more');
+    debugDisableShadows = false;
+    await shot(t, 'phone-item-6-detail-more');
+    debugDisableShadows = true;
+    await t.tapAt(const Offset(10, 10));
+    await t.pumpAndSettle();
+    await tapKey(t, 'detail-notes');
+    await tapKey(t, 'detail-tools');
+    await t.scrollUntilVisible(
+      find.byKey(const Key('detail-unpin')),
+      200,
+      scrollable: find.byType(Scrollable).first,
+    );
+    await t.pumpAndSettle();
+    await shot(t, 'phone-item-7-detail-folds');
+  });
+  for (final theme in ['light', 'dark']) {
+    testWidgets('item share picture $theme', (t) async {
+      final c = await boot(t, const Size(390, 844), theme: theme);
+      // A camera photo: the guide's licensed photo with EXIF written in.
+      final photo = img.decodeJpg(
+        File('assets/welcome/hoi-an.jpg').readAsBytesSync(),
+      )!;
+      photo.exif.imageIfd['Make'] = 'TestCam';
+      photo.exif.imageIfd['ImageDescription'] = 'Hoi An';
+      final bytes = img.encodeJpg(photo, quality: 85);
+      unawaited(
+        c.addPictures([
+          (bytes: bytes, name: 'Phố cổ Hội An.jpg'),
+        ], collectionId: 'trip'),
+      );
+      for (
+        var i = 0;
+        i < 50 && !c.library!.bookmarks.any((b) => b.isImage);
+        i++
+      ) {
+        await t.runAsync(
+          () => Future<void>.delayed(const Duration(milliseconds: 100)),
+        );
+        await t.pump();
+      }
+      await openOne(t, c.library!.bookmarks.firstWhere((b) => b.isImage).id);
+      await shot(t, 'phone-item-8-picture-detail-$theme');
+      await tapKey(t, 'detail-share');
+      await shot(t, 'phone-item-9-share-picture-$theme');
+    });
+  }
 }
+
+const _tripArticle =
+    '<html><head><title>Lịch trình 3 ngày Đà Nẵng – Hội An</title>'
+    '<meta property="og:site_name" content="Hội Du lịch bụi"></head><body>'
+    '<article><h1>Lịch trình 3 ngày Đà Nẵng – Hội An</h1>'
+    '<p>Ba ngày là vừa đủ để ăn, tắm biển và đi bộ phố cổ mà không vội. '
+    'Lịch dưới đây đi từ Đà Nẵng, ngủ hai đêm ở thành phố và một tối ở Hội An.</p>'
+    '<h2>Ngày 1: biển Mỹ Khê và bán đảo Sơn Trà</h2>'
+    '<p>Sáng tắm biển trước 8 giờ khi nước còn mát. Chiều thuê xe máy lên Sơn Trà, '
+    'dừng ở chùa Linh Ứng rồi xuống chợ Cồn ăn bánh xèo, nem lụi.</p>'
+    '<ul><li>Thuê xe máy: khoảng 120.000 đồng một ngày.</li>'
+    '<li>Đường lên Sơn Trà dốc, đi chậm và tránh trời mưa.</li></ul>'
+    '<h2>Ngày 2: Bà Nà hoặc Ngũ Hành Sơn</h2>'
+    '<p>Nếu thích mát, lên Bà Nà từ sớm; nếu muốn tiết kiệm, Ngũ Hành Sơn chỉ mất nửa ngày '
+    'và có nhiều hang động đẹp. Tối ăn mì Quảng ở đường Hải Phòng.</p>'
+    '<h2>Ngày 3: Hội An</h2>'
+    '<p>Đi Hội An buổi chiều, dạo phố cổ lúc đèn lồng lên, ăn cao lầu và bánh mì. '
+    'Nếu ở lại muộn, thả đèn hoa đăng trên sông Hoài.</p>'
+    '</article></body></html>';

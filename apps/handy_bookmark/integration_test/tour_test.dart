@@ -283,6 +283,8 @@ void main() {
 
     // One link's details; make it a favourite.
     await tap(t, 'details-${ids[3]}');
+    await pause(t, 800);
+    await tap(t, 'item-details');
     await pause(t, 2500);
     await tap(t, 'detail-favorite');
     await pause(t, 1500);
@@ -334,8 +336,13 @@ void main() {
     // Settings: how links open, what is fetched (nothing, by default), data.
     await tap(t, 'open-settings');
     await pause(t, 1500);
+    // Page details and the library check live in Advanced library tools.
+    await tap(t, 'set-library-tools');
+    await pause(t, 1000);
     await show(t, 'set-metadata', 2500);
     await show(t, 'save-integrity', 2000);
+    await back(t);
+    await pause(t, 800);
     await back(t);
     await pause(t, 1500);
   }, timeout: const Timeout(Duration(minutes: 6)));

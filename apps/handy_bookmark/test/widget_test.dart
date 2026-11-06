@@ -201,6 +201,7 @@ void main() {
     expect(find.byKey(const Key('place-inbox')), findsOneWidget);
     expect(find.byKey(const Key('collection-recipes')), findsOneWidget);
     await tapKey(tester, 'details-$id');
+    await tapKey(tester, 'item-details');
     expect(find.byKey(const Key('save-open-original')), findsOneWidget);
     await tapKey(tester, 'detail-favorite');
     expect(c.library!.bookmarks.single.isFavorite, isTrue);

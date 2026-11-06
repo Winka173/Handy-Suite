@@ -627,25 +627,53 @@ class BrowserBookmarkStore implements BookmarkStore {
       }.jsify()!;
     }
     if (rows.isEmpty) return;
-    await _run<bool>(['bookmarks', 'reading'], 'readwrite', (
-      tx,
-      result,
-      guard,
-    ) {
-      // Every copy needs its bookmark; one missing aborts the whole write.
-      final keys = tx.objectStore('bookmarks').getAllKeys();
-      keys.onsuccess = ((web.Event _) {
-        guard(() {
-          final known = (keys.result.dartify() as List).toSet();
-          for (final e in rows.entries) {
-            if (!known.contains(e.key))
-              throw const FormatException('Bookmark not found');
-            tx.objectStore('reading').put(e.value);
-          }
-          result(true);
-        });
-      }).toJS;
-    });
+    await _run<bool>(
+      ['bookmarks', 'reading', 'trash', 'readingTrash'],
+      'readwrite',
+      (tx, result, guard) {
+        // Every copy needs its item, saved or in Recently Deleted; one
+        // missing aborts the whole write.
+        final keys = tx.objectStore('bookmarks').getAllKeys();
+        keys.onsuccess = ((web.Event _) {
+          guard(() {
+            final known = (keys.result.dartify() as List).toSet();
+            final deleted = tx.objectStore('trash').getAll();
+            deleted.onsuccess = ((web.Event _) {
+              guard(() {
+                final trash = {
+                  for (final r in _records(deleted))
+                    r['id'] as String: _bookmark(r),
+                };
+                for (final e in rows.entries) {
+                  if (known.contains(e.key)) {
+                    tx.objectStore('reading').put(e.value);
+                    continue;
+                  }
+                  final item = trash[e.key];
+                  if (item == null)
+                    throw const FormatException('Bookmark not found');
+                  // Waits beside its Trash item, as if deleted here, and
+                  // comes back when the item is restored.
+                  tx
+                      .objectStore('readingTrash')
+                      .put(
+                        {
+                          'id': e.key,
+                          'url': item['normalizedUrl'],
+                          'expiresAt': DateTime.parse(
+                            item['deletedAt'] as String,
+                          ).add(trashRetention).millisecondsSinceEpoch,
+                          'copy': e.value.dartify(),
+                        }.jsify()!,
+                      );
+                }
+                result(true);
+              });
+            }).toJS;
+          });
+        }).toJS;
+      },
+    );
   }
 
   @override
@@ -670,11 +698,47 @@ class BrowserBookmarkStore implements BookmarkStore {
       r['id'] as String: r['savedAt'] as String,
   };
 
+  /// Copies kept beside items in Recently Deleted (same item, same URL,
+  /// not expired): restorable, so a full backup carries them.
+  Future<List<Map<String, dynamic>>> _trashReadingRecords() =>
+      _run(['trash', 'readingTrash'], 'readonly', (tx, result, guard) {
+        final deleted = tx.objectStore('trash').getAll();
+        deleted.onsuccess = ((web.Event _) {
+          guard(() {
+            final urls = {
+              for (final r in _records(deleted))
+                r['id'] as String: _bookmark(r)['normalizedUrl'],
+            };
+            final kept = tx.objectStore('readingTrash').getAll();
+            kept.onsuccess = ((web.Event _) {
+              guard(() {
+                final now = DateTime.now().millisecondsSinceEpoch;
+                result([
+                  for (final r in _records(kept))
+                    if (urls.containsKey(r['id']) &&
+                        urls[r['id']] == r['url'] &&
+                        (r['expiresAt'] as num) > now)
+                      _object(r['copy']),
+                ]);
+              });
+            }).toJS;
+          });
+        }).toJS;
+      });
+
   @override
-  Future<Map<String, Map<String, dynamic>>> readingCopies() async => {
-    for (final r in await _readingRecords())
-      r['id'] as String: _object(jsonDecode(r['payload'] as String)),
-  };
+  Future<Map<String, Map<String, dynamic>>> readingCopies() async {
+    final live = {
+      for (final r in await _readingRecords())
+        r['id'] as String: _object(jsonDecode(r['payload'] as String)),
+    };
+    return {
+      for (final r in await _trashReadingRecords())
+        if (!live.containsKey(r['id']))
+          r['id'] as String: _object(jsonDecode(r['payload'] as String)),
+      ...live,
+    };
+  }
 
   @override
   Future<void> clearReadingCopies() async {

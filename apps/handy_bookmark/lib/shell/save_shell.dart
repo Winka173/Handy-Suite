@@ -159,8 +159,6 @@ class _SaveShellState extends State<SaveShell> {
                     onDetails: (b) => details(b, side),
                     onAdd: add,
                     leading: [
-                      if (v.place == Place.all && v.text.isEmpty)
-                        HomeDateline(controller: scope.c),
                       SearchBox(view: v, focus: searchFocus),
                       ShareIssues(controller: scope.c),
                       if (v.place == Place.all &&

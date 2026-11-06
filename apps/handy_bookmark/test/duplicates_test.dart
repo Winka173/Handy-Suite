@@ -34,6 +34,8 @@ void main() {
     final copyId = c.library!.bookmarks.last.id;
 
     await push(t, '/settings');
+    // Merging is one of the advanced library tools.
+    await tapKey(t, 'set-library-tools');
     await t.scrollUntilVisible(
       find.byKey(const Key('save-duplicates')),
       200,
@@ -58,7 +60,8 @@ void main() {
   ) async {
     await boot(t);
     await push(t, '/settings');
-    // The data section is there; its merge entry is not.
+    await tapKey(t, 'set-library-tools');
+    // The tools are there; the merge entry is not.
     await t.scrollUntilVisible(
       find.byKey(const Key('save-integrity')),
       200,

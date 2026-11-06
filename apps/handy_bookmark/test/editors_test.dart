@@ -182,7 +182,7 @@ void main() {
     expect(edited.parentId, isNull);
   });
 
-  testWidgets('new collection returns selected parent and icon', (
+  testWidgets('new collection returns its parent and keeps a default icon', (
     tester,
   ) async {
     final parent = SaveCollection(id: 'parent', name: 'Parent');
@@ -194,12 +194,13 @@ void main() {
     );
     await _enter(tester, 'collection-name', 'Reading');
     await _choose(tester, 'collection-parent', 'Parent');
-    await _choose(tester, 'collection-icon', 'Learning');
+    // Colour and icon are no longer asked for (2026-11-06).
+    expect(find.byKey(const Key('collection-icon')), findsNothing);
     await tester.tap(find.byKey(const Key('editor-save')));
     await tester.pumpAndSettle();
     final edited = result as SaveCollection;
     expect(edited.parentId, 'parent');
-    expect(edited.icon, 'learning');
+    expect(edited.icon, 'folder');
     expect(edited.id, isNotEmpty);
   });
 

@@ -3,7 +3,8 @@ import 'package:handy_ui/kit.dart';
 import '../ui/words.dart';
 import '../view/library_view.dart';
 
-const _sorts = [
+/// The orders a list can be shown in; Newest first is the default.
+const listSorts = [
   'newest',
   'oldest',
   'recentlyOpened',
@@ -23,13 +24,83 @@ String sortName(BuildContext c, String s) => switch (s) {
   _ => tr(c, 'Newest first', 'Mới nhất trước'),
 };
 
+/// A source's name for a filter: its known name, else the platform's own
+/// (Shopee), and "Websites" only for plain pages, so no two chips read alike.
+String sourceLabel(BuildContext c, String s) {
+  if (sourceName(s).isNotEmpty) return sourceName(s);
+  if (s.isEmpty || s == 'web') return tr(c, 'Websites', 'Trang web');
+  return s[0].toUpperCase() + s.substring(1);
+}
+
 /// The start of the day [days] ago, as the store compares it.
 String savedSince(int days) {
   final d = DateTime.now().subtract(Duration(days: days));
   return DateTime(d.year, d.month, d.day).toUtc().toIso8601String();
 }
 
-/// Narrows the list: source, kind, tag, and order. Choices apply at once.
+/// The list's order, as one menu: the current order is its label.
+class SortButton extends StatelessWidget {
+  final LibraryView view;
+  const SortButton({super.key, required this.view});
+  @override
+  Widget build(BuildContext context) {
+    final now = view.filters.sort;
+    final theme = Theme.of(context);
+    final c = HandyColors.of(context);
+    return PopupMenuButton<String>(
+      key: const Key('save-sort'),
+      tooltip: tr(context, 'Order', 'Thứ tự'),
+      position: PopupMenuPosition.under,
+      initialValue: now,
+      onSelected: (s) => view.filter(view.filters.withSort(s)),
+      itemBuilder: (context) => [
+        for (final s in [
+          ...listSorts,
+          // A search saved in the person's own order keeps it on offer.
+          if (!listSorts.contains(now)) now,
+        ])
+          PopupMenuItem<String>(
+            key: Key('sort-$s'),
+            value: s,
+            height: 44,
+            child: Row(
+              children: [
+                SizedBox(
+                  width: 28,
+                  child: s == now
+                      ? Icon(Icons.check, size: 18, color: c.accent)
+                      : null,
+                ),
+                Text(sortName(context, s)),
+              ],
+            ),
+          ),
+      ],
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(minHeight: 48),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: HandySpace.s),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(Icons.swap_vert, size: 20, color: c.muted),
+              const SizedBox(width: HandySpace.xs),
+              Text(
+                sortName(context, now),
+                style: theme.textTheme.labelLarge?.copyWith(
+                  color: theme.colorScheme.onSurface,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Narrows the list: when it was saved, its source, kind and tag. Choices
+/// apply at once. The order has its own menu ([SortButton]).
 Future<void> showFilterSheet(
   BuildContext context,
   SaveLibrary l,
@@ -93,27 +164,20 @@ Future<void> showFilterSheet(
                   children: [
                     Expanded(
                       child: Text(
-                        tr(context, 'Filter and sort', 'Lọc và sắp xếp'),
+                        tr(context, 'Filter', 'Lọc'),
                         style: Theme.of(context).textTheme.titleLarge,
                       ),
                     ),
                     TextButton(
                       key: const Key('filter-reset'),
-                      onPressed: f.any ? () => v.filter(const Filters()) : null,
+                      // The order is not a filter; it stays.
+                      onPressed: f.narrows
+                          ? () => v.filter(Filters(sort: f.sort))
+                          : null,
                       child: Text(tr(context, 'Reset', 'Đặt lại')),
                     ),
                   ],
                 ),
-                group(tr(context, 'Order', 'Thứ tự'), [
-                  for (final s in _sorts)
-                    ChoiceChip(
-                      key: Key('sort-$s'),
-                      label: Text(sortName(context, s)),
-                      selected: f.sort == s,
-                      showCheckmark: false,
-                      onSelected: (_) => v.filter(with_(sort: s)),
-                    ),
-                ]),
                 group(tr(context, 'Saved', 'Lưu trong'), [
                   for (final (days, label) in [
                     (0, tr(context, 'Any time', 'Mọi lúc')),
@@ -133,6 +197,7 @@ Future<void> showFilterSheet(
                           platform: f.platform,
                           contentType: f.contentType,
                           tag: f.tag,
+                          kind: f.kind,
                           sort: f.sort,
                           savedAfter: days == 0 ? null : savedSince(days),
                         ),
@@ -144,11 +209,7 @@ Future<void> showFilterSheet(
                     for (final s in sources)
                       ChoiceChip(
                         key: Key('source-$s'),
-                        label: Text(
-                          sourceName(s).isEmpty
-                              ? tr(context, 'Websites', 'Trang web')
-                              : sourceName(s),
-                        ),
+                        label: Text(sourceLabel(context, s)),
                         selected: f.platform == s,
                         showCheckmark: false,
                         onSelected: (on) => v.filter(
@@ -209,14 +270,15 @@ class FilterChips extends StatelessWidget {
       bool platform = false,
       bool kind = false,
       bool tag = false,
-      bool sort = false,
       bool saved = false,
     }) => Filters(
       platform: platform ? null : f.platform,
       contentType: kind ? null : f.contentType,
       tag: tag ? null : f.tag,
-      sort: sort ? 'newest' : f.sort,
+      kind: f.kind,
+      sort: f.sort,
       savedAfter: saved ? null : f.savedAfter,
+      savedBefore: f.savedBefore,
     );
     return Wrap(
       spacing: HandySpace.s,
@@ -224,11 +286,7 @@ class FilterChips extends StatelessWidget {
       children: [
         if (f.platform != null)
           InputChip(
-            label: Text(
-              sourceName(f.platform!).isEmpty
-                  ? f.platform!
-                  : sourceName(f.platform!),
-            ),
+            label: Text(sourceLabel(context, f.platform!)),
             onDeleted: () => view.filter(drop(platform: true)),
           ),
         if (f.contentType != null)
@@ -251,11 +309,6 @@ class FilterChips extends StatelessWidget {
               ),
             ),
             onDeleted: () => view.filter(drop(saved: true)),
-          ),
-        if (f.sort != 'newest')
-          InputChip(
-            label: Text(sortName(context, f.sort)),
-            onDeleted: () => view.filter(drop(sort: true)),
           ),
       ],
     );

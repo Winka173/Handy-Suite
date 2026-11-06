@@ -1,9 +1,10 @@
 import 'package:handy_files/backup_folder.dart';
 import 'package:handy_ui/kit.dart';
 import '../scope.dart';
+import '../settings/settings_parts.dart';
 import 'sync_service.dart';
 
-/// Settings > Sync through a folder. On a computer the person picks a
+/// Settings › Data & Sync › Sync, through a folder. On a computer the person picks a
 /// folder their cloud client keeps in step; every device syncing with that
 /// folder ends up with the same items, pictures and deletions. On phones
 /// and the web this build has no cloud adapter yet and says so.
@@ -72,8 +73,6 @@ class _SyncSectionState extends State<SyncSection> {
   Widget build(BuildContext context) {
     final f = folder;
     final available = folderSyncSupported('path') && widget.folders.canChoose;
-    final theme = Theme.of(context);
-    final c = HandyColors.of(context);
     final at = DateTime.tryParse(
       scope.c.preferences['syncedAt'] as String? ?? '',
     );
@@ -81,55 +80,34 @@ class _SyncSectionState extends State<SyncSection> {
     String when(DateTime t) =>
         '${MaterialLocalizations.of(context).formatShortDate(t.toLocal())} '
         '${TimeOfDay.fromDateTime(t.toLocal()).format(context)}';
-    return HandySettingsSection(
-      title: tr(context, 'Sync through a folder', 'Đồng bộ qua thư mục'),
-      description: tr(
-        context,
-        'For computers. Choose a folder that OneDrive, Google Drive, Dropbox or iCloud keeps in step, then press Sync now on each computer. Nothing syncs by itself, and it is not a backup.',
-        'Dành cho máy tính. Chọn một thư mục do OneDrive, Google Drive, Dropbox hoặc iCloud giữ đồng bộ, rồi bấm Đồng bộ ngay trên từng máy. Không có gì tự đồng bộ, và đây không phải bản sao lưu.',
-      ),
-      children: [
+    return SettingsPanel(
+      title: tr(context, 'Sync', 'Đồng bộ'),
+      note: available
+          ? tr(
+              context,
+              'Through a folder that OneDrive, Google Drive, Dropbox or iCloud keeps in step. Press Sync now on each computer; nothing syncs by itself, and it is not a backup.',
+              'Qua một thư mục do OneDrive, Google Drive, Dropbox hoặc iCloud giữ đồng bộ. Bấm Đồng bộ ngay trên từng máy; không có gì tự đồng bộ, và đây không phải bản sao lưu.',
+            )
+          : null,
+      rows: [
         if (!available)
           // Said plainly, not a greyed-out control nobody can use.
-          Padding(
+          SettingsRow(
             key: const Key('sync-unavailable'),
-            padding: const EdgeInsets.all(HandySpace.l),
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Icon(Icons.sync_disabled, size: 20, color: c.muted),
-                const SizedBox(width: HandySpace.l),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        tr(
-                          context,
-                          'Not available on this device',
-                          'Chưa có trên thiết bị này',
-                        ),
-                        style: theme.textTheme.bodyLarge,
-                      ),
-                      const SizedBox(height: 2),
-                      Text(
-                        tr(
-                          context,
-                          'Folder sync works on computers only. To move your library here, export it on one device and import it on the other.',
-                          'Đồng bộ qua thư mục chỉ chạy trên máy tính. Để chuyển thư viện, hãy xuất ở máy này rồi nhập ở máy kia.',
-                        ),
-                        style: theme.textTheme.bodyMedium?.copyWith(
-                          color: c.muted,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
+            icon: Icons.sync_disabled,
+            title: tr(
+              context,
+              'Not available on this device',
+              'Chưa có trên thiết bị này',
+            ),
+            subtitle: tr(
+              context,
+              'Folder sync works on computers only. To move your library here, back it up on one device and restore it on the other.',
+              'Đồng bộ qua thư mục chỉ chạy trên máy tính. Để chuyển thư viện, hãy sao lưu ở máy này rồi khôi phục ở máy kia.',
             ),
           )
         else ...[
-          HandyTile(
+          SettingsRow(
             key: const Key('sync-folder'),
             icon: Icons.folder_shared_outlined,
             title: f == null
@@ -150,32 +128,32 @@ class _SyncSectionState extends State<SyncSection> {
             onTap: busy ? null : _choose,
           ),
           if (f != null)
-            ListTile(
+            SettingsRow(
               key: const Key('sync-now'),
-              leading: busy
-                  ? const SizedBox(
-                      width: 20,
-                      height: 20,
-                      child: CircularProgressIndicator(strokeWidth: 2),
+              icon: Icons.sync,
+              title: busy
+                  ? tr(context, 'Syncing…', 'Đang đồng bộ…')
+                  : tr(context, 'Sync now', 'Đồng bộ ngay'),
+              subtitle: at == null
+                  ? tr(context, 'Not synced yet', 'Chưa đồng bộ lần nào')
+                  : [
+                      tr(
+                        context,
+                        'Last synced ${when(at)}',
+                        'Lần cuối ${when(at)}',
+                      ),
+                      if (note.isNotEmpty) note,
+                    ].join(' · '),
+              trailing: busy
+                  ? const Padding(
+                      padding: EdgeInsets.only(right: HandySpace.s),
+                      child: SizedBox(
+                        width: 20,
+                        height: 20,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      ),
                     )
-                  : const Icon(Icons.sync, size: 20),
-              title: Text(
-                busy
-                    ? tr(context, 'Syncing…', 'Đang đồng bộ…')
-                    : tr(context, 'Sync now', 'Đồng bộ ngay'),
-              ),
-              subtitle: Text(
-                at == null
-                    ? tr(context, 'Not synced yet', 'Chưa đồng bộ lần nào')
-                    : [
-                        tr(
-                          context,
-                          'Last synced ${when(at)}',
-                          'Lần cuối ${when(at)}',
-                        ),
-                        if (note.isNotEmpty) note,
-                      ].join(' · '),
-              ),
+                  : null,
               onTap: busy ? null : _sync,
             ),
         ],

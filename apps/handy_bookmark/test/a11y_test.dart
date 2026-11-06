@@ -59,6 +59,7 @@ void main() {
             .firstWhere((b) => b.collectionId == 'food')
             .id;
         await tapKey(tester, 'details-$id');
+        await tapKey(tester, 'item-details');
         await meetsAll(tester, 'detail');
         await tapKey(tester, 'detail-edit');
         await meetsAll(tester, 'editor');
@@ -71,6 +72,7 @@ void main() {
     final handle = tester.ensureSemantics();
     final c = await start(tester, seed: library, size: const Size(1440, 900));
     await tapKey(tester, 'details-${c.library!.bookmarks.first.id}');
+    await tapKey(tester, 'item-details');
     await meetsAll(tester, 'wide');
     await tapKey(tester, 'open-settings');
     await meetsAll(tester, 'settings');
@@ -94,10 +96,19 @@ void main() {
     expect(tester.takeException(), isNull, reason: 'batch bar');
     await tapKey(tester, 'batch-clear');
     await tapKey(tester, 'details-$id');
+    await tapKey(tester, 'item-details');
     expect(tester.takeException(), isNull, reason: 'detail');
     await tester.binding.handlePopRoute();
     await tester.pumpAndSettle();
     await tester.binding.handlePopRoute();
+    await tester.pumpAndSettle();
+    // Focus sits at the top of the home (since 2026-11-06), above the
+    // covers this test scrolled down to.
+    await tester.fling(
+      find.byKey(const Key('save-home')),
+      const Offset(0, 2000),
+      3000,
+    );
     await tester.pumpAndSettle();
     await tapKey(tester, 'place-focus');
     expect(tester.takeException(), isNull, reason: 'focus');

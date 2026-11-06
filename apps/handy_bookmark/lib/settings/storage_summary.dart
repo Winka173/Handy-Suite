@@ -200,17 +200,18 @@ class StorageSummary extends StatelessWidget {
                     child: Text(tr(context, 'Remove', 'Xóa')),
                   ),
           ),
-          row(
-            key: 'deleted',
-            label: tr(context, 'Recently Deleted', 'Thùng rác'),
-            note: tr(
-              context,
-              'Kept 30 days, then removed',
-              'Giữ 30 ngày rồi xóa hẳn',
+          if (onTrash != null)
+            row(
+              key: 'deleted',
+              label: tr(context, 'Recently Deleted', 'Thùng rác'),
+              note: tr(
+                context,
+                'Kept 30 days, then removed',
+                'Giữ 30 ngày rồi xóa hẳn',
+              ),
+              value: count(u?.deleted),
+              onTap: onTrash,
             ),
-            value: count(u?.deleted),
-            onTap: onTrash,
-          ),
         ],
       );
     },

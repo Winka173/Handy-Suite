@@ -1,5 +1,6 @@
 import 'package:handy_bookmark_engine/handy_bookmark_engine.dart';
 import 'package:handy_ui/kit.dart';
+import '../collections/cover_chooser.dart';
 import '../collections/share_collection.dart';
 import '../controller.dart';
 import '../links/link_actions.dart';
@@ -65,20 +66,7 @@ class ResultsView extends StatelessWidget {
           // under it; on wider screens they share one row.
           Builder(
             builder: (context) {
-              final tools = <Widget>[
-                if (wide && v.canSaveSearch && v.place != Place.smart)
-                  IconButton(
-                    key: const Key('save-search-here'),
-                    tooltip: tr(
-                      context,
-                      'Save this search',
-                      'Lưu tìm kiếm này',
-                    ),
-                    icon: const Icon(Icons.saved_search),
-                    onPressed: () => scope.saveSearch(context),
-                  ),
-                ..._tools(context),
-              ];
+              final tools = _tools(context);
               final title = Row(
                 children: [
                   // A collection opens with its face: its newest picture beside
@@ -91,10 +79,11 @@ class ResultsView extends StatelessWidget {
                         height: 60,
                         child: ItemPicture(
                           controller,
-                          rows.firstWhere(
-                            (b) => b.media != null || b.thumbnailUrl != null,
-                            orElse: () => rows.first,
-                          ),
+                          v.chosenCover(v.id!) ??
+                              rows.firstWhere(
+                                hasPicture,
+                                orElse: () => rows.first,
+                              ),
                           radius: 18,
                           compact: true,
                         ),
@@ -123,7 +112,7 @@ class ResultsView extends StatelessWidget {
                         Text(
                           // A search says how many it found, not how many
                           // the place holds.
-                          v.text.trim().isNotEmpty || v.filters.any
+                          v.text.trim().isNotEmpty || v.filters.narrows
                               ? tr(
                                   context,
                                   '${formatFigure(context, '${v.total}')} found',
@@ -155,15 +144,17 @@ class ResultsView extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   title,
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.end,
+                  const SizedBox(height: HandySpace.xs),
+                  Wrap(
+                    alignment: WrapAlignment.end,
+                    crossAxisAlignment: WrapCrossAlignment.center,
                     children: tools,
                   ),
                 ],
               );
             },
           ),
-          if (v.filters.any) FilterChips(view: v),
+          if (v.filters.narrows) FilterChips(view: v),
           const SizedBox(height: HandySpace.s),
         ],
       );
@@ -276,15 +267,21 @@ class ResultsView extends StatelessWidget {
     },
   );
 
-  /// Filters, rows or cards, and the list's other tools.
+  /// The order, filters, rows or cards, and the list's other tools.
   List<Widget> _tools(BuildContext context) {
     final v = view;
-    final wide = MediaQuery.sizeOf(context).width >= 600;
+    final collection = v.place == Place.collection && v.id != null;
+    final pictured =
+        collection &&
+        controller.library!.bookmarks.any(
+          (b) => b.collectionId == v.id && !b.isArchived && hasPicture(b),
+        );
     return [
+      SortButton(view: v),
       IconButton(
         key: const Key('save-filters'),
-        tooltip: tr(context, 'Filter and sort', 'Lọc và sắp xếp'),
-        isSelected: v.filters.any,
+        tooltip: tr(context, 'Filter', 'Lọc'),
+        isSelected: v.filters.narrows,
         icon: const Icon(Icons.tune),
         onPressed: () => showFilterSheet(context, controller.library!, v),
       ),
@@ -299,19 +296,19 @@ class ResultsView extends StatelessWidget {
       HandyMenuButton(
         key: const Key('list-more'),
         items: [
-          if (v.place == Place.collection && v.id != null)
+          if (collection)
             HandyMenuItem(
               Icons.ios_share,
               tr(context, 'Share as a page', 'Chia sẻ thành trang'),
               () => scope.shareCollection(context, v.id!),
               key: const Key('collection-share'),
             ),
-          if (!wide && v.canSaveSearch && v.place != Place.smart)
+          if (pictured)
             HandyMenuItem(
-              Icons.saved_search,
-              tr(context, 'Save this search', 'Lưu tìm kiếm này'),
-              () => scope.saveSearch(context),
-              key: const Key('save-search-here'),
+              Icons.photo_outlined,
+              tr(context, 'Choose cover', 'Chọn ảnh bìa'),
+              () => chooseCover(context, scope, v.id!),
+              key: const Key('collection-cover'),
             ),
           HandyMenuItem(
             Icons.link_off,
@@ -335,16 +332,16 @@ class ResultsView extends StatelessWidget {
           prefs: {...controller.preferences, 'cards': !cards},
         );
 
-  /// Rows that move: up and down buttons for every input, and a handle to
-  /// drag. Pinned links stay above the rest, so a step across is disabled.
+  /// What an empty list says: nothing matched, or nothing is here yet.
   Widget _empty(BuildContext context) {
     final v = view;
-    if (v.text.trim().isNotEmpty || v.filters.any) {
+    if (v.text.trim().isNotEmpty || v.filters.narrows) {
       return HandyEmpty(
-        title: tr(context, 'Nothing matches', 'Không có link nào khớp'),
+        title: tr(context, 'Nothing matches', 'Không có mục nào khớp'),
         action: TextButton(
           key: const Key('save-clear-filters'),
-          onPressed: () => v.filter(const Filters()),
+          // The order stays: it is the list's, not a filter.
+          onPressed: () => v.filter(Filters(sort: v.filters.sort)),
           child: Text(tr(context, 'Clear filters', 'Xóa bộ lọc')),
         ),
       );

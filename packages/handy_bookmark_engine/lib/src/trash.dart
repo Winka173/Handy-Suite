@@ -159,14 +159,40 @@ SaveLibrary withCollectionTombstones(
   ]),
 );
 
-/// Tombstones older than [age] are dropped: a device silent that long
-/// must restore from a backup rather than sync.
+/// How long a deletion for good is remembered for sync. A device that has
+/// not synced for longer than this may bring back what was deleted
+/// meanwhile (nothing is lost, it reappears); within it, never. Such a
+/// device should restore from a backup rather than sync.
+const tombstoneRetention = Duration(days: 365);
+
+/// Drops tombstones older than [age] (never less than
+/// [tombstoneRetention]). The age is counted back from [now] or from the
+/// newest change the library itself records, whichever is earlier, so a
+/// clock set far ahead cannot drop recent tombstones. Returns the library
+/// unchanged (identical) when nothing was dropped.
 SaveLibrary pruneTombstones(
   SaveLibrary library,
   DateTime now, {
-  Duration age = const Duration(days: 365),
+  Duration age = tombstoneRetention,
 }) {
-  final cutoff = now.toUtc().subtract(age);
+  if (library.tombstones.isEmpty) return library;
+  if (age < tombstoneRetention) age = tombstoneRetention;
+  var newest = DateTime.utc(0);
+  void seen(String? at) {
+    final t = at == null ? null : DateTime.tryParse(at);
+    if (t != null && t.isAfter(newest)) newest = t.toUtc();
+  }
+
+  for (final b in [...library.bookmarks, ...library.trash]) {
+    seen(b.updatedAt);
+    seen(b.savedAt);
+    seen(b.deletedAt);
+  }
+  for (final t in library.tombstones) {
+    seen(t.deletedAt);
+  }
+  final at = now.toUtc().isBefore(newest) ? now.toUtc() : newest;
+  final cutoff = at.subtract(age);
   final kept = [
     for (final t in library.tombstones)
       if (DateTime.parse(t.deletedAt).isAfter(cutoff)) t,

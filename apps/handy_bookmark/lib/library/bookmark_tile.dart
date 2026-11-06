@@ -1,12 +1,13 @@
 import 'package:handy_bookmark_engine/handy_bookmark_engine.dart';
 import 'package:handy_ui/kit.dart';
+import '../bookmark/item_menu.dart';
 import '../controller.dart';
 import '../ui/collection_picker.dart';
 import '../ui/visual.dart';
 import '../ui/words.dart';
 
 /// One saved link: its picture, title, where it is from and when. Tapping
-/// opens the original; the trailing button opens its details. While some
+/// opens the original; the trailing "…" opens its menu. While some
 /// links are selected, tapping toggles instead.
 class BookmarkTile extends StatelessWidget {
   final SaveController controller;
@@ -116,12 +117,7 @@ class BookmarkTile extends StatelessWidget {
                 color: c.muted,
                 semanticLabel: tr(context, 'Favourite', 'Yêu thích'),
               ),
-            IconButton(
-              key: Key('details-${b.id}'),
-              tooltip: tr(context, 'Details', 'Chi tiết'),
-              icon: const Icon(Icons.chevron_right),
-              onPressed: onDetails,
-            ),
+            ItemMenuButton(bookmark: b, onDetails: onDetails),
           ],
         ),
       ),

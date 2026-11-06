@@ -10,6 +10,7 @@ import 'bookmark/bookmark_page.dart';
 import 'controller.dart';
 import 'data/import_export.dart';
 import 'focus/focus_page.dart';
+import 'library/library_page.dart';
 import 'library/results_page.dart';
 import 'links/link_tasks.dart';
 import 'platform/store.dart';
@@ -306,6 +307,7 @@ class _SaveAppState extends State<SaveApp> with WidgetsBindingObserver {
       ['', 'welcome'] => () => WelcomePage(scope: scope),
       ['', 'duplicates'] => () => DuplicatesPage(scope: scope),
       ['', 'trash'] => () => TrashPage(scope: scope),
+      ['', 'library'] => () => LibraryPage(scope: scope),
       ['', 'bookmark', final id] => () => BookmarkPage(scope: scope, id: id),
       ['', 'read', final id] => () => ReaderPage(scope: scope, id: id),
       ['', 'search', final id] => () => ResultsPage(

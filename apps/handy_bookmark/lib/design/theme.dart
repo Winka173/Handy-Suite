@@ -273,7 +273,9 @@ ThemeData bookmarkTheme(ThemeData base) {
     listTileTheme: base.listTileTheme.copyWith(
       iconColor: p.muted,
       minTileHeight: 52,
-      shape: round(BookmarkRadii.item),
+      // Rows sit in grouped cards that clip them; a selected row is a flat
+      // band between its dividers, never a pill that overlaps them.
+      shape: const RoundedRectangleBorder(),
       titleTextStyle: textTheme.bodyLarge,
       subtitleTextStyle: textTheme.bodyMedium?.copyWith(color: p.muted),
     ),

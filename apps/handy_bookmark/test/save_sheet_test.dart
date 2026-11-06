@@ -103,10 +103,10 @@ void main() {
     Navigator.of(t.element(find.byType(Scaffold).first)).pushNamed('/settings');
     await t.pumpAndSettle();
     for (final group in [
-      'Personalise',
+      'Appearance',
       'Reminders',
-      'Your data',
-      'Help and advanced',
+      'Data & sync',
+      'Help & about',
     ]) {
       await t.scrollUntilVisible(
         find.text(group),

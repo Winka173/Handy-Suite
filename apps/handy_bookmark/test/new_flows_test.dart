@@ -114,6 +114,8 @@ void main() {
       );
     final (c, _) = await boot(t, size: const Size(1440, 900), files: files);
     await tapKey(t, 'open-settings');
+    // Other apps' exports sit under Advanced export and import.
+    await tapKey(t, 'set-advanced-data');
     await tapKey(t, 'save-import-pocket');
     await settle(t, 300);
     expect(find.text('Bring in 3 links from Pocket?'), findsOneWidget);
@@ -246,8 +248,8 @@ void main() {
     },
   );
 
-  testWidgets('saved searches: a kept one opens its words; without Pro, '
-      'saving explains instead', (t) async {
+  testWidgets('saved searches: a kept one opens its words from Library > '
+      'Advanced; no new ones are offered', (t) async {
     final (c, _) = await boot(
       t,
       seed: (c) => c.update(
@@ -262,6 +264,10 @@ void main() {
         ),
       ),
     );
+    // Retired on 2026-11-06: not on the home, only kept under Advanced.
+    expect(find.byKey(const Key('search-s1')), findsNothing);
+    await tapKey(t, 'home-library');
+    await tapKey(t, 'library-advanced');
     await tapKey(t, 'search-s1');
     await settle(t);
     expect(find.text('Page two'), findsWidgets);
@@ -273,11 +279,18 @@ void main() {
       find.byKey(ValueKey('bookmark-${idOf(c, 'https://a.com/one')}')),
       findsNothing,
     );
+    // A search can no longer be saved from its list.
     await tapKey(t, 'list-more');
-    await tapKey(t, 'save-search-here');
-    expect(find.text('Saved filters are in Pro'), findsOneWidget);
-    await t.tap(find.text('Close'));
+    expect(find.byKey(const Key('save-search-here')), findsNothing);
+    await t.tapAt(const Offset(5, 5));
     await t.pumpAndSettle();
     expect(c.library!.savedSearches, hasLength(1));
+    // The kept one can still be renamed and deleted from the Library.
+    await t.binding.handlePopRoute();
+    await settle(t);
+    await tapKey(t, 'search-menu-s1');
+    await tapKey(t, 'search-delete');
+    await settle(t);
+    expect(c.library!.savedSearches, isEmpty);
   });
 }

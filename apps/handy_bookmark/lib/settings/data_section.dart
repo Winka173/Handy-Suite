@@ -1,34 +1,186 @@
 import 'package:handy_bookmark_engine/handy_bookmark_engine.dart';
 import 'package:handy_ui/kit.dart';
+import '../controller.dart';
 import '../data/import_export.dart';
 import '../scope.dart';
+import 'settings_parts.dart';
 import 'storage_summary.dart';
 
-/// What the library takes on this device, with the one thing to do about
-/// each part.
-class SaveStorageSection extends StatelessWidget {
-  final SaveScope scope;
-  const SaveStorageSection({super.key, required this.scope});
-
-  Future<void> _clearPreviews(BuildContext context) async {
-    final c = scope.c;
-    await scope.run(context, () async {
-      await c.store!.clearThumbnails();
-      c.clearThumbnailMemory();
-      if (context.mounted)
-        showHandyMessage(
-          context,
+/// Back up: the whole library with its pictures and offline copies as
+/// one ZIP, in a file the person places. What it held is kept, so
+/// Settings can say when the last backup was and whether it was whole.
+Future<void> backUp(BuildContext context, SaveScope scope) =>
+    scope.run(context, () async {
+      final lib = scope.library;
+      final out = await scope.backupWithReport(lib);
+      final uri = await scope.files.exportBytes(
+        'handy-bookmark.zip',
+        out.bytes,
+        mimeType: 'application/zip',
+      );
+      if (uri == null) return;
+      final report = BackupReport.of(
+        out,
+        at: saveTime(),
+        automatic: false,
+        links: lib.bookmarks.length,
+      );
+      await scope.c.recordBackup(report);
+      if (!context.mounted) return;
+      final n = lib.bookmarks.length;
+      final pics = out.picturesIncluded, copies = out.readingIncluded;
+      showHandyMessage(
+        context,
+        [
           tr(
             context,
-            'Page pictures cleared. Your links and pictures are untouched.',
-            'Đã xóa ảnh xem trước. Link và ảnh của bạn vẫn còn nguyên.',
+            'Backed up ${n == 1 ? '1 item' : '$n items'}, '
+                '${pics == 1 ? '1 picture' : '$pics pictures'} and '
+                '${copies == 1 ? '1 offline copy' : '$copies offline copies'}.',
+            'Đã sao lưu $n mục, $pics ảnh và $copies bản đọc offline.',
           ),
-        );
+          if (!report.complete)
+            tr(
+              context,
+              'Some things were left out; Settings says which.',
+              'Một số thứ bị bỏ ra; xem chi tiết trong Cài đặt.',
+            ),
+        ].join(' '),
+      );
     });
-  }
 
-  Future<void> _clearCopies(BuildContext context) async {
-    final c = scope.c;
+/// Data & Sync's first panel: Back up, Restore, Import, with what the last
+/// backup held above them. Formats live in [openAdvancedData].
+class BackupPanel extends StatelessWidget {
+  final SaveScope scope;
+  const BackupPanel({super.key, required this.scope});
+  @override
+  Widget build(BuildContext context) => SettingsPanel(
+    gap: false,
+    rows: [
+      if (scope.c.lastBackup case final report?)
+        Padding(
+          padding: const EdgeInsets.all(HandySpace.m),
+          child: BackupReportNote(report),
+        ),
+      SettingsRow(
+        key: const Key('save-backup'),
+        icon: Icons.backup_outlined,
+        title: tr(context, 'Back up', 'Sao lưu'),
+        subtitle: tr(
+          context,
+          'One file with every item, picture and offline copy',
+          'Một file chứa mọi mục, ảnh và bản đọc offline',
+        ),
+        navigates: true,
+        onTap: () => backUp(context, scope),
+      ),
+      SettingsRow(
+        key: const Key('save-import'),
+        icon: Icons.settings_backup_restore,
+        title: tr(context, 'Restore', 'Khôi phục'),
+        subtitle: tr(
+          context,
+          'From a backup file. You see what it holds before anything changes.',
+          'Từ một file sao lưu. Xem trước nội dung rồi mới thay đổi.',
+        ),
+        navigates: true,
+        onTap: () => scope.importLinks(context),
+      ),
+      SettingsRow(
+        key: const Key('save-import-links'),
+        icon: Icons.download_outlined,
+        title: tr(context, 'Import', 'Nhập'),
+        subtitle: tr(
+          context,
+          'Bookmarks from a browser, or a list of links',
+          'Dấu trang từ trình duyệt, hoặc một danh sách link',
+        ),
+        navigates: true,
+        onTap: () => scope.importLinks(context),
+      ),
+    ],
+  );
+}
+
+/// Data & Sync's last panel: Recently deleted, storage, and the
+/// advanced export and import.
+class DataMorePanel extends StatelessWidget {
+  final SaveScope scope;
+  const DataMorePanel({super.key, required this.scope});
+  @override
+  Widget build(BuildContext context) {
+    final deleted = scope.library.trash.length;
+    return SettingsPanel(
+      rows: [
+        SettingsRow(
+          key: const Key('save-trash'),
+          icon: Icons.delete_outline,
+          title: tr(context, 'Recently deleted', 'Đã xóa gần đây'),
+          subtitle: deleted == 0
+              ? tr(
+                  context,
+                  'Empty. Deleted items wait here 30 days.',
+                  'Trống. Mục đã xóa chờ ở đây 30 ngày.',
+                )
+              : tr(
+                  context,
+                  deleted == 1
+                      ? '1 item, kept 30 days'
+                      : '$deleted items, kept 30 days',
+                  '$deleted mục, giữ 30 ngày',
+                ),
+          navigates: true,
+          onTap: () => Navigator.of(context).pushNamed('/trash'),
+        ),
+        SettingsRow(
+          key: const Key('set-storage'),
+          icon: Icons.sd_storage_outlined,
+          title: tr(context, 'Storage', 'Dung lượng'),
+          subtitle: tr(
+            context,
+            'What the library takes on this device',
+            'Thư viện chiếm bao nhiêu trên máy này',
+          ),
+          navigates: true,
+          onTap: () => openStorage(context, scope),
+        ),
+        SettingsRow(
+          key: const Key('set-advanced-data'),
+          icon: Icons.tune,
+          title: tr(
+            context,
+            'Advanced export and import',
+            'Xuất và nhập nâng cao',
+          ),
+          subtitle: 'JSON · CSV · HTML · Markdown · TXT · Pocket · Raindrop',
+          navigates: true,
+          onTap: () => openAdvancedData(context, scope),
+        ),
+      ],
+    );
+  }
+}
+
+/// Settings › Storage: what the library takes, with the one thing to do
+/// about each part.
+Future<void> openStorage(BuildContext context, SaveScope scope) {
+  final c = scope.c;
+  Future<void> clearPreviews(BuildContext context) =>
+      scope.run(context, () async {
+        await c.store!.clearThumbnails();
+        c.clearThumbnailMemory();
+        if (context.mounted)
+          showHandyMessage(
+            context,
+            tr(
+              context,
+              'Page pictures cleared. Your links and pictures are untouched.',
+              'Đã xóa ảnh xem trước. Link và ảnh của bạn vẫn còn nguyên.',
+            ),
+          );
+      });
+  Future<void> clearCopies(BuildContext context) async {
     final ok = await confirmHandy(
       context,
       title: tr(
@@ -51,67 +203,98 @@ class SaveStorageSection extends StatelessWidget {
     });
   }
 
-  @override
-  Widget build(BuildContext context) => HandySettingsSection(
-    title: tr(context, 'Space on this device', 'Dung lượng trên máy'),
-    description: tr(
-      context,
-      'Clearing previews or offline copies never removes a link or a picture you added.',
-      'Xóa ảnh xem trước hay bản đọc không bao giờ xóa link hay ảnh bạn đã thêm.',
-    ),
-    children: [
+  return pushSettingsView(
+    context,
+    tr(context, 'Storage', 'Dung lượng'),
+    listenable: c,
+    (context) => [
+      Padding(
+        padding: const EdgeInsets.only(top: HandySpace.s),
+        child: Text(
+          tr(
+            context,
+            'Clearing previews or offline copies never removes a link or a picture you added.',
+            'Xóa ảnh xem trước hay bản đọc không bao giờ xóa link hay ảnh bạn đã thêm.',
+          ),
+          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+            color: HandyColors.of(context).muted,
+          ),
+        ),
+      ),
+      const SizedBox(height: HandySpace.l),
       StorageSummary(
         key: const Key('save-storage'),
-        controller: scope.c,
-        onClearPreviews: () => _clearPreviews(context),
-        onClearCopies: () => _clearCopies(context),
-        onTrash: () => Navigator.of(context).pushNamed('/trash'),
+        controller: c,
+        onClearPreviews: () => clearPreviews(context),
+        onClearCopies: () => clearCopies(context),
       ),
     ],
   );
 }
 
-/// Taking the library out and bringing it back.
-class SaveBackupSection extends StatelessWidget {
-  final SaveScope scope;
-  const SaveBackupSection({super.key, required this.scope});
-  @override
-  Widget build(BuildContext context) => HandySettingsSection(
-    title: tr(context, 'Export and restore', 'Xuất và khôi phục'),
-    description: tr(
-      context,
-      'An exported file is a copy that leaves this device with whatever it holds, private addresses included.',
-      'File xuất là một bản sao rời khỏi máy cùng mọi thứ bên trong, kể cả địa chỉ riêng tư.',
+/// Settings › Advanced export and import: every file format, and other
+/// apps' exports.
+Future<void> openAdvancedData(
+  BuildContext context,
+  SaveScope scope,
+) => pushSettingsView(
+  context,
+  tr(context, 'Advanced export and import', 'Xuất và nhập nâng cao'),
+  listenable: scope.c,
+  (context) => [
+    SettingsPanel(
+      gap: false,
+      title: tr(context, 'Export', 'Xuất'),
+      note: tr(
+        context,
+        'An exported file is a copy that leaves this device with whatever it holds, private addresses included.',
+        'File xuất là một bản sao rời khỏi máy cùng mọi thứ bên trong, kể cả địa chỉ riêng tư.',
+      ),
+      rows: [
+        SettingsRow(
+          key: const Key('save-export'),
+          icon: Icons.file_upload_outlined,
+          title: tr(context, 'Export as…', 'Xuất dạng…'),
+          subtitle: 'ZIP · JSON · HTML · CSV · Markdown · TXT',
+          navigates: true,
+          onTap: () => scope.exportLinks(context),
+        ),
+      ],
     ),
-    children: [
-      if (scope.c.lastBackup case final report?)
-        Padding(
-          padding: const EdgeInsets.all(HandySpace.m),
-          child: BackupReportNote(report),
-        ),
-      HandyTile(
-        key: const Key('save-export'),
-        icon: Icons.archive_outlined,
-        title: tr(context, 'Export or back up', 'Xuất hoặc sao lưu'),
-        subtitle: 'JSON · ZIP · HTML · CSV · Markdown · TXT',
-        navigates: true,
-        onTap: () => scope.exportLinks(context),
+    SettingsPanel(
+      title: tr(context, 'From other apps', 'Từ app khác'),
+      note: tr(
+        context,
+        'Only adds what is new, after showing what the file holds. Undo takes it back.',
+        'Chỉ thêm mục mới, sau khi cho xem file có gì. Hoàn tác để bỏ lại.',
       ),
-      HandyTile(
-        key: const Key('save-import'),
-        icon: Icons.unarchive_outlined,
-        title: tr(context, 'Import or restore', 'Nhập hoặc khôi phục'),
-        subtitle: tr(
-          context,
-          'You see what a file holds before anything changes',
-          'Xem trước nội dung file rồi mới thay đổi',
+      rows: [
+        SettingsRow(
+          key: const Key('save-import-pocket'),
+          icon: Icons.move_to_inbox_outlined,
+          title: tr(context, 'Import from Pocket', 'Nhập từ Pocket'),
+          subtitle: tr(
+            context,
+            'Pocket\'s CSV or ril_export.html: read state, tags and saved dates kept',
+            'File CSV hoặc ril_export.html của Pocket: giữ trạng thái đọc, thẻ và ngày lưu',
+          ),
+          onTap: () => scope.importPocket(context),
         ),
-        navigates: true,
-        onTap: () => scope.importLinks(context),
-      ),
-    ],
-  );
-}
+        SettingsRow(
+          key: const Key('save-import-raindrop'),
+          icon: Icons.move_to_inbox_outlined,
+          title: tr(context, 'Import from Raindrop', 'Nhập từ Raindrop'),
+          subtitle: tr(
+            context,
+            'Raindrop.io CSV or HTML: folders, tags, notes and favourites kept',
+            'File CSV hoặc HTML của Raindrop.io: giữ thư mục, thẻ, ghi chú và yêu thích',
+          ),
+          onTap: () => scope.importRaindrop(context),
+        ),
+      ],
+    ),
+  ],
+);
 
 /// What the last backup holds. "Complete" only when nothing was left out;
 /// otherwise a warning that names what was left out and why (it is still
@@ -187,97 +370,6 @@ class BackupReportNote extends StatelessWidget {
         '$kind $when thiếu $left.$stillVi',
       ),
       tone: HandyTone.warning,
-    );
-  }
-}
-
-/// The less frequent tools: other apps' exports, links saved twice, the
-/// database check and undo.
-class SaveLibraryTools extends StatelessWidget {
-  final SaveScope scope;
-  const SaveLibraryTools({super.key, required this.scope});
-  @override
-  Widget build(BuildContext context) {
-    final c = scope.c;
-    return HandySettingsSection(
-      title: tr(context, 'Library tools', 'Công cụ thư viện'),
-      children: [
-        // Shown only while some link is saved more than once.
-        if (duplicateGroups(c.library!) case final groups
-            when groups.isNotEmpty)
-          HandyTile(
-            key: const Key('save-duplicates'),
-            icon: Icons.merge_type,
-            title: tr(
-              context,
-              groups.length == 1
-                  ? '1 link saved twice'
-                  : '${groups.length} links saved twice',
-              '${groups.length} link lưu trùng',
-            ),
-            subtitle: tr(
-              context,
-              'Review and merge each into one.',
-              'Xem lại và gộp mỗi link thành một.',
-            ),
-            navigates: true,
-            onTap: () => Navigator.of(context).pushNamed('/duplicates'),
-          ),
-        HandyTile(
-          key: const Key('save-import-pocket'),
-          icon: Icons.move_to_inbox_outlined,
-          title: tr(context, 'Import from Pocket', 'Nhập từ Pocket'),
-          subtitle: tr(
-            context,
-            'Pocket\'s CSV or ril_export.html: read state, tags and saved dates kept',
-            'File CSV hoặc ril_export.html của Pocket: giữ trạng thái đọc, thẻ và ngày lưu',
-          ),
-          onTap: () => scope.importPocket(context),
-        ),
-        HandyTile(
-          key: const Key('save-import-raindrop'),
-          icon: Icons.move_to_inbox_outlined,
-          title: tr(context, 'Import from Raindrop', 'Nhập từ Raindrop'),
-          subtitle: tr(
-            context,
-            'Raindrop.io CSV or HTML: folders, tags, notes and favourites kept',
-            'File CSV hoặc HTML của Raindrop.io: giữ thư mục, thẻ, ghi chú và yêu thích',
-          ),
-          onTap: () => scope.importRaindrop(context),
-        ),
-        if (scope.view.canUndo)
-          HandyTile(
-            key: const Key('save-undo'),
-            icon: Icons.undo,
-            title: tr(
-              context,
-              'Undo the last change',
-              'Hoàn tác thay đổi gần nhất',
-            ),
-            onTap: () => scope.run(context, scope.view.undo),
-          ),
-        HandyTile(
-          key: const Key('save-integrity'),
-          icon: Icons.fact_check_outlined,
-          title: tr(context, 'Check the library', 'Kiểm tra thư viện'),
-          subtitle: tr(
-            context,
-            'Looks for damage in the file that holds it',
-            'Tìm lỗi trong tệp lưu thư viện',
-          ),
-          onTap: () => scope.run(context, () async {
-            final status = await c.store!.integrity();
-            if (context.mounted) {
-              showHandyMessage(
-                context,
-                status == 'ok'
-                    ? tr(context, 'The library is healthy.', 'Thư viện vẫn ổn.')
-                    : '${tr(context, 'Problem found', 'Phát hiện lỗi')}: $status',
-              );
-            }
-          }),
-        ),
-      ],
     );
   }
 }

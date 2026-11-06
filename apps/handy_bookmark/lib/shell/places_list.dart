@@ -1,5 +1,6 @@
 import 'package:handy_bookmark_engine/handy_bookmark_engine.dart';
 import 'package:handy_ui/kit.dart';
+import 'package:handy_monetization/handy_monetization.dart';
 import '../collections/collection_actions.dart';
 import '../links/link_actions.dart';
 import '../library/place_title.dart';
@@ -7,30 +8,30 @@ import '../scope.dart';
 import '../ui/collection_picker.dart';
 import '../view/library_view.dart';
 
-/// Every place a link can be found: the fixed views with their counts, the
-/// collections as a tree, smart collections, and tags. The sidebar on wide
-/// screens; the place list on the phone's home.
+/// Every place a save can be found: the fixed views with their counts, the
+/// collections as a tree and the tags. Smart collections and saved searches
+/// wait under "Advanced", shown once there is one (or with Pro, where new
+/// smart collections are made). The sidebar on wide screens; the Library
+/// page on a phone.
 class PlacesList extends StatelessWidget {
   final SaveScope scope;
   final void Function(Place, [String?]) onPick;
-  final VoidCallback onFocus;
+
+  /// Opens Focus; null leaves its row out (the phone's home has its own).
+  final VoidCallback? onFocus;
 
   /// Opens a saved search (its place, words and filters).
   final ValueChanged<SavedSearch> onSearch;
 
   /// Marks the current place (sidebar); the phone list has none.
   final bool marking;
-
-  /// The collections' tree; the phone's home shows them as covers instead.
-  final bool collections;
   const PlacesList({
     super.key,
     required this.scope,
     required this.onPick,
-    required this.onFocus,
     required this.onSearch,
+    this.onFocus,
     this.marking = true,
-    this.collections = true,
   });
 
   @override
@@ -134,12 +135,13 @@ class PlacesList extends StatelessWidget {
                 n: count(p),
                 place: p,
               ),
-            row(
-              const Key('place-focus'),
-              Icons.center_focus_strong_outlined,
-              tr(context, 'Focus', 'Tập trung'),
-              onTap: onFocus,
-            ),
+            if (onFocus != null)
+              row(
+                const Key('place-focus'),
+                Icons.center_focus_strong_outlined,
+                tr(context, 'Focus', 'Tập trung'),
+                onTap: onFocus,
+              ),
             // Only while something is waiting there.
             if (l.trash.isNotEmpty)
               row(
@@ -151,136 +153,56 @@ class PlacesList extends StatelessWidget {
               ),
           ],
         ),
-        if (collections) ...[
-          heading(
-            tr(context, 'Collections', 'Bộ sưu tập'),
-            trailing: IconButton(
-              key: const Key('collection-new'),
-              tooltip: tr(context, 'New collection', 'Bộ sưu tập mới'),
-              icon: const Icon(Icons.add),
-              onPressed: () => scope.editCollection(context),
-            ),
-          ),
-          if (l.collections.isEmpty)
-            Text(
-              tr(
-                context,
-                'Group links by topic: Recipes, Trips, To buy…',
-                'Gom link theo chủ đề: Công thức, Du lịch, Cần mua…',
-              ),
-              style: theme.textTheme.bodyMedium?.copyWith(color: c.muted),
-            )
-          else
-            HandyGroup(
-              children: [
-                for (final (col, depth) in collectionTree(l))
-                  row(
-                    Key('collection-${col.id}'),
-                    Icons.folder,
-                    col.name,
-                    hue: collectionHue(l, col.id),
-                    n: inCollection[col.id] ?? 0,
-                    id: col.id,
-                    place: Place.collection,
-                    indent: depth * 20.0,
-                    menu: HandyMenuButton(
-                      key: Key('collection-menu-${col.id}'),
-                      items: [
-                        HandyMenuItem(
-                          Icons.edit_outlined,
-                          tr(context, 'Edit', 'Sửa'),
-                          () => scope.editCollection(context, col),
-                          key: const Key('collection-edit'),
-                        ),
-                        HandyMenuItem(
-                          Icons.delete_outline,
-                          tr(context, 'Delete', 'Xóa'),
-                          () async {
-                            if (await scope.deleteCollection(context, col) &&
-                                v.place == Place.collection &&
-                                v.id == col.id)
-                              onPick(Place.all);
-                          },
-                          key: const Key('collection-delete'),
-                          destructive: true,
-                        ),
-                      ],
-                    ),
-                  ),
-              ],
-            ),
-          // Smart collections and saved searches are both "a list I kept":
-          // one group since 2026-11-03, each row with its own icon.
-        ],
         heading(
-          tr(context, 'Saved filters', 'Bộ lọc đã lưu'),
+          tr(context, 'Collections', 'Bộ sưu tập'),
           trailing: IconButton(
-            key: const Key('smart-new'),
-            tooltip: tr(
-              context,
-              'New filter from rules',
-              'Bộ lọc mới theo điều kiện',
-            ),
+            key: const Key('collection-new'),
+            tooltip: tr(context, 'New collection', 'Bộ sưu tập mới'),
             icon: const Icon(Icons.add),
-            onPressed: () => scope.editSmart(context),
+            onPressed: () => scope.editCollection(context),
           ),
         ),
-        if (l.smartCollections.isEmpty && l.savedSearches.isEmpty)
+        if (l.collections.isEmpty)
           Text(
             tr(
               context,
-              'Keep a list: + builds one from rules, or save any search or filter from its list. Pro.',
-              'Giữ lại một danh sách: + để tạo theo điều kiện, hoặc lưu tìm kiếm/bộ lọc ngay từ danh sách đó. Bản Pro.',
+              'Group links by topic: Recipes, Trips, To buy…',
+              'Gom link theo chủ đề: Công thức, Du lịch, Cần mua…',
             ),
-            key: const Key('saved-filters-empty'),
             style: theme.textTheme.bodyMedium?.copyWith(color: c.muted),
           )
         else
           HandyGroup(
             children: [
-              for (final s in l.smartCollections)
+              for (final (col, depth) in collectionTree(l))
                 row(
-                  Key('smart-${s.id}'),
-                  Icons.auto_awesome_outlined,
-                  s.name,
-                  id: s.id,
-                  place: Place.smart,
+                  Key('collection-${col.id}'),
+                  Icons.folder,
+                  col.name,
+                  hue: collectionHue(l, col.id),
+                  n: inCollection[col.id] ?? 0,
+                  id: col.id,
+                  place: Place.collection,
+                  indent: depth * 20.0,
                   menu: HandyMenuButton(
+                    key: Key('collection-menu-${col.id}'),
                     items: [
                       HandyMenuItem(
                         Icons.edit_outlined,
                         tr(context, 'Edit', 'Sửa'),
-                        () => scope.editSmart(context, s),
+                        () => scope.editCollection(context, col),
+                        key: const Key('collection-edit'),
                       ),
                       HandyMenuItem(
                         Icons.delete_outline,
                         tr(context, 'Delete', 'Xóa'),
-                        () => scope.deleteSmart(context, s),
-                        destructive: true,
-                      ),
-                    ],
-                  ),
-                ),
-              for (final s in l.savedSearches)
-                row(
-                  Key('search-${s.id}'),
-                  Icons.saved_search,
-                  s.name,
-                  onTap: () => onSearch(s),
-                  menu: HandyMenuButton(
-                    key: Key('search-menu-${s.id}'),
-                    items: [
-                      HandyMenuItem(
-                        Icons.edit_outlined,
-                        tr(context, 'Rename', 'Đổi tên'),
-                        () => scope.renameSaved(context, s),
-                        key: const Key('search-rename'),
-                      ),
-                      HandyMenuItem(
-                        Icons.delete_outline,
-                        tr(context, 'Delete', 'Xóa'),
-                        () => scope.deleteSaved(context, s),
-                        key: const Key('search-delete'),
+                        () async {
+                          if (await scope.deleteCollection(context, col) &&
+                              v.place == Place.collection &&
+                              v.id == col.id)
+                            onPick(Place.all);
+                        },
+                        key: const Key('collection-delete'),
                         destructive: true,
                       ),
                     ],
@@ -308,7 +230,126 @@ class PlacesList extends StatelessWidget {
             ],
           ),
         ],
+        // Smart collections and saved searches are no longer offered to
+        // everyone (2026-11-06): no new saved searches are made, and those
+        // kept stay here to open, rename or delete. New smart collections
+        // are made here only, and only with Pro.
+        if (l.smartCollections.isNotEmpty ||
+            l.savedSearches.isNotEmpty ||
+            LifetimeScope.maybeOf(context)?.pro == true) ...[
+          const SizedBox(height: HandySpace.l),
+          _Advanced(
+            open: marking && v.place == Place.smart,
+            children: [
+              if (l.smartCollections.isNotEmpty || l.savedSearches.isNotEmpty)
+                HandyGroup(
+                  children: [
+                    for (final s in l.smartCollections)
+                      row(
+                        Key('smart-${s.id}'),
+                        Icons.auto_awesome_outlined,
+                        s.name,
+                        id: s.id,
+                        place: Place.smart,
+                        menu: HandyMenuButton(
+                          items: [
+                            HandyMenuItem(
+                              Icons.edit_outlined,
+                              tr(context, 'Edit', 'Sửa'),
+                              () => scope.editSmart(context, s),
+                            ),
+                            HandyMenuItem(
+                              Icons.delete_outline,
+                              tr(context, 'Delete', 'Xóa'),
+                              () => scope.deleteSmart(context, s),
+                              destructive: true,
+                            ),
+                          ],
+                        ),
+                      ),
+                    for (final s in l.savedSearches)
+                      row(
+                        Key('search-${s.id}'),
+                        Icons.saved_search,
+                        s.name,
+                        onTap: () => onSearch(s),
+                        menu: HandyMenuButton(
+                          key: Key('search-menu-${s.id}'),
+                          items: [
+                            HandyMenuItem(
+                              Icons.edit_outlined,
+                              tr(context, 'Rename', 'Đổi tên'),
+                              () => scope.renameSaved(context, s),
+                              key: const Key('search-rename'),
+                            ),
+                            HandyMenuItem(
+                              Icons.delete_outline,
+                              tr(context, 'Delete', 'Xóa'),
+                              () => scope.deleteSaved(context, s),
+                              key: const Key('search-delete'),
+                              destructive: true,
+                            ),
+                          ],
+                        ),
+                      ),
+                  ],
+                ),
+              Align(
+                alignment: AlignmentDirectional.centerStart,
+                child: TextButton.icon(
+                  key: const Key('smart-new'),
+                  onPressed: () => scope.editSmart(context),
+                  icon: const Icon(Icons.add),
+                  label: Text(
+                    tr(
+                      context,
+                      'New smart collection',
+                      'Bộ sưu tập thông minh mới',
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ],
       ],
+    );
+  }
+}
+
+/// A quiet disclosure for the lists the person kept by rules or by search.
+class _Advanced extends StatelessWidget {
+  final bool open;
+  final List<Widget> children;
+  const _Advanced({required this.open, required this.children});
+  @override
+  Widget build(BuildContext context) {
+    final c = HandyColors.of(context);
+    final theme = Theme.of(context);
+    return Theme(
+      data: theme.copyWith(dividerColor: Colors.transparent),
+      child: ExpansionTile(
+        key: const Key('library-advanced'),
+        initiallyExpanded: open,
+        tilePadding: const EdgeInsets.symmetric(horizontal: HandySpace.xs),
+        childrenPadding: EdgeInsets.zero,
+        shape: const Border(),
+        collapsedShape: const Border(),
+        expandedCrossAxisAlignment: CrossAxisAlignment.stretch,
+        title: Text(
+          tr(context, 'Advanced', 'Nâng cao'),
+          style: theme.textTheme.titleSmall,
+        ),
+        subtitle: Text(
+          tr(
+            context,
+            'Smart collections and saved searches',
+            'Bộ sưu tập thông minh và tìm kiếm đã lưu',
+          ),
+          style: theme.textTheme.bodySmall?.copyWith(color: c.muted),
+        ),
+        children: children,
+      ),
     );
   }
 }

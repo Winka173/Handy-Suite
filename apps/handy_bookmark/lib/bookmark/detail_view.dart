@@ -7,12 +7,14 @@ import '../ui/visual.dart';
 import '../ui/words.dart';
 import 'detail_facts.dart';
 import 'picture_view.dart';
-import 'reminder_sheet.dart';
+import 'rename.dart';
+import 'share_item.dart';
 
 /// One saved thing on its own: its picture large, its title, where it is
 /// from, and the one thing to do with it (open the original, or view the
-/// picture). Favourite, move, remind and copy sit in a row under it; the
-/// library's tools wait in a folded section below.
+/// picture). Favourite, move, rename and share sit in a row under it;
+/// copy and the browser wait in the "…" by the title, the library's tools
+/// in a folded section below. Nothing here sets a new pin or reminder.
 class DetailView extends StatelessWidget {
   final SaveScope scope;
   final String id;
@@ -42,18 +44,33 @@ class DetailView extends StatelessWidget {
           : b.isImage
           ? tr(context, 'Picture', 'Ảnh')
           : b.sourceDomain;
+      final web = b.hasUrl && !b.isImage && _isWeb(b.originalUrl);
       return Column(
         key: const Key('detail'),
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
+          // The "…" sits on the picture's corner, so the title keeps
+          // the whole width.
           if (b.isImage)
-            PictureHeader(controller: scope.c, item: b)
+            PictureHeader(
+              controller: scope.c,
+              item: b,
+              corner: _More(scope: scope, bookmark: b),
+            )
           else
-            _LinkHero(scope: scope, bookmark: b),
+            _LinkHero(
+              scope: scope,
+              bookmark: b,
+              corner: _More(scope: scope, bookmark: b),
+            ),
           const SizedBox(height: 20),
           Semantics(
             header: true,
-            child: SelectableText(title, style: bookmarkSerif(context, 28)),
+            child: SelectableText(
+              title,
+              key: const Key('detail-title'),
+              style: bookmarkSerif(context, 28),
+            ),
           ),
           const SizedBox(height: HandySpace.s),
           Text.rich(
@@ -94,28 +111,37 @@ class DetailView extends StatelessWidget {
               icon: const Icon(Icons.open_in_new),
               label: Text(tr(context, 'Open original', 'Mở bản gốc')),
             ),
-          if (b.hasUrl)
+          if (web)
+            Padding(
+              padding: const EdgeInsets.only(top: HandySpace.s),
+              child: FilledButton.icon(
+                key: const Key('detail-reader'),
+                style: detailToolStyle(context).copyWith(
+                  minimumSize: const WidgetStatePropertyAll(
+                    Size.fromHeight(48),
+                  ),
+                  shape: WidgetStatePropertyAll(
+                    RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(BookmarkRadii.button),
+                    ),
+                  ),
+                ),
+                onPressed: () => Navigator.pushNamed(context, '/read/${b.id}'),
+                icon: const Icon(Icons.chrome_reader_mode_outlined, size: 20),
+                label: Text(tr(context, 'Read', 'Đọc')),
+              ),
+            ),
+          if (b.isImage && b.hasUrl)
             Padding(
               padding: const EdgeInsets.only(top: HandySpace.xs),
               child: Center(
-                child: b.isImage
-                    ? TextButton.icon(
-                        key: const Key('save-open-original'),
-                        onPressed: () => scope.open(context, b),
-                        icon: const Icon(Icons.open_in_new, size: 18),
-                        label: Text(tr(context, 'Open its source', 'Mở nguồn')),
-                      )
-                    : TextButton(
-                        key: const Key('detail-browser'),
-                        onPressed: () => scope.open(context, b, browser: true),
-                        child: Text(
-                          tr(
-                            context,
-                            'Open in the browser',
-                            'Mở bằng trình duyệt',
-                          ),
-                        ),
-                      ),
+                child: TextButton.icon(
+                  key: const Key('save-open-original'),
+                  style: TextButton.styleFrom(minimumSize: const Size(48, 48)),
+                  onPressed: () => scope.open(context, b),
+                  icon: const Icon(Icons.open_in_new, size: 18),
+                  label: Text(tr(context, 'Open its source', 'Mở nguồn')),
+                ),
               ),
             ),
           const SizedBox(height: HandySpace.l),
@@ -128,37 +154,122 @@ class DetailView extends StatelessWidget {
   );
 }
 
+/// Only addresses on the web can be read in the app.
+bool _isWeb(String url) {
+  final scheme = Uri.tryParse(url)?.scheme.toLowerCase();
+  return scheme == 'http' || scheme == 'https';
+}
+
+/// The "…" on the picture: Share, Copy link and Open in the browser.
+class _More extends StatelessWidget {
+  final SaveScope scope;
+  final Bookmark bookmark;
+  const _More({required this.scope, required this.bookmark});
+  @override
+  Widget build(BuildContext context) {
+    final p = BookmarkPalette.of(context);
+    final b = bookmark;
+    PopupMenuItem<String> item(String value, IconData icon, String label) =>
+        PopupMenuItem<String>(
+          key: Key('detail-$value'),
+          value: value,
+          height: 48,
+          child: Row(
+            children: [
+              Icon(icon, size: 20, color: p.muted),
+              const SizedBox(width: 14),
+              Flexible(
+                child: Text(
+                  label,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(color: p.ink),
+                ),
+              ),
+            ],
+          ),
+        );
+    return PopupMenuButton<String>(
+      key: const Key('detail-more'),
+      tooltip: tr(context, 'More', 'Thêm'),
+      position: PopupMenuPosition.under,
+      padding: EdgeInsets.zero,
+      iconSize: 40,
+      // A 40px disc on the picture inside a 48px target.
+      icon: DecoratedBox(
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          color: p.surface.withValues(alpha: .94),
+        ),
+        child: SizedBox.square(
+          dimension: 40,
+          child: Icon(Icons.more_horiz, size: 22, color: p.ink),
+        ),
+      ),
+      onSelected: (value) => switch (value) {
+        'share-menu' => scope.shareItem(context, b),
+        'copy' => copyToClipboard(context, shareableUrl(b)),
+        'browser' => scope.open(context, b, browser: true),
+        _ => null,
+      },
+      itemBuilder: (context) => [
+        if (b.hasUrl || b.isImage)
+          item(
+            'share-menu',
+            Icons.ios_share_rounded,
+            b.isImage
+                ? tr(context, 'Share picture', 'Chia sẻ ảnh')
+                : tr(context, 'Share', 'Chia sẻ'),
+          ),
+        if (b.hasUrl) ...[
+          item(
+            'copy',
+            Icons.link_rounded,
+            tr(context, 'Copy link', 'Chép link'),
+          ),
+          if (!b.isImage)
+            item(
+              'browser',
+              Icons.open_in_browser_outlined,
+              tr(context, 'Open in the browser', 'Mở bằng trình duyệt'),
+            ),
+        ],
+      ],
+    );
+  }
+}
+
 /// A link's picture at a wide crop, or its source's face when it has none.
 class _LinkHero extends StatelessWidget {
   final SaveScope scope;
   final Bookmark bookmark;
-  const _LinkHero({required this.scope, required this.bookmark});
+  final Widget corner;
+  const _LinkHero({
+    required this.scope,
+    required this.bookmark,
+    required this.corner,
+  });
   @override
   Widget build(BuildContext context) => ConstrainedBox(
     constraints: const BoxConstraints(maxHeight: 360),
     child: AspectRatio(
       aspectRatio: 1.6,
-      child: ItemPicture(scope.c, bookmark, radius: BookmarkRadii.collection),
+      child: Stack(
+        fit: StackFit.expand,
+        children: [
+          ItemPicture(scope.c, bookmark, radius: BookmarkRadii.collection),
+          PositionedDirectional(top: 6, end: 6, child: corner),
+        ],
+      ),
     ),
   );
 }
 
-/// Favourite, move, remind and copy: round marks with their word under
-/// them, each a whole 48px column to tap.
+/// Favourite, move, rename and share: round marks with their word under
+/// them, each a whole column to tap.
 class _Actions extends StatelessWidget {
   final SaveScope scope;
   final Bookmark bookmark;
   const _Actions({required this.scope, required this.bookmark});
-
-  Future<void> _remind(BuildContext context) async {
-    try {
-      final at = await pickReminder(context);
-      if (at != null && context.mounted)
-        await scope.remind(context, bookmark, at);
-    } on FormatException catch (e) {
-      if (context.mounted) showHandyMessage(context, errorText(context, e));
-    }
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -185,20 +296,20 @@ class _Actions extends StatelessWidget {
           onTap: () => scope.move(context, b),
         ),
         RoundAction(
-          key: const Key('detail-remind'),
-          icon: b.reminderAt == null
-              ? Icons.notifications_none_rounded
-              : Icons.notifications_active_outlined,
-          label: tr(context, 'Remind me', 'Nhắc tôi'),
-          on: b.reminderAt != null,
-          onTap: () => _remind(context),
+          key: const Key('detail-rename'),
+          icon: Icons.drive_file_rename_outline,
+          label: tr(context, 'Rename', 'Đổi tên'),
+          onTap: () => scope.rename(context, b),
         ),
-        if (b.hasUrl)
-          RoundAction(
-            key: const Key('detail-copy'),
-            icon: Icons.link_rounded,
-            label: tr(context, 'Copy link', 'Chép link'),
-            onTap: () => copyToClipboard(context, b.originalUrl),
+        if (b.hasUrl || b.isImage)
+          // Its own context, so an iPad or Mac sheet points at it.
+          Builder(
+            builder: (context) => RoundAction(
+              key: const Key('detail-share'),
+              icon: Icons.ios_share_rounded,
+              label: tr(context, 'Share', 'Chia sẻ'),
+              onTap: () => scope.shareItem(context, b),
+            ),
           ),
       ],
     );

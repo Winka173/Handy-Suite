@@ -3,8 +3,10 @@
 // SHOTS_DIR=<dir> flutter test --no-pub tool/screens_library_test.dart
 import 'dart:io';
 import 'package:flutter/services.dart';
-import 'package:flutter/widgets.dart' show Key, Size;
+import 'package:flutter/material.dart' show Navigator, Scaffold;
+import 'package:flutter/widgets.dart' show Key, Scrollable, Size;
 import 'package:flutter_test/flutter_test.dart';
+import 'package:handy_bookmark/controller.dart';
 import 'screens_test.dart' show boot, shot, tapKey;
 
 Future<void> _font(String family, List<String> paths) async {
@@ -65,6 +67,7 @@ void main() {
 
   testWidgets('phone everything', (t) async {
     await boot(t, const Size(390, 844));
+    await tapKey(t, 'home-library');
     await tapKey(t, 'place-all');
     await shot(t, 'lib-phone-everything');
   });
@@ -83,4 +86,69 @@ void main() {
     await t.pumpAndSettle();
     await shot(t, 'lib-phone-search-none');
   });
+
+  // The Library page (2026-11-06): every place, the collections' tree, the
+  // tags, and the kept smart collections and saved searches under Advanced.
+  for (final (label, size, theme, scale) in [
+    ('phone', const Size(390, 844), 'light', 1.0),
+    ('phone-dark', const Size(390, 844), 'dark', 1.0),
+    ('narrow-large-text', const Size(320, 640), 'light', 2.0),
+  ]) {
+    testWidgets('$label library page', (t) async {
+      t.platformDispatcher.textScaleFactorTestValue = scale;
+      addTearDown(t.platformDispatcher.clearTextScaleFactorTestValue);
+      await boot(t, size, theme: theme, extras: true);
+      await tapKey(t, 'home-library');
+      await shot(t, 'lib-$label-library');
+      await tapKey(t, 'library-advanced');
+      await t.scrollUntilVisible(
+        find.byKey(const Key('smart-new')),
+        200,
+        scrollable: find.byType(Scrollable).first,
+      );
+      await t.pumpAndSettle();
+      await shot(t, 'lib-$label-library-advanced');
+    });
+  }
+
+  // Choosing a collection's cover from its own pictures.
+  Future<void> pictured(SaveController c) => c.update(
+    (l) => l.copyWith(
+      bookmarks: [
+        for (final b in l.bookmarks)
+          b.copyWith(thumbnailUrl: 'https://img.example.com/${b.id}.jpg'),
+      ],
+    ),
+  );
+  for (final (label, size, theme, scale) in [
+    ('phone', const Size(390, 844), 'light', 1.0),
+    ('phone-dark', const Size(390, 844), 'dark', 1.0),
+    ('narrow-large-text', const Size(320, 640), 'light', 2.0),
+    ('desktop', const Size(1440, 900), 'light', 1.0),
+  ]) {
+    testWidgets('$label cover chooser', (t) async {
+      t.platformDispatcher.textScaleFactorTestValue = scale;
+      addTearDown(t.platformDispatcher.clearTextScaleFactorTestValue);
+      final c = await boot(t, size, theme: theme);
+      await pictured(c);
+      await t.runAsync(
+        () => Future<void>.delayed(const Duration(milliseconds: 200)),
+      );
+      await t.pumpAndSettle();
+      await tapKey(t, 'collection-food');
+      await tapKey(t, 'list-more');
+      await tapKey(t, 'collection-cover');
+      await shot(t, 'lib-$label-cover-chooser');
+      final last = c.library!.bookmarks.lastWhere(
+        (b) => b.collectionId == 'food',
+      );
+      await tapKey(t, 'cover-${last.id}');
+      await shot(t, 'lib-$label-cover-chosen');
+      if (size.width < 700) {
+        Navigator.of(t.element(find.byType(Scaffold).last)).pop();
+        await t.pumpAndSettle();
+        await shot(t, 'lib-$label-cover-home');
+      }
+    });
+  }
 }

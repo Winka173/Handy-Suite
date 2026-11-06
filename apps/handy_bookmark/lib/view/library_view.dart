@@ -3,6 +3,9 @@ import 'package:flutter/foundation.dart';
 import 'package:handy_bookmark_engine/handy_bookmark_engine.dart';
 import '../controller.dart';
 
+/// A save that can show a picture: its own, or its page's.
+bool hasPicture(Bookmark b) => b.media != null || b.thumbnailUrl != null;
+
 /// Where the person is looking: one of the fixed places, a collection, a
 /// smart collection or a tag. [broken] holds links whose last check found a
 /// problem.
@@ -57,12 +60,15 @@ class Filters {
     savedAfter: savedAfter,
     savedBefore: savedBefore,
   );
-  bool get any =>
+  bool get any => narrows || sort != 'newest';
+
+  /// Something beyond the order narrows the list (the order alone does not
+  /// make a list a search).
+  bool get narrows =>
       kind != null ||
       platform != null ||
       contentType != null ||
       tag != null ||
-      sort != 'newest' ||
       savedAfter != null ||
       savedBefore != null;
 }
@@ -96,19 +102,25 @@ class LibraryView extends ChangeNotifier {
   }
 
   void show(Place p, [String? which]) {
+    final wasCollection = place == Place.collection;
     place = p;
     id = which;
-    // A collection opens in the order it was last left in.
-    if (p == Place.collection && which != null)
+    // A collection opens in the order it was last left in; leaving one
+    // does not carry its order elsewhere.
+    if (p == Place.collection && which != null) {
       filters = filters.withSort(
         collectionView(which)['sort'] as String? ?? 'newest',
       );
+    } else if (wasCollection) {
+      filters = filters.withSort('newest');
+    }
     selected.clear();
     reload();
   }
 
-  /// What a collection remembers about how it is shown: 'cards' (bool) and
-  /// 'sort'. Kept in the library's preferences; backups carry it (as
+  /// What a collection remembers about how it is shown: 'cards' (bool),
+  /// 'sort' and 'cover' (the id of one of its own saves whose picture is its
+  /// cover). Kept in the library's preferences; backups carry it (as
   /// `collectionViews`, since 2026-11-06).
   Map<String, dynamic> collectionView(String collectionId) => {
     ...?((c.preferences['collectionViews'] as Map?)?[collectionId] as Map?)
@@ -118,11 +130,37 @@ class LibraryView extends ChangeNotifier {
   /// Remembers [key] for the collection on screen; nothing elsewhere.
   Future<void> rememberForCollection(String key, Object value) async {
     if (place != Place.collection || id == null) return;
+    await setCollectionView(id!, key, value);
+  }
+
+  /// Remembers [key] for [collectionId]; a null [value] forgets it.
+  Future<void> setCollectionView(
+    String collectionId,
+    String key,
+    Object? value,
+  ) async {
+    final own = collectionView(collectionId);
+    value == null ? own.remove(key) : own[key] = value;
     final all = {
       ...?(c.preferences['collectionViews'] as Map?)?.cast<String, dynamic>(),
-      id!: {...collectionView(id!), key: value},
+      collectionId: own,
     };
     await c.update((l) => l, prefs: {...c.preferences, 'collectionViews': all});
+  }
+
+  /// The save whose picture is [collectionId]'s chosen cover, or null when
+  /// none was chosen or it is no longer there (deleted, moved out,
+  /// archived, or without a picture): then the cover is made automatically.
+  Bookmark? chosenCover(String collectionId) {
+    final at = collectionView(collectionId)['cover'];
+    if (at is! String) return null;
+    final b = c.library?.bookmarks.where((x) => x.id == at).firstOrNull;
+    return b != null &&
+            b.collectionId == collectionId &&
+            !b.isArchived &&
+            hasPicture(b)
+        ? b
+        : null;
   }
 
   /// The list is in the person's own order.

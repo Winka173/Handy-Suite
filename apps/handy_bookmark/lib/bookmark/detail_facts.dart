@@ -3,7 +3,6 @@ import 'package:handy_ui/kit.dart';
 import '../design/theme.dart';
 import '../links/recall_link.dart';
 import '../scope.dart';
-import '../ui/visual.dart';
 import 'detail_links.dart';
 
 String _metadataWords(BuildContext c, String status) => switch (status) {
@@ -57,9 +56,8 @@ class DetailToolHead extends StatelessWidget {
   );
 }
 
-/// The person's note and the page's description, the tags, then the
-/// library's tools folded away, then Edit and Delete. Edit and delete
-/// close the view.
+/// The person's note and tags (folded), the library's tools (folded), then
+/// Edit and Delete. Edit and delete close the view.
 class DetailFacts extends StatelessWidget {
   final SaveScope scope;
   final Bookmark bookmark;
@@ -76,43 +74,56 @@ class DetailFacts extends StatelessWidget {
     final b = bookmark;
     final theme = Theme.of(context);
     final p = BookmarkPalette.of(context);
-    final description = (b.description ?? '').trim();
+    final note = b.note.trim();
+    final tags = b.tags.map((t) => '#$t').join(' ');
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        if (b.note.isNotEmpty) ...[
-          SectionHead(tr(context, 'Your note', 'Ghi chú của bạn')),
-          Container(
-            padding: const EdgeInsets.all(HandySpace.l),
-            decoration: BoxDecoration(
-              color: p.sageTint,
-              borderRadius: BorderRadius.circular(BookmarkRadii.item),
-            ),
-            child: SelectableText(
-              b.note,
-              style: theme.textTheme.bodyLarge?.copyWith(color: p.ink),
-            ),
-          ),
-        ],
-        if (description.isNotEmpty) ...[
-          SectionHead(tr(context, 'About it', 'Mô tả')),
-          SelectableText(
-            description,
-            style: theme.textTheme.bodyLarge?.copyWith(
-              color: p.ink,
-              height: 1.5,
-            ),
-          ),
-        ],
-        if (b.tags.isNotEmpty) ...[
-          SectionHead(tr(context, 'Tags', 'Thẻ')),
-          Wrap(
-            spacing: HandySpace.s,
-            runSpacing: HandySpace.s,
-            children: [for (final t in b.tags) Chip(label: Text('#$t'))],
-          ),
-        ],
         const SizedBox(height: HandySpace.xl),
+        if (note.isNotEmpty || b.tags.isNotEmpty) ...[
+          DetailFold(
+            toggleKey: const Key('detail-notes'),
+            title: note.isNotEmpty && b.tags.isNotEmpty
+                ? tr(context, 'Note and tags', 'Ghi chú và thẻ')
+                : note.isNotEmpty
+                ? tr(context, 'Your note', 'Ghi chú của bạn')
+                : tr(context, 'Tags', 'Thẻ'),
+            // The first words show while folded, so nothing hides.
+            summary: [
+              if (note.isNotEmpty) note.split('\n').first,
+              if (tags.isNotEmpty) tags,
+            ].join(' · '),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                if (note.isNotEmpty)
+                  Container(
+                    padding: const EdgeInsets.all(HandySpace.l),
+                    decoration: BoxDecoration(
+                      color: p.sageTint,
+                      borderRadius: BorderRadius.circular(BookmarkRadii.thumb),
+                    ),
+                    child: SelectableText(
+                      b.note,
+                      key: const Key('detail-note'),
+                      style: theme.textTheme.bodyLarge?.copyWith(color: p.ink),
+                    ),
+                  ),
+                if (note.isNotEmpty && b.tags.isNotEmpty)
+                  const SizedBox(height: HandySpace.m),
+                if (b.tags.isNotEmpty)
+                  Wrap(
+                    spacing: HandySpace.s,
+                    runSpacing: HandySpace.s,
+                    children: [
+                      for (final t in b.tags) Chip(label: Text('#$t')),
+                    ],
+                  ),
+              ],
+            ),
+          ),
+          const SizedBox(height: HandySpace.s),
+        ],
         _Tools(scope: scope, bookmark: b),
         const SizedBox(height: HandySpace.l),
         Wrap(
@@ -147,49 +158,33 @@ class DetailFacts extends StatelessWidget {
   }
 }
 
-/// "Details and tools": folded by default, with the item's state in its
-/// header so nothing hides behind the fold. Pin, read and archive; the
-/// address or the picture file; the page's details; the offline copy and
-/// the link check; Handy Recall.
-class _Tools extends StatefulWidget {
-  final SaveScope scope;
-  final Bookmark bookmark;
-  const _Tools({required this.scope, required this.bookmark});
+/// A folded panel: its title and a one-line summary of what is inside, a
+/// turn mark, and the content once opened. Reads as a button that is
+/// expanded or not.
+class DetailFold extends StatefulWidget {
+  final String title, summary;
+  final Widget child;
+
+  /// On the header that folds and unfolds (tests tap it).
+  final Key? toggleKey;
+  const DetailFold({
+    super.key,
+    this.toggleKey,
+    required this.title,
+    required this.summary,
+    required this.child,
+  });
   @override
-  State<_Tools> createState() => _ToolsState();
+  State<DetailFold> createState() => _DetailFoldState();
 }
 
-class _ToolsState extends State<_Tools> {
+class _DetailFoldState extends State<DetailFold> {
   bool open = false;
 
   @override
   Widget build(BuildContext context) {
-    final b = widget.bookmark;
-    final scope = widget.scope;
     final theme = Theme.of(context);
     final p = BookmarkPalette.of(context);
-    final state = [
-      if (b.isPinned) tr(context, 'Pinned', 'Đã ghim'),
-      if (b.isRead) tr(context, 'Read', 'Đã đọc'),
-      if (b.isArchived) tr(context, 'Archived', 'Đã lưu trữ'),
-      if (b.linkCheck?.status == 'gone') tr(context, 'Gone', 'Không còn'),
-      if (b.linkCheck?.status == 'moved') tr(context, 'Moved', 'Đã chuyển'),
-      if (scope.c.readingIds.containsKey(b.id))
-        tr(context, 'Offline copy', 'Có bản offline'),
-    ];
-    final summary = state.isNotEmpty
-        ? state.join(' · ')
-        : b.hasUrl && !b.isImage
-        ? tr(
-            context,
-            'Pin, read, archive, offline copy, link check',
-            'Ghim, đã đọc, lưu trữ, bản offline, kiểm tra link',
-          )
-        : tr(
-            context,
-            'Pin, read, archive, the picture file',
-            'Ghim, đã xem, lưu trữ, thông tin tệp ảnh',
-          );
     return Material(
       color: p.surface,
       borderRadius: BorderRadius.circular(BookmarkRadii.item),
@@ -198,9 +193,10 @@ class _ToolsState extends State<_Tools> {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Semantics(
+            button: true,
             expanded: open,
             child: InkWell(
-              key: const Key('detail-tools'),
+              key: widget.toggleKey,
               onTap: () => setState(() => open = !open),
               child: Padding(
                 padding: const EdgeInsets.fromLTRB(16, 14, 8, 14),
@@ -211,15 +207,18 @@ class _ToolsState extends State<_Tools> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            tr(
-                              context,
-                              'Details and tools',
-                              'Chi tiết và công cụ',
-                            ),
+                            widget.title,
                             style: theme.textTheme.titleMedium,
                           ),
-                          const SizedBox(height: 2),
-                          Text(summary, style: theme.textTheme.bodySmall),
+                          if (widget.summary.isNotEmpty) ...[
+                            const SizedBox(height: 2),
+                            Text(
+                              widget.summary,
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                              style: theme.textTheme.bodySmall,
+                            ),
+                          ],
                         ],
                       ),
                     ),
@@ -243,12 +242,59 @@ class _ToolsState extends State<_Tools> {
             child: open
                 ? Padding(
                     padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-                    child: _ToolsBody(scope: scope, bookmark: b),
+                    child: widget.child,
                   )
                 : const SizedBox(width: double.infinity),
           ),
         ],
       ),
+    );
+  }
+}
+
+/// "Details and tools": folded by default, with the item's state in its
+/// header so nothing hides behind the fold. Read and archive (and Unpin
+/// for an item pinned before pins were retired); the address or the
+/// picture file; the page's details; the offline copy and the link check;
+/// Handy Recall.
+class _Tools extends StatelessWidget {
+  final SaveScope scope;
+  final Bookmark bookmark;
+  const _Tools({required this.scope, required this.bookmark});
+
+  @override
+  Widget build(BuildContext context) {
+    final b = bookmark;
+    final state = [
+      if (b.isPinned) tr(context, 'Pinned', 'Đã ghim'),
+      if (b.isRead)
+        b.isImage
+            ? tr(context, 'Seen', 'Đã xem')
+            : tr(context, 'Read', 'Đã đọc'),
+      if (b.isArchived) tr(context, 'Archived', 'Đã lưu trữ'),
+      if (b.linkCheck?.status == 'gone') tr(context, 'Gone', 'Không còn'),
+      if (b.linkCheck?.status == 'moved') tr(context, 'Moved', 'Đã chuyển'),
+      if (scope.c.readingIds.containsKey(b.id))
+        tr(context, 'Offline copy', 'Có bản offline'),
+    ];
+    final summary = state.isNotEmpty
+        ? state.join(' · ')
+        : b.hasUrl && !b.isImage
+        ? tr(
+            context,
+            'Read, archive, address, offline copy, link check',
+            'Đã đọc, lưu trữ, địa chỉ, bản offline, kiểm tra link',
+          )
+        : tr(
+            context,
+            'Seen, archive, the picture file',
+            'Đã xem, lưu trữ, thông tin tệp ảnh',
+          );
+    return DetailFold(
+      toggleKey: const Key('detail-tools'),
+      title: tr(context, 'Details and tools', 'Chi tiết và công cụ'),
+      summary: summary,
+      child: _ToolsBody(scope: scope, bookmark: b),
     );
   }
 }
@@ -264,6 +310,7 @@ class _ToolsBody extends StatelessWidget {
     final theme = Theme.of(context);
     final p = BookmarkPalette.of(context);
     final fetching = scope.c.fetching.containsKey(b.id);
+    final description = (b.description ?? '').trim();
     final muted = theme.textTheme.bodyMedium?.copyWith(color: p.muted);
     Widget flag(
       String key,
@@ -293,14 +340,8 @@ class _ToolsBody extends StatelessWidget {
         Wrap(
           spacing: HandySpace.s,
           runSpacing: HandySpace.s,
+          crossAxisAlignment: WrapCrossAlignment.center,
           children: [
-            flag(
-              'pin',
-              b.isPinned ? Icons.push_pin : Icons.push_pin_outlined,
-              tr(context, 'Pin', 'Ghim'),
-              b.isPinned,
-              (x) => x.copyWith(isPinned: !x.isPinned),
-            ),
             flag(
               'read',
               b.isRead ? Icons.done_all : Icons.done,
@@ -317,8 +358,35 @@ class _ToolsBody extends StatelessWidget {
               b.isArchived,
               (x) => x.copyWith(isArchived: !x.isArchived),
             ),
+            // Pins are retired: an item pinned before keeps its pin until
+            // the person lets it go here; nothing sets a new one.
+            if (b.isPinned)
+              TextButton.icon(
+                key: const Key('detail-unpin'),
+                style: TextButton.styleFrom(
+                  foregroundColor: p.muted,
+                  minimumSize: const Size(48, 44),
+                ),
+                onPressed: () => scope.toggle(
+                  context,
+                  b,
+                  (x) => x.copyWith(isPinned: false),
+                ),
+                icon: const Icon(Icons.push_pin_outlined, size: 18),
+                label: Text(tr(context, 'Unpin', 'Bỏ ghim')),
+              ),
           ],
         ),
+        if (description.isNotEmpty) ...[
+          DetailToolHead(tr(context, 'About it', 'Mô tả')),
+          SelectableText(
+            description,
+            style: theme.textTheme.bodyMedium?.copyWith(
+              color: p.ink,
+              height: 1.5,
+            ),
+          ),
+        ],
         if (b.hasUrl) ...[
           DetailToolHead(tr(context, 'Address', 'Địa chỉ')),
           SelectableText(

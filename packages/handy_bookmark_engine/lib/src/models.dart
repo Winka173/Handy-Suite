@@ -805,13 +805,26 @@ class SaveLibrary {
     ]);
   }
 
+  /// Reads a stored library or a file. A collection whose parent is not
+  /// there (or that is its own ancestor) moves to the top, and an item
+  /// filed in a collection that is not there goes to Not sorted: a damaged
+  /// tree never locks the person out of their library or refuses a backup.
   factory SaveLibrary.fromJson(Map<String, dynamic> j) {
     if (j['version'] != null && !{1, 2, 3}.contains(j['version']))
       throw const FormatException('Unsupported library version');
+    final collections = _repairTree(
+      _objects(j['collections'], SaveCollection.fromJson),
+    );
+    final known = {for (final c in collections) c.id};
     return SaveLibrary(
       tags: _strings(j['tags']),
-      bookmarks: _objects(j['bookmarks'], Bookmark.fromJson),
-      collections: _objects(j['collections'], SaveCollection.fromJson),
+      bookmarks: [
+        for (final b in _objects(j['bookmarks'], Bookmark.fromJson))
+          b.collectionId != null && !known.contains(b.collectionId)
+              ? b.copyWith(collectionId: null)
+              : b,
+      ],
+      collections: collections,
       smartCollections: _objects(
         j['smartCollections'],
         SmartCollection.fromJson,
@@ -821,6 +834,33 @@ class SaveLibrary {
       trash: _objects(j['trash'], Bookmark.fromJson),
       tombstones: _objects(j['tombstones'], Tombstone.fromJson),
     );
+  }
+
+  /// [collections] with every missing parent, and every link that closes a
+  /// cycle, cleared (that collection moves to the top).
+  static List<SaveCollection> _repairTree(List<SaveCollection> collections) {
+    final byId = {for (final c in collections) c.id: c};
+    for (final c in collections) {
+      if (c.parentId != null && !byId.containsKey(c.parentId))
+        byId[c.id] = c.copyWith(parentId: null);
+    }
+    final settled = <String>{};
+    for (final start in collections) {
+      final path = <String>[];
+      String? at = start.id;
+      while (at != null && !settled.contains(at)) {
+        if (path.contains(at)) {
+          // [at] is its own ancestor: the last step back to it is cut.
+          final last = path.last;
+          byId[last] = byId[last]!.copyWith(parentId: null);
+          break;
+        }
+        path.add(at);
+        at = byId[at]!.parentId;
+      }
+      settled.addAll(path);
+    }
+    return [for (final c in collections) byId[c.id]!];
   }
 
   /// Whether anything needs format 3 to be read back.

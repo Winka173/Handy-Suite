@@ -59,11 +59,12 @@ void main() {
       (l) => moveToTrash(l, [idOf(a, 'https://b.org/two')], saveTime()),
     );
     await openSettings(t);
-    await tapKey(t, 'save-export');
-    await tapKey(t, 'export-zip');
+    // Back up is one tap: the ZIP with pictures, no format to choose.
+    await tapKey(t, 'save-backup');
     await wait(t);
     expect(filesA.savedName, 'handy-bookmark.zip');
-    expect(find.textContaining('1 pictures included'), findsOneWidget);
+    expect(find.textContaining('1 picture and'), findsOneWidget);
+    expect(a.lastBackup?.automatic, isFalse, reason: 'Settings says when');
 
     // A separate device: nothing of A's app stays mounted.
     await t.pumpWidget(const SizedBox());

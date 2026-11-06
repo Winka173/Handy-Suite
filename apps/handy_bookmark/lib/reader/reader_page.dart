@@ -1,14 +1,24 @@
+import 'dart:async';
 import 'package:flutter/services.dart';
 import 'package:handy_bookmark_engine/handy_bookmark_engine.dart';
 import 'package:handy_ui/kit.dart';
 import '../app.dart' show saveAccent;
-import '../links/link_actions.dart';
+import '../design/theme.dart';
 import '../scope.dart';
+import 'article_view.dart';
+import 'find_bar.dart';
+import 'find_in_text.dart';
+import 'reader_session.dart';
+import 'reader_states.dart';
+import 'reading_position.dart';
 
 const _minSize = 14.0, _maxSize = 28.0, _defaultSize = 18.0;
 
-/// A link's offline copy as calm text: one readable column, the person's
-/// own size and tone, no pictures, no links. `#/read/<id>` on the web.
+/// One item's text as calm reading: the offline copy when there is one,
+/// otherwise the page read online on this tap (never in the background),
+/// with Save offline to keep it. Find in the article, the person's own
+/// size and tone, and the spot they stopped at, remembered on this device
+/// for this version of the text. `#/read/<id>` on the web.
 class ReaderPage extends StatefulWidget {
   final SaveScope scope;
   final String id;
@@ -18,13 +28,105 @@ class ReaderPage extends StatefulWidget {
 }
 
 class _ReaderPageState extends State<ReaderPage> {
-  late Future<ReadingCopy?> copy = widget.scope.c.readingCopy(widget.id);
   SaveScope get scope => widget.scope;
+  late final session = ReaderSession(scope.c, widget.id)..addListener(_changed);
+  final positions = ReadingPositions.instance;
+  final _page = FocusNode(debugLabel: 'reader');
+
+  // The text on screen, its version and where to open it.
+  ReadingCopy? _shown;
+  String? _version;
+  ReaderSpot? _initial, _spot;
+  bool _ready = false, _spotDirty = false;
+  Timer? _spotTimer;
+
+  // Find in article.
+  bool finding = false;
+  final _query = TextEditingController();
+  final _findFocus = FocusNode(debugLabel: 'reader-find');
+  TextFinder? _finder;
+  List<TextMatch> _matches = const [];
+  int? _current;
+  int _reveal = 0;
+  static const _findLimit = 1000;
 
   double get size =>
       ((scope.c.preferences['readerSize'] as num?)?.toDouble() ?? _defaultSize)
           .clamp(_minSize, _maxSize);
   String get tone => scope.c.preferences['readerTone'] as String? ?? 'app';
+
+  @override
+  void initState() {
+    super.initState();
+    // After the first build, so a quick answer can set state.
+    Future.microtask(session.open);
+  }
+
+  @override
+  void dispose() {
+    _flushSpot();
+    session
+      ..removeListener(_changed)
+      ..dispose();
+    _query.dispose();
+    _findFocus.dispose();
+    _page.dispose();
+    super.dispose();
+  }
+
+  void _changed() {
+    final r = session.copy;
+    if (r == null) {
+      _shown = null;
+      _ready = false;
+      _finder = null;
+      if (mounted) setState(() {});
+      return;
+    }
+    if (identical(r, _shown)) {
+      if (mounted) setState(() {});
+      return;
+    }
+    final version = copyVersion(r);
+    final same = version == _version;
+    _shown = r;
+    _finder = TextFinder([for (final b in r.blocks) b.text]);
+    if (same && _ready) {
+      // Saved offline: the same words, so the spot and the find stay.
+      if (finding) _search(_query.text, keepCurrent: true);
+      if (mounted) setState(() {});
+      return;
+    }
+    _version = version;
+    _ready = false;
+    _initial = null;
+    if (mounted) setState(() {});
+    positions.spot(widget.id, version).then((spot) {
+      if (!mounted || _version != version) return;
+      setState(() {
+        _initial = spot;
+        _spot = spot;
+        _ready = true;
+        if (finding) _search(_query.text);
+      });
+    });
+  }
+
+  void _onSpot(ReaderSpot spot) {
+    _spot = spot;
+    _spotDirty = true;
+    _spotTimer?.cancel();
+    _spotTimer = Timer(const Duration(milliseconds: 600), _flushSpot);
+  }
+
+  /// Writes the spot once scrolling has rested (or the reader closes).
+  void _flushSpot() {
+    _spotTimer?.cancel();
+    _spotTimer = null;
+    final v = _version;
+    if (_spotDirty && v != null) positions.remember(widget.id, v, _spot);
+    _spotDirty = false;
+  }
 
   Future<void> _set(String key, Object value) => scope.run(
     context,
@@ -36,18 +138,74 @@ class _ReaderPageState extends State<ReaderPage> {
     if (next != size) _set('readerSize', next);
   }
 
+  // Find ---------------------------------------------------------------
+
+  bool get _canFind => _ready && _shown != null;
+
+  void _openFind() {
+    if (!_canFind) return;
+    setState(() {
+      finding = true;
+      _search(_query.text);
+    });
+    _query.selection = TextSelection(
+      baseOffset: 0,
+      extentOffset: _query.text.length,
+    );
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) _findFocus.requestFocus();
+    });
+  }
+
+  void _closeFind() {
+    setState(() {
+      finding = false;
+      _matches = const [];
+      _current = null;
+    });
+    _page.requestFocus();
+  }
+
+  /// Runs the search; the first match is the first one from where the
+  /// person is reading, not from the top.
+  void _search(String q, {bool keepCurrent = false}) {
+    final finder = _finder;
+    final before = _current;
+    _matches = finder == null ? const [] : finder.search(q, limit: _findLimit);
+    if (_matches.isEmpty) {
+      _current = null;
+    } else if (keepCurrent && before != null && before < _matches.length) {
+      _current = before;
+    } else {
+      final from = _spot?.block ?? 0;
+      final i = _matches.indexWhere((m) => m.block >= from);
+      _current = i < 0 ? 0 : i;
+      _reveal++;
+    }
+  }
+
+  void _step(int by) {
+    if (_matches.isEmpty) return;
+    setState(() {
+      _current = ((_current ?? -by) + by) % _matches.length;
+      _reveal++;
+    });
+  }
+
+  // Build --------------------------------------------------------------
+
   @override
   Widget build(BuildContext context) => ListenableBuilder(
     listenable: scope.c,
     builder: (context, _) {
-      final page = _page(context);
+      final page = _scaffold(context);
       return switch (tone) {
         'light' => Theme(
-          data: buildHandyTheme(saveAccent, Brightness.light),
+          data: bookmarkTheme(buildHandyTheme(saveAccent, Brightness.light)),
           child: page,
         ),
         'dark' => Theme(
-          data: buildHandyTheme(saveAccent, Brightness.dark),
+          data: bookmarkTheme(buildHandyTheme(saveAccent, Brightness.dark)),
           child: page,
         ),
         _ => page,
@@ -55,8 +213,13 @@ class _ReaderPageState extends State<ReaderPage> {
     },
   );
 
-  Widget _page(BuildContext context) {
+  Widget _scaffold(BuildContext context) {
     final b = scope.find(widget.id);
+    final linked = b != null && b.hasUrl && !b.isImage;
+    void original() {
+      if (b != null) scope.open(context, b);
+    }
+
     return CallbackShortcuts(
       bindings: {
         for (final meta in [false, true]) ...{
@@ -72,16 +235,38 @@ class _ReaderPageState extends State<ReaderPage> {
             meta: meta,
           ): () =>
               _size(-2),
+          SingleActivator(LogicalKeyboardKey.keyF, control: !meta, meta: meta):
+              _openFind,
+          SingleActivator(
+            LogicalKeyboardKey.keyG,
+            control: !meta,
+            meta: meta,
+          ): () =>
+              _step(1),
+          SingleActivator(
+            LogicalKeyboardKey.keyG,
+            control: !meta,
+            meta: meta,
+            shift: true,
+          ): () =>
+              _step(-1),
         },
         const SingleActivator(LogicalKeyboardKey.escape): () =>
-            Navigator.maybePop(context),
+            finding ? _closeFind() : Navigator.maybePop(context),
       },
       child: Focus(
+        focusNode: _page,
         autofocus: true,
         child: Builder(
           builder: (context) => Scaffold(
             appBar: AppBar(
               actions: [
+                IconButton(
+                  key: const Key('reader-find'),
+                  tooltip: tr(context, 'Find in article', 'Tìm trong bài'),
+                  onPressed: _canFind ? _openFind : null,
+                  icon: const Icon(Icons.search),
+                ),
                 IconButton(
                   key: const Key('reader-smaller'),
                   tooltip: tr(context, 'Smaller text', 'Chữ nhỏ hơn'),
@@ -114,27 +299,32 @@ class _ReaderPageState extends State<ReaderPage> {
                       ),
                   ],
                 ),
-                if (b != null)
+                if (linked)
                   IconButton(
                     key: const Key('reader-original'),
                     tooltip: tr(context, 'Open original', 'Mở bản gốc'),
                     icon: const Icon(Icons.open_in_new),
-                    onPressed: () => scope.open(context, b),
+                    onPressed: original,
                   ),
                 const SizedBox(width: HandySpace.xs),
               ],
             ),
-            body: FutureBuilder<ReadingCopy?>(
-              future: copy,
-              builder: (context, snap) {
-                if (snap.connectionState != ConnectionState.done) {
-                  return const _Placeholder();
-                }
-                if (snap.hasError || snap.data == null || b == null) {
-                  return _missing(context, b, failed: snap.hasError);
-                }
-                return _text(context, snap.data!);
-              },
+            body: Column(
+              children: [
+                if (finding && _canFind)
+                  ReaderFindBar(
+                    controller: _query,
+                    focus: _findFocus,
+                    count: _matches.length,
+                    current: _current,
+                    capped: _matches.length >= _findLimit,
+                    onChanged: (q) => setState(() => _search(q)),
+                    onNext: () => _step(1),
+                    onPrevious: () => _step(-1),
+                    onClose: _closeFind,
+                  ),
+                Expanded(child: _body(context, b, linked ? original : null)),
+              ],
             ),
           ),
         ),
@@ -142,212 +332,61 @@ class _ReaderPageState extends State<ReaderPage> {
     );
   }
 
-  Widget _missing(BuildContext context, Bookmark? b, {bool failed = false}) =>
-      HandyEmpty(
-        title: b == null
-            ? tr(context, 'This link was deleted.', 'Link này đã bị xóa.')
-            : failed
-            ? tr(
-                context,
-                'This copy could not be read. The link itself is fine.',
-                'Chưa đọc được bản này. Bản thân link vẫn nguyên.',
-              )
-            : tr(
-                context,
-                'No offline copy of this link',
-                'Link này chưa có bản đọc offline',
-              ),
-        action: b == null
-            ? null
-            : FilledButton(
-                key: const Key('reader-save'),
-                onPressed: () async {
-                  await scope.saveCopies(context, [b.id]);
-                  if (mounted)
-                    setState(() => copy = scope.c.readingCopy(widget.id));
-                },
-                child: Text(
-                  tr(context, 'Save offline copy', 'Lưu bản đọc offline'),
-                ),
-              ),
-      );
+  Widget _body(BuildContext context, Bookmark? b, VoidCallback? original) {
+    switch (session.state) {
+      case ReaderState.opening:
+        return const ReaderLoading();
+      case ReaderState.fetching:
+        return ReaderLoading(
+          host: Uri.tryParse(b?.originalUrl ?? '')?.host ?? '',
+          onCancel: session.cancel,
+        );
+      case ReaderState.failed:
+        return ReaderNotice(
+          problem: session.problem ?? '',
+          address: Uri.tryParse(b?.originalUrl ?? '')?.host ?? '',
+          onOpenOriginal: original,
+          onRetry: session.readOnline,
+        );
+      case ReaderState.unreadable:
+        final p = session.problem ?? '';
+        return ReaderNotice(
+          problem: p,
+          onOpenOriginal: p == 'browser' || p == 'notWeb' ? original : null,
+        );
+      case ReaderState.reading:
+        final r = _shown;
+        if (r == null || !_ready) return const ReaderLoading();
+        return ArticleView(
+          key: ValueKey('article-$_version'),
+          copy: r,
+          fallbackTitle: b?.title ?? '',
+          size: size,
+          online: session.online,
+          saving: session.saving,
+          onSaveOffline: _saveOffline,
+          onOpenOriginal: original,
+          onSpot: _onSpot,
+          matches: finding ? _matches : const [],
+          current: finding ? _current : null,
+          reveal: _reveal,
+          initialSpot: _initial,
+        );
+    }
+  }
 
-  Widget _text(BuildContext context, ReadingCopy r) {
-    final theme = Theme.of(context);
-    final c = HandyColors.of(context);
-    final body = theme.textTheme.bodyLarge!.copyWith(
-      fontSize: size,
-      height: 1.6,
-      color: theme.colorScheme.onSurface,
-    );
-    final minutes = (r.words / 200).ceil();
-    final saved = formatDay(
+  Future<void> _saveOffline() async {
+    final ok = await session.saveOffline();
+    if (!mounted) return;
+    showHandyMessage(
       context,
-      DateTime.parse(r.savedAt).toLocal().toIso8601String().substring(0, 10),
-    );
-    Widget block(ReadingBlock k) => switch (k.kind) {
-      'h' => Padding(
-        padding: EdgeInsets.only(top: size * .9),
-        child: Semantics(
-          header: true,
-          child: Text(
-            k.text,
-            style: theme.textTheme.titleLarge?.copyWith(
-              fontSize: size * 1.25,
-              height: 1.3,
-            ),
-          ),
-        ),
-      ),
-      'quote' => Container(
-        padding: EdgeInsets.only(left: size * .9),
-        decoration: BoxDecoration(
-          border: BorderDirectional(
-            start: BorderSide(color: c.border, width: 3),
-          ),
-        ),
-        child: Text(k.text, style: body.copyWith(fontStyle: FontStyle.italic)),
-      ),
-      'li' => Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          SizedBox(
-            width: size * 1.2,
-            child: Text('•', style: body.copyWith(color: c.muted)),
-          ),
-          Expanded(child: Text(k.text, style: body)),
-        ],
-      ),
-      'pre' => Container(
-        width: double.infinity,
-        padding: const EdgeInsets.all(HandySpace.m),
-        decoration: BoxDecoration(
-          color: c.raised,
-          borderRadius: BorderRadius.circular(HandyRadius.control),
-        ),
-        child: SingleChildScrollView(
-          scrollDirection: Axis.horizontal,
-          child: Text(
-            k.text,
-            style: body.copyWith(
-              fontFamily: 'packages/handy_ui/GeistMono',
-              fontSize: size * .85,
-              height: 1.45,
-            ),
-          ),
-        ),
-      ),
-      _ => Text(k.text, style: body),
-    };
-    final rows = <Widget>[
-      Semantics(
-        header: true,
-        child: Text(
-          r.title.isEmpty ? (scope.find(widget.id)?.title ?? '') : r.title,
-          style: theme.textTheme.headlineMedium?.copyWith(height: 1.15),
-        ),
-      ),
-      Padding(
-        padding: const EdgeInsets.only(top: HandySpace.s),
-        child: Text(
-          [
-            if (r.siteName.isNotEmpty) r.siteName,
-            if (r.byline.isNotEmpty) r.byline,
-            tr(
+      ok
+          ? tr(context, 'Saved for offline reading.', 'Đã lưu bản đọc offline.')
+          : tr(
               context,
-              '$minutes min read · saved $saved',
-              '$minutes phút đọc · lưu $saved',
+              'Could not save the copy. Nothing was changed.',
+              'Chưa lưu được bản đọc. Không có gì thay đổi.',
             ),
-          ].join(' · '),
-          style: theme.textTheme.bodyMedium?.copyWith(color: c.muted),
-        ),
-      ),
-      SizedBox(height: size * 1.4),
-      for (final k in r.blocks) block(k),
-      if (r.truncated)
-        Text(
-          tr(
-            context,
-            'The page was longer. This copy keeps its first ${ReadingCopy.maxChars ~/ 1000}k characters; open the original for the rest.',
-            'Trang dài hơn. Bản này giữ ${ReadingCopy.maxChars ~/ 1000}k ký tự đầu; mở bản gốc để đọc tiếp.',
-          ),
-          style: theme.textTheme.bodyMedium?.copyWith(color: c.muted),
-        ),
-      Padding(
-        padding: const EdgeInsets.only(top: HandySpace.l),
-        child: Text(
-          tr(
-            context,
-            'Offline copy of ${r.url}',
-            'Bản đọc offline của ${r.url}',
-          ),
-          style: theme.textTheme.bodySmall?.copyWith(color: c.muted),
-        ),
-      ),
-    ];
-    return SelectionArea(
-      child: ListView.builder(
-        key: const Key('reader-text'),
-        padding: const EdgeInsets.fromLTRB(
-          HandySpace.l,
-          HandySpace.l,
-          HandySpace.l,
-          HandySpace.xxl * 2,
-        ),
-        itemCount: rows.length,
-        itemBuilder: (context, i) => Center(
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 680),
-            // Full column width, so short lines keep the left edge.
-            child: Container(
-              width: double.infinity,
-              padding: EdgeInsets.only(bottom: i < 2 ? 0 : size * .8),
-              child: rows[i],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-/// The reader's frame while the copy loads: flat bars at the text's size.
-class _Placeholder extends StatelessWidget {
-  const _Placeholder();
-  @override
-  Widget build(BuildContext context) {
-    final c = HandyColors.of(context);
-    Widget bar(double w, double h) => Container(
-      width: w,
-      height: h,
-      margin: const EdgeInsets.only(bottom: HandySpace.m),
-      decoration: BoxDecoration(
-        color: c.raised,
-        borderRadius: BorderRadius.circular(4),
-      ),
-    );
-    return Semantics(
-      label: tr(context, 'Opening the copy', 'Đang mở bản đọc'),
-      child: Center(
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 680),
-          child: Padding(
-            padding: const EdgeInsets.all(HandySpace.l),
-            child: LayoutBuilder(
-              builder: (context, box) => Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  bar(box.maxWidth * .8, 28),
-                  bar(box.maxWidth * .4, 14),
-                  const SizedBox(height: HandySpace.l),
-                  for (var i = 0; i < 6; i++)
-                    bar(box.maxWidth * (i.isEven ? 1 : .9), 16),
-                ],
-              ),
-            ),
-          ),
-        ),
-      ),
     );
   }
 }

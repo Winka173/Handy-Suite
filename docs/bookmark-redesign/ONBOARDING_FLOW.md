@@ -1,4 +1,4 @@
-# Handy Bookmark: the first-run guide (version 2)
+# Handy Bookmark: the first-run guide (version 3)
 
 This is version 2, written on 2026-11-06 after the owner reviewed version 1 on BlueStacks. The
 owner judged version 1 too plain next to Tuckii: grey and black, text-only cards, faint motion,
@@ -34,8 +34,22 @@ screen composition is used.
 
 ## Flow
 
-The progress bar has five segments, or four where the device has no notifications. Back and Skip
-are on every step.
+Version 3 (2026-11-06, the owner's "simple like Tuckii" pass) has **three stages**, and the
+progress bar has three segments on every device:
+
+1. **What to save**: the story, as one stage with two beats (1a and 1b below). The first button
+   brings the cards together on the same stage; the second goes on.
+2. **How to share and save**: the practice (3 below), unchanged.
+3. **How to find it**: the find scene (4 below). Its button, **Start saving**, finishes the guide.
+
+The weekly-nudge step (5 below) was removed: the first run asks for no permission and turns
+nothing on. The weekly nudge is offered only in Settings › Reminders, off until turned on. Back
+and Skip are on every stage; Back from the gathered beat returns to the scattered cards, and Back
+from the practice returns to the gathered library. The primary buttons keep their keys
+(`welcome-next-0` Bring it together, `-1` Show me how, `-2` the practice's Next, `-3` Start
+saving).
+
+The steps as built in version 2, kept here for the detail of each scene:
 
 1. **"Saved everywhere. / Found nowhere."** (VI "Lưu khắp nơi. / Tìm chẳng thấy.") with one
    line under it: "On TikTok, Facebook, YouTube, in your screenshots…". Four photo cards
@@ -73,7 +87,7 @@ are on every step.
 4. **"Find it in a moment."** A search types "pho bo" without accents. The key just typed lights
    on a drawn keyboard, the list narrows to the phở save, and "Open in TikTok" grows in. On
    phones the words follow once the search has played (2.4 s step).
-5. **"A gentle weekly nudge?"** Phones only. A lock screen over the Hội An photo, 19:00 Sunday,
+5. **Removed in version 3.** "A gentle weekly nudge?" Phones only. A lock screen over the Hội An photo, 19:00 Sunday,
    and a notification drops in: "5 things you saved recently are still waiting." **Turn on the
    nudge** asks for permission and turns on the weekly nudge setting. **Not now** finishes.
 
@@ -93,7 +107,7 @@ screen, and the rings became the lit window described above.
 
 ## Motion
 
-- One clock per step, 1.5 s, restarted on every step.
+- One clock per stage (and per story beat), 1.5 s (2.4 s for the find), restarted each time.
 - Parts arrive in order:
   - the title rises with a soft overshoot (0–35 %);
   - the tint band draws in under the key words (30–70 %);
@@ -106,11 +120,11 @@ screen, and the rings became the lit window described above.
 
 ## Layout
 
-- **Under 700 px, steps 1–2:** the progress bar, then the title (36 px, two short lines) and one
+- **Under 700 px, stage 1 (both beats):** the progress bar, then the title (36 px, two short lines) and one
   line, centred, at the top. The scene takes all the height left, and a full-width 56 px button
   sits at the foot. Below 600 px of height, or with text above 130 %, the page scrolls instead,
   with the scene at 52 % of the height (220–560 px).
-- **Under 700 px, steps 3–5:** the step is the whole screen at real size, edge to edge under the
+- **Under 700 px, stages 2–3 (practice and find):** the step is the whole screen at real size, edge to edge under the
   status bar, with no drawn phone. The bar floats on top: white over the video and the lock
   screen, ink on paper. The title, body and buttons come up in a paper panel from the bottom.
   The panel is at most 62 % of the height and scrolls. The practice clamps text to 130 % so its
@@ -123,22 +137,21 @@ screen, and the rings became the lit window described above.
 ## When it shows, and what it keeps
 
 - It opens on start only on an empty library that never finished the guide (`guideDone` in the
-  library preferences). It can be replayed from Settings › Help › How to save, or at
-  `/welcome`.
-- It saves nothing. The only thing it can change is the weekly nudge setting, and only when the
-  person turns it on.
+  library preferences). It can be replayed from Settings › Help & about › Replay the
+  guide (`set-guide`), or at `/welcome`.
+- It saves nothing and changes no setting. It asks for no notification permission (version 3);
+  the weekly nudge is turned on, if at all, in Settings › Reminders.
 
 ## Platform behaviour
 
 - Android back and Esc go to the previous step; on step 1 they leave.
 - Enter triggers the step's primary button once it is shown.
 - iOS swipe-back leaves the guide.
-- The nudge step appears only where the reminders plug-in is supported (Android and iOS), never
-  on Windows or the web.
+- No stage depends on the platform's notifications (the nudge stage is gone).
 
 ## Accessibility
 
-- Titles are headers. The progress bar reads "Step n of N".
+- Titles are headers. The progress bar reads "Step n of 3" (a semantics container).
 - The pretend phone in the practice step is interactive, and each target has a label (Share,
   Handy Bookmark, Good food, Save). The other scenes are pictures and are hidden from screen
   readers.
@@ -155,10 +168,12 @@ owner chose practice only); photos where a brand logo dominates.
 - `test/welcome_test.dart` (9 tests):
   - Skip is remembered;
   - existing libraries are never guided;
+  - three stages: "Bring it together" keeps step 1 of 3, the practice is 2 of 3, the find is 3 of
+    3 and its button finishes; no nudge step, and the nudge setting stays off;
   - the practice keeps its real order (Share, More, a collection in the top row), names each lit
     target, and saves nothing;
   - Handy Bookmark itself, in the practice, goes to Not sorted;
-  - back;
+  - back: practice → gathered → scattered → leave;
   - replay from Settings;
   - no overflow at 320 px with text at 200 %, at 390 px, and at 1280 px.
 - Screenshots of every stage at 390, 320 and 1280 px were rendered and reviewed. The dim behind

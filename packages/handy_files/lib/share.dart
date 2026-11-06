@@ -52,12 +52,64 @@ class LocalShare {
       ),
     );
     cancellation?.check();
-    return switch (result.status) {
-      ShareResultStatus.success => LocalShareResult.selected,
-      ShareResultStatus.dismissed => LocalShareResult.dismissed,
-      ShareResultStatus.unavailable => LocalShareResult.unknown,
-    };
+    return _result(result);
   }
+
+  /// Opens the OS share sheet with [text] (for example a title and a link)
+  /// after an explicit user action. [subject] fills an e-mail subject and
+  /// [title] the sheet's own title where the platform has one. No download
+  /// or e-mail fallback runs, so a missing share sheet is reported, never
+  /// silently replaced.
+  Future<LocalShareResult> text(
+    String text, {
+    String? subject,
+    String? title,
+    required Rect origin,
+    CancellationToken? cancellation,
+  }) async {
+    cancellation?.check();
+    if (!localShareSupported)
+      throw UnsupportedError('Sharing is not available on this platform');
+    final body = text.trim();
+    if (body.isEmpty ||
+        body.length > 100000 ||
+        ![
+          origin.left,
+          origin.top,
+          origin.width,
+          origin.height,
+        ].every((v) => v.isFinite) ||
+        origin.width <= 0 ||
+        origin.height <= 0)
+      throw const FormatException(
+        'Share requires text of 1 to 100000 characters and a valid origin',
+      );
+    String? short(String? value) {
+      final v = value?.trim() ?? '';
+      if (v.isEmpty) return null;
+      return v.length > 300 ? v.substring(0, 300) : v;
+    }
+
+    final result = await (client ?? SharePlus.instance).share(
+      ShareParams(
+        text: body,
+        subject: short(subject),
+        title: short(title),
+        sharePositionOrigin: origin,
+        downloadFallbackEnabled: false,
+        mailToFallbackEnabled: false,
+      ),
+    );
+    cancellation?.check();
+    return _result(result);
+  }
+
+  static LocalShareResult _result(ShareResult result) =>
+      switch (result.status) {
+        ShareResultStatus.success => LocalShareResult.selected,
+        ShareResultStatus.dismissed => LocalShareResult.dismissed,
+        ShareResultStatus.unavailable => LocalShareResult.unknown,
+      };
 }
 
 /// Shares a snapshot only after the user presses this explicit action.

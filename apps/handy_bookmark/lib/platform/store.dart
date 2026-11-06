@@ -34,14 +34,18 @@ abstract interface class BookmarkStore {
   /// [readingUndoRetention]; restoring the same ID and URL restores the copy.
   Future<Map<String, dynamic>?> readingCopy(String id);
 
-  /// Stores copies in one transaction; every id must be a saved bookmark.
+  /// Stores copies in one transaction; every id must be a saved item or one
+  /// in Recently Deleted. A copy of a Trash item waits beside it (as one
+  /// deleted here would) and comes back when the item is restored.
   Future<void> putReadingCopies(Map<String, Map<String, dynamic>> copies);
   Future<void> deleteReadingCopy(String id);
 
   /// Which bookmarks have a copy, with the copy's saved time.
   Future<Map<String, String>> readingIndex();
 
-  /// Every copy, for a full backup.
+  /// Every copy, for a full backup: of saved items, and of items in
+  /// Recently Deleted (they are restorable, so their copies are too). Not
+  /// the copies kept only for the short Undo window of other deletes.
   Future<Map<String, Map<String, dynamic>>> readingCopies();
   Future<void> clearReadingCopies();
 

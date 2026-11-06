@@ -24,7 +24,9 @@ void main() {
     expect(c.store is TestStore, isTrue);
     expect((c.store as TestStore).trash.keys, unorderedEquals([one, two]));
 
-    // It shows in the places list while something is there.
+    // It shows in the Library while something is there (since 2026-11-06
+    // the phone's home keeps only its covers and a way into the Library).
+    await tapKey(t, 'home-library');
     expect(find.byKey(const Key('place-trash'), skipOffstage: false), findsOne);
     await push(t, '/trash');
     expect(find.text('Còn 30 ngày · Chưa xếp'), findsNothing); // English UI

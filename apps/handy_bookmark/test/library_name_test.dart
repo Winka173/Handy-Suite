@@ -10,11 +10,10 @@ void main() {
   testWidgets('the home names the library and says what waits', (t) async {
     await boot(t);
     expect(find.text('Handy Bookmark'), findsWidgets);
-    expect(
-      find.textContaining('3 not sorted · newest'),
-      findsOneWidget,
-      reason: 'the dateline carries the day\'s finding',
-    );
+    // The day's finding sits on the "Recently saved" shelf (the dateline
+    // was dropped on 2026-11-06); the Library door says how much it holds.
+    expect(find.text('3 not sorted yet'), findsOneWidget);
+    expect(find.text('3 items'), findsOneWidget);
     await tapKey(t, 'open-settings');
     await tapKey(t, 'set-library-name');
     await t.enterText(

@@ -1,5 +1,6 @@
 import 'package:handy_bookmark_engine/handy_bookmark_engine.dart';
 import 'package:handy_ui/kit.dart';
+import '../bookmark/item_menu.dart';
 import '../controller.dart';
 import '../design/theme.dart';
 import '../ui/collection_picker.dart';
@@ -8,7 +9,8 @@ import '../ui/words.dart';
 
 /// A save as a gallery card: its picture large (or its source's face),
 /// two lines of title and one of where it is from. Tapping opens the
-/// original (or the picture); the corner button opens its details.
+/// original (or the picture); the corner "…" opens its menu (details,
+/// rename, share, move, delete).
 class LinkCard extends StatelessWidget {
   final SaveController controller;
   final Bookmark bookmark;
@@ -124,15 +126,14 @@ class LinkCard extends StatelessWidget {
                         ],
                       ),
                     ),
-                    SizedBox(
-                      width: 40,
-                      height: 40,
-                      child: IconButton(
-                        key: Key('details-${b.id}'),
-                        tooltip: tr(context, 'Details', 'Chi tiết'),
-                        padding: EdgeInsets.zero,
-                        icon: Icon(Icons.more_horiz, color: p.muted),
-                        onPressed: onDetails,
+                    // 44 × 48: the card's corner, nudged up into the
+                    // padding so the title keeps its width.
+                    Transform.translate(
+                      offset: const Offset(0, -6),
+                      child: ItemMenuButton(
+                        bookmark: b,
+                        onDetails: onDetails,
+                        width: 44,
                       ),
                     ),
                   ],

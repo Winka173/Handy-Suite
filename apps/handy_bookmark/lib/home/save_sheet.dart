@@ -4,10 +4,10 @@ import '../scope.dart';
 import '../welcome/motion.dart';
 import 'link_capture.dart';
 
-/// The one Save button's sheet. A link comes first (type it, or Paste,
-/// then Save); below it, the two other ways in: several links at once, or
-/// a picture. On phones it also points to saving from other apps, which
-/// needs no sheet at all.
+/// The one Save button's sheet, and the only place to save by hand: a
+/// link first (type it, or Paste, then Save), then a picture. Several
+/// links at once is a quiet text action under them; on phones so is how
+/// to save from other apps, which needs no sheet at all.
 Future<void> showSaveSheet(
   BuildContext context,
   SaveScope scope, {
@@ -21,7 +21,6 @@ Future<void> showSaveSheet(
   builder: (sheet) {
     void close() => Navigator.of(sheet).pop();
     final theme = Theme.of(sheet);
-    final p = BookmarkPalette.of(sheet);
     return AnimatedPadding(
       duration: const Duration(milliseconds: 120),
       padding: EdgeInsets.only(bottom: MediaQuery.viewInsetsOf(sheet).bottom),
@@ -49,83 +48,56 @@ Future<void> showSaveSheet(
                   Navigator.of(context).pushNamed('/bookmark/${saved.id}');
                 },
               ),
-              const SizedBox(height: 24),
-              Text(
-                tr(sheet, 'Or add', 'Hoặc thêm'),
-                style: theme.textTheme.titleSmall?.copyWith(color: p.muted),
+              const SizedBox(height: 20),
+              _Way(
+                key: const Key('save-photo'),
+                icon: Icons.add_photo_alternate_outlined,
+                title: tr(sheet, 'Save a picture', 'Lưu một ảnh'),
+                note: tr(
+                  sheet,
+                  'A screenshot or photo, from your photos or files',
+                  'Ảnh chụp màn hình hoặc ảnh, từ thư viện ảnh hay tệp',
+                ),
+                onTap: () {
+                  close();
+                  scope.addPhoto(context);
+                },
               ),
-              const SizedBox(height: 10),
-              LayoutBuilder(
-                builder: (_, box) {
-                  final several = _Way(
+              const SizedBox(height: 8),
+              // The rarer ways stay quiet: several links at once, and
+              // (where the system offers Share) how to save from apps.
+              Wrap(
+                spacing: 4,
+                children: [
+                  TextButton.icon(
                     key: const Key('save-add'),
-                    icon: Icons.playlist_add_rounded,
-                    title: tr(sheet, 'Several links', 'Nhiều link'),
-                    note: tr(
-                      sheet,
-                      'A list, one per line',
-                      'Một danh sách, mỗi dòng một link',
-                    ),
-                    onTap: () {
+                    onPressed: () {
                       close();
                       onAdd();
                     },
-                  );
-                  final picture = _Way(
-                    key: const Key('save-photo'),
-                    icon: Icons.add_photo_alternate_outlined,
-                    title: tr(sheet, 'A picture', 'Một ảnh'),
-                    note: tr(
-                      sheet,
-                      'From photos or files',
-                      'Từ thư viện ảnh hoặc tệp',
-                    ),
-                    onTap: () {
-                      close();
-                      scope.addPhoto(context);
-                    },
-                  );
-                  // Side by side while each keeps room for its words.
-                  final scale = MediaQuery.textScalerOf(sheet).scale(1);
-                  if (box.maxWidth / scale < 300) {
-                    return Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [several, const SizedBox(height: 10), picture],
-                    );
-                  }
-                  return IntrinsicHeight(
-                    child: Row(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        Expanded(child: several),
-                        const SizedBox(width: 10),
-                        Expanded(child: picture),
-                      ],
-                    ),
-                  );
-                },
-              ),
-              if (canReceiveShares) ...[
-                const SizedBox(height: 12),
-                Align(
-                  alignment: AlignmentDirectional.centerStart,
-                  child: TextButton.icon(
-                    key: const Key('save-how'),
-                    onPressed: () {
-                      close();
-                      Navigator.of(context).pushNamed('/welcome');
-                    },
-                    icon: const Icon(Icons.ios_share_rounded, size: 20),
+                    icon: const Icon(Icons.playlist_add_rounded, size: 20),
                     label: Text(
-                      tr(
-                        sheet,
-                        'Save from other apps with Share',
-                        'Lưu từ app khác bằng nút Chia sẻ',
-                      ),
+                      tr(sheet, 'Several links at once', 'Nhiều link một lúc'),
                     ),
                   ),
-                ),
-              ],
+                  if (canReceiveShares)
+                    TextButton.icon(
+                      key: const Key('save-how'),
+                      onPressed: () {
+                        close();
+                        Navigator.of(context).pushNamed('/welcome');
+                      },
+                      icon: const Icon(Icons.ios_share_rounded, size: 20),
+                      label: Text(
+                        tr(
+                          sheet,
+                          'Save from other apps with Share',
+                          'Lưu từ app khác bằng nút Chia sẻ',
+                        ),
+                      ),
+                    ),
+                ],
+              ),
             ],
           ),
         ),
@@ -134,8 +106,8 @@ Future<void> showSaveSheet(
   },
 );
 
-/// One other way to save: a soft tile with its mark, name and a short
-/// line on what it takes.
+/// The other way to save, a picture: a soft tile with its mark, name and
+/// a short line on what it takes.
 class _Way extends StatelessWidget {
   final IconData icon;
   final String title, note;

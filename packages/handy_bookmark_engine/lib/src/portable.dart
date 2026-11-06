@@ -29,6 +29,10 @@ class PortablePicture {
 
 class ImportResult {
   final SaveLibrary library;
+
+  /// Offline copies to store after [library], keyed by the ids their items
+  /// ended up with. A replace also carries the copies of items in Recently
+  /// Deleted, so they come back with the item when it is restored.
   final Map<String, ReadingCopy> readingCopies;
 
   /// Pictures to store before the library, keyed by their id.
@@ -86,7 +90,8 @@ class ImportPreview {
   final List<String> warnings;
 
   /// Offline reading copies carried by a full backup, keyed by the ids in
-  /// [library]. Copies that failed validation are counted in [invalidCopies].
+  /// [library]: its items and those in Recently Deleted. Copies that failed
+  /// validation are counted in [invalidCopies].
   final Map<String, ReadingCopy> readingCopies;
   final int invalidCopies;
 
@@ -300,6 +305,20 @@ class ImportPreview {
       for (final b in bookmarks)
         if (added.containsValue(b.id) && b.media != null) b.media!.id,
     };
+    // A file item as it is known here: added under a new id, or (a
+    // duplicate) the same link already saved.
+    final here = {for (final b in bookmarks) _key(b): b.id};
+    final fileItems = {for (final b in library.bookmarks) b.id: b};
+    Map<String, dynamic> view(Map<String, dynamic> v) {
+      final cover = v['cover'];
+      if (cover is! String) return {...v};
+      final b = fileItems[cover];
+      final id = added[cover] ?? (b == null ? null : here[_key(b)]);
+      return {...v}
+        ..remove('cover')
+        ..addAll({if (id != null) 'cover': id});
+    }
+
     return ImportResult(
       SaveLibrary(
         tags: {...current.tags, ...library.tags}.toList(),
@@ -324,7 +343,7 @@ class ImportPreview {
       // keeps the way the person shows it.
       {
         for (final e in collectionViews.entries)
-          if (created.contains(e.key)) remap[e.key]!: e.value,
+          if (created.contains(e.key)) remap[e.key]!: view(e.value),
       },
     );
   }
@@ -550,15 +569,20 @@ class SavePortable {
   ).bytes;
 
   /// The view choices worth carrying for [collections]: per collection id,
-  /// `cards` (bool) and `sort` (a [SaveSort] name). Anything else (unknown
-  /// collections, keys or values) is dropped, never an error: a view is a
-  /// preference, and a damaged one must not stop a restore.
+  /// `cards` (bool), `sort` (a [SaveSort] name) and `cover` (the id of the
+  /// item chosen as the collection's cover; kept only when it is one of
+  /// [items], the file's items and those in Recently Deleted). Anything
+  /// else (unknown collections, keys or values) is dropped, never an
+  /// error: a view is a preference, and a damaged one must not stop a
+  /// restore.
   static Map<String, Map<String, dynamic>> readCollectionViews(
     Object? raw,
-    Iterable<String> collections,
-  ) {
+    Iterable<String> collections, [
+    Iterable<String> items = const [],
+  ]) {
     if (raw is! Map) return const {};
     final known = collections.toSet();
+    final ids = items.toSet();
     final sorts = {for (final s in SaveSort.values) s.name};
     final out = <String, Map<String, dynamic>>{};
     for (final e in raw.entries) {
@@ -567,11 +591,20 @@ class SavePortable {
       final view = <String, dynamic>{
         if (v['cards'] is bool) 'cards': v['cards'],
         if (v['sort'] is String && sorts.contains(v['sort'])) 'sort': v['sort'],
+        if (v['cover'] is String && ids.contains(v['cover']))
+          'cover': v['cover'],
       };
       if (view.isNotEmpty) out[e.key as String] = view;
     }
     return out;
   }
+
+  /// Ids of [library]'s items and of those in Recently Deleted: what a
+  /// full backup carries offline copies (and covers) for.
+  static Set<String> _itemIds(SaveLibrary library) => {
+    for (final b in library.bookmarks) b.id,
+    for (final b in library.trash) b.id,
+  };
 
   /// Reading copies that fit next to the library inside [budget] bytes,
   /// newest first; a copy too large to fit is skipped, smaller ones still go.
@@ -580,7 +613,7 @@ class SavePortable {
     Map<String, ReadingCopy> copies,
     int budget,
   ) {
-    final ids = {for (final b in library.bookmarks) b.id};
+    final ids = _itemIds(library);
     final entries = copies.entries.where((e) => ids.contains(e.key)).toList()
       ..sort((a, b) => b.value.savedAt.compareTo(a.value.savedAt));
     final chosen = <String, Map<String, dynamic>>{};
@@ -616,9 +649,12 @@ class SavePortable {
     int unreadableReadingCopies = 0,
   }) {
     library.validate();
+    // Items in Recently Deleted are in the file too: their copies go with
+    // them, so restoring one from Trash after a restore brings it back.
+    final ids = _itemIds(library);
     final views = readCollectionViews(collectionViews, [
       for (final c in library.collections) c.id,
-    ]);
+    ], ids);
     // An extra key older versions of the app ignore when they read it, so
     // backups stay readable both ways without a format change.
     final libraryJson = {
@@ -627,7 +663,6 @@ class SavePortable {
     };
     var json = jsonEncode(libraryJson);
     final payload = base64Url.encode(utf8.encode(json));
-    final ids = {for (final b in library.bookmarks) b.id};
     final offered = readingCopies.keys.where(ids.contains).length;
     var copies = const <String, Map<String, dynamic>>{};
     if (offered > 0 &&
@@ -1243,7 +1278,7 @@ class SavePortable {
     var invalidCopies = 0;
     if (raw != null) {
       if (raw is! Map) throw const FormatException('Invalid reading copies');
-      final ids = {for (final b in library.bookmarks) b.id};
+      final ids = _itemIds(library);
       for (final e in raw.entries) {
         try {
           if (e.key is! String || !ids.contains(e.key) || e.value is! Map)
@@ -1267,7 +1302,7 @@ class SavePortable {
       invalidCopies: invalidCopies,
       collectionViews: readCollectionViews(json['collectionViews'], [
         for (final c in library.collections) c.id,
-      ]),
+      ], _itemIds(library)),
     );
   }
 
@@ -1569,7 +1604,7 @@ class SavePortable {
       invalidCount: p.invalidCount,
       collectionViews: readCollectionViews(metadata['collectionViews'], [
         for (final c in library.collections) c.id,
-      ]),
+      ], _itemIds(library)),
     );
   }
 }

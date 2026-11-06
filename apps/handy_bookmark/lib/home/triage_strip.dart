@@ -10,7 +10,8 @@ import '../ui/words.dart';
 
 /// The home's shelf of what was saved lately, as pictures. What still has
 /// no collection comes first and carries one "Put in…" button; the rest
-/// show where they live. Ten at most; "See all" opens Not sorted.
+/// show where they live. Six at most, so the home stays short; "See all"
+/// opens Not sorted.
 class TriageStrip extends StatelessWidget {
   final SaveController controller;
   final Future<void> Function(Bookmark, String collectionId) onFile;
@@ -39,7 +40,7 @@ class TriageStrip extends StatelessWidget {
       ...waiting,
       for (final b in live)
         if (b.collectionId != null) b,
-    ].take(10).toList();
+    ].take(6).toList();
     if (shown.isEmpty) return const SizedBox.shrink();
     final scale = MediaQuery.textScalerOf(context).scale(14) / 14;
     return Column(

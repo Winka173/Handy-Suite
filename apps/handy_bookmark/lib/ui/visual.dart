@@ -147,7 +147,9 @@ class SectionHead extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.only(top: 28, bottom: 12),
       child: Row(
-        crossAxisAlignment: CrossAxisAlignment.end,
+        crossAxisAlignment: note == null
+            ? CrossAxisAlignment.center
+            : CrossAxisAlignment.end,
         children: [
           Expanded(
             child: Column(

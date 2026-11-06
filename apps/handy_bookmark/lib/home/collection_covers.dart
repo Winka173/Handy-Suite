@@ -7,6 +7,7 @@ import '../scope.dart';
 import '../design/theme.dart';
 import '../ui/collection_picker.dart';
 import '../ui/visual.dart';
+import '../view/library_view.dart';
 
 /// The library as a shelf: every collection with a cover made from what is
 /// in it (its newest pictures, or its newest titles set like a front page
@@ -82,6 +83,7 @@ class CollectionCovers extends StatelessWidget {
                             : names[col.parentId],
                         hue: collectionHue(l, col.id),
                         items: byCollection[col.id] ?? const [],
+                        cover: scope.view.chosenCover(col.id),
                         onOpen: () => onOpen(col),
                       ),
                     ),
@@ -100,6 +102,9 @@ class _Cover extends StatelessWidget {
   final String? parent;
   final int hue;
   final List<Bookmark> items;
+
+  /// The picture the person chose for this cover, if it is still here.
+  final Bookmark? cover;
   final VoidCallback onOpen;
   const _Cover({
     required this.scope,
@@ -107,6 +112,7 @@ class _Cover extends StatelessWidget {
     required this.parent,
     required this.hue,
     required this.items,
+    required this.cover,
     required this.onOpen,
   });
 
@@ -118,14 +124,22 @@ class _Cover extends StatelessWidget {
     final links = items.length - pictures;
     final count = [
       if (links > 0 || pictures == 0)
-        tr(context, '$links links', '$links link'),
-      if (pictures > 0) tr(context, '$pictures pictures', '$pictures ảnh'),
+        tr(context, links == 1 ? '1 link' : '$links links', '$links link'),
+      if (pictures > 0)
+        tr(
+          context,
+          pictures == 1 ? '1 picture' : '$pictures pictures',
+          '$pictures ảnh',
+        ),
     ].join(' · ');
-    // Pictures first: a cover is what the collection looks like.
-    final shown = [
-      ...items.where((b) => b.media != null || b.thumbnailUrl != null),
-      ...items.where((b) => b.media == null && b.thumbnailUrl == null),
-    ].take(3).toList();
+    // The chosen picture alone; else pictures first, since a cover is what
+    // the collection looks like.
+    final shown = cover != null
+        ? [cover!]
+        : [
+            ...items.where(hasPicture),
+            ...items.where((b) => !hasPicture(b)),
+          ].take(3).toList();
     return Semantics(
       button: true,
       label: '${collection.name}, $count',

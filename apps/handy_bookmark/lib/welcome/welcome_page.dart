@@ -19,11 +19,15 @@ bool shouldShowGuide(SaveScope scope) =>
     scope.library.bookmarks.isEmpty &&
     scope.library.trash.isEmpty;
 
-enum _Step { scattered, gathered, practice, find, nudge }
+/// The guide's three stages: what to save (scattered, then gathered in
+/// one place: one stage, two beats), how to save from another app (the
+/// practice), and how to find it again.
+enum _Step { story, practice, find }
 
-/// The first run: a short story told with real photos (saved everywhere,
-/// found nowhere; then one place), a practice save on a pretend phone,
-/// finding it again, and the weekly nudge. Nothing in it is saved.
+/// The first run, in three short stages told with real photos: saved
+/// everywhere and found nowhere, then brought together; a practice save on
+/// a pretend phone; finding it again. Nothing in it is saved, and it asks
+/// for no permission: the weekly nudge is offered in Settings only.
 /// Skip on every step; replayable from Settings (`/welcome`).
 class WelcomePage extends StatefulWidget {
   final SaveScope scope;
@@ -35,6 +39,9 @@ class WelcomePage extends StatefulWidget {
 class _WelcomePageState extends State<WelcomePage>
     with SingleTickerProviderStateMixin {
   int at = 0;
+
+  /// The story's second beat: the cards have come together.
+  bool gathered = false;
   bool practiced = false, leaving = false;
   late final AnimationController clock = AnimationController(
     vsync: this,
@@ -42,14 +49,12 @@ class _WelcomePageState extends State<WelcomePage>
   );
   SaveScope get scope => widget.scope;
 
-  List<_Step> get steps => [
-    _Step.scattered,
-    _Step.gathered,
-    _Step.practice,
-    _Step.find,
-    if (scope.reminders.supported) _Step.nudge,
-  ];
+  static const steps = _Step.values;
   _Step get step => steps[at];
+
+  /// Which primary button is showing, for its key: 0 and 1 are the
+  /// story's two beats, 2 the practice, 3 the find.
+  int get beat => step == _Step.story ? (gathered ? 1 : 0) : step.index + 1;
 
   @override
   void didChangeDependencies() {
@@ -72,9 +77,17 @@ class _WelcomePageState extends State<WelcomePage>
 
   void _go(int next) {
     setState(() {
+      // Back into the story lands on its second beat.
+      gathered = next < at;
       at = next;
       if (step == _Step.practice) practiced = false;
     });
+    _play();
+  }
+
+  /// The story's first button: the cards come together, same stage.
+  void _gather() {
+    setState(() => gathered = true);
     _play();
   }
 
@@ -99,22 +112,14 @@ class _WelcomePageState extends State<WelcomePage>
     if (mounted) Navigator.of(context).pop();
   }
 
-  Future<void> _turnOnNudge() async {
-    final allowed = await scope.reminders.request();
-    if (allowed && mounted)
-      await scope.run(
-        context,
-        () => scope.c.update(
-          (l) => l,
-          prefs: {...scope.c.preferences, 'revisit': true},
-        ),
-      );
-    await _finish();
+  void _back() {
+    if (step == _Step.story && gathered) {
+      setState(() => gathered = false);
+      _play();
+    } else {
+      at == 0 ? _finish() : _go(at - 1);
+    }
   }
-
-  void _back() => at == 0 ? _finish() : _go(at - 1);
-
-  void _next() => at == steps.length - 1 ? _finish() : _go(at + 1);
 
   @override
   Widget build(BuildContext context) {
@@ -139,7 +144,7 @@ class _WelcomePageState extends State<WelcomePage>
               body: LayoutBuilder(
                 builder: (context, box) => box.maxWidth >= 700
                     ? SafeArea(child: _wide(context, page))
-                    : step.index >= _Step.practice.index
+                    : step != _Step.story
                     ? _full(context, page)
                     : SafeArea(child: _narrow(context, page)),
               ),
@@ -151,7 +156,7 @@ class _WelcomePageState extends State<WelcomePage>
   }
 
   _Page _page(BuildContext context) => switch (step) {
-    _Step.scattered => _Page(
+    _Step.story when !gathered => _Page(
       before: tr(context, 'Saved everywhere.\n', 'Lưu khắp nơi.\n'),
       words: tr(context, 'Found nowhere.', 'Tìm chẳng thấy.'),
       after: '',
@@ -161,7 +166,7 @@ class _WelcomePageState extends State<WelcomePage>
         'Trên TikTok, Facebook, YouTube, trong ảnh chụp màn hình…',
       ),
       primary: tr(context, 'Bring it together', 'Gom về một chỗ'),
-      onPrimary: () => _go(1),
+      onPrimary: _gather,
       secondary: TextButton(
         key: const Key('welcome-import'),
         style: TextButton.styleFrom(foregroundColor: GuideColors.tealDeep),
@@ -174,7 +179,7 @@ class _WelcomePageState extends State<WelcomePage>
         ),
       ),
     ),
-    _Step.gathered => _Page(
+    _Step.story => _Page(
       before: tr(context, 'One place for ', 'Một chỗ cho '),
       words: tr(context, 'all of it', 'tất cả'),
       after: '.',
@@ -184,7 +189,7 @@ class _WelcomePageState extends State<WelcomePage>
         'Ngay trên máy, xếp theo bộ sưu tập. Không tài khoản, không quảng cáo.',
       ),
       primary: tr(context, 'Show me how', 'Chỉ tôi cách lưu'),
-      onPrimary: () => _go(2),
+      onPrimary: () => _go(1),
     ),
     _Step.practice => _Page(
       before: practiced
@@ -206,7 +211,7 @@ class _WelcomePageState extends State<WelcomePage>
               'Bấm vào chỗ đang sáng trên điện thoại. Đây là bản tập, không lưu gì thật.',
             ),
       primary: practiced ? tr(context, 'Next', 'Tiếp') : null,
-      onPrimary: () => _go(3),
+      onPrimary: () => _go(2),
     ),
     _Step.find => _Page(
       before: tr(context, 'Find it ', 'Tìm lại '),
@@ -217,38 +222,15 @@ class _WelcomePageState extends State<WelcomePage>
         'Type a few letters, accents optional. Tap the result to open the original video.',
         'Gõ vài chữ, không dấu cũng được. Chạm kết quả là mở đúng video gốc.',
       ),
-      primary: at == steps.length - 1
-          ? tr(context, 'Start saving', 'Bắt đầu lưu')
-          : tr(context, 'Next', 'Tiếp'),
-      onPrimary: _next,
-    ),
-    _Step.nudge => _Page(
-      before: tr(context, 'A gentle ', 'Nhắc nhẹ '),
-      words: tr(context, 'weekly nudge', 'mỗi tuần'),
-      after: '?',
-      body: tr(
-        context,
-        'Only when something new is waiting unread. It says how many, never which.',
-        'Chỉ khi có món mới lưu mà chưa xem. Thông báo chỉ ghi số lượng, không ghi tiêu đề.',
-      ),
-      primary: tr(context, 'Turn on the nudge', 'Bật nhắc'),
-      onPrimary: _turnOnNudge,
-      secondary: TextButton(
-        key: const Key('welcome-later'),
-        style: TextButton.styleFrom(foregroundColor: GuideColors.tealDeep),
-        onPressed: _finish,
-        child: Text(tr(context, 'Not now', 'Để sau')),
-      ),
+      primary: tr(context, 'Start saving', 'Bắt đầu lưu'),
+      onPrimary: _finish,
     ),
   };
 
   /// The step's picture. [full]: a phone's whole screen, real size, with
   /// [top] left clear for the bar.
   Widget _scene({bool full = false, double top = 48}) => switch (step) {
-    _Step.scattered || _Step.gathered => StoryScene(
-      key: const ValueKey('story'),
-      gathered: step == _Step.gathered,
-    ),
+    _Step.story => StoryScene(key: const ValueKey('story'), gathered: gathered),
     _Step.practice => Rehearsal(
       key: const ValueKey('practice'),
       framed: !full,
@@ -265,11 +247,6 @@ class _WelcomePageState extends State<WelcomePage>
       bare: full,
       top: full ? top + 8 : 48,
     ),
-    _Step.nudge => NudgeScene(
-      key: const ValueKey('nudge'),
-      bare: full,
-      top: full ? top : 48,
-    ),
   };
 
   Widget _bar(BuildContext context, {bool light = false}) {
@@ -280,7 +257,7 @@ class _WelcomePageState extends State<WelcomePage>
         children: [
           SizedBox(
             width: 48,
-            child: at == 0
+            child: at == 0 && !gathered
                 ? null
                 : IconButton(
                     key: const Key('welcome-back'),
@@ -292,6 +269,7 @@ class _WelcomePageState extends State<WelcomePage>
           ),
           Expanded(
             child: Semantics(
+              container: true,
               label: tr(
                 context,
                 'Step ${at + 1} of ${steps.length}',
@@ -355,7 +333,7 @@ class _WelcomePageState extends State<WelcomePage>
     );
     return HandySwap(
       child: Column(
-        key: ValueKey('words-$at-$practiced'),
+        key: ValueKey('words-$at-$gathered-$practiced'),
         crossAxisAlignment: center
             ? CrossAxisAlignment.center
             : CrossAxisAlignment.start,
@@ -399,7 +377,7 @@ class _WelcomePageState extends State<WelcomePage>
             rise: 10,
             scale: .96,
             child: FilledButton(
-              key: Key('welcome-next-$at'),
+              key: Key('welcome-next-$beat'),
               style: FilledButton.styleFrom(
                 backgroundColor: GuideColors.teal,
                 foregroundColor: Colors.white,
@@ -433,20 +411,16 @@ class _WelcomePageState extends State<WelcomePage>
           );
   }
 
-  /// On a phone, from the practice on: the step is the whole screen at
+  /// On a phone, the practice and the find: the step is the whole screen at
   /// real size (so the things to tap are their real size), the bar floats
   /// on top, and the words arrive in a panel from below once the picture
   /// has played (after the save, in the practice).
   Widget _full(BuildContext context, _Page p) {
     final pad = MediaQuery.paddingOf(context);
     const barHeight = 56.0;
-    final dark = step == _Step.nudge || (step == _Step.practice && !practiced);
+    final dark = step == _Step.practice && !practiced;
     final panel = step != _Step.practice || practiced;
-    final from = switch (step) {
-      _Step.find => .72,
-      _Step.nudge => .55,
-      _ => 0.0,
-    };
+    final from = step == _Step.find ? .72 : 0.0;
     return AnnotatedRegion<SystemUiOverlayStyle>(
       value: dark ? SystemUiOverlayStyle.light : SystemUiOverlayStyle.dark,
       child: ColoredBox(
@@ -533,7 +507,7 @@ class _WelcomePageState extends State<WelcomePage>
     );
   }
 
-  /// Phones, the two story steps: a short title and one line at the top,
+  /// Phones, the story's two beats: a short title and one line at the top,
   /// the picture as large as the screen allows, the button at the foot.
   /// With little height or large text the page scrolls instead.
   Widget _narrow(BuildContext context, _Page p) => LayoutBuilder(

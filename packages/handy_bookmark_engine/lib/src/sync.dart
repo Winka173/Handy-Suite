@@ -129,14 +129,7 @@ SaveLibrary mergeLibraries(SaveLibrary local, SaveLibrary remote) {
   final cols = [
     for (final c in collections.values)
       c.parentId != null && !collections.containsKey(c.parentId)
-          ? SaveCollection(
-              id: c.id,
-              name: c.name,
-              color: c.color,
-              icon: c.icon,
-              description: c.description,
-              position: c.position,
-            )
+          ? c.copyWith(parentId: null)
           : c,
   ];
   final known = {for (final c in cols) c.id};
