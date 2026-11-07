@@ -5,7 +5,7 @@ import 'package:flutter/services.dart';
 class BoardField {
   final String id, en, vi, kind;
   final Map<String, String>? options;
-  final bool optional;
+  final bool optional, advanced;
   final bool Function(Map<String, dynamic>)? visibleWhen;
   const BoardField(
     this.id,
@@ -14,6 +14,7 @@ class BoardField {
     this.kind = 'text',
     this.options,
     this.optional = false,
+    this.advanced = false,
     this.visibleWhen,
   });
 }
@@ -61,6 +62,7 @@ class _FormState extends State<_BoardForm> {
   };
   String? error;
   bool busy = false;
+  bool advanced = false;
   @override
   void dispose() {
     for (final c in inputs.values) c.dispose();
@@ -124,9 +126,10 @@ class _FormState extends State<_BoardForm> {
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                for (final f in widget.fields.where(
-                  (f) => f.visibleWhen?.call(values) ?? true,
-                ))
+                for (final f in [
+                  ...widget.fields.where((f) => !f.advanced),
+                  if (advanced) ...widget.fields.where((f) => f.advanced),
+                ].where((f) => f.visibleWhen?.call(values) ?? true))
                   Padding(
                     padding: const EdgeInsets.only(bottom: 16),
                     child: Column(
@@ -251,6 +254,7 @@ class _FormState extends State<_BoardForm> {
                           _ => Semantics(
                             label: tr(context, f.en, f.vi),
                             child: TextField(
+                              key: Key('boards-field-${f.id}'),
                               controller: inputs[f.id],
                               enabled: !busy,
                               maxLines: f.kind == 'note' ? 5 : 1,
@@ -265,6 +269,29 @@ class _FormState extends State<_BoardForm> {
                           ),
                         },
                       ],
+                    ),
+                  ),
+                if (widget.fields.any((f) => f.advanced))
+                  OutlinedButton.icon(
+                    key: const Key('boards-form-advanced'),
+                    onPressed: busy
+                        ? null
+                        : () => setState(() => advanced = !advanced),
+                    icon: Icon(
+                      advanced ? Icons.expand_less : Icons.expand_more,
+                    ),
+                    label: Text(
+                      advanced
+                          ? tr(
+                              context,
+                              'Hide advanced options',
+                              'Ẩn tuỳ chọn nâng cao',
+                            )
+                          : tr(
+                              context,
+                              'Advanced options',
+                              'Tuỳ chọn nâng cao',
+                            ),
                     ),
                   ),
                 ...widget.footer,

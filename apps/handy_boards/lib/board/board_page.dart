@@ -1,0 +1,351 @@
+import 'package:flutter/services.dart';
+import 'package:handy_boards_engine/handy_boards_engine.dart';
+import 'package:handy_ui/kit.dart';
+import '../card/card_sheet.dart';
+import '../card/cover_picker.dart';
+import '../design/theme.dart';
+import '../pro/pro.dart';
+import '../scope.dart';
+import '../ui/look.dart';
+import 'board_menus.dart';
+import 'categories_sheet.dart';
+import 'category_strip.dart';
+import 'kanban_view.dart';
+
+/// Shows [message] with an Undo that steps the controller back once.
+void showUndo(BuildContext context, BoardsScope scope, String message) {
+  final m = ScaffoldMessenger.of(context);
+  m.hideCurrentSnackBar();
+  m.showSnackBar(
+    SnackBar(
+      content: Text(message),
+      action: SnackBarAction(
+        label: tr(context, 'Undo', 'Hoàn tác'),
+        onPressed: () => scope.controller.undo(),
+      ),
+    ),
+  );
+}
+
+/// One board: its name, the category strip and the Kanban.
+class BoardPage extends StatefulWidget {
+  final BoardsScope scope;
+  final String board;
+  const BoardPage({super.key, required this.scope, required this.board});
+  @override
+  State<BoardPage> createState() => _BoardPageState();
+}
+
+class _BoardPageState extends State<BoardPage> {
+  String? category;
+  bool searching = false, dueSoon = false, showStrip = true;
+  final query = TextEditingController();
+  final kanban = GlobalKey<KanbanViewState>();
+  BoardsScope get scope => widget.scope;
+
+  @override
+  void dispose() {
+    query.dispose();
+    super.dispose();
+  }
+
+  KanbanFilter get filter => KanbanFilter(
+    category: category == null || category == CategoryStrip.uncategorisedKey
+        ? null
+        : category,
+    uncategorised: category == CategoryStrip.uncategorisedKey,
+    query: query.text,
+    dueSoon: dueSoon,
+  );
+
+  Future<void> _move(String card, String column, int index) async {
+    final s = scope.state;
+    final from = s.get('tasks', card).str('status');
+    await scope.run(
+      context,
+      () => scope.controller.change(
+        (s) =>
+            moveCard(s, card, column: column, index: index, now: scope.clock()),
+      ),
+    );
+    if (!mounted || from == column) return;
+    showUndo(
+      context,
+      scope,
+      tr(
+        context,
+        'Moved to ${scope.state.get('statuses', column).str('title')}',
+        'Đã chuyển sang ${scope.state.get('statuses', column).str('title')}',
+      ),
+    );
+  }
+
+  Future<void> _add(String column, String title) => scope.run(
+    context,
+    () => scope.controller.change((s) {
+      final cat = filter.category;
+      final card = newTask(
+        s,
+        widget.board,
+        title,
+        category: cat,
+      ).copy({'status': column, 'order': cardsIn(s, column).length});
+      return saveTask(s, card, now: scope.clock());
+    }),
+  );
+
+  Future<void> _tick(String subtask, bool done) => scope.run(
+    context,
+    () => scope.controller.change(
+      (s) => finishWhenSubtasksDone(
+        toggleChecklist(s, subtask, done, now: scope.clock()),
+        s.get('checklist', subtask).str('task'),
+        now: scope.clock(),
+      ),
+    ),
+  );
+
+  @override
+  Widget build(BuildContext context) => ListenableBuilder(
+    listenable: scope.controller,
+    builder: (context, _) {
+      final s = scope.controller.state;
+      final b = s?.maybe('boards', widget.board);
+      if (s == null || b == null) {
+        return Scaffold(
+          appBar: AppBar(),
+          body: HandyEmpty(
+            title: tr(context, 'This board is gone', 'Bảng này không còn'),
+            message: tr(
+              context,
+              'It was deleted or moved.',
+              'Bảng đã bị xoá hoặc chuyển đi.',
+            ),
+          ),
+        );
+      }
+      return _page(context, s, b);
+    },
+  );
+
+  Widget _page(BuildContext context, BoardsState s, BoardRecord b) {
+    final theme = Theme.of(context);
+    final p = BoardsPalette.of(context);
+    final now = scope.clock();
+    final sum = boardSummary(s, widget.board, now: now);
+    final detailed = b.str('presentation') == 'detailed';
+    final hasCategories = categoryProgress(s, widget.board).isNotEmpty;
+    final title = Row(
+      children: [
+        ClipRRect(
+          borderRadius: BorderRadius.circular(10),
+          child: SizedBox(width: 36, height: 36, child: boardCover(b)),
+        ),
+        const SizedBox(width: 12),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Semantics(
+                header: true,
+                child: Text(
+                  b.str('title'),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: theme.textTheme.titleLarge,
+                ),
+              ),
+              Text(
+                tr(
+                  context,
+                  '${sum.cards} ${sum.cards == 1 ? 'card' : 'cards'} · ${sum.done} done',
+                  '${sum.cards} thẻ · ${sum.done} xong',
+                ),
+                style: theme.textTheme.bodySmall,
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+    final actions = <Widget>[
+      IconButton(
+        key: const Key('board-search'),
+        tooltip: tr(context, 'Search cards', 'Tìm thẻ'),
+        onPressed: () => setState(() {
+          searching = !searching;
+          if (!searching) query.clear();
+        }),
+        icon: Icon(searching ? Icons.search_off : Icons.search),
+      ),
+      // A narrow phone keeps the title room; the strip stays on.
+      if (hasCategories && MediaQuery.sizeOf(context).width >= 360)
+        IconButton(
+          key: const Key('board-categories'),
+          tooltip: showStrip
+              ? tr(context, 'Hide categories', 'Ẩn nhóm')
+              : tr(context, 'Show categories', 'Hiện nhóm'),
+          isSelected: showStrip,
+          onPressed: () => setState(() => showStrip = !showStrip),
+          icon: const Icon(Icons.space_dashboard_outlined),
+          selectedIcon: const Icon(Icons.space_dashboard),
+        ),
+      IconButton(
+        key: const Key('board-more'),
+        tooltip: tr(context, 'Board options', 'Tuỳ chọn bảng'),
+        onPressed: () => boardMenu(context, scope, widget.board),
+        icon: const Icon(Icons.more_vert),
+      ),
+    ];
+    final due = FilterChip(
+      key: const Key('filter-due-soon'),
+      selected: dueSoon,
+      visualDensity: VisualDensity.compact,
+      label: Text(tr(context, 'Due in 3 days', 'Hạn trong 3 ngày')),
+      onSelected: (v) => setState(() => dueSoon = v),
+    );
+    final stripShown = showStrip && hasCategories;
+    final chips = <Widget>[
+      if (category != null)
+        InputChip(
+          label: Text(
+            categoryName(
+              context,
+              category == CategoryStrip.uncategorisedKey
+                  ? null
+                  : s.maybe('categories', category),
+            ),
+          ),
+          onDeleted: () => setState(() => category = null),
+          deleteButtonTooltipMessage: tr(
+            context,
+            'Show all categories',
+            'Hiện mọi nhóm',
+          ),
+        ),
+    ];
+    final body = Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        if (searching)
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 4, 16, 8),
+            child: TextField(
+              key: const Key('board-search-field'),
+              controller: query,
+              autofocus: true,
+              onChanged: (_) => setState(() {}),
+              decoration: InputDecoration(
+                prefixIcon: const Icon(Icons.search),
+                hintText: tr(
+                  context,
+                  'Search this board',
+                  'Tìm trong bảng này',
+                ),
+              ),
+            ),
+          ),
+        if (showStrip) ...[
+          CategoryStrip(
+            state: s,
+            board: widget.board,
+            selected: category,
+            onSelect: (v) => setState(() => category = v),
+            onEdit: () => editCategories(context, scope, widget.board),
+            trailing: [due],
+          ),
+          const SizedBox(height: 12),
+        ],
+        if (!stripShown)
+          SizedBox(
+            height: 48,
+            child: ListView(
+              scrollDirection: Axis.horizontal,
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              children: [
+                for (final c in [...chips, due])
+                  Padding(
+                    padding: const EdgeInsets.only(right: 8),
+                    child: Center(child: c),
+                  ),
+              ],
+            ),
+          ),
+        Expanded(
+          child: Padding(
+            padding: const EdgeInsets.only(bottom: 8),
+            child: KanbanView(
+              key: kanban,
+              state: s,
+              board: widget.board,
+              now: now,
+              detailed: detailed,
+              filter: filter,
+              actions: KanbanActions(
+                open: (card) => openCard(context, scope, card.id),
+                move: _move,
+                add: _add,
+                tick: _tick,
+                cardMenu: (card) =>
+                    cardMenu(context, scope, card.id, onMoved: _move),
+                columnMenu: (column) => columnMenu(context, scope, column.id),
+                addColumn: () => addColumnDialog(context, scope, widget.board),
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
+    return CallbackShortcuts(
+      bindings: {
+        const SingleActivator(LogicalKeyboardKey.keyF, control: true): () =>
+            setState(() => searching = true),
+        const SingleActivator(LogicalKeyboardKey.keyZ, control: true): () =>
+            scope.controller.undo(),
+        const SingleActivator(LogicalKeyboardKey.keyY, control: true): () =>
+            scope.controller.redo(),
+      },
+      child: Focus(
+        autofocus: true,
+        child: Scaffold(
+          appBar: AppBar(
+            titleSpacing: 0,
+            title: title,
+            actions: [...actions, const SizedBox(width: 4)],
+            backgroundColor: p.canvas,
+          ),
+          body: SafeArea(top: false, child: body),
+        ),
+      ),
+    );
+  }
+}
+
+/// Opens the cover picker for the board and keeps the choice.
+Future<void> pickBoardCover(
+  BuildContext context,
+  BoardsScope scope,
+  String board,
+) async {
+  final b = scope.state.get('boards', board);
+  final picked = await pickCover(
+    context,
+    scope,
+    current: b.data['cover'] as String?,
+    artOnly: true,
+    preview: (cover) => SizedBox(height: 120, child: cover ?? boardCover(b)),
+  );
+  if (picked == null || !context.mounted) return;
+  if (picked.art != null &&
+      coverById(picked.art)?.pro == true &&
+      !await requirePro(context, ProFeature.covers))
+    return;
+  if (!context.mounted) return;
+  await scope.run(
+    context,
+    () => scope.controller.change(
+      (s) => setBoardLook(s, board, cover: picked.art),
+    ),
+  );
+}

@@ -118,7 +118,7 @@ class NativeBoardsStore
         revision = next.revision,
         header = jsonEncode({
           'app': 'handy-boards',
-          'schema': 2,
+          'schema': 3,
           'revision': revision,
           'preferences': next.preferences,
         });

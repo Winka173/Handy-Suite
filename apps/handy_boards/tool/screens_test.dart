@@ -1,23 +1,39 @@
+// Review shots of the Kanban rebuild, rendered with the real fonts:
+//   SHOTS_DIR=<dir> flutter test --no-pub tool/screens_test.dart
 import 'dart:io';
 import 'dart:ui' as ui;
 import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:handy_ui/kit.dart';
 import 'package:handy_boards/app.dart';
 import 'package:handy_boards/controller.dart';
-import '../test/ui_test.dart' as fixtures;
+import 'package:handy_boards_engine/handy_boards_engine.dart';
+import 'package:handy_ui/kit.dart';
+import '../test/kanban_app_test.dart' show TestStore;
 
 final boundary = GlobalKey();
+final clock = DateTime(2026, 11, 7, 9);
+const board = 'b0000000-0000-4000-8000-000000000001';
+
+Future<void> settle(WidgetTester t) async {
+  for (var i = 0; i < 3; i++) {
+    await t.runAsync(
+      () => Future<void>.delayed(const Duration(milliseconds: 30)),
+    );
+    await t.pumpAndSettle();
+  }
+}
+
 Future<void> shot(WidgetTester t, String name) async {
-  await t.pumpAndSettle();
-  expect(t.takeException(), isNull);
+  await settle(t);
+  final error = t.takeException();
+  if (error is FlutterError) debugPrint(error.toStringDeep());
+  expect(error, isNull, reason: name);
   await t.runAsync(() async {
     final render =
-            boundary.currentContext!.findRenderObject()!
-                as RenderRepaintBoundary,
-        im = await render.toImage(pixelRatio: 1.5),
-        bytes = await im.toByteData(format: ui.ImageByteFormat.png);
+        boundary.currentContext!.findRenderObject()! as RenderRepaintBoundary;
+    final im = await render.toImage(pixelRatio: 1.5);
+    final bytes = await im.toByteData(format: ui.ImageByteFormat.png);
     final dir = Directory(Platform.environment['SHOTS_DIR'] ?? 'build/shots')
       ..createSync(recursive: true);
     File('${dir.path}/$name.png').writeAsBytesSync(bytes!.buffer.asUint8List());
@@ -34,6 +50,65 @@ Future<void> loadFont(String family, List<String> paths) async {
   await loader.load();
 }
 
+BoardsState sample({String locale = 'vi', String theme = 'light'}) {
+  final vi = locale == 'vi';
+  var s = createKanbanBoard(
+    BoardsState(
+      preferences: {'locale': locale, 'theme': theme, 'welcomed': true},
+    ),
+    title: vi ? 'Học kỳ 1' : 'Semester 1',
+    preset: presetById('study'),
+    vi: vi,
+    now: clock,
+    boardId: board,
+  );
+  s = createKanbanBoard(
+    s,
+    title: vi ? 'Việc nhà tháng 11' : 'Home in November',
+    preset: presetById('personal'),
+    vi: vi,
+    now: clock.subtract(const Duration(days: 1)),
+  );
+  s = createKanbanBoard(
+    s,
+    title: vi ? 'Ra mắt website' : 'Website launch',
+    preset: presetById('project'),
+    vi: vi,
+    now: clock.subtract(const Duration(days: 3)),
+  );
+  return s;
+}
+
+Future<BoardsController> boot(
+  WidgetTester t,
+  BoardsState s, {
+  Size size = const Size(390, 844),
+  double text = 1,
+}) async {
+  t.view.physicalSize = size;
+  t.view.devicePixelRatio = 1;
+  t.platformDispatcher.textScaleFactorTestValue = text;
+  addTearDown(t.view.reset);
+  addTearDown(t.platformDispatcher.clearTextScaleFactorTestValue);
+  final c = BoardsController(open: () async => TestStore(s));
+  await t.runAsync(c.load);
+  await t.pumpWidget(
+    RepaintBoundary(
+      key: boundary,
+      child: BoardsApp(controller: c, clock: () => clock),
+    ),
+  );
+  await settle(t);
+  return c;
+}
+
+Future<void> tap(WidgetTester t, Finder f) async {
+  await t.ensureVisible(f.first);
+  await t.pumpAndSettle();
+  await t.tap(f.first);
+  await settle(t);
+}
+
 void main() {
   setUpAll(() async {
     TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
@@ -47,69 +122,92 @@ void main() {
       '$root/Geist-Medium.ttf',
       '$root/Geist-Bold.ttf',
     ]);
-    await loadFont('packages/handy_ui/Bricolage', [
-      '$root/BricolageGrotesque-Medium.ttf',
-      '$root/BricolageGrotesque-Display.ttf',
-    ]);
     await loadFont('PlusJakartaSans', [
       for (final f in Directory('fonts').listSync())
         if (f.path.endsWith('.ttf')) f.path,
     ]);
+    final flutter =
+        Platform.environment['FLUTTER_ROOT'] ?? 'C:/Users/Winka/flutter';
     await loadFont('MaterialIcons', [
-      '${Platform.environment['FLUTTER_ROOT']}/bin/cache/artifacts/material_fonts/materialicons-regular.otf',
+      '$flutter/bin/cache/artifacts/material_fonts/materialicons-regular.otf',
     ]);
   });
-  for (final (name, width, locale, theme, scale) in [
-    ('phone', 375.0, 'en', 'light', 1.0),
-    ('large-phone', 430.0, 'en', 'light', 1.0),
-    ('narrow-vi', 320.0, 'vi', 'light', 1.0),
-    ('large-text', 320.0, 'vi', 'light', 2.0),
-    ('tablet', 768.0, 'en', 'light', 1.0),
-    ('desktop', 1440.0, 'en', 'light', 1.0),
-    ('dark', 1024.0, 'vi', 'dark', 1.0),
-  ])
-    testWidgets('$name product review', (t) async {
-      t.view.physicalSize = Size(width, 1000);
-      t.view.devicePixelRatio = 1;
-      t.platformDispatcher.textScaleFactorTestValue = scale;
-      addTearDown(t.view.resetPhysicalSize);
-      addTearDown(t.view.resetDevicePixelRatio);
-      addTearDown(t.platformDispatcher.clearTextScaleFactorTestValue);
-      final c = BoardsController(
-        open: () async =>
-            fixtures.TestStore(fixtures.sample(locale: locale, theme: theme)),
-      );
-      await c.load();
-      await t.pumpWidget(
-        RepaintBoundary(
-          key: boundary,
-          child: BoardsApp(
-            controller: c,
-            clock: () => DateTime.utc(2026, 11, 2),
-          ),
-        ),
-      );
-      await shot(t, '$name-categories');
-      for (final (en, vi, id) in [
-        ('Kanban', 'Kanban', 'kanban'),
-        ('List', 'Danh sách', 'list'),
-        ('Table', 'Bảng dữ liệu', 'table'),
-      ]) {
-        await fixtures.tap(
-          t,
-          find.widgetWithText(ChoiceChip, locale == 'vi' ? vi : en),
-        );
-        await shot(t, '$name-$id');
-      }
-      for (final (en, vi, id) in [
-        ('Today', 'Hôm nay', 'today'),
-        ('Calendar', 'Lịch', 'calendar'),
-        ('Insights', 'Thống kê', 'insights'),
-      ]) {
-        await fixtures.tap(t, find.text(locale == 'vi' ? vi : en).last);
-        await shot(t, '$name-$id');
-      }
-      await t.pumpWidget(const SizedBox());
-      c.dispose();
-    });
+
+  testWidgets('welcome', (t) async {
+    await boot(t, BoardsState(preferences: {'locale': 'vi'}));
+    await shot(t, '01-welcome');
+    await tap(t, find.byKey(const Key('welcome-next')));
+    await tap(t, find.byKey(const Key('welcome-add')));
+    await shot(t, '02-welcome-move');
+    await tap(t, find.byKey(const Key('welcome-move')));
+    await shot(t, '03-welcome-category');
+  });
+
+  testWidgets('phone journey', (t) async {
+    final c = await boot(t, sample());
+    await shot(t, '04-home');
+    await tap(t, find.byKey(const Key('board-$board')));
+    await shot(t, '05-board');
+    final maths = categoriesOf(c.state!, board).first;
+    await tap(t, find.byKey(Key('strip-${maths.id}')));
+    await shot(t, '06-board-filtered');
+    await tap(t, find.byKey(Key('strip-${maths.id}')));
+    final card = topTasks(
+      c.state!,
+      board: board,
+    ).firstWhere((x) => subtaskProgress(c.state!, x.id).total > 2);
+    await tap(t, find.byKey(ValueKey('card-${card.id}')));
+    await shot(t, '07-card');
+    final chip = find.byKey(const Key('card-cover'));
+    await tap(
+      t,
+      chip.evaluate().isNotEmpty
+          ? chip
+          : find.byKey(const Key('card-cover-art')),
+    );
+    await shot(t, '08-cover-picker');
+  });
+
+  testWidgets('templates', (t) async {
+    await boot(t, sample());
+    await tap(t, find.byKey(const Key('home-new')));
+    await shot(t, '09-new-board');
+    await tap(t, find.byKey(const Key('new-template')));
+    await shot(t, '10-template-gallery');
+    await tap(t, find.byKey(const Key('shelf-work')));
+    await tap(t, find.byKey(const Key('template-content')));
+    await shot(t, '11-template-preview-pro');
+  });
+
+  testWidgets('settings and pro', (t) async {
+    await boot(t, sample());
+    await tap(t, find.byKey(const Key('home-settings')));
+    await shot(t, '12-settings');
+    await tap(t, find.byKey(const Key('settings-pro')));
+    await shot(t, '13-pro');
+  });
+
+  testWidgets('desktop light and dark', (t) async {
+    await boot(t, sample(locale: 'en'), size: const Size(1280, 800));
+    await shot(t, '14-desktop-home');
+    await tap(t, find.byKey(const Key('board-$board')));
+    await shot(t, '15-desktop-board');
+  });
+
+  testWidgets('desktop dark', (t) async {
+    await boot(
+      t,
+      sample(locale: 'en', theme: 'dark'),
+      size: const Size(1280, 800),
+    );
+    await tap(t, find.byKey(const Key('board-$board')));
+    await shot(t, '16-desktop-board-dark');
+  });
+
+  testWidgets('320 px, Vietnamese, text x2', (t) async {
+    await boot(t, sample(), size: const Size(320, 700), text: 2);
+    await shot(t, '17-small-home');
+    await tap(t, find.byKey(const Key('board-$board')));
+    await shot(t, '18-small-board');
+  });
 }

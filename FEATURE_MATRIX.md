@@ -52,8 +52,11 @@ Các native integration/build của bảy app trước được giữ làm bằn
 chưa chạy lại trên snapshot bổ sung Handy Spend. Regression unit/widget gồm cả tám app.
 Không đồng nhất build thành công với kiểm chứng runtime trên mọi nền tảng.
 
-Handy Boards: app 11, canonical category/status/task model, Category Board/Kanban/
-List/Table/Today/Calendar, Study, Focus and advanced tools. [Exact status and gaps](docs/HANDY_BOARDS_FEATURE_MATRIX.md). Not release complete.
+Handy Boards (rebuilt Kanban-first 2026-11-07): boards → columns → cards with one-level
+subtasks, categories independent of columns (category strip = overview + filter), 10
+templates with a live preview, 60 original covers, Bookmark-style tour and Settings, Pro
+Lifetime (templates, covers, automations, insights). Table/calendar/study/focus modules were
+removed. [Exact status and gaps](docs/HANDY_BOARDS_FEATURE_MATRIX.md). Not release complete.
 
 Boards remaining-work batch: Study reports (working calendars and workload removed
 2026-11-03), Trello

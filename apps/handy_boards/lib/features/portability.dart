@@ -5,7 +5,6 @@ import 'package:handy_boards_engine/handy_boards_engine.dart';
 import 'package:pdf/widgets.dart' as pw;
 import '../scope.dart';
 import '../ui/form.dart';
-import 'advanced.dart';
 import '../platform/export_job.dart';
 import '../platform/import_job.dart';
 import '../ui/job_dialog.dart';
@@ -124,22 +123,6 @@ Future<void> exportBoards(
       'md': 'Markdown',
       'pdf': 'PDF',
       'ics': 'ICS',
-      if (boardsPro(context)) 'xlsx': 'XLSX',
-      if (boardsPro(context))
-        if (boardsPro(context))
-          'study-pdf': tr(
-            context,
-            'Printable study planner PDF',
-            'PDF kế hoạch học tập để in',
-          ),
-      if (boardsPro(context))
-        'template': tr(context, 'Board template JSON', 'JSON mẫu bảng'),
-      if (boardsPro(context))
-        'template-zip': tr(
-          context,
-          'Board template ZIP package',
-          'Gói mẫu bảng ZIP',
-        ),
     },
   };
   await boardForm(
@@ -160,18 +143,8 @@ Future<void> exportBoards(
         kind: 'bool',
         optional: true,
       ),
-      if (board != null && boardsPro(context))
-        BoardField(
-          'recurrence',
-          'Template only: include recurring definitions and dates',
-          'Chỉ với mẫu: kèm định nghĩa lặp và ngày',
-          kind: 'bool',
-          optional: true,
-          visibleWhen: (values) =>
-              ['template', 'template-zip'].contains(values['format']),
-        ),
     ],
-    {'format': 'zip', 'review': false, 'recurrence': false},
+    {'format': 'zip', 'review': false},
     (v) async {
       if (v['review'] != true)
         throw FormatException(
@@ -210,7 +183,7 @@ Future<void> exportBoards(
       }
       if (!context.mounted) return;
       final Uint8List bytes;
-      if (['zip', 'json', 'pdf', 'study-pdf'].contains(f)) {
+      if (['zip', 'json', 'pdf'].contains(f)) {
         bytes = await runBoardsJob(context, (job) async {
           final result = switch (f) {
             'zip' || 'json' => await exportBackupAsync(
@@ -219,8 +192,7 @@ Future<void> exportBoards(
               check: job.check,
               progress: job.progress,
             ),
-            'pdf' => await boardPdf(s, board!, job: job, vi: vi),
-            _ => await studyPlannerPdf(s, board!, job: job, vi: vi),
+            _ => await boardPdf(s, board!, job: job, vi: vi),
           };
           job.check();
           return result;
@@ -230,34 +202,11 @@ Future<void> exportBoards(
           'csv' => Uint8List.fromList(utf8.encode(exportTaskCsv(s, board!))),
           'md' => Uint8List.fromList(utf8.encode(exportMarkdown(s, board!))),
           'ics' => Uint8List.fromList(utf8.encode(exportIcs(s, board!))),
-          'xlsx' => exportXlsx(s, board!),
-          'template-zip' => exportTemplatePackage(
-            s,
-            board!,
-            includeRecurrence: v['recurrence'] == true,
-          ),
-          'template' => Uint8List.fromList(
-            utf8.encode(
-              jsonEncode(
-                exportBoardTemplate(
-                  s,
-                  board!,
-                  includeRecurrence: v['recurrence'] == true,
-                ),
-              ),
-            ),
-          ),
           _ => throw const FormatException('Unknown format'),
         };
       }
       final path = await scope.files.exportBytes(
-        'handy-boards.${f == 'template-zip'
-            ? 'template.zip'
-            : f == 'template'
-            ? 'template.json'
-            : f.endsWith('-pdf')
-            ? '$f.pdf'
-            : f}',
+        'handy-boards.$f',
         bytes,
         mimeType: switch (f) {
           'zip' => 'application/zip',
@@ -265,10 +214,6 @@ Future<void> exportBoards(
           'pdf' => 'application/pdf',
           'csv' => 'text/csv',
           'ics' => 'text/calendar',
-          'xlsx' =>
-            'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-          'template' => 'application/json',
-          'study-pdf' => 'application/pdf',
           _ => 'text/markdown',
         },
       );

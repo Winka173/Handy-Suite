@@ -1737,7 +1737,7 @@ frontend-ui-engineering: một câu hỏi, một hành động chính, đủ tr�
 | Media, nối ảnh       | Các ảnh này ghép thành một trang dài chưa? | Nối N ảnh → Lưu ảnh dài        | Trống, 1 ảnh, đang khớp, không thấy đoạn trùng, lỗi          | Dải ảnh kéo để đổi thứ tự                                                          |
 | Keep, sắp hết        | Món nào sắp phải mua?                      | Vừa mua thêm                   | Chưa đủ lần mua, đã đoán, có lẽ đã hết                       | Vào "Cần để ý" một tuần trước                                                      |
 
-## Handy Boards design contract - 2026-11-02
+## Handy Boards design contract - 2026-11-02 (thay bằng "Hợp đồng: Handy Boards · Kanban" ngày 2026-11-07)
 
 Draw: editorial-greeting, seed 1051914986; no redraw. Hue magenta #A61C8E, face
 Plus Jakarta Sans (`HandyBrand.boards`); the indigo #6366F1 and Geist/Bricolage of
@@ -2595,3 +2595,99 @@ Hợp đồng đầy đủ (bản tiếng Anh): `docs/bookmark-redesign/ONBOARDI
 - Tự chạy: 30 giây sau thay đổi cuối của thư viện (đổi cài đặt không tính), khi app trở lại, khi app
   xuống nền còn thay đổi chờ, lúc mở app. Không chạy khi app đóng; không hứa điều đó.
 - Bỏ: bắt bật ở lần đầu, gắn với Pro, đồng bộ cài đặt máy, công tắc hiện ra mà không kết nối được.
+
+## Hợp đồng: Handy Boards · Kanban (2026-11-07, thay hợp đồng 2026-11-02)
+
+Bản đề bài của chủ: `docs/HANDY_BOARDS_KANBAN_SPEC.md`. Phong cách: editorial-greeting (seed
+1904133732, `--keep palette,type`), giữ hue `#A61C8E`, Plus Jakarta Sans, cấm indigo. Học theo
+Handy Bookmark về độ chỉn chu (thứ bậc, ảnh bìa, màn chào diễn tập luồng thật, Cài đặt chia khu,
+xem trước trước khi mua), không chép nền ngà/teal và không gọi là "bộ sưu tập".
+
+- Dữ liệu và việc: một người, vài bảng (1–10), mỗi bảng 3–5 cột, 0–6 nhóm, 5–80 thẻ; thẻ có 0–8
+  việc con, đôi khi có hạn và bìa. Mở app vài lần mỗi ngày trên điện thoại, đôi khi trên máy tính.
+  Việc hay làm nhất: thêm thẻ, kéo thẻ sang cột bên, tick việc con.
+- Mặt (face): nền là "mặt bảng ghim" đá ấm hơi hồng (`#F3EFEE`, tối `#1A1619`), tấm trắng tách bằng
+  tông; mỗi bảng có ảnh bìa riêng ở đầu bảng và trên thẻ bảng ở Trang chủ.
+- Yếu tố đặc trưng: **dải nhóm**. Mỗi nhóm là một khối (chấm màu + tên + "3/7" + vạch tiến độ mảnh
+  theo màu nhóm), vừa là Tổng quan nhóm vừa là bộ lọc. Thẻ mang màu nhóm ở gờ trái và chip tên
+  nhóm; màu không bao giờ đứng một mình (luôn có tên).
+
+### Trang chủ · Bảng của tôi
+- Câu hỏi: "Bảng nào cần mình hôm nay?". h1 "Bảng của bạn"; dòng xám dưới là phát hiện từ dữ liệu
+  ("2 thẻ đến hạn hôm nay · Học kỳ 1"), không chào kiểu "Welcome back".
+- Thẻ bảng: bìa (3:2 trên điện thoại, cắt an toàn), tên, "4 nhóm · 12 thẻ · 5 xong", sửa lần cuối;
+  ghim lên đầu khi người dùng ghim. Lưới 1 cột (<600), 2 (600–1023), 3 (≥1024, cột giữa 1100px).
+- Hành động chính: "Bảng mới" (nút đặc, góc phải trên; điện thoại: nút nổi không che thẻ cuối).
+- Trống: hình bảng vẽ bằng chính bìa + "Tạo bảng đầu tiên" với hai nút Bảng trống / Xem mẫu.
+- Đang tải: khung thẻ xám đúng kích thước. Lỗi đọc dữ liệu: trong khung, một câu + Thử lại.
+- Thanh trên: dấu app + tên, tìm (thẻ trên mọi bảng), Cài đặt. Không thanh dưới, không tab Pro.
+
+### Tạo bảng · Thư viện mẫu
+- Hai lối: Bảng trống (Cần làm / Đang làm / Xong) và Mẫu. Mẫu chia nhóm (Tất cả, Học tập, Công
+  việc, Cá nhân, Mua sắm, Sự kiện, Sáng tạo), ô mẫu có bìa, tên, một câu, nhãn Pro nếu Pro.
+- Xem trước dùng đúng widget Kanban thật với dữ liệu mẫu (không phải ảnh chụp). Chạm "Dùng mẫu này"
+  → ô tên (điền sẵn) → Tạo. Mẫu Pro xem trước đầy đủ; nút tạo thành "Mở khoá Pro" khi chưa có Pro.
+- Dữ liệu mẫu là dữ liệu của người dùng sau khi tạo (sửa, xoá được), ID mới, không liên kết chéo.
+
+### Bảng (Kanban)
+- Câu hỏi: "Việc gì đang ở đâu?". h1 là tên bảng (24px), dòng xám "12 thẻ · 4 xong".
+- Thanh công cụ: Nhóm (mở dải nhóm), Tìm/Lọc (nhóm, cột, sắp đến hạn), Thêm (đổi bìa bảng, cách
+  hiện thẻ gọn/chi tiết, cột, nhân bản, lưu trữ, xoá, xuất).
+- Cột: điện thoại một cột gần đủ rộng (rộng màn − 48px, nhìn thấy mép cột bên) cuộn ngang có hút
+  cột; ≥600px nhiều cột 300px. Đầu cột: tên, số thẻ, menu (đổi tên, thu gọn, chuyển vị trí, xoá
+  với lựa chọn chuyển thẻ). "Thêm thẻ" ở cuối cột: gõ tên, Enter là lưu, ô vẫn mở để thêm tiếp.
+- Thẻ: bìa mảnh (nếu có), tiêu đề tối đa 3 dòng, chip nhóm, "2/5" việc con, hạn chỉ khi có (đỏ chỉ
+  khi quá hạn). Chi tiết: hiện thêm tối đa 3 việc con tick được ngay.
+- Kéo thả: giữ để nhấc (rung nhẹ), kéo trong cột và sang cột; cột đích sáng nền; thả xong có
+  SnackBar "Đã chuyển sang Xong · Hoàn tác". Lối không kéo: menu thẻ "Chuyển tới…" (cột + vị trí),
+  bàn phím: Alt+←/→ chuyển cột, Alt+↑/↓ đổi chỗ.
+- Nhóm độc lập với cột: chuyển cột không đổi nhóm. Không tự chuyển sang Xong khi đủ việc con trừ
+  khi bật tự động hoá Pro tương ứng.
+- Dải nhóm: điện thoại 2×2 khi ≤4 nhóm (cuộn ngang khi nhiều hơn), chạm lọc bảng theo nhóm, chạm
+  lại hoặc "Tất cả" để bỏ lọc; "Sửa nhóm" mở trang nhẹ: thêm, đổi tên, đổi màu/biểu tượng, sắp
+  xếp, xoá (thẻ chuyển sang "Chưa phân nhóm" hoặc nhóm khác do người dùng chọn; không bao giờ xoá
+  thẻ). Bảng không có nhóm: dải hiện một ô "Thêm nhóm" nhỏ, không chiếm chỗ.
+- Trống: cột trống giữ khung + "Thêm thẻ"; bảng lọc không ra thẻ: một câu + "Bỏ lọc".
+
+### Thẻ (chi tiết) · Thêm nhanh · Chọn bìa
+- Trang đáy kéo lên (điện thoại) / hộp thoại 640px (≥900px). Thứ tự: bìa, tiêu đề (sửa tại chỗ),
+  hàng chip Cột · Nhóm · Hạn · Nhắc, việc con (thêm, sửa, kéo xếp, tick, xoá; "2/5" và vạch), ghi
+  chú (link bấm được), ảnh đính kèm nếu có, menu Thêm (nhân bản, lưu trữ, xoá, chuyển bảng).
+- Lưu ngay từng thay đổi (Hoàn tác có ở SnackBar); đóng bằng Back/vuốt không mất gì.
+- Chọn bìa: Gợi ý (theo nhóm/mẫu), Tất cả, từng họ bìa, Ảnh của bạn, Màu. Chạm là xem trước ngay
+  trên thẻ ở đầu trang; Áp dụng / Huỷ (huỷ trả lại bìa cũ). Bìa Pro: xem trước được, Áp dụng thành
+  "Mở khoá Pro".
+
+### Màn chào (lần đầu, xem lại từ Trợ giúp)
+- Ba bước diễn tập trên bảng tạm (không ghi dữ liệu): 1) chào + chọn Bảng trống / Học tập / Bỏ qua;
+  2) thêm một thẻ rồi kéo nó sang "Đang làm" (có nút "Chuyển" cho ai không kéo được); 3) chạm nhóm
+  Toán để lọc, tick một việc con, thấy nhóm vẫn giữ khi thẻ sang Xong → Xong. Không xin quyền, không
+  tài khoản, không dùng thử.
+
+### Cài đặt (theo khung Cài đặt của Bookmark)
+- Các khu: Giao diện (sáng/tối/hệ thống, ngôn ngữ, cách hiện thẻ mặc định), Thông báo (nhắc hạn,
+  xin quyền chỉ khi bật), Dữ liệu (sao lưu/khôi phục, tự sao lưu, xuất, thùng rác, đã lưu trữ),
+  Pro, Trợ giúp (xem lại màn chào, cách dùng), Giới thiệu (phiên bản, quyền riêng tư), Các app Handy
+  khác. Mỗi khu một trang trên điện thoại; ≥1024 hai cột nhãn/tấm.
+
+### Pro (mua một lần)
+- Free đủ dùng: không giới hạn bảng/thẻ/nhóm/việc con, kéo thả, hạn, tìm, sao lưu, xuất cơ bản,
+  ≥30 bìa. Không quảng cáo.
+- Pro: mẫu cao cấp, họ bìa cao cấp, giao diện bảng, tự động hoá có sẵn (đủ việc con → Xong; sắp
+  hạn → nổi bật; lưu trữ thẻ Xong sau N ngày, khôi phục được), kiểu xuất đẹp, Thống kê nhẹ.
+- Xem trước trên dữ liệu thật, không lưu; trang mua chỉ mở khi bấm Mở khoá/Áp dụng/Xuất. Giá và
+  trạng thái mua/khôi phục thật từ cửa hàng; chưa có mã sản phẩm thì nút mua ghi "Chưa mở bán trên
+  bản này" thay vì giá giả.
+
+### Nền tảng
+- Android/iOS: Back đóng trang/trang đáy trước, rồi về Trang chủ; giữ-để-kéo; rung nhẹ khi nhấc
+  và thả. Windows: chuột kéo ngay (không cần giữ), Ctrl+N thẻ mới ở cột đầu, Ctrl+F tìm, Ctrl+Z/Y,
+  phím Alt như trên. Web: URL `/`, `/board/<id>`, `/templates`, `/settings`; Back của trình duyệt
+  như Back.
+- 320–1440: 320px chữ ×2 vẫn một cột thẻ đọc được; dải nhóm chuyển một cột; không cuộn ngang trang
+  (chỉ vùng cột cuộn ngang).
+- Truy cập: mọi nút biểu tượng có nhãn; thẻ đọc thành "Tiêu đề, nhóm Toán, cột Đang làm, 2 trên 5
+  việc con, hạn thứ Sáu"; mục tiêu chạm ≥48px; giảm chuyển động thì bỏ hiệu ứng nhấc/trượt.
+- Bỏ: thanh dưới nhiều mô-đun, tab Pro, bảng dữ liệu/lịch/timeline/học tập/tập trung riêng, trình
+  dựng quy tắc, ba cột tí hon trên điện thoại, cầu vồng màu thẻ, gradient, kính mờ, emoji, khoá
+  Pro chỉ bằng ảnh chụp, tự xoá hay tự chuyển thẻ không báo.

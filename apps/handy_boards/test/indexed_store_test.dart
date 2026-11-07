@@ -131,7 +131,7 @@ void main() {
       db.close();
       final migrated = await store.read();
       expect(migrated.file('assets/original.bin'), bytes);
-      expect(migrated.toJson()['schema'], 2);
+      expect(migrated.toJson()['schema'], 3);
       final again = openBoardsDatabase(store.path);
       expect(again.userVersion, 4);
       again.close();

@@ -1,23 +1,23 @@
 {
  "version": 1,
  "kind": "app",
- "at": "2026-11-02T07:05:03.031Z",
- "seed": 1051914986,
+ "at": "2026-11-07T15:46:19.905Z",
+ "seed": 1904133732,
  "input": {
   "kind": "workspace",
-  "brief": "Handy Boards universal visual task manager category blocks retain identity across workflow views",
+  "brief": "Handy Boards: personal local-first Kanban boards with independent categories, one-level subtasks, cover art and templates",
   "theme": null,
   "screens": [
    "home",
-   "list",
    "builder",
+   "detail",
    "settings"
   ],
   "keep": [
    "palette",
    "type"
   ],
-  "style": null
+  "style": "editorial-greeting"
  },
  "style": {
   "id": "editorial-greeting",
@@ -155,11 +155,11 @@
    }
   },
   {
-   "name": "list",
+   "name": "builder",
    "pattern": null
   },
   {
-   "name": "builder",
+   "name": "detail",
    "pattern": null
   },
   {
