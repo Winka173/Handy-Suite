@@ -1,6 +1,7 @@
 import 'package:handy_boards_engine/handy_boards_engine.dart';
 import 'package:handy_ui/kit.dart';
 import '../create/templates.dart';
+import '../design/looks.dart';
 import '../design/theme.dart';
 import '../scope.dart';
 import '../ui/look.dart';
@@ -257,7 +258,8 @@ class BoardTile extends StatelessWidget {
       label: '${board.str('title')}. $facts',
       excludeSemantics: true,
       child: Material(
-        color: p.surface,
+        // The board's own tone, from its cover.
+        color: boardGround(context, board).page,
         borderRadius: BorderRadius.circular(BoardsRadii.tile),
         clipBehavior: Clip.antiAlias,
         child: InkWell(

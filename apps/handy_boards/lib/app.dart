@@ -180,7 +180,7 @@ class _BoardsAppState extends State<BoardsApp> with WidgetsBindingObserver {
     String? board;
     await c.change((s) {
       var next = s.copy(preferences: {...s.preferences, 'welcomed': true});
-      if (start != null) {
+      if (start == 'study' || start == 'blank') {
         board = newId();
         next = createKanbanBoard(
           next,
@@ -197,6 +197,7 @@ class _BoardsAppState extends State<BoardsApp> with WidgetsBindingObserver {
     }, history: false);
     if (mounted) setState(() => replayWelcome = false);
     if (board != null) navigator.currentState?.pushNamed('/board/$board');
+    if (start == 'templates') navigator.currentState?.pushNamed('/templates');
   }
 
   Route<void>? _route(RouteSettings settings) {
@@ -258,7 +259,10 @@ class _BoardsAppState extends State<BoardsApp> with WidgetsBindingObserver {
         adsVisible: noAds,
         onGenerateRoute: _route,
         home: welcome
-            ? WelcomePage(scope: scope, onDone: _welcomed)
+            ? WelcomePage(
+                onDone: _welcomed,
+                replay: replayWelcome && s.preferences['welcomed'] == true,
+              )
             : HomePage(scope: scope),
       );
     },

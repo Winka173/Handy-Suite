@@ -74,17 +74,20 @@ Widget? cardCover(BuildContext context, BoardsState s, BoardRecord card) {
   return CoverArt(cover.substring(4));
 }
 
-/// The board's cover art; a board without one gets a stable default from
-/// its id, so every board has a face.
-Widget boardCover(BoardRecord board) {
+/// The cover a board shows: its own, or a stable free default picked from
+/// its id, so every board has a face (and a colour).
+String boardCoverId(BoardRecord board) {
   final id = board.data['cover'] as String?;
-  if (id != null && coverById(id) != null) return CoverArt(id);
+  if (id != null && coverById(id) != null) return id;
   final free = coverCatalog.where((c) => !c.pro).toList();
-  if (free.isEmpty) return CoverArt(id ?? '');
+  if (free.isEmpty) return id ?? '';
   var h = 0;
   for (final u in board.id.codeUnits) h = (h * 31 + u) & 0x7fffffff;
-  return CoverArt(free[h % free.length].id);
+  return free[h % free.length].id;
 }
+
+/// The board's cover art.
+Widget boardCover(BoardRecord board) => CoverArt(boardCoverId(board));
 
 /// A photo kept in the app's own storage, read once and kept while shown.
 class StoredPhoto extends StatefulWidget {

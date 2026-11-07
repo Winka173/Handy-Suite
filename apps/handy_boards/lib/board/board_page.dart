@@ -4,6 +4,7 @@ import 'package:handy_ui/kit.dart';
 import '../card/card_sheet.dart';
 import '../card/cover_picker.dart';
 import '../design/looks.dart';
+import '../design/theme.dart';
 import '../pro/pro.dart';
 import '../scope.dart';
 import '../ui/look.dart';
@@ -142,41 +143,35 @@ class _BoardPageState extends State<BoardPage> {
     final now = scope.clock();
     final sum = boardSummary(s, widget.board, now: now);
     final detailed = b.str('presentation') == 'detailed';
-    final look = lookById(previewLook ?? b.data['appearance'] as String?);
     final hasCategories = categoryProgress(s, widget.board).isNotEmpty;
-    final title = Row(
-      children: [
-        ClipRRect(
-          borderRadius: BorderRadius.circular(10),
-          child: SizedBox(width: 36, height: 36, child: boardCover(b)),
-        ),
-        const SizedBox(width: 12),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Semantics(
-                header: true,
-                child: Text(
-                  b.str('title'),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: theme.textTheme.titleLarge,
-                ),
-              ),
-              Text(
-                tr(
-                  context,
-                  '${sum.cards} ${sum.cards == 1 ? 'card' : 'cards'} · ${sum.done} done',
-                  '${sum.cards} thẻ · ${sum.done} xong',
-                ),
-                style: theme.textTheme.bodySmall,
-              ),
-            ],
+    final p = BoardsPalette.of(context);
+    final ground = boardGround(context, b, look: previewLook);
+    final wide = MediaQuery.sizeOf(context).width >= 600;
+    final title = Padding(
+      padding: EdgeInsets.fromLTRB(wide ? 24 : 16, 12, 16, 8),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Semantics(
+            header: true,
+            child: Text(
+              b.str('title'),
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+              style: theme.textTheme.headlineMedium,
+            ),
           ),
-        ),
-      ],
+          const SizedBox(height: 2),
+          Text(
+            tr(
+              context,
+              '${sum.cards} ${sum.cards == 1 ? 'card' : 'cards'} · ${sum.done} done',
+              '${sum.cards} thẻ · ${sum.done} xong',
+            ),
+            style: theme.textTheme.bodyMedium?.copyWith(color: p.muted),
+          ),
+        ],
+      ),
     );
     final actions = <Widget>[
       IconButton(
@@ -243,9 +238,53 @@ class _BoardPageState extends State<BoardPage> {
           ),
         ),
     ];
+    // The board's cover across the top, its buttons on round white
+    // backs so they read on any picture.
+    Widget round(Widget button) => Padding(
+      padding: const EdgeInsets.all(4),
+      child: Material(
+        color: p.surface.withValues(alpha: .92),
+        shape: const CircleBorder(),
+        child: button,
+      ),
+    );
+    final band = SizedBox(
+      height: (wide ? 140 : 96) + MediaQuery.paddingOf(context).top,
+      child: Stack(
+        fit: StackFit.expand,
+        children: [
+          boardCover(b),
+          SafeArea(
+            bottom: false,
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(8, 4, 8, 0),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  round(
+                    IconButton(
+                      key: const Key('board-back'),
+                      tooltip: MaterialLocalizations.of(
+                        context,
+                      ).backButtonTooltip,
+                      onPressed: () => Navigator.of(context).maybePop(),
+                      icon: const Icon(Icons.arrow_back),
+                    ),
+                  ),
+                  const Spacer(),
+                  for (final a in actions) round(a),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
     final body = Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
+        band,
+        title,
         if (searching)
           Padding(
             padding: const EdgeInsets.fromLTRB(16, 4, 16, 8),
@@ -299,7 +338,7 @@ class _BoardPageState extends State<BoardPage> {
               board: widget.board,
               now: now,
               detailed: detailed,
-              columnColor: look.column(context),
+              columnColor: ground.column,
               filter: filter,
               actions: KanbanActions(
                 open: (card) => openCard(context, scope, card.id),
@@ -328,14 +367,8 @@ class _BoardPageState extends State<BoardPage> {
       child: Focus(
         autofocus: true,
         child: Scaffold(
-          appBar: AppBar(
-            titleSpacing: 0,
-            title: title,
-            actions: [...actions, const SizedBox(width: 4)],
-            backgroundColor: look.page(context),
-          ),
-          backgroundColor: look.page(context),
-          body: SafeArea(top: false, child: body),
+          backgroundColor: ground.page,
+          body: body,
           bottomNavigationBar: previewLook == null
               ? null
               : LookPicker(

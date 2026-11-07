@@ -2710,3 +2710,25 @@ xem trước trước khi mua), không chép nền ngà/teal và không gọi l�
   thẻ đang hiện.
 - Bỏ: trình dựng quy tắc lặp phức tạp (ngày trong tuần, ngoại lệ), theme đổi màu chữ hay màu
   thẻ, ảnh xuất có watermark quảng cáo.
+
+### Handy Boards · màn chào làm lại + "mỗi bảng một màu" (2026-11-08, thay mục Màn chào ở trên)
+- Màn chào theo đúng khung của Handy Bookmark và Sticky Wall (chủ yêu cầu): thanh trên có Quay
+  lại, thanh tiến độ ba khúc, Bỏ qua; tiêu đề lớn có vệt highlight vẽ dưới chữ khoá; chữ, hình,
+  nút hiện lần lượt theo nhịp của chặng; Back/Esc lùi một bước, Enter bấm nút chính; giảm chuyển
+  động thì mọi thứ đứng yên ở trạng thái cuối. Rộng ≥ 700: chữ và nút bên trái, hình bên phải
+  (phần tập thử trong khung điện thoại); điện thoại: chữ trên, hình lớn, nút ở chân.
+  1. Câu chuyện, hai nhịp: "Việc nằm khắp nơi. Rồi rơi mất." (mẩu việc trong app ghi chú, tin
+     nhắn, giấy dán, nhắc lịch; ngả xám) → "Một bảng cho tất cả." (các mẩu bay vào ba cột, thành
+     thẻ có nhóm màu). Nút "Gom về một bảng", rồi "Chỉ tôi cách dùng".
+  2. Tập thử trên bảng giả (không lưu gì): mọi thứ tối đi trừ đúng chỗ cần làm, khung sáng có
+     viền thở và nhãn chỉ dẫn: (a) "Giữ thẻ rồi kéo sang Đang làm" (có nút chữ "Chuyển giúp tôi"
+     cho ai không kéo được); (b) "Chạm Toán để chỉ xem việc Toán"; (c) "Kéo sang Xong". Xong thì
+     dấu tick nảy lên: "Vẫn thuộc Toán, dù đã xong."
+  3. Bắt đầu: ba lựa chọn lớn (Bảng học tập, Bảng trống, Xem các mẫu), nút "Bắt đầu". Mở lại
+     từ Cài đặt thì không có lựa chọn và không đổi gì.
+- Mỗi bảng một màu (chủ chọn): nền trang của bảng lấy từ tông của ảnh bìa (sáng: pha nhạt;
+  tối: pha đậm), cột là tấm trắng trong (sáng) / tối trong (tối) đặt trên nền đó, thẻ vẫn trắng
+  để đọc. Đầu bảng là dải ảnh bìa (điện thoại 96px, rộng 140px) với tên bảng chữ lớn ngay dưới.
+  Trang chủ là các tấm poster bảng: bìa chiếm phần trên, chân tấm mang tông màu của bảng đó.
+  Gói giao diện Pro (Vải lanh…) thay tông bìa khi được chọn; "Mặc định" nay là "Theo ảnh bìa".
+  Chữ trên nền màu luôn đạt 4.5:1 (tông được ép về độ sáng an toàn).

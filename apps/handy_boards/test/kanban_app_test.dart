@@ -76,20 +76,23 @@ void main() {
         );
   });
 
-  testWidgets('a new install plays the tour on a board it never saves, then '
-      'makes the study board', (t) async {
+  testWidgets('a new install plays the tour (story, practice, start) on a '
+      'board it never saves, then makes the study board', (t) async {
     final c = await boot(t, BoardsState(preferences: {'locale': 'en'}));
-    expect(find.text('A board for how you work'), findsOneWidget);
-    await tap(t, find.byKey(const Key('welcome-next')));
-    await tap(t, find.byKey(const Key('welcome-add')));
-    expect(find.text('Do the chapter 4 exercises'), findsWidgets);
+    expect(find.byKey(const Key('welcome-skip')), findsOneWidget);
+    await tap(t, find.byKey(const Key('welcome-primary'))); // gather
+    await tap(t, find.byKey(const Key('welcome-primary'))); // show me how
+    // The practice: lit steps, done without dragging here.
+    expect(find.text('Hold, then drag to Doing'), findsOneWidget);
+    await tap(t, find.byKey(const Key('welcome-do-it')));
+    expect(find.text('Tap Maths'), findsOneWidget);
+    await tap(t, find.byKey(const Key('welcome-do-it')));
+    expect(find.text('Drag it to Done'), findsOneWidget);
+    await tap(t, find.byKey(const Key('welcome-do-it')));
     expect(c.state!.rows('boards'), isEmpty);
-    await tap(t, find.byKey(const Key('welcome-move')));
-    expect(find.text('Its category goes with it'), findsOneWidget);
-    await tap(t, find.byKey(const Key('welcome-finish-card')));
-    expect(find.text('Still in Maths'), findsOneWidget);
-    expect(c.state!.rows('boards'), isEmpty);
-    await tap(t, find.byKey(const Key('welcome-done')));
+    await tap(t, find.byKey(const Key('welcome-primary'))); // next
+    expect(find.byKey(const Key('welcome-choice-study')), findsOneWidget);
+    await tap(t, find.byKey(const Key('welcome-primary'))); // start
     final b = c.state!.rows('boards').single;
     expect(b.str('title'), 'Semester 1');
     expect(categoriesOf(c.state!, b.id).map((x) => x.str('title')), [
@@ -99,9 +102,6 @@ void main() {
       'Physics',
     ]);
     expect(c.state!.preferences['welcomed'], isTrue);
-    // The board opens with its four categories in the strip.
-    for (final name in ['Maths', 'Literature', 'English', 'Physics'])
-      expect(find.text(name), findsWidgets);
   });
 
   testWidgets('skipping the tour leaves an empty home with both ways in', (

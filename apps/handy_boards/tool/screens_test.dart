@@ -135,12 +135,29 @@ void main() {
 
   testWidgets('welcome', (t) async {
     await boot(t, BoardsState(preferences: {'locale': 'vi'}));
-    await shot(t, '01-welcome');
-    await tap(t, find.byKey(const Key('welcome-next')));
-    await tap(t, find.byKey(const Key('welcome-add')));
-    await shot(t, '02-welcome-move');
-    await tap(t, find.byKey(const Key('welcome-move')));
-    await shot(t, '03-welcome-category');
+    await shot(t, '01-welcome-scattered');
+    await tap(t, find.byKey(const Key('welcome-primary')));
+    await shot(t, '02-welcome-board');
+    await tap(t, find.byKey(const Key('welcome-primary')));
+    await shot(t, '03-welcome-practice');
+    await tap(t, find.byKey(const Key('welcome-do-it')));
+    await shot(t, '03b-welcome-filter');
+    await tap(t, find.byKey(const Key('welcome-do-it')));
+    await tap(t, find.byKey(const Key('welcome-do-it')));
+    await shot(t, '03c-welcome-done');
+    await tap(t, find.byKey(const Key('welcome-primary')));
+    await shot(t, '03d-welcome-start');
+  });
+
+  testWidgets('welcome wide', (t) async {
+    await boot(
+      t,
+      BoardsState(preferences: {'locale': 'vi'}),
+      size: const Size(1280, 800),
+    );
+    await tap(t, find.byKey(const Key('welcome-primary')));
+    await tap(t, find.byKey(const Key('welcome-primary')));
+    await shot(t, '03e-welcome-practice-wide');
   });
 
   testWidgets('phone journey', (t) async {

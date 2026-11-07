@@ -1,4 +1,7 @@
 import 'package:handy_ui/kit.dart';
+import 'package:handy_boards_engine/handy_boards_engine.dart';
+import '../covers/cover_art.dart';
+import '../ui/look.dart';
 import 'theme.dart';
 
 /// A board's look: the page ground and the column fill, light and dark.
@@ -34,7 +37,7 @@ class BoardLook {
 /// Every look, the free default first. Ids are stored on boards: never
 /// rename one; an unknown id falls back to the default.
 const boardLooks = <BoardLook>[
-  BoardLook('default', 'Pinboard', 'Mặc định', pro: false),
+  BoardLook('default', 'From the cover', 'Theo ảnh bìa', pro: false),
   BoardLook(
     'linen',
     'Linen',
@@ -84,3 +87,40 @@ const boardLooks = <BoardLook>[
 
 BoardLook lookById(String? id) =>
     boardLooks.where((l) => l.id == id).firstOrNull ?? boardLooks.first;
+
+/// The colours a board is drawn on. By default they come from its cover:
+/// a pale wash of the cover's tone in light, a deep one in dark, so every
+/// board looks like itself. A chosen look (Pro) replaces them.
+class BoardGround {
+  final Color page, column, band;
+  const BoardGround(this.page, this.column, this.band);
+}
+
+BoardGround boardGround(
+  BuildContext context,
+  BoardRecord board, {
+  String? look,
+}) {
+  final dark = Theme.of(context).brightness == Brightness.dark;
+  final chosen = lookById(look ?? board.data['appearance'] as String?);
+  if (chosen.id != 'default')
+    return BoardGround(
+      chosen.page(context),
+      chosen.column(context),
+      chosen.column(context),
+    );
+  final tone = HSLColor.fromColor(coverTone(boardCoverId(board)));
+  // Clamped so ink on it always reads (≥ 4.5:1 for the muted grey).
+  final page = tone
+      .withSaturation(tone.saturation.clamp(0, dark ? .22 : .32))
+      .withLightness(dark ? .11 : .925)
+      .toColor();
+  final column = Color.alphaBlend(
+    (dark ? Colors.white : Colors.white).withValues(alpha: dark ? .06 : .55),
+    page,
+  );
+  final band = tone
+      .withLightness(dark ? .2 : tone.lightness.clamp(.45, .85))
+      .toColor();
+  return BoardGround(page, column, band);
+}
