@@ -1,6 +1,7 @@
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:handy_bookmark/controller.dart' show saveTime, SaveController;
+import 'package:handy_bookmark/settings/help_links.dart' as help;
 import 'package:handy_bookmark/settings/settings_parts.dart' show SettingsGroup;
 import 'package:handy_bookmark_engine/handy_bookmark_engine.dart';
 import 'package:handy_ui/kit.dart';
@@ -147,9 +148,17 @@ void main() {
       300,
       scrollable: find.byType(Scrollable).first,
     );
+    // The published policy (the Play listing's too) opens outside the app.
+    final opened = <Uri>[];
+    final open = help.openExternal;
+    help.openExternal = (uri) async {
+      opened.add(uri);
+      return true;
+    };
+    addTearDown(() => help.openExternal = open);
     await tapKey(t, 'save-privacy');
-    expect(find.textContaining('Only when you start it'), findsOneWidget);
-    expect(find.textContaining('never leaves'), findsNothing);
+    expect(opened.single.toString(), help.privacyPolicyUrl);
+    expect(opened.single.path, endsWith('apps/handy_bookmark/PRIVACY.md'));
   });
 
   testWidgets('Recently Deleted: restore is the prominent action; delete '

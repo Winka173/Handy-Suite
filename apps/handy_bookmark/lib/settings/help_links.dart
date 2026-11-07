@@ -5,9 +5,10 @@ import 'package:url_launcher/url_launcher.dart';
 /// Where feedback goes.
 const feedbackEmail = 'apps.winka.studio@gmail.com';
 
-/// The published privacy policy and terms of service. Neither exists yet;
-/// set the address here once it does and Settings opens it.
-const String? privacyPolicyUrl = null;
+/// The published privacy policy (apps/handy_bookmark/PRIVACY.md, also the
+/// Play listing's) and terms of service; Settings opens what is set.
+const String? privacyPolicyUrl =
+    'https://github.com/Winka173/Handy-Suite/blob/ui-rebuild/apps/handy_bookmark/PRIVACY.md';
 const String? termsUrl = null;
 
 /// Opens; tests replace it.
