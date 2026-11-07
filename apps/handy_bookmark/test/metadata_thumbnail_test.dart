@@ -58,7 +58,7 @@ void main() {
   test(
     'rejects compressed image exceeding pixel budget before decoding frame',
     () {
-      final encoded = image.encodePng(image.Image(width: 2001, height: 1000));
+      final encoded = image.encodePng(image.Image(width: 2001, height: 2000));
       expect(encoded.length, lessThan(metadataMaxThumbnailBytes));
       expect(
         sanitizeThumbnail(encoded, contentType: 'image/png').available,

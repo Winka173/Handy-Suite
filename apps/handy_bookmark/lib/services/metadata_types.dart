@@ -6,7 +6,9 @@ const metadataMaxUrlLength = 8192;
 /// never past this (YouTube puts them after ~800 KB of script).
 const metadataHeadMaxBytes = 2 * 1024 * 1024;
 const metadataMaxThumbnailBytes = 1024 * 1024;
-const metadataMaxImagePixels = 2000000;
+
+/// A reel cover is 1080 x 1920 (2.07 Mpx); 4 Mpx also takes 1440 x 2560.
+const metadataMaxImagePixels = 4000000;
 const metadataMaxRedirects = 3;
 const metadataTimeout = Duration(seconds: 8);
 

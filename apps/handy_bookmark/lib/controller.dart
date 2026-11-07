@@ -42,6 +42,10 @@ class SaveController extends ChangeNotifier {
   String? error, notice, highlighted;
   final invalidShares = <SharedLink>[];
   final fetching = <String, CancellationToken>{};
+
+  /// Pages turned away by a login page: how often, and the retries waiting.
+  final _wallTries = <String, int>{};
+  final _later = <Timer>[];
   Future<void> _writes = Future.value();
   bool disposed = false, draining = false;
   bool _again = false;
@@ -431,6 +435,20 @@ class SaveController extends ChangeNotifier {
         result = await metadata.fetch(b.originalUrl, cancellation: token);
       }
       token.check();
+      // Facebook and Instagram sometimes answer with their login page (a
+      // title that only names the site, no picture) and the real page a
+      // little later: not a title to keep; asked again shortly, and when
+      // the app next opens.
+      if (_loginWall(b, result)) {
+        result = const MetadataResult(status: 'failed', errorCode: 'loginWall');
+        if ((_wallTries[id] = (_wallTries[id] ?? 0) + 1) <= 1) {
+          _later.add(
+            Timer(const Duration(seconds: 45), () {
+              if (!disposed) unawaited(refreshMetadata(id));
+            }),
+          );
+        }
+      }
       await update(
         (s) => s.copyWith(
           bookmarks: [
@@ -484,25 +502,42 @@ class SaveController extends ChangeNotifier {
   /// A title an app shared that only names the site ("Facebook",
   /// "youtube.com"): the page's own title says more.
   static bool _genericTitle(Bookmark b, MetadataResult r) {
-    String bare(String? v) =>
-        (v ?? '').toLowerCase().replaceAll(RegExp(r'[^a-z0-9]'), '');
-    final title = bare(b.title);
-    if (title.isEmpty || r.title == null) return title.isEmpty;
+    if (r.title == null) return _bare(b.title).isEmpty;
+    return _onlyNamesSite(b, b.title, r.siteName);
+  }
+
+  static String _bare(String? v) =>
+      (v ?? '').toLowerCase().replaceAll(RegExp(r'[^a-z0-9]'), '');
+
+  /// Whether [text] is no more than the site's name or address.
+  static bool _onlyNamesSite(Bookmark b, String? text, String? siteName) {
+    final bare = _bare(text);
+    if (bare.isEmpty) return true;
     final host = b.sourceDomain.toLowerCase().replaceFirst(
       RegExp(r'^(www|m|mobile)\.'),
       '',
     );
     return {
-      bare(host),
-      bare(host.split('.').first),
-      bare(r.siteName),
-      bare(b.platform),
-    }.contains(title);
+      _bare(host),
+      _bare(host.split('.').first),
+      _bare(siteName),
+      _bare(b.platform),
+    }.contains(bare);
   }
 
-  /// Links saved lately that never got their title and picture (the page
-  /// could not be read then) are asked again once each time the app
-  /// opens, one at a time, newest first.
+  /// A Facebook or Instagram login page in place of the post or reel.
+  static bool _loginWall(Bookmark b, MetadataResult r) =>
+      {'facebook', 'instagram'}.contains(b.platform) &&
+      r.thumbnailUrl == null &&
+      (_onlyNamesSite(b, r.title, r.siteName) ||
+          RegExp(
+            r'log ?in|sign up|đăng nhập',
+            caseSensitive: false,
+          ).hasMatch(r.title!));
+
+  /// Links saved lately that have no picture on this device (the page could
+  /// not be read, showed a login page, or its picture did not arrive) are
+  /// asked again once each time the app opens, one at a time, newest first.
   Future<void> _retryMissing() async {
     if (preferences['automaticMetadata'] == false || !metadata.available) {
       return;
@@ -514,15 +549,24 @@ class SaveController extends ChangeNotifier {
               (b) =>
                   b.kind != 'image' &&
                   b.originalUrl.isNotEmpty &&
-                  b.thumbnailUrl == null &&
                   b.metadataSource != 'user' &&
-                  {'unavailable', 'failed'}.contains(b.metadataStatus) &&
+                  ({'unavailable', 'failed'}.contains(b.metadataStatus) ||
+                      // Its picture is known but never arrived.
+                      b.thumbnailUrl != null ||
+                      // Read before, but only a login page came back.
+                      (b.metadataStatus == 'partial' &&
+                          {'facebook', 'instagram'}.contains(b.platform) &&
+                          _onlyNamesSite(b, b.title, null))) &&
                   (DateTime.tryParse(b.savedAt)?.isAfter(since) ?? false),
             )
             .toList()
           ..sort((a, b) => b.savedAt.compareTo(a.savedAt));
-    for (final b in missing.take(12)) {
-      if (disposed) return;
+    var asked = 0;
+    for (final b in missing) {
+      if (disposed || asked >= 12) return;
+      // Only those with no picture on this device.
+      if (await thumbnail(b.id) != null) continue;
+      asked++;
       await refreshMetadata(b.id);
     }
   }
@@ -732,6 +776,7 @@ class SaveController extends ChangeNotifier {
   @override
   void dispose() {
     disposed = true;
+    for (final t in _later) t.cancel();
     for (final t in fetching.values) t.cancel();
     inbox.dispose();
     metadata.dispose();

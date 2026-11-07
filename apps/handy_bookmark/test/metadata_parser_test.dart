@@ -78,7 +78,7 @@ void main() {
     expect(metadataTimeout, const Duration(seconds: 8));
     expect(metadataMaxRedirects, 3);
     expect(metadataMaxThumbnailBytes, 1024 * 1024);
-    expect(metadataMaxImagePixels, 2000000);
+    expect(metadataMaxImagePixels, 4000000);
   });
   test(
     'pre-cancelled native operations return safely without network',
