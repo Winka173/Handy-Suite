@@ -6,7 +6,7 @@ import '../collections/identity.dart';
 import '../design/identity.dart';
 import '../design/theme.dart';
 import '../ui/app_mark.dart';
-import '../ui/collection_picker.dart' show collectionHue, collectionTree;
+import '../ui/collection_picker.dart' show collectionHue;
 import '../ui/visual.dart' show ReadingShade, SourceFace;
 import 'sheet_controller.dart';
 
@@ -651,7 +651,6 @@ class _Places extends StatelessWidget {
       required Widget leading,
       required String title,
       String? note,
-      double indent = 0,
     }) {
       final placed = c.placed;
       final done = placed != null && _same(where, placed);
@@ -659,7 +658,6 @@ class _Places extends StatelessWidget {
         key: key,
         title: title,
         leading: leading,
-        indent: indent,
         note: done ? tr(context, 'Added', 'Đã cho vào') : note,
         done: done,
         onTap: c.busy || placed != null ? null : () => c.put(where),
@@ -670,34 +668,29 @@ class _Places extends StatelessWidget {
     // here is somewhere it can go.
     bool elsewhere(SheetChoice where) => !_same(where, c.choice);
     final from = c.placeName(c.choice);
+    // Every collection, the one that last got an item first.
     final rows = [
-      for (final name in c.named)
-        if (elsewhere(InNewCollection(name)))
+      for (final s in c.places)
+        if (elsewhere(s.choice))
           place(
-            InNewCollection(name),
-            key: Key('share-place-new-$name'),
+            s.choice,
+            key: Key(
+              s.collection == null
+                  ? 'share-place-new-${s.name}'
+                  : 'share-place-${s.collection!.id}',
+            ),
             leading: CollectionBadge(
-              hue: HandyPalette.forKey(name),
+              hue: s.collection == null
+                  ? HandyPalette.forKey(s.name)
+                  : collectionHue(l, s.collection!.id),
+              mark: s.collection == null ? null : markOf(s.collection!.icon),
               size: 15,
               always: true,
             ),
-            title: name,
-            note: tr(context, 'New', 'Mới'),
-          ),
-      for (final (col, depth) in collectionTree(l))
-        if (elsewhere(InCollection(col.id)))
-          place(
-            InCollection(col.id),
-            key: Key('share-place-${col.id}'),
-            indent: depth * 20.0,
-            leading: CollectionBadge(
-              hue: collectionHue(l, col.id),
-              mark: markOf(col.icon),
-              size: 15,
-              always: true,
-            ),
-            title: col.name,
-            note: links(snapshot.counts[col.id] ?? 0),
+            title: s.name,
+            note: s.fresh && s.count == 0
+                ? tr(context, 'New', 'Mới')
+                : [?s.parent, links(s.count)].join(' · '),
           ),
       // In a collection already (its share shortcut): it can come out.
       if (from != null)
@@ -748,7 +741,6 @@ class _Place extends StatelessWidget {
   final String title;
   final String? note;
   final Widget leading;
-  final double indent;
   final bool done;
   final VoidCallback? onTap;
   const _Place({
@@ -757,7 +749,6 @@ class _Place extends StatelessWidget {
     required this.leading,
     this.done = false,
     this.note,
-    this.indent = 0,
     this.onTap,
   });
 
@@ -772,7 +763,7 @@ class _Place extends StatelessWidget {
         // Still readable while the sheet closes.
         enabled: true,
         tileColor: done ? p.tint : null,
-        contentPadding: EdgeInsets.only(left: 20 + indent, right: 20),
+        contentPadding: const EdgeInsets.symmetric(horizontal: 20),
         leading: leading,
         title: Text(
           title,

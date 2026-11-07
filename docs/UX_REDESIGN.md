@@ -1,5 +1,115 @@
 # Handy Suite — làm lại UI/UX
 
+## Vòng 7: Docs gợi ý mép giấy có duyệt
+
+Nhận ảnh → xem gợi ý bốn góc → chủ động Dùng gợi ý hoặc kéo tay → Lưu trang.
+Xử lý local trên lưới nhỏ có giới hạn, không gọi camera/cloud/OCR mới, không tự
+cắt hay ghi file. Chỉ gợi ý tờ giấy sáng nổi bật trên nền tối đủ tương phản;
+ảnh mờ, kín khung hoặc nhiều vùng lớn không chắc chắn chuyển sang kéo tay.
+Gợi ý đến muộn không được thay góc đã kéo; áp dụng/reset là thao tác rõ ràng.
+Giữ ảnh gốc, preset/contrast, rectify, cancel/retry và session/page ID hiện hữu.
+Không claim máy đọc đúng mọi mép hoặc đã kiểm camera thật từ fixture tổng hợp.
+
+## Vòng 6: Spend xác nhận số dư từ dữ liệu hiện tại
+
+Từ Today xem phạm vi tài khoản đã xác nhận → chọn tài khoản → nhập/xác nhận số
+dư thật. Ghi mốc cả khi chênh lệch bằng 0, không tạo giao dịch 0 đồng. Khi có
+chênh lệch, tính lại từ state mới nhất trong transaction queue; lưu adjustment
+và mốc xác nhận cùng một commit. Lỗi giữ nguyên ledger/mốc và nội dung form,
+Undo trả cả hai về trước; backup/reload giữ metadata. Không sửa BigInt, pending,
+refund/transfer, schema/database hoặc suy ngày mở tài khoản thành ngày đối chiếu.
+Chỉ thống kê tài khoản thực sự tham gia Safe to Spend; không giả kết nối bank hay
+xác nhận tất cả từ một tài khoản. Thông tin ngày xác nhận không thay lời nhắc rằng
+số dư chỉ dựa trên bản ghi; không lộ số tiền khi đang ẩn. Màn 320px/200% cuộn được.
+
+## Docs: giữ nhiều tệp văn bản mà không xoá bản cũ
+
+Reader retains a 1 MB per-text-file bound and 500 documents, with a bounded
+24 MB serialized library instead of the former 8 MB. Scan/PDF/writer keep their
+own type-specific limits. A larger reader library/ZIP is explicitly version 3;
+small v1/v2 archives retain their format and continue loading. Reject mislabeled
+legacy oversized archives, corruption and quota failures without partial writes.
+Keep namespace, IDs, metadata, source bytes and recovery/reset behavior. No
+automatic eviction of owned documents and no unbounded JSON/ZIP loading.
+
+## Tiếp tục: Keep xuất catalog bộ sưu tập
+
+Card image-export continuation: PNG/JPEG must await actual asset retrieval and
+image decoding before painting. A slow photo must not silently become an empty
+box. Coalesce loads shared by the canvas/export; keep an actionable export error
+for undecodable files, allow retry and dispose codecs/images if the studio closes.
+Do not change scene IDs, stored image bytes or crop transforms.
+PDF must use the same bundled Medium/SemiBold faces as the canvas when supplied,
+rather than mapping both to Regular/Bold. Existing caller font maps with only
+400/700 retain their fallback behavior; imported scene weights remain unchanged.
+
+Card template-quality continuation: the real-font audit found no clipped default
+text but many initial captions/contact values below 8 pt. Raise text size to at
+least 8 pt only while constructing bundled starter scenes; do not rewrite saved
+designs, user templates, imported documents or the text-layout engine. Re-render
+all 144, inspect the priority twenty first, and retain small-text/overflow review
+for user-authored layouts. Reject global font scaling or auto-fitting saved work.
+
+Forms template-quality continuation: preserve all 22 schemas, IDs, published
+versions and validation. While filling, explain Required/Optional in the input
+helper and accessibility hint, using the evaluated requirement rather than only
+the schema flag. Authored hints/errors wrap instead of disappearing on large
+text. Display-only blocks/calculations are not announced as optional questions.
+At 320px/200% show the complete question above decorated controls instead of a
+single-line floating label. Keep screen-reader field naming, typed values and
+validation. An unanswered calculation asks for its source numbers, without a
+technical exception. Do not change formula semantics or submission snapshots.
+
+- Câu hỏi: Tôi sẽ gửi những món nào và file sẽ trông ra sao? Từ bộ sưu tập,
+  mở Catalog → xem trang → lưu PNG trang đang xem hoặc PDF tất cả trang.
+- Mặc định chỉ các món đã sở hữu. Bật thêm mong muốn/đang đặt nếu cần; status
+  luôn có chữ. Giá chỉ xuất khi chủ động bật. Không xuất serial, vị trí, người
+  mượn, hoá đơn, ghi chú riêng hoặc đường dẫn file nội bộ.
+- Sáu món một trang A4; preview lấy đúng ảnh/name/status đang xuất; ảnh thiếu
+  có nhãn rõ. PNG/PDF là bản trình bày raster, không thay backup editable.
+- Bộ rỗng hướng dẫn quay lại thêm món; đang dựng có tiến độ; lỗi giữ lựa chọn,
+  Hủy file picker không báo đã lưu. Không ghi inventory khi preview/export.
+- 320px/chữ 200% cuộn được; tên dài không bị cắt khỏi file, nút có 48dp mục tiêu;
+  màn rộng tách preview và điều khiển. Từ chối một ảnh siêu dài, giá tổng nhiều
+  tiền tệ, tự chia sẻ ra ngoài hoặc dùng ảnh stock thay ảnh của người dùng.
+
+## Phần tiếp tục sau vòng 3: hợp đồng luồng ngắn
+
+- Recall: thêm nhiều cặp hỏi/đáp bằng dán văn bản, xem trước rồi lưu một lần;
+  giữ note/reverse/cloze và lịch cũ. Sheet đơn vẫn nhanh; màn dán cuộn 320–1440,
+  lỗi giữ nguyên nội dung, sửa text vô hiệu bản preview cũ. Không tự đọc clipboard.
+- Trip: chọn lịch khung 1 ngày/cuối tuần/city break rồi xem trước; tên/địa điểm
+  thật do người dùng sửa. Không tạo lượt ghé, booking hay expense từ preset;
+  lưu atomic cùng chuyến, vẫn giữ mọi tem cũ. Timeline là trục chính.
+- Bookmark: tác vụ mạng mặc định một lượt nhỏ có Hủy/tiến độ, batch lớn nằm sau
+  Advanced; trạng thái lấy bài rõ, không giả tải được bài đăng nhập/video.
+- Tools/Dev: công việc phổ biến luôn ở bench; tool hiếm vẫn tìm được bằng search,
+  pins/deep links cũ còn hiệu lực. Disclosure không sửa dữ liệu persisted.
+
+Tiếp tục áp dụng app-screen rules của design-taste-frontend và
+frontend-ui-engineering bằng Flutter; giữ hướng riêng đã chốt, không bốc style
+web chung để áp lại cả suite. Kiểm chứng bằng màn thật và test trước khi chốt.
+
+## Hợp đồng Codex 05/11/2026
+
+Yêu cầu mới của chủ repo ưu tiên 14 sản phẩm độc lập; các quy định cũ bắt buộc cùng
+khung Handy, cấm icon/màu riêng của thói quen hoặc áp một kiểu dashboard không còn
+chi phối những thay đổi mới. [14 hợp đồng thiết kế](product-review/DESIGN_IDENTITIES.md)
+ghi persona, câu hỏi chính, signature, wireflow, trạng thái và acceptance trước code.
+Cấu hình đã chuyển về từng app tại `lib/design/identity.dart`; giữ API renderer cũ
+để tương thích, không nhận việc di chuyển cấu hình là đã xong redesign.
+
+Lát triển khai đầu: Habit có editor diện mạo độc lập (không đổi lịch); Forms giữ
+không gian dữ liệu bằng nhãn phạm vi ngay tại footer, không thêm card thống kê;
+Media phân biệt file gộp để chia sẻ với project chứa ảnh gốc, duyệt trước xuất.
+Empty/loading/error và quyền sở hữu dữ liệu được giữ. Xác nhận destructive/import
+vẫn cần preview; không thêm xác nhận cho check-in hoặc đổi màu chưa lưu.
+
+Capture trước/sau dùng Flutter widget render thật, lưu tách ở
+`docs/product-review/evidence/before` và `after`; không phải ảnh thiết bị. Kiểm
+tra 320/390, tablet/desktop, VI/EN và dark theo độ phủ thực tế từng suite; chưa
+khẳng định tất cả tổ hợp đã được kiểm chứng.
+
 Toàn bộ UI, UX và flow được **làm lại từ đầu**. UI cũ chỉ là danh sách chức năng cần
 giữ (cùng [FUNCTIONS](FUNCTIONS.md)), không bao giờ là mẫu bố cục hay flow. Engine,
 storage, files, ZIP, adapter native và store giữ nguyên vì đã có test và quy tắc an
@@ -1722,6 +1832,29 @@ appear only for template formats. Regenerated the 97 captures and review sheets.
 
 Handy Boards remaining-scope contract: see docs/HANDY_BOARDS_REMAINING_WORK.md. Reuse the existing style/seed. Reports, working-calendar controls, reviewed imports, cancellable progress and opt-in widget previews extend current canonical workflows; test 320-1440 and large text before claiming completion.
 
+# Handy Forms — design contract
+
+Framed sheet, seed 1472575188; no redraw. Face: blue-grey paper frame, teal
+#1B6C80 data/action hue; IBM Plex Sans (reuse bundled licensed Tools font).
+Signature: version spine beside the form, making Draft versus Published vN visible.
+Objects: forms, pages, stable fields, immutable versions, answer drafts, records,
+repeatable rows, attachments, report definitions and workflow events. Production
+starts empty; practical templates are schemas, never fabricated submissions.
+Home asks “Which form do I need to collect from?”; primary action New form, with
+published forms offering New entry. Studio asks “What will people fill in?”;
+primary action Preview/Publish, field palette/canvas/properties at >=1100, two
+panes tablet, stepped editor phone with explicit reorder actions. Entry asks
+“What remains before submitting?”; field errors and autosave state visible.
+Records asks “Which responses need attention?”; search/filter and bounded pages.
+Report asks “What will I export?”; preview before export, real selectable PDF.
+320–1440 widths, VI expansion/200% text, labelled controls and keyboard save;
+empty/loading/error/cancel and denied permissions preserve data. Back confirms
+discard where needed; Web routes identify form/version/record, shortcuts never
+bypass validation. No gradients, generic KPI tiles, dead Pro controls or seeded
+production totals. Native capabilities have upload/manual alternatives; kiosk
+is an app screen, never presented as OS lockdown. Review screenshots against
+design-taste §2.7 before declaring UI verified.
+
 ## Handy Card design contract - 2026-11-02
 
 Style dealt by design-taste-frontend (`draw.mjs --app --kind builder`, seed
@@ -1758,6 +1891,17 @@ studio, the export sheet or anything that shares.
 Patterns rejected: a tutorial wall, coloured chrome or tinted tool tiles, a
 form that edits a static preview (the canvas is the editor), fake buttons for
 NFC or Wallet (not built; marked not started in the matrix).
+
+Handy Forms P1 automation contract: the editor answers "what happens after this
+local event?" Primary action saves a draft rule; publication binds it to future
+responses. Show trigger, readable condition and real bounded actions, never a
+script editor. Mobile uses scrollable dialogs; desktop retains the version spine.
+Execution history answers "did it run and can I retry?" Empty/pending/error/done
+are distinct; no success before durable commit. Labels and explanations EN/VI,
+320-1440px, keyboard/touch alternatives, no ads in editing/execution dialogs.
+Generated reports stay local until explicit export. Automation never chains its
+own transitions or bypasses workflow requirements. In-app reminders remain honest
+when system notification adapters are unavailable.
 
 ## Feature round 3 contracts - 2026-11-03
 
@@ -1936,6 +2080,121 @@ Docs because it moves a file, the thing Docs holds; Tools works on text.
   network.
 - Reject: a progress ring, a fake "connecting" step, a transfer history,
   sending folders or several files, compressing behind the user's back.
+
+## Handy Widget design contract (2026-11-03)
+
+Style: editorial-greeting, seed 725218380, `.taste-skill/widget/direction.json`.
+Chosen because this is a personal art library with a short creation ritual, not
+an operations dashboard. Face: original art on a white editorial canvas, with
+Manrope controls and Lora for one editorial headline. The dealt Instrument
+Sans/Serif pair was replaced after real glyph validation found missing Vietnamese
+letters; the replacement original font files pass the full U+1EA0..U+1EF9 range.
+Signature: **Theme spread** -- a real wallpaper with several actual rendered
+widget compositions, reused from pack detail to install preview. Never represent
+this composition preview as a capture from an installed native widget.
+
+Data/jobs inventory: theme packs; unique compositions; three size variants;
+wallpapers; decorative assets; font/license entries; saved user instances;
+managed personal photos/crops; favorites; confirmed native installations.
+Counts come from validated manifests, not promotional counters. User jobs are
+choose a look, adjust photos/text, save, install/export, and recover their data.
+
+Theme-sheet export contract: answer "What will this coordinated look contain?"
+with an actual canonical-renderer composition, pack title and a permanent
+composition-preview label. Open a review dialog before PNG export; preserve a
+cancel action, bound raster output to 1080x1920, and exclude private projects.
+Use the same theme face, no decorative export chrome. Fit the review to 320px
+and desktop, keep actions keyboard accessible, show loading/error states, and
+do not report cancelled file dialogs as successful exports. This is a static
+image, not an installation flow or an updating clock.
+
+Static-text controls extend the existing advanced inspector: choose left/center/
+right, enter a validated six-digit color, or clear it to follow the palette.
+Invalid intermediate input stays in the field and never corrupts a saved project.
+Show an explicitly palette-only contrast ratio; photo/layer backgrounds can vary,
+so this ratio must not claim universal accessibility. Preserve undo/autosave and
+respect locked layers. Dynamic native clock styling remains separately limited.
+
+Background editor contract: answer "What sits behind my widget?" in a compact
+basic inspector section, keeping the canonical preview visible. Offer Template,
+Solid, Gradient, Photo and Texture with only relevant controls shown. Gradients
+belong inside the widget artwork, never studio chrome. Photo selection must finish
+validation/normalization and persistence before switching mode; cancellation and
+errors preserve the previous design. Reuse existing crop and undo/autosave rules,
+portable managed media and privacy warnings. Existing projects without background
+settings render identically. Use EN/VI labels, wrapping choices at 320px, labelled
+sliders, inline invalid-color errors, and explicit image replacement/reset actions.
+
+Photo-preset extension: Polaroid, three-frame film and taped scrapbook remain
+ordinary templates in the existing gallery/editor. They share photo slots,
+portable media, crop and native rendering. Editable captions use the existing
+words field with localized defaults; long captions ellipsize at actual available
+line height. Review all three sizes with real fonts; never use a launcher mockup
+as proof that these presets were installed on the OS.
+
+Wallpaper crop contract: answer "Which part will I save?" with the actual raster
+crop as the preview. Keep original dimensions by default; explicitly select
+portrait aspect, focal position, zoom and quarter-turn rotation. Preview and PNG/
+JPEG exports share the engine operation. Debounce preview work, discard stale
+results and bound concurrency; never export a loading placeholder. Preserve
+source art, keep reset/cancel/error/retry reachable, and do not imply automatic
+OS wallpaper setting. Controls wrap at 320px and sit beside art where width
+permits. Label sliders for keyboard/accessibility; ads remain outside this flow.
+
+Saved-widget favorites: reuse the project favorite field, independent of theme
+favorites. A labelled heart in the editor toggles via normal undo/autosave; My
+Widgets uses the same favorites filter as Discover, scoped to saved designs.
+Do not force a theme favorite to mark every user project. Preserve the flag on
+reset and ZIP restore. Empty filtered results must offer clearing the filter.
+
+Screens/questions and primary actions:
+
+- Discover: Which look fits my screen? Actual art dominates; open a theme.
+- Theme detail: How does this set work together? Theme spread; Use theme.
+- Editor: Does this widget look right with my content? Preview leads; Save.
+- My Widgets: Which saved design should I edit or install? Real saved renders;
+  Edit/Add to Home Screen where a supported native path exists.
+- Wallpapers: Which background should I save? Real portrait art; Export.
+- Settings/backup: Can I recover this library? Counts and reviewed ZIP restore.
+
+Layout: centered 1100px desktop canvas (12x77 +11x16), 16px gaps and variable
+8/4 or 6/6 spans for theme spreads. The gallery uses actual peer art tiles, no KPI
+row. Tablet uses two readable columns; 320px/large text uses one column and
+stacked actions. Editor controls are a sheet on phones, inspector beside preview
+on desktop. Touch >=44px; keyboard editing has explicit alternatives to dragging.
+
+States: bundled library is available without a network. My Widgets starts empty
+with a choose-theme action. Missing/corrupt media offers Replace and retains the
+project. Native installation distinguishes requested/confirmed/unavailable;
+never fake success. Import has preview, cancel, duplicate handling and rollback.
+No user photos leave the device except explicit share/export. Ads are absent
+from installation and the native widget. Loading keeps geometry; errors stay
+beside the action that failed. Reduced motion disables nonessential transitions.
+
+The subject's requested glass/neon/gradient aesthetics are allowed inside the
+original theme artwork, not app chrome. No fake popularity, vanity counts,
+empty gallery cards or recolor-only padding. Each pack starts with owned artwork;
+its preview uses the same renderer and real clock/calendar data as its instance.
+
+Handy Widget follow-up: literal captions in older photo templates use a free
+labelled Photo caption field, autosave and the same undo stack as other edits.
+The single scene remains the truth; no second editor or duplicate project is
+created. The controlled draft observes undo without replacing keyboard focus
+on each keystroke. Empty text is allowed; invalid/overlong content cannot reach
+the model. Existing records retain their original appearance until edited;
+project-v2 migration happens only on save. Canonical art uses bundled shared
+GeistMono for mono scenes rather than relying on a generic OS font. App chrome
+keeps Manrope/Lora, and the theme spread remains the one visual signature.
+
+Layer keyboard contract: editable scenes expose layers as focusable controls
+with localized type/order labels and a selected border. Tab selects a layer;
+arrows move it in 0.5% steps; Shift+arrows resize through the same bounded model
+callbacks. Each key is one undoable transform. Locked layers remain selectable
+for unlocking but cannot move/resize. Preview/export scenes add no interactive
+focus targets. Pointer selection and keyboard selection use the same canonical
+layer; hidden layers do not enter the focus order. The existing position/size
+sliders remain the equivalent alternative. Instructions appear beside the
+editable preview, without adding a toolbar or a second editor.
 
 ## Refactor 2026-11 · lát S1: ẩn và bỏ (hợp đồng)
 
@@ -2175,6 +2434,23 @@ Run: design-taste-frontend app-screens (giữ `HandyBrand.media`) + frontend-ui-
   cuối thì quay về Tất cả. Danh sách lưu trong cài đặt của app (chỉ id).
 - Reject: đếm lượt thích, gợi ý theo thích, đồng bộ.
 
+
+## Implementation continuation ? 2026-11-05
+
+Forms: choose a published form and collect one response. A paper tray shows title, version and actual response count; new entry precedes editing. Basic exposes collection and records, Advanced exposes schema power tools, Operations exposes kiosk and insights. Modes change presentation only; existing formulas, workflow and responses remain intact. On phone the mode picker folds; the collection list starts within the first 60% of the screen.
+
+Boards: capture one task in the current board without configuring a project. An inline composer sits immediately above category/kanban/list content; Table is disclosed under Advanced views. Saved rules, WIP and assignees are never reset by disclosure.
+
+Spend: record an expense before studying the financial plan. A receipt-like capture panel precedes the projection on Today; exact ledger and assumption explanations remain unchanged. No duplicate balance state.
+
+Keep: find a physical item or browse a collection. Items and Collections are explicit destinations; only Items carries place filters and totals. Collection covers belong to the collection area, with an opt-in sample. Switching areas never mutates inventory.
+
+Card: choose an editable design visually, personalize and export. Gallery is first; existing projects have their own section; print-production controls are Advanced. Artwork is a removable image layer, never baked text.
+
+All: scrolling large text, native Back, focus and labelled 48px controls; error retains content, empty states offer the actual first action. No repeated universal home shell is introduced.
+
+Round 4 continuation: Habit keeps daily/weekday capture short; interval/quota schedules stay searchable/selectable in Advanced, and an existing uncommon selection stays visible without conversion. Dates/grouping/priority/notes collapse without clearing their controllers. Widget placement presents numbered OS-specific instructions and separately reports a pin request versus actual installed instances. Media frame presets must differ in geometry, remain editable, and export actual PNGs; increasing a color list does not count as new designs. Dev reviews invalid resolved JSON before network use and never silently discards malformed header lines.
+
 ## Hợp đồng: Handy Bookmark · hướng dẫn lần đầu (2026-11-06)
 
 Hợp đồng đầy đủ (bản tiếng Anh): `docs/bookmark-redesign/ONBOARDING_FLOW.md`.
@@ -2198,15 +2474,6 @@ Hợp đồng đầy đủ (bản tiếng Anh): `docs/bookmark-redesign/ONBOARDI
   sưu tập "Chạm một bộ sưu tập" → "Đã lưu vào …". Bấm bộ sưu tập ở hàng đầu → khung mở với bộ đó
   rồi, ô sáng ở ✕. Cảnh Tìm vẽ như màn Tìm thật: thanh "← Tìm", ô tròn viền teal có ✕, "Tất cả
   mục · N kết quả", các dòng trong một thẻ (ảnh, tiêu đề, chấm bộ sưu tập · trang, ⋯).
-
-## Hợp đồng: Handy Bookmark · Warm Modern Library (2026-11-06)
-
-Hợp đồng đầy đủ (tiếng Anh): `docs/bookmark-redesign/VISUAL_DESIGN.md`. Tóm tắt: app sau phần
-hướng dẫn phải trông như chính phần hướng dẫn. Cùng màu teal `#0E7490`, nền ngà ấm `#F6F4EE`
-(tối: than ấm `#171D1C`, không đen tuyền), thẻ 16, bìa collection 20, sheet 26, ảnh là chính, mặt
-thay thế theo nguồn khi không có ảnh. Màn chính: tên thư viện (serif), tìm kiếm dạng viên thuốc,
-dải "Mới lưu" (mục chưa xếp đi trước, một nút "Xếp vào…"), bìa collection, nơi chốn, nút Lưu ở
-đáy. Theme riêng của app qua `HandyApp(themeOverride:)`, không đổi theme các app khác.
 
 ## Hợp đồng: Handy Bookmark · tạo và sửa bộ sưu tập (2026-11-07)
 
@@ -2293,10 +2560,12 @@ dải "Mới lưu" (mục chưa xếp đi trước, một nút "Xếp vào…"),
   một dòng mô tả. Khi đang đọc trang: ô hình tối lại với vòng xoay (như thẻ trong app), tiêu đề tạm
   là tiêu đề app gửi hoặc tên trang. Không đọc được: mặt chữ cái của trang, không báo lỗi (app tự
   thử lại sau). Ảnh được chia sẻ: ảnh đó, tiêu đề "1 ảnh" / "N ảnh".
-- Danh sách "Chạm để cho vào": Chưa xếp, rồi các bộ sưu tập theo cây như trong app, mỗi dòng là
-  dấu bộ sưu tập (màu nhạt + biểu tượng/emoji của nó) + tên + số link; chỗ mục đang nằm có ✓
-  "Đang ở đây". "Bộ sưu tập mới" mở một ô nhập ngay đầu danh sách (không mở hộp thoại); Thêm là
-  cho vào bộ mới và đóng. App tạo bộ đó khi nhận mục (trùng tên thì dùng bộ đã có).
+- Danh sách "Cho vào bộ sưu tập": mọi bộ sưu tập, bộ vừa có mục vào gần nhất ở trên cùng
+  (không theo cây; bộ con ghi tên bộ cha trước số link), mỗi dòng là dấu bộ sưu tập (màu nhạt +
+  biểu tượng/emoji của nó) + tên + số link; chỗ mục đang nằm không liệt kê. "Bộ sưu tập mới" mở
+  một ô nhập ngay đầu danh sách (không mở hộp thoại); Thêm là cho vào bộ mới và đóng. App tạo bộ
+  đó khi nhận mục (trùng tên thì dùng bộ đã có). Bộ tạo ở lần chia sẻ trước mà app chưa mở để
+  nhận vẫn hiện (đọc từ hàng chờ, sửa 2026-11-07: trước đó lần chia sẻ sau không thấy bộ mới).
 - Khoá app bật: không liệt kê bộ sưu tập; chỉ xem trước + "Đã lưu vào Chưa xếp. Mở khoá app để
   xếp." Tắt tự đọc trang: không đọc, xem trước chỉ có tên trang.
 - Bộ sưu tập ở hàng đầu khung chia sẻ Android (lối tắt) cũng mở khung này, với bộ đó đã chọn

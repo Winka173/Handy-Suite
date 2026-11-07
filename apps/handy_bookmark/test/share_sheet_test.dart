@@ -111,6 +111,7 @@ Future<(SheetController, FakeBridge)> showSheet(
   Map<String, dynamic> prefs = const {},
   String text = video,
   String? collection,
+  List<QueuedPlace> queued = const [],
 }) async {
   final bridge = FakeBridge(
     SheetShare(
@@ -118,6 +119,7 @@ Future<(SheetController, FakeBridge)> showSheet(
       text: text,
       collection: collection,
       snapshot: SheetSnapshot.parse(sheetSnapshot(library(), prefs)),
+      queued: queued,
     ),
   );
   final c = SheetController(
@@ -150,6 +152,11 @@ void main() {
     expect(s.library.collections.map((c) => c.name), ['Food', 'Trips']);
     expect(s.counts['c' * 32], 1);
     expect(s.counts['d' * 32], 0);
+    expect(
+      s.last['c' * 32],
+      DateTime.parse('2026-11-07T00:00:00Z').millisecondsSinceEpoch,
+    );
+    expect(s.last['d' * 32], 0);
     expect((s.theme, s.locale, s.locked, s.read), ('dark', 'vi', false, true));
 
     final locked = SheetSnapshot.parse(
@@ -259,6 +266,44 @@ void main() {
     expect(find.text('in Xem sau'), findsOneWidget);
     await t.pump(const Duration(milliseconds: 300));
     expect(bridge.saved!['collection'], isNull);
+  });
+
+  testWidgets('collections named in earlier sheets are listed; the newest '
+      'goes first', (t) async {
+    final (c, bridge) = await showSheet(
+      t,
+      queued: [
+        QueuedPlace(
+          collection: 'd' * 32,
+          at: DateTime.parse('2026-11-07T12:00:00Z'),
+        ),
+        QueuedPlace(
+          newCollection: 'Xem sau',
+          at: DateTime.parse('2026-11-08T09:00:00Z'),
+        ),
+      ],
+    );
+    // Not made yet (the app has not opened), still listed: most recent
+    // first, then Trips (a share waiting for it), then Food.
+    expect(c.places.map((p) => p.name), ['Xem sau', 'Trips', 'Food']);
+    double y(String key) => t.getTopLeft(find.byKey(Key(key))).dy;
+    expect(
+      y('share-place-new-Xem sau'),
+      lessThan(y('share-place-${'d' * 32}')),
+    );
+    expect(
+      y('share-place-${'d' * 32}'),
+      lessThan(y('share-place-${'c' * 32}')),
+    );
+    expect(find.text('1 link'), findsNWidgets(3));
+    // Typing its name again picks the same place.
+    expect((c.name(' xem SAU') as InNewCollection).name, 'Xem sau');
+    expect(c.named, isEmpty);
+
+    await t.tap(find.byKey(const Key('share-place-new-Xem sau')));
+    await t.pump();
+    expect(bridge.saved!['newCollection'], 'Xem sau');
+    await t.pump(const Duration(milliseconds: 600));
   });
 
   testWidgets('a name already used picks that collection', (t) async {

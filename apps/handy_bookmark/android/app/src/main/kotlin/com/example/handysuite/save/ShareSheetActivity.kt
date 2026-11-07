@@ -60,6 +60,7 @@ class ShareSheetActivity : FlutterFragmentActivity() {
                                         "images" to images,
                                         "snapshot" to getSharedPreferences(SNAPSHOT, Context.MODE_PRIVATE)
                                             .getString("snapshot", null),
+                                        "queued" to queued(s["id"] as? String),
                                     ),
                                 )
                             }
@@ -97,6 +98,23 @@ class ShareSheetActivity : FlutterFragmentActivity() {
                 }
             }
         }
+    }
+
+    /**
+     * Where the other shares still in the queue go, and when they came: a
+     * collection named in an earlier sheet is made only when the app opens,
+     * so the snapshot does not know it yet. Never their text.
+     */
+    private fun queued(current: String?): List<Map<String, Any?>> = try {
+        queue.drain().filter { it["id"] != current }.map {
+            mapOf(
+                "collection" to it["collection"],
+                "newCollection" to it["newCollection"],
+                "receivedAt" to it["receivedAt"],
+            )
+        }
+    } catch (_: Exception) {
+        emptyList()
     }
 
     private fun close() {

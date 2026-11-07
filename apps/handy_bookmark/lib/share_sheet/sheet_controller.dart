@@ -5,6 +5,7 @@ import 'package:handy_bookmark_engine/handy_bookmark_engine.dart';
 import 'package:handy_core/handy_core.dart';
 import '../services/metadata_client.dart';
 import '../services/metadata_judge.dart';
+import '../ui/collection_picker.dart' show collectionTree;
 import 'snapshot.dart';
 
 /// A share as the share sheet receives it: already in the app's private
@@ -20,6 +21,11 @@ class SheetShare {
   /// Pictures the share carried, copied into the queue.
   final List<String> images;
   final SheetSnapshot snapshot;
+
+  /// Earlier shares still waiting for the app to take them in: the places
+  /// they were put in, which the snapshot does not know of yet (a new
+  /// collection named in another sheet is made only when the app opens).
+  final List<QueuedPlace> queued;
   const SheetShare({
     required this.id,
     required this.text,
@@ -27,6 +33,42 @@ class SheetShare {
     this.collection,
     this.images = const [],
     required this.snapshot,
+    this.queued = const [],
+  });
+}
+
+/// Where a share still in the queue goes, and when it arrived.
+class QueuedPlace {
+  final String? collection, newCollection;
+  final DateTime? at;
+  const QueuedPlace({this.collection, this.newCollection, this.at});
+}
+
+/// A row of the sheet: a collection, or one still to be made.
+class SheetPlace {
+  final SheetChoice choice;
+  final String name;
+
+  /// The collection as the app keeps it; null for one still to be made.
+  final SaveCollection? collection;
+
+  /// The parent's name, for a collection inside another.
+  final String? parent;
+  final int count;
+
+  /// When it last got an item (ms since epoch; 0 for never).
+  final int last;
+
+  /// Named in this sheet.
+  final bool fresh;
+  const SheetPlace({
+    required this.choice,
+    required this.name,
+    this.collection,
+    this.parent,
+    this.count = 0,
+    this.last = 0,
+    this.fresh = false,
   });
 }
 
@@ -44,6 +86,15 @@ class SheetBridge {
       collection: r['collection'] as String?,
       images: [for (final p in r['images'] as List? ?? const []) p as String],
       snapshot: SheetSnapshot.parse(r['snapshot'] as String?),
+      queued: [
+        for (final q in r['queued'] as List? ?? const [])
+          if (q is Map)
+            QueuedPlace(
+              collection: q['collection'] as String?,
+              newCollection: q['newCollection'] as String?,
+              at: DateTime.tryParse(q['receivedAt'] as String? ?? ''),
+            ),
+      ],
     );
   }
 
@@ -212,6 +263,85 @@ class SheetController extends ChangeNotifier {
     notifyListeners();
   }
 
+  /// Every collection it can go in, the one that last got an item first;
+  /// those named in this sheet lead. Collections named in earlier sheets
+  /// and not yet made by the app are listed as well.
+  List<SheetPlace> get places {
+    final s = share;
+    if (s == null) return const [];
+    final snapshot = s.snapshot;
+    final collections = snapshot.library.collections;
+    final byId = {for (final c in collections) c.id: c};
+    String key(String name) => name.trim().toLowerCase();
+    final topLevel = {
+      for (final c in collections)
+        if (c.parentId == null) key(c.name): c,
+    };
+    // What earlier shares still in the queue add to each place.
+    final count = <String, int>{}, last = <String, int>{};
+    final waiting = <String, String>{}; // key → name as first typed
+    void add(String k, DateTime? at) {
+      count[k] = (count[k] ?? 0) + 1;
+      final ms = at?.millisecondsSinceEpoch ?? 0;
+      if (ms > (last[k] ?? 0)) last[k] = ms;
+    }
+
+    for (final q in s.queued) {
+      final n = q.newCollection?.trim();
+      if (n != null && n.isNotEmpty) {
+        final made = topLevel[key(n)];
+        if (made != null) {
+          add(made.id, q.at);
+        } else {
+          waiting.putIfAbsent(key(n), () => n);
+          add('new:${key(n)}', q.at);
+        }
+      } else if (q.collection != null && byId.containsKey(q.collection)) {
+        add(q.collection!, q.at);
+      }
+    }
+
+    final freshKeys = {for (final n in named) key(n)};
+    final out = <SheetPlace>[
+      for (final n in named)
+        SheetPlace(
+          choice: InNewCollection(waiting[key(n)] ?? n),
+          name: waiting[key(n)] ?? n,
+          count: count['new:${key(n)}'] ?? 0,
+          fresh: true,
+        ),
+    ];
+    final rest = <SheetPlace>[
+      for (final MapEntry(key: k, value: n) in waiting.entries)
+        if (!freshKeys.contains(k))
+          SheetPlace(
+            choice: InNewCollection(n),
+            name: n,
+            count: count['new:$k'] ?? 0,
+            last: last['new:$k'] ?? 0,
+          ),
+      for (final (c, _) in collectionTree(snapshot.library))
+        SheetPlace(
+          choice: InCollection(c.id),
+          name: c.name,
+          collection: c,
+          parent: c.parentId == null ? null : byId[c.parentId]?.name,
+          count: (snapshot.counts[c.id] ?? 0) + (count[c.id] ?? 0),
+          last: [
+            snapshot.last[c.id] ?? 0,
+            last[c.id] ?? 0,
+          ].reduce((a, b) => a > b ? a : b),
+        ),
+    ];
+    // Newest first; the tree's order where none is newer (a stable sort).
+    final order = {for (var i = 0; i < rest.length; i++) rest[i]: i};
+    rest.sort((a, b) {
+      final by = b.last.compareTo(a.last);
+      return by != 0 ? by : order[a]!.compareTo(order[b]!);
+    });
+    return [...out, ...rest];
+  }
+
   /// A new collection named in the sheet, or the one already called that.
   SheetChoice? name(String value) {
     final clean = value.trim();
@@ -221,6 +351,13 @@ class SheetController extends ChangeNotifier {
         .where((c) => c.parentId == null && c.name.trim().toLowerCase() == key)
         .firstOrNull;
     if (existing != null) return InCollection(existing.id);
+    // Named in an earlier sheet, not made yet: the same place.
+    final waiting = share?.queued
+        .map((q) => q.newCollection?.trim())
+        .whereType<String>()
+        .where((n) => n.toLowerCase() == key)
+        .firstOrNull;
+    if (waiting != null) return InNewCollection(waiting);
     named.removeWhere((n) => n.toLowerCase() == key);
     named.insert(0, clean.length > 200 ? clean.substring(0, 200) : clean);
     return InNewCollection(named.first);
