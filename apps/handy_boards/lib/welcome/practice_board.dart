@@ -322,140 +322,149 @@ class _Board extends StatelessWidget {
       bool done = false,
       bool mine = false,
     }) {
-      final dim = s.filtered && hue != _maths;
-      return AnimatedOpacity(
+      // Filtered by a category, the others leave the board (as in the
+      // app), rather than staying dimmed.
+      final hidden = s.filtered && hue != _maths;
+      return AnimatedSize(
         duration: HandyMotion.of(context, HandyMotion.medium),
-        opacity: dim ? .25 : 1,
-        child: Container(
-          key: key,
-          margin: const EdgeInsets.only(bottom: 6),
-          padding: const EdgeInsets.fromLTRB(8, 8, 8, 8),
-          decoration: BoxDecoration(
-            color: GuideColors.card,
-            borderRadius: BorderRadius.circular(10),
-            boxShadow: mine
-                ? const [
-                    BoxShadow(
-                      color: GuideColors.shadow,
-                      blurRadius: 6,
-                      offset: Offset(0, 2),
-                    ),
-                  ]
-                : null,
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                title,
-                style: TextStyle(
-                  fontSize: 12.5,
-                  height: 1.25,
-                  fontWeight: FontWeight.w600,
-                  color: done ? GuideColors.muted : GuideColors.ink,
-                  decoration: done ? TextDecoration.lineThrough : null,
-                ),
-              ),
-              const SizedBox(height: 6),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+        alignment: Alignment.topCenter,
+        child: hidden
+            ? const SizedBox(width: double.infinity)
+            : Container(
+                key: key,
+                margin: const EdgeInsets.only(bottom: 6),
+                padding: const EdgeInsets.fromLTRB(8, 8, 8, 8),
                 decoration: BoxDecoration(
-                  color: hue.$2,
-                  borderRadius: BorderRadius.circular(99),
+                  color: GuideColors.card,
+                  borderRadius: BorderRadius.circular(10),
+                  boxShadow: mine
+                      ? const [
+                          BoxShadow(
+                            color: GuideColors.shadow,
+                            blurRadius: 6,
+                            offset: Offset(0, 2),
+                          ),
+                        ]
+                      : null,
                 ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
+                    Text(
+                      title,
+                      style: TextStyle(
+                        fontSize: 12.5,
+                        height: 1.25,
+                        fontWeight: FontWeight.w600,
+                        color: done ? GuideColors.muted : GuideColors.ink,
+                        decoration: done ? TextDecoration.lineThrough : null,
+                      ),
+                    ),
+                    const SizedBox(height: 6),
                     Container(
-                      width: 6,
-                      height: 6,
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 6,
+                        vertical: 2,
+                      ),
                       decoration: BoxDecoration(
-                        color: hue.$1,
-                        shape: BoxShape.circle,
+                        color: hue.$2,
+                        borderRadius: BorderRadius.circular(99),
                       ),
-                    ),
-                    const SizedBox(width: 4),
-                    Flexible(
-                      child: Text(
-                        cat,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(
-                          fontSize: 11,
-                          color: GuideColors.ink,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              if (mine && s.column < 2) ...[
-                const SizedBox(height: 4),
-                Text(
-                  s.ticked ? '3/5' : '2/5',
-                  style: const TextStyle(
-                    fontSize: 11,
-                    color: GuideColors.muted,
-                  ),
-                ),
-              ],
-              // In Doing, once filtered: two of its subtasks, one to tick.
-              if (mine &&
-                  key != null &&
-                  s.column == 1 &&
-                  s.step.index >= PracticeStep.tick.index) ...[
-                const SizedBox(height: 6),
-                for (final (title, done, rowKey) in [
-                  (
-                    tr(context, 'Review the formula', 'Ôn công thức'),
-                    true,
-                    null,
-                  ),
-                  (
-                    tr(context, 'Five exercises', 'Làm 5 bài tập'),
-                    s.ticked,
-                    s.tick,
-                  ),
-                ])
-                  GestureDetector(
-                    key: rowKey,
-                    onTap: rowKey == null ? null : s._tick,
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 3),
                       child: Row(
+                        mainAxisSize: MainAxisSize.min,
                         children: [
-                          Icon(
-                            done
-                                ? Icons.check_box
-                                : Icons.check_box_outline_blank,
-                            size: 16,
-                            color: done ? GuideColors.teal : GuideColors.muted,
+                          Container(
+                            width: 6,
+                            height: 6,
+                            decoration: BoxDecoration(
+                              color: hue.$1,
+                              shape: BoxShape.circle,
+                            ),
                           ),
                           const SizedBox(width: 4),
                           Flexible(
                             child: Text(
-                              title,
+                              cat,
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
-                              style: TextStyle(
-                                fontSize: 11.5,
-                                color: done
-                                    ? GuideColors.muted
-                                    : GuideColors.ink,
-                                decoration: done
-                                    ? TextDecoration.lineThrough
-                                    : null,
+                              style: const TextStyle(
+                                fontSize: 11,
+                                color: GuideColors.ink,
                               ),
                             ),
                           ),
                         ],
                       ),
                     ),
-                  ),
-              ],
-            ],
-          ),
-        ),
+                    if (mine && s.column < 2) ...[
+                      const SizedBox(height: 4),
+                      Text(
+                        s.ticked ? '3/5' : '2/5',
+                        style: const TextStyle(
+                          fontSize: 11,
+                          color: GuideColors.muted,
+                        ),
+                      ),
+                    ],
+                    // In Doing, once filtered: two of its subtasks, one to tick.
+                    if (mine &&
+                        key != null &&
+                        s.column == 1 &&
+                        s.step.index >= PracticeStep.tick.index) ...[
+                      const SizedBox(height: 6),
+                      for (final (title, done, rowKey) in [
+                        (
+                          tr(context, 'Review the formula', 'Ôn công thức'),
+                          true,
+                          null,
+                        ),
+                        (
+                          tr(context, 'Five exercises', 'Làm 5 bài tập'),
+                          s.ticked,
+                          s.tick,
+                        ),
+                      ])
+                        GestureDetector(
+                          key: rowKey,
+                          onTap: rowKey == null ? null : s._tick,
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(vertical: 3),
+                            child: Row(
+                              children: [
+                                Icon(
+                                  done
+                                      ? Icons.check_box
+                                      : Icons.check_box_outline_blank,
+                                  size: 16,
+                                  color: done
+                                      ? GuideColors.teal
+                                      : GuideColors.muted,
+                                ),
+                                const SizedBox(width: 4),
+                                Flexible(
+                                  child: Text(
+                                    title,
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: TextStyle(
+                                      fontSize: 11.5,
+                                      color: done
+                                          ? GuideColors.muted
+                                          : GuideColors.ink,
+                                      decoration: done
+                                          ? TextDecoration.lineThrough
+                                          : null,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                    ],
+                  ],
+                ),
+              ),
       );
     }
 
