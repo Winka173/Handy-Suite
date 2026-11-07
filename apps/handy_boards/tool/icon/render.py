@@ -1,17 +1,18 @@
-"""Render the original SVG and mirror its geometry into Android vectors.
+"""Render Board in Colour and mirror its cards into Android vectors.
 
 Requires Pillow and Playwright with Chromium installed. From the repo root:
     python apps/handy_boards/tool/icon/render.py
     python tooling/app-icons.py boards
     python apps/handy_boards/tool/icon/render.py --finish --previews <directory>
 
-The last step restores the rounded 256px in-app tile and Boards' web
-background after the shared generator, and optionally saves previews.
+The last step restores the rounded 256px in-app tile after the shared
+generator, and optionally saves previews. Adaptive artwork uses a 0.94
+scale about its centre to keep every card inside the 66-unit safe circle.
 """
 import argparse
 import copy
 import io
-import json
+import re
 from pathlib import Path
 import xml.etree.ElementTree as ET
 
@@ -26,26 +27,44 @@ ET.register_namespace('', SVG)
 ET.register_namespace('android', ANDROID)
 
 
+def adaptive_source(source):
+    source = copy.deepcopy(source)
+    source.find(f'{{{SVG}}}g').set(
+        'transform', 'translate(54 54) scale(.94) translate(-54 -54)')
+    return source
+
+
 def android_attributes(**values):
     return {f'{{{ANDROID}}}{key}': str(value) for key, value in values.items()}
 
 
 def vector_element(source, monochrome=False):
-    if source.tag == f'{{{SVG}}}path':
+    if source.tag == f'{{{SVG}}}rect':
+        x, y, w, h, r = (float(source.get(key, '0')) for key in ('x', 'y', 'width', 'height', 'rx'))
+        # SVG rounded rectangles become exact circular-arc vector paths.
+        d = (f'M{x+r:g} {y:g}H{x+w-r:g}A{r:g} {r:g} 0 0 1 {x+w:g} {y+r:g}'
+             f'V{y+h-r:g}A{r:g} {r:g} 0 0 1 {x+w-r:g} {y+h:g}'
+             f'H{x+r:g}A{r:g} {r:g} 0 0 1 {x:g} {y+h-r:g}'
+             f'V{y+r:g}A{r:g} {r:g} 0 0 1 {x+r:g} {y:g}Z')
         return ET.Element('path', android_attributes(
             fillColor='#FF000000' if monochrome else '#FF' + source.attrib['fill'][1:],
-            pathData=source.attrib['d']))
+            pathData=d))
+    if source.tag != f'{{{SVG}}}g':
+        raise ValueError(f'Unsupported mark element: {source.tag}')
     result = ET.Element('group')
     transform = source.get('transform')
     if transform:
-        # The only source transform is the lifted card's rotation.
-        angle, x, y = transform.removeprefix('rotate(').removesuffix(')').split()
-        result.attrib.update(android_attributes(rotation=angle, pivotX=x, pivotY=y))
+        scale = re.fullmatch(r'translate\(54 54\) scale\(([^)]+)\) translate\(-54 -54\)', transform)
+        if not scale:
+            raise ValueError(f'Unsupported mark transform: {transform}')
+        result.attrib.update(android_attributes(
+            scaleX=scale[1], scaleY=scale[1], pivotX=54, pivotY=54))
     result.extend(vector_element(child, monochrome) for child in source)
     return result
 
 
 def write_android(source):
+    source = adaptive_source(source)
     res = APP / 'android/app/src/main/res'
     for suffix, monochrome in [('foreground', False), ('monochrome', True)]:
         vector = ET.Element('vector', android_attributes(
@@ -104,7 +123,8 @@ def main():
             browser = playwright.chromium.launch()
             page = browser.new_page(viewport={'width': 4096, 'height': 4096}, device_scale_factor=1)
             for name, box in [('art', '18 18 72 72'), ('maskable', '0 0 108 108')]:
-                render_svg(page, source, box).save(ART / f'{name}.png')
+                artwork = adaptive_source(source) if name == 'maskable' else source
+                render_svg(page, artwork, box).save(ART / f'{name}.png')
             browser.close()
     with Image.open(ART / 'art.png') as art:
         tile(art, 256).save(APP / 'assets/icon.png')
@@ -112,11 +132,6 @@ def main():
             args.previews.mkdir(parents=True, exist_ok=True)
             for size in (28, 48, 96, 512):
                 tile(art, size).save(args.previews / f'boards-{size}.png')
-    manifest = APP / 'web/manifest.json'
-    data = json.loads(manifest.read_text(encoding='utf-8'))
-    data['theme_color'] = '#A61C8E'
-    data['background_color'] = '#F3EFEE'
-    manifest.write_text(json.dumps(data, indent=2, ensure_ascii=False) + '\n', encoding='utf-8')
     print('Boards source renders, vectors and/or final in-app tile written.')
 
 

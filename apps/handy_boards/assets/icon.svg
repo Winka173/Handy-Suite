@@ -1,24 +1,15 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="18 18 72 72">
-  <!-- Handy Boards: three uneven columns of cards, with one cover card
-       lifted and tilted mid-move. Original drawing on Android's 108-unit
-       adaptive grid. This viewBox is the 72-unit launcher crop; use
-       viewBox="0 0 108 108" for maskable.png. The complete mark fits the
-       centred 66-unit safe circle. Android vectors mirror these paths.
-       Rebuild the source renders with tool/icon/render.py, then run
-       python tooling/app-icons.py boards from the repository root, then
-       tool/icon/render.py --finish to restore the rounded in-app tile
-       and Boards' web background colour. -->
-  <rect width="108" height="108" fill="#A61C8E"/>
-  <g id="mark">
-    <path fill="#FFF6EC" d="M31.7 36H39.3A2.7 2.7 0 0 1 42 38.7V48.3A2.7 2.7 0 0 1 39.3 51H31.7A2.7 2.7 0 0 1 29 48.3V38.7A2.7 2.7 0 0 1 31.7 36Z"/>
-    <path fill="#F7E1F1" d="M31.7 36H39.3A2.7 2.7 0 0 1 42 38.7V42H29V38.7A2.7 2.7 0 0 1 31.7 36Z"/>
-    <path fill="#FFF6EC" d="M31.7 55H39.3A2.7 2.7 0 0 1 42 57.7V70.3A2.7 2.7 0 0 1 39.3 73H31.7A2.7 2.7 0 0 1 29 70.3V57.7A2.7 2.7 0 0 1 31.7 55Z"/>
-    <path fill="#FFF6EC" d="M50.2 44H57.8A2.7 2.7 0 0 1 60.5 46.7V54.3A2.7 2.7 0 0 1 57.8 57H50.2A2.7 2.7 0 0 1 47.5 54.3V46.7A2.7 2.7 0 0 1 50.2 44Z"/>
-    <path fill="#F7E1F1" d="M50.2 61H57.8A2.7 2.7 0 0 1 60.5 63.7V70.3A2.7 2.7 0 0 1 57.8 73H50.2A2.7 2.7 0 0 1 47.5 70.3V63.7A2.7 2.7 0 0 1 50.2 61Z"/>
-    <path fill="#FFF6EC" d="M68.7 51H76.3A2.7 2.7 0 0 1 79 53.7V70.3A2.7 2.7 0 0 1 76.3 73H68.7A2.7 2.7 0 0 1 66 70.3V53.7A2.7 2.7 0 0 1 68.7 51Z"/>
-    <g transform="rotate(-14 68.5 37.5)">
-      <path fill="#FFF6EC" d="M63.7 29H73.3A2.7 2.7 0 0 1 76 31.7V43.3A2.7 2.7 0 0 1 73.3 46H63.7A2.7 2.7 0 0 1 61 43.3V31.7A2.7 2.7 0 0 1 63.7 29Z"/>
-      <path fill="#EBC99F" d="M64.2 31.7H72.8A0.8 0.8 0 0 1 73.6 32.5V36.3A0.8 0.8 0 0 1 72.8 37.1H64.2A0.8 0.8 0 0 1 63.4 36.3V32.5A0.8 0.8 0 0 1 64.2 31.7Z"/>
-    </g>
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 108 108" role="img" aria-labelledby="title desc">
+  <title id="title">Handy Boards — A: Board in Colour</title>
+  <desc id="desc">Original flat adaptive icon study. Full-bleed magenta field. Essential geometry is inside the centred 66 percent safe circle. No launcher assets are installed.</desc>
+  <rect id="background" width="108" height="108" fill="#A61C8E"/>
+  <g id="mark" transform="translate(54 54) scale(.97) translate(-54 -54)">
+
+      <rect x="25" y="32" width="17" height="21" rx="4" fill="#D9930B"/>
+      <rect x="25" y="58" width="17" height="18" rx="4" fill="#D9930B"/>
+      <rect x="45.5" y="32" width="17" height="29" rx="4" fill="#FFF6EC"/>
+      <rect x="45.5" y="66" width="17" height="10" rx="3.5" fill="#FFF6EC"/>
+      <rect x="66" y="32" width="17" height="13" rx="4" fill="#1F9E8F"/>
+      <rect x="66" y="50" width="17" height="26" rx="4" fill="#1F9E8F"/>
+
   </g>
 </svg>

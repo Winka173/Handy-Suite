@@ -111,12 +111,14 @@ BoardGround boardGround(
     );
   final tone = HSLColor.fromColor(coverTone(boardCoverId(board)));
   // Clamped so ink on it always reads (≥ 4.5:1 for the muted grey).
+  // Clearly the board's colour, still a ground muted grey reads on
+  // (about 5:1 at the light end).
   final page = tone
-      .withSaturation(tone.saturation.clamp(0, dark ? .22 : .32))
-      .withLightness(dark ? .11 : .925)
+      .withSaturation(tone.saturation.clamp(dark ? .18 : .3, dark ? .32 : .55))
+      .withLightness(dark ? .13 : .875)
       .toColor();
   final column = Color.alphaBlend(
-    (dark ? Colors.white : Colors.white).withValues(alpha: dark ? .06 : .55),
+    Colors.white.withValues(alpha: dark ? .06 : .45),
     page,
   );
   final band = tone
