@@ -27,7 +27,19 @@ void main() {
     await scrollTo(t, 'set-howto');
     await tapKey(t, 'set-howto');
     expect(find.byKey(const Key('howto-replay')), findsOneWidget);
-    for (final id in ['faster', 'home', 'organize', 'find', 'read', 'safe']) {
+    for (final id in [
+      'faster',
+      'home',
+      'move',
+      'organize',
+      'pictures',
+      'find',
+      'read',
+      'share',
+      'tidy',
+      'safe',
+      'pro',
+    ]) {
       await scrollTo(t, 'howto-topic-$id');
       expect(find.byKey(Key('howto-topic-$id')), findsOneWidget);
     }

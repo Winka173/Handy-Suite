@@ -74,7 +74,7 @@ void main() {
   testWidgets('an empty library opens the guide; Skip remembers it', (t) async {
     final store = TestStore();
     final c = await open(t, store: store);
-    expect(find.textContaining('Found nowhere'), findsOneWidget);
+    expect(find.textContaining('Then forgot it'), findsOneWidget);
     await tapKey(t, 'welcome-skip');
     await settle(t);
     expect(find.byType(WelcomePage), findsNothing);
@@ -165,7 +165,7 @@ void main() {
     expect(find.textContaining('all of it'), findsOneWidget);
     // Then to the scattered cards, the same stage.
     await tapKey(t, 'welcome-back');
-    expect(find.textContaining('Found nowhere'), findsOneWidget);
+    expect(find.textContaining('Then forgot it'), findsOneWidget);
     await t.binding.handlePopRoute();
     await settle(t);
     expect(find.byType(WelcomePage), findsNothing);
@@ -187,7 +187,7 @@ void main() {
     await tapKey(t, 'set-howto');
     await tapKey(t, 'howto-replay');
     await settle(t);
-    expect(find.textContaining('Found nowhere'), findsOneWidget);
+    expect(find.textContaining('Then forgot it'), findsOneWidget);
     await tapKey(t, 'welcome-skip');
     await settle(t);
     expect(c.library!.bookmarks, hasLength(1), reason: 'nothing changed');

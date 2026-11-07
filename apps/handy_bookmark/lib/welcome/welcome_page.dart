@@ -157,13 +157,15 @@ class _WelcomePageState extends State<WelcomePage>
 
   _Page _page(BuildContext context) => switch (step) {
     _Step.story when !gathered => _Page(
-      before: tr(context, 'Saved everywhere.\n', 'Lưu khắp nơi.\n'),
-      words: tr(context, 'Found nowhere.', 'Tìm chẳng thấy.'),
+      // The problem in the person's own words: saved in each app, then
+      // forgotten there.
+      before: tr(context, 'Saved it.\n', 'Lưu rồi.\n'),
+      words: tr(context, 'Then forgot it.', 'Rồi quên mất.'),
       after: '',
       body: tr(
         context,
-        'On TikTok, Facebook, YouTube, in your screenshots…',
-        'Trên TikTok, Facebook, YouTube, trong ảnh chụp màn hình…',
+        'You tap Save in TikTok, Facebook, YouTube, take a screenshot… and never open it again.',
+        'Bấm Lưu trong TikTok, Facebook, YouTube, chụp màn hình… rồi chẳng bao giờ mở lại.',
       ),
       primary: tr(context, 'Bring it together', 'Gom về một chỗ'),
       onPrimary: _gather,

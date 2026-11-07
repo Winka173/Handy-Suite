@@ -2271,7 +2271,8 @@ dải "Mới lưu" (mục chưa xếp đi trước, một nút "Xếp vào…"),
   giữ mật khẩu. Bật thì phải xác nhận trước; máy chưa có khóa thì báo và để tắt. Khóa khi mở app
   và khi quay lại sau hơn một phút; che cả khung và hộp thoại. Không có trên web.
 - Cách dùng: thẻ lớn "Xem lại phần giới thiệu" → danh sách chủ đề (Lưu link nhanh hơn, Lưu
-  ngay trong app, Sắp xếp gọn gàng, Tìm lại, Đọc và xem lại, Giữ an toàn). Mỗi chủ đề mở khung
+  ngay trong app, Chuyển link từ app khác, Sắp xếp gọn gàng, Ảnh và ảnh chụp màn hình, Tìm lại,
+  Đọc và xem lại, Chia sẻ cho người khác, Dọn dẹp, Giữ an toàn, Pro). Mỗi chủ đề mở khung
   các thẻ bước đánh số, mỗi bước có hình một mảnh màn hình (vẽ bằng màu của app, khoanh đúng
   chỗ bấm). "Lưu link nhanh hơn": bước 1 có nút mở khung chia sẻ thật; Android hướng dẫn nhấn
   giữ rồi Ghim, iOS hướng dẫn Sửa rồi thêm vào Mục ưa thích. Trước/Tiếp và Xong cố định ở đáy.

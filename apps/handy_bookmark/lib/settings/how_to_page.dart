@@ -153,6 +153,52 @@ List<_Topic> _topics(BuildContext context) => [
     ],
   ),
   _Topic(
+    'move',
+    Icons.move_to_inbox_outlined,
+    tr(context, 'Bring links from another app', 'Chuyển link từ app khác'),
+    tr(
+      context,
+      'Pocket, Raindrop, or your browser’s bookmarks.',
+      'Pocket, Raindrop, hoặc dấu trang của trình duyệt.',
+    ),
+    [
+      _Step(
+        tr(
+          context,
+          'From Pocket or Raindrop: export from there, then Settings › Data › Import and export › Import from Pocket or Raindrop.',
+          'Từ Pocket hoặc Raindrop: xuất file ở app đó, rồi Cài đặt › Dữ liệu › Nhập và xuất › Nhập từ Pocket hoặc Raindrop.',
+        ),
+        picture: MockRows(
+          title: tr(context, 'From other apps', 'Từ app khác'),
+          rows: [
+            (
+              Icons.move_to_inbox_outlined,
+              tr(context, 'Import from Pocket', 'Nhập từ Pocket'),
+            ),
+            (
+              Icons.move_to_inbox_outlined,
+              tr(context, 'Import from Raindrop', 'Nhập từ Raindrop'),
+            ),
+          ],
+        ),
+      ),
+      _Step(
+        tr(
+          context,
+          'From a browser: export its bookmarks as an HTML file, then Settings › Data › Restore and pick that file.',
+          'Từ trình duyệt: xuất dấu trang thành file HTML, rồi Cài đặt › Dữ liệu › Khôi phục và chọn file đó.',
+        ),
+      ),
+      _Step(
+        tr(
+          context,
+          'You see what the file holds before anything changes. Only what is new is added, and Undo takes it back.',
+          'Bạn xem trước file có gì rồi mới thay đổi. Chỉ thêm mục mới, và Hoàn tác để bỏ lại.',
+        ),
+      ),
+    ],
+  ),
+  _Topic(
     'organize',
     Icons.folder_outlined,
     tr(context, 'Put things in order', 'Sắp xếp gọn gàng'),
@@ -198,6 +244,60 @@ List<_Topic> _topics(BuildContext context) => [
             (null, '#weekend'),
             (Icons.add, tr(context, 'Add tag', 'Thêm thẻ')),
           ],
+        ),
+      ),
+      _Step(
+        tr(
+          context,
+          'In a collection, tap … › New collection inside to keep smaller groups in it.',
+          'Trong một bộ sưu tập, bấm … › Bộ sưu tập con mới để chia nhỏ bên trong.',
+        ),
+        picture: MockRows(
+          rows: [
+            (
+              Icons.edit_outlined,
+              tr(context, 'Edit collection', 'Sửa bộ sưu tập'),
+            ),
+            (
+              Icons.create_new_folder_outlined,
+              tr(context, 'New collection inside', 'Bộ sưu tập con mới'),
+            ),
+          ],
+          ringed: 1,
+        ),
+      ),
+      _Step(
+        tr(
+          context,
+          'Pro: smart collections fill themselves by rules (a site, a tag, unread…), and Auto organize files new saves for you.',
+          'Pro: bộ sưu tập thông minh tự gom theo quy tắc (một trang, một thẻ, chưa đọc…), và Tự sắp xếp tự cho mục mới vào đúng chỗ.',
+        ),
+      ),
+    ],
+  ),
+  _Topic(
+    'pictures',
+    Icons.image_outlined,
+    tr(context, 'Pictures and screenshots', 'Ảnh và ảnh chụp màn hình'),
+    tr(
+      context,
+      'Keep a screenshot like a link, and copy the words in it.',
+      'Giữ ảnh chụp màn hình như một link, và chép chữ trong ảnh.',
+    ),
+    [
+      _Step(
+        tr(
+          context,
+          'Tap + on Home › Save a picture, or share a screenshot to Handy Bookmark from your gallery.',
+          'Bấm + ở Trang chủ › Lưu một ảnh, hoặc chia sẻ ảnh chụp màn hình từ thư viện ảnh sang Handy Bookmark.',
+        ),
+        picture: const MockQuickSave(ringPlus: true),
+      ),
+      _Step(
+        tr(
+          context,
+          'Open it to see it whole. Pro: Copy text reads the words in it on this device.',
+          'Mở ảnh để xem toàn bộ. Pro: Chép chữ đọc chữ trong ảnh ngay trên máy.',
         ),
       ),
     ],
@@ -272,6 +372,92 @@ List<_Topic> _topics(BuildContext context) => [
         ),
         picture: const MockFocus(),
       ),
+      _Step(
+        tr(
+          context,
+          'Settings › General › Weekly nudge reminds you when new saves wait unread. It shows a count, never titles.',
+          'Cài đặt › Chung › Nhắc mỗi tuần báo khi có mục mới chưa xem. Chỉ ghi số lượng, không ghi tiêu đề.',
+        ),
+      ),
+    ],
+  ),
+  _Topic(
+    'share',
+    Icons.ios_share_rounded,
+    tr(context, 'Share with others', 'Chia sẻ cho người khác'),
+    tr(
+      context,
+      'One item, or a whole collection as a page.',
+      'Một mục, hoặc cả bộ sưu tập thành một trang.',
+    ),
+    [
+      _Step(
+        tr(
+          context,
+          'Open an item and tap Share. The link goes without tracking bits (utm_, fbclid).',
+          'Mở một mục và bấm Chia sẻ. Link được bỏ phần theo dõi (utm_, fbclid) trước khi gửi.',
+        ),
+      ),
+      _Step(
+        tr(
+          context,
+          'In a collection, tap … › Share as a page. Pro: Design an export makes a PDF or a web page in a chosen design.',
+          'Trong một bộ sưu tập, bấm … › Chia sẻ thành trang. Pro: Thiết kế bản xuất tạo PDF hoặc trang web theo mẫu bạn chọn.',
+        ),
+        picture: MockRows(
+          ringed: 0,
+          rows: [
+            (
+              Icons.ios_share,
+              tr(context, 'Share as a page', 'Chia sẻ thành trang'),
+            ),
+            (
+              Icons.auto_awesome_outlined,
+              tr(context, 'Design an export', 'Thiết kế bản xuất'),
+            ),
+          ],
+        ),
+      ),
+    ],
+  ),
+  _Topic(
+    'tidy',
+    Icons.cleaning_services_outlined,
+    tr(context, 'Tidy up', 'Dọn dẹp'),
+    tr(
+      context,
+      'Duplicates, links that stopped working, and taking back a delete.',
+      'Mục trùng, link không còn mở được, và lấy lại thứ đã xóa.',
+    ),
+    [
+      _Step(
+        tr(
+          context,
+          'Settings › Data › Library tools finds duplicates to merge, and checks every link for ones that stopped working.',
+          'Cài đặt › Dữ liệu › Công cụ thư viện tìm mục trùng để gộp, và kiểm tra mọi link xem cái nào không còn mở được.',
+        ),
+        picture: MockRows(
+          title: tr(context, 'Data', 'Dữ liệu'),
+          ringed: 1,
+          rows: [
+            (
+              Icons.delete_outline,
+              tr(context, 'Recently deleted', 'Đã xóa gần đây'),
+            ),
+            (
+              Icons.handyman_outlined,
+              tr(context, 'Library tools', 'Công cụ thư viện'),
+            ),
+          ],
+        ),
+      ),
+      _Step(
+        tr(
+          context,
+          'Deleted something? Undo in the message, or find it in Recently deleted for 30 days.',
+          'Lỡ xóa? Bấm Hoàn tác trong thông báo, hoặc tìm trong Đã xóa gần đây trong 30 ngày.',
+        ),
+      ),
     ],
   ),
   _Topic(
@@ -317,8 +503,48 @@ List<_Topic> _topics(BuildContext context) => [
       _Step(
         tr(
           context,
-          'Deleted items wait 30 days in Recently deleted.',
-          'Mục đã xóa chờ 30 ngày trong Đã xóa gần đây.',
+          'Back up automatically keeps a copy each day something changed, the last 7 on this device.',
+          'Tự sao lưu giữ một bản mỗi ngày có thay đổi, 7 bản gần nhất trên máy này.',
+        ),
+      ),
+    ],
+  ),
+  _Topic(
+    'pro',
+    Icons.workspace_premium_outlined,
+    'Pro',
+    tr(
+      context,
+      'One payment adds more; everything above stays free.',
+      'Trả một lần để có thêm; mọi thứ ở trên vẫn miễn phí.',
+    ),
+    [
+      _Step(
+        tr(
+          context,
+          'Themes, collection layouts and Focus skins.',
+          'Chủ đề màu, kiểu trình bày bộ sưu tập và kiểu Tập trung.',
+        ),
+      ),
+      _Step(
+        tr(
+          context,
+          'Highlights and notes in the Reader; search inside articles, highlights and pictures.',
+          'Đánh dấu và ghi chú trong trình đọc; tìm cả bên trong bài viết, đoạn đánh dấu và ảnh.',
+        ),
+      ),
+      _Step(
+        tr(
+          context,
+          'Copy text from pictures, Auto organize, smart collections, and designed exports.',
+          'Chép chữ trong ảnh, Tự sắp xếp, bộ sưu tập thông minh, và bản xuất có thiết kế.',
+        ),
+      ),
+      _Step(
+        tr(
+          context,
+          'Settings › Upgrade to Pro shows each on your own library before you pay. Restore a purchase there too.',
+          'Cài đặt › Nâng cấp Pro cho xem thử từng thứ trên chính thư viện của bạn trước khi trả. Khôi phục giao dịch cũng ở đó.',
         ),
       ),
     ],

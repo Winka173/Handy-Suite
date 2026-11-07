@@ -1113,7 +1113,12 @@ void main() {
       await boot(t, const Size(390, 844), theme: theme);
       Navigator.of(t.element(find.byType(Scaffold).first)).pushNamed('/how-to');
       await t.pumpAndSettle();
-      await shot(t, 'phone-50-how-to-$theme');
+      await scrolled(t, 'phone-50-how-to-$theme', 1);
+      await t.scrollUntilVisible(
+        find.byKey(const Key('howto-topic-faster')),
+        -300,
+        scrollable: find.byType(Scrollable).first,
+      );
       await tapKey(t, 'howto-topic-faster');
       await scrolled(t, 'phone-50-how-to-faster-$theme', 2);
     });
