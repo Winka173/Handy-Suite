@@ -10,10 +10,10 @@ Tạm dừng để làm project khác. Đọc file này trước khi làm tiếp
 
 | Mục | Trạng thái |
 |---|---|
-| Google Play | App `com.apps.winka.handybookmark` đã qua lượt duyệt đầu. Kiểm thử kín (`alpha`): **1.0.0 (4)** đã phát hành, nhóm tester `testers-community@googlegroups.com`, link tham gia Android/web đã có. Code 1–4 đã dùng; bản sau phải là `+5`. |
+| Google Play | App `com.apps.winka.handybookmark` đã qua lượt duyệt đầu. Kiểm thử kín (`alpha`): **1.0.0 (5)** đã phát hành (qua fastlane), nhóm tester `testers-community@googlegroups.com`, link tham gia Android/web đã có. Code 1–5 đã dùng; bản sau phải là `+6`. |
 | Trang store | EN (mặc định) + VI: chữ, icon, ảnh bìa, 6 ảnh màn hình mỗi ngôn ngữ, email `apps.winka.studio@gmail.com`, web repo GitHub. Danh mục Năng suất; thẻ Năng suất, Sổ tay, Công cụ. App content đã điền (riêng tư, đăng nhập, IARC, độ tuổi 13+, Data safety "không thu thập", người bán, điều khoản). |
 | Pro | Sản phẩm `handy_bookmark_pro`, mua một lần, **99.000đ** (VN), Play tự quy đổi (US 3,89 USD), đang ACTIVE. App tin kết quả Google Play (không khoá giấy phép; xem commit `b99521b`). |
-| Đồng bộ Google Drive | Code xong (`lib/sync/drive_*.dart`), có trong 1.0.0 (4) (build với `HANDY_DRIVE_SYNC=true`). Client OAuth Android cho debug/upload/Play signing do chủ tài khoản tạo trên Google Cloud. **Chưa chạy thật giữa hai máy.** |
+| Đồng bộ Google Drive | Code xong (`lib/sync/drive_*.dart`), có từ 1.0.0 (4) (build với `HANDY_DRIVE_SYNC=true`). Client OAuth Android cho debug/upload/Play signing do chủ tài khoản tạo trên Google Cloud. **Chưa chạy thật giữa hai máy.** |
 | Repo | Mọi việc của phiên đã commit + push (commit cuối của Bookmark: `b99521b`). Còn `apps/handy_bookmark/web/manifest.json` (chỉ khác xuống dòng) và `docs/HANDY_BOOKMARK_HO_SO_DAY_DU.html` (của người khác) chưa commit — không phải của phiên này. |
 | Thiết bị | BlueStacks `127.0.0.1:5556` (dữ liệu thật của người dùng) và `127.0.0.1:5575`, kiểm `ro.product.model == SM-S908E` trước khi cài; không dùng 5555/emulator-5554. Cả hai có bản debug mới nhất; 5556 là bản có cờ Drive. |
 
@@ -32,7 +32,7 @@ Tạm dừng để làm project khác. Đọc file này trước khi làm tiếp
 
 1. **Chạy thật đồng bộ Drive** trên hai máy cùng tài khoản Google (bản cài từ Play, hoặc debug có cờ): lưu ở mỗi máy, một máy mất mạng, xoá rồi khôi phục từ Đã xoá gần đây, ảnh, tắt đồng bộ, thu hồi quyền trong tài khoản Google. Nếu bật báo "Google chưa cho phép": kiểm client OAuth (package + SHA-1) và test users của màn đồng ý OAuth. Ghi kết quả vào `docs/HANDY_BOOKMARK_RELEASE.md` (mục Google Drive sync, dòng "Verified").
 2. **Mua Pro thật** từ bản tester: thêm tài khoản tester vào *Cài đặt › Kiểm thử giấy phép* (không bị trừ tiền), mua, gỡ/cài lại rồi Khôi phục giao dịch.
-3. **API Play trả 500** cho mọi edit của Bookmark (kể cả edit rỗng) từ lúc gửi duyệt; Sticky Wall thì bình thường. Lần sau thử `python tool/play.py check` rồi một lần `fastlane android closed`; nếu vẫn 500 thì tải tay (Kiểm thử kín › Alpha › Tạo bản phát hành mới) với `build/app/outputs/bundle/release/app-release.aab`.
+3. API Play từng trả 500 vài giờ sau lượt duyệt đầu (bản 4 tải tay); bản 5 đã lên bình thường bằng `fastlane android publish`. Nếu lại gặp 500: tải tay (Kiểm thử kín › Alpha › Tạo bản phát hành mới) với `build/app/outputs/bundle/release/app-release.aab`.
 4. **Link chính sách/điều khoản** đang trỏ nhánh `ui-rebuild`. Khi merge vào `main`: đổi `ui-rebuild` → `main` trong `lib/settings/help_links.dart`, `PRIVACY.md`/`TERMS.md` (link chéo), `docs/HANDY_BOOKMARK_RELEASE.md`, Play Console (Chính sách quyền riêng tư, Điều khoản dịch vụ) và màn đồng ý OAuth.
 5. **Data safety** khi Drive sync được dùng: xem lại hướng dẫn của Google về dữ liệu gửi vào Drive của chính người dùng (hiện khai "không thu thập").
 6. Lên production: tài khoản cá nhân cần ≥ 12 tester tham gia 14 ngày liên tục; production luôn làm tay.

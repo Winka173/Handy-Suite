@@ -67,11 +67,13 @@ bundle.
 - Graphics for both languages: icon, feature graphic, 6 phone screenshots.
 - Contact email `apps.winka.studio@gmail.com`, website
   `https://github.com/Winka173/Handy-Suite`.
-- Closed testing (`alpha`): **1.0.0 (4)** released (Pro and Google Drive
-  sync), tester group `testers-community@googlegroups.com`; the app passed its
-  first review on 2026-11-07. Build 4 was uploaded by hand: from the first
-  review on, every API edit for this app answered 500 (Sticky Wall's did not).
-  Codes 1–4 are used up.
+- Closed testing (`alpha`): **1.0.0 (5)** released on 2026-11-07 by
+  `fastlane android publish` (share sheet lists collections made in earlier
+  sheets, newest first), tester group `testers-community@googlegroups.com`;
+  the app passed its first review on 2026-11-07. Build 4 (Pro and Google Drive
+  sync) was uploaded by hand while every API edit for this app answered 500
+  for a few hours after the first review; the API worked again for build 5.
+  Codes 1–5 are used up.
 
 ## Left for the owner in Play Console (the API cannot do these)
 

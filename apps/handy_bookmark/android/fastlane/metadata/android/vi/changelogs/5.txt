@@ -1,0 +1,2 @@
+• Bộ sưu tập tạo khi chia sẻ hiện ngay ở lần chia sẻ sau, kể cả khi chưa mở app.
+• Khung lưu liệt kê mọi bộ sưu tập, bộ vừa thêm mục gần nhất ở trên cùng.
