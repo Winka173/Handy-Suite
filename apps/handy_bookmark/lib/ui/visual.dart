@@ -112,23 +112,101 @@ class ItemPicture extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final face = SourceFace(bookmark, compact: compact);
+    // Saved already; its page is being read for a title and picture.
+    final reading = controller.fetching.containsKey(bookmark.id);
     return ClipRRect(
       borderRadius: BorderRadius.circular(radius),
-      child: FutureBuilder<Uint8List?>(
-        future: bookmark.media != null
-            ? controller.mediaPreview(bookmark.media!.id)
-            : controller.thumbnail(bookmark.id),
-        builder: (context, snap) => snap.data == null
-            ? face
-            : Image.memory(
-                snap.data!,
-                fit: BoxFit.cover,
-                width: double.infinity,
-                height: double.infinity,
-                gaplessPlayback: true,
-                excludeFromSemantics: true,
-                errorBuilder: (_, _, _) => face,
+      child: reading ? ReadingSweep(child: _picture(face)) : _picture(face),
+    );
+  }
+
+  Widget _picture(Widget face) => FutureBuilder<Uint8List?>(
+    future: bookmark.media != null
+        ? controller.mediaPreview(bookmark.media!.id)
+        : controller.thumbnail(bookmark.id),
+    builder: (context, snap) => snap.data == null
+        ? face
+        : Image.memory(
+            snap.data!,
+            fit: BoxFit.cover,
+            width: double.infinity,
+            height: double.infinity,
+            gaplessPlayback: true,
+            excludeFromSemantics: true,
+            errorBuilder: (_, _, _) => face,
+          ),
+  );
+}
+
+/// A soft band of light passing over a picture while its page is read,
+/// as a skeleton does. Still (a faint veil) when the system asks for less
+/// motion. Says "Reading the page" to screen readers.
+class ReadingSweep extends StatefulWidget {
+  final Widget child;
+  const ReadingSweep({super.key, required this.child});
+  @override
+  State<ReadingSweep> createState() => _ReadingSweepState();
+}
+
+class _ReadingSweepState extends State<ReadingSweep>
+    with SingleTickerProviderStateMixin {
+  late final _run = AnimationController(
+    vsync: this,
+    duration: const Duration(milliseconds: 1300),
+  );
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (MediaQuery.disableAnimationsOf(context)) {
+      _run.stop();
+    } else if (!_run.isAnimating) {
+      _run.repeat();
+    }
+  }
+
+  @override
+  void dispose() {
+    _run.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final light = Theme.of(context).brightness == Brightness.light;
+    final glow = (light ? Colors.white : Colors.white24).withValues(
+      alpha: light ? 0.55 : 0.18,
+    );
+    return Semantics(
+      label: tr(context, 'Reading the page', 'Đang đọc trang'),
+      child: Stack(
+        fit: StackFit.passthrough,
+        children: [
+          widget.child,
+          Positioned.fill(
+            child: IgnorePointer(
+              child: AnimatedBuilder(
+                animation: _run,
+                builder: (context, _) {
+                  final t = _run.isAnimating ? _run.value * 2.6 - 1.3 : 0.0;
+                  return DecoratedBox(
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        begin: Alignment(t - 1, -0.4),
+                        end: Alignment(t + 1, 0.4),
+                        colors: [
+                          glow.withValues(alpha: 0),
+                          _run.isAnimating ? glow : glow.withValues(alpha: 0.2),
+                          glow.withValues(alpha: 0),
+                        ],
+                      ),
+                    ),
+                  );
+                },
               ),
+            ),
+          ),
+        ],
       ),
     );
   }

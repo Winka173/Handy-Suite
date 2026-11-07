@@ -2,6 +2,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:handy_bookmark/app.dart';
 import 'package:handy_bookmark/controller.dart';
 import 'package:handy_bookmark_engine/handy_bookmark_engine.dart';
+import 'package:handy_core/handy_core.dart' show CancellationToken;
+import 'package:handy_bookmark/ui/visual.dart' show ReadingSweep;
 import 'package:handy_storage/handy_storage.dart';
 import 'package:handy_ui/kit.dart';
 import 'controller_test.dart' show TestStore, TestInbox;
@@ -39,6 +41,9 @@ Future<OpeningController> start(
   addTearDown(tester.view.resetDevicePixelRatio);
   final c = OpeningController(store ?? TestStore());
   await tester.runAsync(c.initialize);
+  // No pages are read here: a reading retried after a pause would outlive
+  // the test.
+  c.preferences['automaticMetadata'] = false;
   // The write queue lives in the test's zone: seed outside runAsync.
   await seed?.call(c);
   await tester.pumpWidget(
@@ -141,6 +146,30 @@ void main() {
     expect(c.library!.bookmarks.single.collectionId, 'recipes');
     // Filed: the row names its collection and the button goes.
     expect(find.byKey(Key('file-$id')), findsNothing);
+  });
+
+  testWidgets('a card whose page is being read shows it, then stops', (
+    tester,
+  ) async {
+    final c = await start(
+      tester,
+      seed: (c) => c.quickSave('https://example.com/a'),
+    );
+    final id = c.library!.bookmarks.single.id;
+    final semantics = tester.ensureSemantics();
+    c.fetching[id] = CancellationToken();
+    c.changed();
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 400));
+    expect(find.byType(ReadingSweep), findsWidgets);
+    expect(find.bySemanticsLabel(RegExp('Reading the page')), findsWidgets);
+    // The link is saved meanwhile: it is in the library already.
+    expect(c.library!.bookmarks, hasLength(1));
+    c.fetching.remove(id);
+    c.changed();
+    await tester.pumpAndSettle();
+    expect(find.byType(ReadingSweep), findsNothing);
+    semantics.dispose();
   });
 
   testWidgets('a link saved twice asks before adding a copy', (tester) async {

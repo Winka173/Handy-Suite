@@ -14,6 +14,8 @@ Uint8List b(String s) => Uint8List.fromList(utf8.encode(s));
 Future<SaveController> device() async {
   final c = SaveController(open: () async => TestStore(), shares: TestInbox());
   await c.initialize();
+  // A page read finishing mid-sync would change the library under it.
+  c.preferences['automaticMetadata'] = false;
   return c;
 }
 

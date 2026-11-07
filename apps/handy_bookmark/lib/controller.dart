@@ -98,6 +98,7 @@ class SaveController extends ChangeNotifier {
       );
       changed();
       await drain();
+      unawaited(_retryMissing());
       await tidy(opened);
     } catch (_) {
       error = 'storage_failed';
@@ -417,7 +418,18 @@ class SaveController extends ChangeNotifier {
     fetching[id] = token;
     changed();
     try {
-      final result = await metadata.fetch(b.originalUrl, cancellation: token);
+      var result = await metadata.fetch(b.originalUrl, cancellation: token);
+      // Asked too soon after another page of the same site, or two pages
+      // already reading: wait a moment and ask again.
+      for (
+        var tries = 0;
+        tries < 4 && {'rateLimited', 'busy'}.contains(result.errorCode);
+        tries++
+      ) {
+        await Future<void>.delayed(const Duration(milliseconds: 2200));
+        token.check();
+        result = await metadata.fetch(b.originalUrl, cancellation: token);
+      }
       token.check();
       await update(
         (s) => s.copyWith(
@@ -429,7 +441,8 @@ class SaveController extends ChangeNotifier {
                 current.copyWith(
                   title:
                       current.metadataSource == 'user' ||
-                          current.metadataSource == 'share'
+                          (current.metadataSource == 'share' &&
+                              !_genericTitle(current, result))
                       ? current.title
                       : (result.title ?? current.title),
                   description: current.metadataSource == 'user'
@@ -465,6 +478,52 @@ class SaveController extends ChangeNotifier {
     } finally {
       fetching.remove(id);
       changed();
+    }
+  }
+
+  /// A title an app shared that only names the site ("Facebook",
+  /// "youtube.com"): the page's own title says more.
+  static bool _genericTitle(Bookmark b, MetadataResult r) {
+    String bare(String? v) =>
+        (v ?? '').toLowerCase().replaceAll(RegExp(r'[^a-z0-9]'), '');
+    final title = bare(b.title);
+    if (title.isEmpty || r.title == null) return title.isEmpty;
+    final host = b.sourceDomain.toLowerCase().replaceFirst(
+      RegExp(r'^(www|m|mobile)\.'),
+      '',
+    );
+    return {
+      bare(host),
+      bare(host.split('.').first),
+      bare(r.siteName),
+      bare(b.platform),
+    }.contains(title);
+  }
+
+  /// Links saved lately that never got their title and picture (the page
+  /// could not be read then) are asked again once each time the app
+  /// opens, one at a time, newest first.
+  Future<void> _retryMissing() async {
+    if (preferences['automaticMetadata'] == false || !metadata.available) {
+      return;
+    }
+    final since = DateTime.now().subtract(const Duration(days: 30));
+    final missing =
+        library!.bookmarks
+            .where(
+              (b) =>
+                  b.kind != 'image' &&
+                  b.originalUrl.isNotEmpty &&
+                  b.thumbnailUrl == null &&
+                  b.metadataSource != 'user' &&
+                  {'unavailable', 'failed'}.contains(b.metadataStatus) &&
+                  (DateTime.tryParse(b.savedAt)?.isAfter(since) ?? false),
+            )
+            .toList()
+          ..sort((a, b) => b.savedAt.compareTo(a.savedAt));
+    for (final b in missing.take(12)) {
+      if (disposed) return;
+      await refreshMetadata(b.id);
     }
   }
 

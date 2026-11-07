@@ -99,6 +99,14 @@ void main() {
       }
     },
   );
+  test('Facebook reels shared from the app are videos, posts stay posts', () {
+    String type(String url) => UrlTools.normalize(url).contentType;
+    expect(type('https://www.facebook.com/share/r/1GgvysCjAs/'), 'video');
+    expect(type('https://www.facebook.com/share/v/1AbCdEf/'), 'video');
+    expect(type('https://www.facebook.com/reel/2151614385753408'), 'video');
+    expect(type('https://www.facebook.com/share/p/18RRxAWX57/'), 'post');
+  });
+
   test('recently opened sorting puts never-opened bookmarks last', () {
     final b = bookmark('a', 'https://a.com');
     final library = SaveLibrary(

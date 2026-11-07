@@ -280,6 +280,9 @@ class UrlTools {
     if (platform == 'facebook' &&
         (clean.path.contains('/reel') ||
             clean.path.contains('/video') ||
+            // The app's Share links: /share/r/ (reel), /share/v/ (video).
+            clean.path.startsWith('/share/r/') ||
+            clean.path.startsWith('/share/v/') ||
             bare == 'fb.watch'))
       type = 'video';
     if (platform == 'tiktok' &&
