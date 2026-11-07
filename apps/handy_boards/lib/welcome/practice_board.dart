@@ -1,9 +1,9 @@
 import 'package:handy_ui/kit.dart';
 import 'motion.dart';
 
-/// Where the practice is: move the card to Doing, filter by its category,
-/// tick one of its subtasks, finish it, done.
-enum PracticeStep { drag, filter, tick, finish, done }
+/// Where the practice is: add a card, move it to Doing, filter by its
+/// category, tick one of its subtasks, finish it, done.
+enum PracticeStep { add, drag, filter, tick, finish, done }
 
 /// A small pretend board for the guide, drawn at a phone's real size: three
 /// columns, a few cards with their categories, and the category strip.
@@ -18,16 +18,23 @@ class PracticeBoard extends StatefulWidget {
 }
 
 class PracticeBoardState extends State<PracticeBoard> {
-  PracticeStep step = PracticeStep.drag;
+  PracticeStep step = PracticeStep.add;
 
   /// Column of the practice card: 0 To Do, 1 Doing, 2 Done.
-  int column = 0;
+  int column = -1;
   bool filtered = false;
   final card = GlobalKey(),
       chip = GlobalKey(),
       doing = GlobalKey(),
       tick = GlobalKey();
   bool ticked = false;
+  final adder = GlobalKey();
+
+  void _add() {
+    if (step != PracticeStep.add) return;
+    setState(() => column = 0);
+    _to(PracticeStep.drag);
+  }
 
   void _to(PracticeStep next) {
     setState(() => step = next);
@@ -37,6 +44,8 @@ class PracticeBoardState extends State<PracticeBoard> {
   /// The drag-free way through (the guide's "Move it for me").
   void advance() {
     switch (step) {
+      case PracticeStep.add:
+        _add();
       case PracticeStep.drag:
         _drop(1);
       case PracticeStep.filter:
@@ -75,12 +84,14 @@ class PracticeBoardState extends State<PracticeBoard> {
   @override
   Widget build(BuildContext context) {
     final target = switch (step) {
+      PracticeStep.add => adder,
       PracticeStep.drag || PracticeStep.finish => card,
       PracticeStep.filter => chip,
       PracticeStep.tick => tick,
       PracticeStep.done => null,
     };
     final label = switch (step) {
+      PracticeStep.add => tr(context, 'Tap Add card', 'Chạm Thêm thẻ'),
       PracticeStep.drag => tr(
         context,
         'Hold, then drag to Doing',
@@ -431,9 +442,60 @@ class _Board extends StatelessWidget {
                                   ),
                                 ),
                               ),
-                              if (s.column == i) draggable,
+                              if (s.column == i)
+                                // The new card arrives: it grows in and settles.
+                                TweenAnimationBuilder<double>(
+                                  key: ValueKey('mine-$i'),
+                                  tween: Tween(
+                                    begin: i == 0 && moves(context) ? 0 : 1,
+                                    end: 1,
+                                  ),
+                                  duration: const Duration(milliseconds: 420),
+                                  curve: Curves.easeOutBack,
+                                  builder: (context, t, child) => Opacity(
+                                    opacity: t.clamp(0.0, 1.0),
+                                    child: Transform.scale(
+                                      scale: .85 + .15 * t,
+                                      child: child,
+                                    ),
+                                  ),
+                                  child: draggable,
+                                ),
                               for (final o in others[i]!)
                                 tile(o.$1, o.$2, o.$3, done: i == 2),
+                              if (i == 0)
+                                GestureDetector(
+                                  key: s.adder,
+                                  onTap: s._add,
+                                  child: Padding(
+                                    padding: const EdgeInsets.symmetric(
+                                      vertical: 8,
+                                      horizontal: 2,
+                                    ),
+                                    child: Row(
+                                      children: [
+                                        const Icon(
+                                          Icons.add,
+                                          size: 16,
+                                          color: GuideColors.tealDeep,
+                                        ),
+                                        const SizedBox(width: 4),
+                                        Flexible(
+                                          child: Text(
+                                            tr(context, 'Add card', 'Thêm thẻ'),
+                                            maxLines: 1,
+                                            overflow: TextOverflow.ellipsis,
+                                            style: const TextStyle(
+                                              fontSize: 12.5,
+                                              fontWeight: FontWeight.w600,
+                                              color: GuideColors.tealDeep,
+                                            ),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ),
                             ],
                           ),
                         ),

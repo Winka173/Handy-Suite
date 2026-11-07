@@ -139,9 +139,12 @@ void main() {
     await tap(t, find.byKey(const Key('welcome-primary')));
     await shot(t, '02-welcome-board');
     await tap(t, find.byKey(const Key('welcome-primary')));
-    await shot(t, '03-welcome-practice');
+    await shot(t, '03-welcome-practice-add');
     await tap(t, find.byKey(const Key('welcome-do-it')));
-    await shot(t, '03b-welcome-filter');
+    await shot(t, '03a-welcome-practice-drag');
+    await tap(t, find.byKey(const Key('welcome-do-it')));
+    await tap(t, find.byKey(const Key('welcome-do-it')));
+    await shot(t, '03b-welcome-tick');
     await tap(t, find.byKey(const Key('welcome-do-it')));
     await tap(t, find.byKey(const Key('welcome-do-it')));
     await shot(t, '03c-welcome-done');

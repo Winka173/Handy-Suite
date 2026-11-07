@@ -83,6 +83,10 @@ void main() {
     await tap(t, find.byKey(const Key('welcome-primary'))); // gather
     await tap(t, find.byKey(const Key('welcome-primary'))); // show me how
     // The practice: lit steps, done without dragging here.
+    expect(find.text('Tap Add card'), findsOneWidget);
+    expect(find.text('Revise chapter 3'), findsNothing);
+    await tap(t, find.byKey(const Key('welcome-do-it')));
+    expect(find.text('Revise chapter 3'), findsWidgets);
     expect(find.text('Hold, then drag to Doing'), findsOneWidget);
     await tap(t, find.byKey(const Key('welcome-do-it')));
     expect(find.text('Tap Maths'), findsOneWidget);

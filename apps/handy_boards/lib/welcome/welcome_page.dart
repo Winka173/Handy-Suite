@@ -34,7 +34,7 @@ class _WelcomePageState extends State<WelcomePage>
   int at = 0;
   bool gathered = false, practiced = false, leaving = false;
   String start = 'study';
-  PracticeStep practiceStep = PracticeStep.drag;
+  PracticeStep practiceStep = PracticeStep.add;
   final practice = GlobalKey<PracticeBoardState>();
   late final AnimationController clock = AnimationController(
     vsync: this,
@@ -62,7 +62,7 @@ class _WelcomePageState extends State<WelcomePage>
       at = next;
       if (stage == _Stage.practice) {
         practiced = false;
-        practiceStep = PracticeStep.drag;
+        practiceStep = PracticeStep.add;
       }
     });
     _play();
@@ -145,13 +145,18 @@ class _WelcomePageState extends State<WelcomePage>
     ),
     _Stage.practice => _Page(
       before: tr(context, 'Try ', 'Thử '),
-      words: tr(context, 'moving a card', 'chuyển một thẻ'),
+      words: tr(context, 'a card of your own', 'một thẻ của bạn'),
       after: '.',
       body: switch (practiceStep) {
+        PracticeStep.add => tr(
+          context,
+          'Each thing to do is a card. Do what is lit: tap Add card in To Do.',
+          'Mỗi việc là một thẻ. Làm theo chỗ đang sáng: chạm Thêm thẻ ở cột Cần làm.',
+        ),
         PracticeStep.drag => tr(
           context,
-          'Do what is lit on the board. Hold the card, then drag it to Doing.',
-          'Làm theo chỗ đang sáng trên bảng. Giữ thẻ rồi kéo sang Đang làm.',
+          'Hold the new card, then drag it to Doing.',
+          'Giữ thẻ vừa thêm rồi kéo sang Đang làm.',
         ),
         PracticeStep.filter => tr(
           context,
