@@ -97,16 +97,22 @@ void main() {
     expect(find.text('Copy'), findsOneWidget);
   });
 
-  testWidgets('privacy policy and terms say plainly they are not published '
-      'yet; terms opens nothing', (t) async {
+  testWidgets('privacy policy and terms open their published pages', (t) async {
+    final opened = <Uri>[];
+    final open = openExternal;
+    openExternal = (uri) async {
+      opened.add(uri);
+      return true;
+    };
+    addTearDown(() => openExternal = open);
     await start(t);
     await openSettings(t);
     await scrollTo(t, 'set-terms');
     expect(find.text('Privacy policy'), findsOneWidget);
     expect(find.text('Terms of service'), findsOneWidget);
-    expect(find.text('Not published yet'), findsOneWidget);
+    expect(find.text('Not published yet'), findsNothing);
     await tapKey(t, 'set-terms');
-    expect(find.byType(BottomSheet), findsNothing);
+    expect(opened.single.path, endsWith('apps/handy_bookmark/TERMS.md'));
   });
 
   testWidgets('Delete all data asks first, then removes items, pictures '
