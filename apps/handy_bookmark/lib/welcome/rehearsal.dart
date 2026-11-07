@@ -2,6 +2,7 @@ import 'package:flutter/services.dart';
 import 'package:handy_ui/kit.dart';
 import 'motion.dart';
 import 'samples.dart';
+import '../ui/app_mark.dart';
 
 enum PracticeStage { video, apps, share, found, saved }
 
@@ -529,8 +530,8 @@ class _ShareSheetState extends State<_ShareSheet> {
   Widget build(BuildContext context) {
     final food = tr(context, 'Good food', 'Món ngon');
     final trips = tr(context, 'Trips', 'Du lịch');
-    // A collection as the system shows it: its colour and initial, with
-    // the app's small badge.
+    // A collection as the system shows it (ShareTargets.kt): its initial
+    // in its colour on a pale tint of it, with the app's small badge.
     Widget collection(String name, Color color, {Key? key, GlobalKey? at}) {
       final tile = _tile(
         key: at,
@@ -540,31 +541,18 @@ class _ShareSheetState extends State<_ShareSheet> {
             _circle(
               Text(
                 name.substring(0, 1),
-                style: const TextStyle(
-                  color: Colors.white,
+                style: TextStyle(
+                  color: Color.lerp(color, Colors.black, .22),
                   fontSize: 22,
                   fontWeight: FontWeight.w700,
                 ),
               ),
-              color: color,
+              color: Color.lerp(color, Colors.white, .84)!,
             ),
-            Positioned(
+            const Positioned(
               right: -2,
               bottom: -2,
-              child: Container(
-                width: 22,
-                height: 22,
-                decoration: BoxDecoration(
-                  color: GuideColors.teal,
-                  borderRadius: BorderRadius.circular(6),
-                  border: Border.all(color: Colors.white, width: 2),
-                ),
-                child: const Icon(
-                  Icons.bookmark,
-                  size: 12,
-                  color: Colors.white,
-                ),
-              ),
+              child: AppMark(size: 22, radius: 6, ring: Colors.white),
             ),
           ],
         ),
@@ -586,19 +574,17 @@ class _ShareSheetState extends State<_ShareSheet> {
     Widget app(IconData icon, String label, {bool ours = false}) {
       final tile = _tile(
         key: ours ? widget.oursKey : null,
-        face: Container(
-          width: 56,
-          height: 56,
-          decoration: BoxDecoration(
-            color: ours ? GuideColors.teal : const Color(0xFFEFF1F2),
-            borderRadius: BorderRadius.circular(16),
-          ),
-          child: Icon(
-            icon,
-            color: ours ? Colors.white : GuideColors.muted,
-            size: 26,
-          ),
-        ),
+        face: ours
+            ? const AppMark(size: 56, radius: 16)
+            : Container(
+                width: 56,
+                height: 56,
+                decoration: BoxDecoration(
+                  color: const Color(0xFFEFF1F2),
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                child: Icon(icon, color: GuideColors.muted, size: 26),
+              ),
         label: label,
         strong: ours,
       );

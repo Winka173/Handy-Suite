@@ -1,8 +1,11 @@
 """Generate every platform icon for the Handy apps from one mark family.
 
 Each app: its hue from the suite palette (docs/UX_REDESIGN.md) as a full
-field, its Material Symbols glyph in white. Existing icon files are
-overwritten at their current sizes, so platform templates stay valid.
+field, its Material Symbols glyph in white. An app with its own drawn mark
+keeps 1024px renders of it in tool/icon/ (art.png: the area launchers show;
+maskable.png: the whole adaptive canvas) and is cut from those instead.
+Existing icon files are overwritten at their current sizes, so platform
+templates stay valid.
 
     python tooling/app-icons.py            # all apps
     python tooling/app-icons.py tools dev  # some apps
@@ -59,6 +62,18 @@ def render(hue: str, glyph: int, size: int, *, radius: float = 0.0, glyph_scale:
     return img.resize((size, size), Image.LANCZOS)
 
 
+def from_art(art: Path, size: int, *, radius: float = 0.0) -> Image.Image:
+    """A drawn mark resized, cut to a rounded tile when radius > 0."""
+    with Image.open(art) as source:
+        img = source.convert('RGBA').resize((size * 4, size * 4), Image.LANCZOS)
+    if radius > 0:
+        mask = Image.new('L', img.size, 0)
+        ImageDraw.Draw(mask).rounded_rectangle(
+            [0, 0, img.size[0] - 1, img.size[1] - 1], radius=int(img.size[0] * radius), fill=255)
+        img.putalpha(mask)
+    return img.resize((size, size), Image.LANCZOS)
+
+
 def write_like(path: Path, make) -> None:
     """Overwrite an existing PNG at its own size."""
     with Image.open(path) as old:
@@ -75,6 +90,12 @@ def app(name: str) -> None:
     full = lambda s: render(hue, glyph, s).convert('RGB')  # iOS/stores: opaque square
     tile = lambda s: render(hue, glyph, s, radius=0.22)    # launchers that show the shape
     safe = lambda s: render(hue, glyph, s, glyph_scale=0.42).convert('RGB')  # maskable zone
+
+    art = base / 'tool/icon'
+    if (art / 'art.png').exists():
+        full = lambda s: from_art(art / 'art.png', s).convert('RGB')
+        tile = lambda s: from_art(art / 'art.png', s, radius=0.22)
+        safe = lambda s: from_art(art / 'maskable.png', s).convert('RGB')
 
     icon = base / 'assets/icon.png'
     if icon.exists():

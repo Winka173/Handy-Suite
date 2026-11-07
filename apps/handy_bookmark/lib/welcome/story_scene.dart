@@ -1,6 +1,7 @@
 import 'package:handy_ui/kit.dart';
 import 'motion.dart';
 import 'samples.dart';
+import '../ui/app_mark.dart';
 
 /// Steps one and two in one picture, so the cards themselves travel:
 /// scattered across apps and lost to a search ([gathered] false), then
@@ -208,15 +209,7 @@ class _Library extends StatelessWidget {
       children: [
         Row(
           children: [
-            Container(
-              width: 30,
-              height: 30,
-              decoration: BoxDecoration(
-                color: GuideColors.teal,
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: const Icon(Icons.bookmark, size: 18, color: Colors.white),
-            ),
+            const AppMark(size: 30, radius: 8),
             const SizedBox(width: 10),
             Text(
               'Handy Bookmark',

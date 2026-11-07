@@ -1,1 +1,24 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512"><rect width="512" height="512" rx="112" fill="#0f766e"/><path d="M164 112h184v292l-92-62-92 62z" fill="#fff"/><path d="m216 205 30 30 59-61" fill="none" stroke="#0f766e" stroke-width="24" stroke-linecap="round" stroke-linejoin="round"/></svg>
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="18 18 72 72">
+  <!-- Handy Bookmark: a saved thing (a bookmark holding its picture) in front
+       of another, a collection. Drawn on Android's 108-unit adaptive grid;
+       the viewBox is the 72-unit area launchers show, everything that
+       matters sits in the 66-unit safe circle. Use viewBox="0 0 108 108"
+       for maskable web icons. Mirrored by
+       android/app/src/main/res/drawable/ic_launcher_foreground.xml. -->
+  <rect width="108" height="108" fill="#0E7490"/>
+  <g transform="translate(54 55) scale(.82) translate(-52 -55)">
+    <g transform="translate(0 -2.5) rotate(14 62 80)">
+      <path d="M44 27h28a4 4 0 0 1 4 4v52L58 71.5 40 83V31a4 4 0 0 1 4-4z" fill="#F2B44B"/>
+    </g>
+    <g transform="translate(-3 0)">
+      <path d="M38 25h30a4 4 0 0 1 4 4v56L53 72.5 34 85V29a4 4 0 0 1 4-4z" fill="#F7F2E8"/>
+      <clipPath id="picture"><rect x="39" y="30" width="28" height="24" rx="3"/></clipPath>
+      <g clip-path="url(#picture)">
+        <rect x="39" y="30" width="28" height="24" fill="#5FB0C2"/>
+        <circle cx="60" cy="37" r="3.3" fill="#FFF4DA"/>
+        <path d="M39 54 L49 44 L55 49 L60 45 L67 51 V54Z" fill="#0B4F63"/>
+      </g>
+      <rect x="39" y="58.5" width="20" height="3.6" rx="1.8" fill="#0B4F63"/>
+    </g>
+  </g>
+</svg>

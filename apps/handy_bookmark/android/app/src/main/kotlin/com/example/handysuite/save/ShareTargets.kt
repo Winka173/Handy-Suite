@@ -40,7 +40,7 @@ object ShareTargets {
             ShortcutInfo.Builder(context, PREFIX + id)
                 .setShortLabel(name)
                 .setLongLabel(name)
-                .setIcon(Icon.createWithAdaptiveBitmap(icon(name, color)))
+                .setIcon(Icon.createWithAdaptiveBitmap(icon(context, name, color)))
                 // Opening the shortcut itself (where a launcher shows it)
                 // just opens the app.
                 .setIntent(Intent(Intent.ACTION_VIEW, null, context, MainActivity::class.java))
@@ -79,21 +79,50 @@ object ShareTargets {
         return id.removePrefix(PREFIX).takeIf { it.isNotBlank() && it.length <= 512 }
     }
 
-    /** The collection's own colour with its initial, as an adaptive icon. */
-    private fun icon(name: String, color: Int): Bitmap {
+    /**
+     * The collection's initial in its own colour on a pale tint of it, the
+     * way the app shows a collection beside its name, as an adaptive icon
+     * (the system crops the outer sixth and adds the app's badge).
+     */
+    private fun icon(context: Context, name: String, color: Int): Bitmap {
         val size = 216
+        val hue = color or 0xFF000000.toInt()
         val bitmap = Bitmap.createBitmap(size, size, Bitmap.Config.ARGB_8888)
         val canvas = Canvas(bitmap)
-        canvas.drawColor(color or 0xFF000000.toInt())
+        canvas.drawColor(mix(hue, Color.WHITE, .84f))
         val paint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-            this.color = Color.WHITE
+            // Dark enough to read on the tint, even for a light hue.
+            this.color = mix(hue, Color.BLACK, .22f)
             textAlign = Paint.Align.CENTER
-            textSize = size * .3f
-            typeface = Typeface.create(Typeface.DEFAULT, Typeface.BOLD)
+            textSize = size * .34f
+            typeface = face(context)
         }
         val letter = String(Character.toChars(name.codePointAt(0))).uppercase()
         val baseline = size / 2f - (paint.descent() + paint.ascent()) / 2
         canvas.drawText(letter, size / 2f, baseline, paint)
         return bitmap
     }
+
+    /** [a] moved [t] of the way towards [b]. */
+    private fun mix(a: Int, b: Int, t: Float): Int {
+        fun ch(shift: Int): Int {
+            val x = (a shr shift) and 0xFF
+            val y = (b shr shift) and 0xFF
+            return (x + (y - x) * t).toInt().coerceIn(0, 255)
+        }
+        return Color.rgb(ch(16), ch(8), ch(0))
+    }
+
+    private var geist: Typeface? = null
+
+    /** The app's own face (Geist, bundled with Flutter's assets). */
+    private fun face(context: Context): Typeface =
+        geist ?: try {
+            Typeface.createFromAsset(
+                context.assets,
+                "flutter_assets/packages/handy_ui/fonts/Geist-Bold.ttf",
+            ).also { geist = it }
+        } catch (_: RuntimeException) {
+            Typeface.create(Typeface.DEFAULT, Typeface.BOLD)
+        }
 }

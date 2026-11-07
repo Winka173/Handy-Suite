@@ -1,5 +1,6 @@
 import 'package:handy_ui/kit.dart';
 import '../design/theme.dart';
+import '../ui/app_mark.dart';
 
 /// The pictures of How to use: small pieces of a screen drawn in the
 /// app's own colours (never a photo of one), each showing the one place a
@@ -83,17 +84,17 @@ Widget _app(
   bool ours = false,
 }) {
   final p = BookmarkPalette.of(context);
-  final face = Container(
-    width: 46,
-    height: 46,
-    decoration: BoxDecoration(
-      color: ours ? p.primary : p.line.withValues(alpha: .5),
-      borderRadius: BorderRadius.circular(12),
-    ),
-    child: icon == null
-        ? null
-        : Icon(icon, size: 22, color: ours ? p.onPrimary : p.muted),
-  );
+  final face = ours
+      ? const AppMark(size: 46, radius: 12)
+      : Container(
+          width: 46,
+          height: 46,
+          decoration: BoxDecoration(
+            color: p.line.withValues(alpha: .5),
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: icon == null ? null : Icon(icon, size: 22, color: p.muted),
+        );
   return SizedBox(
     width: 66,
     child: Column(
@@ -182,15 +183,7 @@ class MockFavorites extends StatelessWidget {
                 children: [
                   Icon(Icons.remove_circle, color: p.danger, size: 20),
                   const SizedBox(width: 10),
-                  Container(
-                    width: 28,
-                    height: 28,
-                    decoration: BoxDecoration(
-                      color: p.primary,
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: Icon(Icons.bookmark, size: 16, color: p.onPrimary),
-                  ),
+                  const AppMark(size: 28, radius: 8),
                   const SizedBox(width: 10),
                   Expanded(
                     child: Text(
