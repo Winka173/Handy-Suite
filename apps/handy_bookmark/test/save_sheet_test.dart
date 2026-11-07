@@ -191,7 +191,9 @@ void main() {
       final c = await start(t);
       final report = BackupReport(
         at: '2026-11-05T08:00:00Z',
-        automatic: true,
+        // A complete automatic copy is told by its switch instead; what
+        // was left out is always told here.
+        automatic: omissions.isNotEmpty,
         links: 2,
         picturesIncluded: 1,
         omissions: omissions,

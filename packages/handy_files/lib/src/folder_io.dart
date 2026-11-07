@@ -10,6 +10,21 @@ BackupFolders create() {
   return _Desktop();
 }
 
+BackupFolders private() => _Private();
+
+/// The app's own `backups` folder; [choose] makes it and hands it back.
+class _Private extends _Disk {
+  @override
+  bool get canChoose => false;
+  @override
+  Future<BackupFolder?> choose() async {
+    final base = await getApplicationSupportDirectory();
+    final dir = Directory('${base.path}${Platform.pathSeparator}backups');
+    await dir.create(recursive: true);
+    return BackupFolder('path', dir.path, 'This device');
+  }
+}
+
 bool _plain(String name) =>
     name.isNotEmpty &&
     !name.startsWith('.') &&

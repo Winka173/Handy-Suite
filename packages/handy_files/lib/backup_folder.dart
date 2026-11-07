@@ -57,3 +57,8 @@ abstract interface class BackupFolders {
 }
 
 BackupFolders systemBackupFolders() => impl.create();
+
+/// A fixed folder in the app's own storage on this device (`backups` in
+/// its support folder): nothing to choose, nothing to grant, never seen by
+/// other apps. Unsupported on the web.
+BackupFolders privateBackupFolders() => impl.private();

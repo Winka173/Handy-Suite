@@ -11,6 +11,7 @@ import 'pro/theme_studio.dart';
 import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
+import 'package:handy_files/backup_folder.dart';
 import 'package:handy_files/handy_files.dart';
 import 'package:handy_storage/handy_storage.dart';
 import 'package:handy_ui/kit.dart';
@@ -104,6 +105,18 @@ class _SaveAppState extends State<SaveApp> with WidgetsBindingObserver {
             app: 'bookmark',
             extension: 'zip',
             build: () => scope.fullBackup(),
+            // In the app's own storage: nothing to choose (see Settings).
+            folders: privateBackupFolders(),
+            // An unchanged library is not copied again.
+            revision: () {
+              final l = c.library;
+              if (l == null) return null;
+              final last = [
+                for (final b in l.bookmarks) b.updatedAt,
+              ].fold<String>('', (a, b) => b.compareTo(a) > 0 ? b : a);
+              return '${l.bookmarks.length}|${l.collections.length}|'
+                  '${l.trash.length}|$last';
+            },
           )
         : null,
   );

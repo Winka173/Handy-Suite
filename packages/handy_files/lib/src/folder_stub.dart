@@ -3,6 +3,7 @@ import '../backup_folder.dart';
 
 /// The web has no folder the app can write to later.
 BackupFolders create() => _None();
+BackupFolders private() => _None();
 
 class _None implements BackupFolders {
   @override

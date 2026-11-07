@@ -55,6 +55,14 @@ ItemSharer itemSharer = const _OsSharer();
 /// Whether this device can open its share sheet.
 bool get canShareText => itemSharer.supported;
 
+/// Shares a file the app made (an automatic backup).
+Future<LocalShareResult> shareFileNow(
+  String name,
+  Uint8List bytes,
+  String mimeType,
+  Rect origin,
+) => itemSharer.bytes(name, bytes, mimeType: mimeType, origin: origin);
+
 /// Opens the share sheet with [text] (How to use, to set up its list).
 Future<void> shareTextNow(String text, Rect origin) async {
   await itemSharer.text(text, origin: origin);

@@ -1,4 +1,5 @@
 import 'package:handy_bookmark_engine/handy_bookmark_engine.dart';
+import 'package:handy_files/auto_backup.dart';
 import 'package:handy_ui/kit.dart';
 import '../controller.dart';
 import '../data/import_export.dart';
@@ -356,8 +357,8 @@ Future<void> deleteEverything(BuildContext context, SaveScope scope) async {
     title: tr(context, 'Delete all data?', 'Xóa toàn bộ dữ liệu?'),
     message: tr(
       context,
-      "Every item, picture, offline copy, collection, tag, highlight and reminder on this device, and the library's settings. Backup files and your sync folder are not touched. Back up first if you may want it back.",
-      'Mọi mục, ảnh, bản đọc offline, bộ sưu tập, thẻ, đoạn đánh dấu và hẹn nhắc trên máy này, cùng cài đặt của thư viện. File sao lưu và thư mục đồng bộ không bị đụng tới. Hãy sao lưu trước nếu còn cần.',
+      "Every item, picture, offline copy, collection, tag, highlight and reminder on this device, the library's settings and its automatic copies. Backup files you saved elsewhere and your sync folder are not touched. Back up first if you may want it back.",
+      'Mọi mục, ảnh, bản đọc offline, bộ sưu tập, thẻ, đoạn đánh dấu và hẹn nhắc trên máy này, cùng cài đặt của thư viện và các bản tự sao lưu. File sao lưu bạn đã cất nơi khác và thư mục đồng bộ không bị đụng tới. Hãy sao lưu trước nếu còn cần.',
     ),
     confirmLabel: tr(context, 'Delete all data', 'Xóa toàn bộ'),
     destructive: true,
@@ -369,6 +370,22 @@ Future<void> deleteEverything(BuildContext context, SaveScope scope) async {
     await c.store!.clearReadingCopies();
     // No item or Trash item uses a picture any more: they all go now.
     await c.store!.collectMedia(const {}, grace: Duration.zero);
+    // The automatic copies kept in the app's own storage go too; files the
+    // person saved elsewhere are theirs and stay.
+    if (scope.autoBackup case final backup?) {
+      final folder = backup.settings.folder;
+      if (folder != null) {
+        try {
+          for (final e in await backup.folders.list(folder)) {
+            if (isAutoBackup('bookmark', e.name))
+              await backup.folders.delete(folder, e);
+          }
+        } catch (_) {
+          /* The library itself is already cleared. */
+        }
+        await backup.update(AutoBackupSettings(enabled: false, folder: folder));
+      }
+    }
     await c.refreshReading();
     await scope.reminders.cancelAll();
     c.clearThumbnailMemory();

@@ -369,6 +369,20 @@ extension ImportExport on SaveScope {
       maxBytes: SavePortable.maxBackupBytes,
     );
     if (file == null || !context.mounted) return;
+    await _restoreBytes(context, file.name, file.bytes);
+  });
+
+  /// Restores an automatic backup kept on this device, through the same
+  /// preview and choice as any file.
+  Future<void> restoreFrom(BuildContext context, String name, Uint8List raw) =>
+      run(context, () => _restoreBytes(context, name, raw));
+
+  Future<void> _restoreBytes(
+    BuildContext context,
+    String fileName,
+    Uint8List raw,
+  ) async {
+    final file = (name: fileName, bytes: raw);
     // A password-locked automatic backup opens to the same ZIP.
     final bytes = await openSealedBackup(context, file.bytes);
     if (bytes == null || !context.mounted) return;
@@ -568,5 +582,5 @@ extension ImportExport on SaveScope {
               )
             : tr(context, 'Links imported.', 'Đã nhập link.'),
       );
-  });
+  }
 }

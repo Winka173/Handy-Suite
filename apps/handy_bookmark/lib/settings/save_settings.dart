@@ -1,4 +1,6 @@
 import 'package:handy_storage/handy_storage.dart';
+import 'package:flutter/foundation.dart';
+import 'auto_backup_row.dart';
 import '../data/import_export.dart';
 import '../sync/sync_service.dart';
 import '../design/theme.dart';
@@ -129,15 +131,20 @@ class _SaveSettingsPageState extends State<SaveSettingsPage> {
     }
   }
 
-  /// "Through a folder · synced 6 Nov 14:20", or why there is none here.
+  /// Sync goes through a folder a cloud app keeps in step: computers only
+  /// for now.
+  bool get _syncHere =>
+      !kIsWeb &&
+      (defaultTargetPlatform == TargetPlatform.windows ||
+          defaultTargetPlatform == TargetPlatform.macOS ||
+          defaultTargetPlatform == TargetPlatform.linux) &&
+      folderSyncSupported('path') &&
+      syncFolders.canChoose;
+
+  /// "Folder · synced 6 Nov 14:20", or "Coming soon" where there is none.
   String _syncState(BuildContext context) {
     final p = scope.c.preferences;
-    if (!(folderSyncSupported('path') && syncFolders.canChoose))
-      return tr(
-        context,
-        'Not available on this device yet',
-        'Chưa có trên thiết bị này',
-      );
+    if (!_syncHere) return tr(context, 'Coming soon', 'Sắp có');
     final folder = (p['syncFolder'] as Map?)?['name'] as String?;
     if (folder == null)
       return tr(
@@ -280,22 +287,29 @@ class _SaveSettingsPageState extends State<SaveSettingsPage> {
                     icon: Icons.sync,
                     title: tr(context, 'Sync', 'Đồng bộ'),
                     subtitle: _syncState(context),
-                    navigates: true,
-                    onTap: () => pushSettingsView(
-                      context,
-                      tr(context, 'Sync', 'Đồng bộ'),
-                      listenable: scope.c,
-                      (context) => [
-                        SyncSection(scope: scope, folders: syncFolders),
-                      ],
-                    ),
+                    navigates: _syncHere,
+                    onTap: !_syncHere
+                        ? null
+                        : () => pushSettingsView(
+                            context,
+                            tr(context, 'Sync', 'Đồng bộ'),
+                            listenable: scope.c,
+                            (context) => [
+                              SyncSection(scope: scope, folders: syncFolders),
+                            ],
+                          ),
                   ),
                 ],
               ),
               SettingsPanel(
                 title: tr(context, 'Backup and restore', 'Sao lưu & khôi phục'),
                 rows: [
-                  if (c.lastBackup case final report?)
+                  // A complete automatic copy is said by the switch below;
+                  // a manual one, or anything left out, is said here.
+                  if (c.lastBackup case final report?
+                      when !report.complete ||
+                          !report.automatic ||
+                          !(scope.autoBackup?.folders.supported ?? false))
                     Padding(
                       padding: const EdgeInsets.all(HandySpace.m),
                       child: BackupReportNote(report),
@@ -327,12 +341,10 @@ class _SaveSettingsPageState extends State<SaveSettingsPage> {
                       ],
                     ),
                   ),
+                  if (scope.autoBackup?.folders.supported ?? false)
+                    AutoBackupRow(scope: scope),
                 ],
               ),
-              if (scope.autoBackup != null)
-                KitSection(
-                  child: HandyAutoBackupSection(backup: scope.autoBackup!),
-                ),
               SettingsPanel(
                 rows: [
                   SettingsRow(
