@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+import 'dart:ui' as ui;
 import 'package:handy_ui/kit.dart';
 import 'motion.dart';
 
@@ -28,7 +30,7 @@ class PracticeBoardState extends State<PracticeBoard> {
       doing = GlobalKey(),
       tick = GlobalKey();
   bool ticked = false;
-  final adder = GlobalKey();
+  final adder = GlobalKey(), finished = GlobalKey();
 
   void _add() {
     if (step != PracticeStep.add) return;
@@ -102,13 +104,175 @@ class PracticeBoardState extends State<PracticeBoard> {
       PracticeStep.finish => tr(context, 'Drag it to Done', 'Kéo sang Xong'),
       PracticeStep.done => null,
     };
-    return Spotlight(
-      target: target,
-      label: label,
-      radius: 14,
-      child: _Board(state: this),
+    final dragTo = switch (step) {
+      PracticeStep.drag => doing,
+      PracticeStep.finish => finished,
+      _ => null,
+    };
+    return Stack(
+      fit: StackFit.expand,
+      children: [
+        Spotlight(
+          target: target,
+          label: label,
+          radius: 14,
+          child: _Board(state: this),
+        ),
+        // Over the dark: an arrow from the card to where it goes.
+        if (dragTo != null)
+          IgnorePointer(
+            child: DragHint(key: ValueKey(step), from: card, to: dragTo),
+          ),
+      ],
     );
   }
+}
+
+/// A curved arrow drawn from [from] to [to] (two widgets on the board),
+/// with a light running along it: "drag this there". It draws itself a few
+/// times, then rests; with reduced motion it is simply there.
+class DragHint extends StatefulWidget {
+  final GlobalKey from, to;
+  const DragHint({super.key, required this.from, required this.to});
+  @override
+  State<DragHint> createState() => _DragHintState();
+}
+
+class _DragHintState extends State<DragHint>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController run = AnimationController(
+    vsync: this,
+    duration: const Duration(milliseconds: 1500),
+  );
+  Offset? a, b;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (!run.isAnimating && run.value == 0) {
+      if (moves(context)) {
+        // Three runs, then the whole arrow stays drawn.
+        run.repeat(count: 3).whenCompleteOrCancel(() {
+          if (mounted) run.value = 1;
+        });
+      } else {
+        run.value = 1;
+      }
+    }
+  }
+
+  @override
+  void dispose() {
+    run.dispose();
+    super.dispose();
+  }
+
+  /// Where the card and the target column are, in this layer's space:
+  /// from the card's right edge to the target column, a little below its
+  /// heading.
+  void _measure() {
+    if (!mounted) return;
+    final me = context.findRenderObject() as RenderBox?;
+    final from = widget.from.currentContext?.findRenderObject() as RenderBox?;
+    final to = widget.to.currentContext?.findRenderObject() as RenderBox?;
+    if (me == null ||
+        from == null ||
+        to == null ||
+        !me.hasSize ||
+        !from.hasSize ||
+        !to.hasSize)
+      return;
+    final f = me.globalToLocal(
+      from.localToGlobal(Offset(from.size.width - 4, from.size.height * .5)),
+    );
+    // Into the empty part of the target column, under the cards it holds.
+    final top = me.globalToLocal(to.localToGlobal(Offset.zero));
+    final t = Offset(
+      top.dx + to.size.width * .55,
+      math.min(f.dy + 48, top.dy + to.size.height - 40),
+    );
+    if (f != a || t != b) {
+      setState(() {
+        a = f;
+        b = t;
+      });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    WidgetsBinding.instance.addPostFrameCallback((_) => _measure());
+    if (a == null || b == null) return const SizedBox.expand();
+    return AnimatedBuilder(
+      animation: run,
+      builder: (context, _) =>
+          CustomPaint(size: Size.infinite, painter: _Arrow(a!, b!, run.value)),
+    );
+  }
+}
+
+class _Arrow extends CustomPainter {
+  final Offset a, b;
+  final double t;
+  _Arrow(this.a, this.b, this.t);
+  static const _ink = Color(0xFFF7A8E2);
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    // A soft arc over the columns, rising between the two ends.
+    final mid = Offset((a.dx + b.dx) / 2 + 10, math.min(a.dy, b.dy) - 10);
+    final path = Path()
+      ..moveTo(a.dx, a.dy)
+      ..quadraticBezierTo(mid.dx, mid.dy, b.dx, b.dy);
+    final metric = path.computeMetrics().first;
+    // Drawn in over the first 60 % of each run, then held.
+    final drawn = (t / .6).clamp(0.0, 1.0);
+    final stroke = Paint()
+      ..color = _ink
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 4
+      ..strokeCap = StrokeCap.round;
+    // Dashes, so it reads as a gesture rather than a line on the board.
+    final length = metric.length * drawn;
+    for (var d = 0.0; d < length; d += 14) {
+      canvas.drawPath(metric.extractPath(d, math.min(d + 8, length)), stroke);
+    }
+    if (drawn >= 1) {
+      final end = metric.getTangentForOffset(metric.length)!;
+      final dir = end.vector / end.vector.distance;
+      final normal = Offset(-dir.dy, dir.dx);
+      final tip = end.position;
+      final head = Path()
+        ..moveTo(tip.dx, tip.dy)
+        ..lineTo(
+          tip.dx - dir.dx * 14 + normal.dx * 9,
+          tip.dy - dir.dy * 14 + normal.dy * 9,
+        )
+        ..lineTo(
+          tip.dx - dir.dx * 14 - normal.dx * 9,
+          tip.dy - dir.dy * 14 - normal.dy * 9,
+        )
+        ..close();
+      canvas.drawPath(head, Paint()..color = _ink);
+    }
+    // The light that travels along it once it is drawn.
+    if (t > .6 && t < 1) {
+      final at = metric
+          .getTangentForOffset(metric.length * ((t - .6) / .4))!
+          .position;
+      canvas.drawCircle(
+        at,
+        7,
+        Paint()
+          ..color = Colors.white
+          ..maskFilter = const ui.MaskFilter.blur(BlurStyle.normal, 3),
+      );
+      canvas.drawCircle(at, 4, Paint()..color = Colors.white);
+    }
+  }
+
+  @override
+  bool shouldRepaint(_Arrow old) => old.t != t || old.a != a || old.b != b;
 }
 
 const _maths = (Color(0xFF3A6FD8), Color(0xFFE3EBFA));
@@ -409,7 +573,7 @@ class _Board extends StatelessWidget {
                     if (i > 0) const SizedBox(width: 6),
                     Expanded(
                       child: DragTarget<String>(
-                        key: i == 1 ? s.doing : null,
+                        key: i == 1 ? s.doing : (i == 2 ? s.finished : null),
                         onAcceptWithDetails: (_) => s._drop(i),
                         builder: (context, candidates, _) => AnimatedContainer(
                           duration: HandyMotion.of(context, HandyMotion.short),
