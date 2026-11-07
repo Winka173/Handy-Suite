@@ -72,21 +72,22 @@ void main() {
 
     await tapKey(t, 'collection-food');
     await settle(t);
-    expect(await offered(), 'Show as cards');
+    // Cards are the default; rows are the choice to make.
+    expect(await offered(), 'Show as rows');
     await tapKey(t, 'list-more');
     await tapKey(t, 'save-view');
     await settle(t);
-    expect(await offered(), 'Show as rows');
+    expect(await offered(), 'Show as cards');
     final views = c.preferences['collectionViews'] as Map;
-    expect((views['food'] as Map)['cards'], isTrue);
-    expect(c.preferences['cards'], isNot(true), reason: 'the app default');
+    expect((views['food'] as Map)['cards'], isFalse);
+    expect(c.preferences['cards'], isNot(false), reason: 'the app default');
 
     await tapKey(t, 'collection-trip');
     await settle(t);
-    expect(await offered(), 'Show as cards');
+    expect(await offered(), 'Show as rows');
     await tapKey(t, 'collection-food');
     await settle(t);
-    expect(await offered(), 'Show as rows');
+    expect(await offered(), 'Show as cards');
   });
 
   testWidgets('a collection opens in the order it was last left in', (t) async {

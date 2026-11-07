@@ -59,7 +59,18 @@ void main() {
   });
 
   testWidgets('Refresh reads the page again, only when pressed', (t) async {
-    final (c, _) = await boot(t);
+    // Reading after saving switched off: only Refresh may read the page.
+    final (c, _) = await boot(
+      t,
+      urls: const [],
+      seed: (c) async {
+        await c.update(
+          (l) => l,
+          prefs: {...c.preferences, 'automaticMetadata': false},
+        );
+        await c.quickSave('https://a.com/one', title: 'Page one');
+      },
+    );
     final id = idOf(c, 'https://a.com/one');
     String status() =>
         c.library!.bookmarks.firstWhere((b) => b.id == id).metadataStatus;

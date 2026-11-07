@@ -272,7 +272,7 @@ void main() {
     await settle(t);
     expect(find.text('Page two'), findsWidgets);
     expect(
-      find.byKey(ValueKey('bookmark-${idOf(c, 'https://b.org/two')}')),
+      find.byKey(ValueKey('card-${idOf(c, 'https://b.org/two')}')),
       findsOneWidget,
     );
     expect(

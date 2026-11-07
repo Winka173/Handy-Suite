@@ -157,8 +157,6 @@ class RecentlySaved extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final p = BookmarkPalette.of(context);
     final l = scope.library;
     final recent = [
       for (final b in l.bookmarks)
@@ -177,62 +175,109 @@ class RecentlySaved extends StatelessWidget {
             child: Text(tr(context, 'See all', 'Xem tất cả')),
           ),
         ),
-        for (final b in recent.take(shown))
-          InkWell(
-            key: Key('recent-${b.id}'),
-            borderRadius: BorderRadius.circular(BookmarkRadii.item),
-            onTap: () => onOpen(b),
-            child: Padding(
-              padding: const EdgeInsets.symmetric(vertical: 6),
-              child: Row(
-                children: [
+        // Cards, as everywhere else: two across on a phone, more on a
+        // wider screen, two rows.
+        LayoutBuilder(
+          builder: (context, box) {
+            final scale = MediaQuery.textScalerOf(context).scale(14) / 14;
+            final columns = (box.maxWidth / (165 * scale.clamp(1.0, 2.0)))
+                .floor()
+                .clamp(1, 4);
+            const gap = HandySpace.m;
+            final width = (box.maxWidth - gap * (columns - 1)) / columns;
+            return Wrap(
+              spacing: gap,
+              runSpacing: gap,
+              children: [
+                for (final b in recent.take(columns * 2))
                   SizedBox(
-                    width: 52,
-                    height: 52,
-                    child: ItemPicture(scope.c, b, compact: true),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          b.title.isEmpty ? b.sourceDomain : b.title,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: theme.textTheme.titleSmall?.copyWith(
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                        const SizedBox(height: 2),
-                        Text(
-                          [
-                            if (!b.isImage) sourceLine(b),
-                            ago(context, b.savedAt),
-                            if (collectionOf(l, b.collectionId) case final c?)
-                              c.$1.name,
-                          ].join(' · '),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: theme.textTheme.bodySmall?.copyWith(
-                            color: p.muted,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  if (b.collectionId == null)
-                    PutIn(
-                      controller: scope.c,
+                    width: width,
+                    child: _RecentCard(
+                      scope: scope,
                       bookmark: b,
-                      onFile: scope.file,
-                      compact: true,
+                      onOpen: () => onOpen(b),
                     ),
-                ],
+                  ),
+              ],
+            );
+          },
+        ),
+      ],
+    );
+  }
+}
+
+/// One recent save as a card: its picture, title and where it is from or
+/// where it went; "Put in" under it while it is not sorted.
+class _RecentCard extends StatelessWidget {
+  final SaveScope scope;
+  final Bookmark bookmark;
+  final VoidCallback onOpen;
+  const _RecentCard({
+    required this.scope,
+    required this.bookmark,
+    required this.onOpen,
+  });
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final p = BookmarkPalette.of(context);
+    final b = bookmark;
+    final home = collectionOf(scope.library, b.collectionId);
+    return Material(
+      color: p.surface,
+      borderRadius: BorderRadius.circular(BookmarkRadii.item),
+      clipBehavior: Clip.antiAlias,
+      child: InkWell(
+        key: Key('recent-${b.id}'),
+        onTap: onOpen,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            AspectRatio(aspectRatio: 4 / 3, child: ItemPicture(scope.c, b)),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(12, 10, 12, 4),
+              child: Text(
+                b.title.isEmpty ? b.sourceDomain : b.title,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                style: theme.textTheme.titleSmall?.copyWith(
+                  fontWeight: FontWeight.w600,
+                ),
               ),
             ),
-          ),
-      ],
+            Padding(
+              padding: const EdgeInsets.fromLTRB(12, 0, 12, 10),
+              child: Text.rich(
+                TextSpan(
+                  children: [
+                    if (home != null) collectionSpan(context, home),
+                    TextSpan(
+                      text: [
+                        if (!b.isImage) sourceLine(b),
+                        ago(context, b.savedAt),
+                      ].join(' · '),
+                    ),
+                  ],
+                ),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: theme.textTheme.bodySmall?.copyWith(color: p.muted),
+              ),
+            ),
+            if (b.collectionId == null)
+              Padding(
+                padding: const EdgeInsets.fromLTRB(8, 0, 8, 8),
+                child: PutIn(
+                  controller: scope.c,
+                  bookmark: b,
+                  onFile: scope.file,
+                  compact: true,
+                ),
+              ),
+          ],
+        ),
+      ),
     );
   }
 }

@@ -94,8 +94,7 @@ void main() {
     expect(tester.takeException(), isNull);
     await openFood(tester);
     expect(tester.takeException(), isNull);
-    await tapKey(tester, 'list-more');
-    await tapKey(tester, 'save-view');
+    // Cards are the default.
     expect(tester.takeException(), isNull, reason: 'cards');
     final id = c.library!.bookmarks
         .firstWhere((b) => b.collectionId == 'food')

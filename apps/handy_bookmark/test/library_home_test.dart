@@ -198,7 +198,7 @@ void main() {
     await tapKey(t, 'collection-food');
     expect(find.byKey(const Key('batch-clear')), findsNothing);
     final id = c.library!.bookmarks.firstWhere((b) => b.collectionId == 'food');
-    await t.longPress(find.byKey(ValueKey('bookmark-${id.id}')));
+    await t.longPress(find.byKey(ValueKey('card-${id.id}')));
     await t.pumpAndSettle();
     expect(find.byKey(const Key('batch-clear')), findsOneWidget);
     await tapKey(t, 'batch-more');

@@ -1,7 +1,10 @@
 import 'dart:typed_data';
 
 const metadataMaxUrlLength = 8192;
-const metadataMaxHtmlBytes = 512 * 1024;
+
+/// How far a page is read for its title and picture: up to its `</head>`,
+/// never past this (YouTube puts them after ~800 KB of script).
+const metadataHeadMaxBytes = 2 * 1024 * 1024;
 const metadataMaxThumbnailBytes = 1024 * 1024;
 const metadataMaxImagePixels = 2000000;
 const metadataMaxRedirects = 3;

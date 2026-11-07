@@ -44,6 +44,11 @@ void main() {
         shares: TestInbox(),
       );
       await t.runAsync(c.initialize);
+      // Layouts are the point here, not reading pages.
+      await c.update(
+        (l) => l,
+        prefs: {...c.preferences, 'automaticMetadata': false},
+      );
       for (final (i, u) in [
         'https://www.youtube.com/watch?v=1',
         'https://shopee.vn/p/2',

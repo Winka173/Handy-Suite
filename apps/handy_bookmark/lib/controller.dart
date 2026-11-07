@@ -271,7 +271,8 @@ class SaveController extends ChangeNotifier {
       highlighted = saved.last.id;
       notice = 'saved';
       changed();
-      if (preferences['automaticMetadata'] == true) {
+      // On unless switched off: a save brings its title and picture.
+      if (preferences['automaticMetadata'] != false) {
         for (final b in saved) {
           unawaited(refreshMetadata(b.id));
         }

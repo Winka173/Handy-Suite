@@ -63,7 +63,7 @@ List<Widget> libraryTools(BuildContext context, SaveScope scope) {
             'Bigger pictures, fewer items per screen',
             'Ảnh to hơn, ít mục hơn mỗi màn hình',
           ),
-          value: p['cards'] == true,
+          value: p['cards'] != false,
           onChanged: (v) => set({'cards': v}),
         ),
         SettingsSwitch(
@@ -99,7 +99,7 @@ List<Widget> libraryTools(BuildContext context, SaveScope scope) {
             'Read pages after saving',
             'Đọc trang sau khi lưu',
           ),
-          value: p['automaticMetadata'] == true,
+          value: p['automaticMetadata'] != false,
           onChanged: (v) => set({'automaticMetadata': v}),
         ),
       ],

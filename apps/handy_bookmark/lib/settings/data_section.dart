@@ -323,8 +323,8 @@ Future<void> showPrivacy(BuildContext context) => showModalBottomSheet<void>(
             tr(context, 'When something leaves', 'Khi nào dữ liệu rời máy'),
             tr(
               context,
-              'Only when you start it: reading page details contacts that public website; folder sync writes to the folder you chose; exports and shared pages carry what you put in them.',
-              'Chỉ khi bạn bắt đầu: đọc thông tin trang sẽ liên hệ website công khai đó; đồng bộ qua thư mục ghi vào thư mục bạn chọn; file xuất và trang chia sẻ mang theo những gì bạn đưa vào.',
+              'Only when you start it: saving a link reads that public page for its title and picture (switch it off in Settings › Data › Library tools); folder sync writes to the folder you chose; exports and shared pages carry what you put in them.',
+              'Chỉ khi bạn bắt đầu: lưu một link sẽ đọc trang công khai đó để lấy tiêu đề và ảnh (tắt trong Cài đặt › Dữ liệu › Công cụ thư viện); đồng bộ qua thư mục ghi vào thư mục bạn chọn; file xuất và trang chia sẻ mang theo những gì bạn đưa vào.',
             ),
           ),
           point(

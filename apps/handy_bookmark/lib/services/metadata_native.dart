@@ -66,8 +66,10 @@ class PlatformMetadataClient implements MetadataClient {
       final response = await _exchange(
         url,
         accept: 'text/html,application/xhtml+xml',
-        maxBytes: metadataMaxHtmlBytes,
+        maxBytes: metadataHeadMaxBytes,
         mimes: const {'text/html', 'application/xhtml+xml'},
+        // Title and picture sit in the head: a page is read only that far.
+        headOnly: true,
         cancellation: cancellation,
       );
       cancellation?.check();
@@ -170,6 +172,21 @@ class PlatformMetadataClient implements MetadataClient {
     }
   }
 
+  /// Whether [chunk] holds `</head` (any case).
+  static bool _endsHead(List<int> chunk) {
+    const tag = [60, 47, 104, 101, 97, 100]; // </head
+    outer:
+    for (var i = 0; i + tag.length <= chunk.length; i++) {
+      for (var j = 0; j < tag.length; j++) {
+        final c = chunk[i + j];
+        final lower = c >= 65 && c <= 90 ? c + 32 : c;
+        if (lower != tag[j]) continue outer;
+      }
+      return true;
+    }
+    return false;
+  }
+
   String _errorCode(Object error) => switch (error) {
     _MetadataFailure(:final code) => code,
     Cancelled() => 'cancelled',
@@ -187,6 +204,7 @@ class PlatformMetadataClient implements MetadataClient {
     required String accept,
     required int maxBytes,
     Set<String>? mimes,
+    bool headOnly = false,
     bool anyStatus = false,
     int maxRedirects = metadataMaxRedirects,
     Duration timeout = metadataTimeout,
@@ -241,11 +259,20 @@ class PlatformMetadataClient implements MetadataClient {
           // HttpClient retains the original hostname for TLS verification and
           // Host, but its socket connects ONLY to the checked numeric address.
           // No second hostname lookup or environment proxy is involved.
-          client.connectionFactory = (requested, proxyHost, proxyPort) {
+          client.connectionFactory = (requested, proxyHost, proxyPort) async {
             if (requested.host != target.host || proxyHost != null) {
               throw const _MetadataFailure('unsafeAddress');
             }
-            return _connect(addresses.first, requested.port);
+            final task = await _connect(addresses.first, requested.port);
+            if (requested.scheme != 'https') return task;
+            // A factory's socket is used as it is: an https page needs TLS
+            // here, checked against the page's own host name (not the IP).
+            return ConnectionTask.fromSocket(
+              task.socket.then(
+                (socket) => SecureSocket.secure(socket, host: target.host),
+              ),
+              task.cancel,
+            );
           };
           final request = await client.openUrl(method, target);
           request.followRedirects = false;
@@ -293,16 +320,21 @@ class PlatformMetadataClient implements MetadataClient {
           if (mimes != null && !mimes.contains(mime)) {
             throw const _MetadataFailure('unsupportedContentType');
           }
-          if (response.contentLength > maxBytes) {
+          if (!headOnly && response.contentLength > maxBytes) {
             throw const _MetadataFailure('responseTooLarge');
           }
           final builder = BytesBuilder(copy: false);
           await for (final chunk in response) {
             cancellation?.check();
             if (builder.length + chunk.length > maxBytes) {
-              throw const _MetadataFailure('responseTooLarge');
+              if (!headOnly) throw const _MetadataFailure('responseTooLarge');
+              // Enough of the page: keep what fits and stop reading.
+              builder.add(chunk.sublist(0, maxBytes - builder.length));
+              break;
             }
             builder.add(chunk);
+            // The head is over: the rest of the page is not needed.
+            if (headOnly && _endsHead(chunk)) break;
           }
           return _Response(
             builder.takeBytes(),

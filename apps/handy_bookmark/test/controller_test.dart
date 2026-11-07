@@ -231,36 +231,32 @@ void main() {
       c.dispose();
     },
   );
-  test(
-    'explicit duplicate keeps notes; add anyway makes a new record; no implicit network',
-    () async {
-      final store = TestStore(),
-          c = SaveController(open: () async => store, shares: TestInbox());
-      await c.initialize();
-      final first = (await c.quickSave(
-        'https://example.com/item?sku=1',
-      )).single;
-      await c.put(
-        first.copyWith(
-          note: 'Keep private note',
-          title: 'My title',
-          metadataSource: 'user',
-        ),
-      );
-      final duplicate = (await c.quickSave(
-        'https://example.com/item?sku=1&utm_source=share',
-      )).single;
-      expect(duplicate.id, first.id);
-      expect(duplicate.note, 'Keep private note');
-      expect(c.fetching, isEmpty);
-      await c.quickSave(
-        'https://example.com/item?sku=1',
-        allowDuplicates: true,
-      );
-      expect(c.library!.bookmarks, hasLength(2));
-      await c.quickSave('https://example.com/item?sku=2');
-      expect(c.library!.bookmarks, hasLength(3));
-      c.dispose();
-    },
-  );
+  test('explicit duplicate keeps notes; add anyway makes a new record; with '
+      'page reading off, no network at all', () async {
+    final store = TestStore(),
+        c = SaveController(open: () async => store, shares: TestInbox());
+    await c.initialize();
+    // Reading pages after saving is on by default; switched off, a save
+    // contacts nothing.
+    await c.update((l) => l, prefs: {'automaticMetadata': false});
+    final first = (await c.quickSave('https://example.com/item?sku=1')).single;
+    await c.put(
+      first.copyWith(
+        note: 'Keep private note',
+        title: 'My title',
+        metadataSource: 'user',
+      ),
+    );
+    final duplicate = (await c.quickSave(
+      'https://example.com/item?sku=1&utm_source=share',
+    )).single;
+    expect(duplicate.id, first.id);
+    expect(duplicate.note, 'Keep private note');
+    expect(c.fetching, isEmpty);
+    await c.quickSave('https://example.com/item?sku=1', allowDuplicates: true);
+    expect(c.library!.bookmarks, hasLength(2));
+    await c.quickSave('https://example.com/item?sku=2');
+    expect(c.library!.bookmarks, hasLength(3));
+    c.dispose();
+  });
 }

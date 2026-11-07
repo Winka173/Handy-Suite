@@ -65,12 +65,12 @@ void main() {
   );
   test('HTML hard byte cap permits boundary and rejects one byte more', () {
     expect(
-      parseMetadataHtml(List.filled(metadataMaxHtmlBytes, 32), source).status,
+      parseMetadataHtml(List.filled(metadataHeadMaxBytes, 32), source).status,
       'partial',
     );
     expect(
       parseMetadataHtml(
-        List.filled(metadataMaxHtmlBytes + 1, 32),
+        List.filled(metadataHeadMaxBytes + 1, 32),
         source,
       ).errorCode,
       'responseTooLarge',

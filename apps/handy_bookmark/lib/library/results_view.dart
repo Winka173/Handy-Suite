@@ -56,10 +56,13 @@ class ResultsView extends StatelessWidget {
 
   bool get cards {
     final v = view;
+    // Broken links stay rows: each says what went wrong.
+    if (v.place == Place.broken) return false;
     final own = v.place == Place.collection && v.id != null
         ? v.collectionView(v.id!)['cards']
         : null;
-    return own is bool ? own : controller.preferences['cards'] == true;
+    // Cards unless the person chose rows.
+    return own is bool ? own : controller.preferences['cards'] != false;
   }
 
   @override

@@ -175,7 +175,7 @@ void main() {
     );
     await tester.pumpAndSettle();
     final first = c.library!.bookmarks.first.id;
-    await tester.longPress(find.byKey(ValueKey('bookmark-$first')));
+    await tester.longPress(find.byKey(ValueKey('card-$first')));
     await tester.pumpAndSettle();
     expect(find.text('1 selected'), findsOneWidget);
     await tapKey(tester, 'batch-archive');

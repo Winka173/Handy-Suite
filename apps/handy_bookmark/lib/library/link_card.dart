@@ -126,14 +126,14 @@ class LinkCard extends StatelessWidget {
                         ],
                       ),
                     ),
-                    // 44 × 48: the card's corner, nudged up into the
-                    // padding so the title keeps its width.
+                    // 48 × 48 (the least a finger needs): the card's
+                    // corner, nudged up into the padding.
                     Transform.translate(
                       offset: const Offset(0, -6),
                       child: ItemMenuButton(
                         bookmark: b,
                         onDetails: onDetails,
-                        width: 44,
+                        width: 48,
                       ),
                     ),
                   ],

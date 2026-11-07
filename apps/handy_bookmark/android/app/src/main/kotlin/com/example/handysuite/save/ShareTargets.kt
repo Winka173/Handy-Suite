@@ -25,6 +25,7 @@ object ShareTargets {
     private const val PREFIX = "col:"
     private const val SHORTCUT_ID = "android.intent.extra.shortcut.ID"
     private const val MAX = 4
+    const val COLORS = "share_target_colors"
 
     fun publish(context: Context, targets: List<Map<*, *>>): Boolean {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) return false
@@ -51,6 +52,15 @@ object ShareTargets {
                         setExcludedFromSurfaces(ShortcutInfo.SURFACE_LAUNCHER)
                 }
                 .build()
+        }
+        // The colours, for the "Saved to …" card the share activity shows.
+        context.getSharedPreferences(COLORS, Context.MODE_PRIVATE).edit().apply {
+            clear()
+            targets.take(limit).forEach { t ->
+                val id = t["id"] as? String ?: return@forEach
+                putInt(PREFIX + id, (t["color"] as? Number)?.toInt() ?: 0xFF0E7490.toInt())
+            }
+            apply()
         }
         val keep = shortcuts.map { it.id }.toSet()
         val stale = manager.dynamicShortcuts.map { it.id }

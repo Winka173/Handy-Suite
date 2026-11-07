@@ -5,7 +5,7 @@ import 'metadata_types.dart';
 
 /// Parses inert HTML only. Never executes scripts or follows document base URLs.
 MetadataResult parseMetadataHtml(List<int> bytes, Uri source) {
-  if (bytes.length > metadataMaxHtmlBytes) {
+  if (bytes.length > metadataHeadMaxBytes) {
     return const MetadataResult(
       status: 'failed',
       errorCode: 'responseTooLarge',
