@@ -2,7 +2,7 @@
 <!-- Sharing shortcuts: the person's collections in the top row of the
      share sheet (published by ShareTargets.kt, Android 10+). -->
 <shortcuts xmlns:android="http://schemas.android.com/apk/res/android">
-    <share-target android:targetClass="com.example.handysuite.save.MainActivity">
+    <share-target android:targetClass="com.example.handysuite.save.ShareActivity">
         <data android:mimeType="text/plain" />
         <data android:mimeType="image/jpeg" />
         <data android:mimeType="image/png" />

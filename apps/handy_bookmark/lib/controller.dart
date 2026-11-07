@@ -284,10 +284,6 @@ class SaveController extends ChangeNotifier {
     }
   }
 
-  /// Items that just came in from another app's Share without a
-  /// collection; the app offers to put them in one, then clears this.
-  final sharedToFile = <String>[];
-
   Future<void> drain() async {
     if (draining) {
       _again = true;
@@ -301,42 +297,29 @@ class SaveController extends ChangeNotifier {
         try {
           // Pictures first, then any link alongside them; the delivery is
           // acknowledged (and its files deleted) only after both committed.
-          final into = library!.collections.any((c) => c.id == share.collection)
-              ? share.collection
-              : null;
-          final fresh = <String>[];
           if (share.images.isNotEmpty) {
-            final pictures = await addPictures([
+            final into =
+                library!.collections.any((c) => c.id == share.collection)
+                ? share.collection
+                : null;
+            await addPictures([
               for (final i in share.images)
                 (bytes: await inbox.readImage(i.path), name: i.name),
             ], collectionId: into);
-            fresh.addAll([for (final b in pictures.added) b.id]);
             if (UrlTools.extract(share.text).isNotEmpty)
-              fresh.addAll([
-                for (final b in await quickSave(
-                  share.text,
-                  title: share.title,
-                  collectionId: share.collection,
-                ))
-                  b.id,
-              ]);
-          } else {
-            fresh.addAll([
-              for (final b in await quickSave(
+              await quickSave(
                 share.text,
                 title: share.title,
                 collectionId: share.collection,
-              ))
-                b.id,
-            ]);
+              );
+          } else {
+            await quickSave(
+              share.text,
+              title: share.title,
+              collectionId: share.collection,
+            );
           }
           await inbox.acknowledge(share.id);
-          // Shared without a collection: the app asks where it goes, now
-          // that it is safely saved.
-          if (into == null && fresh.isNotEmpty) {
-            sharedToFile.addAll(fresh);
-            changed();
-          }
         } catch (_) {
           if (!invalidShares.any((s) => s.id == share.id))
             invalidShares.add(share);

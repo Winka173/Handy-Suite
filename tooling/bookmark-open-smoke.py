@@ -30,7 +30,7 @@ shell('am', 'force-stop', package)
 shell('am', 'start', '-W', '-a', 'android.intent.action.SEND', '-t', 'text/plain',
       '--es', 'android.intent.extra.TEXT', 'https://example.org/handy-save-open-qa',
       '--es', 'android.intent.extra.SUBJECT', 'Handy Bookmark open QA',
-      '-n', package + '/com.example.handysuite.save.MainActivity')
+      '-n', package + '/com.example.handysuite.save.ShareActivity')
 time.sleep(5)
 shell('uiautomator', 'dump', '/sdcard/handy-save-open.xml')
 xml = adb('shell', 'cat', '/sdcard/handy-save-open.xml')

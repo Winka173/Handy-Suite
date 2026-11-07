@@ -109,8 +109,8 @@ List<_Topic> _topics(BuildContext context) => [
       _Step(
         tr(
           context,
-          'Next time: tap Share, choose Handy Bookmark, and you are done. Then pick a collection, or leave it in Not sorted.',
-          'Lần sau: bấm Chia sẻ, chọn Handy Bookmark là xong. Rồi chọn bộ sưu tập, hoặc để ở Chưa xếp.',
+          'Next time: tap Share, choose Handy Bookmark, and you are done. "Saved" shows, you stay in that app, and it waits in Not sorted.',
+          'Lần sau: bấm Chia sẻ, chọn Handy Bookmark là xong. Hiện "Đã lưu", bạn vẫn ở lại app đó, mục chờ ở Chưa xếp.',
         ),
         picture: const MockShareRow(first: true),
       ),

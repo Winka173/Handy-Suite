@@ -2228,21 +2228,17 @@ dải "Mới lưu" (mục chưa xếp đi trước, một nút "Xếp vào…"),
 - Bỏ: trang toàn màn hình cho một cái tên, 32 màu cầu vồng, biểu tượng tô màu theo loại,
   bảng emoji tự làm, gradient, wizard nhiều bước, lưới 16 biểu tượng chiếm nửa màn.
 
-## Hợp đồng: Handy Bookmark · "Đã lưu. Cho vào đâu?" sau khi chia sẻ (2026-11-07)
+## Hợp đồng: Handy Bookmark · chia sẻ từ app khác (2026-11-07, thay khung "Cho vào đâu?")
 
-- Việc: thứ vừa chia sẻ từ app khác đã nằm an toàn trong Chưa xếp; giờ đặt nó đúng chỗ
-  trong một chạm, không phải mở app tìm lại. Hành động chính: Xong / "Cho vào <tên>".
-- Luôn lưu trước rồi mới hỏi (quy tắc dữ liệu: ghi xong mới xác nhận hàng chia sẻ). Đóng
-  khung = để ở Chưa xếp. Chia sẻ thẳng vào một bộ (hàng đầu khung chia sẻ Android) thì không
-  hỏi. Nhiều lần chia sẻ dồn lại hỏi một lần.
-- Khuôn mặt: như onboarding. Tiêu đề Newsreader "Đã lưu. Cho vào đâu?" với dải tô nhạt dưới
-  chữ khoá; thứ vừa lưu là một mẩu báo (ảnh, nhãn nguồn bằng chữ, tiêu đề Newsreader); nút
-  chính cao 56, bo 14. Dùng chung cho khung Bộ sưu tập mới (`design/clipping.dart`).
-- Thứ tự: tiêu đề → mẩu báo (nhiều mục: mục đầu + "và N mục nữa") → "Cho vào" + Bộ sưu tập
-  mới → danh sách (Chưa xếp, rồi cây bộ sưu tập; chọn như radio) → Ghim lên đầu → nút.
-- Danh sách: chấm màu cạnh tên, biểu tượng chỉ khi bộ đó có; số mục là dòng phụ.
-- Bỏ: chọn trước rồi mới lưu (mất link nếu app bị đóng), giới hạn số link miễn phí mỗi
-  ngày, màn "Saved!" chặn thêm một bước.
+- Việc: lưu thứ đang xem mà không rời app đang xem. Chọn Handy Bookmark (hoặc một bộ sưu tập ở
+  hàng đầu khung chia sẻ Android) → mục được ghi vào hàng chờ riêng của app trên máy → hiện
+  thông báo ngắn "Đã lưu vào Handy Bookmark" / "Đã lưu vào <bộ sưu tập>" → người dùng vẫn ở
+  Facebook, TikTok… Không mở app, không hiện màn nào.
+- Android: `ShareActivity` trong suốt, không vào Gần đây, tự đóng ngay. Lần sau mở app, hàng
+  chờ được đưa vào thư viện (ghi xong mới xác nhận hàng chờ, như trước). Mục không có bộ sưu
+  tập nằm ở Chưa xếp; xếp chỗ bằng nút "Cho vào" ở Mới lưu.
+- Bỏ: khung "Đã lưu. Cho vào đâu?" tự bật khi mở app (đã thấy "Đã lưu" ở app kia thì không hỏi
+  lại); mở app chính khi chia sẻ.
 
 ## Hợp đồng: Handy Bookmark · Tìm, trước khi gõ (2026-11-07)
 

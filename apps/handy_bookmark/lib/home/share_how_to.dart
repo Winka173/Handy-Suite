@@ -29,8 +29,8 @@ Future<void> showShareHowTo(BuildContext context) => showModalBottomSheet<void>(
       ),
       tr(
         sheet,
-        'Swipe the row of apps to find Handy Bookmark, and tap it. It is saved at once; then choose where it goes.',
-        'Vuốt hàng app để tìm Handy Bookmark rồi bấm. Mục được lưu ngay; sau đó chọn chỗ cho nó.',
+        'Swipe the row of apps to find Handy Bookmark, and tap it. It is saved at once and you stay where you were; it waits in Not sorted.',
+        'Vuốt hàng app để tìm Handy Bookmark rồi bấm. Mục được lưu ngay, bạn vẫn ở lại app đang xem; nó chờ ở Chưa xếp.',
       ),
       if (shortcuts)
         tr(

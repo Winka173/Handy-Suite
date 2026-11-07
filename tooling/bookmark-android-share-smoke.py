@@ -31,7 +31,7 @@ shell('am', 'force-stop', package)
 def share(text, title):
     shell('am', 'start', '-W', '-a', 'android.intent.action.SEND', '-t', 'text/plain',
           '--es', 'android.intent.extra.TEXT', text, '--es', 'android.intent.extra.SUBJECT', title,
-          '-n', package + '/com.example.handysuite.save.MainActivity')
+          '-n', package + '/com.example.handysuite.save.ShareActivity')
     time.sleep(3)
     for _ in range(15):
         shell('uiautomator', 'dump', '/sdcard/handy-save-share.xml')
