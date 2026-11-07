@@ -4,18 +4,6 @@ import 'engine_test.dart' show fixture, withTask;
 
 void main() {
   test(
-    'same-board move preserves subtask parent; cross-board move detaches explicitly',
-    () {
-      var s = withTask(withTask(fixture()), id: 'child', parent: 't');
-      final cat = s.rows('categories').last.id;
-      s = moveTasks(s, {'child'}, 'b', category: cat);
-      expect(s.get('tasks', 'child').str('parent'), 't');
-      s = createBoard(s, 'Other', boardId: 'other');
-      s = moveTasks(s, {'child'}, 'other');
-      expect(s.get('tasks', 'child').data['parent'], isNull);
-    },
-  );
-  test(
     'restoring parent never restores a previously trashed independent child',
     () {
       var s = withTask(withTask(fixture()), id: 'child', parent: 't');
@@ -26,33 +14,7 @@ void main() {
       expect(s.get('tasks', 'child').flag('trashed'), true);
     },
   );
-  test(
-    'safe duplicate creates new subtree/checklist IDs and resets completion',
-    () {
-      var s = withTask(withTask(fixture()), id: 'child', parent: 't');
-      s = s.put(
-        'checklist',
-        BoardRecord({
-          'id': 'check',
-          'task': 'child',
-          'title': 'Read',
-          'done': true,
-          'completedAt': '2026-01-01T00:00:00Z',
-        }),
-      );
-      final next = duplicateTask(s, 't');
-      expect(next.rows('tasks').length, 4);
-      final copies = next
-          .rows('tasks')
-          .where((r) => !['t', 'child'].contains(r.id))
-          .toList();
-      expect(copies.where((r) => r.data['parent'] == null).length, 1);
-      final check = next.rows('checklist').firstWhere((r) => r.id != 'check');
-      expect(check.flag('done'), false);
-      expect(check.data['completedAt'], isNull);
-      next.validate();
-    },
-  );
+
   test(
     'custom defaults apply to new tasks and incompatible type changes refuse',
     () {
@@ -110,30 +72,4 @@ void main() {
       expect(s.rows('events').last.str('action'), 'completed');
     },
   );
-  test(
-    'focus crosses midnight with exact allocation; reviewed duration stays unallocated',
-    () {
-      var s = withTask(fixture());
-      final start = DateTime.utc(2026, 11, 1, 16, 59);
-      s = startFocus(s, 't', start);
-      final id = s.rows('sessions').single.id;
-      s = pauseFocus(s, id, start.add(const Duration(minutes: 2)));
-      s = resumeFocus(s, id, start.add(const Duration(days: 2)));
-      s = reviewInterruptedFocus(
-        s,
-        id,
-        300,
-        start.add(const Duration(days: 5)),
-      );
-      expect(s.rows('sessions').single.data['runningAt'], isNull);
-    },
-  );
-  test('personal grade scale mapping and invalid thresholds', () {
-    expect(presentGrade(80, '10'), '8.00 / 10');
-    expect(
-      presentGrade(80, 'letter', letters: {'A': 90, 'B': 80, 'C': 60}),
-      'B',
-    );
-    expect(() => presentGrade(80, 'letter'), throwsFormatException);
-  });
 }

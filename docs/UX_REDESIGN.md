@@ -2691,3 +2691,22 @@ xem trước trước khi mua), không chép nền ngà/teal và không gọi l�
 - Bỏ: thanh dưới nhiều mô-đun, tab Pro, bảng dữ liệu/lịch/timeline/học tập/tập trung riêng, trình
   dựng quy tắc, ba cột tí hon trên điện thoại, cầu vồng màu thẻ, gradient, kính mờ, emoji, khoá
   Pro chỉ bằng ảnh chụp, tự xoá hay tự chuyển thẻ không báo.
+
+### Handy Boards · Pro: thẻ lặp lại, giao diện bảng, bản xuất đẹp (2026-11-07)
+- Thẻ lặp lại: chip "Lặp lại" trong chi tiết thẻ (Không / Hằng ngày / Hằng tuần / Hằng tháng,
+  nhãn Pro). Khi thẻ vào cột "đã xong", app tạo thẻ kế tiếp ở đầu cột đầu tiên: cùng tên, nhóm,
+  ghi chú, bìa, việc con (bỏ tick), hạn dời đúng một chu kỳ; SnackBar "Đã tạo lần tiếp theo ·
+  Hoàn tác". Thẻ cũ chỉ sinh lần sau một lần (kéo qua lại không nhân bản). Mất Pro thì thẻ đã
+  đặt vẫn lặp; đặt mới cần Pro.
+- Giao diện bảng: menu bảng › "Giao diện bảng" mở dải lựa chọn ở đáy, bảng phía trên đổi ngay
+  khi chạm (xem trước trên chính dữ liệu của mình); Áp dụng / Huỷ. "Mặc định" miễn phí; các gói
+  khác (Vải lanh, Bản vẽ, Đồng cỏ, Phấn hồng, Đêm) là Pro: Áp dụng thành "Dùng với Pro". Mỗi gói
+  có biến thể sáng và tối, chữ vẫn đạt tương phản 4.5:1; chỉ đổi nền trang và nền cột, thẻ luôn
+  trắng/tối như cũ để đọc. Mất Pro: giao diện đã chọn vẫn giữ.
+- Bản xuất: menu bảng › "Xuất bảng" mở trang xem trước: ảnh bảng đúng như sẽ lưu, chọn kiểu
+  (Đơn giản: miễn phí; Poster, Bản in: Pro), nút "Lưu ảnh PNG" và "Lưu PDF"; kiểu Pro xem
+  trước được, lưu cần Pro. Liên kết "Định dạng khác (CSV, Markdown, lịch ICS, sao lưu)" mở hộp
+  xuất dữ liệu cũ (miễn phí). Ảnh không có dữ liệu ngoài bảng, không có ảnh riêng tư ngoài bìa
+  thẻ đang hiện.
+- Bỏ: trình dựng quy tắc lặp phức tạp (ngày trong tuần, ngoại lệ), theme đổi màu chữ hay màu
+  thẻ, ảnh xuất có watermark quảng cáo.

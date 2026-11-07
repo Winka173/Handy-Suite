@@ -300,4 +300,63 @@ void main() {
     expect(find.text('Maths'), findsWidgets);
     expect(find.text('Nhóm'), findsOneWidget);
   });
+
+  testWidgets('a board look is tried on the board itself; Cancel keeps the '
+      'old one and a Pro look asks for Pro', (t) async {
+    final c = await boot(t, studyState());
+    await tap(t, find.byKey(const Key('board-$board')));
+    await tap(t, find.byKey(const Key('board-more')));
+    await tap(t, find.byKey(const Key('menu-board-look')));
+    await tap(t, find.byKey(const Key('look-linen')));
+    expect(find.text('Apply with Pro'), findsOneWidget);
+    expect(c.state!.get('boards', board).data['appearance'], isNull);
+    await tap(t, find.byKey(const Key('look-cancel')));
+    expect(find.byKey(const Key('look-list')), findsNothing);
+    await tap(t, find.byKey(const Key('board-more')));
+    await tap(t, find.byKey(const Key('menu-board-look')));
+    await tap(t, find.byKey(const Key('look-linen')));
+    await tap(t, find.byKey(const Key('look-apply')));
+    expect(find.text('Pay once. Keep it.'), findsOneWidget);
+    expect(c.state!.get('boards', board).data['appearance'], isNull);
+    // Bought on the Pro page: back on the board, the look is kept.
+    debugProOverride = true;
+    await t.pageBack();
+    await settle(t);
+    expect(c.state!.get('boards', board).str('appearance'), 'linen');
+    expect(find.byKey(const Key('look-list')), findsNothing);
+  });
+
+  testWidgets('export shows the picture first; Pro styles can be seen but '
+      'saving them asks for Pro', (t) async {
+    await boot(t, studyState(), size: const Size(1000, 800));
+    await tap(t, find.byKey(const Key('board-$board')));
+    await tap(t, find.byKey(const Key('board-more')));
+    await tap(t, find.byKey(const Key('menu-export')));
+    expect(find.text('Semester 1'), findsWidgets);
+    await tap(t, find.byKey(const Key('export-style-poster')));
+    expect(
+      find.text('This style saves with Pro. Plain stays free.'),
+      findsOneWidget,
+    );
+    await tap(t, find.byKey(const Key('export-png')));
+    expect(find.text('Pay once. Keep it.'), findsOneWidget);
+  });
+
+  testWidgets('setting a card to repeat asks for Pro; with Pro it repeats', (
+    t,
+  ) async {
+    final c = await boot(t, studyState());
+    await tap(t, find.byKey(const Key('board-$board')));
+    final card = topTasks(c.state!, board: board).first;
+    await tap(t, find.byKey(ValueKey('card-${card.id}')));
+    await tap(t, find.byKey(const Key('card-repeat')));
+    await tap(t, find.byKey(const Key('card-repeat-weekly')));
+    expect(find.text('Pay once. Keep it.'), findsOneWidget);
+    expect(c.state!.get('tasks', card.id).data['repeat'], isNull);
+    // Bought on the Pro page: the repeat is set on the way back.
+    debugProOverride = true;
+    await t.pageBack();
+    await settle(t);
+    expect(c.state!.get('tasks', card.id).str('repeat'), 'weekly');
+  });
 }

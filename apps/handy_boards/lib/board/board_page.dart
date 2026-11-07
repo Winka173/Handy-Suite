@@ -3,7 +3,7 @@ import 'package:handy_boards_engine/handy_boards_engine.dart';
 import 'package:handy_ui/kit.dart';
 import '../card/card_sheet.dart';
 import '../card/cover_picker.dart';
-import '../design/theme.dart';
+import '../design/looks.dart';
 import '../pro/pro.dart';
 import '../scope.dart';
 import '../ui/look.dart';
@@ -11,6 +11,7 @@ import 'board_menus.dart';
 import 'categories_sheet.dart';
 import 'category_strip.dart';
 import 'kanban_view.dart';
+import 'look_picker.dart';
 
 /// Shows [message] with an Undo that steps the controller back once.
 void showUndo(BuildContext context, BoardsScope scope, String message) {
@@ -39,6 +40,9 @@ class BoardPage extends StatefulWidget {
 class _BoardPageState extends State<BoardPage> {
   String? category;
   bool searching = false, dueSoon = false, showStrip = true;
+
+  /// While choosing a look: the one being tried (shown, not saved).
+  String? previewLook;
   final query = TextEditingController();
   final kanban = GlobalKey<KanbanViewState>();
   BoardsScope get scope => widget.scope;
@@ -61,6 +65,7 @@ class _BoardPageState extends State<BoardPage> {
   Future<void> _move(String card, String column, int index) async {
     final s = scope.state;
     final from = s.get('tasks', card).str('status');
+    final repeated = s.get('tasks', card).data['repeatedAs'];
     await scope.run(
       context,
       () => scope.controller.change(
@@ -69,14 +74,18 @@ class _BoardPageState extends State<BoardPage> {
       ),
     );
     if (!mounted || from == column) return;
+    final to = scope.state.get('statuses', column).str('title');
+    final next = scope.state.maybe('tasks', card)?.data['repeatedAs'];
     showUndo(
       context,
       scope,
-      tr(
-        context,
-        'Moved to ${scope.state.get('statuses', column).str('title')}',
-        'Đã chuyển sang ${scope.state.get('statuses', column).str('title')}',
-      ),
+      next != null && next != repeated
+          ? tr(
+              context,
+              'Moved to $to · the next one is waiting',
+              'Đã chuyển sang $to · lần tiếp theo đã có',
+            )
+          : tr(context, 'Moved to $to', 'Đã chuyển sang $to'),
     );
   }
 
@@ -130,10 +139,10 @@ class _BoardPageState extends State<BoardPage> {
 
   Widget _page(BuildContext context, BoardsState s, BoardRecord b) {
     final theme = Theme.of(context);
-    final p = BoardsPalette.of(context);
     final now = scope.clock();
     final sum = boardSummary(s, widget.board, now: now);
     final detailed = b.str('presentation') == 'detailed';
+    final look = lookById(previewLook ?? b.data['appearance'] as String?);
     final hasCategories = categoryProgress(s, widget.board).isNotEmpty;
     final title = Row(
       children: [
@@ -194,7 +203,16 @@ class _BoardPageState extends State<BoardPage> {
       IconButton(
         key: const Key('board-more'),
         tooltip: tr(context, 'Board options', 'Tuỳ chọn bảng'),
-        onPressed: () => boardMenu(context, scope, widget.board),
+        onPressed: () => boardMenu(
+          context,
+          scope,
+          widget.board,
+          onLook: () => setState(
+            () => previewLook = s
+                .get('boards', widget.board)
+                .str('appearance', 'default'),
+          ),
+        ),
         icon: const Icon(Icons.more_vert),
       ),
     ];
@@ -281,6 +299,7 @@ class _BoardPageState extends State<BoardPage> {
               board: widget.board,
               now: now,
               detailed: detailed,
+              columnColor: look.column(context),
               filter: filter,
               actions: KanbanActions(
                 open: (card) => openCard(context, scope, card.id),
@@ -313,9 +332,35 @@ class _BoardPageState extends State<BoardPage> {
             titleSpacing: 0,
             title: title,
             actions: [...actions, const SizedBox(width: 4)],
-            backgroundColor: p.canvas,
+            backgroundColor: look.page(context),
           ),
+          backgroundColor: look.page(context),
           body: SafeArea(top: false, child: body),
+          bottomNavigationBar: previewLook == null
+              ? null
+              : LookPicker(
+                  current: previewLook!,
+                  onPick: (id) => setState(() => previewLook = id),
+                  onCancel: () => setState(() => previewLook = null),
+                  onApply: () async {
+                    final id = previewLook!;
+                    if (lookById(id).pro &&
+                        !await requirePro(context, ProFeature.looks))
+                      return;
+                    if (!mounted) return;
+                    await scope.run(
+                      this.context,
+                      () => scope.controller.change(
+                        (s) => setBoardLook(
+                          s,
+                          widget.board,
+                          appearance: id == 'default' ? null : id,
+                        ),
+                      ),
+                    );
+                    if (mounted) setState(() => previewLook = null);
+                  },
+                ),
         ),
       ),
     );

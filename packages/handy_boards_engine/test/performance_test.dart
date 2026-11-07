@@ -3,18 +3,15 @@ import 'dart:convert';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:handy_boards_engine/handy_boards_engine.dart';
 
+import 'engine_test.dart' show fixture;
+
 void main() {
   test(
     'measure canonical task operations at 100/1000/10000/50000',
     () {
       final metrics = <Map<String, dynamic>>[];
       for (final count in [100, 1000, 10000, 50000]) {
-        final base = createBoard(
-              BoardsState(),
-              'Performance',
-              boardId: 'b',
-              template: 'personal',
-            ),
+        final base = fixture(title: 'Performance'),
             category = base.rows('categories').first.id,
             status = base.rows('statuses').first.id,
             watch = Stopwatch()..start();

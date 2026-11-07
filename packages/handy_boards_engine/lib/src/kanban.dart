@@ -292,7 +292,10 @@ BoardsState moveCard(
     if (ordered[i].number('order') != i || ordered[i].id == card)
       e.put('tasks', e.data['tasks']![ordered[i].id]!.copy({'order': i}));
   _touch(e, t.str('board'), now);
-  return e.finish();
+  final moved = e.finish();
+  return t.str('status') != column && target.flag('done')
+      ? repeatIfDone(moved, card, now: now)
+      : moved;
 }
 
 /// A copy of a card just under it: same column, category, note, cover and
@@ -487,6 +490,7 @@ BoardsState setBoardLook(
   BoardsState s,
   String board, {
   Object? cover = _keep,
+  Object? appearance = _keep,
   String? presentation,
   bool? pinned,
   DateTime? now,
@@ -496,6 +500,7 @@ BoardsState setBoardLook(
     'boards',
     b.copy({
       if (!identical(cover, _keep)) 'cover': cover,
+      if (!identical(appearance, _keep)) 'appearance': appearance,
       'presentation': ?presentation,
       'pinned': ?pinned,
       'updated': _now(now),
@@ -618,6 +623,10 @@ void validateKanban(BoardsState s) {
     final look = b.data['presentation'];
     if (look != null && look != 'compact' && look != 'detailed')
       throw const FormatException('Invalid card presentation');
+    final pack = b.data['appearance'];
+    if (pack != null &&
+        (pack is! String || !RegExp(r'^[a-z][a-z-]{0,39}$').hasMatch(pack)))
+      throw const FormatException('Invalid board appearance');
     final template = b.data['template'];
     if (template != null && (template is! String || template.length > 80))
       throw const FormatException('Invalid template id');
@@ -630,6 +639,12 @@ void validateKanban(BoardsState s) {
     if (photo != null &&
         (photo is! String || s.get('attachments', photo).str('task') != t.id))
       throw const FormatException('Invalid cover photo');
+    final repeat = t.data['repeat'];
+    if (repeat != null && !repeatEvery.contains(repeat))
+      throw const FormatException('Invalid repeat');
+    final next = t.data['repeatedAs'];
+    if (next != null && next is! String)
+      throw const FormatException('Invalid repeat pointer');
     final merged = t.data['mergedInto'];
     if (merged != null && merged is! String)
       throw const FormatException('Invalid merge pointer');
@@ -686,5 +701,86 @@ BoardsState archiveFinished(BoardsState s, {int days = 14, DateTime? now}) {
   final e = BoardsEdit(s);
   for (final t in old)
     e.put('tasks', t.copy({'archived': true, 'updated': _now(now)}));
+  return e.finish();
+}
+
+/// How often a repeating card comes back.
+const repeatEvery = {'daily', 'weekly', 'monthly'};
+
+DateTime _nextDay(DateTime d, String every) => switch (every) {
+  'daily' => DateTime(d.year, d.month, d.day + 1),
+  'weekly' => DateTime(d.year, d.month, d.day + 7),
+  // The same day next month, or its last day when that month is shorter.
+  _ => DateTime(
+    d.year,
+    d.month + 1,
+    d.day.clamp(1, DateTime(d.year, d.month + 2, 0).day),
+  ),
+};
+
+/// A repeating card that reached a finished column makes its next time: a
+/// copy at the top of the first unfinished column, subtasks unticked, the
+/// due day one period later (no due day stays none). Each card makes its
+/// next one once, so moving it back and forth never multiplies it.
+BoardsState repeatIfDone(BoardsState s, String card, {DateTime? now}) {
+  final t = s.maybe('tasks', card);
+  final every = t?.data['repeat'] as String?;
+  if (t == null || every == null || t.data['repeatedAs'] != null) return s;
+  final columns = columnsOf(s, t.str('board'));
+  if (!columns.any((c) => c.id == t.str('status') && c.flag('done'))) return s;
+  final first = columns.firstWhere(
+    (c) => !c.flag('done'),
+    orElse: () => columns.first,
+  );
+  final id = newId(), at = _now(now), e = BoardsEdit(s);
+  final due = dueDay(t);
+  Json? nextDue;
+  if (due != null) {
+    final n = _nextDay(due, every);
+    final old = t.data['due'] as Map;
+    nextDue = old['kind'] == 'day'
+        ? {
+            'kind': 'day',
+            'day':
+                '${n.year.toString().padLeft(4, '0')}-'
+                '${n.month.toString().padLeft(2, '0')}-'
+                '${n.day.toString().padLeft(2, '0')}',
+          }
+        : {
+            ...Map<String, dynamic>.from(old),
+            'at': DateTime.parse(old['at'] as String)
+                .add(_nextDay(due, every).difference(due))
+                .toUtc()
+                .toIso8601String(),
+          };
+  }
+  final ids = <String, String>{};
+  for (final a in s.related('attachments', card)) {
+    ids[a.id] = newId();
+    e.put('attachments', a.copy({'id': ids[a.id], 'task': id}));
+  }
+  e.put(
+    'tasks',
+    BoardRecord({
+      ...t.toJson(),
+      'id': id,
+      'status': first.id,
+      'order': -1,
+      'created': at,
+      'updated': at,
+      'completedAt': null,
+      'due': nextDue,
+      'repeatedAs': null,
+      'suggestedStatus': null,
+      'coverPhoto': ids[t.data['coverPhoto']],
+    }),
+  );
+  for (final c in s.related('checklist', card))
+    e.put(
+      'checklist',
+      c.copy({'id': newId(), 'task': id, 'done': false, 'completedAt': null}),
+    );
+  e.put('tasks', t.copy({'repeatedAs': id}));
+  e.event(id, 'created', now ?? DateTime.now(), details: {'repeatOf': card});
   return e.finish();
 }

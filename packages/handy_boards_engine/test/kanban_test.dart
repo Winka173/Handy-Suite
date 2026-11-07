@@ -307,4 +307,42 @@ void main() {
     expect(s.get('tasks', card.id).flag('archived'), isTrue);
     expect(s.get('tasks', card.id).flag('trashed'), isFalse);
   });
+
+  test('a repeating card comes back once, a period later, unticked', () {
+    var s = studyBoard(vi: false);
+    final b = boardOf(s),
+        done = columnsOf(s, b).last.id,
+        todo = columnsOf(s, b).first.id;
+    final card = topTasks(s, board: b).firstWhere(
+      (t) => s.related('checklist', t.id).isNotEmpty && t.str('status') != done,
+    );
+    s = s.put(
+      'tasks',
+      s.get('tasks', card.id).copy({
+        'repeat': 'monthly',
+        'due': {'kind': 'day', 'day': '2026-01-31'},
+      }),
+    );
+    for (final c in subtasksOf(s, card.id)) s = toggleChecklist(s, c.id, true);
+    s = moveCard(s, card.id, column: done, index: 0, now: now);
+    final next = s.get('tasks', s.get('tasks', card.id).str('repeatedAs'));
+    expect(next.str('status'), todo);
+    expect(next.str('title'), card.str('title'));
+    expect(next.str('category'), card.str('category'));
+    expect(next.data['due'], {'kind': 'day', 'day': '2026-02-28'});
+    expect(next.str('repeat'), 'monthly');
+    expect(subtaskProgress(s, next.id).done, 0);
+    expect(cardsIn(s, todo).first.id, next.id);
+    // Back and forth: no second copy.
+    final count = topTasks(s, board: b).length;
+    s = moveCard(s, card.id, column: todo, index: 0);
+    s = moveCard(s, card.id, column: done, index: 0);
+    expect(topTasks(s, board: b), hasLength(count));
+    expect(
+      () => s
+          .put('tasks', s.get('tasks', card.id).copy({'repeat': 'hourly'}))
+          .validate(),
+      throwsFormatException,
+    );
+  });
 }

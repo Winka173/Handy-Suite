@@ -304,83 +304,6 @@ BoardsState changeStatus(
   return e.finish();
 }
 
-BoardsState moveTasks(
-  BoardsState s,
-  Set<String> taskIds,
-  String board, {
-  String? category,
-  String? status,
-  DateTime? now,
-}) {
-  s.get('boards', board);
-  final e = BoardsEdit(s), at = now ?? DateTime.now();
-  final moving = {...taskIds};
-  // Move complete subtrees, not orphaned child records.
-  moving.addAll(taskDescendants(s, moving));
-  final targetStatus =
-      status ??
-      s
-          .rows('statuses')
-          .firstWhere((v) => v.str('board') == board && !v.flag('done'))
-          .id;
-  for (final id in moving) {
-    final t = s.get('tasks', id), cross = t.str('board') != board;
-    if (cross &&
-        s
-            .rows('dependencies')
-            .any(
-              (d) =>
-                  moving.contains(d.str('before')) !=
-                      moving.contains(d.str('after')) &&
-                  (d.str('before') == id || d.str('after') == id),
-            ))
-      throw const FormatException(
-        'Move linked dependencies together or remove links first',
-      );
-    e.put(
-      'tasks',
-      t.copy({
-        'board': board,
-        'category': category,
-        'status': cross ? targetStatus : status ?? t.str('status'),
-        'parent': !cross || moving.contains(t.str('parent'))
-            ? t.data['parent']
-            : null,
-        if (cross) 'tags': <String>[],
-        if (cross) 'suggestedStatus': null,
-        if (cross) 'custom': <String, dynamic>{},
-      }),
-    );
-    e.event(
-      id,
-      'moved',
-      at,
-      details: {
-        'fromBoard': t.str('board'),
-        'toBoard': board,
-        'category': category,
-      },
-    );
-    for (final k in [
-      'checklist',
-      'attachments',
-      'reminders',
-      'recurrence',
-      'sessions',
-    ])
-      for (final r in s.rows(k).where((r) => r.str('task') == id))
-        e.put(
-          k,
-          r.copy({
-            'board': board,
-            if (cross && k == 'recurrence' && r.data['status'] != null)
-              'status': targetStatus,
-          }),
-        );
-  }
-  return e.finish();
-}
-
 BoardsState reorder(BoardsState s, String kind, List<String> ids) {
   if (!['categories', 'statuses', 'tasks', 'checklist'].contains(kind) ||
       ids.toSet().length != ids.length)
@@ -518,67 +441,11 @@ BoardsState toggleChecklist(
   );
 }
 
-BoardsState addDependency(BoardsState s, String before, String after) {
-  if (s
-      .rows('dependencies')
-      .any((r) => r.str('before') == before && r.str('after') == after))
-    return s;
-  final next = s.put(
-    'dependencies',
-    BoardRecord({'id': newId(), 'before': before, 'after': after}),
-  );
-  next.validate();
-  return next;
-}
-
 bool blocked(BoardsState s, BoardRecord task) =>
     s.related('dependencies', task.id, field: 'after').any((d) {
       final p = s.get('tasks', d.str('before'));
       return !completed(s, p) || p.flag('trashed');
     });
-
-Json summary(
-  BoardsState s,
-  Iterable<BoardRecord> source, {
-  required DateTime now,
-  String? viewZone,
-}) {
-  final tasks = source
-          .where((t) => activeTask(t) && t.data['parent'] == null)
-          .toList(),
-      done = tasks.where((t) => completed(s, t)).length;
-  var estimate = 0, doneEstimate = 0, unknown = 0, overdue = 0;
-  for (final t in tasks) {
-    final today = localDay(
-      now,
-      viewZone ?? s.get('boards', t.str('board')).str('zone'),
-    );
-    final n = t.number('estimate');
-    if (n > 0) {
-      estimate += n;
-      if (completed(s, t)) doneEstimate += n;
-    } else if (t.str('kind') != 'milestone') {
-      unknown++;
-    }
-    if (!completed(s, t) && t.data['due'] != null) {
-      final d = object(t.data['due']);
-      if (d['kind'] == 'day'
-          ? day(d['day']).compareTo(today) < 0
-          : _instant(d['at']).isBefore(now))
-        overdue++;
-    }
-  }
-  return {
-    'total': tasks.length,
-    'done': done,
-    'percent': tasks.isEmpty ? null : 100 * done / tasks.length,
-    'overdue': overdue,
-    'estimate': estimate,
-    'doneEstimate': doneEstimate,
-    'unknownEstimates': unknown,
-    'weightedPercent': estimate == 0 ? null : 100 * doneEstimate / estimate,
-  };
-}
 
 void validateTaskFilter(Json filter) {
   const supported = {

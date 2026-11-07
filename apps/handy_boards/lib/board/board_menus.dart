@@ -1,7 +1,6 @@
 import 'package:handy_boards_engine/handy_boards_engine.dart';
 import 'package:handy_ui/kit.dart';
 import '../design/theme.dart';
-import '../features/portability.dart';
 import '../pro/pro.dart';
 import '../scope.dart';
 import '../ui/look.dart';
@@ -95,7 +94,12 @@ Future<String?> askText(
 }
 
 /// Everything about the board that is not a card.
-Future<void> boardMenu(BuildContext context, BoardsScope scope, String board) {
+Future<void> boardMenu(
+  BuildContext context,
+  BoardsScope scope,
+  String board, {
+  VoidCallback? onLook,
+}) {
   final b = scope.state.get('boards', board);
   final detailed = b.str('presentation') == 'detailed';
   return _sheet<void>(context, b.str('title'), (sheet) {
@@ -210,6 +214,14 @@ Future<void> boardMenu(BuildContext context, BoardsScope scope, String board) {
             );
         }),
       ),
+      if (onLook != null)
+        _row(
+          sheet,
+          Icons.palette_outlined,
+          tr(sheet, 'Board look', 'Giao diện bảng'),
+          () => then(() async => onLook()),
+          key: const Key('menu-board-look'),
+        ),
       _row(
         sheet,
         Icons.insights_outlined,
@@ -224,9 +236,10 @@ Future<void> boardMenu(BuildContext context, BoardsScope scope, String board) {
         sheet,
         Icons.ios_share,
         tr(sheet, 'Export board', 'Xuất bảng'),
-        () => then(
-          () => scope.run(context, () => exportBoards(context, scope, board)),
-        ),
+        () => then(() async {
+          await Navigator.pushNamed(context, '/export', arguments: board);
+        }),
+        key: const Key('menu-export'),
       ),
       _row(
         sheet,

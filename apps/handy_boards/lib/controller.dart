@@ -12,7 +12,6 @@ class BoardsController extends ChangeNotifier {
   int _pending = 0;
   bool get busy => _pending > 0;
   final adsVisible = ValueNotifier(false);
-  bool advancedEnabled = false;
   Future<void> Function(BoardsState)? afterCommit;
   String? adapterWarning;
   Future<void> _queue = Future.value();
@@ -60,31 +59,6 @@ class BoardsController extends ChangeNotifier {
         final retention = next.preferences['historyDays'] as int? ?? 0;
         if (retention > 0)
           next = retainActivity(next, retention, DateTime.now());
-        if (history &&
-            advancedEnabled &&
-            next.rows('rules').any((r) => r.flag('enabled'))) {
-          final eventId = newId();
-          for (final task in next.rows('tasks').toList()) {
-            final old = before.maybe('tasks', task.id);
-            final trigger = old == null
-                ? 'created'
-                : old.data['category'] != task.data['category']
-                ? 'moved'
-                : !completed(before, old) && completed(next, task)
-                ? 'completed'
-                : old.data['due'].toString() != task.data['due'].toString()
-                ? 'due changed'
-                : null;
-            if (trigger != null)
-              next = runAutomations(
-                next,
-                task.id,
-                trigger,
-                '$eventId/${task.id}',
-                now: DateTime.now(),
-              );
-          }
-        }
         next.validate();
         await store!.commit(next, expectedRevision: before.revision);
         if (history) {

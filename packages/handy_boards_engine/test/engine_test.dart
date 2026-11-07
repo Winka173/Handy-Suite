@@ -2,8 +2,19 @@ import 'dart:typed_data';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:handy_boards_engine/handy_boards_engine.dart';
 
-BoardsState fixture() =>
-    createBoard(BoardsState(), 'Semester 1', template: 'study', boardId: 'b');
+BoardsState fixture({String title = 'Semester 1'}) {
+  final s = createKanbanBoard(
+    BoardsState(),
+    title: title,
+    preset: presetById('study'),
+    boardId: 'b',
+  );
+  // These tests supply their own cards; keep the preset's columns/categories.
+  return s
+      .remove('checklist', s.rows('checklist').map((r) => r.id).toSet())
+      .remove('tasks', s.rows('tasks').map((r) => r.id).toSet());
+}
+
 BoardsState withTask(BoardsState s, {String id = 't', String? parent}) =>
     saveTask(
       s,
@@ -27,21 +38,16 @@ void main() {
           .firstWhere((r) => r.str('title') == 'Doing');
       s = changeStatus(s, 't', doing.id);
       expect(s.get('tasks', 't').str('category'), category);
+      expect(changeStatus(s, 't', doing.id), same(s));
       expect(queryTasks(s).single.id, 't');
     },
   );
-  test(
-    'empty board and generic templates never create hidden example tasks',
-    () {
-      final s = createBoard(BoardsState(), 'Life', template: 'personal');
-      expect(s.rows('tasks'), isEmpty);
-      expect(s.rows('subjects'), isEmpty);
-      expect(
-        s.rows('categories').map((r) => r.str('title')),
-        containsAll(['Home', 'Health', 'Money', 'Errands']),
-      );
-    },
-  );
+  test('a blank Kanban board never creates hidden example tasks', () {
+    final s = createKanbanBoard(BoardsState(), title: 'Life');
+    expect(s.rows('tasks'), isEmpty);
+    expect(s.rows('subjects'), isEmpty);
+    expect(s.rows('categories'), isEmpty);
+  });
   test('subtask and checklist do not inflate denominator', () {
     var s = withTask(withTask(fixture()), id: 'child', parent: 't');
     s = s.put(
@@ -49,13 +55,25 @@ void main() {
       BoardRecord({'id': 'check', 'task': 't', 'title': 'Read'}),
     );
     s = toggleChecklist(s, 'check', true);
-    expect(summary(s, s.rows('tasks'), now: DateTime.utc(2026))['total'], 1);
+    expect(boardSummary(s, 'b', now: DateTime.utc(2026)).cards, 1);
     expect(s.get('checklist', 'check').data['completedAt'], isNotNull);
   });
   test('dependency and parent cycles rejected without altering input', () {
     var s = withTask(withTask(fixture()), id: 'u');
-    s = addDependency(s, 't', 'u');
-    expect(() => addDependency(s, 'u', 't'), throwsFormatException);
+    s = s.put(
+      'dependencies',
+      BoardRecord({'id': 'dep', 'before': 't', 'after': 'u'}),
+    );
+    s.validate();
+    expect(
+      () => s
+          .put(
+            'dependencies',
+            BoardRecord({'id': 'reverse', 'before': 'u', 'after': 't'}),
+          )
+          .validate(),
+      throwsFormatException,
+    );
     expect(s.rows('dependencies').length, 1);
     expect(
       () =>
@@ -63,20 +81,7 @@ void main() {
       throwsFormatException,
     );
   });
-  test(
-    'move subtree atomically preserves UUIDs and drops incompatible custom scope',
-    () {
-      var s = withTask(withTask(fixture()), id: 'child', parent: 't');
-      s = createBoard(s, 'Personal', boardId: 'b2', template: 'personal');
-      final category = s
-          .rows('categories')
-          .firstWhere((r) => r.str('board') == 'b2');
-      final next = moveTasks(s, {'t'}, 'b2', category: category.id);
-      expect(next.get('tasks', 'child').str('board'), 'b2');
-      expect(next.get('tasks', 'child').str('parent'), 't');
-      expect(s.get('tasks', 't').str('board'), 'b');
-    },
-  );
+
   test('category deletion moves to uncategorized without removing tasks', () {
     final s = withTask(fixture()),
         c = s.get('tasks', 't').str('category'),
@@ -156,61 +161,23 @@ void main() {
       );
     },
   );
-  test('grade validation and impossible remaining target', () {
-    final grades = [
-      BoardRecord({'id': 'g', 'weight': 50, 'possible': 10, 'earned': 2}),
-      BoardRecord({'id': 'g2', 'weight': 50, 'possible': 10}),
-    ];
-    final p = gradePlan(grades, target: 90);
-    expect(p['requiredPercent'], 160);
-    expect(p['feasible'], false);
-    expect(() => gradePlan([grades.first], target: 50), throwsFormatException);
-    expect(
-      () =>
-          validateGrade(BoardRecord({'id': 'x', 'weight': -1, 'possible': 10})),
-      throwsFormatException,
-    );
+  test('legacy grades still validate assessment weights and scores', () {
+    final valid = BoardRecord({
+      'id': 'g',
+      'weight': 50,
+      'possible': 10,
+      'earned': 2,
+    });
+    validateGrade(valid);
+    for (final changes in [
+      {'weight': -1},
+      {'possible': 0},
+      {'earned': 11},
+    ]) {
+      expect(() => validateGrade(valid.copy(changes)), throwsFormatException);
+    }
   });
-  test(
-    'focus timestamps survive restart; pause/resume do not double count',
-    () {
-      var s = startFocus(withTask(fixture()), 't', DateTime.utc(2026, 1, 1));
-      final id = s.rows('sessions').single.id;
-      s = pauseFocus(
-        BoardsState.fromJson(s.toJson()),
-        id,
-        DateTime.utc(2026, 1, 1, 0, 2),
-      );
-      expect(s.get('sessions', id).number('elapsed'), 120);
-      s = pauseFocus(s, id, DateTime.utc(2026, 1, 1, 0, 3));
-      expect(s.get('sessions', id).number('elapsed'), 120);
-      s = resumeFocus(s, id, DateTime.utc(2026, 1, 1, 0, 4));
-      s = pauseFocus(s, id, DateTime.utc(2026, 1, 1, 0, 5));
-      expect(s.get('sessions', id).number('elapsed'), 180);
-    },
-  );
-  test('automation exactly once per event and no recursive execution', () {
-    var s = withTask(fixture());
-    s = s.put(
-      'rules',
-      BoardRecord({
-        'id': 'r',
-        'board': 'b',
-        'trigger': 'created',
-        'enabled': true,
-        'actions': [
-          {'type': 'priority', 'value': 3},
-          {'type': 'checklist', 'value': 'Review'},
-        ],
-      }),
-    );
-    s = runAutomations(s, 't', 'created', 'event1', now: DateTime.utc(2026));
-    expect(s.get('tasks', 't').number('priority'), 3);
-    expect(s.rows('checklist').length, 1);
-    s = runAutomations(s, 't', 'created', 'event1', now: DateTime.utc(2026));
-    expect(s.rows('checklist').length, 1);
-    expect(s.rows('executions').length, 1);
-  });
+
   test(
     'JSON ZIP exact round trips, merge remaps references, corruption rejected',
     () {

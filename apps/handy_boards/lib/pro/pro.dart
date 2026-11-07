@@ -5,7 +5,7 @@ import '../design/theme.dart';
 /// What Pro Lifetime adds. Everything a board needs to work stays free:
 /// boards, cards, categories, subtasks, drag and drop, due dates, search,
 /// backup and plain export.
-enum ProFeature { templates, covers, automation, export, insights }
+enum ProFeature { templates, covers, looks, automation, export, insights }
 
 /// Whether this device has a verified Pro Lifetime.
 bool hasPro(BuildContext context) =>
@@ -52,6 +52,16 @@ class ProPage extends StatelessWidget {
           context,
           'The full cover library. Free keeps a good selection in every family; tap any cover to see it on your card before deciding.',
           'Toàn bộ thư viện bìa. Bản miễn phí vẫn có đủ bìa đẹp ở mọi họ; chạm một bìa để xem ngay trên thẻ trước khi quyết định.',
+        ),
+      ),
+      (
+        ProFeature.looks,
+        Icons.palette_outlined,
+        tr(context, 'Board looks', 'Giao diện bảng'),
+        tr(
+          context,
+          'Five grounds for your boards, light and dark. Try each on your own board first.',
+          'Năm nền cho bảng, sáng và tối. Thử ngay trên bảng của bạn trước.',
         ),
       ),
       (

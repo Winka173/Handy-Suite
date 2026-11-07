@@ -1,5 +1,4 @@
 import 'dart:convert';
-import 'dart:io';
 import 'dart:typed_data';
 import 'package:archive/archive.dart';
 import 'package:crypto/crypto.dart';
@@ -65,7 +64,21 @@ void main() {
     'canonical CSV preserves task UUID, tags, Unicode, time and ordering',
     () {
       var s = withTask(fixture());
-      s = assignTags(s, 't', 'Toán, school');
+      s = s
+          .put(
+            'tags',
+            BoardRecord({'id': 'math', 'board': 'b', 'title': 'Toán'}),
+          )
+          .put(
+            'tags',
+            BoardRecord({'id': 'school', 'board': 'b', 'title': 'school'}),
+          );
+      s = s.put(
+        'tasks',
+        s.get('tasks', 't').copy({
+          'tags': ['math', 'school'],
+        }),
+      );
       s = s.put(
         'tasks',
         s.get('tasks', 't').copy({
@@ -90,61 +103,25 @@ void main() {
       expect(() => importOwnTaskCsv(base, 'b', rows), throwsFormatException);
     },
   );
-  test(
-    'XLSX real archive and safe template contain no history or attachments',
-    () {
-      final s = withTask(fixture());
-      final bytes = exportXlsx(s, 'b'),
-          archive = ZipDecoder().decodeBytes(bytes);
-      expect(archive.findFile('xl/worksheets/sheet1.xml'), isNotNull);
-      final out = Directory('../../docs/qa/evidence/exports')
-        ..createSync(recursive: true);
-      File('${out.path}/boards-tasks.xlsx').writeAsBytesSync(bytes);
-      final template = exportBoardTemplate(s, 'b'),
-          next = applyBoardTemplate(
-            BoardsState(),
-            template,
-            title: 'Copy',
-            confirmed: true,
-          );
-      expect(next.rows('tasks').length, 1);
-      expect(next.rows('tasks').single.id, isNot('t'));
-      expect(next.rows('events'), isEmpty);
-      expect(next.rows('attachments'), isEmpty);
-      next.validate();
-    },
-  );
-  test(
-    'saved AND/OR views use canonical IDs and timed range includes end day',
-    () {
-      var s = withTask(fixture());
-      s = s.put(
-        'tasks',
-        s.get('tasks', 't').copy({
-          'due': {
-            'kind': 'time',
-            'at': '2026-11-03T02:00:00Z',
-            'zone': 'Asia/Ho_Chi_Minh',
-          },
-        }),
-      );
-      expect(
-        queryTasks(
-          s,
-          filter: {'dueFrom': '2026-11-03', 'dueTo': '2026-11-03'},
-        ).length,
-        1,
-      );
-      final v = BoardRecord({
-        'id': 'view',
-        'board': 'b',
-        'mode': 'or',
-        'conditions': [
-          {'priority': 3},
-          {'priority': 1},
-        ],
-      });
-      expect(smartViewTasks(s, v).single.id, 't');
-    },
-  );
+
+  test('timed range includes the end day', () {
+    var s = withTask(fixture());
+    s = s.put(
+      'tasks',
+      s.get('tasks', 't').copy({
+        'due': {
+          'kind': 'time',
+          'at': '2026-11-03T02:00:00Z',
+          'zone': 'Asia/Ho_Chi_Minh',
+        },
+      }),
+    );
+    expect(
+      queryTasks(
+        s,
+        filter: {'dueFrom': '2026-11-03', 'dueTo': '2026-11-03'},
+      ).length,
+      1,
+    );
+  });
 }

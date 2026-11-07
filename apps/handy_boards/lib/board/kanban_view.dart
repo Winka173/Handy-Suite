@@ -69,6 +69,9 @@ class KanbanView extends StatefulWidget {
   final KanbanActions actions;
   final DateTime now;
   final bool detailed;
+
+  /// The column fill of the board's look (null: the theme's).
+  final Color? columnColor;
   const KanbanView({
     super.key,
     required this.state,
@@ -77,6 +80,7 @@ class KanbanView extends StatefulWidget {
     this.filter = const KanbanFilter(),
     this.actions = const KanbanActions(),
     this.detailed = false,
+    this.columnColor,
   });
   @override
   State<KanbanView> createState() => KanbanViewState();
@@ -168,6 +172,7 @@ class KanbanViewState extends State<KanbanView> {
           actions: widget.actions,
           now: widget.now,
           detailed: widget.detailed,
+          color: widget.columnColor,
           onDragStart: () => setState(() => dragging = true),
           onDragMove: (g) => _dragAt(g, box.maxWidth),
           onDragEnd: _dragEnd,
@@ -230,6 +235,7 @@ class ColumnView extends StatefulWidget {
   final KanbanActions actions;
   final DateTime now;
   final bool detailed;
+  final Color? color;
   final VoidCallback onDragStart, onDragEnd;
   final ValueChanged<Offset> onDragMove;
   const ColumnView({
@@ -242,6 +248,7 @@ class ColumnView extends StatefulWidget {
     required this.actions,
     required this.now,
     required this.detailed,
+    this.color,
     required this.onDragStart,
     required this.onDragMove,
     required this.onDragEnd,
@@ -513,7 +520,7 @@ class _ColumnViewState extends State<ColumnView> {
 
     return Container(
       decoration: BoxDecoration(
-        color: p.raised,
+        color: widget.color ?? p.raised,
         borderRadius: BorderRadius.circular(BoardsRadii.column),
       ),
       padding: const EdgeInsets.fromLTRB(6, 4, 6, 4),

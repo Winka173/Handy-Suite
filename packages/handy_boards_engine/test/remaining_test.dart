@@ -1,4 +1,3 @@
-import 'dart:convert';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:handy_boards_engine/handy_boards_engine.dart';
 import 'engine_test.dart' show fixture, withTask;
@@ -126,62 +125,6 @@ void main() {
         ),
         throwsFormatException,
       );
-    },
-  );
-  test(
-    'Study reports retain unknown scores and provide actual task/exam counts',
-    () {
-      var s = withTask(fixture());
-      final cat = s.get('tasks', 't').str('category');
-      s = s.put(
-        'subjects',
-        BoardRecord({
-          'id': 'subject',
-          'board': 'b',
-          'category': cat,
-          'target': 90,
-          'credits': 3,
-        }),
-      );
-      s = s.put(
-        'tasks',
-        s.get('tasks', 't').copy({
-          'kind': 'exam',
-          'due': {'kind': 'day', 'day': '2026-11-01'},
-        }),
-      );
-      for (final g in [
-        BoardRecord({
-          'id': 'g1',
-          'board': 'b',
-          'category': cat,
-          'title': 'Midterm',
-          'weight': 50,
-          'possible': 10,
-          'earned': 2,
-        }),
-        BoardRecord({
-          'id': 'g2',
-          'board': 'b',
-          'category': cat,
-          'title': 'Final',
-          'weight': 50,
-          'possible': 10,
-        }),
-      ])
-        s = s.put('grades', g);
-      final report = studyReport(s, 'b', DateTime.utc(2026, 11, 2)),
-          row = object((report['subjects'] as List).first);
-      expect(row['graded'], 1);
-      expect(row['assessments'], 2);
-      expect(row['exams'], 1);
-      expect(object(row['grade'])['feasible'], false);
-      expect(row['reasons'], contains('target infeasible'));
-      expect(
-        utf8.encode(studyReportCsv(s, 'b', DateTime.utc(2026, 11, 2))),
-        isNotEmpty,
-      );
-      expect(s.get('grades', 'g2').data['earned'], null);
     },
   );
 }

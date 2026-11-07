@@ -7,6 +7,7 @@ import 'controller.dart';
 import 'create/templates.dart';
 import 'design/identity.dart';
 import 'design/theme.dart';
+import 'export/export_page.dart';
 import 'home/home_page.dart';
 import 'pages/more_pages.dart';
 import 'platform/home_surface.dart';
@@ -217,6 +218,10 @@ class _BoardsAppState extends State<BoardsApp> with WidgetsBindingObserver {
         '/search' => SearchPage(scope: scope),
         '/trash' => TrashPage(scope: scope),
         '/insights' => InsightsPage(
+          scope: scope,
+          board: settings.arguments as String,
+        ),
+        '/export' => ExportPage(
           scope: scope,
           board: settings.arguments as String,
         ),

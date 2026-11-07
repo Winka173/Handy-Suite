@@ -210,4 +210,25 @@ void main() {
     await tap(t, find.byKey(const Key('board-$board')));
     await shot(t, '18-small-board');
   });
+
+  testWidgets('looks and exports', (t) async {
+    await boot(t, sample());
+    await tap(t, find.byKey(const Key('board-$board')));
+    await tap(t, find.byKey(const Key('board-more')));
+    await tap(t, find.byKey(const Key('menu-board-look')));
+    await tap(t, find.byKey(const Key('look-blueprint')));
+    await shot(t, '19-look-picker');
+  });
+
+  testWidgets('export styles', (t) async {
+    await boot(t, sample(locale: 'en'), size: const Size(1280, 900));
+    await tap(t, find.byKey(const Key('board-$board')));
+    await tap(t, find.byKey(const Key('board-more')));
+    await tap(t, find.byKey(const Key('menu-export')));
+    await shot(t, '20-export-plain');
+    await tap(t, find.byKey(const Key('export-style-poster')));
+    await shot(t, '21-export-poster');
+    await tap(t, find.byKey(const Key('export-style-print')));
+    await shot(t, '22-export-print');
+  });
 }

@@ -215,6 +215,20 @@ class _CardDetailState extends State<CardDetail> {
     );
   }
 
+  /// Repeating is Pro; taking a repeat off never is.
+  Future<void> _repeat(String? every) async {
+    if (every != null && !await requirePro(context, ProFeature.automation))
+      return;
+    if (!mounted) return;
+    await _change(
+      (s) => saveTask(
+        s,
+        s.get('tasks', widget.card).copy({'repeat': every, 'repeatedAs': null}),
+        now: scope.clock(),
+      ),
+    );
+  }
+
   Future<void> _due() async {
     final t = _card;
     final current = t.data['due'] is Map && t.data['due']['kind'] == 'day'
@@ -511,6 +525,39 @@ class _CardDetailState extends State<CardDetail> {
                         }(),
                   set: reminder != null,
                   onTap: () => _reminder(reminder),
+                ),
+                MenuAnchor(
+                  menuChildren: [
+                    for (final (v, en, vi) in const [
+                      (null, 'Does not repeat', 'Không lặp lại'),
+                      ('daily', 'Every day', 'Hằng ngày'),
+                      ('weekly', 'Every week', 'Hằng tuần'),
+                      ('monthly', 'Every month', 'Hằng tháng'),
+                    ])
+                      MenuItemButton(
+                        key: Key('card-repeat-${v ?? 'none'}'),
+                        leadingIcon: Icon(
+                          t.data['repeat'] == v ? Icons.check : null,
+                        ),
+                        trailingIcon: v == null || hasPro(context)
+                            ? null
+                            : const ProBadge(),
+                        onPressed: () => _repeat(v),
+                        child: Text(tr(context, en, vi)),
+                      ),
+                  ],
+                  builder: (context, menu, _) => chip(
+                    key: const Key('card-repeat'),
+                    icon: Icons.repeat,
+                    label: switch (t.data['repeat']) {
+                      'daily' => tr(context, 'Every day', 'Hằng ngày'),
+                      'weekly' => tr(context, 'Every week', 'Hằng tuần'),
+                      'monthly' => tr(context, 'Every month', 'Hằng tháng'),
+                      _ => tr(context, 'Repeat', 'Lặp lại'),
+                    },
+                    set: t.data['repeat'] != null,
+                    onTap: () => menu.isOpen ? menu.close() : menu.open(),
+                  ),
                 ),
                 if (cover == null)
                   chip(
