@@ -76,8 +76,8 @@ class ShareSheetActivity : FlutterFragmentActivity() {
                                     thumbnail = call.argument<ByteArray>("thumbnail"),
                                 )
                             }
+                            // The sheet shows "Saved in …", then asks to close.
                             result.success(null)
-                            close()
                         }
                         "discard" -> {
                             (share?.get("id") as? String)?.let { queue.ack(it) }

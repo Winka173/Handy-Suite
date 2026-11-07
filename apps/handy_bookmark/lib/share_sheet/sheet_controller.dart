@@ -102,14 +102,20 @@ class SheetController extends ChangeNotifier {
     this.bridge = const SheetBridge(),
     MetadataClient? metadata,
     this.retryDelay = const Duration(milliseconds: 2200),
-    this.settle = const Duration(milliseconds: 450),
+    this.confirm = const Duration(milliseconds: 1200),
+    this.pictureWait = const Duration(seconds: 4),
   }) : _metadata = metadata;
 
   final SheetBridge bridge;
   final Duration retryDelay;
 
-  /// How long the place just tapped shows its tick before the sheet goes.
-  final Duration settle;
+  /// How long "Saved in …" shows before the sheet goes.
+  final Duration confirm;
+
+  /// How long a tap waits for a picture still on its way, so the link
+  /// keeps the one shown here.
+  final Duration pictureWait;
+  Future<void>? _reading;
   MetadataClient? _metadata;
   final _cancel = CancellationToken();
 
@@ -118,6 +124,9 @@ class SheetController extends ChangeNotifier {
   /// The share could not be handed over (it is saved all the same).
   bool broken = false;
   bool reading = false, busy = false;
+
+  /// The choice is with the share: "Saved in …" shows, then the sheet goes.
+  bool done = false;
   MetadataResult? page;
   Uint8List? picture;
 
@@ -158,7 +167,7 @@ class SheetController extends ChangeNotifier {
     final s = share, u = link;
     if (s == null || u == null || s.images.isNotEmpty) return;
     if (!s.snapshot.read) return;
-    unawaited(_read(u));
+    unawaited(_reading = _read(u));
   }
 
   Future<void> _read(UrlCandidate u) async {
@@ -217,16 +226,39 @@ class SheetController extends ChangeNotifier {
     return InNewCollection(named.first);
   }
 
-  /// One tap: the share goes there, the place shows its tick a moment,
-  /// and the sheet closes. Tapping where it already is just closes (with
-  /// what was read of the page, so the app need not read it again).
+  /// One tap: the share goes there at once and "Saved in …" shows. A
+  /// picture still on its way is waited for a few seconds and sent after,
+  /// so the link keeps the one shown here; then the sheet closes.
   Future<void> put(SheetChoice where) async {
     if (busy || placed != null) return;
     placed = where;
     choice = where;
+    busy = true;
     notifyListeners();
-    await Future<void>.delayed(settle);
-    await save();
+    final shown = Future<void>.delayed(confirm);
+    final hadPicture = picture != null;
+    try {
+      await _send();
+    } catch (_) {
+      // Saved where it arrived all the same; the sheet closes.
+      await close();
+      return;
+    }
+    done = true;
+    notifyListeners();
+    final reading = _reading;
+    if (!hadPicture && reading != null) {
+      await reading.timeout(pictureWait, onTimeout: () {});
+      if (picture != null) {
+        try {
+          await _send();
+        } catch (_) {
+          // The app reads the page itself when it takes the share in.
+        }
+      }
+    }
+    await shown;
+    await close();
   }
 
   /// The name of a place, for the sheet's line "Saved in …".
@@ -240,24 +272,16 @@ class SheetController extends ChangeNotifier {
           ?.name,
   };
 
-  Future<void> save() async {
-    if (busy) return;
-    busy = true;
-    notifyListeners();
-    _cancel.cancel();
+  /// Sends the choice, and what was read of the page with its picture.
+  Future<void> _send() {
     final c = choice;
-    try {
-      await bridge.save(
-        collection: c is InCollection ? c.id : null,
-        newCollection: c is InNewCollection ? c.name : null,
-        // Only a page read whole (with its picture) is kept as it is.
-        metadata: picture == null ? null : page,
-        thumbnail: picture,
-      );
-    } catch (_) {
-      // Saved in Not sorted all the same; the sheet closes.
-      await close();
-    }
+    return bridge.save(
+      collection: c is InCollection ? c.id : null,
+      newCollection: c is InNewCollection ? c.name : null,
+      // Only a page read whole (with its picture) is kept as it is.
+      metadata: picture == null ? null : page,
+      thumbnail: picture,
+    );
   }
 
   Future<void> discard() async {

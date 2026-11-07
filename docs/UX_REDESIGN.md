@@ -2277,8 +2277,9 @@ dải "Mới lưu" (mục chưa xếp đi trước, một nút "Xếp vào…"),
 
 - Việc: thấy đúng thứ mình đang lưu (hình, tiêu đề, trang) và cho nó vào đúng chỗ, ngay trong
   app đang xem. Câu hỏi của khung: "Cho vào đâu?". Hành động chính: chạm vào một chỗ (một chạm,
-  không có nút Lưu riêng: mục đã lưu sẵn; dòng vừa chạm hiện ✓ "Đã cho vào" chừng nửa giây rồi
-  khung đóng).
+  không có nút Lưu riêng: mục đã lưu sẵn). Chạm xong, khung thu lại thành thẻ "✓ Đã lưu · vào
+  <chỗ>" kèm hình nhỏ của mục (~1,2 giây, chạm để đóng ngay). Nếu hình còn đang tải, thẻ chờ tối
+  đa 4 giây để mục giữ đúng hình vừa thấy.
 - Lưu không bao giờ thất bại: link vào hàng chờ riêng ngay khi tới (như trước), trước khi khung
   hiện. Khung chỉ ghi thêm lựa chọn vào mục đang chờ. Đóng (X, Back, chạm ngoài) = giữ ở Chưa xếp,
   cũng là lựa chọn mặc định đang chọn. "Không lưu" là lối riêng, nhỏ, để bỏ mục vừa tới.

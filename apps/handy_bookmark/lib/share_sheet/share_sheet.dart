@@ -116,7 +116,21 @@ class _SheetPageState extends State<_SheetPage> {
                     maxWidth: 560,
                     maxHeight: MediaQuery.sizeOf(context).height * .88,
                   ),
-                  child: _Sheet(c),
+                  // Once placed, the sheet gives way to a small "Saved in …"
+                  // card, as the system's own confirmations do.
+                  child: AnimatedSwitcher(
+                    duration: time,
+                    switchInCurve: Curves.easeOutCubic,
+                    transitionBuilder: (child, run) => FadeTransition(
+                      opacity: run,
+                      child: SizeTransition(
+                        sizeFactor: run,
+                        alignment: Alignment.bottomCenter,
+                        child: child,
+                      ),
+                    ),
+                    child: c.done ? _SavedCard(c) : _Sheet(c),
+                  ),
                 ),
               ),
             ),
@@ -448,6 +462,124 @@ class _Preview extends StatelessWidget {
         updatedAt: now,
       ),
       compact: true,
+    );
+  }
+}
+
+/// The confirmation after a tap: "Saved", where, and the picture of what
+/// was saved. A tap closes it at once.
+class _SavedCard extends StatelessWidget {
+  final SheetController c;
+  const _SavedCard(this.c);
+
+  @override
+  Widget build(BuildContext context) {
+    final p = BookmarkPalette.of(context);
+    final theme = Theme.of(context);
+    final where = c.placed ?? c.choice;
+    final name = c.placeName(where) ?? tr(context, 'Not sorted', 'Chưa xếp');
+    final l = c.share?.snapshot.library;
+    final hue = switch (where) {
+      InCollection(:final id) when l != null => collectionHue(l, id),
+      InNewCollection(:final name) => HandyPalette.forKey(name),
+      _ => null,
+    };
+    final images = c.share?.images ?? const [];
+    final picture = c.picture;
+    return Padding(
+      key: const Key('share-saved'),
+      padding: const EdgeInsets.fromLTRB(16, 0, 16, 32),
+      child: Semantics(
+        liveRegion: true,
+        button: true,
+        label: tr(context, 'Saved in $name', 'Đã lưu vào $name'),
+        excludeSemantics: true,
+        child: Material(
+          color: p.surface,
+          elevation: 8,
+          borderRadius: BorderRadius.circular(20),
+          clipBehavior: Clip.antiAlias,
+          child: InkWell(
+            onTap: c.close,
+            child: Padding(
+              padding: const EdgeInsets.all(14),
+              child: Row(
+                children: [
+                  const AppMark(size: 40, radius: 10),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Row(
+                          children: [
+                            Icon(
+                              Icons.check_circle,
+                              size: 18,
+                              color: p.primary,
+                            ),
+                            const SizedBox(width: 6),
+                            Text(
+                              tr(context, 'Saved', 'Đã lưu'),
+                              style: theme.textTheme.titleMedium,
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 2),
+                        Row(
+                          children: [
+                            if (hue != null) ...[
+                              HandyDot(hue, size: 9),
+                              const SizedBox(width: 6),
+                            ],
+                            Flexible(
+                              child: Text(
+                                tr(context, 'in $name', 'vào $name'),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: theme.textTheme.bodyMedium?.copyWith(
+                                  color: hue == null ? p.muted : p.ink,
+                                  fontWeight: hue == null
+                                      ? null
+                                      : FontWeight.w600,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                  if (picture != null || images.isNotEmpty) ...[
+                    const SizedBox(width: 12),
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(10),
+                      child: SizedBox.square(
+                        dimension: 48,
+                        child: picture != null
+                            ? Image.memory(
+                                picture,
+                                fit: BoxFit.cover,
+                                excludeFromSemantics: true,
+                              )
+                            : Image.file(
+                                File(images.first),
+                                fit: BoxFit.cover,
+                                cacheWidth: 150,
+                                excludeFromSemantics: true,
+                                errorBuilder: (_, _, _) =>
+                                    const SizedBox.shrink(),
+                              ),
+                      ),
+                    ),
+                  ],
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
     );
   }
 }

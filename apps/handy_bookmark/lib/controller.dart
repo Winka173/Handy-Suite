@@ -371,10 +371,14 @@ class SaveController extends ChangeNotifier {
     );
     if (picture == null) return;
     for (final b in saved) {
-      // Only links this share added (or ones never read): a link saved and
-      // read before keeps what it has.
-      if (!{'unavailable', 'failed'}.contains(b.metadataStatus)) continue;
-      await _keepRead(b, read!);
+      // What it says comes from this read only for a link never read; a
+      // link saved before keeps its title. Any link still without a
+      // picture on this device takes the one the sheet showed.
+      if ({'unavailable', 'failed'}.contains(b.metadataStatus)) {
+        await _keepRead(b, read!);
+      } else if (await store!.thumbnail(b.id) != null) {
+        continue;
+      }
       await store!.putThumbnail(b.id, picture);
       _thumbnails.remove(b.id);
     }

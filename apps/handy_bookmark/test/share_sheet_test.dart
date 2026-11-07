@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
@@ -32,6 +33,20 @@ class PictureStore extends TestStore {
       pictures[id] = bytes;
   @override
   Future<Uint8List?> thumbnail(String id) async => pictures[id];
+}
+
+/// A picture that arrives only when [gate] opens.
+class SlowPictureNet extends PictureNet {
+  SlowPictureNet(super.answers, super.picture, this.gate);
+  final Future<void> gate;
+  @override
+  Future<ThumbnailResult> fetchThumbnail(
+    String url, {
+    dynamic cancellation,
+  }) async {
+    await gate;
+    return super.fetchThumbnail(url);
+  }
 }
 
 /// The activity's side of the sheet, recorded.
@@ -109,7 +124,8 @@ Future<(SheetController, FakeBridge)> showSheet(
     bridge: bridge,
     metadata: PictureNet([read], jpeg),
     retryDelay: Duration.zero,
-    settle: const Duration(milliseconds: 300),
+    confirm: const Duration(milliseconds: 300),
+    pictureWait: const Duration(milliseconds: 100),
   );
   addTearDown(c.dispose);
   await t.pumpWidget(ShareSheetApp(controller: c));
@@ -161,19 +177,55 @@ void main() {
 
     await t.tap(find.byKey(Key('share-place-${'c' * 32}')));
     await t.pump();
-    // The place shows its tick while the sheet goes.
-    expect(find.text('Saved in Food'), findsOneWidget);
-    expect(find.text('Added'), findsOneWidget);
-    expect(bridge.saved, isNull);
-    await t.pump(const Duration(milliseconds: 300));
+    // Saved at once; the sheet gives way to "Saved in Food", then goes.
     expect(bridge.saved!['collection'], 'c' * 32);
     expect(bridge.saved!['title'], 'Me at the zoo');
     expect(bridge.saved!['thumbnail'], jpeg);
-
-    // A second tap while it closes does nothing more.
-    await t.tap(find.byKey(const Key('share-place-inbox')));
+    await t.pump(const Duration(milliseconds: 250));
+    expect(find.byKey(const Key('share-saved')), findsOneWidget);
+    expect(find.text('Saved'), findsOneWidget);
+    expect(find.text('in Food'), findsOneWidget);
+    expect(bridge.closed, isFalse);
     await t.pump(const Duration(milliseconds: 300));
+    expect(bridge.closed, isTrue);
+  });
+
+  testWidgets('a tap before the picture came waits for it and sends it', (
+    t,
+  ) async {
+    final gate = Completer<void>();
+    final bridge = FakeBridge(
+      SheetShare(
+        id: 'q',
+        text: video,
+        snapshot: SheetSnapshot.parse(sheetSnapshot(library(), {})),
+      ),
+    );
+    final c = SheetController(
+      bridge: bridge,
+      metadata: SlowPictureNet([read], jpeg, gate.future),
+      retryDelay: Duration.zero,
+      confirm: const Duration(milliseconds: 300),
+      pictureWait: const Duration(seconds: 2),
+    );
+    addTearDown(c.dispose);
+    await t.pumpWidget(ShareSheetApp(controller: c));
+    // The sheet slides up (it starts after its first frame).
+    await t.pump();
+    await t.pump(const Duration(milliseconds: 300));
+    await t.pump(const Duration(milliseconds: 300));
+    expect(c.picture, isNull);
+    await t.tap(find.byKey(Key('share-place-${'c' * 32}')));
+    await t.pump();
+    // The place is kept at once, without a picture yet.
     expect(bridge.saved!['collection'], 'c' * 32);
+    expect(bridge.saved!['thumbnail'], isNull);
+    gate.complete();
+    await t.pump(const Duration(milliseconds: 50));
+    await t.pump(const Duration(milliseconds: 400));
+    expect(bridge.saved!['thumbnail'], jpeg);
+    expect(bridge.saved!['collection'], 'c' * 32);
+    expect(bridge.closed, isTrue);
   });
 
   testWidgets('shared through a collection, it is there; another tap moves '
@@ -184,9 +236,10 @@ void main() {
     expect(find.byKey(const Key('share-sheet-new')), findsOneWidget);
 
     await t.tap(find.byKey(const Key('share-place-inbox')));
-    await t.pump(const Duration(milliseconds: 300));
+    await t.pump();
     expect(bridge.saved!['collection'], isNull);
     expect(bridge.saved!['newCollection'], isNull);
+    await t.pump(const Duration(milliseconds: 300));
   });
 
   testWidgets('a new collection is named in place and the share goes in', (
@@ -198,10 +251,10 @@ void main() {
     await t.enterText(find.byKey(const Key('share-sheet-name')), ' Xem sau ');
     await t.testTextInput.receiveAction(TextInputAction.done);
     await t.pump();
-    expect(find.byKey(const Key('share-sheet-name')), findsNothing);
-    expect(find.text('Saved in Xem sau'), findsOneWidget);
-    await t.pump(const Duration(milliseconds: 300));
     expect(bridge.saved!['newCollection'], 'Xem sau');
+    await t.pump(const Duration(milliseconds: 250));
+    expect(find.text('in Xem sau'), findsOneWidget);
+    await t.pump(const Duration(milliseconds: 300));
     expect(bridge.saved!['collection'], isNull);
   });
 
@@ -303,5 +356,40 @@ void main() {
           .map((x) => x.originalUrl),
       containsAll([video, 'https://example.com/b']),
     );
+  });
+
+  test('a link saved before without a picture takes the sheet’s one and '
+      'keeps its title', () async {
+    final dir = await Directory.systemTemp.createTemp('sheet');
+    addTearDown(() => dir.delete(recursive: true));
+    final thumb = File('${dir.path}/thumb')..writeAsBytesSync(jpeg);
+    final store = PictureStore();
+    final inbox = TestInbox();
+    final c = SaveController(
+      open: () async => store,
+      shares: inbox,
+      metadataClient: ScriptedNet([
+        const MetadataResult(status: 'partial', title: 'Kept title'),
+      ]),
+    );
+    await c.initialize();
+    addTearDown(c.dispose);
+    c.preferences['automaticMetadata'] = false;
+    final b = (await c.quickSave(video, title: 'Kept title')).single;
+    await c.refreshMetadata(b.id);
+    expect(await store.thumbnail(b.id), isNull);
+
+    inbox.pending = [
+      SharedLink.full(
+        'again',
+        video,
+        null,
+        metadata: read,
+        thumbnail: thumb.path,
+      ),
+    ];
+    await c.drain();
+    expect(c.library!.bookmarks.single.title, 'Kept title');
+    expect(await store.thumbnail(b.id), isNotNull);
   });
 }
