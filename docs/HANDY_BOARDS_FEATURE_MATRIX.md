@@ -17,6 +17,7 @@ device- or store-verified unless it says so.
 | Card detail | AUTOMATED_TESTED host UI | Title, column, category, due, reminder (permission asked on first use), subtasks (add, edit, tick, reorder, remove, progress), notes with link chips, duplicate/archive/trash; every change saved with Undo |
 | Covers | AUTOMATED_TESTED | 60 original procedural covers in 10 families (30 free, 30 Pro), 0 raster bytes (`docs/HANDY_BOARDS_ASSETS.md`); picker with Suggested/All/family/Colour/Your photo, live preview, Apply/Cancel; photo covers are attachments in app storage |
 | Columns and boards | AUTOMATED_TESTED engine | Add/rename/reorder/mark finished/delete column (cards must go somewhere); duplicate, pin, archive, delete board (confirmed, Undo) |
+| Time view | AUTOMATED_TESTED host UI | "Board | Time" per board: cards by due day (≤ 14 days) or by week (longer); spans Today, 3 days, Week, 2 weeks, Month, 3 months or custom 1–12 days/weeks/months, remembered per board; Overdue first, No due date tray; drop on a day sets the due day (Undo); opens on today. Not a Gantt (no bars, no times) |
 | Search and filters | IMPLEMENTED | Board search, category filter, "due in 3 days"; search across boards |
 | Onboarding | AUTOMATED_TESTED host UI | Tour on a temporary board (never saved): add a card, move it, category stays when finished; makes a study or blank board, or skip; replay from Settings |
 | Settings | IMPLEMENTED | Bookmark-style groups: look, reminders, Pro + automations, data (backup/restore, archived boards, trash), help, more apps |

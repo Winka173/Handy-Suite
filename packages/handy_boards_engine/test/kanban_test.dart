@@ -345,4 +345,41 @@ void main() {
       throwsFormatException,
     );
   });
+
+  test('a due day set from the week view, and taken off', () {
+    var s = studyBoard(vi: false);
+    final card = topTasks(s).first.id;
+    s = setDueDay(s, card, DateTime(2026, 11, 13));
+    expect(dueDay(s.get('tasks', card)), DateTime(2026, 11, 13));
+    s = setDueDay(s, card, null);
+    expect(dueDay(s.get('tasks', card)), isNull);
+    s = setBoardLook(
+      s,
+      boardOf(s),
+      view: 'time',
+      span: {'unit': 'week', 'count': 2},
+    );
+    expect(s.get('boards', boardOf(s)).str('view'), 'time');
+    expect(s.get('boards', boardOf(s)).data['span'], {
+      'unit': 'week',
+      'count': 2,
+    });
+    expect(
+      () => s
+          .put(
+            'boards',
+            s.get('boards', boardOf(s)).copy({
+              'span': {'unit': 'year', 'count': 1},
+            }),
+          )
+          .validate(),
+      throwsFormatException,
+    );
+    expect(
+      () => s
+          .put('boards', s.get('boards', boardOf(s)).copy({'view': 'gantt'}))
+          .validate(),
+      throwsFormatException,
+    );
+  });
 }

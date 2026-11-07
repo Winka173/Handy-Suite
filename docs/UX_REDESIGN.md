@@ -2735,3 +2735,23 @@ xem trước trước khi mua), không chép nền ngà/teal và không gọi l�
   Trang chủ là các tấm poster bảng: bìa chiếm phần trên, chân tấm mang tông màu của bảng đó.
   Gói giao diện Pro (Vải lanh…) thay tông bìa khi được chọn; "Mặc định" nay là "Theo ảnh bìa".
   Chữ trên nền màu luôn đạt 4.5:1 (tông được ép về độ sáng an toàn).
+
+### Handy Boards · chế độ "Tuần" (2026-11-08, theo feedback tester + chủ chọn)
+- Vì sao: tester hỏi "To Do là hôm nay hay tuần này?" và "thiếu timeline". Cột chỉ nói trạng
+  thái; chế độ Tuần trả lời "việc nào vào ngày nào" mà không thành Gantt (đề bài vẫn loại Gantt).
+- Mỗi bảng có nút chuyển "Bảng | Tuần" ngay cạnh tên bảng; nhớ lựa chọn theo từng bảng.
+- Tuần: đầu là "‹ 10–16 Th11 ›" và "Hôm nay"; bảy ngày Thứ Hai–Chủ nhật. Rộng ≥ 600: bảy cột ngày
+  cạnh nhau (cuộn ngang trong vùng của nó); điện thoại: các ngày xếp dọc, mỗi ngày một mục có tiêu
+  đề ngày, hôm nay nổi bằng nền nhạt màu nhấn và chữ "Hôm nay". Thẻ nằm đúng ngày hạn (cùng thẻ
+  như ở Bảng: nhóm, việc con, bìa; thẻ đã xong gạch ngang). "Quá hạn" đứng đầu khi xem tuần này;
+  "Chưa có hạn" là khay cuối (điện thoại) / cột đầu (rộng).
+- Kéo một thẻ sang ngày khác (hoặc từ khay vào một ngày) là đặt hạn ngày đó; SnackBar "Hạn: Thứ
+  Năm 13/11 · Hoàn tác". Lối không kéo: chip Hạn trong chi tiết thẻ. Kéo vào khay = bỏ hạn.
+- Lọc nhóm, tìm vẫn áp dụng như ở Bảng (thẻ không khớp ẩn hẳn). Ngày trống giữ khung và một dòng
+  "Trống". Bàn phím: ←/→ đổi tuần khi đang ở Tuần.
+- Bỏ: thanh kéo dài nhiều ngày, đường găng, giờ trong ngày, lịch tháng.
+- Sửa cùng ngày (chủ): không cố định một tuần mà là chế độ "Thời gian" với khoảng tuỳ chọn: Hôm
+  nay, 3 ngày, Tuần, 2 tuần, Tháng, 3 tháng, Tuỳ chỉnh (1–12 ngày/tuần/tháng). Khoảng ≤ 14 ngày:
+  mỗi ngày một cột/mục; dài hơn: gom theo tuần ("Tuần 10–16/11"), kéo thẻ vào một tuần là đặt hạn
+  ngày đầu tuần đó (Thứ Hai) trừ khi thẻ đã có hạn trong tuần ấy. ‹ › nhảy đúng một khoảng; nút
+  chuyển ghi "Bảng | Thời gian"; mỗi bảng nhớ chế độ và khoảng (trường `view`, `span`).

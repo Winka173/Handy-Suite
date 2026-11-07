@@ -13,6 +13,7 @@ import 'categories_sheet.dart';
 import 'category_strip.dart';
 import 'kanban_view.dart';
 import 'look_picker.dart';
+import 'time_view.dart';
 
 /// Shows [message] with an Undo that steps the controller back once.
 void showUndo(BuildContext context, BoardsScope scope, String message) {
@@ -90,6 +91,36 @@ class _BoardPageState extends State<BoardPage> {
     );
   }
 
+  /// The board's view and time span are remembered per board, outside
+  /// the undo history.
+  Future<void> _look({String? view, TimeSpan? span}) => scope.run(
+    context,
+    () => scope.controller.change(
+      (s) => setBoardLook(s, widget.board, view: view, span: span?.toJson()),
+      history: false,
+    ),
+  );
+
+  Future<void> _setDue(String card, DateTime? day) async {
+    await scope.run(
+      context,
+      () => scope.controller.change(
+        (s) => setDueDay(s, card, day, now: scope.clock()),
+      ),
+    );
+    if (!mounted) return;
+    final when = day == null ? '' : dueLabel(context, day, scope.clock());
+    final date = day == null ? '' : '${day.day}/${day.month}';
+    final label = when == date ? date : '$when $date';
+    showUndo(
+      context,
+      scope,
+      day == null
+          ? tr(context, 'Due date taken off', 'Đã bỏ hạn')
+          : tr(context, 'Due $label', 'Hạn: $label'),
+    );
+  }
+
   Future<void> _add(String column, String title) => scope.run(
     context,
     () => scope.controller.change((s) {
@@ -146,6 +177,12 @@ class _BoardPageState extends State<BoardPage> {
     final hasCategories = categoryProgress(s, widget.board).isNotEmpty;
     final p = BoardsPalette.of(context);
     final ground = boardGround(context, b, look: previewLook);
+    final timeView = b.str('view') == 'time';
+    // A narrow phone or very large text keeps the board's height: the
+    // Board | Time switch moves into the buttons on the cover.
+    final roomy =
+        MediaQuery.sizeOf(context).width >= 360 &&
+        MediaQuery.textScalerOf(context).scale(1) <= 1.3;
     final wide = MediaQuery.sizeOf(context).width >= 600;
     final title = Padding(
       padding: EdgeInsets.fromLTRB(wide ? 24 : 16, 12, 16, 8),
@@ -170,10 +207,42 @@ class _BoardPageState extends State<BoardPage> {
             ),
             style: theme.textTheme.bodyMedium?.copyWith(color: p.muted),
           ),
+          if (roomy) ...[
+            const SizedBox(height: 10),
+            // Where things are (columns) or when they are due (time).
+            SegmentedButton<String>(
+              key: const Key('board-view'),
+              showSelectedIcon: false,
+              style: const ButtonStyle(visualDensity: VisualDensity.compact),
+              segments: [
+                ButtonSegment(
+                  value: 'board',
+                  icon: const Icon(Icons.view_week_outlined, size: 18),
+                  label: Text(tr(context, 'Board', 'Bảng')),
+                ),
+                ButtonSegment(
+                  value: 'time',
+                  icon: const Icon(Icons.date_range, size: 18),
+                  label: Text(tr(context, 'Time', 'Thời gian')),
+                ),
+              ],
+              selected: {timeView ? 'time' : 'board'},
+              onSelectionChanged: (v) => _look(view: v.first),
+            ),
+          ],
         ],
       ),
     );
     final actions = <Widget>[
+      if (!roomy)
+        IconButton(
+          key: const Key('board-view-toggle'),
+          tooltip: timeView
+              ? tr(context, 'Show the board', 'Xem bảng')
+              : tr(context, 'Show by time', 'Xem theo thời gian'),
+          onPressed: () => _look(view: timeView ? 'board' : 'time'),
+          icon: Icon(timeView ? Icons.view_week_outlined : Icons.date_range),
+        ),
       IconButton(
         key: const Key('board-search'),
         tooltip: tr(context, 'Search cards', 'Tìm thẻ'),
@@ -332,25 +401,38 @@ class _BoardPageState extends State<BoardPage> {
         Expanded(
           child: Padding(
             padding: const EdgeInsets.only(bottom: 8),
-            child: KanbanView(
-              key: kanban,
-              state: s,
-              board: widget.board,
-              now: now,
-              detailed: detailed,
-              columnColor: ground.column,
-              filter: filter,
-              actions: KanbanActions(
-                open: (card) => openCard(context, scope, card.id),
-                move: _move,
-                add: _add,
-                tick: _tick,
-                cardMenu: (card) =>
-                    cardMenu(context, scope, card.id, onMoved: _move),
-                columnMenu: (column) => columnMenu(context, scope, column.id),
-                addColumn: () => addColumnDialog(context, scope, widget.board),
-              ),
-            ),
+            child: timeView
+                ? TimeView(
+                    state: s,
+                    board: widget.board,
+                    now: now,
+                    filter: filter,
+                    span: TimeSpan.read(b.data['span']),
+                    onSpan: (span) => _look(span: span),
+                    open: (card) => openCard(context, scope, card.id),
+                    setDue: _setDue,
+                  )
+                : KanbanView(
+                    key: kanban,
+                    state: s,
+                    board: widget.board,
+                    now: now,
+                    detailed: detailed,
+                    columnColor: ground.column,
+                    filter: filter,
+                    actions: KanbanActions(
+                      open: (card) => openCard(context, scope, card.id),
+                      move: _move,
+                      add: _add,
+                      tick: _tick,
+                      cardMenu: (card) =>
+                          cardMenu(context, scope, card.id, onMoved: _move),
+                      columnMenu: (column) =>
+                          columnMenu(context, scope, column.id),
+                      addColumn: () =>
+                          addColumnDialog(context, scope, widget.board),
+                    ),
+                  ),
           ),
         ),
       ],

@@ -491,6 +491,8 @@ BoardsState setBoardLook(
   String board, {
   Object? cover = _keep,
   Object? appearance = _keep,
+  String? view,
+  Json? span,
   String? presentation,
   bool? pinned,
   DateTime? now,
@@ -501,6 +503,8 @@ BoardsState setBoardLook(
     b.copy({
       if (!identical(cover, _keep)) 'cover': cover,
       if (!identical(appearance, _keep)) 'appearance': appearance,
+      'view': ?view,
+      'span': ?span,
       'presentation': ?presentation,
       'pinned': ?pinned,
       'updated': _now(now),
@@ -627,6 +631,18 @@ void validateKanban(BoardsState s) {
     if (pack != null &&
         (pack is! String || !RegExp(r'^[a-z][a-z-]{0,39}$').hasMatch(pack)))
       throw const FormatException('Invalid board appearance');
+    final view = b.data['view'];
+    if (view != null && view != 'board' && view != 'time')
+      throw const FormatException('Invalid board view');
+    final span = b.data['span'];
+    if (span != null) {
+      if (span is! Map ||
+          !const {'day', 'week', 'month'}.contains(span['unit']) ||
+          span['count'] is! int ||
+          (span['count'] as int) < 1 ||
+          (span['count'] as int) > 12)
+        throw const FormatException('Invalid time span');
+    }
     final template = b.data['template'];
     if (template != null && (template is! String || template.length > 80))
       throw const FormatException('Invalid template id');
@@ -783,4 +799,30 @@ BoardsState repeatIfDone(BoardsState s, String card, {DateTime? now}) {
   e.put('tasks', t.copy({'repeatedAs': id}));
   e.event(id, 'created', now ?? DateTime.now(), details: {'repeatOf': card});
   return e.finish();
+}
+
+/// Sets a card's due day (a whole day, no time), or takes it off with
+/// null: what dropping a card on a day of the week view does.
+BoardsState setDueDay(
+  BoardsState s,
+  String card,
+  DateTime? day, {
+  DateTime? now,
+}) {
+  final t = s.get('tasks', card);
+  return saveTask(
+    s,
+    t.copy({
+      'due': day == null
+          ? null
+          : {
+              'kind': 'day',
+              'day':
+                  '${day.year.toString().padLeft(4, '0')}-'
+                  '${day.month.toString().padLeft(2, '0')}-'
+                  '${day.day.toString().padLeft(2, '0')}',
+            },
+    }),
+    now: now,
+  );
 }

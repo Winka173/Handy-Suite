@@ -251,4 +251,21 @@ void main() {
     await tap(t, find.byKey(const Key('export-style-print')));
     await shot(t, '22-export-print');
   });
+
+  testWidgets('time view', (t) async {
+    await boot(t, sample());
+    await tap(t, find.byKey(const Key('board-$board')));
+    await tap(t, find.text('Thời gian'));
+    await shot(t, '23-time-phone');
+  });
+
+  testWidgets('time view wide', (t) async {
+    await boot(t, sample(locale: 'en'), size: const Size(1280, 800));
+    await tap(t, find.byKey(const Key('board-$board')));
+    await tap(t, find.text('Time'));
+    await shot(t, '24-time-wide');
+    await tap(t, find.byKey(const Key('time-span')));
+    await tap(t, find.byKey(const Key('span-month-1')));
+    await shot(t, '25-time-month');
+  });
 }

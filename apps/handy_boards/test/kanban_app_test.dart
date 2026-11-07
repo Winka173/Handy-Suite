@@ -367,4 +367,78 @@ void main() {
     await settle(t);
     expect(c.state!.get('tasks', card.id).str('repeat'), 'weekly');
   });
+
+  testWidgets('the time view lays cards out by day; its span is kept per '
+      'board, presets and custom', (t) async {
+    final c = await boot(t, studyState(), size: const Size(1000, 800));
+    await tap(t, find.byKey(const Key('board-$board')));
+    await tap(t, find.text('Time'));
+    expect(c.state!.get('boards', board).str('view'), 'time');
+    expect(find.byKey(const Key('time-range')), findsOneWidget);
+    // A card due in the shown week sits under its day.
+    final monday = DateTime(
+      clock.year,
+      clock.month,
+      clock.day - (clock.weekday - 1),
+    );
+    final sunday = DateTime(monday.year, monday.month, monday.day + 7);
+    final due = topTasks(c.state!, board: board).where((x) {
+      final d = dueDay(x);
+      return d != null && !d.isBefore(monday) && d.isBefore(sunday);
+    });
+    for (final x in due) {
+      expect(find.byKey(ValueKey('time-card-${x.id}')), findsOneWidget);
+    }
+    await tap(t, find.byKey(const Key('time-span')));
+    await tap(t, find.byKey(const Key('span-day-3')));
+    expect(c.state!.get('boards', board).data['span'], {
+      'unit': 'day',
+      'count': 3,
+    });
+    await tap(t, find.byKey(const Key('time-span')));
+    await tap(t, find.byKey(const Key('span-custom')));
+    await tap(t, find.byKey(const Key('span-more')));
+    await tap(t, find.text('Months'));
+    await tap(t, find.byKey(const Key('span-apply')));
+    expect(c.state!.get('boards', board).data['span'], {
+      'unit': 'month',
+      'count': 4,
+    });
+    // Back to the board, the choice stays with this board.
+    await tap(t, find.text('Board'));
+    expect(c.state!.get('boards', board).str('view'), 'board');
+    expect(c.state!.get('boards', board).data['span'], {
+      'unit': 'month',
+      'count': 4,
+    });
+  });
+
+  testWidgets('dropping a card on a day sets its due day, with Undo', (
+    t,
+  ) async {
+    final c = await boot(t, studyState(), size: const Size(1280, 800));
+    await tap(t, find.byKey(const Key('board-$board')));
+    await tap(t, find.text('Time'));
+    final card = topTasks(c.state!, board: board).firstWhere(
+      (x) =>
+          dueDay(x) == null &&
+          !columnsOf(c.state!, board).last.id.contains(x.str('status')),
+    );
+    final from = t.getCenter(find.byKey(ValueKey('time-card-${card.id}')));
+    final to = t.getCenter(find.byKey(const Key('time-d2')));
+    final g = await t.startGesture(from);
+    // Touch platforms lift a card after a long press.
+    await t.pump(const Duration(milliseconds: 700));
+    await g.moveTo(to);
+    await t.pump();
+    await g.up();
+    await settle(t);
+    final monday = clock.subtract(Duration(days: clock.weekday - 1));
+    expect(
+      dueDay(c.state!.get('tasks', card.id)),
+      DateTime(monday.year, monday.month, monday.day + 2),
+    );
+    await tap(t, find.text('Undo'));
+    expect(dueDay(c.state!.get('tasks', card.id)), isNull);
+  });
 }
