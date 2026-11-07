@@ -128,10 +128,12 @@ class LifetimeController extends ChangeNotifier {
   }
   bool get pro => snapshot?.isPro ?? false;
   bool get pending => snapshot?.status == 'pending';
+  /// A product id is enough: on Android, Google Play's word on a purchase
+  /// is taken unless the app also gives its licence key (androidPublicKey),
+  /// in which case the purchase's signature is checked too.
   bool get configured =>
       config.productId.isNotEmpty &&
-      ['android', 'ios', 'windows'].contains(monetizationPlatform) &&
-      (monetizationPlatform != 'android' || config.androidPublicKey.isNotEmpty);
+      ['android', 'ios', 'windows'].contains(monetizationPlatform);
   void accept(StoreSnapshot value) {
     if (disposed || value.productId != config.productId) return;
     snapshot = value;

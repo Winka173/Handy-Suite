@@ -64,6 +64,20 @@ void main() {
       controller.dispose();
     },
   );
+  test('on Android a product id is enough: Google Play’s word is taken, '
+      'the licence key is optional', () async {
+    debugDefaultTargetPlatformOverride = TargetPlatform.android;
+    addTearDown(() => debugDefaultTargetPlatformOverride = null);
+    final store = Store(),
+        controller = LifetimeController(
+          const MonetizationConfig(productId: 'app.pro'),
+          store,
+        );
+    expect(controller.configured, isTrue);
+    await controller.action('read');
+    expect(store.calls, 1);
+    controller.dispose();
+  });
   test(
     'pending/canceled/unverified/foreign products never grant Pro',
     () async {

@@ -1,4 +1,5 @@
 • Bản thử nghiệm đầu tiên.
 • Lưu từ mọi app: khung hiện hình và tiêu đề; chạm bộ sưu tập để cho vào, hoặc tạo bộ mới tại chỗ.
 • Tiêu đề và hình cho Facebook, TikTok, Instagram, YouTube, X, Threads, Reddit và các trang web.
-• Bộ sưu tập, tìm kiếm, Tập trung, nhắc nhở, sao lưu và khoá app.
+• Đồng bộ Google Drive giữa các máy Android (Cài đặt › Đồng bộ).
+• Handy Bookmark Pro, mua một lần.

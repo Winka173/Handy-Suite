@@ -31,14 +31,21 @@ class HandyStorePlugin : FlutterPlugin, MethodChannel.MethodCallHandler, Activit
     channel = MethodChannel(binding.binaryMessenger, "handy_store")
     channel.setMethodCallHandler(this)
   }
+  /**
+   * Whether a purchase Google Play reported is this app's product, bought.
+   * Without a public key (the default) Play's word is taken, as most apps
+   * do; with the app's licence key the purchase's signature is checked too,
+   * which stops faked answers on a tampered device.
+   */
   private fun proof(json: String, signature: String): Boolean {
-    if (json.length > 100000 || signature.length > 2048 || publicKey.length !in 64..2048) return false
+    if (json.length > 100000 || signature.length > 2048) return false
+    if (publicKey.isNotEmpty() && publicKey.length !in 64..2048) return false
     return try {
       val body = JSONObject(json)
       val ids = body.optJSONArray("productIds")
       val matches = body.optString("productId") == product || ids != null && (0 until ids.length()).any { ids.optString(it) == product }
       if (!matches || body.optString("packageName") != context.packageName || body.optInt("purchaseState", -1) != 0 || body.optString("purchaseToken").isEmpty()) return false
-      PlaySignature.verify(Base64.decode(publicKey, Base64.DEFAULT), json.toByteArray(Charsets.UTF_8), Base64.decode(signature, Base64.DEFAULT))
+      publicKey.isEmpty() || PlaySignature.verify(Base64.decode(publicKey, Base64.DEFAULT), json.toByteArray(Charsets.UTF_8), Base64.decode(signature, Base64.DEFAULT))
     } catch (_: Exception) { false }
   }
   private fun cached(): Boolean = try {
@@ -85,8 +92,9 @@ class HandyStorePlugin : FlutterPlugin, MethodChannel.MethodCallHandler, Activit
     if (busy) { result.success(state("pending", "operation_in_progress")); return }
     product = call.argument<String>("productId") ?: ""
     publicKey = call.argument<String>("publicKey") ?: ""
-    if (!Regex("^[a-zA-Z0-9_.-]{1,200}$").matches(product) || publicKey.isEmpty()) { result.success(state("unavailable", "configuration_required", false)); return }
-    val validKey = try { KeyFactory.getInstance("RSA").generatePublic(X509EncodedKeySpec(Base64.decode(publicKey, Base64.DEFAULT))); true } catch (_: Exception) { false }
+    if (!Regex("^[a-zA-Z0-9_.-]{1,200}$").matches(product)) { result.success(state("unavailable", "configuration_required", false)); return }
+    // The key is optional; one that is given must be a real RSA public key.
+    val validKey = publicKey.isEmpty() || try { KeyFactory.getInstance("RSA").generatePublic(X509EncodedKeySpec(Base64.decode(publicKey, Base64.DEFAULT))); true } catch (_: Exception) { false }
     if (!validKey) { result.success(state("unavailable", "configuration_required", false)); return }
     busy = true
     var finished = false

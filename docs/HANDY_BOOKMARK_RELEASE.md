@@ -112,14 +112,17 @@ bundle.
   and descriptions in English and Vietnamese.
 - The app finds it through `HANDY_MONETIZATION_CONFIG`: the owner's
   `config/monetization.local.json` (gitignored; `bookmark.android` has the
-  product id, the listing URL and `androidPublicKey`) →
+  product id and the listing URL) →
   `python tooling/prepare-store-config.py config/monetization.local.json` →
   `.tooling/monetization-defines.json`, which `fastlane android build`
   passes with `--dart-define-from-file`.
-- **`androidPublicKey`** is the app's licence key, used to check purchases on
-  the device. Play Console → Handy Bookmark → *Monetize with Play →
-  Monetization setup → Licensing* → the Base64 RSA public key. The API cannot
-  read it. `preflight` stops until it is in the local config.
+- **How a purchase is trusted:** Google Play's word, as most apps do (the
+  `in_app_purchase` way; chosen 2026-11-07). `handy_store` checks that the
+  purchase Play reports is this app's product, bought, with a token, then
+  keeps it in a device-bound Keystore-encrypted cache. No licence key is set
+  (`androidPublicKey` empty). Setting the key from *Kiếm tiền qua Play ›
+  Thiết lập kiếm tiền › Cấp phép* turns on the extra on-device signature
+  check, which stops faked answers on a tampered device.
 - Testing purchases: add the testers' Google accounts as **license testers**
   (Play Console → Settings → License testing) so they are not charged.
 - Reviewers: if App access asks for full access to paid content, create a
@@ -173,6 +176,6 @@ Drive round trip has **not** run (needs the clients above).
 
 ## Not in this build
 
-- Pro cannot be bought in 1.0.0 (3): it was built before the product and
-  the licence key existed. The next build carries them.
+- Pro cannot be bought in 1.0.0 (3): it was built before the product
+  existed. 1.0.0 (4) carries it.
 - iOS is not set up for the App Store.

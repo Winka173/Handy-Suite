@@ -64,7 +64,6 @@ def preflight!
   UI.user_error!("#{DEFINES} is missing: run `python tooling/prepare-store-config.py config/monetization.local.json` from the repo root.") unless File.exist?(DEFINES)
   store = JSON.parse(JSON.parse(File.read(DEFINES))["HANDY_MONETIZATION_CONFIG"]).dig("bookmark", "android") || {}
   UI.user_error!("No Pro product id for bookmark/android in config/monetization.local.json") if store["productId"].to_s.empty?
-  UI.user_error!("No Play licence key (androidPublicKey) for bookmark/android: Pro could not be bought") if store["androidPublicKey"].to_s.empty?
   played = Dir.chdir(ROOT) { sh(PYTHON, "tool/play.py", "codes", log: false).strip.to_i }
   UI.user_error!("versionCode #{code} is not above #{played}, the highest Play has seen. Bump `version:` in pubspec.yaml.") unless code > played
   UI.success("Ready: #{name} (#{code}); Play's highest so far is #{played}")

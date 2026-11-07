@@ -39,8 +39,11 @@ python tooling/prepare-store-config.py config/monetization.local.json
 
 From an app directory, Flutter accepts
 `--dart-define-from-file=../../.tooling/monetization-defines.json`. The public config
-contains product IDs, Play licensing RSA public key, banner ad-unit IDs and an
-explicit adsEnabled boolean. Each platform may also carry a public
+contains product IDs, an optional Play licensing RSA public key, banner ad-unit
+IDs and an explicit adsEnabled boolean. Without the key (the default), Android
+takes Google Play's word on a purchase (product, package, purchased state and
+token checked); with it, the purchase's signature is verified on the device
+as well. Each platform may also carry a public
 `listingUrl` (https only): the app's store page there, or its web address. The
 "Other Handy apps" section in every app's settings lists only siblings that
 have one, so it stays hidden until apps are published. Never put service-account JSON, passwords, private
