@@ -254,7 +254,9 @@ class _WelcomePageState extends State<WelcomePage> {
         ],
       ),
     };
-    final showBoard = step != _Step.start;
+    // The board shows from the first step, read-only until the tour starts,
+    // so the first screen already says what the app is.
+    final live = step != _Step.start;
     return Scaffold(
       body: SafeArea(
         child: Column(
@@ -333,12 +335,12 @@ class _WelcomePageState extends State<WelcomePage> {
                 ),
               ),
             ),
-            if (showBoard) ...[
+            ...[
               CategoryStrip(
                 state: s,
                 board: _board,
                 selected: category,
-                onSelect: (v) => setState(() => category = v),
+                onSelect: (v) => setState(() => category = live ? v : null),
               ),
               const SizedBox(height: 10),
               Expanded(
@@ -348,16 +350,17 @@ class _WelcomePageState extends State<WelcomePage> {
                   board: _board,
                   now: widget.scope.clock(),
                   filter: KanbanFilter(category: category),
-                  actions: KanbanActions(
-                    move: _move,
-                    tick: (id, v) => setState(
-                      () => sample = toggleChecklist(sample!, id, v),
-                    ),
-                  ),
+                  actions: live
+                      ? KanbanActions(
+                          move: _move,
+                          tick: (id, v) => setState(
+                            () => sample = toggleChecklist(sample!, id, v),
+                          ),
+                        )
+                      : const KanbanActions(),
                 ),
               ),
-            ] else
-              const Spacer(),
+            ],
           ],
         ),
       ),
