@@ -4,12 +4,14 @@ import 'motion.dart';
 import 'samples.dart';
 import '../ui/app_mark.dart';
 
-enum PracticeStage { video, apps, share, found, saved }
+enum PracticeStage { video, apps, share, found, pick, saved }
 
 /// A practice save, the way it really goes: a video, the app's own share
 /// list (where Handy Bookmark is never listed, so: More), then the phone's
 /// share sheet, where the person's collections sit in the top row and
-/// Handy Bookmark sits further along the apps, found by swiping the row. Everything is dark except the one thing
+/// Handy Bookmark sits further along the apps, found by swiping the row.
+/// Then Handy Bookmark's own sheet, as the real one: saved already, one tap
+/// on a collection puts it there. Everything is dark except the one thing
 /// to tap, in a lit window with a word beside it. Nothing is written.
 ///
 /// [framed] draws it inside a pretend phone (wide screens). Unframed it
@@ -33,8 +35,12 @@ class Rehearsal extends StatefulWidget {
 class _RehearsalState extends State<Rehearsal> {
   PracticeStage stage = PracticeStage.video;
   String? into;
+
+  /// The collection it arrived in (its top-row shortcut), or null.
+  String? from;
   final share = GlobalKey(), more = GlobalKey(), direct = GlobalKey();
   final appsRow = GlobalKey(), ours = GlobalKey();
+  final firstPlace = GlobalKey(), close = GlobalKey();
 
   void _go(PracticeStage next) {
     if (moves(context)) {
@@ -79,6 +85,20 @@ class _RehearsalState extends State<Rehearsal> {
           18,
           false,
         ),
+        // Handy Bookmark's sheet: one tap on a collection files it; one
+        // that came through a collection is there already.
+        PracticeStage.pick when from == null => (
+          firstPlace,
+          tr(context, 'Tap a collection', 'Chạm một bộ sưu tập'),
+          16,
+          false,
+        ),
+        PracticeStage.pick => (
+          close,
+          tr(context, 'Already in $from. Tap ✕', 'Đã ở $from. Bấm ✕'),
+          24,
+          true,
+        ),
         PracticeStage.saved => (null, null, 14, null),
       };
 
@@ -98,6 +118,11 @@ class _RehearsalState extends State<Rehearsal> {
       context,
       'Now your phone’s share list',
       'Đây là danh sách chia sẻ của máy',
+    ),
+    PracticeStage.pick => tr(
+      context,
+      'Saved already. Now where?',
+      'Đã lưu rồi. Cho vào đâu?',
     ),
     PracticeStage.saved => null,
   };
@@ -141,7 +166,18 @@ class _RehearsalState extends State<Rehearsal> {
                   onScroll: () {
                     if (stage == PracticeStage.found) setState(() {});
                   },
-                  onPick: (String? collection) => _saved(collection),
+                  onPick: _open,
+                ),
+              ),
+              _SlideUp(
+                show: stage == PracticeStage.pick,
+                time: time,
+                child: _OurSheet(
+                  from: from,
+                  firstKey: firstPlace,
+                  closeKey: close,
+                  onPut: _put,
+                  onClose: () => _put(from),
                 ),
               ),
               if (stage == PracticeStage.saved)
@@ -194,8 +230,15 @@ class _RehearsalState extends State<Rehearsal> {
     if (stage == PracticeStage.share) _go(PracticeStage.found);
   }
 
-  void _saved(String? collection) {
+  /// Shared to the app (or one of its collections): its sheet opens.
+  void _open(String? collection) {
     if (stage != PracticeStage.share && stage != PracticeStage.found) return;
+    from = collection;
+    _go(PracticeStage.pick);
+  }
+
+  void _put(String? collection) {
+    if (stage != PracticeStage.pick) return;
     into = collection;
     _go(PracticeStage.saved);
   }
@@ -729,6 +772,245 @@ class _Preview extends StatelessWidget {
   );
 }
 
+/// Handy Bookmark's own sheet (lib/share_sheet), drawn for the practice:
+/// saved already, what it is, and the collections to tap. The one it is in
+/// is not listed; one that came through a collection can come back out.
+class _OurSheet extends StatelessWidget {
+  final String? from;
+  final GlobalKey firstKey, closeKey;
+  final ValueChanged<String?> onPut;
+  final VoidCallback onClose;
+  const _OurSheet({
+    required this.from,
+    required this.firstKey,
+    required this.closeKey,
+    required this.onPut,
+    required this.onClose,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final places = [
+      (
+        tr(context, 'Good food', 'Món ngon'),
+        const Color(0xFFD9480F),
+        Icons.restaurant,
+        8,
+        'food',
+      ),
+      (
+        tr(context, 'Trips', 'Du lịch'),
+        const Color(0xFF2B8A3E),
+        Icons.luggage_outlined,
+        5,
+        'trips',
+      ),
+      (
+        tr(context, 'Read later', 'Đọc sau'),
+        const Color(0xFF5C7C99),
+        Icons.menu_book_outlined,
+        3,
+        'read',
+      ),
+    ];
+    final here = from ?? tr(context, 'Not sorted', 'Chưa xếp');
+    var first = true;
+    Widget row(
+      String name,
+      Widget leading,
+      String note, {
+      required String? to,
+      required String id,
+    }) {
+      final key = first ? firstKey : null;
+      first = false;
+      return Semantics(
+        button: true,
+        label: name,
+        excludeSemantics: true,
+        child: GestureDetector(
+          key: Key('practice-pick-$id'),
+          onTap: () => onPut(to),
+          behavior: HitTestBehavior.opaque,
+          child: Padding(
+            key: key,
+            padding: const EdgeInsets.symmetric(vertical: 8),
+            child: Row(
+              children: [
+                leading,
+                const SizedBox(width: 14),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        name,
+                        style: const TextStyle(
+                          fontSize: 16,
+                          color: GuideColors.ink,
+                        ),
+                      ),
+                      Text(
+                        note,
+                        style: const TextStyle(
+                          fontSize: 12,
+                          color: GuideColors.muted,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+    }
+
+    Widget badge(Color color, IconData icon) => Container(
+      width: 36,
+      height: 36,
+      decoration: BoxDecoration(
+        color: Color.lerp(color, Colors.white, .84),
+        shape: BoxShape.circle,
+      ),
+      child: Icon(icon, size: 20, color: GuideColors.ink),
+    );
+
+    return Container(
+      width: double.infinity,
+      padding: EdgeInsets.fromLTRB(
+        18,
+        14,
+        8,
+        14 + MediaQuery.paddingOf(context).bottom,
+      ),
+      constraints: BoxConstraints(
+        // Like the real sheet: never taller than the screen; it scrolls.
+        maxHeight: MediaQuery.sizeOf(context).height * .9,
+      ),
+      decoration: const BoxDecoration(
+        color: GuideColors.card,
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      child: SingleChildScrollView(
+        child: Column(
+          key: const Key('practice-our-sheet'),
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                const AppMark(size: 36, radius: 9),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text(
+                        'Handy Bookmark',
+                        style: TextStyle(
+                          fontSize: 15,
+                          fontWeight: FontWeight.w700,
+                          color: GuideColors.ink,
+                        ),
+                      ),
+                      Text(
+                        tr(context, 'Saved in $here', 'Đã lưu vào $here'),
+                        style: const TextStyle(
+                          fontSize: 12,
+                          color: GuideColors.muted,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                Semantics(
+                  button: true,
+                  label: tr(context, 'Close', 'Đóng'),
+                  excludeSemantics: true,
+                  child: GestureDetector(
+                    key: const Key('practice-close'),
+                    onTap: from == null ? null : onClose,
+                    behavior: HitTestBehavior.opaque,
+                    child: SizedBox.square(
+                      key: closeKey,
+                      dimension: 44,
+                      child: const Icon(Icons.close, color: GuideColors.ink),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 10),
+            Padding(
+              padding: const EdgeInsets.only(right: 10),
+              child: Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFF1EEE7),
+                  borderRadius: BorderRadius.circular(14),
+                  border: Border.all(color: const Color(0xFFE3DED3)),
+                ),
+                child: _Preview(),
+              ),
+            ),
+            const SizedBox(height: 12),
+            Padding(
+              padding: const EdgeInsets.only(right: 10),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      tr(
+                        context,
+                        'Put it in a collection',
+                        'Cho vào bộ sưu tập',
+                      ),
+                      style: const TextStyle(
+                        fontSize: 13,
+                        color: GuideColors.ink,
+                      ),
+                    ),
+                  ),
+                  const Icon(Icons.add, size: 18, color: GuideColors.teal),
+                  const SizedBox(width: 4),
+                  Text(
+                    tr(context, 'New collection', 'Bộ sưu tập mới'),
+                    style: const TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w700,
+                      color: GuideColors.teal,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 4),
+            for (final (name, color, icon, count, id) in places)
+              if (name != from)
+                row(
+                  name,
+                  badge(color, icon),
+                  tr(context, '$count links', '$count link'),
+                  to: name,
+                  id: id,
+                ),
+            if (from != null)
+              row(
+                tr(context, 'Not sorted', 'Chưa xếp'),
+                badge(const Color(0xFF5B5E63), Icons.inbox_outlined),
+                tr(context, 'Take it out of $from', 'Bỏ ra khỏi $from'),
+                to: null,
+                id: 'inbox',
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
 /// A sheet from the bottom, as tall as its content, clear of the phone's
 /// own navigation bar.
 class _Sheet extends StatelessWidget {
@@ -875,8 +1157,8 @@ class _SavedState extends State<_Saved> with SingleTickerProviderStateMixin {
                       Text(
                         tr(
                           context,
-                          'From the share list, in one tap.',
-                          'Từ danh sách chia sẻ, chỉ một chạm.',
+                          'Saved at once, sorted with one tap.',
+                          'Lưu ngay, một chạm là xếp xong.',
                         ),
                         style: const TextStyle(
                           fontSize: 14,

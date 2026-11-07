@@ -204,8 +204,8 @@ class _WelcomePageState extends State<WelcomePage>
       body: practiced
           ? tr(
               context,
-              'In TikTok or Facebook: Share, then More. Recent collections sit in the top row; Handy Bookmark itself saves to Not sorted. Press and hold it to pin it first. Nothing was saved.',
-              'Trong TikTok, Facebook: bấm Chia sẻ, rồi Khác. Collection dùng gần đây nằm ở hàng đầu; chọn Handy Bookmark thì vào Chưa xếp. Nhấn giữ nó để ghim lên đầu. Bản tập, chưa lưu gì.',
+              'In TikTok or Facebook: Share, then More, then Handy Bookmark. It saves at once; tap a collection to put it there. Your collections also sit in the top row. Press and hold Handy Bookmark to pin it first. Nothing was saved.',
+              'Trong TikTok, Facebook: bấm Chia sẻ, rồi Khác, rồi Handy Bookmark. Link được lưu ngay; chạm một bộ sưu tập để cho vào. Các bộ sưu tập cũng nằm sẵn ở hàng đầu. Nhấn giữ Handy Bookmark để ghim lên đầu. Bản tập, chưa lưu gì.',
             )
           : tr(
               context,
@@ -221,8 +221,8 @@ class _WelcomePageState extends State<WelcomePage>
       after: '.',
       body: tr(
         context,
-        'Type a few letters, accents optional. Tap the result to open the original video.',
-        'Gõ vài chữ, không dấu cũng được. Chạm kết quả là mở đúng video gốc.',
+        'Type a few letters, accents optional. Tap a result to see it and open the original.',
+        'Gõ vài chữ, không dấu cũng được. Chạm kết quả để xem lại và mở bản gốc.',
       ),
       primary: tr(context, 'Start saving', 'Bắt đầu lưu'),
       onPrimary: _finish,

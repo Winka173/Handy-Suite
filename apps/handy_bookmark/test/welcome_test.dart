@@ -67,6 +67,7 @@ Future<void> practise(WidgetTester t) async {
   await tapKey(t, 'practice-share');
   await tapKey(t, 'practice-more');
   await tapKey(t, 'practice-direct');
+  await tapKey(t, 'practice-close');
   await settle(t);
 }
 
@@ -120,6 +121,11 @@ void main() {
     await t.pumpAndSettle();
     expect(find.text('Tap Handy Bookmark'), findsOneWidget);
     await tapKey(t, 'practice-direct');
+    // Its sheet opens with the collection it came through already chosen.
+    expect(find.byKey(const Key('practice-our-sheet')), findsOneWidget);
+    expect(find.text('Saved in Good food'), findsOneWidget);
+    expect(find.text('Already in Good food. Tap ✕'), findsOneWidget);
+    await tapKey(t, 'practice-close');
     await settle(t);
     expect(find.text('Saved to Good food'), findsOneWidget);
     expect(find.textContaining('all it takes'), findsOneWidget);
@@ -140,9 +146,8 @@ void main() {
     expect(c.preferences['revisit'], isNot(true), reason: 'nudge stays off');
   });
 
-  testWidgets('Handy Bookmark itself, in the practice, goes to Not sorted', (
-    t,
-  ) async {
+  testWidgets('Handy Bookmark itself, in the practice, opens its sheet; one '
+      'tap on a collection files it', (t) async {
     await open(t);
     await tapKey(t, 'welcome-next-0');
     await tapKey(t, 'welcome-next-1');
@@ -151,8 +156,13 @@ void main() {
     await swipeApps(t);
     await t.pumpAndSettle();
     await tapKey(t, 'practice-target');
+    expect(find.text('Saved in Not sorted'), findsOneWidget);
+    expect(find.text('Tap a collection'), findsOneWidget);
+    // The place it is in is not a row; only places it can go.
+    expect(find.byKey(const Key('practice-pick-inbox')), findsNothing);
+    await tapKey(t, 'practice-pick-trips');
     await settle(t);
-    expect(find.text('Saved to Not sorted'), findsOneWidget);
+    expect(find.text('Saved to Trips'), findsOneWidget);
   });
 
   testWidgets('back steps back; on the first step it leaves', (t) async {

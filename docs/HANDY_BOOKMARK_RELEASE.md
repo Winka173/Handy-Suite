@@ -67,8 +67,8 @@ bundle.
 - Graphics for both languages: icon, feature graphic, 6 phone screenshots.
 - Contact email `apps.winka.studio@gmail.com`, website
   `https://github.com/Winka173/Handy-Suite`.
-- Closed testing (`alpha`): draft release **1.0.0 (2)** with release notes in
-  both languages. Build 1 was uploaded first and replaced; code 1 is used up.
+- Closed testing (`alpha`): draft release **1.0.0 (3)** with release notes in
+  both languages. Builds 1 and 2 were uploaded first and replaced; codes 1–2 are used up.
 
 ## Left for the owner in Play Console (the API cannot do these)
 
@@ -98,7 +98,7 @@ bundle.
    - *Countries/regions:* add Vietnam (and any others).
    - *Testers:* create an email list (or use a Google Group), add the testers,
      save, and copy the opt-in link.
-   - *Releases:* open the draft **1.0.0 (2)**, review it, start the rollout.
+   - *Releases:* open the draft **1.0.0 (3)**, review it, start the rollout.
 4. **Publishing overview → Send changes for review.** Until this first review
    passes, Play accepts drafts only; afterwards `fastlane android publish`
    rolls out by itself.

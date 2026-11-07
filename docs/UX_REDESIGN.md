@@ -2193,6 +2193,11 @@ Hợp đồng đầy đủ (bản tiếng Anh): `docs/bookmark-redesign/ONBOARDI
   `guideDone` nằm trong tuỳ chọn của thư viện. Route `/welcome`.
 - Bỏ: mascot, viền sticker, gạch highlight, carousel có chấm, paywall, xin quyền thông
   báo, bài tập giả bị xoá sau đó, bàn tay demo, giấu Bỏ qua, nút chờ animation.
+- Sửa 2026-11-07: bản tập theo đúng khung lưu mới. Bấm Handy Bookmark → khung của app (đã lưu vào
+  Chưa xếp, thẻ xem trước, "Cho vào bộ sưu tập", các bộ, không liệt kê chỗ đang ở) → ô sáng ở một bộ
+  sưu tập "Chạm một bộ sưu tập" → "Đã lưu vào …". Bấm bộ sưu tập ở hàng đầu → khung mở với bộ đó
+  rồi, ô sáng ở ✕. Cảnh Tìm vẽ như màn Tìm thật: thanh "← Tìm", ô tròn viền teal có ✕, "Tất cả
+  mục · N kết quả", các dòng trong một thẻ (ảnh, tiêu đề, chấm bộ sưu tập · trang, ⋯).
 
 ## Hợp đồng: Handy Bookmark · Warm Modern Library (2026-11-06)
 

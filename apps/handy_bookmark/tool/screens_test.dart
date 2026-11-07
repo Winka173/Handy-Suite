@@ -625,6 +625,8 @@ void main() {
       await t.pumpAndSettle();
       await shot(t, '$label-21-welcome-5b-found');
       await tapKey(t, 'practice-target');
+      await shot(t, '$label-21-welcome-5c-pick');
+      await tapKey(t, 'practice-pick-food');
       await shot(t, '$label-21-welcome-6-saved');
       await tapKey(t, 'welcome-next-2');
       await shot(t, '$label-21-welcome-7-find');

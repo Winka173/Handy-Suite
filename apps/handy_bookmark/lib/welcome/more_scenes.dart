@@ -2,8 +2,10 @@ import 'package:handy_ui/kit.dart';
 import 'motion.dart';
 import 'samples.dart';
 
-/// Finding it again: the search types "pho bo" without accents and the
-/// list narrows to the saved video, which offers to open the original.
+/// Finding it again, drawn as the app's own search: its bar, the round
+/// field, the results' heading and count, and the rows in one card. The
+/// search types "pho bo" without accents and the list narrows to the saved
+/// video.
 class FindScene extends StatelessWidget {
   /// [bare]: the real-size screen of a phone guide, with [top] left clear.
   final bool bare;
@@ -17,8 +19,8 @@ class FindScene extends StatelessWidget {
     final all = [samples[0], pho, samples[1]];
     return PhoneFrame(
       bare: bare,
-      // Search, three saves and the keyboard.
-      minHeight: top + 540,
+      // Bar, field, heading, three rows and the keyboard.
+      minHeight: top + 560,
       screen: ColoredBox(
         color: GuideColors.paper,
         child: AnimatedBuilder(
@@ -27,32 +29,49 @@ class FindScene extends StatelessWidget {
             final typed = ((clock.value - .15) / .4).clamp(0.0, 1.0);
             final shown = query.substring(0, (query.length * typed).round());
             final narrowed = clock.value > .62;
-            final focus = Curves.easeOutBack.transform(
+            final focus = Curves.easeOut.transform(
               ((clock.value - .7) / .25).clamp(0.0, 1.0),
             );
+            final rows = [
+              for (final s in all)
+                if (!narrowed || s == pho) s,
+            ];
             return Padding(
               padding: EdgeInsets.fromLTRB(16, top, 16, 16),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
+                  Row(
+                    children: [
+                      const Icon(Icons.arrow_back, color: GuideColors.ink),
+                      const SizedBox(width: 20),
+                      Text(
+                        tr(context, 'Search', 'Tìm'),
+                        style: const TextStyle(
+                          fontSize: 19,
+                          fontWeight: FontWeight.w600,
+                          color: GuideColors.ink,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 14),
                   Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 14,
-                      vertical: 12,
-                    ),
+                    height: 50,
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
                     decoration: BoxDecoration(
                       color: GuideColors.card,
-                      borderRadius: BorderRadius.circular(14),
-                      border: Border.all(color: GuideColors.teal, width: 1.5),
+                      borderRadius: BorderRadius.circular(25),
+                      border: Border.all(color: GuideColors.teal, width: 2),
                     ),
                     child: Row(
                       children: [
-                        const Icon(Icons.search, color: GuideColors.teal),
-                        const SizedBox(width: 10),
+                        const Icon(Icons.search, color: GuideColors.muted),
+                        const SizedBox(width: 12),
                         Text(
                           shown,
                           style: const TextStyle(
-                            fontSize: 17,
+                            fontSize: 16,
                             color: GuideColors.ink,
                           ),
                         ),
@@ -61,26 +80,64 @@ class FindScene extends StatelessWidget {
                           height: 20,
                           color: GuideColors.teal,
                         ),
+                        const Spacer(),
+                        if (shown.isNotEmpty)
+                          const Icon(
+                            Icons.close,
+                            size: 20,
+                            color: GuideColors.muted,
+                          ),
                       ],
                     ),
                   ),
-                  const SizedBox(height: 16),
-                  for (final s in all)
-                    AnimatedSize(
-                      duration: moves(context)
-                          ? const Duration(milliseconds: 260)
-                          : Duration.zero,
-                      curve: Curves.easeOut,
-                      child: narrowed && s != pho
-                          ? const SizedBox(width: double.infinity)
-                          : Padding(
-                              padding: const EdgeInsets.only(bottom: 10),
-                              child: _Row(
-                                sample: s,
-                                focus: s == pho ? focus : 0,
-                              ),
-                            ),
+                  const SizedBox(height: 14),
+                  Text(
+                    tr(context, 'All items', 'Tất cả mục'),
+                    style: const TextStyle(
+                      fontSize: 24,
+                      fontWeight: FontWeight.w700,
+                      color: GuideColors.ink,
                     ),
+                  ),
+                  Text(
+                    tr(
+                      context,
+                      rows.length == 1 ? '1 result' : '${rows.length} results',
+                      '${rows.length} kết quả',
+                    ),
+                    style: const TextStyle(
+                      fontSize: 13,
+                      color: GuideColors.muted,
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  AnimatedSize(
+                    duration: moves(context)
+                        ? const Duration(milliseconds: 260)
+                        : Duration.zero,
+                    curve: Curves.easeOut,
+                    alignment: Alignment.topCenter,
+                    child: Container(
+                      decoration: BoxDecoration(
+                        color: GuideColors.card,
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                      clipBehavior: Clip.antiAlias,
+                      child: Column(
+                        children: [
+                          for (final (i, s) in rows.indexed) ...[
+                            if (i > 0)
+                              const Divider(
+                                height: 1,
+                                indent: 76,
+                                color: Color(0xFFECE9E2),
+                              ),
+                            _Row(sample: s, focus: s == pho ? focus : 0),
+                          ],
+                        ],
+                      ),
+                    ),
+                  ),
                   const Spacer(),
                   _Keyboard(
                     pressed: shown.isEmpty || typed >= 1
@@ -159,105 +216,84 @@ class _Keyboard extends StatelessWidget {
   }
 }
 
+/// A result as the app lists it: picture, title, the collection's dot with
+/// its name and the site, and the row's menu. [focus] lights the match.
 class _Row extends StatelessWidget {
   final Sample sample;
   final double focus;
   const _Row({required this.sample, required this.focus});
   @override
-  Widget build(BuildContext context) => Container(
-    padding: const EdgeInsets.all(10),
-    decoration: BoxDecoration(
-      color: GuideColors.card,
-      borderRadius: BorderRadius.circular(14),
-      border: Border.all(
-        color: Color.lerp(
-          const Color(0xFFE6E8EA),
-          GuideColors.teal,
-          focus.clamp(0, 1),
-        )!,
-        width: 1.5,
-      ),
-      boxShadow: const [
-        BoxShadow(
-          color: GuideColors.shadow,
-          blurRadius: 10,
-          offset: Offset(0, 4),
-        ),
-      ],
-    ),
-    child: Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
+  Widget build(BuildContext context) {
+    final travel = sample.source == 'Facebook';
+    final (place, color) = travel
+        ? (tr(context, 'Trips', 'Du lịch'), const Color(0xFF2B8A3E))
+        : (tr(context, 'Good food', 'Món ngon'), const Color(0xFFD9480F));
+    final site = '${sample.source.toLowerCase()}.com';
+    return ColoredBox(
+      color: Color.lerp(GuideColors.card, GuideColors.tint, focus * .7)!,
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(12, 12, 4, 12),
+        child: Row(
           children: [
             ClipRRect(
-              borderRadius: BorderRadius.circular(8),
+              borderRadius: BorderRadius.circular(10),
               child: Image.asset(
                 sample.asset,
-                width: 56,
-                height: 56,
+                width: 48,
+                height: 48,
                 fit: BoxFit.cover,
               ),
             ),
-            const SizedBox(width: 12),
+            const SizedBox(width: 14),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
                     sample.title(context),
-                    maxLines: 1,
+                    maxLines: 2,
                     overflow: TextOverflow.ellipsis,
                     style: const TextStyle(
                       fontSize: 15,
-                      fontWeight: FontWeight.w600,
+                      fontWeight: FontWeight.w700,
                       color: GuideColors.ink,
                     ),
                   ),
-                  const SizedBox(height: 4),
-                  SourcePill(sample),
+                  const SizedBox(height: 3),
+                  Row(
+                    children: [
+                      Container(
+                        width: 8,
+                        height: 8,
+                        decoration: BoxDecoration(
+                          color: color,
+                          shape: BoxShape.circle,
+                        ),
+                      ),
+                      const SizedBox(width: 6),
+                      Flexible(
+                        child: Text(
+                          '$place · $site',
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(
+                            fontSize: 12,
+                            color: GuideColors.muted,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
                 ],
               ),
             ),
+            const SizedBox(
+              width: 40,
+              child: Icon(Icons.more_horiz, color: GuideColors.muted),
+            ),
           ],
         ),
-        if (focus > 0)
-          Padding(
-            padding: const EdgeInsets.only(top: 10),
-            child: Transform.scale(
-              scale: focus.clamp(0, 1.2),
-              alignment: Alignment.centerLeft,
-              child: Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 14,
-                  vertical: 9,
-                ),
-                decoration: BoxDecoration(
-                  color: GuideColors.teal,
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    const Icon(
-                      Icons.open_in_new,
-                      color: Colors.white,
-                      size: 16,
-                    ),
-                    const SizedBox(width: 6),
-                    Text(
-                      tr(context, 'Open in TikTok', 'Mở trong TikTok'),
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ),
-      ],
-    ),
-  );
+      ),
+    );
+  }
 }
