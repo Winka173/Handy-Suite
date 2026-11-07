@@ -25,6 +25,7 @@ import 'links/link_tasks.dart';
 import 'platform/store.dart';
 import 'reader/reader_page.dart';
 import 'scope.dart';
+import 'security/app_lock.dart';
 import 'services/reminders.dart';
 import 'services/revisit.dart';
 import 'services/share_targets.dart';
@@ -436,6 +437,12 @@ class _SaveAppState extends State<SaveApp> with WidgetsBindingObserver {
       locale: p?.locale ?? 'system',
       navigatorKey: navigator,
       onGenerateRoute: _route,
+      // The app lock covers everything, sheets and dialogs included.
+      wrap: (context, child) => LockGate(
+        enabled: c.preferences[appLockKey] == true,
+        loaded: c.library != null,
+        child: child,
+      ),
       home: p == null
           ? const HandyLoading()
           : _ready(

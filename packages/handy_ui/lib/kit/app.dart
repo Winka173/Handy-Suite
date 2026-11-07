@@ -54,6 +54,10 @@ class HandyApp extends StatelessWidget {
   /// The app's own finishing touches on the kit theme (both brightnesses).
   /// Optional: apps without one get the kit theme unchanged.
   final ThemeData Function(ThemeData theme)? themeOverride;
+
+  /// Wraps everything under the navigator, dialogs and sheets included (an
+  /// app lock's cover, for example). Optional.
+  final Widget Function(BuildContext context, Widget child)? wrap;
   const HandyApp({
     super.key,
     required this.app,
@@ -68,6 +72,7 @@ class HandyApp extends StatelessWidget {
     this.navigatorKey,
     this.navigatorObservers = const [],
     this.themeOverride,
+    this.wrap,
   });
   ThemeData _finish(ThemeData theme) =>
       themeOverride == null ? theme : themeOverride!(theme);
@@ -98,7 +103,11 @@ class HandyApp extends StatelessWidget {
           color: b.frame,
           child: Column(
             children: [
-              Expanded(child: child ?? const SizedBox.shrink()),
+              Expanded(
+                child: wrap == null
+                    ? child ?? const SizedBox.shrink()
+                    : wrap!(context, child ?? const SizedBox.shrink()),
+              ),
               if (adsVisible == null)
                 const LifetimeBanner()
               else

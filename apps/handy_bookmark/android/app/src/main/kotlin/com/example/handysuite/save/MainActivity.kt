@@ -3,12 +3,13 @@ package com.example.handysuite.save
 import android.content.Intent
 import android.os.Bundle
 import android.widget.Toast
-import io.flutter.embedding.android.FlutterActivity
+import io.flutter.embedding.android.FlutterFragmentActivity
 import io.flutter.embedding.engine.FlutterEngine
 import io.flutter.plugin.common.MethodChannel
 import java.io.File
 
-class MainActivity : FlutterActivity() {
+// A FragmentActivity: the app lock's biometric prompt needs one.
+class MainActivity : FlutterFragmentActivity() {
     private val queue by lazy { ShareQueue(File(filesDir, "share_queue")) }
     private var channel: MethodChannel? = null
     override fun onCreate(savedInstanceState: Bundle?) {

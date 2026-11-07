@@ -1108,21 +1108,19 @@ void main() {
     await openFocus(t);
     await shot(t, 'small-45-focus-poster-large-text');
   });
-  testWidgets('how to use', (t) async {
-    await boot(t, const Size(390, 844));
-    Navigator.of(t.element(find.byType(Scaffold).first)).pushNamed('/how-to');
-    await t.pumpAndSettle();
-    await scrolled(t, 'phone-50-how-to', 4);
-  });
+  for (final theme in ['light', 'dark'])
+    testWidgets('how to use $theme', (t) async {
+      await boot(t, const Size(390, 844), theme: theme);
+      Navigator.of(t.element(find.byType(Scaffold).first)).pushNamed('/how-to');
+      await t.pumpAndSettle();
+      await shot(t, 'phone-50-how-to-$theme');
+      await tapKey(t, 'howto-topic-faster');
+      await scrolled(t, 'phone-50-how-to-faster-$theme', 2);
+    });
   testWidgets('settings advanced views', (t) async {
     await boot(t, const Size(390, 844), extras: true);
     Navigator.of(t.element(find.byType(Scaffold).first)).pushNamed('/settings');
     await t.pumpAndSettle();
-    await tapKey(t, 'set-library-tools');
-    await scrolled(t, 'phone-46-tools', 2);
-    Navigator.of(t.element(find.byType(Scaffold).last)).pop();
-    await t.pumpAndSettle();
-    // Library (tools, storage) comes before Backup & restore.
     await t.scrollUntilVisible(
       find.byKey(const Key('set-advanced-data')),
       200,
@@ -1132,10 +1130,12 @@ void main() {
     await shot(t, 'phone-47-advanced-data');
     Navigator.of(t.element(find.byType(Scaffold).last)).pop();
     await t.pumpAndSettle();
+    await tapKey(t, 'set-library-tools');
+    await scrolled(t, 'phone-46-tools', 3);
     await t.scrollUntilVisible(
       find.byKey(const Key('set-storage')),
-      -200,
-      scrollable: find.byType(Scrollable).first,
+      200,
+      scrollable: find.byType(Scrollable).last,
     );
     await tapKey(t, 'set-storage');
     await shot(t, 'phone-48-storage');

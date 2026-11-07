@@ -1,4 +1,9 @@
 import 'package:handy_storage/handy_storage.dart';
+import '../data/import_export.dart';
+import '../sync/sync_service.dart';
+import '../design/theme.dart';
+import '../pro/entitlements.dart';
+import '../security/app_lock.dart';
 import '../design/looks.dart';
 import 'package:handy_ui/kit.dart';
 import '../scope.dart';
@@ -31,8 +36,8 @@ Future<String?> _askName(BuildContext context, SaveController c) {
           hintText: tr(context, "Lan's saves", 'Kho của Lan'),
           helperText: tr(
             context,
-            'Leave empty to show Handy Bookmark.',
-            'Để trống để hiện Handy Bookmark.',
+            'Leave empty to show My library.',
+            'Để trống để hiện Thư viện của tôi.',
           ),
         ),
         onSubmitted: (v) => Navigator.pop(context, v.trim()),
@@ -84,12 +89,12 @@ String weekdayName(BuildContext context, int day) => tr(
 //// Where sync folders are picked; tests replace it.
 BackupFolders syncFolders = systemBackupFolders();
 
-/// Settings in nine groups, in the order people look for them:
-/// Appearance (theme, language, looks, the library's name), Reminders,
-/// Library (Recently deleted, Storage, advanced tools), Backup & restore,
-/// Cloud sync, Help & feedback (How to use, the welcome, Send feedback),
-/// Pro, About (privacy policy, terms, licenses, other apps) and, last,
-/// Reset and delete. Every control saves itself.
+/// Settings, as the suite's other apps have them: Pro first, then General
+/// (language, theme, looks, the library's name, the weekly nudge), Privacy
+/// (the app lock), Data (sync, backup and restore, import, Recently
+/// deleted, the library tools, delete everything), Help (How to use) and
+/// About (feedback, privacy policy, terms, licenses). Every control saves
+/// itself.
 class SaveSettingsPage extends StatefulWidget {
   final HandyPreferences Function() read;
   final Future<void> Function(HandyPreferences) save;
@@ -124,23 +129,28 @@ class _SaveSettingsPageState extends State<SaveSettingsPage> {
     }
   }
 
-  Future<void> _resetPreferences() async {
-    final ok = await confirmHandy(
-      context,
-      title: tr(context, 'Reset preferences?', 'Đặt lại cài đặt?'),
-      message: tr(
+  /// "Through a folder · synced 6 Nov 14:20", or why there is none here.
+  String _syncState(BuildContext context) {
+    final p = scope.c.preferences;
+    if (!(folderSyncSupported('path') && syncFolders.canChoose))
+      return tr(
         context,
-        'Language and appearance go back to how they started. Your links, pictures and collections are kept.',
-        'Ngôn ngữ và giao diện trở về như ban đầu. Link, ảnh và bộ sưu tập vẫn được giữ.',
-      ),
-      confirmLabel: tr(context, 'Reset preferences', 'Đặt lại cài đặt'),
-      destructive: true,
-    );
-    if (!ok || !mounted) return;
-    await _device(HandyPreferences(), () {
-      theme = 'system';
-      locale = 'system';
-    });
+        'Not available on this device yet',
+        'Chưa có trên thiết bị này',
+      );
+    final folder = (p['syncFolder'] as Map?)?['name'] as String?;
+    if (folder == null)
+      return tr(
+        context,
+        'Off. Choose a synced folder',
+        'Đang tắt. Chọn thư mục',
+      );
+    final at = DateTime.tryParse(p['syncedAt'] as String? ?? '')?.toLocal();
+    final when = at == null
+        ? tr(context, 'not synced yet', 'chưa đồng bộ lần nào')
+        : '${MaterialLocalizations.of(context).formatShortDate(at)} '
+              '${TimeOfDay.fromDateTime(at).format(context)}';
+    return '$folder · $when';
   }
 
   @override
@@ -150,6 +160,7 @@ class _SaveSettingsPageState extends State<SaveSettingsPage> {
       final c = scope.c;
       final p = c.preferences;
       final system = tr(context, 'System', 'Hệ thống');
+      final deleted = scope.library.trash.length;
       Future<void> set(String key, Object value) => scope.run(
         context,
         () => c.update((l) => l, prefs: {...c.preferences, key: value}),
@@ -157,54 +168,54 @@ class _SaveSettingsPageState extends State<SaveSettingsPage> {
       return HandyPage(
         title: tr(context, 'Settings', 'Cài đặt'),
         children: [
-          // 1. Appearance.
+          const SizedBox(height: HandySpace.s),
+          const _ProCard(),
+
+          // General.
           SettingsGroup(
-            first: true,
-            title: tr(context, 'Appearance', 'Giao diện'),
+            title: tr(context, 'General', 'Chung'),
             children: [
               SettingsPanel(
                 gap: false,
                 rows: [
-                  SettingsChoice<String>(
-                    controlKey: const Key('settings-theme'),
-                    icon: Icons.contrast,
-                    title: tr(context, 'Theme', 'Màu nền'),
-                    value: theme,
-                    options: [
-                      ('system', system),
-                      ('light', tr(context, 'Light', 'Sáng')),
-                      ('dark', tr(context, 'Dark', 'Tối')),
-                    ],
-                    onChanged: (v) => _device(
-                      widget.read().copyWith(theme: v),
-                      () => theme = v,
-                    ),
-                  ),
                   SettingsChoice<String>(
                     controlKey: const Key('settings-locale'),
                     icon: Icons.translate,
                     title: tr(context, 'Language', 'Ngôn ngữ'),
                     value: locale,
                     options: [
-                      ('system', system),
                       ('en', 'English'),
                       ('vi', 'Tiếng Việt'),
+                      ('system', system),
                     ],
                     onChanged: (v) => _device(
                       widget.read().copyWith(locale: v),
                       () => locale = v,
                     ),
                   ),
+                  SettingsChoice<String>(
+                    controlKey: const Key('settings-theme'),
+                    icon: Icons.contrast,
+                    title: tr(context, 'Light or dark', 'Sáng hay tối'),
+                    value: theme,
+                    options: [
+                      ('light', tr(context, 'Light', 'Sáng')),
+                      ('dark', tr(context, 'Dark', 'Tối')),
+                      ('system', system),
+                    ],
+                    onChanged: (v) => _device(
+                      widget.read().copyWith(theme: v),
+                      () => theme = v,
+                    ),
+                  ),
                   SettingsRow(
                     key: const Key('set-looks'),
                     icon: Icons.palette_outlined,
-                    title: tr(context, 'Themes', 'Giao diện'),
+                    title: tr(context, 'Themes', 'Chủ đề màu'),
                     subtitle: tr(
                       context,
-                      lookById(c.preferences['look'] as String?)?.en ??
-                          libraryLook.en,
-                      lookById(c.preferences['look'] as String?)?.vi ??
-                          libraryLook.vi,
+                      lookById(p['look'] as String?)?.en ?? libraryLook.en,
+                      lookById(p['look'] as String?)?.vi ?? libraryLook.vi,
                     ),
                     navigates: true,
                     onTap: () => Navigator.pushNamed(context, '/looks'),
@@ -213,32 +224,13 @@ class _SaveSettingsPageState extends State<SaveSettingsPage> {
                     key: const Key('set-library-name'),
                     icon: Icons.edit_outlined,
                     title: tr(context, 'Library name', 'Tên thư viện'),
-                    subtitle: libraryName(c),
+                    subtitle: libraryName(c, context),
                     navigates: true,
                     onTap: () async {
                       final name = await _askName(context, c);
                       if (name != null) await set('libraryName', name);
                     },
                   ),
-                ],
-              ),
-            ],
-          ),
-
-          // 2. Reminders.
-          SettingsGroup(
-            title: tr(context, 'Reminders', 'Nhắc nhở'),
-            note: scope.reminders.supported
-                ? tr(
-                    context,
-                    'Off unless you turn it on. A reminder never shows a title on the lock screen.',
-                    'Tắt cho đến khi bạn bật. Thông báo không bao giờ hiện tiêu đề trên màn hình khóa.',
-                  )
-                : null,
-            children: [
-              SettingsPanel(
-                gap: false,
-                rows: [
                   if (scope.reminders.supported) ...[
                     SettingsSwitch(
                       key: const Key('set-revisit'),
@@ -256,153 +248,183 @@ class _SaveSettingsPageState extends State<SaveSettingsPage> {
                       },
                     ),
                     if (p['revisit'] == true) _RevisitWhen(set: set, p: p),
-                  ] else
-                    SettingsRow(
-                      icon: Icons.notifications_off_outlined,
-                      title: tr(context, 'Not available here', 'Chưa có ở đây'),
-                      subtitle: tr(
-                        context,
-                        'This device or browser cannot show notifications.',
-                        'Thiết bị hoặc trình duyệt này không hiện được thông báo.',
-                      ),
-                    ),
+                  ],
                 ],
               ),
               ExistingReminders(scope: scope),
             ],
           ),
 
-          // 3. Library.
+          // Privacy.
           SettingsGroup(
-            title: tr(context, 'Library', 'Thư viện'),
+            title: tr(context, 'Privacy', 'Riêng tư'),
             children: [
-              DataMorePanel(
-                scope: scope,
-                extra: [
+              SettingsPanel(gap: false, rows: [AppLockSwitch(scope: scope)]),
+            ],
+          ),
+
+          // Data.
+          SettingsGroup(
+            title: tr(context, 'Data', 'Dữ liệu'),
+            note: tr(
+              context,
+              'Kept on this device. It leaves only when you back it up, sync it or share it.',
+              'Lưu trên máy này. Chỉ rời máy khi bạn sao lưu, đồng bộ hoặc chia sẻ.',
+            ),
+            children: [
+              SettingsPanel(
+                gap: false,
+                rows: [
+                  SettingsRow(
+                    key: const Key('set-sync'),
+                    icon: Icons.sync,
+                    title: tr(context, 'Sync', 'Đồng bộ'),
+                    subtitle: _syncState(context),
+                    navigates: true,
+                    onTap: () => pushSettingsView(
+                      context,
+                      tr(context, 'Sync', 'Đồng bộ'),
+                      listenable: scope.c,
+                      (context) => [
+                        SyncSection(scope: scope, folders: syncFolders),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+              SettingsPanel(
+                title: tr(context, 'Backup and restore', 'Sao lưu & khôi phục'),
+                rows: [
+                  if (c.lastBackup case final report?)
+                    Padding(
+                      padding: const EdgeInsets.all(HandySpace.m),
+                      child: BackupReportNote(report),
+                    ),
+                  Padding(
+                    padding: const EdgeInsets.all(HandySpace.m),
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: FilledButton.icon(
+                            key: const Key('save-backup'),
+                            onPressed: () => backUp(context, scope),
+                            icon: const Icon(Icons.backup_outlined, size: 20),
+                            label: Text(tr(context, 'Back up', 'Sao lưu')),
+                          ),
+                        ),
+                        const SizedBox(width: HandySpace.m),
+                        Expanded(
+                          child: OutlinedButton.icon(
+                            key: const Key('save-import'),
+                            onPressed: () => scope.importLinks(context),
+                            icon: const Icon(
+                              Icons.settings_backup_restore,
+                              size: 20,
+                            ),
+                            label: Text(tr(context, 'Restore', 'Khôi phục')),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+              if (scope.autoBackup != null)
+                KitSection(
+                  child: HandyAutoBackupSection(backup: scope.autoBackup!),
+                ),
+              SettingsPanel(
+                rows: [
+                  SettingsRow(
+                    key: const Key('set-advanced-data'),
+                    icon: Icons.swap_vert,
+                    title: tr(context, 'Import and export', 'Nhập và xuất'),
+                    subtitle: tr(
+                      context,
+                      'Browser bookmarks, Pocket, Raindrop; CSV, HTML, Markdown',
+                      'Dấu trang trình duyệt, Pocket, Raindrop; CSV, HTML, Markdown',
+                    ),
+                    navigates: true,
+                    onTap: () => openAdvancedData(context, scope),
+                  ),
+                  SettingsRow(
+                    key: const Key('save-trash'),
+                    icon: Icons.delete_outline,
+                    title: tr(context, 'Recently deleted', 'Đã xóa gần đây'),
+                    subtitle: deleted == 0
+                        ? tr(
+                            context,
+                            'Empty. Deleted items wait here 30 days.',
+                            'Trống. Mục đã xóa chờ ở đây 30 ngày.',
+                          )
+                        : tr(
+                            context,
+                            deleted == 1
+                                ? '1 item, kept 30 days'
+                                : '$deleted items, kept 30 days',
+                            '$deleted mục, giữ 30 ngày',
+                          ),
+                    navigates: true,
+                    onTap: () => Navigator.of(context).pushNamed('/trash'),
+                  ),
                   SettingsRow(
                     key: const Key('set-library-tools'),
                     icon: Icons.handyman_outlined,
-                    title: tr(
-                      context,
-                      'Advanced library tools',
-                      'Công cụ thư viện nâng cao',
-                    ),
+                    title: tr(context, 'Library tools', 'Công cụ thư viện'),
                     subtitle: tr(
                       context,
-                      'How links open, duplicates, link checks, smart collections',
-                      'Cách mở link, mục trùng, kiểm tra link, bộ sưu tập thông minh',
+                      'How links open, duplicates, link checks, storage',
+                      'Cách mở link, mục trùng, kiểm tra link, dung lượng',
                     ),
                     navigates: true,
                     onTap: () => openLibraryTools(context, scope),
+                  ),
+                  SettingsRow(
+                    key: const Key('save-reset'),
+                    icon: Icons.delete_forever_outlined,
+                    destructive: true,
+                    title: tr(
+                      context,
+                      'Delete all data',
+                      'Xóa toàn bộ dữ liệu',
+                    ),
+                    subtitle: tr(
+                      context,
+                      'Everything this app keeps on this device. Cannot be undone.',
+                      'Mọi thứ app lưu trên máy này. Không hoàn tác được.',
+                    ),
+                    onTap: () => deleteEverything(context, scope),
                   ),
                 ],
               ),
             ],
           ),
 
-          // 4. Backup & restore.
+          // Help.
           SettingsGroup(
-            title: tr(context, 'Backup & restore', 'Sao lưu & khôi phục'),
-            note: tr(
-              context,
-              'Kept on this device. It leaves only when you back it up, sync it through a folder or share a page.',
-              'Lưu trên máy này. Dữ liệu chỉ rời máy khi bạn sao lưu, đồng bộ qua thư mục hoặc chia sẻ một trang.',
-            ),
-            children: [
-              BackupPanel(scope: scope),
-              if (scope.autoBackup != null)
-                KitSection(
-                  child: HandyAutoBackupSection(backup: scope.autoBackup!),
-                ),
-            ],
-          ),
-
-          // 5. Cloud sync.
-          SettingsGroup(
-            title: tr(context, 'Cloud sync', 'Đồng bộ đám mây'),
-            note: tr(
-              context,
-              'The same library on more than one device.',
-              'Dùng chung một thư viện trên nhiều thiết bị.',
-            ),
-            children: [SyncSection(scope: scope, folders: syncFolders)],
-          ),
-
-          // 6. Help & feedback.
-          SettingsGroup(
-            title: tr(context, 'Help & feedback', 'Trợ giúp & góp ý'),
+            title: tr(context, 'Help', 'Trợ giúp'),
             children: [
               SettingsPanel(
                 gap: false,
                 rows: [
                   SettingsRow(
                     key: const Key('set-howto'),
-                    icon: Icons.menu_book_outlined,
+                    icon: Icons.school_outlined,
                     title: tr(context, 'How to use', 'Cách dùng'),
                     subtitle: tr(
                       context,
-                      'Save, organize, find, read, keep it safe, Pro',
-                      'Lưu, sắp xếp, tìm lại, đọc, giữ an toàn, Pro',
+                      'The welcome again, and each thing step by step',
+                      'Xem lại phần giới thiệu và từng việc theo từng bước',
                     ),
                     navigates: true,
                     onTap: () => Navigator.pushNamed(context, '/how-to'),
                   ),
-                  SettingsRow(
-                    key: const Key('set-guide'),
-                    icon: Icons.school_outlined,
-                    title: tr(
-                      context,
-                      'Replay the welcome',
-                      'Xem lại phần giới thiệu',
-                    ),
-                    subtitle: tr(
-                      context,
-                      'The three screens shown at first start',
-                      'Ba màn hình hiện khi mở app lần đầu',
-                    ),
-                    navigates: true,
-                    onTap: () => Navigator.pushNamed(context, '/welcome'),
-                  ),
-                  SettingsRow(
-                    key: const Key('set-feedback'),
-                    icon: Icons.mail_outline,
-                    title: tr(context, 'Send feedback', 'Gửi góp ý'),
-                    subtitle: feedbackEmail,
-                    navigates: true,
-                    onTap: () => sendFeedback(context),
-                  ),
                 ],
               ),
             ],
           ),
 
-          // 7. Pro.
-          SettingsGroup(
-            title: 'Pro',
-            children: [
-              SettingsPanel(
-                gap: false,
-                rows: [
-                  SettingsRow(
-                    key: const Key('set-pro'),
-                    icon: Icons.workspace_premium_outlined,
-                    title: tr(context, 'Explore Pro', 'Khám phá Pro'),
-                    subtitle: tr(
-                      context,
-                      'Themes, layouts, highlights, deeper search; one payment. Buy or restore a purchase there.',
-                      'Giao diện, kiểu trình bày, đánh dấu, tìm sâu; trả một lần. Mua hoặc khôi phục giao dịch ở đó.',
-                    ),
-                    navigates: true,
-                    onTap: () => Navigator.pushNamed(context, '/pro'),
-                  ),
-                ],
-              ),
-              // Not the kit's Pro section: its words are about removing
-              // ads, and Bookmark shows none. Explore Pro buys and restores.
-            ],
-          ),
-
-          // 8. About & legal.
+          // About.
           SettingsGroup(
             title: tr(context, 'About', 'Giới thiệu'),
             children: [
@@ -410,8 +432,15 @@ class _SaveSettingsPageState extends State<SaveSettingsPage> {
                 gap: false,
                 rows: [
                   SettingsRow(
+                    key: const Key('set-feedback'),
+                    icon: Icons.mail_outline,
+                    title: tr(context, 'Send feedback', 'Gửi góp ý'),
+                    subtitle: feedbackEmail,
+                    onTap: () => sendFeedback(context),
+                  ),
+                  SettingsRow(
                     key: const Key('save-privacy'),
-                    icon: Icons.privacy_tip_outlined,
+                    icon: Icons.policy_outlined,
                     title: tr(
                       context,
                       'Privacy policy',
@@ -465,54 +494,75 @@ class _SaveSettingsPageState extends State<SaveSettingsPage> {
               const KitSection(child: HandyMoreApps(app: 'bookmark')),
             ],
           ),
-
-          // 9. What cannot be taken back, last.
-          SettingsGroup(
-            title: tr(context, 'Reset and delete', 'Đặt lại và xóa'),
-            note: tr(
-              context,
-              'Deleting cannot be undone. Back up first if you may want it back.',
-              'Xóa thì không hoàn tác được. Hãy sao lưu trước nếu còn cần.',
-            ),
-            children: [
-              SettingsPanel(
-                gap: false,
-                rows: [
-                  SettingsRow(
-                    key: const Key('settings-reset'),
-                    icon: Icons.restart_alt,
-                    title: tr(context, 'Reset preferences', 'Đặt lại cài đặt'),
-                    subtitle: tr(
-                      context,
-                      'Language and appearance. Your library stays.',
-                      'Ngôn ngữ và giao diện. Thư viện vẫn giữ.',
-                    ),
-                    onTap: _resetPreferences,
-                  ),
-                  SettingsRow(
-                    key: const Key('save-reset'),
-                    icon: Icons.delete_forever_outlined,
-                    destructive: true,
-                    title: tr(
-                      context,
-                      'Delete all data',
-                      'Xóa toàn bộ dữ liệu',
-                    ),
-                    subtitle: tr(
-                      context,
-                      'Everything this app keeps on this device',
-                      'Mọi thứ app này lưu trên máy này',
-                    ),
-                    onTap: () => deleteEverything(context, scope),
-                  ),
-                ],
-              ),
-            ],
-          ),
         ],
       );
     },
   );
+}
+
+/// The first thing in Settings: Pro, on a soft card in the app's hue; a
+/// thank-you once it is owned.
+class _ProCard extends StatelessWidget {
+  const _ProCard();
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final p = BookmarkPalette.of(context);
+    final pro = hasPro(context);
+    return Material(
+      color: p.tint,
+      borderRadius: BorderRadius.circular(BookmarkRadii.item),
+      child: InkWell(
+        key: const Key('set-pro'),
+        borderRadius: BorderRadius.circular(BookmarkRadii.item),
+        onTap: () => Navigator.pushNamed(context, '/pro'),
+        child: Padding(
+          padding: const EdgeInsets.all(HandySpace.l),
+          child: Row(
+            children: [
+              Icon(Icons.workspace_premium_outlined, size: 32, color: p.ink),
+              const SizedBox(width: HandySpace.m),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      pro
+                          ? tr(context, 'Pro is yours', 'Bạn đã có Pro')
+                          : tr(context, 'Upgrade to Pro', 'Nâng cấp Pro'),
+                      style: theme.textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.w700,
+                        color: p.ink,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      pro
+                          ? tr(
+                              context,
+                              'Thank you. Everything Pro adds is on.',
+                              'Cảm ơn bạn. Mọi thứ của Pro đã mở.',
+                            )
+                          : tr(
+                              context,
+                              'Themes, layouts, highlights, deeper search. One payment; buy or restore inside.',
+                              'Chủ đề, kiểu trình bày, đánh dấu, tìm sâu. Trả một lần; mua hoặc khôi phục ở trong.',
+                            ),
+                      style: theme.textTheme.bodyMedium?.copyWith(color: p.ink),
+                    ),
+                  ],
+                ),
+              ),
+              Icon(
+                pro ? Icons.check_circle : Icons.chevron_right,
+                color: p.ink,
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
 }
 
 /// The weekly nudge's day and hour, under its switch.

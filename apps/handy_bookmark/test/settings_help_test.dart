@@ -20,19 +20,33 @@ Future<void> scrollTo(WidgetTester t, String key) => t.scrollUntilVisible(
 void main() {
   tearDown(() => openExternal = (_) async => false);
 
-  testWidgets('How to use: six parts read top to bottom; a chip jumps to '
-      'its part', (t) async {
-    await start(t, size: const Size(360, 720));
+  testWidgets('How to use: the welcome again, then topics; a topic opens '
+      'as steps with Previous, Next and Done', (t) async {
+    await start(t, size: const Size(390, 844));
     await openSettings(t);
     await scrollTo(t, 'set-howto');
     await tapKey(t, 'set-howto');
-    expect(find.text('How to use'), findsWidgets);
-    for (final id in ['save', 'organize', 'find', 'read', 'safe', 'pro']) {
-      expect(find.byKey(Key('howto-jump-$id')), findsOneWidget);
+    expect(find.byKey(const Key('howto-replay')), findsOneWidget);
+    for (final id in ['faster', 'home', 'organize', 'find', 'read', 'safe']) {
+      await scrollTo(t, 'howto-topic-$id');
+      expect(find.byKey(Key('howto-topic-$id')), findsOneWidget);
     }
-    expect(find.byKey(const Key('howto-safe')).hitTestable(), findsNothing);
-    await tapKey(t, 'howto-jump-safe');
-    expect(find.byKey(const Key('howto-safe')).hitTestable(), findsOneWidget);
+    await t.scrollUntilVisible(
+      find.byKey(const Key('howto-topic-faster')),
+      -300,
+      scrollable: find.byType(Scrollable).first,
+    );
+    await tapKey(t, 'howto-topic-faster');
+    expect(find.byKey(const Key('howto-sheet-faster')), findsOneWidget);
+    expect(find.text('Open the share menu'), findsWidgets);
+    expect(find.byKey(const Key('howto-action-0')), findsOneWidget);
+    expect(find.byKey(const Key('howto-previous')), findsNothing);
+    await tapKey(t, 'howto-next');
+    expect(find.byKey(const Key('howto-sheet-home')), findsOneWidget);
+    await tapKey(t, 'howto-previous');
+    expect(find.byKey(const Key('howto-sheet-faster')), findsOneWidget);
+    await tapKey(t, 'howto-done');
+    expect(find.byKey(const Key('howto-sheet-faster')), findsNothing);
     expect(t.takeException(), isNull);
   });
 

@@ -178,7 +178,14 @@ void main() {
       t.element(find.byType(Navigator).first),
     ).pushNamed('/settings');
     await settle(t);
-    await tapKey(t, 'set-guide');
+    // Help › How to use › the welcome again.
+    await t.scrollUntilVisible(
+      find.byKey(const Key('set-howto')),
+      300,
+      scrollable: find.byType(Scrollable).first,
+    );
+    await tapKey(t, 'set-howto');
+    await tapKey(t, 'howto-replay');
     await settle(t);
     expect(find.textContaining('Found nowhere'), findsOneWidget);
     await tapKey(t, 'welcome-skip');

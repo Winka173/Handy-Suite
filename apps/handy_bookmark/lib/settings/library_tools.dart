@@ -1,4 +1,5 @@
 import 'package:handy_bookmark_engine/handy_bookmark_engine.dart';
+import 'data_section.dart';
 import 'package:handy_ui/kit.dart';
 import '../collections/collection_actions.dart';
 import '../links/link_actions.dart';
@@ -228,5 +229,22 @@ List<Widget> libraryTools(BuildContext context, SaveScope scope) {
             ),
         ],
       ),
+    SettingsPanel(
+      title: tr(context, 'Storage', 'Dung lượng'),
+      rows: [
+        SettingsRow(
+          key: const Key('set-storage'),
+          icon: Icons.sd_storage_outlined,
+          title: tr(context, 'Storage', 'Dung lượng'),
+          subtitle: tr(
+            context,
+            'What the library takes on this device',
+            'Thư viện chiếm bao nhiêu trên máy này',
+          ),
+          navigates: true,
+          onTap: () => openStorage(context, scope),
+        ),
+      ],
+    ),
   ];
 }

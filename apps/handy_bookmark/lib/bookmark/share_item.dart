@@ -52,6 +52,14 @@ class _OsSharer implements ItemSharer {
 @visibleForTesting
 ItemSharer itemSharer = const _OsSharer();
 
+/// Whether this device can open its share sheet.
+bool get canShareText => itemSharer.supported;
+
+/// Opens the share sheet with [text] (How to use, to set up its list).
+Future<void> shareTextNow(String text, Rect origin) async {
+  await itemSharer.text(text, origin: origin);
+}
+
 /// The address to hand on: tracking parameters (utm_…, fbclid…) and any
 /// user name or password removed, the rest exactly as saved.
 String shareableUrl(Bookmark b) {

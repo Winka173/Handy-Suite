@@ -1,293 +1,601 @@
+import 'package:flutter/foundation.dart';
 import 'package:handy_ui/kit.dart';
+import '../bookmark/share_item.dart' show canShareText, shareTextNow;
+import '../design/clipping.dart';
 import '../design/theme.dart';
-import 'settings_parts.dart';
+import 'how_to_mocks.dart';
 
-/// One part of the how-to: a name, its icon and the steps in order.
-typedef _Part = ({String id, IconData icon, String title, List<String> steps});
+/// One step of a topic: what to do, and (often) a picture of where.
+class _Step {
+  final String words;
+  final Widget? picture;
 
-List<_Part> _parts(BuildContext context) => [
-  (
-    id: 'save',
-    icon: Icons.add_link_rounded,
-    title: tr(context, 'Save', 'Lưu'),
-    steps: [
+  /// A button that does the step for real (opens the share sheet).
+  final (String, Future<void> Function(BuildContext))? action;
+  const _Step(this.words, {this.picture, this.action});
+}
+
+/// One topic of How to use.
+class _Topic {
+  final String id;
+  final IconData icon;
+  final String title, summary;
+  final List<_Step> steps;
+  const _Topic(this.id, this.icon, this.title, this.summary, this.steps);
+}
+
+bool get _android => !kIsWeb && defaultTargetPlatform == TargetPlatform.android;
+bool get _apple =>
+    !kIsWeb &&
+    (defaultTargetPlatform == TargetPlatform.iOS ||
+        defaultTargetPlatform == TargetPlatform.macOS);
+
+/// Opens the phone's share sheet with a sample link, so its list can be
+/// set up right away.
+Future<void> _openShareSheet(BuildContext context) async {
+  if (!canShareText) {
+    showHandyMessage(
+      context,
       tr(
         context,
-        'Paste a link into the field at the top of Home and press Save. Undo in the message takes it back.',
-        'Dán link vào ô trên cùng của Trang chủ rồi bấm Lưu. Bấm Hoàn tác trong thông báo để bỏ lại.',
+        'Sharing opens in the Android and iOS apps.',
+        'Chia sẻ có trong app Android và iOS.',
       ),
-      tr(
-        context,
-        'From another app on your phone: Share, then Handy Bookmark. It lands in Not sorted.',
-        'Từ app khác trên điện thoại: bấm Chia sẻ, chọn Handy Bookmark. Mục mới nằm ở Chưa sắp xếp.',
+    );
+    return;
+  }
+  final box = context.findRenderObject() as RenderBox?;
+  final at = box == null || !box.hasSize
+      ? Rect.zero
+      : box.localToGlobal(Offset.zero) & box.size;
+  try {
+    await shareTextNow('https://www.youtube.com/', at);
+  } catch (_) {}
+}
+
+List<_Topic> _topics(BuildContext context) => [
+  _Topic(
+    'faster',
+    Icons.bolt_rounded,
+    tr(context, 'Save links faster', 'Lưu link nhanh hơn'),
+    tr(
+      context,
+      'Put Handy Bookmark first in the share list, so saving from any app is one tap.',
+      'Đưa Handy Bookmark lên đầu danh sách chia sẻ, để lưu từ app nào cũng chỉ một chạm.',
+    ),
+    [
+      _Step(
+        tr(context, 'Open the share menu', 'Mở khung chia sẻ'),
+        action: (
+          tr(context, 'Open the share menu', 'Mở khung chia sẻ'),
+          _openShareSheet,
+        ),
       ),
-      tr(
-        context,
-        'The + beside the field saves a picture or several links at once.',
-        'Nút + cạnh ô nhập để lưu một ảnh hoặc nhiều link một lúc.',
-      ),
-      tr(
-        context,
-        'Saving the same link twice shows the one you already have instead of a copy.',
-        'Lưu lại một link đã có thì app mở mục cũ, không tạo bản trùng.',
-      ),
-      tr(
-        context,
-        'On a computer: Ctrl+V saves what you copied, Ctrl+N opens more ways to save.',
-        'Trên máy tính: Ctrl+V lưu thứ vừa chép, Ctrl+N mở thêm cách lưu.',
-      ),
-    ],
-  ),
-  (
-    id: 'organize',
-    icon: Icons.folder_outlined,
-    title: tr(context, 'Organize', 'Sắp xếp'),
-    steps: [
-      tr(
-        context,
-        'New saves wait in Not sorted. Put each one into a collection from Recently saved on Home.',
-        'Mục mới chờ ở Chưa sắp xếp. Cho từng mục vào bộ sưu tập ngay ở phần Mới lưu trên Trang chủ.',
-      ),
-      tr(
-        context,
-        'Make a collection with the folder button beside Collections. Press and hold a collection to rename it.',
-        'Tạo bộ sưu tập bằng nút thư mục cạnh Bộ sưu tập. Nhấn giữ một bộ sưu tập để đổi tên.',
-      ),
-      tr(
-        context,
-        'Open an item to add tags and a note, or to move it.',
-        'Mở một mục để thêm thẻ, ghi chú hoặc chuyển chỗ.',
-      ),
-      tr(
-        context,
-        'Press and hold an item to select several, then move, tag or delete them together.',
-        'Nhấn giữ một mục để chọn nhiều, rồi chuyển, gắn thẻ hoặc xóa cùng lúc.',
-      ),
-    ],
-  ),
-  (
-    id: 'find',
-    icon: Icons.search_rounded,
-    title: tr(context, 'Find', 'Tìm lại'),
-    steps: [
-      tr(
-        context,
-        'The search button at the top of Home opens Search. Type a word from the title, the site, a tag or a note.',
-        'Nút tìm ở đầu Trang chủ mở trang Tìm. Gõ một từ trong tiêu đề, tên trang, thẻ hoặc ghi chú.',
-      ),
-      tr(
-        context,
-        'Show only links or only pictures with the chips under the field.',
-        'Lọc chỉ link hoặc chỉ ảnh bằng các nút dưới ô tìm.',
-      ),
-      tr(
-        context,
-        'On a computer, Ctrl+F jumps to search.',
-        'Trên máy tính, Ctrl+F để tìm nhanh.',
-      ),
-    ],
-  ),
-  (
-    id: 'read',
-    icon: Icons.chrome_reader_mode_outlined,
-    title: tr(context, 'Read', 'Đọc'),
-    steps: [
-      tr(
-        context,
-        'Open an article in the Reader for clean text. Save offline keeps a copy that opens without the internet.',
-        'Mở bài viết trong trình đọc để xem chữ gọn gàng. Lưu offline giữ một bản đọc được khi không có mạng.',
-      ),
-      tr(
-        context,
-        'Focus shows what you have not opened yet, one at a time: swipe right when done, left for later.',
-        'Tập trung cho xem từng mục chưa mở: vuốt phải khi xong, vuốt trái để để sau.',
-      ),
-      tr(
-        context,
-        'A weekly nudge can remind you when new saves wait. Turn it on in Settings › Reminders.',
-        'Có thể bật nhắc mỗi tuần khi có mục mới chưa xem, trong Cài đặt › Nhắc nhở.',
-      ),
-    ],
-  ),
-  (
-    id: 'safe',
-    icon: Icons.shield_outlined,
-    title: tr(context, 'Keep it safe', 'Giữ an toàn'),
-    steps: [
-      tr(
-        context,
-        'Everything stays on this device. There is no account.',
-        'Mọi thứ nằm trên máy này. Không cần tài khoản.',
-      ),
-      tr(
-        context,
-        'Settings › Backup & restore › Back up makes one file with every item, picture and offline copy. Keep it somewhere else.',
-        'Cài đặt › Sao lưu & khôi phục › Sao lưu tạo một file chứa mọi mục, ảnh và bản đọc offline. Hãy cất nó ở nơi khác.',
-      ),
-      tr(
-        context,
-        'Restore shows what a backup holds before anything changes.',
-        'Khôi phục cho xem file sao lưu có gì trước khi thay đổi.',
-      ),
-      tr(
-        context,
-        'Deleted items wait 30 days in Recently deleted.',
-        'Mục đã xóa chờ 30 ngày trong Đã xóa gần đây.',
-      ),
-      tr(
-        context,
-        'To use the same library on two computers, sync it through a folder your cloud app keeps in step (Settings › Cloud sync).',
-        'Muốn dùng chung thư viện trên hai máy tính, đồng bộ qua một thư mục do app đám mây giữ đồng bộ (Cài đặt › Đồng bộ đám mây).',
+      if (_apple) ...[
+        _Step(
+          tr(
+            context,
+            'Swipe through the apps to the end and tap More',
+            'Vuốt hàng app tới cuối rồi bấm Thêm',
+          ),
+          picture: const MockShareRow(),
+        ),
+        _Step(
+          tr(
+            context,
+            'Tap Edit, then add Handy Bookmark to Favorites',
+            'Bấm Sửa, rồi thêm Handy Bookmark vào Mục ưa thích',
+          ),
+          picture: const MockFavorites(),
+        ),
+      ] else ...[
+        _Step(
+          tr(
+            context,
+            'Swipe through the apps to find Handy Bookmark',
+            'Vuốt hàng app để tìm Handy Bookmark',
+          ),
+          picture: const MockShareRow(),
+        ),
+        _Step(
+          tr(
+            context,
+            'Press and hold it, then tap Pin',
+            'Nhấn giữ nó rồi bấm Ghim',
+          ),
+          picture: const MockPin(),
+        ),
+      ],
+      _Step(
+        tr(
+          context,
+          'Next time: tap Share, choose Handy Bookmark, and you are done. Then pick a collection, or leave it in Not sorted.',
+          'Lần sau: bấm Chia sẻ, chọn Handy Bookmark là xong. Rồi chọn bộ sưu tập, hoặc để ở Chưa xếp.',
+        ),
+        picture: const MockShareRow(first: true),
       ),
     ],
   ),
-  (
-    id: 'pro',
-    icon: Icons.workspace_premium_outlined,
-    title: tr(context, 'Pro', 'Pro'),
-    steps: [
-      tr(
-        context,
-        'One payment adds themes, collection layouts, Focus skins and designed exports.',
-        'Trả một lần để có thêm giao diện, kiểu trình bày bộ sưu tập, kiểu Tập trung và bản xuất có thiết kế.',
+  _Topic(
+    'home',
+    Icons.add_link_rounded,
+    tr(context, 'Save in the app', 'Lưu ngay trong app'),
+    tr(
+      context,
+      'A link you copied, a picture, or several links at once.',
+      'Link vừa chép, một ảnh, hoặc nhiều link một lúc.',
+    ),
+    [
+      _Step(
+        tr(
+          context,
+          'Paste a link into the field at the top of Home and tap Save. Undo in the message takes it back.',
+          'Dán link vào ô trên cùng Trang chủ rồi bấm Lưu. Bấm Hoàn tác trong thông báo để bỏ lại.',
+        ),
+        picture: const MockQuickSave(),
       ),
-      tr(
-        context,
-        'Also highlights in the Reader, search inside articles and pictures, and reading text from pictures on the device.',
-        'Thêm đánh dấu trong trình đọc, tìm bên trong bài viết và ảnh, đọc chữ trong ảnh ngay trên máy.',
+      _Step(
+        tr(
+          context,
+          'The + beside it saves a picture, or several links at once.',
+          'Nút + bên cạnh để lưu ảnh, hoặc nhiều link một lúc.',
+        ),
+        picture: const MockQuickSave(ringPlus: true),
       ),
-      tr(
-        context,
-        'Everything above stays free. Settings › Explore Pro shows each one on your own library.',
-        'Mọi thứ ở trên vẫn miễn phí. Cài đặt › Khám phá Pro cho xem thử từng tính năng trên chính thư viện của bạn.',
+      if (!_android && !_apple)
+        _Step(
+          tr(
+            context,
+            'On a computer: Ctrl+V saves what you copied.',
+            'Trên máy tính: Ctrl+V lưu thứ vừa chép.',
+          ),
+        ),
+    ],
+  ),
+  _Topic(
+    'organize',
+    Icons.folder_outlined,
+    tr(context, 'Put things in order', 'Sắp xếp gọn gàng'),
+    tr(
+      context,
+      'Collections with their own icon and colour, tags and notes.',
+      'Bộ sưu tập có biểu tượng và màu riêng, thẻ và ghi chú.',
+    ),
+    [
+      _Step(
+        tr(
+          context,
+          'New saves wait in Not sorted. Tap the folder on a row to put it in a collection.',
+          'Mục mới chờ ở Chưa xếp. Bấm biểu tượng thư mục trên dòng để cho vào bộ sưu tập.',
+        ),
+        picture: const MockPutIn(),
+      ),
+      _Step(
+        tr(
+          context,
+          'Make a collection from a ready start, then give it an icon and a colour.',
+          'Tạo bộ sưu tập từ mẫu có sẵn, rồi chọn biểu tượng và màu.',
+        ),
+        picture: MockChips(
+          title: tr(context, 'Start from', 'Bắt đầu từ'),
+          chips: [
+            (Icons.restaurant_outlined, tr(context, 'Recipes', 'Công thức')),
+            (Icons.luggage_outlined, tr(context, 'Trips', 'Du lịch')),
+            (Icons.shopping_bag_outlined, tr(context, 'To buy', 'Cần mua')),
+          ],
+        ),
+      ),
+      _Step(
+        tr(
+          context,
+          'Open an item to add tags and a note right on its page.',
+          'Mở một mục để thêm thẻ và ghi chú ngay trên trang của nó.',
+        ),
+        picture: MockChips(
+          title: tr(context, 'Tags', 'Thẻ'),
+          ringed: 1,
+          chips: [
+            (null, '#weekend'),
+            (Icons.add, tr(context, 'Add tag', 'Thêm thẻ')),
+          ],
+        ),
+      ),
+    ],
+  ),
+  _Topic(
+    'find',
+    Icons.search_rounded,
+    tr(context, 'Find it again', 'Tìm lại'),
+    tr(
+      context,
+      'By a word, a tag, or where it is.',
+      'Bằng một chữ, một thẻ, hoặc nơi nó nằm.',
+    ),
+    [
+      _Step(
+        tr(
+          context,
+          'Tap the search button at the top of Home and type a word from the title, site, tag or note.',
+          'Bấm nút tìm ở đầu Trang chủ rồi gõ một chữ trong tiêu đề, tên trang, thẻ hoặc ghi chú.',
+        ),
+      ),
+      _Step(
+        tr(
+          context,
+          'Before typing, tap a figure or a tag to open it.',
+          'Trước khi gõ, bấm một con số hoặc một thẻ để mở nó.',
+        ),
+        picture: MockChips(
+          ringed: 0,
+          chips: [(null, '#món-huế  2'), (null, '#cuối-tuần  1')],
+        ),
+      ),
+      _Step(
+        tr(
+          context,
+          'Show only links or only pictures with the chips under the field.',
+          'Lọc chỉ link hoặc chỉ ảnh bằng các nút dưới ô tìm.',
+        ),
+        picture: MockChips(
+          ringed: 2,
+          chips: [
+            (null, tr(context, 'All', 'Tất cả')),
+            (null, 'Link'),
+            (null, tr(context, 'Pictures', 'Ảnh')),
+          ],
+        ),
+      ),
+    ],
+  ),
+  _Topic(
+    'read',
+    Icons.chrome_reader_mode_outlined,
+    tr(context, 'Read and look back', 'Đọc và xem lại'),
+    tr(
+      context,
+      'Clean reading, offline copies, and Focus for what waits.',
+      'Đọc gọn gàng, bản đọc offline, và Tập trung cho những gì đang chờ.',
+    ),
+    [
+      _Step(
+        tr(
+          context,
+          'Open an article and tap Read for clean text. Save offline keeps a copy for when there is no internet.',
+          'Mở một bài viết và bấm Đọc để xem chữ gọn gàng. Lưu offline giữ một bản cho lúc không có mạng.',
+        ),
+      ),
+      _Step(
+        tr(
+          context,
+          'Focus shows what you have not opened, one at a time: right when done, left for later.',
+          'Tập trung cho xem từng mục chưa mở: vuốt phải khi xong, vuốt trái để sau.',
+        ),
+        picture: const MockFocus(),
+      ),
+    ],
+  ),
+  _Topic(
+    'safe',
+    Icons.shield_outlined,
+    tr(context, 'Keep it safe', 'Giữ an toàn'),
+    tr(
+      context,
+      'Everything stays on this device. Back it up, sync it, lock it.',
+      'Mọi thứ nằm trên máy này. Sao lưu, đồng bộ, khóa lại.',
+    ),
+    [
+      _Step(
+        tr(
+          context,
+          'Settings › Data › Back up makes one file with everything. Keep it somewhere else; Restore shows what it holds first.',
+          'Cài đặt › Dữ liệu › Sao lưu tạo một file chứa mọi thứ. Cất ở nơi khác; Khôi phục cho xem trước file có gì.',
+        ),
+        picture: MockRows(
+          title: tr(context, 'Data', 'Dữ liệu'),
+          ringed: 1,
+          rows: [
+            (Icons.sync, tr(context, 'Sync', 'Đồng bộ')),
+            (Icons.backup_outlined, tr(context, 'Back up', 'Sao lưu')),
+            (
+              Icons.delete_outline,
+              tr(context, 'Recently deleted', 'Đã xóa gần đây'),
+            ),
+          ],
+        ),
+      ),
+      _Step(
+        tr(
+          context,
+          'App lock asks for your fingerprint, face or screen lock when the app opens.',
+          'Khóa app hỏi vân tay, khuôn mặt hoặc khóa màn hình khi mở app.',
+        ),
+        picture: MockRows(
+          title: tr(context, 'Privacy', 'Riêng tư'),
+          rows: [(Icons.lock_outline, tr(context, 'App lock', 'Khóa app'))],
+        ),
+      ),
+      _Step(
+        tr(
+          context,
+          'Deleted items wait 30 days in Recently deleted.',
+          'Mục đã xóa chờ 30 ngày trong Đã xóa gần đây.',
+        ),
       ),
     ],
   ),
 ];
 
-/// Settings › How to use: the whole app read from top to bottom, in six
-/// parts, with a row of links at the top that jumps to each part.
-class HowToPage extends StatefulWidget {
+/// Settings › Help › How to use: the welcome again, then short topics.
+/// Each topic opens as a sheet of numbered steps with a picture of where.
+/// Reading it changes nothing.
+class HowToPage extends StatelessWidget {
   const HowToPage({super.key});
+
   @override
-  State<HowToPage> createState() => _HowToPageState();
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final p = BookmarkPalette.of(context);
+    final topics = _topics(context);
+    return HandyPage(
+      title: tr(context, 'How to use', 'Cách dùng'),
+      children: [
+        const SizedBox(height: HandySpace.m),
+        // The first way in: the welcome again, on a large soft card.
+        Material(
+          color: p.tint,
+          borderRadius: BorderRadius.circular(BookmarkRadii.item),
+          child: InkWell(
+            key: const Key('howto-replay'),
+            borderRadius: BorderRadius.circular(BookmarkRadii.item),
+            onTap: () => Navigator.pushNamed(context, '/welcome'),
+            child: Padding(
+              padding: const EdgeInsets.all(HandySpace.l),
+              child: Row(
+                children: [
+                  Icon(Icons.play_circle_outline, size: 36, color: p.ink),
+                  const SizedBox(width: HandySpace.m),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          tr(
+                            context,
+                            'Watch the welcome again',
+                            'Xem lại phần giới thiệu',
+                          ),
+                          style: bookmarkSerif(context, 22),
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          tr(
+                            context,
+                            'Save a video for practice and find it again. Nothing is kept.',
+                            'Lưu thử một video rồi tìm lại. Không lưu gì thật.',
+                          ),
+                          style: theme.textTheme.bodyMedium?.copyWith(
+                            color: p.ink,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+        const SizedBox(height: HandySpace.xl),
+        Semantics(
+          header: true,
+          child: Text(
+            tr(context, 'Topics', 'Chủ đề'),
+            style: theme.textTheme.titleLarge,
+          ),
+        ),
+        const SizedBox(height: HandySpace.s),
+        for (final (i, t) in topics.indexed)
+          ListTile(
+            key: Key('howto-topic-${t.id}'),
+            contentPadding: const EdgeInsets.symmetric(horizontal: 4),
+            minVerticalPadding: 10,
+            leading: Container(
+              width: 44,
+              height: 44,
+              decoration: BoxDecoration(
+                color: p.surface,
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Icon(t.icon, color: p.ink),
+            ),
+            title: Text(
+              t.title,
+              style: theme.textTheme.titleMedium?.copyWith(
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            subtitle: Text(t.summary),
+            trailing: Icon(Icons.chevron_right, color: p.muted),
+            onTap: () => showHowToTopic(context, i),
+          ),
+        const SizedBox(height: HandySpace.xl),
+      ],
+    );
+  }
 }
 
-class _HowToPageState extends State<HowToPage> {
-  final _keys = <String, GlobalKey>{};
-
-  GlobalKey _key(String id) => _keys.putIfAbsent(id, GlobalKey.new);
-
-  void _jump(String id) {
-    final target = _key(id).currentContext;
-    if (target == null) return;
-    Scrollable.ensureVisible(
-      target,
-      duration: HandyMotion.of(context, HandyMotion.long),
-      curve: HandyMotion.curve,
+/// A topic as a sheet: numbered step cards, Previous and Next, and Done.
+Future<void> showHowToTopic(BuildContext context, int start) =>
+    showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      showDragHandle: true,
+      useSafeArea: true,
+      constraints: const BoxConstraints(maxWidth: 640),
+      builder: (_) => DraggableScrollableSheet(
+        initialChildSize: .92,
+        minChildSize: .5,
+        maxChildSize: .96,
+        expand: false,
+        builder: (_, scroll) => _TopicSheet(start: start, scroll: scroll),
+      ),
     );
+
+class _TopicSheet extends StatefulWidget {
+  final int start;
+  final ScrollController scroll;
+  const _TopicSheet({required this.start, required this.scroll});
+  @override
+  State<_TopicSheet> createState() => _TopicSheetState();
+}
+
+class _TopicSheetState extends State<_TopicSheet> {
+  late int _at = widget.start;
+
+  void _go(int to) {
+    if (widget.scroll.hasClients) widget.scroll.jumpTo(0);
+    setState(() => _at = to);
   }
 
   @override
   Widget build(BuildContext context) {
-    final parts = _parts(context);
     final theme = Theme.of(context);
     final p = BookmarkPalette.of(context);
-    final title = tr(context, 'How to use', 'Cách dùng');
-    final wide = MediaQuery.sizeOf(context).width >= HandySpace.wide;
-    // Built whole (not lazily) so a link at the top can reach any part.
-    final children = <Widget>[
-      if (wide)
-        Semantics(
-          header: true,
-          child: Text(title, style: theme.textTheme.headlineSmall),
-        ),
-      const SizedBox(height: HandySpace.m),
-      Wrap(
-        key: const Key('howto-jumps'),
-        spacing: HandySpace.s,
-        runSpacing: HandySpace.s,
-        children: [
-          for (final part in parts)
-            ActionChip(
-              key: Key('howto-jump-${part.id}'),
-              avatar: Icon(part.icon, size: 18),
-              label: Text(part.title),
-              onPressed: () => _jump(part.id),
-            ),
-        ],
-      ),
-      const SizedBox(height: HandySpace.l),
-      for (final (i, part) in parts.indexed)
-        SettingsGroup(
-          key: _key(part.id),
-          first: i == 0,
-          title: part.title,
-          children: [
-            Material(
-              key: Key('howto-${part.id}'),
-              color: p.surface,
-              borderRadius: BorderRadius.circular(BookmarkRadii.item),
-              child: Padding(
-                padding: const EdgeInsets.symmetric(vertical: HandySpace.s),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    for (final (n, step) in part.steps.indexed)
-                      Padding(
-                        padding: const EdgeInsets.fromLTRB(
-                          HandySpace.l,
-                          HandySpace.s,
-                          HandySpace.l,
-                          HandySpace.s,
-                        ),
-                        child: Row(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            ExcludeSemantics(
-                              child: Container(
-                                width: 24,
-                                height: 24,
-                                alignment: Alignment.center,
-                                decoration: BoxDecoration(
-                                  color: p.tint,
-                                  shape: BoxShape.circle,
-                                ),
-                                child: Text(
-                                  '${n + 1}',
-                                  style: theme.textTheme.labelMedium?.copyWith(
-                                    color: p.ink,
-                                  ),
-                                ),
-                              ),
-                            ),
-                            const SizedBox(width: HandySpace.l),
-                            Expanded(
-                              child: Text(
-                                step,
-                                style: theme.textTheme.bodyLarge,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                  ],
+    final topics = _topics(context);
+    final t = topics[_at];
+    return Column(
+      key: Key('howto-sheet-${t.id}'),
+      children: [
+        Expanded(
+          child: ListView(
+            controller: widget.scroll,
+            padding: const EdgeInsets.fromLTRB(20, 0, 20, 12),
+            children: [
+              Text(
+                tr(
+                  context,
+                  'Topic ${_at + 1} of ${topics.length}',
+                  'Chủ đề ${_at + 1}/${topics.length}',
                 ),
+                style: theme.textTheme.bodySmall?.copyWith(color: p.muted),
               ),
-            ),
-          ],
+              const SizedBox(height: 4),
+              Semantics(
+                header: true,
+                child: Text(t.title, style: SheetTitle.style(context)),
+              ),
+              const SizedBox(height: HandySpace.s),
+              Text(
+                t.summary,
+                style: theme.textTheme.bodyLarge?.copyWith(color: p.muted),
+              ),
+              const SizedBox(height: HandySpace.l),
+              for (final (i, step) in t.steps.indexed)
+                Container(
+                  key: Key('howto-step-$i'),
+                  margin: const EdgeInsets.only(bottom: HandySpace.m),
+                  padding: const EdgeInsets.all(14),
+                  // A step in tone from the sheet, as the app's grounds are.
+                  decoration: BoxDecoration(
+                    color: theme.scaffoldBackgroundColor,
+                    borderRadius: BorderRadius.circular(18),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          SizedBox(
+                            width: 30,
+                            child: Text(
+                              '${i + 1}',
+                              style: theme.textTheme.titleLarge?.copyWith(
+                                fontWeight: FontWeight.w700,
+                              ),
+                            ),
+                          ),
+                          Expanded(
+                            child: Padding(
+                              padding: const EdgeInsets.only(top: 3),
+                              child: Text(
+                                step.words,
+                                style: theme.textTheme.bodyLarge?.copyWith(
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                      if (step.action case (final label, final run)) ...[
+                        const SizedBox(height: HandySpace.m),
+                        Builder(
+                          builder: (context) => FilledButton.icon(
+                            key: Key('howto-action-$i'),
+                            style: sheetButtonStyle(context),
+                            onPressed: () => run(context),
+                            icon: const Icon(Icons.ios_share_rounded),
+                            label: Text(label),
+                          ),
+                        ),
+                      ],
+                      if (step.picture case final picture?) ...[
+                        const SizedBox(height: HandySpace.m),
+                        Center(
+                          child: ConstrainedBox(
+                            constraints: const BoxConstraints(maxWidth: 420),
+                            child: picture,
+                          ),
+                        ),
+                      ],
+                    ],
+                  ),
+                ),
+            ],
+          ),
         ),
-      const SizedBox(height: HandySpace.xxl),
-    ];
-    return HandyPage(
-      title: title,
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.symmetric(horizontal: HandySpace.l),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [for (final c in children) HandyContent(child: c)],
+        // Pinned at the foot, wherever the steps are scrolled.
+        Padding(
+          padding: const EdgeInsets.fromLTRB(20, 4, 20, 16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Row(
+                children: [
+                  Expanded(
+                    child: _at > 0
+                        ? TextButton.icon(
+                            key: const Key('howto-previous'),
+                            onPressed: () => _go(_at - 1),
+                            icon: const Icon(Icons.arrow_back, size: 18),
+                            label: Text(tr(context, 'Previous', 'Trước')),
+                          )
+                        : const SizedBox.shrink(),
+                  ),
+                  Expanded(
+                    child: _at < topics.length - 1
+                        ? TextButton.icon(
+                            key: const Key('howto-next'),
+                            onPressed: () => _go(_at + 1),
+                            icon: const Icon(Icons.arrow_forward, size: 18),
+                            label: Text(tr(context, 'Next', 'Tiếp')),
+                          )
+                        : const SizedBox.shrink(),
+                  ),
+                ],
+              ),
+              const SizedBox(height: HandySpace.xs),
+              FilledButton(
+                key: const Key('howto-done'),
+                style: sheetButtonStyle(context),
+                onPressed: () => Navigator.pop(context),
+                child: Text(tr(context, 'Done', 'Xong')),
+              ),
+            ],
+          ),
         ),
-      ),
+      ],
     );
   }
 }

@@ -2254,3 +2254,24 @@ dải "Mới lưu" (mục chưa xếp đi trước, một nút "Xếp vào…"),
   điện thoại, tới 5 cột ở màn rộng, hai hàng). Gõ một chữ hoặc chọn chip thì ra kết quả như cũ.
 - Thư viện trống: các số là 0, và một câu nói Tìm sẽ tìm theo tiêu đề, trang, thẻ, ghi chú.
 - Bỏ: con số "phù phiếm", biểu đồ, ô tìm kiếm có minh hoạ, đám mây thẻ nhiều màu.
+
+## Hợp đồng: Handy Bookmark · Cài đặt và Cách dùng (2026-11-07)
+
+- Mẫu: app Sticky-Wall (cùng studio) và khung "Save links faster" của Tuckii. Cài đặt chỉ giữ
+  những gì người dùng tìm tới; công cụ ít dùng nằm trong một trang con.
+- Cài đặt, theo thứ tự: thẻ **Pro** (Nâng cấp / Bạn đã có Pro) → **Chung** (Ngôn ngữ, Sáng hay
+  tối, Chủ đề màu, Tên thư viện, Nhắc mỗi tuần) → **Riêng tư** (Khóa app) → **Dữ liệu** (Đồng
+  bộ có trạng thái; Sao lưu & Khôi phục là hai nút cạnh nhau; Tự sao lưu; Nhập và xuất; Đã xóa
+  gần đây có số; Công cụ thư viện gồm cách mở link, mục trùng, kiểm tra link, dung lượng; Xóa
+  toàn bộ dữ liệu ở cuối, chữ đỏ) → **Trợ giúp** (Cách dùng) → **Giới thiệu** (Góp ý, Chính
+  sách, Điều khoản, Giấy phép, App khác).
+- Bỏ: "Đặt lại cài đặt", dòng "Xem lại phần giới thiệu" riêng (đã vào Cách dùng), Dung lượng
+  đứng riêng, nhóm Pro ở giữa trang.
+- Khóa app: dùng khóa màn hình, vân tay hay khuôn mặt của chính máy (`local_auth`); app không
+  giữ mật khẩu. Bật thì phải xác nhận trước; máy chưa có khóa thì báo và để tắt. Khóa khi mở app
+  và khi quay lại sau hơn một phút; che cả khung và hộp thoại. Không có trên web.
+- Cách dùng: thẻ lớn "Xem lại phần giới thiệu" → danh sách chủ đề (Lưu link nhanh hơn, Lưu
+  ngay trong app, Sắp xếp gọn gàng, Tìm lại, Đọc và xem lại, Giữ an toàn). Mỗi chủ đề mở khung
+  các thẻ bước đánh số, mỗi bước có hình một mảnh màn hình (vẽ bằng màu của app, khoanh đúng
+  chỗ bấm). "Lưu link nhanh hơn": bước 1 có nút mở khung chia sẻ thật; Android hướng dẫn nhấn
+  giữ rồi Ghim, iOS hướng dẫn Sửa rồi thêm vào Mục ưa thích. Trước/Tiếp và Xong cố định ở đáy.

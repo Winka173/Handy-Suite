@@ -114,23 +114,14 @@ void main() {
     expect(t.takeException(), isNull);
   });
 
-  testWidgets('settings: its groups in order, truthful sync and privacy, '
-      'and the irreversible actions last', (t) async {
+  testWidgets('settings: Pro first, then General, Privacy, Data, Help and '
+      'About; delete-all ends Data; truthful sync and privacy', (t) async {
     await start(t);
     Navigator.of(t.element(find.byType(Scaffold).first)).pushNamed('/settings');
     await t.pumpAndSettle();
-    for (final group in [
-      'Appearance',
-      'Reminders',
-      'Library',
-      'Backup & restore',
-      'Cloud sync',
-      'Help & feedback',
-      'Pro',
-      'About',
-      'Reset and delete',
-    ]) {
-      // By the group itself: "Pro" is also the Pro section's own label.
+    expect(find.byKey(const Key('set-pro')), findsOneWidget);
+    expect(find.text('Upgrade to Pro'), findsOneWidget);
+    for (final group in ['General', 'Privacy', 'Data', 'Help', 'About']) {
       final heading = find.byWidgetPredicate(
         (w) => w is SettingsGroup && w.title == group,
       );
@@ -139,27 +130,21 @@ void main() {
         300,
         scrollable: find.byType(Scrollable).first,
       );
-      expect(heading, findsOneWidget);
+      expect(heading, findsOneWidget, reason: group);
     }
+    // Gone: a separate reset, a second guide row, storage on its own.
+    expect(find.byKey(const Key('settings-reset')), findsNothing);
+    expect(find.byKey(const Key('set-guide')), findsNothing);
     // Nothing claims a connection that does not exist.
     expect(find.textContaining('Connected'), findsNothing);
     await t.scrollUntilVisible(
-      find.byKey(const Key('save-reset')),
-      300,
+      find.byKey(const Key('save-privacy')),
+      -300,
       scrollable: find.byType(Scrollable).first,
-    );
-    // Delete-all is the last row of the page, under its own heading.
-    expect(find.text('Reset and delete'), findsOneWidget);
-    await t.drag(find.byType(Scrollable).first, const Offset(0, -3000));
-    await t.pumpAndSettle();
-    expect(
-      t.getRect(find.byKey(const Key('save-reset'))).bottom,
-      greaterThan(900 - 120),
-      reason: 'at the end of the page, nothing comes after it',
     );
     await t.scrollUntilVisible(
       find.byKey(const Key('save-privacy')),
-      -300,
+      300,
       scrollable: find.byType(Scrollable).first,
     );
     await tapKey(t, 'save-privacy');
