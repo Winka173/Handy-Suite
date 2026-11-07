@@ -2,8 +2,8 @@ import 'package:handy_ui/kit.dart';
 import 'motion.dart';
 
 /// Where the practice is: move the card to Doing, filter by its category,
-/// finish it, done.
-enum PracticeStep { drag, filter, finish, done }
+/// tick one of its subtasks, finish it, done.
+enum PracticeStep { drag, filter, tick, finish, done }
 
 /// A small pretend board for the guide, drawn at a phone's real size: three
 /// columns, a few cards with their categories, and the category strip.
@@ -23,7 +23,11 @@ class PracticeBoardState extends State<PracticeBoard> {
   /// Column of the practice card: 0 To Do, 1 Doing, 2 Done.
   int column = 0;
   bool filtered = false;
-  final card = GlobalKey(), chip = GlobalKey(), doing = GlobalKey();
+  final card = GlobalKey(),
+      chip = GlobalKey(),
+      doing = GlobalKey(),
+      tick = GlobalKey();
+  bool ticked = false;
 
   void _to(PracticeStep next) {
     setState(() => step = next);
@@ -37,6 +41,8 @@ class PracticeBoardState extends State<PracticeBoard> {
         _drop(1);
       case PracticeStep.filter:
         _filter();
+      case PracticeStep.tick:
+        _tick();
       case PracticeStep.finish:
         _drop(2);
       case PracticeStep.done:
@@ -57,6 +63,12 @@ class PracticeBoardState extends State<PracticeBoard> {
   void _filter() {
     if (step != PracticeStep.filter) return;
     setState(() => filtered = true);
+    _to(PracticeStep.tick);
+  }
+
+  void _tick() {
+    if (step != PracticeStep.tick) return;
+    setState(() => ticked = true);
     _to(PracticeStep.finish);
   }
 
@@ -65,6 +77,7 @@ class PracticeBoardState extends State<PracticeBoard> {
     final target = switch (step) {
       PracticeStep.drag || PracticeStep.finish => card,
       PracticeStep.filter => chip,
+      PracticeStep.tick => tick,
       PracticeStep.done => null,
     };
     final label = switch (step) {
@@ -74,6 +87,7 @@ class PracticeBoardState extends State<PracticeBoard> {
         'Giữ rồi kéo sang Đang làm',
       ),
       PracticeStep.filter => tr(context, 'Tap Maths', 'Chạm Toán'),
+      PracticeStep.tick => tr(context, 'Tick a subtask', 'Tick một việc con'),
       PracticeStep.finish => tr(context, 'Drag it to Done', 'Kéo sang Xong'),
       PracticeStep.done => null,
     };
@@ -202,10 +216,67 @@ class _Board extends StatelessWidget {
               ),
               if (mine && s.column < 2) ...[
                 const SizedBox(height: 4),
-                const Text(
-                  '2/5',
-                  style: TextStyle(fontSize: 11, color: GuideColors.muted),
+                Text(
+                  s.ticked ? '3/5' : '2/5',
+                  style: const TextStyle(
+                    fontSize: 11,
+                    color: GuideColors.muted,
+                  ),
                 ),
+              ],
+              // In Doing, once filtered: two of its subtasks, one to tick.
+              if (mine &&
+                  key != null &&
+                  s.column == 1 &&
+                  s.step.index >= PracticeStep.tick.index) ...[
+                const SizedBox(height: 6),
+                for (final (title, done, rowKey) in [
+                  (
+                    tr(context, 'Review the formula', 'Ôn công thức'),
+                    true,
+                    null,
+                  ),
+                  (
+                    tr(context, 'Five exercises', 'Làm 5 bài tập'),
+                    s.ticked,
+                    s.tick,
+                  ),
+                ])
+                  GestureDetector(
+                    key: rowKey,
+                    onTap: rowKey == null ? null : s._tick,
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 3),
+                      child: Row(
+                        children: [
+                          Icon(
+                            done
+                                ? Icons.check_box
+                                : Icons.check_box_outline_blank,
+                            size: 16,
+                            color: done ? GuideColors.teal : GuideColors.muted,
+                          ),
+                          const SizedBox(width: 4),
+                          Flexible(
+                            child: Text(
+                              title,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: TextStyle(
+                                fontSize: 11.5,
+                                color: done
+                                    ? GuideColors.muted
+                                    : GuideColors.ink,
+                                decoration: done
+                                    ? TextDecoration.lineThrough
+                                    : null,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
               ],
             ],
           ),

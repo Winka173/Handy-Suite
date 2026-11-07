@@ -2722,7 +2722,9 @@ xem trước trước khi mua), không chép nền ngà/teal và không gọi l�
      thẻ có nhóm màu). Nút "Gom về một bảng", rồi "Chỉ tôi cách dùng".
   2. Tập thử trên bảng giả (không lưu gì): mọi thứ tối đi trừ đúng chỗ cần làm, khung sáng có
      viền thở và nhãn chỉ dẫn: (a) "Giữ thẻ rồi kéo sang Đang làm" (có nút chữ "Chuyển giúp tôi"
-     cho ai không kéo được); (b) "Chạm Toán để chỉ xem việc Toán"; (c) "Kéo sang Xong". Xong thì
+     cho ai không kéo được); (b) "Chạm Toán để chỉ xem việc Toán"; (c) "Tick một việc con" (thẻ
+     mở hai việc con, 2/5 thành 3/5; thêm 2026-11-08 vì việc con là tính năng chính); (d) "Kéo
+     sang Xong". Xong thì
      dấu tick nảy lên: "Vẫn thuộc Toán, dù đã xong."
   3. Bắt đầu: ba lựa chọn lớn (Bảng học tập, Bảng trống, Xem các mẫu), nút "Bắt đầu". Mở lại
      từ Cài đặt thì không có lựa chọn và không đổi gì.

@@ -158,6 +158,11 @@ class _WelcomePageState extends State<WelcomePage>
           'Now tap Maths: the board shows only Maths cards.',
           'Giờ chạm Toán: bảng chỉ còn thẻ môn Toán.',
         ),
+        PracticeStep.tick => tr(
+          context,
+          'A card can hold small steps. Tick one: 2/5 becomes 3/5.',
+          'Một thẻ có thể gồm các việc con. Tick một việc: 2/5 thành 3/5.',
+        ),
         _ => tr(
           context,
           'Last, drag it to Done.',

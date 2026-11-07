@@ -87,6 +87,10 @@ void main() {
     await tap(t, find.byKey(const Key('welcome-do-it')));
     expect(find.text('Tap Maths'), findsOneWidget);
     await tap(t, find.byKey(const Key('welcome-do-it')));
+    expect(find.text('Tick a subtask'), findsOneWidget);
+    expect(find.text('2/5'), findsWidgets);
+    await tap(t, find.byKey(const Key('welcome-do-it')));
+    expect(find.text('3/5'), findsWidgets);
     expect(find.text('Drag it to Done'), findsOneWidget);
     await tap(t, find.byKey(const Key('welcome-do-it')));
     expect(c.state!.rows('boards'), isEmpty);
