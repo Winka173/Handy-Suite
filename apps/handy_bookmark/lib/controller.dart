@@ -525,15 +525,18 @@ class SaveController extends ChangeNotifier {
     }.contains(bare);
   }
 
-  /// A Facebook or Instagram login page in place of the post or reel.
+  /// A login page or a bare site page (Facebook, Instagram, TikTok's
+  /// "Make Your Day", Reddit's check) in place of the post or video.
   static bool _loginWall(Bookmark b, MetadataResult r) =>
-      {'facebook', 'instagram'}.contains(b.platform) &&
+      _walledSites.contains(b.platform) &&
       r.thumbnailUrl == null &&
       (_onlyNamesSite(b, r.title, r.siteName) ||
           RegExp(
-            r'log ?in|sign up|đăng nhập',
+            r'log ?in|sign up|đăng nhập|make your day',
             caseSensitive: false,
           ).hasMatch(r.title!));
+
+  static const _walledSites = {'facebook', 'instagram', 'tiktok', 'reddit'};
 
   /// Links saved lately that have no picture on this device (the page could
   /// not be read, showed a login page, or its picture did not arrive) are
@@ -555,7 +558,7 @@ class SaveController extends ChangeNotifier {
                       b.thumbnailUrl != null ||
                       // Read before, but only a login page came back.
                       (b.metadataStatus == 'partial' &&
-                          {'facebook', 'instagram'}.contains(b.platform) &&
+                          _walledSites.contains(b.platform) &&
                           _onlyNamesSite(b, b.title, null))) &&
                   (DateTime.tryParse(b.savedAt)?.isAfter(since) ?? false),
             )

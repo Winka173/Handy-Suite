@@ -62,7 +62,8 @@ ThumbnailResult sanitizeThumbnail(
         info.width <= 0 ||
         info.height <= 0 ||
         info.width * info.height > metadataMaxImagePixels ||
-        info.numFrames != 1) {
+        // A still lossy WebP reports no frames: ask it about animation.
+        (info is image.WebPInfo ? info.hasAnimation : info.numFrames != 1)) {
       throw const _ThumbnailFailure('imageDimensions');
     }
     final decoded = decoder.decodeFrame(0);

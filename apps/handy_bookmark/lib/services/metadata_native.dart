@@ -63,13 +63,21 @@ class PlatformMetadataClient implements MetadataClient {
     CancellationToken? cancellation,
   }) async {
     try {
+      final host = Uri.tryParse(url)?.host.toLowerCase() ?? '';
+      bool on(String domain) => host == domain || host.endsWith('.$domain');
+      if (on('reddit.com') || host == 'redd.it') {
+        final reddit = await _redditOEmbed(url, cancellation);
+        if (reddit != null) return reddit;
+      }
       final response = await _exchange(
         url,
         accept: 'text/html,application/xhtml+xml',
         maxBytes: metadataHeadMaxBytes,
         mimes: const {'text/html', 'application/xhtml+xml'},
         // Title and picture sit in the head: a page is read only that far.
+        // TikTok keeps its video's caption and cover further down.
         headOnly: true,
+        stopAtHead: !on('tiktok.com'),
         cancellation: cancellation,
       );
       cancellation?.check();
@@ -172,6 +180,29 @@ class PlatformMetadataClient implements MetadataClient {
     }
   }
 
+  /// Reddit's official oEmbed for a post: its title and author. Null when
+  /// it has none, so the page itself is tried.
+  Future<MetadataResult?> _redditOEmbed(
+    String url,
+    CancellationToken? cancellation,
+  ) async {
+    try {
+      final response = await _exchange(
+        Uri.https('www.reddit.com', '/oembed', {'url': url}).toString(),
+        accept: 'application/json',
+        maxBytes: 64 * 1024,
+        mimes: const {'application/json'},
+        cancellation: cancellation,
+      );
+      final result = parseRedditOEmbed(response.bytes);
+      return result.title == null ? null : result;
+    } on Cancelled {
+      rethrow;
+    } catch (_) {
+      return null;
+    }
+  }
+
   /// Whether [chunk] holds `</head` (any case).
   static bool _endsHead(List<int> chunk) {
     const tag = [60, 47, 104, 101, 97, 100]; // </head
@@ -205,6 +236,7 @@ class PlatformMetadataClient implements MetadataClient {
     required int maxBytes,
     Set<String>? mimes,
     bool headOnly = false,
+    bool stopAtHead = true,
     bool anyStatus = false,
     int maxRedirects = metadataMaxRedirects,
     Duration timeout = metadataTimeout,
@@ -334,7 +366,7 @@ class PlatformMetadataClient implements MetadataClient {
             }
             builder.add(chunk);
             // The head is over: the rest of the page is not needed.
-            if (headOnly && _endsHead(chunk)) break;
+            if (headOnly && stopAtHead && _endsHead(chunk)) break;
           }
           return _Response(
             builder.takeBytes(),

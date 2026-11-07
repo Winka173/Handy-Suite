@@ -68,7 +68,7 @@ Uint8List cameraJpeg() {
 }
 
 Future<void> waitFor(WidgetTester t, bool Function() done) async {
-  for (var i = 0; i < 60 && !done(); i++) {
+  for (var i = 0; i < 200 && !done(); i++) {
     await t.runAsync(
       () => Future<void>.delayed(const Duration(milliseconds: 50)),
     );
@@ -366,7 +366,10 @@ void main() {
       await tapKey(t, 'detail-share');
       expect(find.byKey(const Key('share-picture-sheet')), findsOneWidget);
       expect(find.byKey(const Key('share-has-exif')), findsOneWidget);
-      await tapKey(t, 'share-picture-go');
+      // The picture is made in an isolate: wait for it in real time, not
+      // by settling (the sheet's spinner never settles).
+      await t.tap(find.byKey(const Key('share-picture-go')));
+      await t.pump();
       await waitFor(t, () => sharer.files.isNotEmpty);
       final clean = sharer.files.single;
       expect(clean.name, 'Hồ Gươm.jpg');
@@ -377,7 +380,10 @@ void main() {
 
       await tapKey(t, 'detail-share');
       await tapKey(t, 'share-picture-original');
-      await tapKey(t, 'share-picture-go');
+      // The picture is made in an isolate: wait for it in real time, not
+      // by settling (the sheet's spinner never settles).
+      await t.tap(find.byKey(const Key('share-picture-go')));
+      await t.pump();
       await waitFor(t, () => sharer.files.length == 2);
       expect(sharer.files.last.bytes, original);
     });
@@ -403,7 +409,10 @@ void main() {
       await tapKey(t, 'detail-share');
       expect(find.byKey(const Key('share-preview-only')), findsOneWidget);
       expect(find.byKey(const Key('share-picture-original')), findsNothing);
-      await tapKey(t, 'share-picture-go');
+      // The picture is made in an isolate: wait for it in real time, not
+      // by settling (the sheet's spinner never settles).
+      await t.tap(find.byKey(const Key('share-picture-go')));
+      await t.pump();
       await waitFor(t, () => sharer.files.isNotEmpty);
       final preview = await t.runAsync(
         () => c.mediaPreview(

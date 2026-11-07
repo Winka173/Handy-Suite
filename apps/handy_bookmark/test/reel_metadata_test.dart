@@ -91,4 +91,19 @@ void main() {
     expect(c.library!.bookmarks.single.metadataStatus, 'partial');
     expect(c.library!.bookmarks.single.title, 'Example');
   });
+
+  test('a TikTok page that only says "Make Your Day" is read again', () async {
+    final net = ScriptedNet([
+      const MetadataResult(status: 'partial', title: 'TikTok - Make Your Day'),
+    ]);
+    final c = await start(net);
+    c.preferences['automaticMetadata'] = false;
+    final b = (await c.quickSave(
+      'https://www.tiktok.com/@looooooooch/video/7332342275151760642',
+    )).single;
+    await c.refreshMetadata(b.id);
+    final now = c.library!.bookmarks.single;
+    expect(now.metadataStatus, 'failed');
+    expect(now.title, isNot(contains('Make Your Day')));
+  });
 }

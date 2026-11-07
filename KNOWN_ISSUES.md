@@ -5,10 +5,11 @@ Handy Trip: [giới hạn riêng](docs/handy_trip/KNOWN_LIMITATIONS.md) và
 Android/Windows/Web đã có; iOS, thiết bị thật, browser/provider runtime và store
 chưa được chứng nhận. Bản AAB/MSIX chưa ký phát hành.
 
-Handy Bookmark: xem [giới hạn riêng](docs/HANDY_BOOKMARK_KNOWN_LIMITATIONS.md). Metadata từ
-website thật chưa có lần fetch thành công trên host QA; lưu link offline vẫn chạy.
-Android share đã kiểm tra trên emulator; iOS, browser runtime và app xã hội thật
-chưa xác nhận. Backup không chứa thumbnail cache, tối đa 30MB.
+Handy Bookmark: xem [giới hạn riêng](docs/HANDY_BOOKMARK_KNOWN_LIMITATIONS.md). Đọc tiêu đề
+và hình đã chạy thật (2026-11-07, host Windows) với Facebook, Instagram, YouTube, X, Threads,
+TikTok và web thường; Reddit chỉ có tiêu đề (oEmbed), reel 18+/riêng tư thì không. Android
+share đã kiểm tra trên BlueStacks; iOS chưa chạy thật. Backup không chứa thumbnail cache,
+tối đa 30MB.
 
 1. iOS source chưa build/run trên Windows; cần macOS/Xcode. Chưa kiểm thử thiết bị
    Android/iOS thật. Các build Android/Windows/Web không chứng nhận iOS.

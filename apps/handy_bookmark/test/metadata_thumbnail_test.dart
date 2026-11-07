@@ -66,4 +66,17 @@ void main() {
       );
     },
   );
+
+  test('a still lossy WebP (Vimeo covers) is a picture, not an animation', () {
+    // 16 x 16, one colour, VP8 (lossy): it reports no frames at all.
+    final webp = Uint8List.fromList([
+      82, 73, 70, 70, 58, 0, 0, 0, 87, 69, 66, 80, 86, 80, 56, 32, 46, 0, 0, //
+      0, 208, 1, 0, 157, 1, 42, 16, 0, 16, 0, 1, 64, 38, 37, 160, 2, 116, //
+      186, 1, 248, 0, 3, 176, 0, 254, 240, 108, 175, 255, 16, 207, 71, 169, //
+      120, 127, 253, 52, 143, 26, 71, 141, 35, 229, 52, 0, 0,
+    ]);
+    final result = sanitizeThumbnail(webp, contentType: 'image/webp');
+    expect(result.errorCode, isNull);
+    expect(image.decodeJpg(result.bytes!)!.width, 16);
+  });
 }
