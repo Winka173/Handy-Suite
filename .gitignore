@@ -37,3 +37,6 @@ __pycache__/
 
 # Crawled community posts used for feature research; personal data, never commit
 data_crawl/
+
+# The owner's store identifiers (product ids, licence keys): kept on this machine.
+config/monetization.local.json

@@ -17,12 +17,17 @@
 # The key has no production rights, on purpose: production stays a manual
 # step in Play Console.
 
+require "json"
+
 default_platform(:android)
 
 ROOT = File.expand_path("../..", __dir__)
 AAB = File.join(ROOT, "build/app/outputs/bundle/release/app-release.aab")
 LANGS = %w[en-US vi].freeze
 PYTHON = ENV["PYTHON"] || "python"
+# The store identifiers (Pro product, licence key), made from the owner's
+# config/monetization.local.json by tooling/prepare-store-config.py.
+DEFINES = File.expand_path("../../.tooling/monetization-defines.json", ROOT)
 
 def pubspec_version
   line = File.read(File.join(ROOT, "pubspec.yaml"))[/^version:\s*(\S+)/, 1]
@@ -56,6 +61,10 @@ def preflight!
     size = File.read(file, encoding: "UTF-8").strip.length
     UI.user_error!("#{lang} release notes are #{size} characters; Play allows 500") if size > 500
   end
+  UI.user_error!("#{DEFINES} is missing: run `python tooling/prepare-store-config.py config/monetization.local.json` from the repo root.") unless File.exist?(DEFINES)
+  store = JSON.parse(JSON.parse(File.read(DEFINES))["HANDY_MONETIZATION_CONFIG"]).dig("bookmark", "android") || {}
+  UI.user_error!("No Pro product id for bookmark/android in config/monetization.local.json") if store["productId"].to_s.empty?
+  UI.user_error!("No Play licence key (androidPublicKey) for bookmark/android: Pro could not be bought") if store["androidPublicKey"].to_s.empty?
   played = Dir.chdir(ROOT) { sh(PYTHON, "tool/play.py", "codes", log: false).strip.to_i }
   UI.user_error!("versionCode #{code} is not above #{played}, the highest Play has seen. Bump `version:` in pubspec.yaml.") unless code > played
   UI.success("Ready: #{name} (#{code}); Play's highest so far is #{played}")
@@ -80,7 +89,10 @@ platform :android do
   lane :build do
     Dir.chdir(ROOT) do
       # The monorepo resolves its packages with tooling/flutter-bootstrap.ps1.
-      sh("flutter", "build", "appbundle", "--release", "--no-pub", "--obfuscate", "--split-debug-info=build/symbols")
+      # With the store identifiers, so Pro can be bought.
+      args = ["flutter", "build", "appbundle", "--release", "--no-pub", "--obfuscate", "--split-debug-info=build/symbols"]
+      args << "--dart-define-from-file=#{DEFINES}" if File.exist?(DEFINES)
+      sh(*args)
     end
   end
 

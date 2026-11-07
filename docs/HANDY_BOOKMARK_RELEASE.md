@@ -78,8 +78,8 @@ bundle.
    - **Privacy policy:**
      `https://github.com/Winka173/Handy-Suite/blob/ui-rebuild/apps/handy_bookmark/PRIVACY.md`.
      Change `ui-rebuild` to `main` once the branch is merged.
-   - **App access:** all functionality is available without special access
-     (no account; Pro cannot be bought in this build).
+   - **App access:** no account or sign-in. If Play asks for full access to
+     paid content, give a promo code for `handy_bookmark_pro` (see Pro below).
    - **Ads:** no ads.
    - **Content rating (IARC):** utility/productivity. No violence, sexual
      content, gambling or user-to-user communication. The app shows the titles
@@ -104,9 +104,30 @@ bundle.
    rolls out by itself.
 5. Testers open the opt-in link, accept, then install from Play.
 
+## Pro (one-time purchase)
+
+- Product **`handy_bookmark_pro`** on Play, created through the API on
+  2026-11-07: one purchase option `buy`, active, **99,000 VND** in Vietnam
+  and Play's conversion elsewhere (3.89 USD in the US; 174 regions), titles
+  and descriptions in English and Vietnamese.
+- The app finds it through `HANDY_MONETIZATION_CONFIG`: the owner's
+  `config/monetization.local.json` (gitignored; `bookmark.android` has the
+  product id, the listing URL and `androidPublicKey`) →
+  `python tooling/prepare-store-config.py config/monetization.local.json` →
+  `.tooling/monetization-defines.json`, which `fastlane android build`
+  passes with `--dart-define-from-file`.
+- **`androidPublicKey`** is the app's licence key, used to check purchases on
+  the device. Play Console → Handy Bookmark → *Monetize with Play →
+  Monetization setup → Licensing* → the Base64 RSA public key. The API cannot
+  read it. `preflight` stops until it is in the local config.
+- Testing purchases: add the testers' Google accounts as **license testers**
+  (Play Console → Settings → License testing) so they are not charged.
+- Reviewers: if App access asks for full access to paid content, create a
+  promo code for `handy_bookmark_pro` (*Monetize → Promo codes*) and give it
+  in the App access instructions, as Sticky Wall does.
+
 ## Not in this build
 
-- **Pro cannot be bought.** The build has no billing permission, so the
-  Pro purchase is unavailable; no in-app product exists on Play yet. Setting
-  it up needs a build with Google Play billing first.
+- Pro cannot be bought in 1.0.0 (3): it was built before the product and
+  the licence key existed. The next build carries them.
 - iOS is not set up for the App Store.
