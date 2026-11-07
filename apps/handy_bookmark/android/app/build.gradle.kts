@@ -1,7 +1,20 @@
+import java.util.Properties
+
 plugins {
     id("com.android.application")
     // The Flutter Gradle Plugin must be applied after the Android and Kotlin Gradle plugins.
     id("dev.flutter.flutter-gradle-plugin")
+}
+
+// Release signing: the upload key stays out of the repo. `android/key.properties`
+// (gitignored) holds storeFile, storePassword, keyAlias and keyPassword; the
+// owner's copy is ~/.secrets/handy-bookmark-upload.properties. Without it a
+// release build is left unsigned, so Play can never get a debug-signed one.
+val keystoreProperties = Properties()
+val keystorePropertiesFile = rootProject.file("key.properties")
+val hasReleaseKey = keystorePropertiesFile.exists()
+if (hasReleaseKey) {
+    keystorePropertiesFile.inputStream().use { keystoreProperties.load(it) }
 }
 
 android {
@@ -16,10 +29,10 @@ android {
     }
 
     defaultConfig {
-        // TODO: Specify your own unique Application ID (https://developer.android.com/studio/build/application-id.html).
-        applicationId = "com.example.handysuite.bookmark"
-        // You can update the following values to match your application needs.
-        // For more information, see: https://flutter.dev/to/review-gradle-config.
+        // The Play Store identity; it can never change after the first upload.
+        // (The Kotlin namespace and the on-device storage names keep their
+        // old names on purpose.)
+        applicationId = "com.apps.winka.handybookmark"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         minSdk = flutter.minSdkVersion
         targetSdk = flutter.targetSdkVersion
@@ -27,12 +40,35 @@ android {
         versionName = flutter.versionName
     }
 
-    buildTypes {
-        debug { applicationIdSuffix = ".flutterpilot" }
-        release {
-            // Release artifacts remain unsigned until the publisher supplies signing.
-            // Never sign a production release with the development debug key.
+    signingConfigs {
+        if (hasReleaseKey) {
+            create("release") {
+                storeFile = file(keystoreProperties["storeFile"] as String)
+                storePassword = keystoreProperties["storePassword"] as String
+                keyAlias = keystoreProperties["keyAlias"] as String
+                keyPassword = keystoreProperties["keyPassword"] as String
+            }
         }
+    }
+
+    buildTypes {
+        release {
+            // Never signed with the debug key: without key.properties the
+            // bundle stays unsigned and Play refuses it.
+            if (hasReleaseKey) signingConfig = signingConfigs.getByName("release")
+            proguardFiles(
+                getDefaultProguardFile("proguard-android-optimize.txt"),
+                "proguard-rules.pro",
+            )
+        }
+    }
+}
+
+// Development builds keep the id they always had, so the libraries already
+// on test devices stay where they are; store builds use the Play id above.
+androidComponents {
+    onVariants(selector().withBuildType("debug")) { variant ->
+        variant.applicationId.set("com.example.handysuite.bookmark.flutterpilot")
     }
 }
 

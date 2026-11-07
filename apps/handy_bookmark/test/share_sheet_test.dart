@@ -170,7 +170,8 @@ void main() {
     expect(c.picture, isNotNull);
     expectEdges(t);
     expect(find.text('Saved in Not sorted'), findsOneWidget);
-    expect(find.text('Here now'), findsOneWidget);
+    // Where it is now is not a row to tap: only places it can go.
+    expect(find.byKey(const Key('share-place-inbox')), findsNothing);
     expect(find.text('1 link'), findsOneWidget);
     // No separate Save step.
     expect(find.text('Save'), findsNothing);
@@ -233,6 +234,8 @@ void main() {
     final (c, bridge) = await showSheet(t, collection: 'd' * 32);
     expect((c.choice as InCollection).id, 'd' * 32);
     expect(find.text('Saved in Trips'), findsOneWidget);
+    expect(find.byKey(Key('share-place-${'d' * 32}')), findsNothing);
+    expect(find.text('Take it out of Trips'), findsOneWidget);
     expect(find.byKey(const Key('share-sheet-new')), findsOneWidget);
 
     await t.tap(find.byKey(const Key('share-place-inbox')));

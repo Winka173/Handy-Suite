@@ -1,6 +1,7 @@
 // Review screenshots with the real typefaces and icons.
 // SHOTS_DIR=<dir> flutter test --no-pub tool/screens_test.dart
 import 'dart:async';
+import 'dart:convert';
 import 'dart:io';
 import 'dart:ui' as ui;
 import 'package:flutter/rendering.dart';
@@ -19,6 +20,10 @@ import '../test/controller_test.dart' show TestStore;
 import '../test/link_tasks_test.dart' show FakeNet;
 import '../test/new_flows_test.dart' show NetController, OneFile;
 import '../test/reader_test.dart' show GatedNet;
+import '../test/share_sheet_test.dart' show FakeBridge, PictureNet;
+import 'package:handy_bookmark/share_sheet/share_sheet.dart';
+import 'package:handy_bookmark/share_sheet/sheet_controller.dart';
+import 'package:handy_bookmark/share_sheet/snapshot.dart';
 import 'package:handy_bookmark/reader/reading_position.dart';
 import 'package:handy_bookmark/services/metadata_client.dart';
 import '../test/widget_test.dart' show Preferences;
@@ -35,6 +40,13 @@ Future<void> _font(String family, List<String> paths) async {
 
 final _root = GlobalKey();
 
+/// Google Play's phone screenshots (STORE_SHOTS=1): 9:16 at 1080×1920.
+final store = Platform.environment['STORE_SHOTS'] != null;
+final phone = store ? const Size(360, 640) : const Size(390, 844);
+
+/// The language of the shots (STORE_LOCALE=en for the English listing).
+final locale = Platform.environment['STORE_LOCALE'] ?? 'vi';
+
 Future<void> shot(WidgetTester t, String name, {bool settle = true}) async {
   final dir = Platform.environment['SHOTS_DIR'] ?? 'build/shots';
   Directory(dir).createSync(recursive: true);
@@ -47,7 +59,7 @@ Future<void> shot(WidgetTester t, String name, {bool settle = true}) async {
   await t.runAsync(() async {
     final b =
         _root.currentContext!.findRenderObject()! as RenderRepaintBoundary;
-    final image = await b.toImage(pixelRatio: 2);
+    final image = await b.toImage(pixelRatio: store ? 3 : 2);
     final data = await image.toByteData(format: ui.ImageByteFormat.png);
     File('$dir/$name.png').writeAsBytesSync(data!.buffer.asUint8List());
   });
@@ -185,6 +197,9 @@ Future<NetController> boot(
   final store = PictureStore();
   final c = NetController(store, net ?? FakeNet());
   await t.runAsync(c.initialize);
+  // Fixture pictures are put in below; reading the sample pages would only
+  // leave the login-page retry timer of the social sites running.
+  if (net == null) c.preferences['automaticMetadata'] = false;
   if (!empty) {
     for (final l in _links) {
       await c.quickSave(l.$1, title: l.$2);
@@ -242,7 +257,7 @@ Future<NetController> boot(
         controller: c,
         files: files ?? OneFile(),
         preferences: Preferences()
-          ..value = HandyPreferences(locale: 'vi', theme: theme),
+          ..value = HandyPreferences(locale: locale, theme: theme),
         guide: false,
       ),
     ),
@@ -385,7 +400,7 @@ void main() {
   });
 
   for (final (label, size) in [
-    ('phone', const Size(390, 844)),
+    ('phone', phone),
     ('tablet', const Size(900, 1100)),
     ('desktop', const Size(1440, 900)),
   ]) {
@@ -398,8 +413,97 @@ void main() {
       await shot(t, '$label-1-home');
     });
   }
+  testWidgets('phone share sheet', (t) async {
+    // Shared from a video app: the sheet over it, its page already read.
+    t.view.physicalSize = phone;
+    t.view.devicePixelRatio = 1;
+    addTearDown(t.view.resetPhysicalSize);
+    addTearDown(t.view.resetDevicePixelRatio);
+    final vi = locale == 'vi';
+    final photo = File('assets/welcome/bun-cha.jpg').readAsBytesSync();
+    final library = SaveLibrary(
+      collections: [
+        SaveCollection(
+          id: 'food',
+          name: vi ? 'Công thức nấu ăn' : 'Recipes',
+          icon: 'restaurant',
+        ),
+        SaveCollection(
+          id: 'trip',
+          name: vi ? 'Du lịch' : 'Trips',
+          icon: 'luggage',
+          position: 1,
+        ),
+        SaveCollection(
+          id: 'buy',
+          name: vi ? 'Cần mua' : 'To buy',
+          icon: 'shopping',
+          position: 2,
+        ),
+        SaveCollection(
+          id: 'read',
+          name: vi ? 'Đọc sau' : 'Read later',
+          position: 3,
+        ),
+      ],
+    );
+    // Link counts as a used library has them.
+    final raw = jsonDecode(sheetSnapshot(library, {}, locale: locale)) as Map;
+    for (final (i, col) in (raw['collections'] as List).indexed) {
+      (col as Map)['count'] = [12, 7, 4, 9][i];
+    }
+    final snapshot = jsonEncode(raw);
+    final c = SheetController(
+      bridge: FakeBridge(
+        SheetShare(
+          id: 'q',
+          text: 'https://www.youtube.com/watch?v=buncha',
+          snapshot: SheetSnapshot.parse(snapshot),
+        ),
+      ),
+      metadata: PictureNet([
+        MetadataResult(
+          status: 'complete',
+          title: vi
+              ? 'Bún chả Hà Nội: nướng thơm như ngoài hàng'
+              : 'Hanoi bún chả, grilled like the street stalls',
+          siteName: 'YouTube',
+          description: vi
+              ? 'Cách ướp thịt và pha nước chấm chuẩn vị.'
+              : 'How to marinate the pork and mix the dipping sauce.',
+          thumbnailUrl: 'https://i.ytimg.com/vi/buncha/hq.jpg',
+        ),
+      ], photo),
+    );
+    addTearDown(c.dispose);
+    await t.pumpWidget(
+      RepaintBoundary(
+        key: _root,
+        child: Directionality(
+          textDirection: TextDirection.ltr,
+          child: Stack(
+            fit: StackFit.expand,
+            children: [
+              // The app it was shared from, dimmed by the system.
+              Image.memory(
+                File('assets/welcome/pho.jpg').readAsBytesSync(),
+                fit: BoxFit.cover,
+              ),
+              const ColoredBox(color: Color(0x73000000)),
+              ShareSheetApp(controller: c),
+            ],
+          ),
+        ),
+      ),
+    );
+    await t.runAsync(
+      () => Future<void>.delayed(const Duration(milliseconds: 200)),
+    );
+    await t.pumpAndSettle();
+    await shot(t, 'phone-0-share');
+  });
   testWidgets('phone collection', (t) async {
-    await boot(t, const Size(390, 844));
+    await boot(t, phone);
     await tapKey(t, 'collection-food');
     await shot(t, 'phone-2-collection');
     await tapKey(t, 'list-more');
@@ -407,7 +511,7 @@ void main() {
     await shot(t, 'phone-3-cards');
   });
   testWidgets('phone detail', (t) async {
-    final c = await boot(t, const Size(390, 844));
+    final c = await boot(t, phone);
     Navigator.of(
       t.element(find.byKey(const Key('save-home'))),
     ).pushNamed('/bookmark/${c.library!.bookmarks.first.id}');
@@ -415,7 +519,7 @@ void main() {
     await shot(t, 'phone-4-detail');
   });
   testWidgets('phone select', (t) async {
-    final c = await boot(t, const Size(390, 844));
+    final c = await boot(t, phone);
     await tapKey(t, 'collection-trip');
     await t.longPress(
       find.byKey(ValueKey('bookmark-${c.library!.bookmarks[3].id}')),
@@ -424,7 +528,7 @@ void main() {
     await shot(t, 'phone-5-select');
   });
   testWidgets('phone trash', (t) async {
-    final c = await boot(t, const Size(390, 844));
+    final c = await boot(t, phone);
     final ids = [for (final b in c.library!.bookmarks.take(4)) b.id];
     final now = DateTime.now().toUtc();
     // Deleted at different times, so the days left differ.
@@ -441,7 +545,7 @@ void main() {
     await shot(t, 'phone-20-trash');
   });
   testWidgets('phone duplicates', (t) async {
-    final c = await boot(t, const Size(390, 844));
+    final c = await boot(t, phone);
     // Saved again from a chat link, and again from another app.
     for (final (url, title) in [
       (
@@ -460,12 +564,12 @@ void main() {
     await shot(t, 'phone-19-duplicates');
   });
   testWidgets('phone focus', (t) async {
-    await boot(t, const Size(390, 844));
+    await boot(t, phone);
     await tapKey(t, 'place-focus');
     await shot(t, 'phone-6-focus');
   });
   testWidgets('phone add', (t) async {
-    await boot(t, const Size(390, 844));
+    await boot(t, phone);
     await tapKey(t, 'save-new');
     await tapKey(t, 'save-add');
     await t.enterText(
@@ -481,17 +585,17 @@ void main() {
     await shot(t, 'desktop-8-settings');
   });
   testWidgets('phone dark', (t) async {
-    await boot(t, const Size(390, 844), theme: 'dark');
+    await boot(t, phone, theme: 'dark');
     await shot(t, 'phone-9-dark');
   });
   testWidgets('phone empty', (t) async {
-    await boot(t, const Size(390, 844), empty: true);
+    await boot(t, phone, empty: true);
     await shot(t, 'phone-10-empty');
   });
   // The first-run guide, step by step, on a phone, narrow and wide. Motion
   // is reduced so each shot is a step's resting frame.
   for (final (label, size) in [
-    ('phone', const Size(390, 844)),
+    ('phone', phone),
     ('narrow', const Size(320, 640)),
     ('desktop', const Size(1280, 800)),
   ]) {
@@ -529,7 +633,7 @@ void main() {
     });
   }
   testWidgets('films', (t) async {
-    final c = await boot(t, const Size(390, 844));
+    final c = await boot(t, phone);
     final first =
         c.library!.bookmarks.where((b) => b.collectionId == null).toList()
           ..sort((a, b) => b.savedAt.compareTo(a.savedAt));
@@ -541,7 +645,7 @@ void main() {
     }, frames: 20);
   });
   testWidgets('phone reader', (t) async {
-    final c = await boot(t, const Size(390, 844), extras: true);
+    final c = await boot(t, phone, extras: true);
     final id = c.library!.bookmarks[5].id;
     Navigator.of(
       t.element(find.byKey(const Key('save-home'))),
@@ -556,7 +660,7 @@ void main() {
     await shot(t, 'phone-12-reader-dark');
   });
   testWidgets('phone reader highlights', (t) async {
-    final c = await boot(t, const Size(390, 844), extras: true);
+    final c = await boot(t, phone, extras: true);
     final id = c.library!.bookmarks[5].id;
     final copy = (await t.runAsync(() => c.readingCopy(id)))!;
     final blocks = [for (final b in copy.blocks) b.text];
@@ -604,7 +708,7 @@ void main() {
     debugProOverride = true;
     // ignore: invalid_use_of_visible_for_testing_member
     addTearDown(() => debugProOverride = null);
-    await boot(t, const Size(390, 844), extras: true);
+    await boot(t, phone, extras: true);
     await tapKey(t, 'open-search');
     await t.enterText(find.byKey(const Key('save-search')), 'dong van');
     await t.runAsync(
@@ -625,7 +729,7 @@ void main() {
     await shot(t, 'desktop-13-reader');
   });
   testWidgets('phone detail links', (t) async {
-    final c = await boot(t, const Size(390, 844), extras: true);
+    final c = await boot(t, phone, extras: true);
     Navigator.of(
       t.element(find.byKey(const Key('save-home'))),
     ).pushNamed('/bookmark/${c.library!.bookmarks[5].id}');
@@ -640,7 +744,7 @@ void main() {
     await shot(t, 'phone-14-detail-links');
   });
   testWidgets('phone places with saved searches', (t) async {
-    await boot(t, const Size(390, 844), extras: true);
+    await boot(t, phone, extras: true);
     // Since 2026-11-06 the kept lists wait in Library > Advanced.
     await tapKey(t, 'home-library');
     await tapKey(t, 'library-advanced');
@@ -678,7 +782,7 @@ void main() {
   });
   testWidgets('phone check running', (t) async {
     final net = FakeNet()..gate = Completer<void>();
-    final c = await boot(t, const Size(390, 844), extras: true, net: net);
+    final c = await boot(t, phone, extras: true, net: net);
     await tapKey(t, 'home-library');
     await tapKey(t, 'place-all');
     await t.longPress(
@@ -715,7 +819,7 @@ void main() {
           '../../packages/handy_bookmark_engine/test/fixtures/part_000000.csv',
         ).readAsBytesSync(),
       );
-    await boot(t, const Size(390, 844), files: files);
+    await boot(t, phone, files: files);
     Navigator.of(
       t.element(find.byKey(const Key('save-home'))),
     ).pushNamed('/settings');
@@ -739,7 +843,7 @@ void main() {
     });
   });
   testWidgets('phone bounded batch review', (t) async {
-    await boot(t, const Size(390, 844));
+    await boot(t, phone);
     final pending = chooseLinkBatch(
       t.element(find.byType(Scaffold).first),
       count: 80,
@@ -763,7 +867,7 @@ void main() {
 
   for (final theme in ['light', 'dark']) {
     testWidgets('phone settings $theme', (t) async {
-      await boot(t, const Size(390, 844), theme: theme);
+      await boot(t, phone, theme: theme);
       Navigator.of(
         t.element(find.byKey(const Key('save-home'))),
       ).pushNamed('/settings');
@@ -784,7 +888,7 @@ void main() {
     await shot(t, 'small-31-save-error');
   });
   testWidgets('phone quick save done', (t) async {
-    await boot(t, const Size(390, 844));
+    await boot(t, phone);
     await t.enterText(
       find.byKey(const Key('bookmark-inline-url')),
       'https://www.foody.vn/ha-noi/bun-cha-huong-lien',
@@ -798,11 +902,11 @@ void main() {
     await shot(t, 'phone-32-quick-saved', settle: false);
   });
   testWidgets('phone home dark', (t) async {
-    await boot(t, const Size(390, 844), theme: 'dark');
+    await boot(t, phone, theme: 'dark');
     await shot(t, 'phone-1-home-dark');
   });
   testWidgets('phone share how to', (t) async {
-    await boot(t, const Size(390, 844));
+    await boot(t, phone);
     await tapKey(t, 'save-new');
     await tapKey(t, 'save-how');
     await shot(t, 'phone-57-share-how-to');
@@ -814,7 +918,7 @@ void main() {
     await shot(t, 'desktop-58-collection-new');
   });
   testWidgets('phone collection tools', (t) async {
-    await boot(t, const Size(390, 844));
+    await boot(t, phone);
     Navigator.of(
       t.element(find.byType(Scaffold).first),
     ).pushNamed('/collection/trip');
@@ -825,14 +929,14 @@ void main() {
   });
   for (final theme in ['light', 'dark'])
     testWidgets('phone search start $theme', (t) async {
-      await boot(t, const Size(390, 844), theme: theme);
+      await boot(t, phone, theme: theme);
       await tapKey(t, 'open-search');
       FocusManager.instance.primaryFocus?.unfocus();
       await t.pumpAndSettle();
       await scrolled(t, 'phone-55-search-start-$theme', 1);
     });
   testWidgets('phone new collection', (t) async {
-    await boot(t, const Size(390, 844));
+    await boot(t, phone);
     await tapKey(t, 'collection-new');
     await shot(t, 'phone-51-collection-new');
     await tapKey(t, 'template-play-4');
@@ -841,7 +945,7 @@ void main() {
     await shot(t, 'phone-51-collection-more');
   });
   testWidgets('phone new collection dark emoji', (t) async {
-    await boot(t, const Size(390, 844), theme: 'dark');
+    await boot(t, phone, theme: 'dark');
     await tapKey(t, 'collection-new');
     await t.enterText(find.byKey(const Key('collection-name')), 'Phở Hà Nội');
     await t.pump();
@@ -863,12 +967,12 @@ void main() {
     await shot(t, 'small-53-collection-large');
   });
   testWidgets('phone save sheet dark', (t) async {
-    await boot(t, const Size(390, 844), theme: 'dark');
+    await boot(t, phone, theme: 'dark');
     await tapKey(t, 'save-new');
     await shot(t, 'phone-31-save-dark');
   });
   testWidgets('phone trash dark', (t) async {
-    final c = await boot(t, const Size(390, 844), theme: 'dark');
+    final c = await boot(t, phone, theme: 'dark');
     final now = DateTime.now().toUtc();
     for (final (i, b) in c.library!.bookmarks.take(3).indexed) {
       await c.update(
@@ -883,20 +987,20 @@ void main() {
     await shot(t, 'phone-32-trash-dark');
   });
   testWidgets('phone trash empty', (t) async {
-    await boot(t, const Size(390, 844));
+    await boot(t, phone);
     Navigator.of(t.element(find.byType(Scaffold).first)).pushNamed('/trash');
     await t.pumpAndSettle();
     await shot(t, 'phone-33-trash-empty');
   });
   testWidgets('phone share collection', (t) async {
-    await boot(t, const Size(390, 844));
+    await boot(t, phone);
     await tapKey(t, 'collection-food');
     await tapKey(t, 'list-more');
     await tapKey(t, 'collection-share');
     await shot(t, 'phone-34-share');
   });
   testWidgets('phone filter sheet', (t) async {
-    await boot(t, const Size(390, 844));
+    await boot(t, phone);
     await tapKey(t, 'collection-food');
     await tapKey(t, 'save-filters');
     await shot(t, 'phone-35-filters');
@@ -934,13 +1038,13 @@ void main() {
   }
 
   testWidgets('phone detail dark', (t) async {
-    final c = await boot(t, const Size(390, 844), theme: 'dark');
+    final c = await boot(t, phone, theme: 'dark');
     await openItem(t, c.library!.bookmarks.first.id);
     await shot(t, 'phone-40-detail-dark');
   });
   for (final theme in ['light', 'dark']) {
     testWidgets('phone picture detail $theme', (t) async {
-      final c = await boot(t, const Size(390, 844), theme: theme);
+      final c = await boot(t, phone, theme: theme);
       await openItem(t, await addPicture(t, c));
       await shot(t, 'phone-41-picture-detail-$theme');
       await tapKey(t, 'detail-view-picture');
@@ -952,7 +1056,7 @@ void main() {
     });
   }
   testWidgets('phone focus dark', (t) async {
-    await boot(t, const Size(390, 844), theme: 'dark');
+    await boot(t, phone, theme: 'dark');
     await tapKey(t, 'place-focus');
     await shot(t, 'phone-43-focus-dark');
   });
@@ -971,7 +1075,7 @@ void main() {
 
   testWidgets('phone reader online', (t) async {
     final net = GatedNet()..pageGate = Completer<void>();
-    final c = await boot(t, const Size(390, 844), extras: true, net: net);
+    final c = await boot(t, phone, extras: true, net: net);
     final b = c.library!.bookmarks[3];
     net.pages[b.originalUrl] = PageResult(
       html: _tripArticle,
@@ -991,13 +1095,13 @@ void main() {
     await shot(t, 'phone-51-reader-online');
   });
   testWidgets('phone reader failed', (t) async {
-    final c = await boot(t, const Size(390, 844), extras: true);
+    final c = await boot(t, phone, extras: true);
     await openRead(t, c.library!.bookmarks[3].id);
     await t.pumpAndSettle();
     await shot(t, 'phone-52-reader-failed');
   });
   testWidgets('phone reader find', (t) async {
-    final c = await boot(t, const Size(390, 844), extras: true);
+    final c = await boot(t, phone, extras: true);
     await openRead(t, c.library!.bookmarks[5].id);
     await t.pumpAndSettle();
     await t.tap(find.byKey(const Key('reader-find')));
@@ -1025,7 +1129,7 @@ void main() {
   // one past, two coming.
   for (final theme in ['light', 'dark']) {
     testWidgets('phone existing reminders $theme', (t) async {
-      final c = await boot(t, const Size(390, 844), theme: theme);
+      final c = await boot(t, phone, theme: theme);
       final now = DateTime.now().toUtc();
       final due = {
         0: now.add(const Duration(days: 2, hours: 3)),
@@ -1068,7 +1172,7 @@ void main() {
 
   for (final theme in ['light', 'dark']) {
     testWidgets('phone focus image-less $theme', (t) async {
-      final c = await boot(t, const Size(390, 844), theme: theme);
+      final c = await boot(t, phone, theme: theme);
       (c.store! as PictureStore).pictures.clear();
       c.clearThumbnailMemory();
       await openFocus(t);
@@ -1092,7 +1196,7 @@ void main() {
   });
   for (final theme in ['light', 'dark'])
     testWidgets('how to use $theme', (t) async {
-      await boot(t, const Size(390, 844), theme: theme);
+      await boot(t, phone, theme: theme);
       Navigator.of(t.element(find.byType(Scaffold).first)).pushNamed('/how-to');
       await t.pumpAndSettle();
       await scrolled(t, 'phone-50-how-to-$theme', 1);
@@ -1105,7 +1209,7 @@ void main() {
       await scrolled(t, 'phone-50-how-to-faster-$theme', 2);
     });
   testWidgets('settings advanced views', (t) async {
-    await boot(t, const Size(390, 844), extras: true);
+    await boot(t, phone, extras: true);
     Navigator.of(t.element(find.byType(Scaffold).first)).pushNamed('/settings');
     await t.pumpAndSettle();
     await t.scrollUntilVisible(
@@ -1147,7 +1251,7 @@ void main() {
   }
 
   testWidgets('item rename phone', (t) async {
-    final c = await boot(t, const Size(390, 844));
+    final c = await boot(t, phone);
     await openOne(t, c.library!.bookmarks.first.id);
     await tapKey(t, 'detail-rename');
     await shot(t, 'phone-item-1-rename');
@@ -1162,7 +1266,7 @@ void main() {
     await shot(t, 'small-item-3-rename-dark');
   });
   testWidgets('item menus', (t) async {
-    final c = await boot(t, const Size(390, 844));
+    final c = await boot(t, phone);
     final food = [
       for (final b in c.library!.bookmarks)
         if (b.collectionId == 'food') b.id,
@@ -1181,7 +1285,7 @@ void main() {
     debugDisableShadows = true;
   });
   testWidgets('item detail more and folds', (t) async {
-    final c = await boot(t, const Size(390, 844));
+    final c = await boot(t, phone);
     final id = c.library!.bookmarks.first.id;
     await c.update(
       (l) => l.copyWith(
@@ -1214,7 +1318,7 @@ void main() {
   });
   for (final theme in ['light', 'dark']) {
     testWidgets('item share picture $theme', (t) async {
-      final c = await boot(t, const Size(390, 844), theme: theme);
+      final c = await boot(t, phone, theme: theme);
       // A camera photo: the guide's licensed photo with EXIF written in.
       final photo = img.decodeJpg(
         File('assets/welcome/hoi-an.jpg').readAsBytesSync(),

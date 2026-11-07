@@ -1,0 +1,3 @@
+
+# Play store listing text: Windows line endings would show inside Play.
+apps/*/android/fastlane/metadata/** text eol=lf

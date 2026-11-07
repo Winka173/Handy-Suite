@@ -1,0 +1,143 @@
+# Handy Bookmark on Google Play. Run from apps/handy_bookmark/android/ (setup
+# and the whole story: docs/HANDY_BOOKMARK_RELEASE.md):
+#
+#   fastlane android publish            the whole release in one go: checks,
+#                                       build, upload to closed
+#                                       testing, roll out. track:internal for
+#                                       internal testing.
+#   fastlane android check              read-only: can the key reach the app?
+#   fastlane android preflight          read-only: is this version ready to ship?
+#   fastlane android build              signed release bundle (obfuscated)
+#   fastlane android closed             upload the bundle to closed testing (draft)
+#   fastlane android internal           upload the bundle to internal testing (draft)
+#   fastlane android metadata           push listing text from fastlane/metadata
+#   fastlane android images             replace store graphics from fastlane/metadata
+#   fastlane android pull               download listing text into fastlane/metadata
+#
+# The key has no production rights, on purpose: production stays a manual
+# step in Play Console.
+
+default_platform(:android)
+
+ROOT = File.expand_path("../..", __dir__)
+AAB = File.join(ROOT, "build/app/outputs/bundle/release/app-release.aab")
+LANGS = %w[en-US vi].freeze
+PYTHON = ENV["PYTHON"] || "python"
+
+def pubspec_version
+  line = File.read(File.join(ROOT, "pubspec.yaml"))[/^version:\s*(\S+)/, 1]
+  name, code = line.split("+")
+  [name, code.to_i]
+end
+
+def upload_bundle(track)
+  UI.user_error!("No bundle at #{AAB}. Run `fastlane android build` first.") unless File.exist?(AAB)
+  name, code = pubspec_version
+  upload_to_play_store(
+    track: track,
+    aab: AAB,
+    release_status: "draft",
+    version_name: "#{name} (#{code})",
+    skip_upload_metadata: true,
+    skip_upload_images: true,
+    skip_upload_screenshots: true,
+    skip_upload_changelogs: false,
+  )
+end
+
+# Stops before anything is built or uploaded when this version cannot ship.
+def preflight!
+  name, code = pubspec_version
+  key = File.join(ROOT, "android", "key.properties")
+  UI.user_error!("android/key.properties is missing: the bundle would be signed with the debug key, which Play rejects.") unless File.exist?(key)
+  LANGS.each do |lang|
+    file = File.join(__dir__, "metadata", "android", lang, "changelogs", "#{code}.txt")
+    UI.user_error!("Missing release notes #{file}") unless File.exist?(file)
+    size = File.read(file, encoding: "UTF-8").strip.length
+    UI.user_error!("#{lang} release notes are #{size} characters; Play allows 500") if size > 500
+  end
+  played = Dir.chdir(ROOT) { sh(PYTHON, "tool/play.py", "codes", log: false).strip.to_i }
+  UI.user_error!("versionCode #{code} is not above #{played}, the highest Play has seen. Bump `version:` in pubspec.yaml.") unless code > played
+  UI.success("Ready: #{name} (#{code}); Play's highest so far is #{played}")
+  code
+end
+
+platform :android do
+  desc "Check that the key can open the app (read-only)"
+  lane :check do
+    validate_play_store_json_key
+    name, code = pubspec_version
+    codes = google_play_track_version_codes(track: "alpha")
+    UI.message("pubspec #{name}+#{code}; closed testing has #{codes.inspect}")
+  end
+
+  desc "Check that this version can ship (read-only)"
+  lane :preflight do
+    preflight!
+  end
+
+  desc "Build the signed, obfuscated release bundle"
+  lane :build do
+    Dir.chdir(ROOT) do
+      # The monorepo resolves its packages with tooling/flutter-bootstrap.ps1.
+      sh("flutter", "build", "appbundle", "--release", "--no-pub", "--obfuscate", "--split-debug-info=build/symbols")
+    end
+  end
+
+  desc "Upload the bundle to closed testing as a draft"
+  lane :closed do
+    upload_bundle("alpha")
+  end
+
+  desc "Upload the bundle to internal testing as a draft"
+  lane :internal do
+    upload_bundle("internal")
+  end
+
+  desc "Check, build, upload and roll out to a testing track (default: closed testing)"
+  lane :publish do |options|
+    track = (options[:track] || "alpha").to_s
+    UI.user_error!("publish goes to testing tracks only (internal, alpha, beta)") unless %w[internal alpha beta].include?(track)
+    code = preflight!
+    build
+    upload_bundle(track)
+    Dir.chdir(ROOT) { sh(PYTHON, "tool/play.py", "complete", track, code.to_s) }
+    UI.success("#{pubspec_version.join(' (')}) is rolled out on #{track}; Google reviews it before testers get it.")
+  end
+
+  desc "Push store listing text (no bundle, no images)"
+  lane :metadata do
+    upload_to_play_store(
+      # supply looks for a release to hang changelogs on even when told to
+      # skip them: point it at this version's on closed testing.
+      track: "alpha",
+      version_code: pubspec_version[1],
+      skip_upload_apk: true,
+      skip_upload_aab: true,
+      skip_upload_changelogs: true,
+      skip_upload_images: true,
+      skip_upload_screenshots: true,
+    )
+  end
+
+  desc "Replace the store graphics with fastlane/metadata/android/<lang>/images (icon, featureGraphic, phoneScreenshots, ...)"
+  lane :images do
+    upload_to_play_store(
+      # supply looks for a release to hang changelogs on even when told to
+      # skip them: point it at this version's on closed testing.
+      track: "alpha",
+      version_code: pubspec_version[1],
+      skip_upload_apk: true,
+      skip_upload_aab: true,
+      skip_upload_changelogs: true,
+      skip_upload_metadata: true,
+      skip_upload_images: false,
+      skip_upload_screenshots: false,
+    )
+  end
+
+  desc "Download the store listing into fastlane/metadata"
+  lane :pull do
+    download_from_play_store
+  end
+end

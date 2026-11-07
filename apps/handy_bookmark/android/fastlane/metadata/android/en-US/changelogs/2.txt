@@ -1,0 +1,4 @@
+• First test release.
+• Save from any app: the sheet shows the picture and title; tap a collection to put it there, or make a new one in place.
+• Titles and pictures for Facebook, TikTok, Instagram, YouTube, X, Threads, Reddit and websites.
+• Collections, search, Focus, reminders, backups and app lock.

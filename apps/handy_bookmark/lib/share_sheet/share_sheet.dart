@@ -253,7 +253,11 @@ class _SheetState extends State<_Sheet> {
                         child: Semantics(
                           header: true,
                           child: Text(
-                            tr(context, 'Tap where it goes', 'Chạm để cho vào'),
+                            tr(
+                              context,
+                              'Put it in a collection',
+                              'Cho vào bộ sưu tập',
+                            ),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                             style: theme.textTheme.titleSmall,
@@ -650,45 +654,25 @@ class _Places extends StatelessWidget {
       double indent = 0,
     }) {
       final placed = c.placed;
-      final now = placed == null && _same(where, c.choice);
       final done = placed != null && _same(where, placed);
       return _Place(
         key: key,
         title: title,
         leading: leading,
         indent: indent,
-        note: done
-            ? tr(context, 'Added', 'Đã cho vào')
-            : now
-            ? tr(context, 'Here now', 'Đang ở đây')
-            : note,
-        state: done
-            ? _PlaceState.done
-            : now
-            ? _PlaceState.here
-            : _PlaceState.open,
+        note: done ? tr(context, 'Added', 'Đã cho vào') : note,
+        done: done,
         onTap: c.busy || placed != null ? null : () => c.put(where),
       );
     }
 
-    return ListView(
-      key: const Key('share-sheet-places'),
-      shrinkWrap: true,
-      padding: const EdgeInsets.only(bottom: 8),
-      children: [
-        ?naming,
-        place(
-          const NotSorted(),
-          key: const Key('share-place-inbox'),
-          leading: Container(
-            width: 36,
-            height: 36,
-            decoration: BoxDecoration(color: p.sunk, shape: BoxShape.circle),
-            child: Icon(Icons.inbox_outlined, size: 20, color: p.ink),
-          ),
-          title: tr(context, 'Not sorted', 'Chưa xếp'),
-        ),
-        for (final name in c.named)
+    // Where it is now is said under the app's name, not listed: every row
+    // here is somewhere it can go.
+    bool elsewhere(SheetChoice where) => !_same(where, c.choice);
+    final from = c.placeName(c.choice);
+    final rows = [
+      for (final name in c.named)
+        if (elsewhere(InNewCollection(name)))
           place(
             InNewCollection(name),
             key: Key('share-place-new-$name'),
@@ -700,7 +684,8 @@ class _Places extends StatelessWidget {
             title: name,
             note: tr(context, 'New', 'Mới'),
           ),
-        for (final (col, depth) in collectionTree(l))
+      for (final (col, depth) in collectionTree(l))
+        if (elsewhere(InCollection(col.id)))
           place(
             InCollection(col.id),
             key: Key('share-place-${col.id}'),
@@ -714,25 +699,63 @@ class _Places extends StatelessWidget {
             title: col.name,
             note: links(snapshot.counts[col.id] ?? 0),
           ),
+      // In a collection already (its share shortcut): it can come out.
+      if (from != null)
+        place(
+          const NotSorted(),
+          key: const Key('share-place-inbox'),
+          leading: Container(
+            width: 36,
+            height: 36,
+            decoration: BoxDecoration(color: p.sunk, shape: BoxShape.circle),
+            child: Icon(Icons.inbox_outlined, size: 20, color: p.ink),
+          ),
+          title: tr(context, 'Not sorted', 'Chưa xếp'),
+          note: tr(context, 'Take it out of $from', 'Bỏ ra khỏi $from'),
+        ),
+    ];
+
+    return ListView(
+      key: const Key('share-sheet-places'),
+      shrinkWrap: true,
+      padding: const EdgeInsets.only(bottom: 8),
+      children: [
+        ?naming,
+        ...rows,
+        if (rows.isEmpty && naming == null)
+          Padding(
+            key: const Key('share-sheet-no-collections'),
+            padding: const EdgeInsets.fromLTRB(20, 8, 20, 16),
+            child: Text(
+              tr(
+                context,
+                'No collections yet. Make one with New collection, or close: '
+                    'it stays in Not sorted.',
+                'Chưa có bộ sưu tập nào. Tạo bằng Bộ sưu tập mới, hoặc đóng '
+                    'lại: mục vẫn nằm ở Chưa xếp.',
+              ),
+              style: Theme.of(
+                context,
+              ).textTheme.bodyMedium?.copyWith(color: p.muted),
+            ),
+          ),
       ],
     );
   }
 }
-
-enum _PlaceState { open, here, done }
 
 class _Place extends StatelessWidget {
   final String title;
   final String? note;
   final Widget leading;
   final double indent;
-  final _PlaceState state;
+  final bool done;
   final VoidCallback? onTap;
   const _Place({
     super.key,
     required this.title,
     required this.leading,
-    required this.state,
+    this.done = false,
     this.note,
     this.indent = 0,
     this.onTap,
@@ -742,9 +765,8 @@ class _Place extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final p = BookmarkPalette.of(context);
-    final done = state == _PlaceState.done;
     return Semantics(
-      selected: state != _PlaceState.open,
+      selected: done,
       child: ListTile(
         onTap: onTap,
         // Still readable while the sheet closes.
@@ -763,14 +785,10 @@ class _Place extends StatelessWidget {
             : Text(
                 note!,
                 style: theme.textTheme.bodySmall?.copyWith(
-                  color: state == _PlaceState.open ? p.muted : p.primary,
+                  color: done ? p.primary : p.muted,
                 ),
               ),
-        trailing: switch (state) {
-          _PlaceState.done => Icon(Icons.check_circle, color: p.primary),
-          _PlaceState.here => Icon(Icons.check, color: p.primary),
-          _PlaceState.open => null,
-        },
+        trailing: done ? Icon(Icons.check_circle, color: p.primary) : null,
       ),
     );
   }
