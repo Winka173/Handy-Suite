@@ -13,6 +13,10 @@ class SheetShare {
   final String id, text;
   final String? title;
 
+  /// The collection it arrived in (shared through that collection's
+  /// shortcut), chosen to begin with.
+  final String? collection;
+
   /// Pictures the share carried, copied into the queue.
   final List<String> images;
   final SheetSnapshot snapshot;
@@ -20,6 +24,7 @@ class SheetShare {
     required this.id,
     required this.text,
     this.title,
+    this.collection,
     this.images = const [],
     required this.snapshot,
   });
@@ -36,6 +41,7 @@ class SheetBridge {
       id: r['id'] as String,
       text: r['text'] as String? ?? '',
       title: r['title'] as String?,
+      collection: r['collection'] as String?,
       images: [for (final p in r['images'] as List? ?? const []) p as String],
       snapshot: SheetSnapshot.parse(r['snapshot'] as String?),
     );
@@ -96,10 +102,14 @@ class SheetController extends ChangeNotifier {
     this.bridge = const SheetBridge(),
     MetadataClient? metadata,
     this.retryDelay = const Duration(milliseconds: 2200),
+    this.settle = const Duration(milliseconds: 450),
   }) : _metadata = metadata;
 
   final SheetBridge bridge;
   final Duration retryDelay;
+
+  /// How long the place just tapped shows its tick before the sheet goes.
+  final Duration settle;
   MetadataClient? _metadata;
   final _cancel = CancellationToken();
 
@@ -110,7 +120,13 @@ class SheetController extends ChangeNotifier {
   bool reading = false, busy = false;
   MetadataResult? page;
   Uint8List? picture;
+
+  /// Where the share is now: Not sorted, or the collection whose shortcut
+  /// it came through.
   SheetChoice choice = const NotSorted();
+
+  /// The place just tapped, shown with its tick while the sheet closes.
+  SheetChoice? placed;
 
   /// Collections named here, newest first, shown above the others.
   final List<String> named = [];
@@ -132,6 +148,11 @@ class SheetController extends ChangeNotifier {
       share = await bridge.start();
     } catch (_) {
       broken = true;
+    }
+    final from = share?.collection;
+    if (from != null &&
+        share!.snapshot.library.collections.any((c) => c.id == from)) {
+      choice = InCollection(from);
     }
     notifyListeners();
     final s = share, u = link;
@@ -182,23 +203,42 @@ class SheetController extends ChangeNotifier {
     notifyListeners();
   }
 
-  /// A new collection named in the sheet; chosen at once. A name already
-  /// listed picks that one instead.
-  void name(String value) {
+  /// A new collection named in the sheet, or the one already called that.
+  SheetChoice? name(String value) {
     final clean = value.trim();
-    if (clean.isEmpty) return;
+    if (clean.isEmpty) return null;
     final key = clean.toLowerCase();
     final existing = share?.snapshot.library.collections
         .where((c) => c.parentId == null && c.name.trim().toLowerCase() == key)
         .firstOrNull;
-    if (existing != null) {
-      choose(InCollection(existing.id));
-      return;
-    }
+    if (existing != null) return InCollection(existing.id);
     named.removeWhere((n) => n.toLowerCase() == key);
     named.insert(0, clean.length > 200 ? clean.substring(0, 200) : clean);
-    choose(InNewCollection(named.first));
+    return InNewCollection(named.first);
   }
+
+  /// One tap: the share goes there, the place shows its tick a moment,
+  /// and the sheet closes. Tapping where it already is just closes (with
+  /// what was read of the page, so the app need not read it again).
+  Future<void> put(SheetChoice where) async {
+    if (busy || placed != null) return;
+    placed = where;
+    choice = where;
+    notifyListeners();
+    await Future<void>.delayed(settle);
+    await save();
+  }
+
+  /// The name of a place, for the sheet's line "Saved in …".
+  String? placeName(SheetChoice where) => switch (where) {
+    NotSorted() => null,
+    InNewCollection(:final name) => name,
+    InCollection(:final id) =>
+      share?.snapshot.library.collections
+          .where((c) => c.id == id)
+          .firstOrNull
+          ?.name,
+  };
 
   Future<void> save() async {
     if (busy) return;

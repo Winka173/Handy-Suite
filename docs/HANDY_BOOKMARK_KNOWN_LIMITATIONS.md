@@ -28,7 +28,8 @@
   - Not run on a real iPhone; iOS uses the same Dart client.
 - Android's share sheet (2026-11-07): sharing to the app saves first, then shows
   the page's picture and title and asks where it goes (a collection, a new one
-  named in place, or Not sorted on close). Tested on BlueStacks (Android 11)
+  named in place, or Not sorted on close; shared through a collection's
+  shortcut, that collection is chosen and kept on close). Tested on BlueStacks (Android 11)
   from Chrome; the sheet starts its own Flutter engine, so it appears about a
   second after the tap. If the app takes the share in while the sheet is open,
   the choice is queued again and moves the link out of Not sorted (a picture

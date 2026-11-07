@@ -11,8 +11,9 @@ import '../ui/visual.dart' show ReadingShade, SourceFace;
 import 'sheet_controller.dart';
 
 /// Shown over the app someone shares from (Android): what is being saved,
-/// and where it goes. The share is already saved (in Not sorted) before
-/// this appears; closing keeps it there.
+/// and where it goes. The share is already saved (in Not sorted, or the
+/// collection whose shortcut it came through) before this appears; closing
+/// keeps it there.
 class ShareSheetApp extends StatefulWidget {
   final SheetController? controller;
   const ShareSheetApp({super.key, this.controller});
@@ -150,10 +151,10 @@ class _SheetState extends State<_Sheet> {
   }
 
   void _addNamed() {
-    if (_name.text.trim().isEmpty) return;
-    widget.c.name(_name.text);
-    _name.clear();
+    final where = widget.c.name(_name.text);
+    if (where == null) return;
     setState(() => _naming = false);
+    widget.c.put(where);
   }
 
   @override
@@ -196,22 +197,7 @@ class _SheetState extends State<_Sheet> {
                               style: theme.textTheme.titleMedium,
                             ),
                           ),
-                          Text(
-                            c.broken
-                                ? tr(
-                                    context,
-                                    'Saved. It shows in Not sorted.',
-                                    'Đã lưu. Mục nằm ở Chưa xếp.',
-                                  )
-                                : tr(
-                                    context,
-                                    'Saved · choose where it goes',
-                                    'Đã lưu · chọn chỗ cho nó',
-                                  ),
-                            style: theme.textTheme.bodySmall?.copyWith(
-                              color: p.muted,
-                            ),
-                          ),
+                          _SavedIn(c),
                         ],
                       ),
                     ),
@@ -245,18 +231,22 @@ class _SheetState extends State<_Sheet> {
                 Padding(
                   padding: const EdgeInsets.fromLTRB(20, 16, 8, 4),
                   child: Row(
+                    // Each keeps its own width and shrinks (with …) only on
+                    // a narrow screen with large text.
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Expanded(
+                      Flexible(
                         child: Semantics(
                           header: true,
                           child: Text(
-                            tr(context, 'Save to', 'Lưu vào'),
+                            tr(context, 'Tap where it goes', 'Chạm để cho vào'),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
                             style: theme.textTheme.titleSmall,
                           ),
                         ),
                       ),
                       Flexible(
-                        flex: 2,
                         child: TextButton.icon(
                           key: const Key('share-sheet-new'),
                           onPressed: _naming
@@ -289,43 +279,25 @@ class _SheetState extends State<_Sheet> {
                   ),
                 ),
               ],
-              Divider(height: 1, color: p.line),
-              Padding(
-                padding: const EdgeInsets.fromLTRB(12, 10, 16, 12),
-                child: Row(
-                  children: [
-                    if (c.share != null)
-                      Flexible(
-                        child: TextButton(
-                          key: const Key('share-sheet-discard'),
-                          onPressed: c.busy ? null : c.discard,
-                          style: TextButton.styleFrom(foregroundColor: p.muted),
-                          child: Text(
-                            tr(context, 'Don’t save', 'Không lưu'),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ),
+              if (c.share != null) ...[
+                Divider(height: 1, color: p.line),
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(12, 6, 12, 6),
+                  child: Align(
+                    alignment: Alignment.centerLeft,
+                    child: TextButton.icon(
+                      key: const Key('share-sheet-discard'),
+                      onPressed: c.busy || c.placed != null ? null : c.discard,
+                      style: TextButton.styleFrom(
+                        foregroundColor: p.muted,
+                        minimumSize: const Size(48, 48),
                       ),
-                    const Spacer(),
-                    FilledButton.icon(
-                      key: const Key('share-sheet-save'),
-                      style: FilledButton.styleFrom(
-                        minimumSize: const Size(96, 48),
-                      ),
-                      onPressed: c.busy
-                          ? null
-                          : (c.share == null ? c.close : c.save),
-                      icon: const Icon(Icons.bookmark),
-                      label: Text(
-                        c.share == null || locked
-                            ? tr(context, 'Done', 'Xong')
-                            : tr(context, 'Save', 'Lưu'),
-                      ),
+                      icon: const Icon(Icons.delete_outline, size: 20),
+                      label: Text(tr(context, 'Don’t save', 'Không lưu')),
                     ),
-                  ],
+                  ),
                 ),
-              ),
+              ],
             ],
           ),
         ),
@@ -480,17 +452,54 @@ class _Preview extends StatelessWidget {
   }
 }
 
+/// Where the share is, in a line under the app's name: "Saved in Not
+/// sorted", "Saved in Food"; the place just tapped once it is.
+class _SavedIn extends StatelessWidget {
+  final SheetController c;
+  const _SavedIn(this.c);
+
+  @override
+  Widget build(BuildContext context) {
+    final p = BookmarkPalette.of(context);
+    final style = Theme.of(context).textTheme.bodySmall;
+    if (c.broken || c.share == null) {
+      return Text(
+        tr(context, 'Saved in Not sorted', 'Đã lưu vào Chưa xếp'),
+        style: style?.copyWith(color: p.muted),
+      );
+    }
+    final name =
+        c.placeName(c.placed ?? c.choice) ??
+        tr(context, 'Not sorted', 'Chưa xếp');
+    return Semantics(
+      liveRegion: true,
+      child: Text(
+        tr(context, 'Saved in $name', 'Đã lưu vào $name'),
+        key: const Key('share-sheet-where'),
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
+        style: style?.copyWith(
+          color: c.placed == null ? p.muted : p.primary,
+          fontWeight: c.placed == null ? null : FontWeight.w600,
+        ),
+      ),
+    );
+  }
+}
+
 /// Not sorted, collections named here, then the library's collections in
-/// its own tree order: one choice.
+/// its own tree order. One tap puts the share there and closes the sheet;
+/// the place it is now carries a tick.
 class _Places extends StatelessWidget {
   final SheetController c;
   final Widget? naming;
   const _Places(this.c, {this.naming});
 
-  String _key(SheetChoice v) => switch (v) {
-    NotSorted() => '',
-    InCollection(:final id) => 'c:$id',
-    InNewCollection(:final name) => 'n:$name',
+  static bool _same(SheetChoice a, SheetChoice b) => switch ((a, b)) {
+    (NotSorted(), NotSorted()) => true,
+    (InCollection(id: final x), InCollection(id: final y)) => x == y,
+    (InNewCollection(name: final x), InNewCollection(name: final y)) => x == y,
+    _ => false,
   };
 
   @override
@@ -500,98 +509,137 @@ class _Places extends StatelessWidget {
     final p = BookmarkPalette.of(context);
     String links(int n) =>
         tr(context, n == 1 ? '1 link' : '$n links', '$n link');
-    return RadioGroup<String>(
-      groupValue: _key(c.choice),
-      onChanged: (v) {
-        if (v == null) return;
-        c.choose(
-          v.isEmpty
-              ? const NotSorted()
-              : v.startsWith('c:')
-              ? InCollection(v.substring(2))
-              : InNewCollection(v.substring(2)),
-        );
-      },
-      child: ListView(
-        key: const Key('share-sheet-places'),
-        shrinkWrap: true,
-        padding: const EdgeInsets.only(bottom: 8),
-        children: [
-          ?naming,
-          _Place(
-            key: const Key('share-place-inbox'),
-            value: '',
-            leading: Container(
-              width: 36,
-              height: 36,
-              decoration: BoxDecoration(color: p.sunk, shape: BoxShape.circle),
-              child: Icon(Icons.inbox_outlined, size: 20, color: p.ink),
-            ),
-            title: tr(context, 'Not sorted', 'Chưa xếp'),
+    Widget place(
+      SheetChoice where, {
+      required Key key,
+      required Widget leading,
+      required String title,
+      String? note,
+      double indent = 0,
+    }) {
+      final placed = c.placed;
+      final now = placed == null && _same(where, c.choice);
+      final done = placed != null && _same(where, placed);
+      return _Place(
+        key: key,
+        title: title,
+        leading: leading,
+        indent: indent,
+        note: done
+            ? tr(context, 'Added', 'Đã cho vào')
+            : now
+            ? tr(context, 'Here now', 'Đang ở đây')
+            : note,
+        state: done
+            ? _PlaceState.done
+            : now
+            ? _PlaceState.here
+            : _PlaceState.open,
+        onTap: c.busy || placed != null ? null : () => c.put(where),
+      );
+    }
+
+    return ListView(
+      key: const Key('share-sheet-places'),
+      shrinkWrap: true,
+      padding: const EdgeInsets.only(bottom: 8),
+      children: [
+        ?naming,
+        place(
+          const NotSorted(),
+          key: const Key('share-place-inbox'),
+          leading: Container(
+            width: 36,
+            height: 36,
+            decoration: BoxDecoration(color: p.sunk, shape: BoxShape.circle),
+            child: Icon(Icons.inbox_outlined, size: 20, color: p.ink),
           ),
-          for (final name in c.named)
-            _Place(
-              key: Key('share-place-new-$name'),
-              value: 'n:$name',
-              leading: CollectionBadge(
-                hue: HandyPalette.forKey(name),
-                size: 15,
-                always: true,
-              ),
-              title: name,
-              note: tr(context, 'New', 'Mới'),
+          title: tr(context, 'Not sorted', 'Chưa xếp'),
+        ),
+        for (final name in c.named)
+          place(
+            InNewCollection(name),
+            key: Key('share-place-new-$name'),
+            leading: CollectionBadge(
+              hue: HandyPalette.forKey(name),
+              size: 15,
+              always: true,
             ),
-          for (final (col, depth) in collectionTree(l))
-            _Place(
-              key: Key('share-place-${col.id}'),
-              value: 'c:${col.id}',
-              indent: depth * 20.0,
-              leading: CollectionBadge(
-                hue: collectionHue(l, col.id),
-                mark: markOf(col.icon),
-                size: 15,
-                always: true,
-              ),
-              title: col.name,
-              note: links(snapshot.counts[col.id] ?? 0),
+            title: name,
+            note: tr(context, 'New', 'Mới'),
+          ),
+        for (final (col, depth) in collectionTree(l))
+          place(
+            InCollection(col.id),
+            key: Key('share-place-${col.id}'),
+            indent: depth * 20.0,
+            leading: CollectionBadge(
+              hue: collectionHue(l, col.id),
+              mark: markOf(col.icon),
+              size: 15,
+              always: true,
             ),
-        ],
-      ),
+            title: col.name,
+            note: links(snapshot.counts[col.id] ?? 0),
+          ),
+      ],
     );
   }
 }
 
+enum _PlaceState { open, here, done }
+
 class _Place extends StatelessWidget {
-  final String value, title;
+  final String title;
   final String? note;
   final Widget leading;
   final double indent;
+  final _PlaceState state;
+  final VoidCallback? onTap;
   const _Place({
     super.key,
-    required this.value,
     required this.title,
     required this.leading,
+    required this.state,
     this.note,
     this.indent = 0,
+    this.onTap,
   });
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    return RadioListTile<String>(
-      value: value,
-      controlAffinity: ListTileControlAffinity.trailing,
-      contentPadding: EdgeInsets.only(left: 20 + indent, right: 12),
-      secondary: leading,
-      title: Text(title, maxLines: 1, overflow: TextOverflow.ellipsis),
-      subtitle: note == null
-          ? null
-          : Text(
-              note!,
-              style: theme.textTheme.bodySmall?.copyWith(
-                color: BookmarkPalette.of(context).muted,
+    final p = BookmarkPalette.of(context);
+    final done = state == _PlaceState.done;
+    return Semantics(
+      selected: state != _PlaceState.open,
+      child: ListTile(
+        onTap: onTap,
+        // Still readable while the sheet closes.
+        enabled: true,
+        tileColor: done ? p.tint : null,
+        contentPadding: EdgeInsets.only(left: 20 + indent, right: 20),
+        leading: leading,
+        title: Text(
+          title,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          style: done ? const TextStyle(fontWeight: FontWeight.w600) : null,
+        ),
+        subtitle: note == null
+            ? null
+            : Text(
+                note!,
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: state == _PlaceState.open ? p.muted : p.primary,
+                ),
               ),
-            ),
+        trailing: switch (state) {
+          _PlaceState.done => Icon(Icons.check_circle, color: p.primary),
+          _PlaceState.here => Icon(Icons.check, color: p.primary),
+          _PlaceState.open => null,
+        },
+      ),
     );
   }
 }

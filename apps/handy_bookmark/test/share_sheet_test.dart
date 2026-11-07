@@ -95,11 +95,13 @@ Future<(SheetController, FakeBridge)> showSheet(
   WidgetTester t, {
   Map<String, dynamic> prefs = const {},
   String text = video,
+  String? collection,
 }) async {
   final bridge = FakeBridge(
     SheetShare(
       id: 'q',
       text: text,
+      collection: collection,
       snapshot: SheetSnapshot.parse(sheetSnapshot(library(), prefs)),
     ),
   );
@@ -107,11 +109,21 @@ Future<(SheetController, FakeBridge)> showSheet(
     bridge: bridge,
     metadata: PictureNet([read], jpeg),
     retryDelay: Duration.zero,
+    settle: const Duration(milliseconds: 300),
   );
   addTearDown(c.dispose);
   await t.pumpWidget(ShareSheetApp(controller: c));
   await t.pumpAndSettle();
   return (c, bridge);
+}
+
+/// New collection sits on the right of the list's head.
+void expectEdges(WidgetTester t) {
+  final right = t.getTopRight(find.byKey(const Key('share-sheet'))).dx;
+  expect(
+    t.getTopRight(find.byKey(const Key('share-sheet-new'))).dx,
+    closeTo(right - 8, 1),
+  );
 }
 
 void main() {
@@ -135,26 +147,51 @@ void main() {
     expect(SheetSnapshot.parse('{oops').locked, isFalse);
   });
 
-  testWidgets('the sheet shows the page and saves into a collection', (
-    t,
-  ) async {
+  testWidgets('one tap on a collection puts it there and closes', (t) async {
     final (c, bridge) = await showSheet(t);
     expect(find.text('Me at the zoo'), findsOneWidget);
     expect(find.text('YouTube'), findsOneWidget);
     expect(c.picture, isNotNull);
-    expect(find.text('Food'), findsOneWidget);
+    expectEdges(t);
+    expect(find.text('Saved in Not sorted'), findsOneWidget);
+    expect(find.text('Here now'), findsOneWidget);
     expect(find.text('1 link'), findsOneWidget);
+    // No separate Save step.
+    expect(find.text('Save'), findsNothing);
 
     await t.tap(find.byKey(Key('share-place-${'c' * 32}')));
     await t.pump();
-    await t.tap(find.byKey(const Key('share-sheet-save')));
-    await t.pump();
+    // The place shows its tick while the sheet goes.
+    expect(find.text('Saved in Food'), findsOneWidget);
+    expect(find.text('Added'), findsOneWidget);
+    expect(bridge.saved, isNull);
+    await t.pump(const Duration(milliseconds: 300));
     expect(bridge.saved!['collection'], 'c' * 32);
     expect(bridge.saved!['title'], 'Me at the zoo');
     expect(bridge.saved!['thumbnail'], jpeg);
+
+    // A second tap while it closes does nothing more.
+    await t.tap(find.byKey(const Key('share-place-inbox')));
+    await t.pump(const Duration(milliseconds: 300));
+    expect(bridge.saved!['collection'], 'c' * 32);
   });
 
-  testWidgets('a new collection is named in place and chosen', (t) async {
+  testWidgets('shared through a collection, it is there; another tap moves '
+      'it', (t) async {
+    final (c, bridge) = await showSheet(t, collection: 'd' * 32);
+    expect((c.choice as InCollection).id, 'd' * 32);
+    expect(find.text('Saved in Trips'), findsOneWidget);
+    expect(find.byKey(const Key('share-sheet-new')), findsOneWidget);
+
+    await t.tap(find.byKey(const Key('share-place-inbox')));
+    await t.pump(const Duration(milliseconds: 300));
+    expect(bridge.saved!['collection'], isNull);
+    expect(bridge.saved!['newCollection'], isNull);
+  });
+
+  testWidgets('a new collection is named in place and the share goes in', (
+    t,
+  ) async {
     final (_, bridge) = await showSheet(t);
     await t.tap(find.byKey(const Key('share-sheet-new')));
     await t.pump();
@@ -162,23 +199,21 @@ void main() {
     await t.testTextInput.receiveAction(TextInputAction.done);
     await t.pump();
     expect(find.byKey(const Key('share-sheet-name')), findsNothing);
-    expect(find.text('Xem sau'), findsOneWidget);
-
-    await t.tap(find.byKey(const Key('share-sheet-save')));
-    await t.pump();
+    expect(find.text('Saved in Xem sau'), findsOneWidget);
+    await t.pump(const Duration(milliseconds: 300));
     expect(bridge.saved!['newCollection'], 'Xem sau');
     expect(bridge.saved!['collection'], isNull);
   });
 
   testWidgets('a name already used picks that collection', (t) async {
     final (c, _) = await showSheet(t);
-    c.name('food');
-    expect(c.choice, isA<InCollection>());
-    expect((c.choice as InCollection).id, 'c' * 32);
+    final where = c.name('food');
+    expect(where, isA<InCollection>());
+    expect((where as InCollection).id, 'c' * 32);
     expect(c.named, isEmpty);
   });
 
-  testWidgets('closing keeps it in Not sorted; Don’t save takes it back', (
+  testWidgets('closing keeps it where it is; Don’t save takes it back', (
     t,
   ) async {
     final (c, bridge) = await showSheet(t);
@@ -208,7 +243,7 @@ void main() {
     addTearDown(t.platformDispatcher.clearTextScaleFactorTestValue);
     await showSheet(t);
     expect(t.takeException(), isNull);
-    expect(find.byKey(const Key('share-sheet-save')), findsOneWidget);
+    expectEdges(t);
   });
 
   test('a share from the sheet makes its collection and keeps the picture '

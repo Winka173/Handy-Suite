@@ -217,6 +217,10 @@ class ShareQueue(private val directory: File) {
                 .apply { if (!title.isNullOrBlank()) put("title", title.take(4096)) }
         }
         val target = record.getString("id")
+        // The sheet's choice replaces where the share arrived (Not sorted
+        // when it names none).
+        record.remove("collection")
+        record.remove("newCollection")
         collection?.takeIf { it.isNotBlank() && it.length <= 512 }?.let { record.put("collection", it) }
         newCollection?.trim()?.take(200)?.takeIf { it.isNotEmpty() }?.let { record.put("newCollection", it) }
         if (metadata != null && thumbnail != null && thumbnail.size <= MAX_THUMBNAIL_BYTES) {

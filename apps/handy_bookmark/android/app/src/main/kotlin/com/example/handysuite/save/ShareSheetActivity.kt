@@ -56,6 +56,7 @@ class ShareSheetActivity : FlutterFragmentActivity() {
                                         "id" to s["id"],
                                         "text" to s["text"],
                                         "title" to s["title"],
+                                        "collection" to s["collection"],
                                         "images" to images,
                                         "snapshot" to getSharedPreferences(SNAPSHOT, Context.MODE_PRIVATE)
                                             .getString("snapshot", null),
