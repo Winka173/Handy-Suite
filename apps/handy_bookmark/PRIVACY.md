@@ -1,6 +1,6 @@
 # Privacy Policy · Chính sách quyền riêng tư
 
-**Handy Bookmark** (`com.apps.winka.handybookmark`) — last updated 7 November 2026 · cập nhật 07/11/2026
+**Handy Bookmark** (`com.apps.winka.handybookmark`) — last updated 7 November 2026 (Google Drive sync added) · cập nhật 07/11/2026 (thêm đồng bộ Google Drive)
 
 ---
 
@@ -33,6 +33,22 @@ collect, store, sell or share any personal data.
 - **Opening a link** opens it in your browser or in the app it belongs to.
 
 Nothing else is sent. The developer receives no data from the app.
+
+### Google Drive sync (optional, Android)
+
+Off unless you switch it on in *Settings › Sync*. Then Google asks you to let
+Handy Bookmark use its own hidden folder in **your** Google Drive (the
+`drive.appdata` permission): the app cannot see your other Drive files.
+
+- Your library (links, titles, notes, collections, Recently Deleted and the
+  pictures you saved) is copied there, so your other Android devices signed
+  in to the same Google account get the same library. Device settings, the
+  app lock and offline reading copies stay on each device.
+- It goes from your device straight to Google; the developer has no server in
+  between and receives nothing. Google stores it under its own terms. It is
+  ordinary Drive data, not end-to-end encrypted.
+- Turning sync off deletes nothing. To delete the Drive copy, open Google
+  Drive › Settings › Manage apps › Handy Bookmark › Delete hidden app data.
 
 ### Permissions
 
@@ -95,6 +111,22 @@ nhân nào.
 - **Mở một link** sẽ mở nó trong trình duyệt hoặc trong app của nó.
 
 Ngoài ra không có gì được gửi đi. Nhà phát triển không nhận dữ liệu nào từ app.
+
+### Đồng bộ Google Drive (tuỳ chọn, Android)
+
+Tắt sẵn, chỉ chạy khi bạn bật trong *Cài đặt › Đồng bộ*. Khi đó Google sẽ hỏi
+bạn cho phép Handy Bookmark dùng thư mục ẩn riêng của nó trong Google Drive
+**của bạn** (quyền `drive.appdata`): app không thấy được các tệp Drive khác.
+
+- Thư viện của bạn (link, tiêu đề, ghi chú, bộ sưu tập, Đã xoá gần đây và ảnh
+  bạn đã lưu) được chép vào đó, để các máy Android khác đăng nhập cùng tài
+  khoản Google có cùng thư viện. Cài đặt của máy, khoá app và bản đọc ngoại
+  tuyến vẫn ở riêng từng máy.
+- Dữ liệu đi thẳng từ máy bạn tới Google; nhà phát triển không có máy chủ ở
+  giữa và không nhận gì. Google lưu theo điều khoản của Google. Đây là dữ liệu
+  Drive bình thường, không mã hoá đầu-cuối.
+- Tắt đồng bộ không xoá gì. Muốn xoá bản trên Drive: Google Drive › Cài đặt ›
+  Quản lý ứng dụng › Handy Bookmark › Xoá dữ liệu ẩn của ứng dụng.
 
 ### Quyền
 

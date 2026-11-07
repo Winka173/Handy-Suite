@@ -8,6 +8,7 @@ import 'services/reminders.dart';
 import 'ui/collection_picker.dart';
 import 'bookmark/picture_view.dart';
 import 'view/library_view.dart';
+import 'sync/drive_sync.dart';
 
 /// What every Save screen shares: the controller, the list on screen, the
 /// file picker and reminders, and the actions that change a link.
@@ -22,6 +23,9 @@ class SaveScope {
 
   /// Automatic backups to a folder; null in tests that do not need them.
   final HandyAutoBackup? autoBackup;
+
+  /// Google Drive sync; null where it is not offered.
+  final DriveSync? drive;
   const SaveScope({
     required this.c,
     required this.view,
@@ -29,6 +33,7 @@ class SaveScope {
     required this.reminders,
     required this.tasks,
     this.autoBackup,
+    this.drive,
   });
 
   SaveLibrary get library => c.library!;

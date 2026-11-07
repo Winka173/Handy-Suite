@@ -17,6 +17,8 @@ import 'help_links.dart';
 import 'library_tools.dart';
 import 'reminders_section.dart';
 import 'settings_parts.dart';
+import '../sync/drive_section.dart';
+import '../sync/drive_sync.dart';
 
 /// The library's name, shown at the top of the home. Empty restores the
 /// app's name.
@@ -133,7 +135,8 @@ class _SaveSettingsPageState extends State<SaveSettingsPage> {
 
   /// Sync goes through a folder a cloud app keeps in step: computers only
   /// for now.
-  bool get _syncHere =>
+  /// Folder sync: computers with a folder picker.
+  bool get _folderSync =>
       !kIsWeb &&
       (defaultTargetPlatform == TargetPlatform.windows ||
           defaultTargetPlatform == TargetPlatform.macOS ||
@@ -141,10 +144,48 @@ class _SaveSettingsPageState extends State<SaveSettingsPage> {
       folderSyncSupported('path') &&
       syncFolders.canChoose;
 
+  bool get _syncHere => _folderSync || scope.drive != null;
+
   /// "Folder · synced 6 Nov 14:20", or "Coming soon" where there is none.
   String _syncState(BuildContext context) {
     final p = scope.c.preferences;
     if (!_syncHere) return tr(context, 'Coming soon', 'Sắp có');
+    final drive = scope.drive;
+    if (drive != null && (drive.enabled || !_folderSync)) {
+      if (!drive.enabled) {
+        return tr(
+          context,
+          'Off. Google Drive keeps your devices in step',
+          'Đang tắt. Google Drive giữ các máy khớp nhau',
+        );
+      }
+      final at = drive.lastSync;
+      return switch (drive.state) {
+        DriveSyncState.syncing => tr(context, 'Syncing…', 'Đang đồng bộ…'),
+        DriveSyncState.offline => tr(
+          context,
+          'Google Drive · will sync when online',
+          'Google Drive · sẽ đồng bộ khi có mạng',
+        ),
+        DriveSyncState.authNeeded => tr(
+          context,
+          'Google Drive · allow access again',
+          'Google Drive · cần cho phép lại',
+        ),
+        DriveSyncState.quota => tr(
+          context,
+          'Google Drive is full',
+          'Google Drive đã đầy',
+        ),
+        DriveSyncState.failed => tr(
+          context,
+          'Google Drive · could not sync',
+          'Google Drive · chưa đồng bộ được',
+        ),
+        _ =>
+          'Google Drive · ${at == null ? tr(context, 'not synced yet', 'chưa đồng bộ lần nào') : '${MaterialLocalizations.of(context).formatShortDate(at)} ${TimeOfDay.fromDateTime(at).format(context)}'}',
+      };
+    }
     final folder = (p['syncFolder'] as Map?)?['name'] as String?;
     if (folder == null)
       return tr(
@@ -293,9 +334,15 @@ class _SaveSettingsPageState extends State<SaveSettingsPage> {
                         : () => pushSettingsView(
                             context,
                             tr(context, 'Sync', 'Đồng bộ'),
-                            listenable: scope.c,
+                            listenable: Listenable.merge([
+                              scope.c,
+                              ?scope.drive,
+                            ]),
                             (context) => [
-                              SyncSection(scope: scope, folders: syncFolders),
+                              if (scope.drive case final drive?)
+                                DriveSyncPanel(drive: drive),
+                              if (_folderSync)
+                                SyncSection(scope: scope, folders: syncFolders),
                             ],
                           ),
                   ),

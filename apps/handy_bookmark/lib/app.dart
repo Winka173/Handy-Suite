@@ -38,6 +38,7 @@ import 'shell/save_shell.dart';
 import 'view/library_view.dart';
 import 'welcome/welcome_page.dart';
 import 'share_sheet/snapshot.dart';
+import 'sync/drive_sync.dart';
 
 bool _photoCredits = false;
 
@@ -119,6 +120,7 @@ class _SaveAppState extends State<SaveApp> with WidgetsBindingObserver {
             },
           )
         : null,
+    drive: widget.device && driveSyncOffered ? DriveSync(c) : null,
   );
   final navigator = GlobalKey<NavigatorState>();
   final prefs = ValueNotifier<HandyPreferences?>(null);
@@ -142,6 +144,7 @@ class _SaveAppState extends State<SaveApp> with WidgetsBindingObserver {
     WidgetsBinding.instance.removeObserver(this);
     c.removeListener(_changed);
     scope.autoBackup?.dispose();
+    scope.drive?.dispose();
     _sync?.cancel();
     tasks.cancel();
     tasks.dispose();
@@ -153,7 +156,11 @@ class _SaveAppState extends State<SaveApp> with WidgetsBindingObserver {
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
-    if (state == AppLifecycleState.resumed) unawaited(c.drain());
+    if (state == AppLifecycleState.resumed) {
+      unawaited(c.drain());
+      scope.drive?.resumed();
+    }
+    if (state == AppLifecycleState.paused) scope.drive?.paused();
   }
 
   Future<void> _start() async {
@@ -167,6 +174,8 @@ class _SaveAppState extends State<SaveApp> with WidgetsBindingObserver {
     }
     if (_pendingOpen != null) _openFromNotification(_pendingOpen!);
     scope.autoBackup?.attach();
+    // Sync left on: the other devices' changes arrive now.
+    unawaited(scope.drive?.syncNow());
     if (mounted) setState(() {});
     if (widget.guide && c.library != null && shouldShowGuide(scope))
       WidgetsBinding.instance.addPostFrameCallback(
@@ -251,6 +260,7 @@ class _SaveAppState extends State<SaveApp> with WidgetsBindingObserver {
 
   void _changed() {
     if (mounted) setState(() {});
+    scope.drive?.changed();
     _organizeNew();
     _offerCollections();
     _sync?.cancel();

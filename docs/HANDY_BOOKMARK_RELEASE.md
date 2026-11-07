@@ -126,6 +126,51 @@ bundle.
   promo code for `handy_bookmark_pro` (*Monetize → Promo codes*) and give it
   in the App access instructions, as Sticky Wall does.
 
+## Google Drive sync (Android)
+
+How it works: `apps/handy_bookmark/lib/sync/` (`drive_provider.dart`,
+`drive_sync.dart`, `drive_section.dart`), on the engine's folder-sync merge
+(`packages/handy_bookmark_engine/lib/src/sync.dart`). Shown only in builds
+made with `--dart-define=HANDY_DRIVE_SYNC=true` (`HANDY_DRIVE_SYNC=true
+fastlane android build`), so a store build never offers a switch that cannot
+connect.
+
+One-time setup by the owner, in Google Cloud project `play-publisher-513712`
+(or another):
+
+1. **APIs & Services → Library → Google Drive API → Enable.**
+2. **OAuth consent screen** (Google Auth Platform → Branding / Audience /
+   Data access): app name *Handy Bookmark*, support email
+   `apps.winka.studio@gmail.com`, privacy policy
+   `https://github.com/Winka173/Handy-Suite/blob/ui-rebuild/apps/handy_bookmark/PRIVACY.md`,
+   terms `…/TERMS.md`; scope `https://www.googleapis.com/auth/drive.appdata`
+   (a non-sensitive scope: no Google verification needed). Audience External;
+   while *Testing*, add the testers' Google accounts as test users, or publish
+   the app to *In production*.
+3. **Clients → Create client → Android**, one per signing key:
+
+   | Client | Package | SHA-1 |
+   |---|---|---|
+   | Upload key (local release builds) | `com.apps.winka.handybookmark` | `C6:CE:87:B8:6D:FF:AF:1B:34:02:35:18:E5:FB:16:0D:20:76:48:AC` |
+   | Play app signing (installs from Play) | `com.apps.winka.handybookmark` | Play Console → Test and release → App integrity → App signing key certificate → SHA-1 |
+   | Debug builds (BlueStacks) | `com.example.handysuite.bookmark.flutterpilot` | `40:26:55:25:3B:76:A3:F6:6D:58:FE:DF:87:8F:38:71:34:82:06:4D` |
+
+   No client id goes into the app: Android matches the package and
+   certificate.
+4. Build with `HANDY_DRIVE_SYNC=true`, install on two Android devices signed
+   in to the same Google account, Settings › Sync › Turn on Google Drive sync.
+   Try: a save on each, one offline while the other edits, a delete and a
+   restore from Recently Deleted, pictures, turning sync off, removing access
+   in the Google account's settings.
+5. **Play Console → Data safety:** the library goes, at the user's request, to
+   their own Google Drive; the developer receives nothing. Review whether
+   Google wants it declared (Sticky Wall's note says the same).
+
+Verified 2026-11-07: provider and auto-sync tests (fake Drive in memory, two
+devices); the Android build with `google_sign_in` 7.2.0; on BlueStacks the
+switch opens Google's account chooser and a cancel leaves sync off. A real
+Drive round trip has **not** run (needs the clients above).
+
 ## Not in this build
 
 - Pro cannot be bought in 1.0.0 (3): it was built before the product and

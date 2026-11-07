@@ -2311,3 +2311,18 @@ dải "Mới lưu" (mục chưa xếp đi trước, một nút "Xếp vào…"),
   trang" là vùng thông báo; mọi nút ≥ 48px.
 - Bỏ: viền đen dày và bóng lệch kiểu Tuckii (đó là thương hiệu của họ); hộp thoại riêng để tạo bộ
   sưu tập; tự đóng theo giờ; nút Lưu riêng sau khi đã chọn chỗ (thêm một bước).
+
+## Hợp đồng: Handy Bookmark · đồng bộ Google Drive (2026-11-07)
+
+- Việc: các máy Android của cùng một người có cùng thư viện, không phải nhớ bấm gì. Câu hỏi của
+  màn: "Thư viện đang khớp chưa?". Hành động chính: bật một lần.
+- Cài đặt › Đồng bộ: phần "Google Drive" (Android, bản build có HANDY_DRIVE_SYNC) đặt trên phần
+  "Qua một thư mục" (máy tính). Ghi chú nói thẳng: thư mục ẩn trong Drive của chính người dùng, chỉ
+  app thấy; tới các máy Android khác; đồng bộ khi app mở; không mã hoá đầu-cuối; không thay sao lưu.
+- Tắt: một dòng "Bật đồng bộ Google Drive" (Google hỏi quyền chỉ cho thư mục của app). Bật: một dòng
+  trạng thái (Đã đồng bộ lúc… · gửi/nhận N ảnh · chạm để đồng bộ ngay / Đang đồng bộ / Sẽ đồng bộ
+  khi có mạng / Cho phép truy cập lại / Google Drive đã đầy / Chưa đồng bộ được; thư viện không đổi)
+  và "Tắt đồng bộ" (không xoá gì; nói cách xoá bản trên Drive).
+- Tự chạy: 30 giây sau thay đổi cuối của thư viện (đổi cài đặt không tính), khi app trở lại, khi app
+  xuống nền còn thay đổi chờ, lúc mở app. Không chạy khi app đóng; không hứa điều đó.
+- Bỏ: bắt bật ở lần đầu, gắn với Pro, đồng bộ cài đặt máy, công tắc hiện ra mà không kết nối được.

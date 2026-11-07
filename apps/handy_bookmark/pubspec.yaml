@@ -24,6 +24,8 @@ dependencies:
   local_auth: 3.0.2
   html: 0.15.6
   http: 1.6.0
+  # Google Drive sync (its hidden app folder; drive.appdata only).
+  google_sign_in: 7.2.0
   image: 4.12.0
   web: 1.1.1
   crypto: 3.0.8
