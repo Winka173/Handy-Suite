@@ -23,6 +23,12 @@ class ShareQueue(private val directory: File) {
         private const val ID_EXTRA = "com.example.handysuite.save.DELIVERY_ID"
         private val uuid = Regex("[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}")
         private val imageTypes = setOf("image/jpeg", "image/png", "image/webp")
+        /** The share sheet's picture of a page (already re-encoded, ≤ 512px). */
+        const val MAX_THUMBNAIL_BYTES = 1024 * 1024
+
+        /** The delivery a received share was queued under. */
+        fun deliveryId(intent: Intent): String? =
+            intent.getStringExtra(ID_EXTRA)?.takeIf { uuid.matches(it) }
     }
     private fun files(): List<File> {
         check(directory.exists() || directory.mkdirs()) { "Cannot access share queue" }
@@ -138,27 +144,97 @@ class ShareQueue(private val directory: File) {
         } ?: ""
     } catch (_: Exception) { "" }
 
-    @Synchronized fun drain(): List<Map<String, Any>> = files().map { file ->
-        check(file.length() <= MAX_CHARS * 6L + 32768) { "Invalid queued share" }
+    @Synchronized fun drain(): List<Map<String, Any>> =
+        files().map { read(it) }.sortedBy { it["receivedAt"].toString() }
+
+    /** One queued share, or null when it is no longer queued. */
+    @Synchronized fun peek(id: String): Map<String, Any>? {
+        require(uuid.matches(id)) { "Invalid delivery identifier" }
+        val file = File(directory, "$id.json")
+        return if (file.exists()) read(file) else null
+    }
+
+    private fun read(file: File): Map<String, Any> {
+        check(file.length() <= MAX_CHARS * 6L + 65536) { "Invalid queued share" }
         val json = JSONObject(AtomicFile(file).openRead().bufferedReader().use { it.readText() })
         check(json.getString("id") == file.name.removeSuffix(".json")) { "Invalid queued share" }
         val text = json.getString("text")
         check(text.length <= MAX_CHARS) { "Invalid queued share" }
-        buildMap {
+        val folder = File(directory, "${json.getString("id")}.d")
+        fun inFolder(name: String): File {
+            val target = File(folder, name)
+            check(target.canonicalFile.parentFile == folder.canonicalFile) { "Invalid queue path" }
+            return target
+        }
+        return buildMap {
             put("id", json.getString("id")); put("text", text); put("receivedAt", json.getString("receivedAt"))
             if (json.has("title")) put("title", json.getString("title"))
             json.optString("collection").takeIf { it.isNotEmpty() && it.length <= 512 }?.let { put("collection", it) }
+            json.optString("newCollection").takeIf { it.isNotBlank() && it.length <= 200 }?.let { put("newCollection", it) }
+            json.optJSONObject("metadata")?.let { meta ->
+                put("metadata", meta.keys().asSequence()
+                    .filter { meta.opt(it) is String }
+                    .associateWith { meta.getString(it).take(4096) })
+            }
+            json.optString("thumbnail").takeIf { it.isNotEmpty() }?.let { name ->
+                val target = inFolder(name)
+                if (target.isFile) put("thumbnail", target.absolutePath)
+            }
             json.optJSONArray("images")?.let { list ->
-                val folder = File(directory, "${json.getString("id")}.d")
                 put("images", (0 until list.length()).map { i ->
                     val item = list.getJSONObject(i)
-                    val target = File(folder, item.getString("file"))
-                    check(target.canonicalFile.parentFile == folder.canonicalFile) { "Invalid queue path" }
+                    val target = inFolder(item.getString("file"))
                     mapOf("path" to target.absolutePath, "mime" to item.getString("mime"), "name" to item.optString("name"))
                 })
             }
         }
-    }.sortedBy { it["receivedAt"].toString() }
+    }
+
+    /**
+     * Adds the share sheet's choices to a queued share: the collection (or
+     * a new one's name) and what it read of the page with its picture. If
+     * the app took the share in meanwhile, the choice is queued again as a
+     * share of the same text, which moves the link out of Not sorted.
+     */
+    @Synchronized fun amend(
+        id: String,
+        text: String,
+        title: String?,
+        collection: String?,
+        newCollection: String?,
+        metadata: Map<*, *>?,
+        thumbnail: ByteArray?,
+    ): Boolean {
+        require(uuid.matches(id)) { "Invalid delivery identifier" }
+        val file = File(directory, "$id.json")
+        val record = if (file.exists()) {
+            JSONObject(AtomicFile(file).openRead().bufferedReader().use { it.readText() })
+        } else {
+            if (text.isBlank() || (collection == null && newCollection == null)) return false
+            check(files().size < MAX_PENDING) { "Share queue is full" }
+            JSONObject().put("id", UUID.randomUUID().toString()).put("text", text.take(MAX_CHARS))
+                .put("receivedAt", Instant.now().toString())
+                .apply { if (!title.isNullOrBlank()) put("title", title.take(4096)) }
+        }
+        val target = record.getString("id")
+        collection?.takeIf { it.isNotBlank() && it.length <= 512 }?.let { record.put("collection", it) }
+        newCollection?.trim()?.take(200)?.takeIf { it.isNotEmpty() }?.let { record.put("newCollection", it) }
+        if (metadata != null && thumbnail != null && thumbnail.size <= MAX_THUMBNAIL_BYTES) {
+            val folder = File(directory, "$target.d")
+            check(folder.isDirectory || folder.mkdirs()) { "Cannot store the picture" }
+            val picture = AtomicFile(File(folder, "thumb"))
+            val out = picture.startWrite()
+            try { out.write(thumbnail); picture.finishWrite(out) } catch (error: Exception) { picture.failWrite(out); throw error }
+            val meta = JSONObject()
+            metadata.forEach { (k, v) -> if (k is String && v is String) meta.put(k, v.take(4096)) }
+            record.put("metadata", meta).put("thumbnail", "thumb")
+        }
+        val atomic = AtomicFile(File(directory, "$target.json"))
+        val stream = atomic.startWrite()
+        try { stream.write(record.toString().toByteArray(Charsets.UTF_8)); atomic.finishWrite(stream) }
+        catch (error: Exception) { atomic.failWrite(stream); throw error }
+        return true
+    }
     @Synchronized fun ack(id: String): Boolean {
         require(uuid.matches(id)) { "Invalid delivery identifier" }
         val file = File(directory, "$id.json")

@@ -37,6 +37,7 @@ import 'settings/save_settings.dart';
 import 'shell/save_shell.dart';
 import 'view/library_view.dart';
 import 'welcome/welcome_page.dart';
+import 'share_sheet/snapshot.dart';
 
 bool _photoCredits = false;
 
@@ -188,7 +189,7 @@ class _SaveAppState extends State<SaveApp> with WidgetsBindingObserver {
   }
 
   /// After any change: rebuild, and keep the OS reminders in step.
-  String? _offered;
+  String? _offered, _sheet;
 
   /// Keeps the share sheet's top row in step with the library: the four
   /// collections saved into most recently, each in its own colour. Sent
@@ -196,6 +197,18 @@ class _SaveAppState extends State<SaveApp> with WidgetsBindingObserver {
   void _offerCollections() {
     final l = c.library, context = navigator.currentContext;
     if (!widget.device || l == null || context == null) return;
+    // What the share sheet lists (all collections, their counts, the
+    // theme): written on the device whenever it changes.
+    final sheet = sheetSnapshot(
+      l,
+      c.preferences,
+      theme: prefs.value?.theme ?? 'system',
+      locale: prefs.value?.locale ?? 'system',
+    );
+    if (sheet != _sheet) {
+      _sheet = sheet;
+      unawaited(c.inbox.offerSheet(sheet));
+    }
     final targets = [
       for (final col in shareTargets(l))
         (
@@ -285,6 +298,8 @@ class _SaveAppState extends State<SaveApp> with WidgetsBindingObserver {
   Future<void> _save(HandyPreferences next) async {
     await repo.save(next);
     if (mounted) setState(() => prefs.value = next);
+    // The share sheet follows the theme and language too.
+    _offerCollections();
   }
 
   Future<void> _recover(BuildContext context) async {

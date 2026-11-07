@@ -31,8 +31,8 @@ class MainActivity : FlutterFragmentActivity() {
         try { if (queue.receive(intent, contentResolver)) channel?.invokeMethod("incoming", null) }
         catch (_: Exception) {
             Toast.makeText(this, if (resources.configuration.locales[0].language == "vi")
-                "Không thể nhận liên kết. Hãy mở Handy Save và thử dán liên kết (tối đa 262144 ký tự, 100 lượt chờ)."
-                else "Unable to receive share. Open Handy Save and paste the link (262144 characters, 100 pending shares maximum).", Toast.LENGTH_LONG).show()
+                "Không thể nhận liên kết. Hãy mở Handy Bookmark và thử dán liên kết (tối đa 262144 ký tự, 100 lượt chờ)."
+                else "Unable to receive share. Open Handy Bookmark and paste the link (262144 characters, 100 pending shares maximum).", Toast.LENGTH_LONG).show()
             channel?.invokeMethod("shareError", "SHARE_QUEUE_ERROR")
         }
     }
@@ -44,6 +44,13 @@ class MainActivity : FlutterFragmentActivity() {
                     when (call.method) {
                         "drain" -> result.success(queue.drain())
                         "ack" -> result.success(queue.ack(call.argument<String>("id") ?: ""))
+                        "sheetSnapshot" -> {
+                            val snapshot = call.argument<String>("snapshot") ?: ""
+                            check(snapshot.length <= 1024 * 1024) { "Snapshot too large" }
+                            getSharedPreferences(ShareSheetActivity.SNAPSHOT, MODE_PRIVATE).edit()
+                                .putString("snapshot", snapshot).apply()
+                            result.success(true)
+                        }
                         "shareTargets" -> result.success(
                             ShareTargets.publish(this, call.argument<List<Map<*, *>>>("targets") ?: emptyList())
                         )

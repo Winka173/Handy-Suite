@@ -116,7 +116,7 @@ class ItemPicture extends StatelessWidget {
     final reading = controller.fetching.containsKey(bookmark.id);
     return ClipRRect(
       borderRadius: BorderRadius.circular(radius),
-      child: reading ? ReadingSweep(child: _picture(face)) : _picture(face),
+      child: reading ? ReadingShade(child: _picture(face)) : _picture(face),
     );
   }
 
@@ -138,71 +138,46 @@ class ItemPicture extends StatelessWidget {
   );
 }
 
-/// A soft band of light passing over a picture while its page is read,
-/// as a skeleton does. Still (a faint veil) when the system asks for less
-/// motion. Says "Reading the page" to screen readers.
-class ReadingSweep extends StatefulWidget {
+/// A picture being read for its title and cover: darkened, with a spinner
+/// in the middle sized to the picture. The spinner holds still when the
+/// system asks for less motion.
+class ReadingShade extends StatelessWidget {
   final Widget child;
-  const ReadingSweep({super.key, required this.child});
-  @override
-  State<ReadingSweep> createState() => _ReadingSweepState();
-}
-
-class _ReadingSweepState extends State<ReadingSweep>
-    with SingleTickerProviderStateMixin {
-  late final _run = AnimationController(
-    vsync: this,
-    duration: const Duration(milliseconds: 1300),
-  );
-
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    if (MediaQuery.disableAnimationsOf(context)) {
-      _run.stop();
-    } else if (!_run.isAnimating) {
-      _run.repeat();
-    }
-  }
-
-  @override
-  void dispose() {
-    _run.dispose();
-    super.dispose();
-  }
+  const ReadingShade({super.key, required this.child});
 
   @override
   Widget build(BuildContext context) {
-    final light = Theme.of(context).brightness == Brightness.light;
-    final glow = (light ? Colors.white : Colors.white24).withValues(
-      alpha: light ? 0.55 : 0.18,
-    );
+    final still = MediaQuery.disableAnimationsOf(context);
     return Semantics(
       label: tr(context, 'Reading the page', 'Đang đọc trang'),
       child: Stack(
         fit: StackFit.passthrough,
         children: [
-          widget.child,
+          child,
           Positioned.fill(
             child: IgnorePointer(
-              child: AnimatedBuilder(
-                animation: _run,
-                builder: (context, _) {
-                  final t = _run.isAnimating ? _run.value * 2.6 - 1.3 : 0.0;
-                  return DecoratedBox(
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        begin: Alignment(t - 1, -0.4),
-                        end: Alignment(t + 1, 0.4),
-                        colors: [
-                          glow.withValues(alpha: 0),
-                          _run.isAnimating ? glow : glow.withValues(alpha: 0.2),
-                          glow.withValues(alpha: 0),
-                        ],
+              child: ColoredBox(
+                color: Colors.black.withValues(alpha: .45),
+                child: LayoutBuilder(
+                  builder: (context, box) {
+                    final side = (box.biggest.shortestSide * .3).clamp(
+                      14.0,
+                      30.0,
+                    );
+                    return Center(
+                      child: SizedBox.square(
+                        dimension: side,
+                        child: CircularProgressIndicator(
+                          value: still ? .3 : null,
+                          strokeWidth: side < 20 ? 2 : 3,
+                          color: Colors.white,
+                          backgroundColor: Colors.white24,
+                          strokeCap: StrokeCap.round,
+                        ),
                       ),
-                    ),
-                  );
-                },
+                    );
+                  },
+                ),
               ),
             ),
           ),

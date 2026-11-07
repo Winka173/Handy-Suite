@@ -3,7 +3,7 @@ import 'package:handy_bookmark/app.dart';
 import 'package:handy_bookmark/controller.dart';
 import 'package:handy_bookmark_engine/handy_bookmark_engine.dart';
 import 'package:handy_core/handy_core.dart' show CancellationToken;
-import 'package:handy_bookmark/ui/visual.dart' show ReadingSweep;
+import 'package:handy_bookmark/ui/visual.dart' show ReadingShade;
 import 'package:handy_storage/handy_storage.dart';
 import 'package:handy_ui/kit.dart';
 import 'controller_test.dart' show TestStore, TestInbox;
@@ -161,14 +161,14 @@ void main() {
     c.changed();
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 400));
-    expect(find.byType(ReadingSweep), findsWidgets);
+    expect(find.byType(ReadingShade), findsWidgets);
     expect(find.bySemanticsLabel(RegExp('Reading the page')), findsWidgets);
     // The link is saved meanwhile: it is in the library already.
     expect(c.library!.bookmarks, hasLength(1));
     c.fetching.remove(id);
     c.changed();
     await tester.pumpAndSettle();
-    expect(find.byType(ReadingSweep), findsNothing);
+    expect(find.byType(ReadingShade), findsNothing);
     semantics.dispose();
   });
 

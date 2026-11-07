@@ -2272,3 +2272,33 @@ dải "Mới lưu" (mục chưa xếp đi trước, một nút "Xếp vào…"),
   các thẻ bước đánh số, mỗi bước có hình một mảnh màn hình (vẽ bằng màu của app, khoanh đúng
   chỗ bấm). "Lưu link nhanh hơn": bước 1 có nút mở khung chia sẻ thật; Android hướng dẫn nhấn
   giữ rồi Ghim, iOS hướng dẫn Sửa rồi thêm vào Mục ưa thích. Trước/Tiếp và Xong cố định ở đáy.
+
+## Hợp đồng: Handy Bookmark · khung lưu khi chia sẻ (2026-11-07, thay thông báo "Đã lưu" khi chọn app)
+
+- Việc: thấy đúng thứ mình đang lưu (hình, tiêu đề, trang) và cho nó vào đúng chỗ, ngay trong
+  app đang xem. Câu hỏi của khung: "Cho vào đâu?". Hành động chính: Lưu.
+- Lưu không bao giờ thất bại: link vào hàng chờ riêng ngay khi tới (như trước), trước khi khung
+  hiện. Khung chỉ ghi thêm lựa chọn vào mục đang chờ. Đóng (X, Back, chạm ngoài) = giữ ở Chưa xếp,
+  cũng là lựa chọn mặc định đang chọn. "Không lưu" là lối riêng, nhỏ, để bỏ mục vừa tới.
+- Bố cục (khung đáy, tối đa 560px, cao tối đa 88%): đầu khung là dấu app + "Handy Bookmark" +
+  "Đã lưu · chọn chỗ cho nó" + nút đóng. Thẻ xem trước: hình 88px bên trái, tiêu đề 2 dòng, trang,
+  một dòng mô tả. Khi đang đọc trang: ô hình tối lại với vòng xoay (như thẻ trong app), tiêu đề tạm
+  là tiêu đề app gửi hoặc tên trang. Không đọc được: mặt chữ cái của trang, không báo lỗi (app tự
+  thử lại sau). Ảnh được chia sẻ: ảnh đó, tiêu đề "1 ảnh" / "N ảnh".
+- Danh sách "Lưu vào": Chưa xếp, rồi các bộ sưu tập theo cây như trong app, mỗi dòng là dấu bộ
+  sưu tập (màu nhạt + biểu tượng/emoji của nó) + tên + số link + nút chọn. "Bộ sưu tập mới" mở
+  một ô nhập ngay đầu danh sách (không mở hộp thoại); Xong thì bộ mới hiện trong danh sách và được
+  chọn. App tạo bộ đó khi nhận mục (trùng tên thì dùng bộ đã có).
+- Khoá app bật: không liệt kê bộ sưu tập; chỉ xem trước + "Đã lưu vào Chưa xếp. Mở khoá app để
+  xếp." Tắt tự đọc trang: không đọc, xem trước chỉ có tên trang.
+- Bộ sưu tập ở hàng đầu khung chia sẻ Android (lối tắt) vẫn lưu thẳng với thông báo ngắn: đó là
+  lối nhanh đã chọn chỗ.
+- Nền tảng: Android (Flutter vẽ trong `ShareSheetActivity` trong suốt, không vào Gần đây; Back =
+  đóng, giữ ở Chưa xếp). iOS dùng Share Extension gốc riêng, chưa có khung này. Web/Windows không
+  có Share vào app.
+- Trạng thái: đang đọc, đã đọc, không đọc được, tắt đọc, khoá app, không có bộ sưu tập nào, đang
+  nhập tên mới, tên trống (Xong bị tắt). Bàn phím đẩy khung lên. 320–1440: hẹp thì hình 72px.
+- Truy cập: nút chọn là radio có nhãn "tên, N link"; thẻ xem trước đọc thành một câu; "Đang đọc
+  trang" là vùng thông báo; mọi nút ≥ 48px.
+- Bỏ: viền đen dày và bóng lệch kiểu Tuckii (đó là thương hiệu của họ); hộp thoại riêng để tạo bộ
+  sưu tập; tự đóng theo giờ; nút Lưu bị khoá khi chưa đọc xong trang.

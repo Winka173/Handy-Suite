@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
+import 'metadata_types.dart';
 import 'shared_file.dart';
 import 'web_share_inbox.dart';
 
@@ -14,13 +15,50 @@ class SharedLink {
   /// The collection it was shared into, when the person picked one of
   /// their collections in the share sheet's top row.
   final String? collection;
+
+  /// A collection named in the share sheet, made when the share is taken
+  /// in (or the one already called that).
+  final String? newCollection;
+
+  /// What the share sheet read of the page, and the picture it showed
+  /// (already checked and re-encoded, in the private queue).
+  final MetadataResult? metadata;
+  final String? thumbnail;
   const SharedLink(
     this.id,
     this.text,
     this.title, [
     this.images = const [],
     this.collection,
-  ]);
+  ]) : newCollection = null,
+       metadata = null,
+       thumbnail = null;
+
+  const SharedLink.full(
+    this.id,
+    this.text,
+    this.title, {
+    this.images = const [],
+    this.collection,
+    this.newCollection,
+    this.metadata,
+    this.thumbnail,
+  });
+}
+
+MetadataResult? _metadata(Object? raw) {
+  if (raw is! Map) return null;
+  String? s(String k) => raw[k] is String ? raw[k] as String : null;
+  return MetadataResult(
+    title: s('title'),
+    description: s('description'),
+    siteName: s('siteName'),
+    author: s('author'),
+    canonicalUrl: s('canonicalUrl'),
+    thumbnailUrl: s('thumbnailUrl'),
+    contentType: s('contentType'),
+    status: s('status') ?? 'partial',
+  );
 }
 
 List<({String path, String mime, String name})> _images(Object? raw) => [
@@ -68,12 +106,15 @@ class SaveShareInbox {
       final rows = await channel.invokeListMethod<dynamic>('drain') ?? [];
       return [
         for (final r in rows)
-          SharedLink(
+          SharedLink.full(
             r['id'] as String,
             r['text'] as String,
             r['title'] as String?,
-            _images(r['images']),
-            r['collection'] as String?,
+            images: _images(r['images']),
+            collection: r['collection'] as String?,
+            newCollection: r['newCollection'] as String?,
+            metadata: _metadata(r['metadata']),
+            thumbnail: r['thumbnail'] as String?,
           ),
       ];
     } on MissingPluginException {
@@ -99,6 +140,19 @@ class SaveShareInbox {
       // A host test or an older build: the plain share still works.
     } on PlatformException {
       // The system declined (rate limit); offered again on the next change.
+    }
+  }
+
+  /// Keeps [snapshot] (see `sheetSnapshot`) where the share sheet reads it
+  /// (Android); elsewhere nothing happens.
+  Future<void> offerSheet(String snapshot) async {
+    if (kIsWeb || defaultTargetPlatform != TargetPlatform.android) return;
+    try {
+      await channel.invokeMethod<bool>('sheetSnapshot', {'snapshot': snapshot});
+    } on MissingPluginException {
+      // A host test or an older build: the sheet lists no collections.
+    } on PlatformException {
+      // Written again on the next change.
     }
   }
 

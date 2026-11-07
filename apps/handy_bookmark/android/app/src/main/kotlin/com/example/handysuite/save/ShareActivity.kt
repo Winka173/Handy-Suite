@@ -23,10 +23,10 @@ import java.io.File
 
 /**
  * Receives Share from other apps without opening Handy Bookmark: the share
- * is written to the app's private queue (durably, as before), a small
- * "Saved" card shows at the foot of the screen with where it went (the
- * collection's colour and name, or Not sorted), and the person stays in the
- * app they shared from. The library takes the queued shares in the next
+ * is written to the app's private queue (durably, as before). Shared to the
+ * app, [ShareSheetActivity] then shows it and asks where it goes; shared to
+ * one of the collections in the share sheet's top row, a small "Saved" card
+ * shows where it went, and the person stays in the app they shared from. The library takes the queued shares in the next
  * time the app opens. Invisible otherwise, and kept out of Recents.
  */
 class ShareActivity : Activity() {
@@ -38,6 +38,20 @@ class ShareActivity : Activity() {
         val (title, place, color) = try {
             val queue = ShareQueue(File(filesDir, "share_queue"))
             queue.receive(intent, contentResolver)
+            // Shared to the app itself: saved, then the sheet to see it and
+            // choose where it goes. A collection's own shortcut already chose.
+            val id = ShareQueue.deliveryId(intent)
+            if (id != null && ShareTargets.collection(intent) == null) {
+                startActivity(
+                    Intent(this, ShareSheetActivity::class.java)
+                        .putExtra(ShareSheetActivity.EXTRA_ID, id)
+                        .addFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION),
+                )
+                finish()
+                @Suppress("DEPRECATION")
+                overridePendingTransition(0, 0)
+                return
+            }
             val target = collection(intent)
             Triple(
                 if (vi) "Đã lưu" else "Saved",

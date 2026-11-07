@@ -39,8 +39,9 @@
                 <category android:name="android.intent.category.LAUNCHER"/>
             </intent-filter>
         </activity>
-        <!-- Share from other apps lands here: saved to the private queue, a
-             short "Saved" note, and the person stays where they were. -->
+        <!-- Share from other apps lands here: saved to the private queue, then
+             the sheet below (or, for a collection's own shortcut, a short
+             "Saved" note), and the person stays where they were. -->
         <activity
             android:name=".ShareActivity"
             android:exported="true"
@@ -65,6 +66,19 @@
                 <data android:mimeType="image/webp" />
             </intent-filter>
         </activity>
+        <!-- The sheet over the sending app: what is saved and where it goes.
+             Flutter on a transparent window; the keyboard pushes it up. -->
+        <activity
+            android:name=".ShareSheetActivity"
+            android:exported="false"
+            android:theme="@style/ShareSheetTheme"
+            android:excludeFromRecents="true"
+            android:noHistory="true"
+            android:taskAffinity=""
+            android:launchMode="standard"
+            android:windowSoftInputMode="adjustResize"
+            android:configChanges="orientation|keyboardHidden|keyboard|screenSize|smallestScreenSize|locale|layoutDirection|fontScale|screenLayout|density|uiMode"
+            android:hardwareAccelerated="true" />
         <!-- Don't delete the meta-data below.
              This is used by the Flutter tool to generate GeneratedPluginRegistrant.java -->
         <meta-data

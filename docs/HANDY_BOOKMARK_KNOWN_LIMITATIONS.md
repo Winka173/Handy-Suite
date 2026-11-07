@@ -26,6 +26,14 @@
   - Stack Overflow and Amazon answered apps with an error. Short share links
     (`vt.tiktok.com`, Reddit `/s/`) were not tested with real links.
   - Not run on a real iPhone; iOS uses the same Dart client.
+- Android's share sheet (2026-11-07): sharing to the app saves first, then shows
+  the page's picture and title and asks where it goes (a collection, a new one
+  named in place, or Not sorted on close). Tested on BlueStacks (Android 11)
+  from Chrome; the sheet starts its own Flutter engine, so it appears about a
+  second after the tap. If the app takes the share in while the sheet is open,
+  the choice is queued again and moves the link out of Not sorted (a picture
+  share keeps Not sorted). With the app lock on, no collection is listed.
+  iOS's Share Extension has no such sheet yet.
 - Native SQLite/FTS is measured; Web search currently reads local records for the
   shared fallback. Large-browser-library startup/memory/frame performance unverified.
 - Backup byte budget is 30MB. Text formats with embedded full-state metadata can

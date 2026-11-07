@@ -10,6 +10,7 @@ import 'package:url_launcher/url_launcher.dart';
 import 'platform/store.dart';
 import 'services/media_import.dart';
 import 'services/metadata_client.dart';
+import 'services/metadata_judge.dart';
 import 'services/share_inbox.dart';
 
 String saveId() => List.generate(
@@ -214,6 +215,7 @@ class SaveController extends ChangeNotifier {
     String? title,
     bool allowDuplicates = false,
     String? collectionId,
+    bool read = true,
   }) async {
     try {
       final urls = UrlTools.extract(text);
@@ -277,7 +279,7 @@ class SaveController extends ChangeNotifier {
       notice = 'saved';
       changed();
       // On unless switched off: a save brings its title and picture.
-      if (preferences['automaticMetadata'] != false) {
+      if (read && preferences['automaticMetadata'] != false) {
         for (final b in saved) {
           unawaited(refreshMetadata(b.id));
         }
@@ -303,10 +305,14 @@ class SaveController extends ChangeNotifier {
         try {
           // Pictures first, then any link alongside them; the delivery is
           // acknowledged (and its files deleted) only after both committed.
+          // A collection named in the share sheet is made now.
+          final named = share.newCollection?.trim() ?? '';
+          final collection = named.isNotEmpty
+              ? await _collectionNamed(named)
+              : share.collection;
           if (share.images.isNotEmpty) {
-            final into =
-                library!.collections.any((c) => c.id == share.collection)
-                ? share.collection
+            final into = library!.collections.any((c) => c.id == collection)
+                ? collection
                 : null;
             await addPictures([
               for (final i in share.images)
@@ -316,14 +322,10 @@ class SaveController extends ChangeNotifier {
               await quickSave(
                 share.text,
                 title: share.title,
-                collectionId: share.collection,
+                collectionId: collection,
               );
           } else {
-            await quickSave(
-              share.text,
-              title: share.title,
-              collectionId: share.collection,
-            );
+            await _takeLink(share, collection);
           }
           await inbox.acknowledge(share.id);
         } catch (_) {
@@ -343,6 +345,64 @@ class SaveController extends ChangeNotifier {
         unawaited(drain());
       }
     }
+  }
+
+  /// A shared link, with what the share sheet already read of its page
+  /// when that came with its picture: kept as it is instead of asking the
+  /// page again. Without one, the link is read as any save is.
+  Future<void> _takeLink(SharedLink share, String? collection) async {
+    final read = share.metadata;
+    Uint8List? picture;
+    if (read != null && share.thumbnail != null) {
+      try {
+        // Checked and re-encoded again: it came through a file.
+        picture = sanitizeThumbnail(
+          await inbox.readImage(share.thumbnail!),
+        ).bytes;
+      } catch (_) {
+        picture = null;
+      }
+    }
+    final saved = await quickSave(
+      share.text,
+      title: share.title,
+      collectionId: collection,
+      read: picture == null,
+    );
+    if (picture == null) return;
+    for (final b in saved) {
+      // Only links this share added (or ones never read): a link saved and
+      // read before keeps what it has.
+      if (!{'unavailable', 'failed'}.contains(b.metadataStatus)) continue;
+      await _keepRead(b, read!);
+      await store!.putThumbnail(b.id, picture);
+      _thumbnails.remove(b.id);
+    }
+    changed();
+  }
+
+  /// The top-level collection called [name] (any case), made if missing.
+  Future<String> _collectionNamed(String name) async {
+    final key = name.toLowerCase();
+    final found = library!.collections
+        .where((c) => c.parentId == null && c.name.trim().toLowerCase() == key)
+        .firstOrNull;
+    if (found != null) return found.id;
+    final id = saveId();
+    await update(
+      (s) => s.copyWith(
+        collections: [
+          ...s.collections,
+          SaveCollection(
+            id: id,
+            name: name.length > 200 ? name.substring(0, 200) : name,
+            color: 'auto',
+            position: s.collections.length,
+          ),
+        ],
+      ),
+    );
+    return id;
   }
 
   Future<void> discardShare(SharedLink share) async {
@@ -449,36 +509,7 @@ class SaveController extends ChangeNotifier {
           );
         }
       }
-      await update(
-        (s) => s.copyWith(
-          bookmarks: [
-            for (final current in s.bookmarks)
-              if (current.id != id || current.originalUrl != b.originalUrl)
-                current
-              else
-                current.copyWith(
-                  title:
-                      current.metadataSource == 'user' ||
-                          (current.metadataSource == 'share' &&
-                              !_genericTitle(current, result))
-                      ? current.title
-                      : (result.title ?? current.title),
-                  description: current.metadataSource == 'user'
-                      ? current.description
-                      : (result.description ?? current.description),
-                  siteName: result.siteName ?? current.siteName,
-                  author: result.author ?? current.author,
-                  canonicalUrl: result.canonicalUrl ?? current.canonicalUrl,
-                  thumbnailUrl: result.thumbnailUrl ?? current.thumbnailUrl,
-                  metadataStatus: result.status,
-                  metadataSource: current.metadataSource == 'user'
-                      ? 'user'
-                      : 'html',
-                  updatedAt: saveTime(),
-                ),
-          ],
-        ),
-      );
+      await _keepRead(b, result);
       if (result.thumbnailUrl != null) {
         final thumbnail = await metadata.fetchThumbnail(
           result.thumbnailUrl!,
@@ -499,44 +530,59 @@ class SaveController extends ChangeNotifier {
     }
   }
 
+  /// Keeps what a page read gave [b] (a title the person wrote, or a
+  /// shared one that says more than the site's name, stays).
+  Future<void> _keepRead(Bookmark b, MetadataResult result) async {
+    await update(
+      (s) => s.copyWith(
+        bookmarks: [
+          for (final current in s.bookmarks)
+            if (current.id != b.id || current.originalUrl != b.originalUrl)
+              current
+            else
+              current.copyWith(
+                title:
+                    current.metadataSource == 'user' ||
+                        (current.metadataSource == 'share' &&
+                            !_genericTitle(current, result))
+                    ? current.title
+                    : (result.title ?? current.title),
+                description: current.metadataSource == 'user'
+                    ? current.description
+                    : (result.description ?? current.description),
+                siteName: result.siteName ?? current.siteName,
+                author: result.author ?? current.author,
+                canonicalUrl: result.canonicalUrl ?? current.canonicalUrl,
+                thumbnailUrl: result.thumbnailUrl ?? current.thumbnailUrl,
+                metadataStatus: result.status,
+                metadataSource: current.metadataSource == 'user'
+                    ? 'user'
+                    : 'html',
+                updatedAt: saveTime(),
+              ),
+        ],
+      ),
+    );
+  }
+
   /// A title an app shared that only names the site ("Facebook",
   /// "youtube.com"): the page's own title says more.
   static bool _genericTitle(Bookmark b, MetadataResult r) {
-    if (r.title == null) return _bare(b.title).isEmpty;
-    return _onlyNamesSite(b, b.title, r.siteName);
-  }
-
-  static String _bare(String? v) =>
-      (v ?? '').toLowerCase().replaceAll(RegExp(r'[^a-z0-9]'), '');
-
-  /// Whether [text] is no more than the site's name or address.
-  static bool _onlyNamesSite(Bookmark b, String? text, String? siteName) {
-    final bare = _bare(text);
-    if (bare.isEmpty) return true;
-    final host = b.sourceDomain.toLowerCase().replaceFirst(
-      RegExp(r'^(www|m|mobile)\.'),
-      '',
+    if (r.title == null)
+      return (b.title).replaceAll(RegExp(r'[^A-Za-z0-9]'), '').isEmpty;
+    return onlyNamesSite(
+      domain: b.sourceDomain,
+      platform: b.platform,
+      text: b.title,
+      siteName: r.siteName,
     );
-    return {
-      _bare(host),
-      _bare(host.split('.').first),
-      _bare(siteName),
-      _bare(b.platform),
-    }.contains(bare);
   }
 
-  /// A login page or a bare site page (Facebook, Instagram, TikTok's
-  /// "Make Your Day", Reddit's check) in place of the post or video.
-  static bool _loginWall(Bookmark b, MetadataResult r) =>
-      _walledSites.contains(b.platform) &&
-      r.thumbnailUrl == null &&
-      (_onlyNamesSite(b, r.title, r.siteName) ||
-          RegExp(
-            r'log ?in|sign up|đăng nhập|make your day',
-            caseSensitive: false,
-          ).hasMatch(r.title!));
-
-  static const _walledSites = {'facebook', 'instagram', 'tiktok', 'reddit'};
+  static bool _loginWall(Bookmark b, MetadataResult r) => looksLikeLoginWall(
+    domain: b.sourceDomain,
+    platform: b.platform,
+    result: r,
+  );
 
   /// Links saved lately that have no picture on this device (the page could
   /// not be read, showed a login page, or its picture did not arrive) are
@@ -558,8 +604,12 @@ class SaveController extends ChangeNotifier {
                       b.thumbnailUrl != null ||
                       // Read before, but only a login page came back.
                       (b.metadataStatus == 'partial' &&
-                          _walledSites.contains(b.platform) &&
-                          _onlyNamesSite(b, b.title, null))) &&
+                          walledSites.contains(b.platform) &&
+                          onlyNamesSite(
+                            domain: b.sourceDomain,
+                            platform: b.platform,
+                            text: b.title,
+                          ))) &&
                   (DateTime.tryParse(b.savedAt)?.isAfter(since) ?? false),
             )
             .toList()
