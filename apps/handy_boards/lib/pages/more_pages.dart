@@ -263,6 +263,47 @@ class InsightsPage extends StatelessWidget {
             style: theme.textTheme.bodyLarge?.copyWith(color: p.muted),
           ),
           const SizedBox(height: 16),
+          // Finished per week, from the cards' real completion times.
+          Text(
+            tr(context, 'Finished per week', 'Hoàn thành mỗi tuần'),
+            style: theme.textTheme.titleMedium,
+          ),
+          Text(
+            tr(
+              context,
+              'Counted from when cards reached a finished column; a card '
+                  'reopened since is not counted. ${backlogOf(s, board, now).length} '
+                  'left behind today.',
+              'Tính từ lúc thẻ vào cột xong; thẻ đã mở lại không tính. Hôm nay '
+                  'còn ${backlogOf(s, board, now).length} việc tồn.',
+            ),
+            style: theme.textTheme.bodySmall?.copyWith(color: p.muted),
+          ),
+          for (final (monday, n) in weeklyThroughput(s, board, now))
+            Padding(
+              key: Key('insight-week-${isoDay(monday)}'),
+              padding: const EdgeInsets.symmetric(vertical: 4),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      tr(
+                        context,
+                        'Week of ${monday.day}/${monday.month}',
+                        'Tuần ${monday.day}/${monday.month}',
+                      ),
+                    ),
+                  ),
+                  Text(
+                    '$n',
+                    style: theme.textTheme.titleSmall?.copyWith(
+                      fontFeatures: const [FontFeature.tabularFigures()],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          const SizedBox(height: 16),
           Material(
             color: p.surface,
             borderRadius: BorderRadius.circular(BoardsRadii.tile),

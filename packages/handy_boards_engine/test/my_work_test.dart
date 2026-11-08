@@ -98,4 +98,17 @@ void main() {
     s = restorePlans(s, run.before, now: now);
     expect(s.get('tasks', p).str('scheduled'), '2026-11-06');
   });
+
+  test('weekly throughput counts real completion times, by week', () {
+    var s = two();
+    final done = columnsOf(s, a).firstWhere((c) => c.flag('done')).id;
+    String x, y;
+    (s, x) = add(s, a, 'Finished last week');
+    (s, y) = add(s, a, 'Finished today');
+    s = changeStatus(s, x, done, now: DateTime(2026, 11, 4, 10));
+    s = changeStatus(s, y, done, now: now);
+    final w = weeklyThroughput(s, a, now, weeks: 3);
+    expect(w.map((e) => e.$2), [0, 1, 1]);
+    expect(w.last.$1, DateTime(2026, 11, 9));
+  });
 }

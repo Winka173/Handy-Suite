@@ -552,3 +552,25 @@ String carryOverPeriod(DateTime today) => isoDay(calendarDay(today));
   );
   return (state: next, before: before);
 }
+
+/// Cards finished per week for the last [weeks] weeks (Monday first,
+/// oldest first), counted from the real completion time of cards that are
+/// finished now. A card reopened since is not counted; weeks before the
+/// board existed show zero.
+List<(DateTime monday, int finished)> weeklyThroughput(
+  BoardsState s,
+  String board,
+  DateTime now, {
+  int weeks = 8,
+}) {
+  final first = addDays(mondayOf(now), -7 * (weeks - 1));
+  final counts = List<int>.filled(weeks, 0);
+  for (final t in topTasks(s, board: board)) {
+    if (!completed(s, t)) continue;
+    final at = DateTime.tryParse(t.str('completedAt'))?.toLocal();
+    if (at == null) continue;
+    final i = daysBetween(first, at) ~/ 7;
+    if (!at.isBefore(first) && i < weeks) counts[i]++;
+  }
+  return [for (var i = 0; i < weeks; i++) (addDays(first, 7 * i), counts[i])];
+}
