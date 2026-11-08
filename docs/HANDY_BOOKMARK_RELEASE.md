@@ -143,18 +143,30 @@ made with `--dart-define=HANDY_DRIVE_SYNC=true` (`HANDY_DRIVE_SYNC=true
 fastlane android build`), so a store build never offers a switch that cannot
 connect.
 
-One-time setup by the owner, in Google Cloud project `play-publisher-513712`
-(or another):
+One-time setup by the owner, following Sticky Wall's
+`docs/release/PLAY_CONSOLE_API_GUIDE.md` §10.1 (click by click). Rules from
+there that apply here:
 
-1. **APIs & Services → Library → Google Drive API → Enable.**
-2. **OAuth consent screen** (Google Auth Platform → Branding / Audience /
-   Data access): app name *Handy Bookmark*, support email
-   `apps.winka.studio@gmail.com`, privacy policy
+- Handy Bookmark has **its own Google Cloud project** ("Handy Bookmark"),
+  never `play-publisher-513712` (that one holds the Play service account
+  only). Drive's hidden app folder belongs to the project, so two apps in one
+  project would share one folder and one consent-screen name.
+- A package + SHA-1 pair can belong to one OAuth client in all of Google
+  Cloud: any old Handy Bookmark clients in another project are deleted first.
+- Nothing goes into the app; data saved under an old project is not seen by
+  the new one.
+
+1. **Drive API → Enable** (the only API; no billing).
+2. **Google Auth Platform**: app name *Handy Bookmark*, support and contact
+   email `apps.winka.studio@gmail.com`, Audience *External*. *Branding*: **no
+   logo** (a logo makes Google verify the app), home page
+   `https://github.com/Winka173/Handy-Suite`, privacy policy
    `https://github.com/Winka173/Handy-Suite/blob/ui-rebuild/apps/handy_bookmark/PRIVACY.md`,
-   terms `…/TERMS.md`; scope `https://www.googleapis.com/auth/drive.appdata`
-   (a non-sensitive scope: no Google verification needed). Audience External;
-   while *Testing*, add the testers' Google accounts as test users, or publish
-   the app to *In production*.
+   terms `…/TERMS.md`, authorized domain `github.com` (the guide's *Quick*
+   column; switch with the studio website, guide §13). *Data Access*: scope
+   `.../auth/drive.appdata` (non-sensitive). *Audience* → **Publish app** (In
+   production): in *Testing* only listed accounts can sign in and Google
+   Groups are refused, which would shut out the Play testers' group.
 3. **Clients → Create client → Android**, one per signing key:
 
    | Client | Package | SHA-1 |
