@@ -71,11 +71,7 @@ const List<TemplatePreset> templatePresets = [
     blurbVi: 'Bắt đầu với ba cột để sắp xếp công việc theo cách của bạn.',
     pro: false,
     cover: 'abstract.balanced-forms',
-    columns: [
-      ('To Do', 'Cần làm'),
-      ('Doing', 'Đang làm'),
-      ('Done', 'Hoàn thành'),
-    ],
+    columns: [('To Do', 'Cần làm'), ('Doing', 'Đang làm'), ('Done', 'Xong')],
     categories: [],
     cards: [],
   ),
@@ -88,11 +84,7 @@ const List<TemplatePreset> templatePresets = [
     blurbVi: 'Theo dõi bài học, bài tập và lịch ôn trong học kỳ.',
     pro: false,
     cover: 'study.notebook-grid',
-    columns: [
-      ('To Do', 'Cần làm'),
-      ('Doing', 'Đang làm'),
-      ('Done', 'Hoàn thành'),
-    ],
+    columns: [('To Do', 'Cần làm'), ('Doing', 'Đang làm'), ('Done', 'Xong')],
     categories: [
       PresetCategory(nameEn: 'Maths', nameVi: 'Toán', hue: 0),
       PresetCategory(nameEn: 'Literature', nameVi: 'Văn', hue: 1),
@@ -139,6 +131,7 @@ const List<TemplatePreset> templatePresets = [
         noteEn: 'Aim for two minutes without reading a script.',
         noteVi: 'Nói trong hai phút, không đọc bài soạn.',
         cover: 'travel.coastal-route',
+        dueInDays: 0,
       ),
       PresetCard(
         titleEn: 'Prepare the pendulum experiment',
@@ -165,6 +158,7 @@ const List<TemplatePreset> templatePresets = [
           ('Record a short summary', 'Thu âm đoạn tóm tắt'),
         ],
         done: 1,
+        dueInDays: 1,
       ),
       PresetCard(
         titleEn: 'Compare two poem openings',
@@ -174,12 +168,14 @@ const List<TemplatePreset> templatePresets = [
         noteEn: 'Focus on imagery and tone rather than retelling the poems.',
         noteVi: 'Tập trung vào hình ảnh và giọng điệu, tránh kể lại nội dung.',
         cover: 'study.open-book',
+        dueInDays: 9,
       ),
       PresetCard(
         titleEn: 'Plot a quadratic function by hand',
         titleVi: 'Vẽ đồ thị hàm bậc hai',
         column: 0,
         category: 0,
+        dueInDays: 2,
       ),
       PresetCard(
         titleEn: 'Sort the first month of class notes',
@@ -216,11 +212,7 @@ const List<TemplatePreset> templatePresets = [
     blurbVi: 'Sắp xếp việc vặt, việc nhà và thời gian cho bản thân.',
     pro: false,
     cover: 'home.arched-window',
-    columns: [
-      ('To Do', 'Cần làm'),
-      ('Doing', 'Đang làm'),
-      ('Done', 'Hoàn thành'),
-    ],
+    columns: [('To Do', 'Cần làm'), ('Doing', 'Đang làm'), ('Done', 'Xong')],
     categories: [
       PresetCategory(nameEn: 'Home', nameVi: 'Nhà cửa', hue: 1),
       PresetCategory(nameEn: 'Admin', nameVi: 'Giấy tờ', hue: 0),
@@ -240,6 +232,7 @@ const List<TemplatePreset> templatePresets = [
         ],
         done: 0,
         cover: 'home.arched-window',
+        dueInDays: 0,
       ),
       PresetCard(
         titleEn: 'Renew the library card',
@@ -273,6 +266,7 @@ const List<TemplatePreset> templatePresets = [
         column: 0,
         category: 2,
         cover: 'wellness.morning-leaves',
+        dueInDays: 1,
       ),
       PresetCard(
         titleEn: 'Back up important household documents',
@@ -285,6 +279,7 @@ const List<TemplatePreset> templatePresets = [
           ('Open a few copies to check', 'Mở thử vài bản sao'),
         ],
         done: 1,
+        dueInDays: 9,
       ),
       PresetCard(
         titleEn: 'Practise a new drawing exercise',
@@ -294,6 +289,7 @@ const List<TemplatePreset> templatePresets = [
         noteEn: 'Spend twenty minutes sketching objects on the table.',
         noteVi: 'Dành hai mươi phút phác họa đồ vật trên bàn.',
         cover: 'creative.paper-collage',
+        dueInDays: 2,
       ),
       PresetCard(
         titleEn: 'Book a bicycle service',
@@ -365,6 +361,7 @@ const List<TemplatePreset> templatePresets = [
             'Choose lids that are easy to clean and a size that fits the fridge.',
         noteVi: 'Ưu tiên nắp dễ rửa và kích thước vừa ngăn tủ lạnh.',
         cover: 'shopping.wish-shelf',
+        dueInDays: 0,
       ),
       PresetCard(
         titleEn: 'Choose a reading lamp for the desk',
@@ -378,6 +375,7 @@ const List<TemplatePreset> templatePresets = [
         ],
         done: 1,
         cover: 'work.desk-light',
+        dueInDays: 1,
       ),
       PresetCard(
         titleEn: 'Replace worn everyday socks',
@@ -398,6 +396,7 @@ const List<TemplatePreset> templatePresets = [
         column: 0,
         category: 3,
         cover: 'shopping.wrapped-parcel',
+        dueInDays: 9,
       ),
       PresetCard(
         titleEn: 'Look for a compact shoe rack',
@@ -410,6 +409,7 @@ const List<TemplatePreset> templatePresets = [
           ('Check how it is assembled', 'Xem cách lắp ráp'),
         ],
         done: 2,
+        dueInDays: 2,
       ),
       PresetCard(
         titleEn: 'Restock rice and dried beans',
@@ -460,6 +460,7 @@ const List<TemplatePreset> templatePresets = [
         column: 1,
         category: 1,
         cover: 'home.woven-linen',
+        dueInDays: 4,
       ),
     ],
   ),
@@ -476,7 +477,7 @@ const List<TemplatePreset> templatePresets = [
       ('Backlog', 'Chờ thực hiện'),
       ('In Progress', 'Đang thực hiện'),
       ('Review', 'Cần kiểm tra'),
-      ('Done', 'Hoàn thành'),
+      ('Done', 'Xong'),
     ],
     categories: [
       PresetCategory(nameEn: 'Planning', nameVi: 'Kế hoạch', hue: 1),
@@ -524,6 +525,7 @@ const List<TemplatePreset> templatePresets = [
           ('Save and reopen a sample', 'Lưu rồi mở lại một mẫu'),
         ],
         done: 1,
+        dueInDays: 0,
       ),
       PresetCard(
         titleEn: 'Review the empty and error states',
@@ -546,12 +548,14 @@ const List<TemplatePreset> templatePresets = [
         noteEn: 'Keep observations separate from proposed fixes.',
         noteVi: 'Ghi riêng điều quan sát được và cách sửa đề xuất.',
         cover: 'work.sticky-plan',
+        dueInDays: 1,
       ),
       PresetCard(
         titleEn: 'Prepare a short release checklist',
         titleVi: 'Soạn danh sách kiểm tra trước khi phát hành',
         column: 0,
         category: 3,
+        dueInDays: 9,
       ),
       PresetCard(
         titleEn: 'Write a quick-start guide',
@@ -562,6 +566,7 @@ const List<TemplatePreset> templatePresets = [
             'Use one small example that someone can finish in five minutes.',
         noteVi: 'Dùng một ví dụ nhỏ có thể làm xong trong năm phút.',
         cover: 'study.open-book',
+        dueInDays: 2,
       ),
       PresetCard(
         titleEn: 'Create a shared definition of done',
@@ -587,6 +592,7 @@ const List<TemplatePreset> templatePresets = [
         titleVi: 'Lưu ý tưởng cho phiên bản sau',
         column: 0,
         category: null,
+        dueInDays: 4,
       ),
     ],
   ),
@@ -625,6 +631,7 @@ const List<TemplatePreset> templatePresets = [
         ],
         done: 0,
         cover: 'work.architect-desk',
+        dueInDays: 0,
       ),
       PresetCard(
         titleEn: 'A weekend spent learning pottery',
@@ -655,6 +662,7 @@ const List<TemplatePreset> templatePresets = [
         ],
         done: 2,
         cover: 'creative.paper-collage',
+        dueInDays: 1,
       ),
       PresetCard(
         titleEn: 'Edit the balcony herb guide',
@@ -680,6 +688,7 @@ const List<TemplatePreset> templatePresets = [
         noteVi:
             'Chừa khoảng thoáng quanh chủ thể để cắt ảnh trên màn hình nhỏ.',
         cover: 'abstract.balanced-forms',
+        dueInDays: 9,
       ),
       PresetCard(
         titleEn: 'Outline a guide to reusable gift wrap',
@@ -687,12 +696,14 @@ const List<TemplatePreset> templatePresets = [
         column: 0,
         category: 0,
         cover: 'events.ribbon-invite',
+        dueInDays: 2,
       ),
       PresetCard(
         titleEn: 'Write captions for the studio photos',
         titleVi: 'Viết chú thích cho ảnh góc làm việc',
         column: 1,
         category: 3,
+        dueInDays: 4,
       ),
       PresetCard(
         titleEn: 'Publish the reading-corner story',
@@ -723,6 +734,7 @@ const List<TemplatePreset> templatePresets = [
             'Use real questions from your own notes instead of making up quotes.',
         noteVi: 'Lấy câu hỏi trong ghi chép của mình, không bịa lời trích dẫn.',
         cover: 'creative.paint-palette',
+        dueInDays: 8,
       ),
     ],
   ),
@@ -785,6 +797,7 @@ const List<TemplatePreset> templatePresets = [
         ],
         done: 2,
         cover: 'creative.paper-collage',
+        dueInDays: 0,
       ),
       PresetCard(
         titleEn: 'Set up a small monthly buffer',
@@ -813,6 +826,7 @@ const List<TemplatePreset> templatePresets = [
         ],
         done: 1,
         cover: 'goals.growing-branch',
+        dueInDays: 1,
       ),
       PresetCard(
         titleEn: 'Review the first two walking weeks',
@@ -832,6 +846,7 @@ const List<TemplatePreset> templatePresets = [
         column: 0,
         category: 1,
         cover: 'study.library-steps',
+        dueInDays: 9,
       ),
       PresetCard(
         titleEn: 'Keep a weekly spending reflection',
@@ -852,6 +867,7 @@ const List<TemplatePreset> templatePresets = [
         titleVi: 'Dành riêng một buổi tối cho dự án cá nhân',
         column: 0,
         category: 3,
+        dueInDays: 2,
       ),
       PresetCard(
         titleEn: 'Notice what helped concentration this week',
@@ -916,6 +932,7 @@ const List<TemplatePreset> templatePresets = [
         ],
         done: 1,
         cover: 'events.garden-table',
+        dueInDays: 0,
       ),
       PresetCard(
         titleEn: 'Send a clear invitation',
@@ -943,6 +960,7 @@ const List<TemplatePreset> templatePresets = [
         ],
         done: 1,
         cover: 'events.paper-lanterns',
+        dueInDays: 1,
       ),
       PresetCard(
         titleEn: 'Check the final guest count',
@@ -960,12 +978,14 @@ const List<TemplatePreset> templatePresets = [
             'Choose something that works with the available space and needs no special kit.',
         noteVi: 'Chọn hoạt động vừa chỗ và không cần dụng cụ cầu kỳ.',
         cover: 'events.confetti-cutouts',
+        dueInDays: 9,
       ),
       PresetCard(
         titleEn: 'Arrange drinking water and refill jugs',
         titleVi: 'Chuẩn bị nước uống và bình châm thêm',
         column: 2,
         category: 1,
+        dueInDays: 2,
       ),
       PresetCard(
         titleEn: 'Pack the welcome table box',
@@ -992,6 +1012,7 @@ const List<TemplatePreset> templatePresets = [
         column: 1,
         category: 0,
         cover: 'home.woven-linen',
+        dueInDays: 4,
       ),
     ],
   ),
@@ -1027,6 +1048,7 @@ const List<TemplatePreset> templatePresets = [
             'Use a calm base and reserve the strongest colour for a small area.',
         noteVi: 'Dùng màu nền dịu, để màu đậm nhất ở một vùng nhỏ.',
         cover: 'abstract.balanced-forms',
+        dueInDays: 0,
       ),
       PresetCard(
         titleEn: 'Compare linen weave and plain cotton',
@@ -1043,6 +1065,7 @@ const List<TemplatePreset> templatePresets = [
         ],
         done: 1,
         cover: 'home.woven-linen',
+        dueInDays: 1,
       ),
       PresetCard(
         titleEn: 'Explore circles against folded paper',
@@ -1056,6 +1079,7 @@ const List<TemplatePreset> templatePresets = [
         ],
         done: 1,
         cover: 'abstract.folded-rhythm',
+        dueInDays: 9,
       ),
       PresetCard(
         titleEn: 'Collect ideas for a shaded courtyard',
@@ -1063,6 +1087,7 @@ const List<TemplatePreset> templatePresets = [
         column: 0,
         category: 3,
         cover: 'home.courtyard',
+        dueInDays: 2,
       ),
       PresetCard(
         titleEn: 'Choose a botanical silhouette',
@@ -1087,6 +1112,7 @@ const List<TemplatePreset> templatePresets = [
         column: 1,
         category: 1,
         cover: 'creative.ceramic-studio',
+        dueInDays: 4,
       ),
       PresetCard(
         titleEn: 'Narrow the palette to three colours',
@@ -1199,6 +1225,7 @@ const List<TemplatePreset> templatePresets = [
         ],
         done: 1,
         cover: 'shopping.fabric-swatches',
+        dueInDays: 0,
       ),
       PresetCard(
         titleEn: 'Reposition the task lamp',
@@ -1212,6 +1239,7 @@ const List<TemplatePreset> templatePresets = [
         ],
         done: 2,
         cover: 'work.desk-light',
+        dueInDays: 1,
       ),
       PresetCard(
         titleEn: 'Patch the small shelf screw holes',
@@ -1229,12 +1257,14 @@ const List<TemplatePreset> templatePresets = [
             'Leave enough clearance to pull the basket out without moving the chair.',
         noteVi: 'Chừa đủ khoảng để kéo giỏ ra mà không phải dịch ghế.',
         cover: 'home.woven-linen',
+        dueInDays: 9,
       ),
       PresetCard(
         titleEn: 'Plan an easy-to-reach charging spot',
         titleVi: 'Chọn chỗ sạc dễ với tới',
         column: 0,
         category: 3,
+        dueInDays: 2,
       ),
       PresetCard(
         titleEn: 'Finish the shelf safety check',
@@ -1262,6 +1292,7 @@ const List<TemplatePreset> templatePresets = [
         column: 0,
         category: 2,
         cover: 'home.arched-window',
+        dueInDays: 4,
       ),
     ],
   ),

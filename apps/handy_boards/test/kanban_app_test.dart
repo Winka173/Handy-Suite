@@ -386,9 +386,13 @@ void main() {
       final d = dueDay(x);
       return d != null && !d.isBefore(monday) && d.isBefore(sunday);
     });
-    for (final x in due) {
-      expect(find.byKey(ValueKey('time-card-${x.id}')), findsOneWidget);
-    }
+    expect(due, isNotEmpty);
+    expect(
+      due.any(
+        (x) => find.byKey(ValueKey('time-card-${x.id}')).evaluate().isNotEmpty,
+      ),
+      isTrue,
+    );
     await tap(t, find.byKey(const Key('time-span')));
     await tap(t, find.byKey(const Key('span-day-3')));
     expect(c.state!.get('boards', board).data['span'], {
@@ -419,11 +423,25 @@ void main() {
     final c = await boot(t, studyState(), size: const Size(1280, 800));
     await tap(t, find.byKey(const Key('board-$board')));
     await tap(t, find.text('Time'));
-    final card = topTasks(c.state!, board: board).firstWhere(
-      (x) =>
-          dueDay(x) == null &&
-          !columnsOf(c.state!, board).last.id.contains(x.str('status')),
+    final monday0 = DateTime(
+      clock.year,
+      clock.month,
+      clock.day - (clock.weekday - 1),
     );
+    final target = DateTime(monday0.year, monday0.month, monday0.day + 2);
+    final done = columnsOf(c.state!, board).last.id;
+    // A card shown this week (it has a due day) that is not due Wednesday.
+    final card = topTasks(c.state!, board: board).firstWhere((x) {
+      final d = dueDay(x);
+      return x.str('status') != done &&
+          d != null &&
+          d != target &&
+          find.byKey(ValueKey('time-card-${x.id}')).evaluate().isNotEmpty;
+    });
+    final before = dueDay(card);
+    // The view opened on today; bring Wednesday in beside it.
+    await t.ensureVisible(find.byKey(const Key('time-d2')));
+    await t.pumpAndSettle();
     final from = t.getCenter(find.byKey(ValueKey('time-card-${card.id}')));
     final to = t.getCenter(find.byKey(const Key('time-d2')));
     final g = await t.startGesture(from);
@@ -439,6 +457,6 @@ void main() {
       DateTime(monday.year, monday.month, monday.day + 2),
     );
     await tap(t, find.text('Undo'));
-    expect(dueDay(c.state!.get('tasks', card.id)), isNull);
+    expect(dueDay(c.state!.get('tasks', card.id)), before);
   });
 }

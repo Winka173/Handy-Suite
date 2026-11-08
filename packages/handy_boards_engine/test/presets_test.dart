@@ -23,7 +23,7 @@ void main() {
     expect(blank.columns, [
       ('To Do', 'Cần làm'),
       ('Doing', 'Đang làm'),
-      ('Done', 'Hoàn thành'),
+      ('Done', 'Xong'),
     ]);
     expect(blank.cards, isEmpty);
     expect(blank.categories, isEmpty);

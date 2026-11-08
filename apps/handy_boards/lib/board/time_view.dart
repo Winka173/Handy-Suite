@@ -574,21 +574,29 @@ class _TimeViewState extends State<TimeView> {
             children: [
               bar,
               Expanded(
+                // Every part is built (a span holds at most about 53), so
+                // today can always be scrolled to.
                 child: wide
-                    ? ListView(
+                    ? SingleChildScrollView(
                         key: const Key('time-columns'),
                         scrollDirection: Axis.horizontal,
                         padding: const EdgeInsets.fromLTRB(24, 0, 12, 8),
-                        children: [
-                          for (final b in ordered) section(b, column: true),
-                        ],
+                        child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            for (final b in ordered) section(b, column: true),
+                          ],
+                        ),
                       )
-                    : ListView(
+                    : SingleChildScrollView(
                         key: const Key('time-list'),
                         padding: const EdgeInsets.fromLTRB(16, 0, 16, 24),
-                        children: [
-                          for (final b in ordered) section(b, column: false),
-                        ],
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            for (final b in ordered) section(b, column: false),
+                          ],
+                        ),
                       ),
               ),
             ],
