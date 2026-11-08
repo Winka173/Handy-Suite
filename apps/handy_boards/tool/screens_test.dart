@@ -1,3 +1,4 @@
+import 'dart:async';
 // Review shots of the Kanban rebuild, rendered with the real fonts:
 //   SHOTS_DIR=<dir> flutter test --no-pub tool/screens_test.dart
 import 'dart:io';
@@ -25,8 +26,8 @@ Future<void> settle(WidgetTester t) async {
   }
 }
 
-Future<void> shot(WidgetTester t, String name) async {
-  await settle(t);
+Future<void> shot(WidgetTester t, String name, {bool still = true}) async {
+  if (still) await settle(t);
   final error = t.takeException();
   if (error is FlutterError) debugPrint(error.toStringDeep());
   expect(error, isNull, reason: name);
@@ -286,6 +287,48 @@ void main() {
     await shot(t, '12-settings');
     await tap(t, find.byKey(const Key('settings-pro')));
     await shot(t, '13-pro');
+    await t.scrollUntilVisible(
+      find.byKey(const Key('pro-part-automation')),
+      300,
+      scrollable: find.descendant(
+        of: find.byKey(const Key('pro-page')),
+        matching: find.byType(Scrollable),
+      ),
+    );
+    await tap(t, find.byKey(const Key('pro-part-automation')));
+    await shot(t, '13c-pro-automation-end');
+  });
+
+  testWidgets('pro, opened from a part', (t) async {
+    await boot(t, sample());
+    final nav = t.state<NavigatorState>(find.byType(Navigator).first);
+    unawaited(nav.pushNamed('/pro', arguments: ProFeature.automation));
+    await t.pump();
+    await t.pump(const Duration(milliseconds: 400));
+    await t.pump(const Duration(milliseconds: 1500));
+    await shot(t, '13b-pro-gate-moving', still: false);
+    await shot(t, '13d-pro-gate-end');
+  });
+
+  testWidgets('pro, whole page and widths', (t) async {
+    await boot(t, sample(), size: const Size(390, 3400));
+    final nav = t.state<NavigatorState>(find.byType(Navigator).first);
+    unawaited(nav.pushNamed('/pro'));
+    await shot(t, '13a-pro-whole');
+  });
+
+  testWidgets('pro, small and dark', (t) async {
+    await boot(t, sample(theme: 'dark'), size: const Size(320, 640));
+    final nav = t.state<NavigatorState>(find.byType(Navigator).first);
+    unawaited(nav.pushNamed('/pro', arguments: ProFeature.looks));
+    await shot(t, '13e-pro-small-dark');
+  });
+
+  testWidgets('pro, desktop', (t) async {
+    await boot(t, sample(locale: 'en'), size: const Size(1280, 800));
+    final nav = t.state<NavigatorState>(find.byType(Navigator).first);
+    unawaited(nav.pushNamed('/pro', arguments: ProFeature.export));
+    await shot(t, '13f-pro-desktop');
   });
 
   testWidgets('settings, whole', (t) async {

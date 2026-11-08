@@ -68,8 +68,9 @@ void main() {
     // Tapped in place: scrolling would page the phone's columns away.
     await t.tap(find.byKey(Key('add-from-template-$col')));
     await t.pumpAndSettle();
-    expect(find.text('Pay once. Keep it.'), findsOneWidget);
-    expect(find.text('Weekly review'), findsNothing);
+    expect(find.byKey(const Key('pro-page')), findsOneWidget);
+    // The card template's own demo may say "Weekly review"; no card was
+    // made (checked on the board's data below).
     expect(
       topTasks(
         c.state!,
@@ -92,7 +93,7 @@ void main() {
     // Without Pro: the Pro page opens instead.
     final c = await boot(t, s);
     await tap(t, find.byKey(const Key('home-my-work')));
-    expect(find.text('Pay once. Keep it.'), findsOneWidget);
+    expect(find.byKey(const Key('pro-page')), findsOneWidget);
     await t.binding.handlePopRoute();
     await t.pumpAndSettle();
     debugProOverride = true;
@@ -141,7 +142,7 @@ void main() {
     await tap(t, find.byKey(const Key('board-more')));
     await menuTap(t, 'menu-fields');
     // Free: the Pro page opens at once, not the fields first.
-    expect(find.text('Pay once. Keep it.'), findsOneWidget);
+    expect(find.byKey(const Key('pro-page')), findsOneWidget);
     expect(find.byKey(const Key('field-add')), findsNothing);
     expect(fieldsOf(c.state!, board), isEmpty);
     await t.binding.handlePopRoute();
@@ -162,7 +163,7 @@ void main() {
     await tap(t, find.byKey(const Key('board-$board')));
     await tap(t, find.byKey(const Key('board-more')));
     await menuTap(t, 'menu-board-history');
-    expect(find.text('Pay once. Keep it.'), findsOneWidget);
+    expect(find.byKey(const Key('pro-page')), findsOneWidget);
     await t.binding.handlePopRoute();
     await t.pumpAndSettle();
     debugProOverride = true;

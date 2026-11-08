@@ -1210,6 +1210,52 @@ void main() {
       await tapKey(t, 'howto-topic-faster');
       await scrolled(t, 'phone-50-how-to-faster-$theme', 2);
     });
+  testWidgets('pro page', (t) async {
+    await boot(t, phone);
+    Navigator.of(
+      t.element(find.byType(Scaffold).first),
+      rootNavigator: true,
+    ).pushNamed('/pro');
+    await t.pumpAndSettle();
+    await shot(t, 'phone-60-pro');
+    Navigator.of(
+      t.element(find.byType(Scaffold).last),
+      rootNavigator: true,
+    ).pushNamed('/pro', arguments: ProFeature.premiumLayouts);
+    await t.pump();
+    await t.pump(const Duration(milliseconds: 400));
+    await t.pump(const Duration(milliseconds: 1400));
+    await shot(t, 'phone-61-pro-layouts-moving', settle: false);
+    await t.pumpAndSettle();
+    await shot(t, 'phone-62-pro-layouts-end');
+  });
+  testWidgets('pro page whole', (t) async {
+    await boot(t, const Size(390, 3600));
+    Navigator.of(
+      t.element(find.byType(Scaffold).first),
+      rootNavigator: true,
+    ).pushNamed('/pro');
+    await t.pumpAndSettle();
+    await shot(t, 'phone-63-pro-whole');
+  });
+  testWidgets('pro page dark and desktop', (t) async {
+    await boot(t, const Size(320, 640), theme: 'dark');
+    Navigator.of(
+      t.element(find.byType(Scaffold).first),
+      rootNavigator: true,
+    ).pushNamed('/pro', arguments: ProFeature.focusSkins);
+    await t.pumpAndSettle();
+    await shot(t, 'phone-64-pro-small-dark');
+  });
+  testWidgets('pro page desktop', (t) async {
+    await boot(t, const Size(1280, 800));
+    Navigator.of(
+      t.element(find.byType(Scaffold).first),
+      rootNavigator: true,
+    ).pushNamed('/pro', arguments: ProFeature.readerHighlights);
+    await t.pumpAndSettle();
+    await shot(t, 'desktop-60-pro');
+  });
   testWidgets('settings advanced views', (t) async {
     await boot(t, phone, extras: true);
     Navigator.of(t.element(find.byType(Scaffold).first)).pushNamed('/settings');

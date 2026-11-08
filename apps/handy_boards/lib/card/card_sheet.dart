@@ -220,7 +220,7 @@ class _CardDetailState extends State<CardDetail> {
 
   /// Repeating is Pro; taking a repeat off never is.
   Future<void> _customRepeat() async {
-    if (!await requirePro(context, ProFeature.automation) || !mounted) return;
+    if (!await requirePro(context, ProFeature.repeat) || !mounted) return;
     final v = await customRepeat(context, _card);
     if (v == null || !mounted) return;
     await _change(
@@ -230,8 +230,7 @@ class _CardDetailState extends State<CardDetail> {
   }
 
   Future<void> _repeat(String? every) async {
-    if (every != null && !await requirePro(context, ProFeature.automation))
-      return;
+    if (every != null && !await requirePro(context, ProFeature.repeat)) return;
     if (!mounted) return;
     await _change(
       (s) => saveTask(

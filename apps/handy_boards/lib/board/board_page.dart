@@ -88,7 +88,7 @@ class _BoardPageState extends State<BoardPage> {
   }
 
   Future<void> _filters() async {
-    if (!await requirePro(context, ProFeature.automation) || !mounted) return;
+    if (!await requirePro(context, ProFeature.savedFilters) || !mounted) return;
     final picked = await savedFiltersSheet(
       context,
       scope,

@@ -3118,3 +3118,30 @@ Mất mạng tạm thời không báo.
 - **Pro hỏi ngay khi bấm**, mở thẳng trang Pro, không vào trang chi tiết trước: Luật tự động, Trường tuỳ chỉnh, Bộ lọc đã lưu, Việc của tôi, Mẫu thẻ (Cài đặt và chân cột), mẫu bảng Pro. Nền bảng, ảnh bìa, kiểu xuất và kiểu widget vẫn cho xem thử tại chỗ.
 - **Căn lề:** nút ⋯ ở đầu cột và nút mẫu thẻ ở chân cột luôn sát mép phải. Nút ⋯ trên thẻ có vùng chạm 48 pt.
 - **Kiểm tra:** `week_bar_app_test` (8), `kanban_app_test`, `pro_tools_test`, `rules_app_test`, `settings_test`, `layout_sweep_test` (11 kích thước).
+
+## Hợp đồng: trang Pro của Handy Boards và Handy Bookmark (2026-11-08, mục 8 trong danh sách bug của chủ)
+Chạy theo `design-taste-frontend` (app-screens) và `frontend-ui-engineering`. Thay trang Pro cũ của Boards (một danh sách thẻ
+icon + chữ) và trang Explore Pro của Bookmark (ba khối chữ). Trang này cũng thay sheet "Free và Pro có gì" đã bỏ khỏi Cài đặt.
+
+- **Việc và câu hỏi.** Người tới đây vì vừa chạm một thứ Pro (hoặc mở từ Cài đặt). Câu hỏi: "Thứ tôi vừa chạm làm gì, Pro
+  còn gì nữa, và giá bao nhiêu?" Phát hiện chính đặt đầu trang: chính tính năng vừa chạm, đang chạy.
+- **Mặt của trang (signature): "sân khấu".** Ô trên cùng diễn tính năng bằng giao diện thật của app thu nhỏ, chạy vòng lặp
+  (Boards: thẻ, cột, bìa và nền thật vẽ bằng `CoverArt`/`boardLooks`; Bookmark: thẻ link, giao diện và kiểu bày thật). Không
+  dùng ảnh GIF hay video: hình vẽ bằng widget nên luôn đúng giao diện hiện tại, đúng sáng/tối, đúng tiếng Việt, không tăng
+  dung lượng app. Chạm một dòng ở danh sách bên dưới thì sân khấu đổi sang tính năng đó và cuộn lên.
+- **Thứ tự:** sân khấu (hình lớn, tên, một câu giải thích) → "Pro còn có" chia nhóm (Boards: Lên kế hoạch / Tự động / Giao
+  diện / Xuất và xem lại; Bookmark: Giao diện / Sắp xếp / Đọc và tìm), mỗi dòng một hình nhỏ đứng yên + tên + một dòng → bảng
+  "Miễn phí và Pro" (mỗi mục: miễn phí có gì, Pro thêm gì; số lấy từ dữ liệu thật như số mẫu, số nền) → dòng "Luôn miễn phí"
+  và "Mất Pro không mất dữ liệu".
+- **Hành động chính duy nhất:** thanh mua dính đáy: "Mua một lần · <giá cửa hàng>" + "Khôi phục". Không có giá giả.
+- **Trạng thái:** chưa thiết lập cửa hàng (nút tắt, nói rõ), đang mua (vòng xoay), chờ xác nhận, huỷ (không trừ tiền), lỗi
+  hoặc không kết nối (thử lại sau), đã có Pro (cảm ơn; mở từ một tính năng thì nút thành "Tiếp tục" quay về đúng chỗ).
+- **Chuyển động:** vòng lặp 3–4 giây, dừng ở khung cuối 1 giây. Hệ điều hành bật giảm chuyển động thì chỉ hiện khung cuối.
+  Hình nhỏ trong danh sách luôn đứng yên (không chạy chục bộ hẹn giờ cùng lúc). Vòng lặp dùng `HandyDemoLoop` trong kit.
+- **Trợ năng:** hình có nhãn mô tả việc nó diễn; dòng danh sách là nút có tên, có trạng thái "đang xem"; thanh mua có
+  `liveRegion` cho trạng thái; chữ đạt 4,5:1.
+- **Đáp ứng 320–1440:** một cột tối đa 720 px; sân khấu cao 180 (≤360 px) đến 240; bảng so sánh xếp hai ô Miễn phí | Pro dưới
+  tên mục để không bị ép ở 320 px; chữ ×2 vẫn không tràn (hình nằm trong `FittedBox`).
+- **Nền tảng:** Android Back và vuốt về iOS đóng trang; web URL `/pro`; Windows/web không có cửa hàng thì báo "chưa mở bán".
+- **Từ chối:** icon trong ô màu; thẻ tính năng giống hệt nhau xếp lưới; gradient, ảnh minh hoạ chung chung; đếm ngược hay
+  "giảm giá" giả; khoá việc xem; nói tính năng chưa có.

@@ -382,8 +382,7 @@ class _Digest extends StatelessWidget {
             ('weekly', tr(context, 'Weekly', 'Hằng tuần')),
           ],
           onChanged: (v) async {
-            if (v != 'off' &&
-                !await requirePro(context, ProFeature.carryOver)) {
+            if (v != 'off' && !await requirePro(context, ProFeature.digest)) {
               return;
             }
             await set({'digest': v == 'off' ? null : v});

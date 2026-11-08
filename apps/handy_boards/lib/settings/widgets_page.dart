@@ -274,7 +274,7 @@ class _WidgetsPageState extends State<WidgetsPage> {
                     key: const Key('widget-style-apply'),
                     onPressed: () async {
                       final id = previewing!;
-                      if (!await requirePro(context, ProFeature.looks) ||
+                      if (!await requirePro(context, ProFeature.widgetStyles) ||
                           !context.mounted) {
                         return;
                       }

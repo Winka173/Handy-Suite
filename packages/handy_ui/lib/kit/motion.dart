@@ -59,3 +59,127 @@ class HandyReveal extends StatelessWidget {
     child: child,
   );
 }
+
+/// A short demonstration that plays itself: [builder] gets `t` from 0 to 1
+/// over [period], holds the last frame for [hold], and plays [times] times
+/// before resting on its last frame (a replay button brings it back). With
+/// [play] off, or when the OS asks for less motion, it only ever shows the
+/// last frame, so the still image must explain the feature on its own.
+class HandyDemoLoop extends StatefulWidget {
+  final Duration period, hold;
+  final int times;
+  final bool play;
+
+  /// Read aloud instead of the drawing, which is excluded from semantics.
+  final String label;
+
+  /// The replay button's tooltip, in the app's language.
+  final String replayLabel;
+  final Widget Function(BuildContext context, double t) builder;
+  const HandyDemoLoop({
+    super.key,
+    required this.label,
+    this.replayLabel = 'Play again',
+    required this.builder,
+    this.period = const Duration(milliseconds: 3200),
+    this.hold = const Duration(milliseconds: 1000),
+    this.times = 2,
+    this.play = true,
+  });
+
+  /// Pure: the t of the drawing at [elapsed] into one play with a hold.
+  static double at(Duration elapsed, Duration period, Duration hold) {
+    final whole = period + hold;
+    final e = elapsed.inMicroseconds % whole.inMicroseconds;
+    return (e / period.inMicroseconds).clamp(0.0, 1.0);
+  }
+
+  @override
+  State<HandyDemoLoop> createState() => _HandyDemoLoopState();
+}
+
+class _HandyDemoLoopState extends State<HandyDemoLoop>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _c = AnimationController(vsync: this);
+  bool _done = false;
+
+  bool get _still =>
+      !widget.play || MediaQuery.maybeDisableAnimationsOf(context) == true;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (_still) {
+      _c.stop();
+    } else if (!_c.isAnimating && !_done) {
+      _start();
+    }
+  }
+
+  @override
+  void didUpdateWidget(HandyDemoLoop old) {
+    super.didUpdateWidget(old);
+    if (old.label != widget.label || old.play != widget.play) {
+      _done = false;
+      if (_still) {
+        _c.stop();
+      } else {
+        _start();
+      }
+    }
+  }
+
+  void _start() {
+    final whole = widget.period + widget.hold;
+    _c.duration = whole * widget.times;
+    _done = false;
+    _c.forward(from: 0).whenCompleteOrCancel(() {
+      if (mounted && _c.value == 1) setState(() => _done = true);
+    });
+  }
+
+  @override
+  void dispose() {
+    _c.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final still = _still;
+    final drawing = AnimatedBuilder(
+      animation: _c,
+      builder: (context, _) {
+        final t = still || _done || _c.duration == null
+            ? 1.0
+            : HandyDemoLoop.at(
+                _c.duration! * _c.value,
+                widget.period,
+                widget.hold,
+              );
+        return widget.builder(context, t);
+      },
+    );
+    return Semantics(
+      image: true,
+      label: widget.label,
+      child: Stack(
+        children: [
+          Positioned.fill(child: ExcludeSemantics(child: drawing)),
+          if (_done && !still)
+            PositionedDirectional(
+              end: 4,
+              bottom: 4,
+              child: IconButton.filledTonal(
+                key: const Key('demo-replay'),
+                visualDensity: VisualDensity.compact,
+                tooltip: widget.replayLabel,
+                icon: const Icon(Icons.replay, size: 18),
+                onPressed: _start,
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+}

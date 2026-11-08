@@ -21,9 +21,8 @@ Future<void> store(WidgetTester t, String name) async {
         boundary.currentContext!.findRenderObject()! as RenderRepaintBoundary;
     final im = await render.toImage(pixelRatio: 3);
     final bytes = await im.toByteData(format: ui.ImageByteFormat.png);
-    final dir = Directory(
-      Platform.environment['STORE_DIR'] ?? 'build/store',
-    )..createSync(recursive: true);
+    final dir = Directory(Platform.environment['STORE_DIR'] ?? 'build/store')
+      ..createSync(recursive: true);
     File('${dir.path}/$name.png').writeAsBytesSync(bytes!.buffer.asUint8List());
     im.dispose();
   });
@@ -69,13 +68,13 @@ void main() {
       await store(t, '$lang-4-card');
       await t.binding.handlePopRoute();
       await settle(t);
-      Navigator.of(t.element(find.byType(Scaffold).first)).popUntil(
-        (r) => r.isFirst,
-      );
+      Navigator.of(
+        t.element(find.byType(Scaffold).first),
+      ).popUntil((r) => r.isFirst);
       await settle(t);
-      Navigator.of(t.element(find.byType(Scaffold).first)).pushNamed(
-        '/templates',
-      );
+      Navigator.of(
+        t.element(find.byType(Scaffold).first),
+      ).pushNamed('/templates');
       await settle(t);
       await store(t, '$lang-5-templates');
       await tap(t, find.byKey(const Key('template-semester')));

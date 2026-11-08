@@ -24,7 +24,7 @@ void main() {
     await tap(t, find.byKey(const Key('board-more')));
     await menuTap(t, 'menu-rules');
     // Free: the Pro page opens at once, not the rules first.
-    expect(find.text('Pay once. Keep it.'), findsOneWidget);
+    expect(find.byKey(const Key('pro-page')), findsOneWidget);
     expect(find.byKey(const Key('rules-page')), findsNothing);
     await t.binding.handlePopRoute();
     await t.pumpAndSettle();
@@ -148,7 +148,7 @@ void main() {
     );
     expect((box.decoration as BoxDecoration).color, const Color(0xFF0F2A2E));
     await tap(t, find.byKey(const Key('widget-style-apply')));
-    expect(find.text('Pay once. Keep it.'), findsOneWidget);
+    expect(find.byKey(const Key('pro-page')), findsOneWidget);
     await t.binding.handlePopRoute();
     await t.pumpAndSettle();
     expect(c.state!.preferences['widgetStyle'], 'dark');
@@ -177,7 +177,7 @@ void main() {
     expect(find.text('Teacher: Ms Lan'), findsOneWidget);
     expect(find.textContaining('Saves with Pro.'), findsOneWidget);
     await tap(t, find.byKey(const Key('export-png')));
-    expect(find.text('Pay once. Keep it.'), findsOneWidget);
+    expect(find.byKey(const Key('pro-page')), findsOneWidget);
     await t.binding.handlePopRoute();
     await t.pumpAndSettle();
     await tap(t, find.byKey(const Key('export-style-report')));
@@ -198,7 +198,7 @@ void main() {
     await openSettings(t);
     await tap(t, find.byKey(const Key('settings-reminders')));
     await tap(t, find.text('Daily'));
-    expect(find.text('Pay once. Keep it.'), findsOneWidget);
+    expect(find.byKey(const Key('pro-page')), findsOneWidget);
     await t.binding.handlePopRoute();
     await t.pumpAndSettle();
     expect((c.state!.preferences['notify'] as Map?)?['digest'], isNull);

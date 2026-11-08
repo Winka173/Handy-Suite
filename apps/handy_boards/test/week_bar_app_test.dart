@@ -3,7 +3,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:handy_boards/pro/pro.dart';
 import 'package:handy_boards_engine/handy_boards_engine.dart' hide clock;
 import 'package:handy_ui/kit.dart';
-import 'kanban_app_test.dart' show boot, settle, tap, studyState, board, clock;
+import 'kanban_app_test.dart' show boot, tap, studyState, board, clock;
 
 // The test clock is Saturday 7 November 2026, 09:00.
 final today = DateTime(clock.year, clock.month, clock.day);

@@ -291,7 +291,7 @@ void main() {
     await t.pumpAndSettle();
     await tap(t, find.byKey(const Key('template-sprint')));
     // The Pro page comes first: no preview or questions behind it.
-    expect(find.text('Pay once. Keep it.'), findsOneWidget);
+    expect(find.byKey(const Key('pro-page')), findsOneWidget);
     expect(find.byKey(const Key('template-use')), findsNothing);
     expect(find.byKey(const Key('setup-preview')), findsNothing);
     await t.binding.handlePopRoute();
@@ -437,7 +437,7 @@ void main() {
     await menuTap(t, 'menu-board-look');
     await lookTap(t, 'look-linen');
     await tap(t, find.byKey(const Key('look-apply')));
-    expect(find.text('Pay once. Keep it.'), findsOneWidget);
+    expect(find.byKey(const Key('pro-page')), findsOneWidget);
     expect(c.state!.get('boards', board).data['appearance'], isNull);
     // Bought on the Pro page: back on the board, the look is kept.
     debugProOverride = true;
@@ -457,7 +457,7 @@ void main() {
     await tap(t, find.byKey(const Key('export-style-poster')));
     expect(find.textContaining('Saves with Pro.'), findsOneWidget);
     await tap(t, find.byKey(const Key('export-png')));
-    expect(find.text('Pay once. Keep it.'), findsOneWidget);
+    expect(find.byKey(const Key('pro-page')), findsOneWidget);
   });
 
   testWidgets('setting a card to repeat asks for Pro; with Pro it repeats', (
@@ -469,7 +469,7 @@ void main() {
     await tap(t, find.byKey(ValueKey('card-${card.id}')));
     await tap(t, find.byKey(const Key('card-repeat')));
     await tap(t, find.byKey(const Key('card-repeat-weekly')));
-    expect(find.text('Pay once. Keep it.'), findsOneWidget);
+    expect(find.byKey(const Key('pro-page')), findsOneWidget);
     expect(c.state!.get('tasks', card.id).data['repeat'], isNull);
     // Bought on the Pro page: the repeat is set on the way back.
     debugProOverride = true;

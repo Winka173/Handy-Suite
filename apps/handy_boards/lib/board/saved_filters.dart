@@ -77,7 +77,7 @@ Future<String?> savedFiltersSheet(
                       ),
               ),
               onTap: () async {
-                if (await requirePro(sheet, ProFeature.automation) &&
+                if (await requirePro(sheet, ProFeature.savedFilters) &&
                     sheet.mounted) {
                   Navigator.pop(sheet, f.id);
                 }
@@ -102,7 +102,7 @@ Future<String?> savedFiltersSheet(
           OutlinedButton.icon(
             key: const Key('filter-new'),
             onPressed: () async {
-              if (!await requirePro(sheet, ProFeature.automation) ||
+              if (!await requirePro(sheet, ProFeature.savedFilters) ||
                   !sheet.mounted) {
                 return;
               }
