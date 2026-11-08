@@ -157,8 +157,12 @@ void main() {
     };
     addTearDown(() => help.openExternal = open);
     await tapKey(t, 'save-privacy');
-    expect(opened.single.toString(), help.privacyPolicyUrl);
-    expect(opened.single.path, endsWith('apps/handy_bookmark/PRIVACY.md'));
+    // In the app's language: the English page, or its Vietnamese twin.
+    expect(opened.single.host, 'winka.top');
+    expect(
+      opened.single.path,
+      matches(RegExp(r'^/(en|vi)/apps/handy-bookmark/privacy/$')),
+    );
   });
 
   testWidgets('Recently Deleted: restore is the prominent action; delete '

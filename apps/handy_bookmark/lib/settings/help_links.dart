@@ -5,12 +5,16 @@ import 'package:url_launcher/url_launcher.dart';
 /// Where feedback goes.
 const feedbackEmail = 'apps.winka.studio@gmail.com';
 
-/// The published privacy policy and terms of service (apps/handy_bookmark/
-/// PRIVACY.md and TERMS.md, the Play listing's too); Settings opens them.
+/// The published privacy policy and terms of service on winka.top (the Play
+/// listing's privacy policy too), English; [openLegal] opens the Vietnamese
+/// page when the app is in Vietnamese. The texts are PRIVACY.md and TERMS.md.
 const String? privacyPolicyUrl =
-    'https://github.com/Winka173/Handy-Suite/blob/ui-rebuild/apps/handy_bookmark/PRIVACY.md';
-const String? termsUrl =
-    'https://github.com/Winka173/Handy-Suite/blob/ui-rebuild/apps/handy_bookmark/TERMS.md';
+    'https://winka.top/en/apps/handy-bookmark/privacy/';
+const String? termsUrl = 'https://winka.top/en/apps/handy-bookmark/terms/';
+
+/// [url] in the app's language: winka.top keeps each page under /en/ and /vi/.
+String legalUrlFor(BuildContext context, String url) =>
+    tr(context, url, url.replaceFirst('/en/', '/vi/'));
 
 /// Opens; tests replace it.
 @visibleForTesting
@@ -64,9 +68,12 @@ Future<void> sendFeedback(BuildContext context) async {
     );
 }
 
-/// Opens a published legal page, when it exists.
+/// Opens a published legal page, in the app's language.
 Future<void> openLegal(BuildContext context, String url) async {
-  if (await openExternal(Uri.parse(url)) || !context.mounted) return;
+  if (await openExternal(Uri.parse(legalUrlFor(context, url))) ||
+      !context.mounted) {
+    return;
+  }
   showHandyMessage(
     context,
     tr(context, 'Could not open the page.', 'Chưa mở được trang.'),

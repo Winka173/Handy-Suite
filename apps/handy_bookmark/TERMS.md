@@ -15,7 +15,7 @@ the app you accept them.
   sort and find them. It has no accounts and no servers of its own.
 - The free features can be used without paying.
 - What the app keeps and sends is described in the
-  [Privacy Policy](https://github.com/Winka173/Handy-Suite/blob/ui-rebuild/apps/handy_bookmark/PRIVACY.md).
+  [Privacy Policy](https://winka.top/en/apps/handy-bookmark/privacy/).
 
 ### Handy Bookmark Pro
 
@@ -74,7 +74,7 @@ dùng app, bạn đồng ý với chúng.
   tìm lại chúng. App không có tài khoản và không có máy chủ riêng.
 - Các tính năng miễn phí dùng được mà không phải trả tiền.
 - Những gì app giữ và gửi đi được nêu trong
-  [Chính sách quyền riêng tư](https://github.com/Winka173/Handy-Suite/blob/ui-rebuild/apps/handy_bookmark/PRIVACY.md).
+  [Chính sách quyền riêng tư](https://winka.top/vi/apps/handy-bookmark/privacy/).
 
 ### Handy Bookmark Pro
 

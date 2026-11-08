@@ -112,7 +112,7 @@ void main() {
     expect(find.text('Terms of service'), findsOneWidget);
     expect(find.text('Not published yet'), findsNothing);
     await tapKey(t, 'set-terms');
-    expect(opened.single.path, endsWith('apps/handy_bookmark/TERMS.md'));
+    expect(opened.single.toString(), termsUrl);
   });
 
   testWidgets('Delete all data asks first, then removes items, pictures '

@@ -14,7 +14,8 @@ this page lists what differs and what is set up.
 | Listing text | `android/fastlane/metadata/android/{en-US,vi}/` (title, short, full, `changelogs/N.txt`) |
 | Store graphics (kept in git) | `apps/handy_bookmark/store/` (`icon_512.png`, `feature_graphic_{en,vi}.png`, `screenshots/{en,vi}/1..6.png`) |
 | Staged graphics (gitignored) | `android/fastlane/metadata/android/<lang>/images/` |
-| Privacy policy | `apps/handy_bookmark/PRIVACY.md` (EN + VI) |
+| Privacy policy | `https://winka.top/en/apps/handy-bookmark/privacy/` (VI: `/vi/…`); text from `apps/handy_bookmark/PRIVACY.md` |
+| Terms | `https://winka.top/en/apps/handy-bookmark/terms/`; data deletion `…/data-deletion/`; support `https://winka.top/en/support/handy-bookmark/` |
 | Service-account key | `~/.secrets/play-publisher.json` (shared by every app) |
 | Upload keystore | `C:\Users\Winka\handy-bookmark-upload.jks`, alias `upload`; passwords in `~/.secrets/handy-bookmark-upload.properties`; `android/key.properties` (gitignored) points at it |
 
@@ -87,8 +88,8 @@ bundle.
    (bookmarks, read later, organizer).
 2. **Policy → App content:**
    - **Privacy policy:**
-     `https://github.com/Winka173/Handy-Suite/blob/ui-rebuild/apps/handy_bookmark/PRIVACY.md`.
-     Change `ui-rebuild` to `main` once the branch is merged.
+     `https://winka.top/en/apps/handy-bookmark/privacy/` (since 2026-11-09;
+     the GitHub copy stays online for older builds).
    - **App access:** no account or sign-in. If Play asks for full access to
      paid content, give a promo code for `handy_bookmark_pro` (see Pro below).
    - **Ads:** no ads.
@@ -166,10 +167,11 @@ there that apply here:
 2. **Google Auth Platform**: app name *Handy Bookmark*, support and contact
    email `apps.winka.studio@gmail.com`, Audience *External*. *Branding*: **no
    logo** (a logo makes Google verify the app), home page
-   `https://github.com/Winka173/Handy-Suite`, privacy policy
-   `https://github.com/Winka173/Handy-Suite/blob/ui-rebuild/apps/handy_bookmark/PRIVACY.md`,
-   terms `…/TERMS.md`, authorized domain `github.com` (the guide's *Quick*
-   column; switch with the studio website, guide §13). *Data Access*: scope
+   `https://winka.top/en/apps/handy-bookmark/`, privacy policy
+   `https://winka.top/en/apps/handy-bookmark/privacy/`, terms
+   `https://winka.top/en/apps/handy-bookmark/terms/`, authorized domain
+   `winka.top` (the domain must be verified in Search Console by the
+   project owner; switched from GitHub on 2026-11-09). *Data Access*: scope
    `.../auth/drive.appdata` (non-sensitive). *Audience* → **Publish app** (In
    production): in *Testing* only listed accounts can sign in and Google
    Groups are refused, which would shut out the Play testers' group.

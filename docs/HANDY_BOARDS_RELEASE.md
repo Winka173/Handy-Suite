@@ -17,6 +17,7 @@ Handy Bookmark's `docs/HANDY_BOOKMARK_RELEASE.md` is the sibling it copies.
 | Key passwords | `~/.secrets/handy-boards-upload.properties`, copied to the gitignored `apps/handy_boards/android/key.properties`. Never print or commit |
 | Privacy policy | `https://github.com/Winka173/Handy-Suite/blob/ui-rebuild/apps/handy_boards/PRIVACY.md` |
 | Terms | `https://github.com/Winka173/Handy-Suite/blob/ui-rebuild/apps/handy_boards/TERMS.md` |
+| winka.top legal | Not yet: `https://winka.top/en/apps/handy-boards/privacy/` is still a "not effective" preview (checked 2026-11-09). Keep the GitHub links until the website imports `OneDrive/Documents/Handy-Website-Kit/handy-boards` (its `legal/` is PRIVACY.md and TERMS.md verbatim), then switch the app (`lib/settings/help_links.dart`, as Bookmark does), Play Console and OAuth branding together |
 
 Back up the keystore and its properties file with the owner's other secrets:
 a lost upload key needs an upload-key reset in Play Console.
