@@ -100,6 +100,52 @@ class NotificationsPage extends StatelessWidget {
                   style: theme.textTheme.bodyMedium?.copyWith(color: p.muted),
                 ),
               ),
+            if (on)
+              FutureBuilder<bool>(
+                future: scope.reminders.exactAllowed(),
+                builder: (context, exact) => exact.data != false
+                    ? const SizedBox.shrink()
+                    : Padding(
+                        padding: const EdgeInsets.only(bottom: 12),
+                        child: SettingsPanel(
+                          gap: false,
+                          rows: [
+                            SettingsRow(
+                              key: const Key('notify-exact'),
+                              icon: Icons.alarm_outlined,
+                              title: tr(
+                                context,
+                                'Reminders may come late',
+                                'Lời nhắc có thể đến muộn',
+                              ),
+                              subtitle: tr(
+                                context,
+                                'This phone may delay them. To ring on time, '
+                                    'allow "Alarms & reminders" for Handy Boards.',
+                                'Máy có thể dời lời nhắc. Để kêu đúng giờ, cho '
+                                    'phép "Báo thức và lời nhắc" cho Handy Boards.',
+                              ),
+                              navigates: true,
+                              onTap: () async {
+                                final vi =
+                                    Localizations.localeOf(
+                                      context,
+                                    ).languageCode ==
+                                    'vi';
+                                final pro = hasPro(context);
+                                await scope.reminders.askExact();
+                                // Back from the phone's page: plan again.
+                                await scope.reminders.sync(
+                                  scope.state,
+                                  vi: vi,
+                                  pro: pro,
+                                );
+                              },
+                            ),
+                          ],
+                        ),
+                      ),
+              ),
             SettingsPanel(
               gap: false,
               rows: [

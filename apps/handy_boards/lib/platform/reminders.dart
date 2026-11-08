@@ -52,6 +52,34 @@ class BoardsReminders {
         false;
   }
 
+  AndroidFlutterLocalNotificationsPlugin? get _android =>
+      defaultTargetPlatform == TargetPlatform.android
+      ? plugin
+            .resolvePlatformSpecificImplementation<
+              AndroidFlutterLocalNotificationsPlugin
+            >()
+      : null;
+
+  /// Whether Android lets notifications ring at their exact time. Up to
+  /// Android 12 it does; from 13 the person may have to allow "Alarms &
+  /// reminders". Without it Android may deliver them late, sometimes hours.
+  Future<bool> exactAllowed() async {
+    if (!supported || _android == null) return true;
+    await ready();
+    try {
+      return await _android!.canScheduleExactNotifications() ?? true;
+    } catch (_) {
+      return true;
+    }
+  }
+
+  /// Opens the phone's "Alarms & reminders" page for Handy Boards.
+  Future<void> askExact() async {
+    if (_android == null) return;
+    await ready();
+    await _android!.requestExactAlarmsPermission();
+  }
+
   /// Schedules what the cards and preferences plan (see the engine's
   /// `planNotifications`) and cancels anything else this app scheduled. The
   /// keys are stable, so running it on every change, start and resume never
@@ -71,6 +99,9 @@ class BoardsReminders {
     };
     if (ids.length != notes.length)
       throw StateError('Notification ID collision');
+    final mode = ids.isNotEmpty && await exactAllowed()
+        ? AndroidScheduleMode.exactAllowWhileIdle
+        : AndroidScheduleMode.inexactAllowWhileIdle;
     for (final old in await plugin.pendingNotificationRequests())
       if (!ids.containsKey(old.id)) await plugin.cancel(id: old.id);
     for (final MapEntry(key: id, value: n) in ids.entries)
@@ -96,7 +127,7 @@ class BoardsReminders {
             presentSound: false,
           ),
         ),
-        androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
+        androidScheduleMode: mode,
         payload: n.link,
       );
   }
