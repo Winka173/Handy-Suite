@@ -1,0 +1,31 @@
+Việc nằm khắp nơi: một dòng ghi chú, một tin nhắn nhóm lớp, một mẩu giấy trên bàn… rồi hạn nộp đến trước khi kịp nhớ. Handy Boards gom tất cả về một bảng: cột cho biết việc đang ở đâu, màu cho biết việc thuộc về gì.
+
+BẢNG KANBAN DỄ DÙNG
+• Mỗi thẻ là một việc. Kéo thẻ từ Cần làm sang Đang làm rồi Xong.
+• Trên điện thoại mỗi cột gần đầy màn hình, vuốt ngang sang cột kế. Trên máy tính các cột nằm cạnh nhau.
+• Không muốn kéo? Chọn Chuyển tới… Mọi thao tác đều có Hoàn tác.
+• Đặt tên cột theo cách của bạn, thêm cột, đánh dấu cột đã xong.
+
+NHÓM ĐI THEO THẺ
+• Toán, Văn, Việc nhà, Thiết kế…: mỗi nhóm một màu, đi theo thẻ qua mọi cột.
+• Dải nhóm cho biết mỗi nhóm đã xong bao nhiêu. Chạm một nhóm để chỉ xem thẻ của nhóm đó.
+
+VIỆC CON, HẠN, NHẮC
+• Chia một thẻ thành từng bước nhỏ và tích dần.
+• Đặt hạn và giờ nhắc. Trang chủ cho biết hôm nay có gì đến hạn, gì đã quá hạn.
+• Xem theo thời gian: thẻ nào vào ngày nào, từ hôm nay tới ba tháng. Kéo thẻ vào một ngày để đặt hạn.
+
+BẮT ĐẦU NHANH
+• Bảng trống ba cột, hoặc mẫu có sẵn: học kỳ, việc cá nhân, mua sắm, dự án.
+• Xem trước cả bảng mẫu trước khi dùng.
+• Mỗi bảng một ảnh bìa và một tông màu riêng.
+
+GỌN VÀ RIÊNG TƯ
+• Không tài khoản, không quảng cáo, không theo dõi. Mọi thứ nằm trên máy của bạn.
+• Sao lưu thành một tệp, tự sao lưu mỗi ngày, thùng rác và lưu trữ để lấy lại thứ lỡ xoá.
+• Xuất bảng thành ảnh hoặc PDF; xuất CSV, Markdown, lịch ICS.
+• Widget màn hình chính cho việc đến hạn hôm nay.
+• Tiếng Việt và tiếng Anh, nền sáng và tối.
+
+HANDY BOARDS PRO (MUA MỘT LẦN)
+Thêm năm mẫu bảng, toàn bộ ảnh bìa, năm giao diện bảng, thẻ lặp lại, tự động hoá nhỏ, bản xuất kiểu poster và bản in, thống kê bảng. Không thuê bao. Các bảng của bạn luôn miễn phí.

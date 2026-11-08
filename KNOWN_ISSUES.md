@@ -151,7 +151,7 @@ hàng sẽ làm lệch các kết quả bên dưới; Docs chỉ tìm trong Tệ
 trong bản quét hay PDF đang mở); Keep chỉ đoán ngày sắp hết khi có ít nhất hai
 lần mua cách nhau tối đa 180 ngày; Dev chỉ so với phản hồi trước trong cùng phiên.
 
-Handy Boards remains in development (Kanban rebuild 2026-11-07). No Boards store listing or product id exists yet, so Pro cannot be bought (the app id is still the pilot `com.example.handysuite.handy_boards`). Drag and drop is checked on the BlueStacks emulator only; no physical device or iOS run yet. [Known limitations](docs/HANDY_BOARDS_KNOWN_LIMITATIONS.md) cover native/provider/store QA and platform verification.
+Handy Boards remains in development (Kanban rebuild 2026-11-07). Boards is on Google Play as `com.apps.winka.handyboards` with 1.0.0 (1) as a closed-testing draft (2026-11-08); the Pro product `handy_boards_pro` is not created in Play yet, so Pro cannot be bought ([release](docs/HANDY_BOARDS_RELEASE.md)). Drag and drop is checked on the BlueStacks emulator only; no physical device or iOS run yet. [Known limitations](docs/HANDY_BOARDS_KNOWN_LIMITATIONS.md) cover native/provider/store QA and platform verification.
 
 Handy Card is in development. PDF export embeds the bundled faces; SVG names
 them only, so a viewer without them substitutes. PDF gradients are 64 vector

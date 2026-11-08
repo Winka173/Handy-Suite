@@ -1,0 +1,3 @@
+• First release: Kanban boards with categories, subtasks, due dates and reminders.
+• Templates, covers, a time view and a short guided tour.
+• Backup, automatic copies, Trash and archive. No account, no ads.

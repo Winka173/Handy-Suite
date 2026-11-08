@@ -12,3 +12,8 @@ GeneratedPluginRegistrant.java
 key.properties
 **/*.keystore
 **/*.jks
+
+# fastlane: staged store graphics and run reports stay local.
+fastlane/metadata/android/*/images/
+fastlane/report.xml
+fastlane/README.md
