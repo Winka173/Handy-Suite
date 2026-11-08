@@ -8,8 +8,8 @@
 //
 // Photos: assets/welcome (CREDITS.txt there); KIT_PHOTOS may add more
 // licensed pictures by name (bun-bo-hue, banh-xeo, ha-giang, egg-coffee,
-// mi-quang, my-khe, balcony, yoga, air-fryer). Missing ones fall back to
-// the no-picture face.
+// mi-quang, my-khe, balcony, yoga, air-fryer, bookshelf, android-phone,
+// ha-giang-moto). Every sample has a picture; a missing file fails the run.
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
@@ -39,6 +39,54 @@ final _out = Platform.environment['KIT_DIR'] ?? 'build/website-kit';
 final _photoDir = Platform.environment['KIT_PHOTOS'];
 final _langs = (Platform.environment['KIT_LANGS'] ?? 'vi,en').split(',');
 final _root = GlobalKey();
+
+/// Where a simulated finger is, drawn into clip frames so a viewer sees
+/// what was tapped. Never drawn in stills.
+final _touch = ValueNotifier<Offset?>(null);
+
+/// [child] with the finger marker on top.
+Widget _touchable(Widget child) => Stack(
+  textDirection: TextDirection.ltr,
+  fit: StackFit.expand,
+  children: [
+    child,
+    IgnorePointer(
+      child: ValueListenableBuilder<Offset?>(
+        valueListenable: _touch,
+        builder: (_, at, _) => at == null
+            ? const SizedBox.shrink()
+            : CustomPaint(painter: _Finger(at)),
+      ),
+    ),
+  ],
+);
+
+class _Finger extends CustomPainter {
+  final Offset at;
+  const _Finger(this.at);
+  @override
+  void paint(Canvas canvas, Size size) {
+    canvas.drawCircle(
+      at + const Offset(0, 2),
+      24,
+      Paint()
+        ..color = const Color(0x33000000)
+        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 6),
+    );
+    canvas.drawCircle(at, 22, Paint()..color = const Color(0x8CFFFFFF));
+    canvas.drawCircle(
+      at,
+      22,
+      Paint()
+        ..color = const Color(0x8C1C2627)
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 2,
+    );
+  }
+
+  @override
+  bool shouldRepaint(_Finger old) => old.at != at;
+}
 
 Future<void> _font(String family, List<String> paths) async {
   final loader = FontLoader(family);
@@ -79,6 +127,22 @@ class Kit {
   Kit(this.lang, this.form, this.name);
   bool get vi => lang == 'vi';
   String t(String en, String vi) => this.vi ? vi : en;
+
+  /// A visible tap on [f]: the finger lands, holds for [hold] frames
+  /// (filmed as `<clip>`), then lifts and the tap goes through.
+  Future<void> press(
+    WidgetTester t,
+    Finder f,
+    String clip, {
+    int hold = 9,
+  }) async {
+    final at = t.getCenter(f.first);
+    _touch.value = at;
+    final g = await t.startGesture(at);
+    await film(t, clip, hold);
+    await g.up();
+    _touch.value = null;
+  }
 
   /// `<form>-<lang>-<name>[-<suffix>].png`
   Future<void> shot(
@@ -133,7 +197,7 @@ typedef Sample = ({
   String vi,
   String en,
   String? place,
-  String? photo,
+  String photo,
   int hours,
 });
 
@@ -227,7 +291,7 @@ const samples = <Sample>[
     vi: 'Kệ sách gỗ 5 tầng',
     en: 'Five-shelf wooden bookcase',
     place: 'buy',
-    photo: null,
+    photo: 'bookshelf',
     hours: 98,
   ),
   (
@@ -263,7 +327,7 @@ const samples = <Sample>[
     vi: 'Mẹo: chụp màn hình cuộn cả trang trên Android',
     en: 'Tip: capture a whole scrolling page on Android',
     place: 'read',
-    photo: null,
+    photo: 'android-phone',
     hours: 110,
   ),
   (
@@ -272,7 +336,7 @@ const samples = <Sample>[
     vi: 'Lần đầu đi Hà Giang bằng xe máy, cần chuẩn bị gì?',
     en: 'First time riding the Ha Giang loop: what to pack?',
     place: 'read',
-    photo: null,
+    photo: 'ha-giang-moto',
     hours: 120,
   ),
   (
@@ -529,8 +593,11 @@ Future<NetController> boot(
     if (pictures) {
       await t.runAsync(() async {
         for (final (i, s) in samples.indexed) {
-          final bytes = s.photo == null ? null : _photo(s.photo!);
-          if (bytes != null) store.pictures[ids[i]] = bytes;
+          // Every saved thing shows its picture: a missing file is an error,
+          // never a silent no-picture tile.
+          store.pictures[ids[i]] =
+              _photo(s.photo) ??
+              (throw StateError('Missing photo ${s.photo}.jpg (KIT_PHOTOS)'));
         }
       });
     }
@@ -539,12 +606,14 @@ Future<NetController> boot(
   await t.pumpWidget(
     RepaintBoundary(
       key: _root,
-      child: SaveApp(
-        controller: c,
-        files: files ?? OneFile(),
-        preferences: Preferences()
-          ..value = HandyPreferences(locale: k.lang, theme: k.form.theme),
-        guide: false,
+      child: _touchable(
+        SaveApp(
+          controller: c,
+          files: files ?? OneFile(),
+          preferences: Preferences()
+            ..value = HandyPreferences(locale: k.lang, theme: k.form.theme),
+          guide: false,
+        ),
       ),
     ),
   );
@@ -1269,6 +1338,8 @@ void main() {
   }
 
   // ---- Clips (frame sequences) -------------------------------------------------
+  // Every tap is shown with a finger marker (Kit.press) so a viewer can
+  // follow the story; every clip ends on a settled screen.
   for (final lang in _langs) {
     testWidgets('film welcome $lang', (t) async {
       final k = Kit(lang, KitForm.mobile, 'welcome');
@@ -1279,46 +1350,66 @@ void main() {
       await t.runAsync(
         () => Future<void>.delayed(const Duration(milliseconds: 100)),
       );
-      await k.film(t, 'welcome-story', 45);
-      await t.tap(find.byKey(const Key('welcome-next-0')));
-      await k.film(t, 'welcome-gather', 75);
-      await t.tap(find.byKey(const Key('welcome-next-1')));
-      await k.film(t, 'welcome-practice', 40);
-      await t.tap(find.byKey(const Key('practice-share')));
-      await k.film(t, 'welcome-share', 24);
-      await t.tap(find.byKey(const Key('practice-more')));
-      await k.film(t, 'welcome-more', 24);
+      await k.film(t, 'welcome-01-story', 45);
+      await k.press(t, find.byKey(const Key('welcome-next-0')), 'welcome-02');
+      await k.film(t, 'welcome-03-gather', 75);
+      await k.press(t, find.byKey(const Key('welcome-next-1')), 'welcome-04');
+      await k.film(t, 'welcome-05-practice', 40);
+      await k.press(t, find.byKey(const Key('practice-share')), 'welcome-06');
+      await k.film(t, 'welcome-07-share', 24);
+      await k.press(t, find.byKey(const Key('practice-more')), 'welcome-08');
+      await k.film(t, 'welcome-09-more', 24);
       final apps = t.getTopLeft(find.byKey(const Key('practice-apps')));
+      var finger = apps + const Offset(200, 30);
       await k.film(
         t,
-        'welcome-find-app',
+        'welcome-10-find-app',
         24,
         each: (i) async {
           if (i < 8) {
-            await t.dragFrom(apps + const Offset(60, 30), const Offset(-50, 0));
+            _touch.value = finger;
+            await t.dragFrom(finger, const Offset(-50, 0));
+            finger -= const Offset(18, 0);
+          } else {
+            _touch.value = null;
           }
         },
       );
       for (var i = 0; i < 20; i++) {
         await t.pump(const Duration(milliseconds: 50));
       }
-      await t.tap(find.byKey(const Key('practice-target')));
-      await k.film(t, 'welcome-pick', 36);
-      await t.tap(find.byKey(const Key('practice-pick-food')));
-      await k.film(t, 'welcome-saved', 45);
-      await t.tap(find.byKey(const Key('welcome-next-2')));
-      await k.film(t, 'welcome-find', 60);
+      await k.press(t, find.byKey(const Key('practice-target')), 'welcome-11');
+      await k.film(t, 'welcome-12-pick', 36);
+      await k.press(
+        t,
+        find.byKey(const Key('practice-pick-food')),
+        'welcome-13',
+      );
+      await k.film(t, 'welcome-14-saved', 45);
+      await k.press(t, find.byKey(const Key('welcome-next-2')), 'welcome-15');
+      // The find step types its word and shows what it found.
+      await k.film(t, 'welcome-16-find', 170);
       // Leaves without the done step's timers running.
       await t.pumpWidget(const SizedBox());
     });
 
     testWidgets('film share sheet $lang', (t) async {
       final k = Kit(lang, KitForm.mobile, 'share');
-      await shareSheet(t, k, settle: false);
-      await k.film(t, 'share-sheet', 40);
+      final reveal = ValueNotifier<double>(0);
+      await shareSheet(t, k, settle: false, reveal: reveal);
       await t.pumpAndSettle();
-      await t.tap(find.byKey(const Key('share-place-food')));
-      await k.film(t, 'share-saved', 60);
+      // The video someone is watching, then the sheet rises over it.
+      await k.film(t, 'share-1-app', 24);
+      await k.film(
+        t,
+        'share-2-rise',
+        14,
+        each: (i) async =>
+            reveal.value = Curves.easeOutCubic.transform((i + 1) / 14),
+      );
+      await k.film(t, 'share-3-sheet', 36);
+      await k.press(t, find.byKey(const Key('share-place-food')), 'share-4');
+      await k.film(t, 'share-5-saved', 60);
       await t.pump(const Duration(seconds: 10));
     });
 
@@ -1326,78 +1417,92 @@ void main() {
       final k = Kit(lang, KitForm.mobile, 'file');
       final c = await boot(t, k);
       final id = c.library!.bookmarks[S.coffee].id;
+      final home = find
+          .descendant(
+            of: find.byKey(const Key('save-home')),
+            matching: find.byType(Scrollable),
+          )
+          .first;
       await t.scrollUntilVisible(
         find.byKey(Key('file-$id')),
         200,
-        scrollable: find
-            .descendant(
-              of: find.byKey(const Key('save-home')),
-              matching: find.byType(Scrollable),
-            )
-            .first,
+        scrollable: home,
       );
+      // The "Recently saved" heading at the top, not half a tile.
+      await t.drag(home, const Offset(0, -60));
       await t.pumpAndSettle();
-      await k.film(t, 'file-a', 10);
-      await t.tap(find.byKey(Key('file-$id')));
-      await k.film(t, 'file-b', 18);
+      await k.film(t, 'file-1', 14);
+      await k.press(t, find.byKey(Key('file-$id')), 'file-2');
+      await k.film(t, 'file-3', 20);
       await t.pumpAndSettle();
       final chip = find.byKey(Key('file-$id-food'));
       if (chip.evaluate().isEmpty) {
         await t.tap(find.byKey(Key('file-$id-other')));
         await t.pumpAndSettle();
-        await t.tap(find.byKey(const Key('pick-food')));
+        await k.press(t, find.byKey(const Key('pick-food')), 'file-4');
       } else {
-        await t.tap(chip);
+        await k.press(t, chip, 'file-4');
       }
-      await k.film(t, 'file-c', 36);
+      await k.film(t, 'file-5', 40);
     });
 
     testWidgets('film collection open $lang', (t) async {
       final k = Kit(lang, KitForm.mobile, 'collection');
       await boot(t, k);
-      await k.film(t, 'collection-open', 8);
-      await t.tap(find.byKey(const Key('collection-food')));
-      await k.film(t, 'collection-open-go', 30);
+      await k.film(t, 'collection-1', 12);
+      await k.press(
+        t,
+        find.byKey(const Key('collection-food')),
+        'collection-2',
+      );
+      await k.film(t, 'collection-3', 30);
       await t.pumpAndSettle();
-      await tapKey(t, 'list-more');
-      await t.tap(find.byKey(const Key('save-view')));
-      await k.film(t, 'collection-cards', 30);
+      await k.press(t, find.byKey(const Key('list-more')), 'collection-4');
+      await k.film(t, 'collection-5', 14);
+      await t.pumpAndSettle();
+      await k.press(t, find.byKey(const Key('save-view')), 'collection-6');
+      await k.film(t, 'collection-7', 36);
     });
 
     testWidgets('film focus $lang', (t) async {
       final k = Kit(lang, KitForm.mobile, 'focus');
       await boot(t, k, before: readOld);
       await tapKey(t, 'place-focus');
-      await k.film(t, 'focus-a', 12);
-      // A thumb pushes the card right: done.
-      final card = find.byKey(const Key('focus-card'));
-      final g = await t.startGesture(t.getCenter(card));
-      await k.film(
-        t,
-        'focus-b-swipe-right',
-        14,
-        each: (i) async => g.moveBy(const Offset(24, -2)),
-      );
-      await g.up();
-      await k.film(t, 'focus-c', 24);
+      await k.film(t, 'focus-1', 14);
+      Future<void> swipe(String name, Offset step) async {
+        var at = t.getCenter(find.byKey(const Key('focus-card')));
+        _touch.value = at;
+        final g = await t.startGesture(at);
+        await k.film(
+          t,
+          name,
+          14,
+          each: (i) async {
+            await g.moveBy(step);
+            at += step;
+            _touch.value = at;
+          },
+        );
+        _touch.value = null;
+        await g.up();
+      }
+
+      // A thumb pushes the card right: done. Then left: later.
+      await swipe('focus-2-right', const Offset(24, -2));
+      await k.film(t, 'focus-3', 30);
       await t.pumpAndSettle();
-      final g2 = await t.startGesture(t.getCenter(card));
-      await k.film(
-        t,
-        'focus-d-swipe-left',
-        14,
-        each: (i) async => g2.moveBy(const Offset(-24, -1)),
-      );
-      await g2.up();
-      await k.film(t, 'focus-e', 24);
+      await swipe('focus-4-left', const Offset(-24, -1));
+      await k.film(t, 'focus-5', 30);
     });
 
     testWidgets('film search $lang', (t) async {
       final k = Kit(lang, KitForm.mobile, 'search');
       await boot(t, k);
-      await tapKey(t, 'open-search');
+      await k.film(t, 'search-1', 10);
+      await k.press(t, find.byKey(const Key('open-search')), 'search-2');
+      await t.pumpAndSettle();
       const word = 'da nang';
-      await k.film(t, 'search-a', 8);
+      await k.film(t, 'search-3', 8);
       for (var n = 1; n <= word.length; n++) {
         await t.enterText(
           find.byKey(const Key('save-search')),
@@ -1406,22 +1511,22 @@ void main() {
         await t.runAsync(
           () => Future<void>.delayed(const Duration(milliseconds: 260)),
         );
-        await k.film(t, 'search-b-${n.toString().padLeft(2, '0')}', 4);
+        await k.film(t, 'search-4-${n.toString().padLeft(2, '0')}', 4);
       }
       await t.pumpAndSettle();
-      await k.film(t, 'search-c', 20);
+      await k.film(t, 'search-5', 36);
     });
 
     testWidgets('film dark mode $lang', (t) async {
       final k = Kit(lang, KitForm.mobile, 'theme');
       await boot(t, k);
       await push(t, '/settings');
-      await k.film(t, 'theme-a-light', 12);
-      await t.tap(find.text(k.t('Dark', 'Tối')).last);
-      await k.film(t, 'theme-b-dark', 24);
+      await k.film(t, 'theme-1', 14);
+      await k.press(t, find.text(k.t('Dark', 'Tối')).last, 'theme-2');
+      await k.film(t, 'theme-3', 24);
       await t.pumpAndSettle();
       Navigator.of(t.element(find.byType(Scaffold).last)).pop();
-      await k.film(t, 'theme-c-home', 30);
+      await k.film(t, 'theme-4', 36);
     });
 
     testWidgets('film layouts $lang', (t) async {
@@ -1433,9 +1538,19 @@ void main() {
       await tapKey(t, 'list-more');
       await tapKey(t, 'save-layout');
       await tapKey(t, 'layout-magazine');
+      // One clean layout after another: the switch is filmed as a tap on
+      // the arrow, then the settled layout (no half-faded frames).
       for (var i = 0; i < 8; i++) {
-        await k.film(t, 'layouts-$i', 18);
-        if (i < 7) await t.tap(find.byKey(const Key('layout-next')));
+        await k.film(t, 'layouts-$i-a', 22);
+        if (i < 7) {
+          await k.press(
+            t,
+            find.byKey(const Key('layout-next')),
+            'layouts-$i-b',
+            hold: 6,
+          );
+          await t.pumpAndSettle();
+        }
       }
     });
   }
@@ -1466,7 +1581,12 @@ Future<void> openReader(WidgetTester t, String id) async {
 
 /// The share sheet over the app it was shared from (a video app, dimmed
 /// by the system), its page already read.
-Future<void> shareSheet(WidgetTester t, Kit k, {bool settle = true}) async {
+Future<void> shareSheet(
+  WidgetTester t,
+  Kit k, {
+  bool settle = true,
+  ValueNotifier<double>? reveal,
+}) async {
   t.view.physicalSize = k.form.size;
   t.view.devicePixelRatio = 1;
   addTearDown(t.view.resetPhysicalSize);
@@ -1541,8 +1661,32 @@ Future<void> shareSheet(WidgetTester t, Kit k, {bool settle = true}) async {
           fit: StackFit.expand,
           children: [
             Image.memory(_photo('pho')!, fit: BoxFit.cover),
-            const ColoredBox(color: Color(0x73000000)),
-            ShareSheetApp(controller: c),
+            ValueListenableBuilder<double>(
+              valueListenable: reveal ?? ValueNotifier(1),
+              builder: (_, v, sheet) => Stack(
+                fit: StackFit.expand,
+                children: [
+                  Opacity(
+                    opacity: v,
+                    child: const ColoredBox(color: Color(0x73000000)),
+                  ),
+                  if (v > 0)
+                    FractionalTranslation(
+                      translation: Offset(0, 1 - v),
+                      child: sheet,
+                    ),
+                ],
+              ),
+              child: ShareSheetApp(controller: c),
+            ),
+            IgnorePointer(
+              child: ValueListenableBuilder<Offset?>(
+                valueListenable: _touch,
+                builder: (_, at, _) => at == null
+                    ? const SizedBox.shrink()
+                    : CustomPaint(painter: _Finger(at)),
+              ),
+            ),
           ],
         ),
       ),
