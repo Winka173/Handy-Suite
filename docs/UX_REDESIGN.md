@@ -2914,3 +2914,61 @@ Chủ chốt 14 mẫu Free (29 Chuyển nhà chuyển sang Free) và 16 Pro.
 - Kiểm tra: `packages/handy_boards_engine/test/time_nav_test.dart` (17: ngày tháng, nhuận, qua năm, DST, tuỳ chỉnh, mốc
   không đếm trùng, kịch bản A/B/C/F/G, thẻ lặp, mặc định mẫu), `apps/handy_boards/test/time_nav_app_test.dart` (8: A, B, C,
   D, tồn đọng, lịch sử, thẻ cũ, kéo thả đổi hạn), `layout_sweep_test` (11 kích thước).
+
+### Handy Boards · Pro Lifetime: công cụ, thông báo, widget, luật tự động, báo cáo (2026-11-08, theo yêu cầu Pro của chủ)
+Chung cho mọi màn dưới đây. Xem luôn miễn phí; chỉ hỏi Pro ở hành động tạo, bật hoặc lưu (`requirePro`). Mất Pro thì dữ liệu
+vẫn đọc được và vẫn nằm trong sao lưu; kiểu Pro tự lùi về mặc định mà vẫn giữ lựa chọn. Bố cục là một cột ListView đã đo ở
+320–1440 px trong `layout_sweep_test`. Màn rộng không bày thêm cột, vì đây là các trang cài đặt hoặc danh sách để đọc. Nút
+Back của Android và cử chỉ vuốt về của iOS đều đóng trang. Web và Windows không có thông báo nền hay widget, và trang nói
+rõ điều đó. Không có trạng thái "đang tải" riêng vì mọi thứ tính từ dữ liệu trên máy. Lỗi hiện thanh báo "Thao tác lỗi; dữ
+liệu trước được giữ" qua `scope.run`. Nhãn của ô chọn luôn hiện (`floatingLabelBehavior.always`), vì kit ẩn nhãn nổi và trên
+BlueStacks từng chỉ thấy "Any, Any, Any".
+
+- **Luật tự động** (Bảng ⋮ › Luật tự động).
+  - Câu hỏi của màn: "Bảng này tự làm giúp tôi những gì, và nó đã làm gì?"
+  - Mỗi luật viết thành một câu, ví dụ "Khi thẻ chuyển vào Review: thêm việc con …", kèm công tắc bật/tắt. Bên dưới là
+    "Lần chạy gần đây" trên máy này; bước bị bỏ qua ghi lý do (đã có sẵn, luật khác đã đặt, mẫu đã xoá).
+  - Chưa có luật: hiện ba ví dụ bấm vào là mở trình tạo, không có trang trống.
+  - Trình tạo là trang đầy đủ chứ không phải hộp thoại, theo thứ tự Khi › Chỉ khi › Thì › Xem trước.
+    - Phần Xem trước viết lại luật bằng câu thường. Luật "sắp đến hạn" kể tên những thẻ hôm nay sẽ bị tác động; luật theo sự
+      kiện nói số thẻ đang khớp điều kiện.
+    - Nút chính ở chân trang là "Lưu luật", hoặc "Lưu luật với Pro" khi chưa có Pro.
+  - Từ chối:
+    - luật kích hoạt luật khác;
+    - chạy ngầm mà không ghi nhật ký;
+    - khoá cả việc xem trước;
+    - kéo-thả khối kiểu lập trình;
+    - hứa chạy đúng giờ khi app đóng (chỉ "Báo cho tôi" là kêu khi app đóng).
+- **Tóm tắt các bảng** (Cài đặt › Thông báo).
+  - Câu hỏi: "Hôm nay hoặc tuần này các bảng của tôi còn gì?"
+  - Chọn Tắt / Hằng ngày / Hằng tuần (chọn thứ), và chọn bảng nào được tóm tắt.
+  - Mỗi bảng có việc chiếm một dòng; bảng trống bị bỏ qua, ngày không có việc thì không báo. Áp dụng giờ yên lặng. Khi bật
+    "Ẩn tên thẻ" thì chỉ hiện tổng.
+  - Không đổi tên "Việc hôm nay" (miễn phí) thành tính năng Pro.
+- **Kêu đúng giờ**. Từ Android 13 máy có thể chặn báo thức chính xác. Khi đó trang Thông báo có thêm dòng "Lời nhắc có thể
+  đến muộn" giải thích lý do và mở "Báo thức và lời nhắc". Không hỏi quyền này khi máy không cần.
+- **Kiểu widget** (Cài đặt › Widget).
+  - Câu hỏi: "Widget trên màn hình chính sẽ trông thế nào?"
+  - Miễn phí: Theo máy, Sáng, Tối. Pro: Vải lanh, Đồng cỏ, Gạch nung, Bến cảng, Hoàng hôn tím, Trời đêm.
+  - Chạm vào một kiểu Pro thì năm bản xem trước đổi theo ngay, kèm dòng "Đang xem trước" và nút "Dùng với Pro".
+  - Chữ đạt 7:1, chữ phụ đạt 4,5:1 trên mọi nền; đã đo, thấp nhất là 12,9:1 và 5,6:1.
+  - Chấm màu widget trước đây là indigo, đã đổi về màu Boards.
+- **Báo cáo xuất bảng** (Xuất › Báo cáo, Pro). Câu hỏi: "Bảng này đang ở đâu?"
+  - Nội dung gồm:
+    - bốn con số (đang mở, đã xong, hạn hôm nay, quá hạn);
+    - số thẻ hoàn thành mỗi tuần trong 8 tuần, tính từ thời điểm hoàn thành thật;
+    - tiến độ theo nhóm (bỏ nhóm không có thẻ);
+    - bảng các thẻ đang mở xếp theo hạn, tối đa 80 dòng, rồi chỉ sang CSV.
+  - Tuỳ chọn "Trường tuỳ chỉnh" (Pro) thêm giá trị trường lên thẻ và thành cột trong báo cáo.
+  - Bản xem trước vừa khít bề ngang và chụm để phóng to; ảnh lưu ra giữ kích thước gốc.
+- **Đã soát ảnh §2.7** trên BlueStacks android 11 (1080×1920, mật độ 320) ngày 2026-11-08.
+  - Đã sửa:
+    - nhãn ô chọn bị ẩn;
+    - các ô dính nhau;
+    - "1 days";
+    - biểu tượng lấp lánh kiểu AI (đổi thành tia sét như ở menu);
+    - báo cáo tràn ngang.
+  - Chưa soát được widget đặt thật, vì launcher của BlueStacks không hỗ trợ widget.
+- **Kiểm tra**:
+  - engine `rules_test.dart` (9);
+  - app `rules_app_test.dart` (6: luật, luật sắp hạn, kiểu widget, báo cáo và trường tuỳ chỉnh, tóm tắt).
