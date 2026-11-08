@@ -7,6 +7,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:handy_boards/app.dart';
 import 'package:handy_boards/controller.dart';
+import 'package:handy_boards/pro/pro.dart';
 import 'package:handy_boards_engine/handy_boards_engine.dart';
 import 'package:handy_ui/kit.dart';
 import '../test/kanban_app_test.dart' show TestStore;
@@ -298,5 +299,56 @@ void main() {
     await tap(t, find.byKey(const Key('time-span')));
     await tap(t, find.byKey(const Key('span-month-1')));
     await shot(t, '25-time-month');
+  });
+
+  testWidgets('menus, categories, search, trash, insights', (t) async {
+    var s = sample();
+    final gone = topTasks(s, board: board).last;
+    s = s.put('tasks', gone.copy({'trashed': true}));
+    final c = await boot(t, s);
+    await tap(t, find.byKey(const Key('board-$board')));
+    await tap(t, find.byKey(const Key('board-more')));
+    await shot(t, '29-board-menu');
+    await t.tapAt(const Offset(20, 20));
+    await settle(t);
+    await tap(t, find.byKey(const Key('strip-edit')));
+    await shot(t, '30-categories-edit');
+    await t.tapAt(const Offset(20, 20));
+    await settle(t);
+    final card = topTasks(c.state!, board: board).first;
+    await tap(t, find.byKey(ValueKey('card-${card.id}')));
+    await tap(t, find.byKey(const Key('card-more')));
+    await shot(t, '31-card-menu');
+    await tap(t, find.byKey(const Key('menu-move-card')));
+    await shot(t, '32-move-to');
+  });
+
+  testWidgets('search every board', (t) async {
+    await boot(t, sample());
+    await tap(t, find.byKey(const Key('home-search')));
+    await t.enterText(find.byType(TextField).first, 'Ôn');
+    await shot(t, '33-search');
+  });
+
+  testWidgets('trash', (t) async {
+    var s = sample();
+    final gone = topTasks(s, board: board).last;
+    s = s.put('tasks', gone.copy({'trashed': true}));
+    await boot(t, s, size: const Size(390, 2600));
+    await tap(t, find.byKey(const Key('home-settings')));
+    await tap(t, find.byKey(const Key('settings-trash')));
+    await shot(t, '34-trash');
+  });
+
+  testWidgets('insights (Pro)', (t) async {
+    // ignore: invalid_use_of_visible_for_testing_member
+    debugProOverride = true;
+    // ignore: invalid_use_of_visible_for_testing_member
+    addTearDown(() => debugProOverride = null);
+    await boot(t, sample());
+    await tap(t, find.byKey(const Key('board-$board')));
+    await tap(t, find.byKey(const Key('board-more')));
+    await tap(t, find.text('Thống kê bảng'));
+    await shot(t, '35-insights');
   });
 }

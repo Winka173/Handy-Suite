@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:handy_boards/pro/pro.dart';
@@ -125,5 +126,17 @@ void main() {
     expect(opened.single.query, contains('Handy%20Boards'));
     await tap(t, find.byKey(const Key('settings-privacy')));
     expect(opened.last.toString(), privacyPolicyUrl);
+  });
+
+  testWidgets('on Android the home-screen widget shows card names only once '
+      'it is switched on', (t) async {
+    debugDefaultTargetPlatformOverride = TargetPlatform.android;
+    addTearDown(() => debugDefaultTargetPlatformOverride = null);
+    final c = await boot(t, studyState(), size: tall);
+    await openSettings(t);
+    expect(c.state!.preferences['homeWidget'], isNull);
+    await tap(t, find.byKey(const Key('settings-home-widget')));
+    expect(c.state!.preferences['homeWidget'], isTrue);
+    debugDefaultTargetPlatformOverride = null;
   });
 }

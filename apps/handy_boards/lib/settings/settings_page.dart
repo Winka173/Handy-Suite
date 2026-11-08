@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:handy_ui/kit.dart';
 import 'package:handy_monetization/handy_monetization.dart';
 import '../design/theme.dart';
@@ -124,6 +125,26 @@ class SettingsPage extends StatelessWidget {
                           )
                         : null,
                   ),
+                  // The Android home-screen widget shows card names only
+                  // when this is on; off, it just opens the app.
+                  if (!kIsWeb &&
+                      defaultTargetPlatform == TargetPlatform.android)
+                    SettingsSwitch(
+                      key: const Key('settings-home-widget'),
+                      icon: Icons.widgets_outlined,
+                      title: tr(
+                        context,
+                        'Home-screen widget',
+                        'Widget màn hình chính',
+                      ),
+                      subtitle: tr(
+                        context,
+                        'Shows up to 3 cards due today. Off: it only opens your boards, no card names on the home screen.',
+                        'Hiện tối đa 3 thẻ đến hạn hôm nay. Tắt: widget chỉ mở bảng, không hiện tên thẻ ra màn hình chính.',
+                      ),
+                      value: prefs['homeWidget'] == true,
+                      onChanged: (v) => _pref(context, 'homeWidget', v),
+                    ),
                 ],
               ),
             ],
