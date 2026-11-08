@@ -2972,3 +2972,47 @@ BlueStacks từng chỉ thấy "Any, Any, Any".
 - **Kiểm tra**:
   - engine `rules_test.dart` (9);
   - app `rules_app_test.dart` (6: luật, luật sắp hạn, kiểu widget, báo cáo và trường tuỳ chỉnh, tóm tắt).
+
+### Handy Boards · các phần Pro làm trước đó (ghi bù hợp đồng, 2026-11-08)
+Quy tắc chung giống mục trên.
+
+- **Việc của tôi** (Trang chủ › Việc của tôi).
+  - Câu hỏi: "Hôm nay tôi làm gì, ở mọi bảng?"
+  - Ba nhóm: Hôm nay, Còn tồn, Sắp tới (2 tuần). Mỗi thẻ chỉ xuất hiện một lần và ghi bảng của nó. Nút "Tất cả về hôm nay"
+    nằm ở nhóm Còn tồn.
+  - Xem miễn phí; chuyển thẻ thì hỏi Pro.
+  - Trống: "Không có gì cho hôm nay", kèm lối đi Bảng.
+  - Từ chối: một danh sách trộn không chia nhóm.
+- **Chuyển tiếp thông minh** (Cài đặt › Tự động hoá).
+  - Ba chế độ: Tắt / Hỏi mỗi ngày mới / Tự chuyển.
+  - "Tự chuyển" cho xem trước danh sách trước khi bật, mỗi ngày chạy một lần, có Hoàn tác, và không bao giờ đổi hạn nộp.
+- **Mẫu thẻ**.
+  - Lưu từ Thẻ ⋮ › Lưu làm mẫu thẻ. Dùng từ chân cột › Từ mẫu của tôi. Quản lý ở Cài đặt › Mẫu thẻ của tôi.
+  - Mẫu chỉ giữ khuôn: không giữ id, ngày cụ thể, trạng thái hay lịch sử.
+- **Trường tuỳ chỉnh** (Bảng ⋮).
+  - Sáu kiểu: chữ, số, ngày, có/không, một lựa chọn, liên kết.
+  - Không xoá hẳn mà cất đi.
+  - Giá trị hiện trên thẻ và đọc được khi không có Pro.
+  - Từ chối: công thức, liên kết bản ghi, giao diện bảng tính.
+- **Bộ lọc đã lưu** (chip Bộ lọc trên bảng).
+  - Một tên, chọn "tất cả" hoặc "bất kỳ" điều kiện, rồi các điều kiện: cột, nhóm, ưu tiên, khoảng hạn, có lời nhắc.
+  - Nhóm, tìm kiếm và "Hạn trong 3 ngày" vẫn miễn phí.
+- **Lịch sử bảng** (Bảng ⋮, Pro).
+  - Chỉ đọc, mới nhất trước, gom theo ngày, xem 7 ngày / 30 ngày / Tất cả.
+  - Chỉ từ sự kiện thật của thẻ, không dùng ảnh chụp bảng, không dựng lại quá khứ (theo yêu cầu của chủ).
+- **Lặp tuỳ chỉnh** (Thẻ › Lặp lại › Tuỳ chỉnh).
+  - Mỗi N ngày, tuần hoặc tháng; chọn thứ trong tuần; kết thúc vào một ngày hoặc sau N lần.
+  - Thẻ kế tiếp chỉ được tạo khi thẻ này xong, không tạo sẵn hàng loạt.
+- **Thông báo** (Cài đặt › Thông báo).
+  - Công tắc chính, giờ báo tóm tắt, Việc hôm nay, Sắp đến hạn, Còn tồn, giờ yên lặng, ẩn tên thẻ, chọn bảng nào được báo.
+  - Chỉ xin quyền khi người dùng bật một thứ cần quyền, không xin lúc mở app lần đầu. Bị từ chối thì chỉ đường vào Cài đặt
+    của máy.
+- **Widget** (Cài đặt › Widget).
+  - Năm bản xem trước dựng từ đúng dữ liệu widget nhận được.
+  - Tên thẻ mặc định tắt, để màn hình chính không lộ việc riêng.
+  - Có hướng dẫn cách thêm widget, vì launcher đặt widget chứ không phải app.
+  - Hai widget Pro hiện "Mở khoá trong app" thay vì dữ liệu giả.
+- **Kiểm tra**:
+  - `pro_tools_test`;
+  - `settings_test` (widget, thông báo);
+  - `my_work_test`, `custom_fields_test`, `saved_filters_test`, `repeat_test`, `board_history_test`, `notify_plan_test`.
