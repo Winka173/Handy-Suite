@@ -26,7 +26,10 @@ import 'platform/store.dart';
 import 'reader/reader_page.dart';
 import 'scope.dart';
 import 'security/app_lock.dart';
+import 'bookmark/add_link.dart';
+import 'platform/home_widgets.dart';
 import 'services/problem_notices.dart';
+import 'settings/widgets_page.dart';
 import 'services/reminders.dart';
 import 'services/share_targets.dart';
 import 'ui/collection_picker.dart';
@@ -135,6 +138,9 @@ class _SaveAppState extends State<SaveApp> with WidgetsBindingObserver {
     c.addListener(_changed);
     c.onShareReminderMoved = reminders.cancelShare;
     scope.autoBackup?.addListener(_checkProblems);
+    if (widget.device) {
+      _widgetLinks = homeWidgets.links().listen(_openWidgetLink);
+    }
     scope.drive?.addListener(_checkProblems);
     // What is already there is not new: only later saves meet the rules.
     if (c.library != null) _seen = {for (final b in c.library!.bookmarks) b.id};
@@ -147,6 +153,8 @@ class _SaveAppState extends State<SaveApp> with WidgetsBindingObserver {
     WidgetsBinding.instance.removeObserver(this);
     c.removeListener(_changed);
     scope.autoBackup?.removeListener(_checkProblems);
+    _widgetLinks?.cancel();
+    homeWidgets.dispose();
     scope.drive?.removeListener(_checkProblems);
     scope.autoBackup?.dispose();
     scope.drive?.dispose();
@@ -157,6 +165,47 @@ class _SaveAppState extends State<SaveApp> with WidgetsBindingObserver {
     if (widget.controller == null) c.dispose();
     prefs.dispose();
     super.dispose();
+  }
+
+  final homeWidgets = BookmarkHomeWidgets();
+  StreamSubscription<Uri>? _widgetLinks;
+
+  /// Keeps the home-screen widgets in step with the library.
+  void _publishWidgets() {
+    final l = c.library, ctx = navigator.currentContext;
+    if (!widget.device || l == null || ctx == null) return;
+    homeWidgets.schedule(
+      l,
+      c.preferences,
+      vi: prefs.value?.locale == 'vi',
+      pro: hasPro(ctx),
+      thumbnail: c.thumbnail,
+    );
+  }
+
+  /// A tap on a widget: paste a link, an item, a collection, the unread,
+  /// or the Pro page for a locked one.
+  void _openWidgetLink(Uri uri) {
+    final nav = navigator.currentState, ctx = navigator.currentContext;
+    if (nav == null || ctx == null || c.library == null) return;
+    final id = uri.queryParameters['id'];
+    switch (uri.host) {
+      case 'save':
+        nav.popUntil((r) => r.isFirst);
+        unawaited(addLinks(ctx, scope, fromClipboard: true));
+      case 'item' when id != null:
+        nav.pushNamed('/bookmark/$id');
+      case 'collection' when id != null:
+        nav.pushNamed('/collection/$id');
+      case 'unread':
+        nav.pushNamed('/place/unread');
+      case 'inbox':
+        nav.pushNamed('/place/inbox');
+      case 'library':
+        nav.pushNamed('/library');
+      case 'pro':
+        nav.pushNamed('/pro');
+    }
   }
 
   /// Whether the app is on screen (then problems show in it, not as a
@@ -375,6 +424,7 @@ class _SaveAppState extends State<SaveApp> with WidgetsBindingObserver {
       final p = c.preferences;
       if (c.library == null) return;
       _checkProblems();
+      _publishWidgets();
       final on = p['notifications'] == true;
       // With every reminder off, what was scheduled is cancelled once
       // (sync cancels all of ours when nothing is wanted), then left be.
@@ -484,6 +534,7 @@ class _SaveAppState extends State<SaveApp> with WidgetsBindingObserver {
       ['', 'library'] => () => LibraryPage(scope: scope),
       ['', 'find'] => () => FindPage(scope: scope, onExport: export),
       ['', 'looks'] => () => ThemeStudio(scope: scope),
+      ['', 'widgets'] => () => WidgetsPage(scope: scope),
       ['', 'organize'] => () => OrganizePage(scope: scope),
       ['', 'export', final id] => () => ExportStudio(
         scope: scope,

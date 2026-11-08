@@ -1,0 +1,11 @@
+<resources>
+    <string name="bm_widget_save_description">Save a link: one tap opens paste.</string>
+    <string name="bm_widget_queue_description">The newest three you have not read.</string>
+    <string name="bm_widget_shelf_description">One collection: its count and newest three.</string>
+    <string name="bm_widget_picks_description">Pro: four reading picks, new each day.</string>
+    <string name="bm_widget_gallery_description">Pro: the pictures of four recent items.</string>
+    <color name="bm_widget_ground">#FFFBFAF7</color>
+    <color name="bm_widget_ink">#FF1C2024</color>
+    <color name="bm_widget_muted">#FF545B63</color>
+    <color name="bm_widget_hue">#FF0E7490</color>
+</resources>

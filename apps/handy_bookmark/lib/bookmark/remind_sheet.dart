@@ -35,6 +35,19 @@ class RemindChoices extends StatelessWidget {
     return '${loc.formatMediumDate(at)}, $time';
   }
 
+  /// The moment on a choice's line: the hour for tonight, the date and
+  /// hour otherwise (the line's name already says "Tomorrow").
+  static String dated(BuildContext context, DateTime at, DateTime now) {
+    final loc = MaterialLocalizations.of(context);
+    final time = loc.formatTimeOfDay(
+      TimeOfDay.fromDateTime(at),
+      alwaysUse24HourFormat: true,
+    );
+    final today = DateTime(now.year, now.month, now.day);
+    if (DateTime(at.year, at.month, at.day) == today) return time;
+    return '${loc.formatMediumDate(at)}, $time';
+  }
+
   Future<void> _custom(BuildContext context) async {
     final start = current ?? now.add(const Duration(hours: 2));
     final day = await pickHandyDate(
@@ -106,7 +119,12 @@ class RemindChoices extends StatelessWidget {
             onPick(null);
           }),
           for (final c in choices)
-            row(c.id, name(c.id), when(context, c.at, now), () => onPick(c.at)),
+            row(
+              c.id,
+              name(c.id),
+              dated(context, c.at, now),
+              () => onPick(c.at),
+            ),
           row(
             'custom',
             tr(context, 'Pick a day and time', 'Chọn ngày và giờ'),

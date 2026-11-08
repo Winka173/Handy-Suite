@@ -20,6 +20,10 @@ class HomeWidgetView {
   /// Colours for the native side, ARGB hex: `bg`, `ink`, `muted`, `accent`.
   /// Null keeps the widget's own light/dark theme.
   final Map<String, String>? style;
+
+  /// More keys for a layout of its own (picture paths, labels); a null
+  /// value clears the key.
+  final Map<String, String?> extra;
   const HomeWidgetView({
     required this.title,
     required this.value,
@@ -29,6 +33,7 @@ class HomeWidgetView {
     this.maxRows = 3,
     this.progress,
     this.style,
+    this.extra = const {},
   });
 
   HomeWidgetView styled(Map<String, String>? style) => HomeWidgetView(
@@ -40,6 +45,7 @@ class HomeWidgetView {
     maxRows: maxRows,
     progress: progress,
     style: style,
+    extra: extra,
   );
 
   Map<String, String?> toData() => {
@@ -50,6 +56,7 @@ class HomeWidgetView {
     if (progress != null) 'progress': '${progress!.clamp(0, 100)}',
     for (final k in const ['bg', 'ink', 'muted', 'accent'])
       'style_$k': style?[k],
+    ...extra,
     for (var i = 0; i < maxRows; i++) ...{
       'row${i}_text': i < rows.length ? rows[i].$1 : null,
       'row${i}_uri': i < rows.length ? rows[i].$2 : null,

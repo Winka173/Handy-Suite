@@ -16,6 +16,7 @@ enum ProFeature {
   readerHighlights,
   deepSearch,
   ocrOffline,
+  widgets,
 }
 
 /// The features this build actually ships. The Explore Pro screen lists
@@ -31,6 +32,7 @@ const shippedProFeatures = {
   ProFeature.readerHighlights,
   ProFeature.deepSearch,
   ProFeature.ocrOffline,
+  ProFeature.widgets,
 };
 
 /// Whether this person owns a verified Pro Lifetime.

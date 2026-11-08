@@ -1,0 +1,7 @@
+<resources>
+    <string name="bm_widget_save_description">Lưu link: một chạm để dán.</string>
+    <string name="bm_widget_queue_description">Ba mục mới nhất bạn chưa đọc.</string>
+    <string name="bm_widget_shelf_description">Một bộ sưu tập: số mục và ba mục mới nhất.</string>
+    <string name="bm_widget_picks_description">Pro: bốn gợi ý đọc, đổi mỗi ngày.</string>
+    <string name="bm_widget_gallery_description">Pro: ảnh của bốn mục gần đây.</string>
+</resources>

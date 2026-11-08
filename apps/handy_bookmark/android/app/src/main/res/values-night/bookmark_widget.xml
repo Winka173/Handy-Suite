@@ -1,0 +1,6 @@
+<resources>
+    <color name="bm_widget_ground">#FF1A1C1E</color>
+    <color name="bm_widget_ink">#FFF1F3F4</color>
+    <color name="bm_widget_muted">#FFB2B8BE</color>
+    <color name="bm_widget_hue">#FF7CC8D8</color>
+</resources>

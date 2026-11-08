@@ -240,6 +240,22 @@ class _SaveSettingsPageState extends State<SaveSettingsPage> {
                     onTap: () => Navigator.pushNamed(context, '/looks'),
                   ),
                   SettingsRow(
+                    key: const Key('set-widgets'),
+                    icon: Icons.widgets_outlined,
+                    title: tr(
+                      context,
+                      'Home-screen widgets',
+                      'Widget màn hình chính',
+                    ),
+                    subtitle: tr(
+                      context,
+                      'Quick save, reading queue, a collection; picks and gallery with Pro',
+                      'Lưu nhanh, hàng chờ đọc, bộ sưu tập; gợi ý và thư viện ảnh với Pro',
+                    ),
+                    navigates: true,
+                    onTap: () => Navigator.pushNamed(context, '/widgets'),
+                  ),
+                  SettingsRow(
                     key: const Key('set-library-name'),
                     icon: Icons.edit_outlined,
                     title: tr(context, 'Library name', 'Tên thư viện'),
