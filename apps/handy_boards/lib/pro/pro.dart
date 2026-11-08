@@ -17,6 +17,7 @@ enum ProFeature {
   myWork,
   carryOver,
   fields,
+  history,
 }
 
 /// Whether this device has a verified Pro Lifetime.
@@ -128,6 +129,16 @@ class ProPage extends StatelessWidget {
           context,
           'When a new week or day starts, review what was left behind, or let it move to today by itself. Only the day you plan to work changes, never a due date. Moving cards by hand stays free.',
           'Khi sang tuần hay ngày mới, xem lại việc còn tồn, hoặc để app tự chuyển về hôm nay. Chỉ đổi ngày làm, không bao giờ đổi hạn nộp. Tự chuyển bằng tay vẫn miễn phí.',
+        ),
+      ),
+      (
+        ProFeature.history,
+        Icons.history,
+        tr(context, 'Board history', 'Lịch sử bảng'),
+        tr(
+          context,
+          'See a whole board as it was on an earlier day, what changed since, and copy it into a new board. Kept from the day you start; nothing earlier is made up.',
+          'Xem cả bảng như vào một ngày trước, những gì đã đổi, và chép sang bảng mới. Ghi từ ngày bắt đầu dùng; không bịa những ngày trước.',
         ),
       ),
       (

@@ -1,5 +1,6 @@
 import 'package:handy_boards_engine/handy_boards_engine.dart';
 import 'package:handy_ui/kit.dart';
+import 'board_history.dart';
 import '../card/fields_ui.dart';
 import '../card/card_templates_ui.dart';
 import '../design/theme.dart';
@@ -171,6 +172,20 @@ Future<void> boardMenu(
         Icons.view_column_outlined,
         tr(sheet, 'Add column', 'Thêm cột'),
         () => then(() => addColumnDialog(context, scope, board)),
+      ),
+      _row(
+        sheet,
+        Icons.history,
+        tr(sheet, 'Board history', 'Lịch sử bảng'),
+        () => then(
+          () => Navigator.push(
+            context,
+            MaterialPageRoute<void>(
+              builder: (_) => BoardHistoryPage(scope: scope, board: board),
+            ),
+          ),
+        ),
+        key: const Key('menu-board-history'),
       ),
       _row(
         sheet,

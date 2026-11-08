@@ -98,6 +98,18 @@ class _BoardsAppState extends State<BoardsApp> with WidgetsBindingObserver {
     homeSurface.listen(_link);
   }
 
+  /// Once a day per board, a picture for Board history (on a device; host
+  /// tests pass their own controller and keep their state as given).
+  void _snapshot() {
+    if (widget.controller != null || c.state == null) return;
+    final next = captureSnapshots(c.state!, scope.clock());
+    if (!identical(next, c.state)) {
+      unawaited(
+        c.change((s) => captureSnapshots(s, scope.clock()), history: false),
+      );
+    }
+  }
+
   bool _pro() {
     final ctx = navigator.currentContext;
     return ctx != null && hasPro(ctx);
@@ -116,6 +128,7 @@ class _BoardsAppState extends State<BoardsApp> with WidgetsBindingObserver {
       final s = c.state!;
       unawaited(reminderPort.sync(s, vi: _vi(s), pro: _pro()));
     }
+    _snapshot();
     if (pendingLink case final uri?) {
       pendingLink = null;
       WidgetsBinding.instance.addPostFrameCallback((_) => _link(uri));
@@ -313,6 +326,7 @@ class _BoardsAppState extends State<BoardsApp> with WidgetsBindingObserver {
         final s = c.state!;
         unawaited(reminderPort.sync(s, vi: _vi(s), pro: _pro()));
       }
+      _snapshot();
       unawaited(_carryOver());
       scope.drive?.resumed();
     }
