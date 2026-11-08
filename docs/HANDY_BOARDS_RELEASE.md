@@ -12,7 +12,7 @@ Handy Bookmark's `docs/HANDY_BOOKMARK_RELEASE.md` is the sibling it copies.
 | Play package (release) | `com.apps.winka.handyboards`, created by the owner 2026-11-08 |
 | Debug package (BlueStacks) | `com.example.handysuite.handy_boards.flutterpilot`: development builds keep the old id so test data stays |
 | Kotlin namespace | `com.example.handysuite.handy_boards` (unchanged: the widget and channel classes hang on it) |
-| Pro product | one-time product `handy_boards_pro` (in `config/monetization.local.json`, not yet created in Play) |
+| Pro product | one-time product `handy_boards_pro`, created and ACTIVE 2026-11-08 by the API: 99,000 VND (the same as Handy Bookmark Pro; US 3.89 USD, other regions converted by Play), listing EN + VI |
 | Upload key | `C:\Users\Winka\handy-boards-upload.jks`, alias `upload`; SHA-1 `39:52:00:F5:76:BD:4F:28:7C:95:F3:EC:CA:FE:FC:E1:F8:A6:5B:03` |
 | Key passwords | `~/.secrets/handy-boards-upload.properties`, copied to the gitignored `apps/handy_boards/android/key.properties`. Never print or commit |
 | Privacy policy | `https://github.com/Winka173/Handy-Suite/blob/ui-rebuild/apps/handy_boards/PRIVACY.md` |
@@ -45,7 +45,8 @@ product id.
 
 | Version | Track | Date | Notes |
 |---|---|---|---|
-| 1.0.0 (1) | closed testing (alpha), **draft** | 2026-11-08 | First upload, by the API (the app accepted edits before any bundle existed). Listing text EN + VI pushed. Waiting for the owner's Play Console forms and the first review |
+| 1.0.0 (1) | closed testing (alpha), **draft** | 2026-11-08 | First upload, by the API (the app accepted edits before any bundle existed). Listing text EN + VI pushed. Replaced by 1.0.0 (2) |
+| 1.0.0 (2) | closed testing (alpha), **draft** | 2026-11-08 | Time Navigator, card history, short-screen fixes, Pro card templates / My Work / carry-over / custom fields. Store graphics uploaded (icon, feature graphic, 6 phone screenshots EN + VI from `tool/store_shots_test.dart`), contact email and website set. Play keeps it a draft until the owner finishes the forms below ("Only releases with status draft may be created on draft app") |
 
 ## Google Drive sync (Android)
 
@@ -97,10 +98,11 @@ keeps drafts; after it, `fastlane android publish` rolls out by itself.
    used), government/financial/health (none).
 2. Store settings: category *Productivity*, contact email
    `apps.winka.studio@gmail.com`.
-3. Store graphics: icon 512×512, feature graphic 1024×500, at least two phone
-   screenshots (not made yet).
+3. Store graphics: done by the API (2026-11-08). Remake with
+   `STORE_DIR=<dir> flutter test --no-pub tool/store_shots_test.dart`, copy into
+   `android/fastlane/metadata/android/<lang>/images/phoneScreenshots`, then
+   `fastlane android images`.
 4. Closed testing: the testers' list or Google Group, then *Send changes for
    review*.
-5. Pro: create the one-time product `handy_boards_pro` (*Monetise → Products →
-   One-time products*), now possible because 1.0.0 (1) carries the billing
-   permission.
+5. Pro: `handy_boards_pro` exists (above). Change the price in Play Console if
+   wanted; add license testers to buy it without being charged.
