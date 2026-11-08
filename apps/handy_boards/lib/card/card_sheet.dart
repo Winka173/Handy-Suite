@@ -4,6 +4,7 @@ import 'package:flutter/foundation.dart';
 import 'package:handy_boards_engine/handy_boards_engine.dart';
 import 'package:handy_ui/kit.dart';
 import 'package:url_launcher/url_launcher.dart';
+import '../board/time_actions.dart';
 import '../board/board_menus.dart';
 import '../board/board_page.dart' show showUndo;
 import '../design/theme.dart';
@@ -242,6 +243,23 @@ class _CardDetailState extends State<CardDetail> {
         s.get('tasks', widget.card).copy({
           'due': picked.isEmpty ? null : {'kind': 'day', 'day': picked},
         }),
+        now: scope.clock(),
+      ),
+    );
+  }
+
+  /// The day to work on it: a plan, separate from the due date.
+  Future<void> _planned() async {
+    final picked = await pickHandyDate(
+      context,
+      _card.data['scheduled'] as String? ?? '',
+    );
+    if (picked == null || !mounted) return;
+    await _change(
+      (s) => scheduleCards(
+        s,
+        [widget.card],
+        picked.isEmpty ? null : DateTime.parse(picked),
         now: scope.clock(),
       ),
     );
@@ -511,6 +529,20 @@ class _CardDetailState extends State<CardDetail> {
                   onTap: _due,
                 ),
                 chip(
+                  key: const Key('card-planned'),
+                  icon: Icons.event_available_outlined,
+                  label: switch (scheduledDay(t)) {
+                    final d? => tr(
+                      context,
+                      'Work on ${dueLabel(context, d, now)}',
+                      'Làm ${dueLabel(context, d, now)}',
+                    ),
+                    null => tr(context, 'Plan a day', 'Ngày làm'),
+                  },
+                  set: scheduledDay(t) != null,
+                  onTap: _planned,
+                ),
+                chip(
                   key: const Key('card-reminder'),
                   icon: reminder == null
                       ? Icons.notifications_none
@@ -726,6 +758,19 @@ class _CardDetailState extends State<CardDetail> {
                 ],
               ),
             ),
+          // What really happened to this card, read only.
+          Padding(
+            padding: const EdgeInsets.fromLTRB(12, 16, 16, 0),
+            child: Align(
+              alignment: Alignment.centerLeft,
+              child: TextButton.icon(
+                key: const Key('card-history'),
+                onPressed: () => showCardHistory(context, scope, widget.card),
+                icon: const Icon(Icons.history),
+                label: Text(tr(context, 'Card history', 'Lịch sử thẻ')),
+              ),
+            ),
+          ),
         ],
       ),
     );

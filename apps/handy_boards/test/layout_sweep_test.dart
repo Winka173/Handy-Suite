@@ -95,9 +95,8 @@ Future<void> _sweep(
   // The study board, in Vietnamese (the longer words).
   final s = studyState();
   final c = BoardsController(
-    open: () async => TestStore(
-      s.copy(preferences: {...s.preferences, 'locale': 'vi'}),
-    ),
+    open: () async =>
+        TestStore(s.copy(preferences: {...s.preferences, 'locale': 'vi'})),
   );
   await t.runAsync(c.load);
   await t.pumpWidget(BoardsApp(controller: c, clock: () => clock));
@@ -110,8 +109,7 @@ Future<void> _sweep(
   await _back(t);
   await _back(t);
 
-  NavigatorState nav() =>
-      Navigator.of(t.element(find.byType(Scaffold).first));
+  NavigatorState nav() => Navigator.of(t.element(find.byType(Scaffold).first));
 
   for (final route in [
     '/templates',
@@ -163,9 +161,7 @@ Future<void> _sweep(
     _boardRoom(t, shape, problems, 'board scrolled');
     // A swipe down inside a column at its top brings the header back.
     final pageScroll = t.state<ScrollableState>(
-      find
-          .descendant(of: scroller, matching: find.byType(Scrollable))
-          .first,
+      find.descendant(of: scroller, matching: find.byType(Scrollable)).first,
     );
     if (pageScroll.position.pixels == 0) {
       problems.add('board: the header does not scroll away');
@@ -204,9 +200,9 @@ Future<void> _sweep(
   }
   at('add card field');
   final add = find.byWidgetPredicate(
-    (w) => w.key is ValueKey && '${(w.key as ValueKey).value}'.startsWith(
-      'add-card-open-',
-    ),
+    (w) =>
+        w.key is ValueKey &&
+        '${(w.key as ValueKey).value}'.startsWith('add-card-open-'),
   );
   if (add.evaluate().isNotEmpty) {
     await t.ensureVisible(add.first);
@@ -236,9 +232,11 @@ Future<void> _previewScroll(
 ) async {
   final scroller = find.byKey(const Key('preview-scroll'));
   if (scroller.evaluate().isEmpty) return;
-  final pos = t.state<ScrollableState>(
-    find.descendant(of: scroller, matching: find.byType(Scrollable)).first,
-  ).position;
+  final pos = t
+      .state<ScrollableState>(
+        find.descendant(of: scroller, matching: find.byType(Scrollable)).first,
+      )
+      .position;
   await t.drag(scroller, const Offset(0, -600), warnIfMissed: false);
   await settle(t);
   if (pos.maxScrollExtent > 0 && pos.pixels == 0) {

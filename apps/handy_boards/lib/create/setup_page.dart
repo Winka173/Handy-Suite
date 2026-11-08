@@ -8,21 +8,29 @@ import 'new_board.dart';
 import 'template_parts.dart';
 
 String timeLine(BuildContext context, TimePreset t) {
+  final n = t.count;
   final span = switch (t.unit) {
-    'day' => tr(context, 'today', 'hôm nay'),
-    'month' => tr(context, 'a month', 'theo tháng'),
-    _ => tr(context, 'a week', 'theo tuần'),
+    'day' => tr(context, n == 1 ? 'one day' : '$n days', '$n ngày'),
+    'month' => tr(context, n == 1 ? 'one month' : '$n months', '$n tháng'),
+    _ => tr(context, n == 1 ? 'one week' : '$n weeks', '$n tuần'),
   };
+  if (t.pinIfDated) {
+    return tr(
+      context,
+      'Time view: $span; pinned when you give it a date',
+      'Thời gian: xem $span; ghim cạnh tên khi bạn nhập ngày',
+    );
+  }
   return t.pinned
       ? tr(
           context,
-          'Time view: $span, pinned',
-          'Thời gian: $span, ghim cạnh tên',
+          'Time view: $span, pinned beside the name',
+          'Thời gian: xem $span, ghim cạnh tên',
         )
       : tr(
           context,
-          'Time view: $span, in the menu',
-          'Thời gian: $span, ở menu',
+          'Time view: $span, in the menu (pin it any time)',
+          'Thời gian: xem $span, ở menu (ghim lúc nào cũng được)',
         );
 }
 

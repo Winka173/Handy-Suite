@@ -23,6 +23,7 @@ part 'src/covers.dart';
 part 'src/templates.dart';
 part 'src/template_catalog.dart';
 part 'src/sync.dart';
+part 'src/time_nav.dart';
 
 typedef Json = Map<String, dynamic>;
 

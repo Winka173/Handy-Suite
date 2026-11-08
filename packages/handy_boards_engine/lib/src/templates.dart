@@ -121,15 +121,23 @@ class TemplateColumn {
 
 /// How the time view starts on a new board: its span, whether its switch
 /// is pinned beside the title, and whether the board opens on it.
+///
+/// A recommendation only: every board, from any template or blank, can
+/// pin, unpin and change its range later, and the person's choice wins.
 class TimePreset {
   final String unit;
   final int count;
   final bool pinned, open;
+
+  /// Pinned only when the person gives the template one of its dates
+  /// (a launch, an event, a trip): no date, nothing to look at by time.
+  final bool pinIfDated;
   const TimePreset(
     this.unit, {
     this.count = 1,
     this.pinned = true,
     this.open = false,
+    this.pinIfDated = false,
   });
 }
 
@@ -453,8 +461,23 @@ BoardPlan planBoard(
         (names[i], t.hues[i % t.hues.length]),
     ],
     milestones: milestones,
-    time: option(FieldRole.timeRange)?.time ?? t.time,
+    time: _timeOf(t, option(FieldRole.timeRange)?.time, dates.isNotEmpty),
     cards: cards,
+  );
+}
+
+/// The time view a template's board starts with. The Smart Setup answer
+/// picks the unit (keeping the template's count for the same unit); the
+/// template keeps pinning and opening, and "pin if dated" pins only when
+/// one of its dates was given.
+TimePreset _timeOf(BoardTemplate t, TimePreset? answer, bool dated) {
+  final base = t.time;
+  final unit = answer?.unit ?? base.unit;
+  return TimePreset(
+    unit,
+    count: unit == base.unit ? base.count : (answer?.count ?? 1),
+    pinned: base.pinIfDated ? dated : base.pinned,
+    open: base.open,
   );
 }
 
@@ -478,6 +501,8 @@ BoardPlan blankPlan({
     title: title,
     template: 'blank',
     templateVersion: 1,
+    // Time is in the menu, a week at a time, until the person pins it.
+    time: const TimePreset('week', pinned: false),
     columns: [
       for (var i = 0; i < list.length; i++) (list[i], i == list.length - 1),
     ],

@@ -324,6 +324,12 @@ class BoardsState {
         throw const FormatException('Invalid priority/estimate');
       for (final key in ['start', 'due'])
         if (t.data[key] != null) validateDeadline(object(t.data[key]));
+      // The planned day: a plain calendar date, never a second deadline.
+      if (t.data['scheduled'] != null &&
+          (t.data['scheduled'] is! String ||
+              !RegExp(r'^\d{4}-\d{2}-\d{2}$').hasMatch(t.str('scheduled')) ||
+              DateTime.tryParse(t.str('scheduled')) == null))
+        throw const FormatException('Invalid planned day');
       if (t.data['start'] != null && t.data['due'] != null) {
         final a = object(t.data['start']), b = object(t.data['due']);
         if (a['kind'] == b['kind'] &&

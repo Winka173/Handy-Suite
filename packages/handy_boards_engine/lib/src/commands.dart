@@ -194,22 +194,13 @@ BoardsState saveTask(
         'completedAt': done ? at.toUtc().toIso8601String() : null,
     }),
   );
-  if (log)
-    e.event(
-      task.id,
-      old == null
-          ? 'created'
-          : statusChanged
-          ? done
-                ? 'completed'
-                : 'status changed'
-          : old.flag('archived') != task.flag('archived')
-          ? task.flag('archived')
-                ? 'archived'
-                : 'unarchived'
-          : 'edited',
-      at,
-    );
+  if (log) {
+    if (old == null) {
+      e.event(task.id, 'created', at);
+    } else {
+      _logCardChanges(e, s, old, task, at);
+    }
+  }
   if (statusChanged)
     for (final occurrence
         in s.rows('occurrences').where((r) => r.str('task') == task.id))
@@ -289,11 +280,21 @@ BoardsState changeStatus(
       'updated': at.toUtc().toIso8601String(),
     }),
   );
+  final was = s.get('statuses', t.str('status'));
   e.event(
     task,
-    st.flag('done') ? 'completed' : 'status changed',
+    st.flag('done')
+        ? 'completed'
+        : was.flag('done')
+        ? 'reopened'
+        : 'status changed',
     at,
-    details: {'from': t.str('status'), 'to': status},
+    details: {
+      'from': t.str('status'),
+      'to': status,
+      'fromName': was.str('title'),
+      'toName': st.str('title'),
+    },
   );
   for (final occurrence
       in s.rows('occurrences').where((r) => r.str('task') == task))
@@ -429,16 +430,19 @@ BoardsState toggleChecklist(
   bool done, {
   DateTime? now,
 }) {
-  final r = s.get('checklist', id);
-  return s.put(
+  final r = s.get('checklist', id), at = now ?? DateTime.now();
+  if (r.flag('done') == done) return s;
+  final e = BoardsEdit(s);
+  e.put(
     'checklist',
     r.copy({
       'done': done,
-      'completedAt': done
-          ? (now ?? DateTime.now()).toUtc().toIso8601String()
-          : null,
+      'completedAt': done ? at.toUtc().toIso8601String() : null,
     }),
   );
+  // Only which subtask and its state: its words stay out of the history.
+  e.event(r.str('task'), 'subtask', at, details: {'subtask': id, 'done': done});
+  return e.finish();
 }
 
 bool blocked(BoardsState s, BoardRecord task) =>

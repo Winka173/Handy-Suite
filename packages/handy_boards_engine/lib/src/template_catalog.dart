@@ -67,6 +67,7 @@ const _semester = BoardTemplate(
     TemplateColumn(L10n('In progress', 'Đang làm')),
     TemplateColumn(L10n('Completed', 'Hoàn thành'), done: true),
   ],
+  time: TimePreset('week', pinned: true),
   fields: [
     SetupField(
       'title',
@@ -161,7 +162,7 @@ const _groupAssignment = BoardTemplate(
   cover: 'study.open-book',
   look: 'paper',
   hues: [1, 4, 2, 0],
-  time: TimePreset('week'),
+  time: TimePreset('week', pinned: true),
   columns: [
     TemplateColumn(L10n('To Do', 'Cần làm')),
     TemplateColumn(L10n('Doing', 'Đang làm')),
@@ -269,7 +270,7 @@ const _examRevision = BoardTemplate(
   cover: 'study.pencil-case',
   look: 'mist',
   hues: [2, 0, 4, 1],
-  time: TimePreset('week'),
+  time: TimePreset('week', count: 2, pinned: true),
   columns: [
     TemplateColumn(L10n('To Review', 'Cần ôn')),
     TemplateColumn(L10n('Reviewing', 'Đang ôn')),
@@ -360,7 +361,7 @@ const _course = BoardTemplate(
   cover: 'study.library-steps',
   look: 'linen',
   hues: [4, 1, 0, 3],
-  time: TimePreset('week'),
+  time: TimePreset('week', pinned: false),
   columns: [
     TemplateColumn(L10n('Upcoming', 'Sắp học')),
     TemplateColumn(L10n('Learning', 'Đang học')),
@@ -450,7 +451,7 @@ const _thesis = BoardTemplate(
   cover: 'study.orbital-notes',
   look: 'blueprint',
   hues: [0, 4, 1, 5],
-  time: TimePreset('week'),
+  time: TimePreset('week', count: 2, pinned: true),
   columns: [
     TemplateColumn(L10n('Backlog', 'Việc chờ')),
     TemplateColumn(L10n('Drafting', 'Đang soạn')),
@@ -554,7 +555,7 @@ const _language = BoardTemplate(
   cover: 'study.geometry-set',
   look: 'meadow',
   hues: [3, 2, 4, 6],
-  time: TimePreset('week'),
+  time: TimePreset('week', pinned: false),
   columns: [
     TemplateColumn(L10n('Planned', 'Dự định')),
     TemplateColumn(L10n('Practising', 'Đang luyện')),
@@ -830,7 +831,7 @@ const _sprint = BoardTemplate(
   cover: 'work.architect-desk',
   look: 'blueprint',
   hues: [0, 1, 5, 3],
-  time: TimePreset('week', pinned: true),
+  time: TimePreset('week', count: 2, pinned: true),
   columns: [
     TemplateColumn(L10n('Backlog', 'Việc chờ')),
     TemplateColumn(L10n('Developing', 'Đang phát triển')),
@@ -1024,7 +1025,7 @@ const _launch = BoardTemplate(
   cover: 'events.stage-curtain',
   look: 'ink',
   hues: [5, 4, 0, 2],
-  time: TimePreset('week'),
+  time: TimePreset('month', pinned: false, pinIfDated: true),
   columns: [
     TemplateColumn(L10n('Planning', 'Lên kế hoạch')),
     TemplateColumn(L10n('Producing', 'Đang thực hiện')),
@@ -1070,7 +1071,7 @@ const _launch = BoardTemplate(
         L10n('Quality', 'Chất lượng'),
       ],
     ),
-    _timeWeek,
+    _timeMonth,
   ],
   samples: [
     SampleCard(
@@ -1120,7 +1121,7 @@ const _meeting = BoardTemplate(
   cover: 'work.inbox-trays',
   look: 'harbor',
   hues: [0, 3, 1, 4],
-  time: TimePreset('week'),
+  time: TimePreset('week', pinned: false),
   columns: [
     TemplateColumn(L10n('Action items', 'Việc cần làm')),
     TemplateColumn(L10n('In progress', 'Đang làm')),
@@ -1290,7 +1291,7 @@ const _shopping = BoardTemplate(
   ),
   tags: ['shopping', 'buy', 'gift', 'mua sắm', 'quà', 'đồ dùng'],
   cover: 'shopping.market-tote',
-  time: TimePreset('month', pinned: false),
+  time: TimePreset('week', pinned: false),
   columns: [
     TemplateColumn(L10n('Want', 'Muốn mua')),
     TemplateColumn(L10n('Comparing', 'Đang so sánh')),
@@ -1411,7 +1412,7 @@ const _homeImprovement = BoardTemplate(
   cover: 'home.courtyard',
   look: 'terracotta',
   hues: [6, 3, 2, 4],
-  time: TimePreset('week'),
+  time: TimePreset('week', pinned: false),
   columns: [
     TemplateColumn(L10n('To Do', 'Cần làm')),
     TemplateColumn(L10n('Preparing', 'Đang chuẩn bị')),
@@ -1501,7 +1502,7 @@ const _event = BoardTemplate(
   cover: 'events.ribbon-invite',
   look: 'blush',
   hues: [4, 6, 3, 1],
-  time: TimePreset('week', pinned: true),
+  time: TimePreset('week', count: 2, pinned: false, pinIfDated: true),
   columns: [
     TemplateColumn(L10n('To prepare', 'Cần chuẩn bị')),
     TemplateColumn(L10n('Working on', 'Đang làm')),
@@ -1593,7 +1594,7 @@ const _goals90 = BoardTemplate(
   cover: 'goals.target-rings',
   look: 'orchard',
   hues: [3, 6, 0, 2],
-  time: TimePreset('month'),
+  time: TimePreset('month', pinned: false),
   columns: [
     TemplateColumn(L10n('Planned', 'Dự định')),
     TemplateColumn(L10n('Doing', 'Đang làm')),
@@ -1898,7 +1899,7 @@ const _photography = BoardTemplate(
   cover: 'abstract.folded-rhythm',
   look: 'dusk',
   hues: [5, 0, 4, 2],
-  time: TimePreset('week'),
+  time: TimePreset('week', pinned: false, pinIfDated: true),
   columns: [
     TemplateColumn(L10n('Planning', 'Lên kế hoạch')),
     TemplateColumn(L10n('Shooting', 'Đang chụp')),
@@ -2100,7 +2101,7 @@ const _writing = BoardTemplate(
   cover: 'creative.printing-blocks',
   look: 'sand',
   hues: [2, 6, 4, 0],
-  time: TimePreset('week'),
+  time: TimePreset('week', pinned: false),
   columns: [
     TemplateColumn(L10n('Ideas', 'Ý tưởng')),
     TemplateColumn(L10n('Drafting', 'Đang viết')),
@@ -2196,7 +2197,7 @@ const _gameDev = BoardTemplate(
   cover: 'abstract.offset-checks',
   look: 'ink',
   hues: [5, 1, 4, 3, 0],
-  time: TimePreset('week'),
+  time: TimePreset('week', count: 2, pinned: false),
   columns: [
     TemplateColumn(L10n('Backlog', 'Việc chờ')),
     TemplateColumn(L10n('Building', 'Đang xây dựng')),
@@ -2290,7 +2291,7 @@ const _campaign = BoardTemplate(
   cover: 'creative.ribbon-weave',
   look: 'paper',
   hues: [4, 2, 6, 0],
-  time: TimePreset('week'),
+  time: TimePreset('week', pinned: false, pinIfDated: true),
   columns: [
     TemplateColumn(L10n('Ideas', 'Ý tưởng')),
     TemplateColumn(L10n('Producing', 'Đang sản xuất')),
@@ -2400,7 +2401,7 @@ const _trip = BoardTemplate(
   cover: 'travel.coastal-route',
   look: 'mist',
   hues: [0, 3, 2, 4],
-  time: TimePreset('week'),
+  time: TimePreset('week', count: 2, pinned: false, pinIfDated: true),
   columns: [
     TemplateColumn(L10n('To arrange', 'Cần sắp xếp')),
     TemplateColumn(L10n('In progress', 'Đang làm')),
@@ -2688,7 +2689,7 @@ const _workshop = BoardTemplate(
   cover: 'creative.ceramic-studio',
   look: 'terracotta',
   hues: [6, 2, 0, 3],
-  time: TimePreset('week'),
+  time: TimePreset('week', pinned: false, pinIfDated: true),
   columns: [
     TemplateColumn(L10n('To prepare', 'Cần chuẩn bị')),
     TemplateColumn(L10n('Building', 'Đang soạn')),
@@ -2783,7 +2784,7 @@ const _moving = BoardTemplate(
   cover: 'home.woven-linen',
   look: 'clay',
   hues: [2, 6, 0, 3],
-  time: TimePreset('week', pinned: true),
+  time: TimePreset('week', count: 2, pinned: false, pinIfDated: true),
   columns: [
     TemplateColumn(L10n('To pack', 'Cần đóng gói')),
     TemplateColumn(L10n('Packing', 'Đang đóng gói')),
@@ -2876,7 +2877,7 @@ const _holiday = BoardTemplate(
   cover: 'events.confetti-cutouts',
   look: 'blush',
   hues: [4, 6, 2, 3],
-  time: TimePreset('week', pinned: true),
+  time: TimePreset('week', count: 2, pinned: false, pinIfDated: true),
   columns: [
     TemplateColumn(L10n('To plan', 'Cần lên kế hoạch')),
     TemplateColumn(L10n('Arranging', 'Đang sắp xếp')),

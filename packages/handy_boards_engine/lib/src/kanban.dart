@@ -509,11 +509,14 @@ void validateKanban(BoardsState s) {
       throw const FormatException('Invalid board view');
     final span = b.data['span'];
     if (span != null) {
+      final custom = span is Map && span['unit'] == 'custom';
       if (span is! Map ||
-          !const {'day', 'week', 'month'}.contains(span['unit']) ||
-          span['count'] is! int ||
-          (span['count'] as int) < 1 ||
-          (span['count'] as int) > 12)
+          (custom
+              ? TimeRange.read(span) == TimeRange.standard
+              : (!const {'day', 'week', 'month'}.contains(span['unit']) ||
+                    span['count'] is! int ||
+                    (span['count'] as int) < 1 ||
+                    (span['count'] as int) > 12)))
         throw const FormatException('Invalid time span');
     }
     final template = b.data['template'];
@@ -660,6 +663,11 @@ BoardsState repeatIfDone(BoardsState s, String card, {DateTime? now}) {
       'updated': at,
       'completedAt': null,
       'due': nextDue,
+      // A plan moves with its repeat, one period on.
+      'scheduled': switch (scheduledDay(t)) {
+        final d? => isoDay(_nextDay(d, every)),
+        null => null,
+      },
       'repeatedAs': null,
       'suggestedStatus': null,
       'coverPhoto': ids[t.data['coverPhoto']],

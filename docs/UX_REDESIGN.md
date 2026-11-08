@@ -2889,3 +2889,28 @@ Chủ chốt 14 mẫu Free (29 Chuyển nhà chuyển sang Free) và 16 Pro.
 - Từ chối: chặn Pro ở bước cuối sau khi đã điền; ẩn mẫu Pro khỏi danh sách; khoá cả việc xem trước.
 - Kiểm tra: `kanban_app_test` (mẫu Pro: trang Pro xuất hiện trước câu hỏi, không tạo gì; có Pro: đi thẳng vào câu hỏi rồi
   tạo), `layout_sweep_test` đo bảng ở hai trang xem trước và việc cuộn ở 11 kích thước. Đã xem trên BlueStacks 11-2 (mật độ 320).
+
+### Handy Boards · Time Navigator, ngày làm, chuyển nhanh, lịch sử thẻ (2026-11-08, bổ sung của chủ)
+- Một chế độ Thời gian chung cho mọi bảng (mẫu nào cũng vậy), xem chính các thẻ của bảng. Ba ngày độc lập: `due` (hạn
+  nộp), `scheduled` (ngày làm, 'YYYY-MM-DD', chỉ là kế hoạch) và `completedAt` (lúc thật sự vào cột xong). Thẻ nằm ở ngày
+  làm, không có thì ở hạn nộp; nếu hạn nộp rơi vào ngày khác trong khoảng đang xem thì có dòng "Hạn nộp: …" trỏ về đúng
+  thẻ đó, không nhân đôi thẻ, không đếm hai lần.
+- Khoảng: 1/2/3 ngày, 1/2 tuần, 1/2/3 tháng (tháng lịch thật), Tuỳ chỉnh (độ dài 1–12 ngày/tuần/tháng như cũ, hoặc từ
+  ngày – đến ngày, tối đa 366 ngày, có dòng tóm tắt sống và báo lỗi). Tuần bắt đầu thứ Hai ở cả hai ngôn ngữ (ISO, khớp
+  "đầu tuần" của mẫu). Trước/Sau đi đúng một khoảng, không chồng, không hở; nhãn là ngày thật ("2/11 – 8/11").
+- Mốc: tối đa hai kỳ trước gần nhất còn việc ("… · 2 còn tồn, 1 quá hạn", đỏ chỉ khi quá hạn thật), các kỳ cũ hơn gộp
+  thành "N kỳ trước còn việc", "Xem tất cả tồn đọng (N)" mở danh sách, và kỳ sắp tới có việc ("Sắp tới: …", trung tính).
+  Mỗi thẻ đếm một lần mỗi kỳ; mốc trỏ về kỳ gốc của ngày làm/hạn nộp, không lặp sang mọi tuần sau.
+- Chuyển nhanh ngay trên thẻ (không chôn trong menu): quá khứ → "Về hôm nay", tương lai → "Làm sớm", chưa có ngày →
+  "Lên lịch", xong → "Lịch sử". Chọn nhiều (nút danh sách) và "Tất cả về hôm nay" ở ô Còn tồn. Chỉ đổi ngày làm; thẻ chỉ
+  có hạn nộp thì hỏi: "Lên lịch làm hôm nay · giữ hạn DD/MM" (mặc định) / "Đổi hạn nộp" / Huỷ. Thanh báo "Đã lên lịch N thẻ
+  cho hôm nay · Hoàn tác"; Hoàn tác trả ngày làm cũ và ghi một sự kiện hoàn tác. Kéo thả vào ngày vẫn đổi hạn nộp như trước.
+- Lịch sử thẻ (chỉ đọc, trong chi tiết thẻ): tạo, chuyển cột, hoàn thành/mở lại, đổi hạn, đổi ngày làm (lý do), đổi nhóm,
+  việc con tick/bỏ tick (không chép chữ), lưu trữ, thùng rác. Thẻ có trước phiên bản này nói rõ "Lịch sử chỉ ghi từ phiên
+  bản này", không bịa quá khứ. Không phải ảnh chụp bảng theo thời gian.
+- Mặc định theo mẫu là gợi ý (bảng 30 mẫu + Bảng trống trong yêu cầu); "ghim nếu có ngày" ghim khi người dùng nhập ngày.
+  Lựa chọn trong Thiết lập nhanh và sau khi tạo luôn thắng; bảng cũ giữ nguyên cài đặt.
+- Miễn phí toàn bộ. Màn chào chỉ thêm một câu gợi ý, không thêm bước.
+- Kiểm tra: `packages/handy_boards_engine/test/time_nav_test.dart` (17: ngày tháng, nhuận, qua năm, DST, tuỳ chỉnh, mốc
+  không đếm trùng, kịch bản A/B/C/F/G, thẻ lặp, mặc định mẫu), `apps/handy_boards/test/time_nav_app_test.dart` (8: A, B, C,
+  D, tồn đọng, lịch sử, thẻ cũ, kéo thả đổi hạn), `layout_sweep_test` (11 kích thước).

@@ -105,7 +105,7 @@ class _BoardPageState extends State<BoardPage> {
 
   /// The board's view and time span are remembered per board, outside
   /// the undo history.
-  Future<void> _look({String? view, TimeSpan? span}) => scope.run(
+  Future<void> _look({String? view, TimeRange? span}) => scope.run(
     context,
     () => scope.controller.change(
       (s) => setBoardLook(s, widget.board, view: view, span: span?.toJson()),
@@ -468,8 +468,9 @@ class _BoardPageState extends State<BoardPage> {
               board: widget.board,
               now: now,
               filter: filter,
-              span: TimeSpan.read(b.data['span']),
-              onSpan: (span) => _look(span: span),
+              range: TimeRange.read(b.data['span']),
+              onRange: (span) => _look(span: span),
+              scope: scope,
               open: (card) => openCard(context, scope, card.id),
               setDue: _setDue,
             )

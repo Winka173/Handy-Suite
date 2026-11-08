@@ -34,3 +34,5 @@ device- or store-verified unless it says so.
 Review shots: `SHOTS_DIR=<dir> flutter test --no-pub tool/screens_test.dart` (welcome,
 home, board, filter, card, cover picker, templates, Pro, settings; 390 px, 320 px at 200 %
 text, 1280 px light and dark). Cover sheets: `tool/covers_test.dart`.
+| Time Navigator | AUTOMATED_TESTED host + engine; BlueStacks emulator viewed | Every board: 1/2/3 days, 1/2 weeks, 1/2/3 calendar months, custom length or from–to; prev/next by exact windows; markers for earlier unfinished and later planned work; backlog list; planned day (`scheduled`) separate from due date; To today / Do early / Plan, multi-select, Undo; due-only cards ask before anything; drag to a day still sets the due date. `lib/board/time_view.dart`, `time_range_picker.dart`, `time_actions.dart`; engine `time_nav.dart` |
+| Card history | AUTOMATED_TESTED | Read-only per card: created, column moves, finished/reopened, due and plan changes (with reason), category, subtasks (no text), archive, trash. Starts with this version; older cards say so. Not a board snapshot |

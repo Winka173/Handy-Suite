@@ -145,7 +145,8 @@ String whenLabel(BuildContext context, DateTime? at, DateTime now) {
 /// A due day in words: today, tomorrow, a weekday this week, or a date.
 String dueLabel(BuildContext context, DateTime day, DateTime now) {
   final today = DateTime(now.year, now.month, now.day);
-  final d = day.difference(today).inDays;
+  // Calendar days, so a clock change never makes "tomorrow" today.
+  final d = daysBetween(today, day);
   if (d == 0) return tr(context, 'Today', 'Hôm nay');
   if (d == 1) return tr(context, 'Tomorrow', 'Ngày mai');
   if (d == -1) return tr(context, 'Yesterday', 'Hôm qua');
