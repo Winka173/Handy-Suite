@@ -8,16 +8,22 @@ import 'new_board.dart';
 import 'template_parts.dart';
 
 String timeLine(BuildContext context, TimePreset t) {
-  final n = t.count;
+  if (!t.pinned) {
+    return tr(
+      context,
+      'Not by time: every card on one board (Time on the board turns it on)',
+      'Không theo thời gian: mọi thẻ chung một bảng (bật ở nút Thời gian trên bảng)',
+    );
+  }
   final span = switch (t.unit) {
-    'day' => tr(context, n == 1 ? 'one day' : '$n days', '$n ngày'),
-    'month' => tr(context, n == 1 ? 'one month' : '$n months', '$n tháng'),
-    _ => tr(context, n == 1 ? 'one week' : '$n weeks', '$n tuần'),
+    'day' => tr(context, 'day', 'ngày'),
+    'month' => tr(context, 'month', 'tháng'),
+    _ => tr(context, 'week', 'tuần'),
   };
   return tr(
     context,
-    'Dated cards: $span at a time, ‹ › to move',
-    'Thẻ có ngày: xem từng $span, ‹ › để đi qua lại',
+    'By $span: each card in its $span, ‹ › to move',
+    'Theo $span: mỗi thẻ ở $span của nó, ‹ › để đi qua lại',
   );
 }
 

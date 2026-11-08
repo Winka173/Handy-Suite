@@ -3145,3 +3145,23 @@ icon + chữ) và trang Explore Pro của Bookmark (ba khối chữ). Trang này
 - **Nền tảng:** Android Back và vuốt về iOS đóng trang; web URL `/pro`; Windows/web không có cửa hàng thì báo "chưa mở bán".
 - **Từ chối:** icon trong ô màu; thẻ tính năng giống hệt nhau xếp lưới; gradient, ảnh minh hoạ chung chung; đếm ngược hay
   "giảm giá" giả; khoá việc xem; nói tính năng chưa có.
+
+### Handy Boards · dòng thời gian cố định theo bảng, lọc nhiều nhóm (2026-11-08, mục 11–12 của chủ; thay thanh tuần ở trên)
+- **Một chỗ bật:** chip "Thời gian" (hoặc "Theo tuần"…) ngay hàng bộ lọc của bảng. Chạm vào thì chọn Theo ngày / Theo tuần /
+  Theo tháng / Tắt, áp dụng ngay. Khi bật, việc chưa xong từ các kỳ trước được đem về hôm nay (một Hoàn tác).
+- **Thẻ thuộc kỳ nào:** ngày làm của thẻ, chưa có thì ngày tạo. Hạn nộp không quyết định chỗ của thẻ. Thẻ đã xong ở lại kỳ của nó.
+- **Thanh ‹ kỳ ›:** ghi ngày thật và "Tuần này" / "Đã qua · chỉ xem" / "Sắp tới". Không còn nút đổi khoảng hay "Tất cả".
+  - Kỳ hiện tại: thêm, sửa, kéo thả như thường. Có dòng "N việc chưa xong từ những tuần trước · Đem qua tuần này".
+  - Kỳ sau: thêm thẻ thì ngày làm là ngày đầu kỳ đó.
+  - Kỳ đã qua: chỉ xem. Không thêm thẻ, không kéo thả, không menu thẻ. Mở thẻ để đọc, với hai nút "Đánh dấu xong" và
+    "Đem qua tuần này". Tick việc con vẫn được. Thẻ chưa xong có dải "Chưa xong" và nút đem qua; đầu kỳ có "Đem tất cả".
+- **Đổi đơn vị:** chỉ sang kỳ dài hơn (ngày → tuần → tháng). Kỳ ngắn hơn hiện ra nhưng bị khoá, kèm lý do; bảng nhớ kỳ dài
+  nhất đã dùng (`timelineFloor`).
+- **Tắt:** không thẻ nào đổi. Có hộp xác nhận đếm sẵn số thẻ, kèm lựa chọn lưu trữ thẻ đã xong ở các kỳ trước. Bật lại thì thẻ nào
+  về kỳ nấy.
+- **Thẻ lặp lại:** bản kế tiếp được xếp cho kỳ của ngày lặp tiếp theo, ví dụ họp mỗi thứ Hai sang thứ Hai tuần sau.
+- **Mẫu bảng:** mẫu sống theo thời gian thì bật sẵn. Mẫu có câu hỏi "Xếp theo" cho chọn Theo tuần / Theo tháng / Không theo thời
+  gian.
+- **Lọc nhóm:** chạm để bật hoặc tắt từng nhóm, chọn được nhiều nhóm cùng lúc. Dòng lọc ghi "Đang lọc: chỉ A, B". Thẻ thêm khi
+  đang lọc vào nhóm chọn đầu tiên. Bộ lọc đã lưu cũng chọn nhiều nhóm (`categories`).
+- **Từ chối:** khoá việc xem kỳ cũ; tự đổi hạn nộp; đoán ngày khi đổi sang kỳ ngắn hơn.

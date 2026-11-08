@@ -199,32 +199,32 @@ List<_Topic> _topics(BuildContext context) => [
   _Topic(
     'time',
     Icons.view_timeline_outlined,
-    tr(context, 'Plan by the week', 'Lên kế hoạch theo tuần'),
+    tr(context, 'Plan by day, week or month', 'Xếp theo ngày, tuần, tháng'),
     tr(
       context,
-      'What is planned, due or finished in a week, and the day you mean to do each card.',
-      'Việc định làm, đến hạn hay đã xong trong một tuần, và ngày bạn định làm từng thẻ.',
+      'Lay a board out along time: each card sits in its own day, week or month.',
+      'Xếp bảng theo thời gian: mỗi thẻ nằm ở ngày, tuần hay tháng của nó.',
     ),
     [
       _Step(
         tr(
           context,
-          'When cards have dates, a bar above the board shows this week. ‹ and › go a week back or on; This week comes back; All shows every card. Columns stay your progress.',
-          'Khi thẻ có ngày, thanh phía trên bảng cho thấy tuần này. ‹ và › lùi hay tới một tuần; Tuần này để quay về; Tất cả để xem mọi thẻ. Cột vẫn là tiến độ.',
+          'Tap Time beside the board\'s filters and pick By day, By week or By month. Unfinished work from before comes to now at once (one Undo). Pick Off for a plain Kanban.',
+          'Chạm Thời gian cạnh bộ lọc của bảng, chọn Theo ngày, Theo tuần hay Theo tháng. Việc chưa xong từ trước về ngay kỳ hiện tại (Hoàn tác được). Chọn Tắt để thành Kanban thường.',
         ),
       ),
       _Step(
         tr(
           context,
-          'The calendar button sets how much the bar shows: a day, a week, 2 weeks, a month, 3 months, or your own dates.',
-          'Nút lịch đặt thanh xem bao xa: một ngày, một tuần, 2 tuần, một tháng, 3 tháng, hay khoảng ngày tự chọn.',
+          '‹ and › move a period back or on. A card added in a later week is planned for that week. Weeks gone by are kept to look back on: unfinished cards there are marked, with a button to bring them to this week.',
+          '‹ và › lùi hay tới một kỳ. Thẻ thêm ở tuần sau được xếp cho tuần đó. Tuần đã qua giữ lại để xem: việc chưa xong ở đó có dấu, kèm nút đem qua tuần này.',
         ),
       ),
       _Step(
         tr(
           context,
-          'Card ⋯ › Do it today, or Plan a day…, sets the day you mean to work on it. Its due date never changes by itself. Work left over from before shows above the board with Move to today.',
-          '⋯ trên thẻ › Làm hôm nay, hoặc Lên lịch…, đặt ngày bạn định làm. Hạn nộp không bao giờ tự đổi. Việc chưa xong từ trước hiện phía trên bảng, kèm nút Về hôm nay.',
+          'A board can move to a longer period (a week to a month), never back to a shorter one. A repeating card, such as a Monday meeting, comes back in its next period.',
+          'Bảng có thể đổi sang kỳ dài hơn (tuần sang tháng), không đổi ngược lại. Thẻ lặp lại, như họp thứ Hai, tự có ở kỳ kế tiếp.',
         ),
       ),
     ],

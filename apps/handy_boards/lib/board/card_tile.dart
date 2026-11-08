@@ -1,3 +1,4 @@
+import 'package:flutter/semantics.dart';
 import 'package:handy_boards_engine/handy_boards_engine.dart';
 import 'package:handy_ui/kit.dart';
 import '../design/theme.dart';
@@ -16,6 +17,11 @@ class CardTile extends StatelessWidget {
 
   /// The card's own menu (Move to…, Duplicate, Archive, Delete).
   final VoidCallback? onMenu;
+
+  /// In a period gone by: brings the card, if unfinished, to the current
+  /// one; [carryLabel] names the button ("Bring to this week").
+  final VoidCallback? onCarry;
+  final String? carryLabel;
   const CardTile({
     super.key,
     required this.state,
@@ -26,11 +32,14 @@ class CardTile extends StatelessWidget {
     this.onOpen,
     this.onTick,
     this.onMenu,
+    this.onCarry,
+    this.carryLabel,
   });
 
   @override
   Widget build(BuildContext context) {
     final p = BoardsPalette.of(context);
+    final carry = done ? null : onCarry;
     final theme = Theme.of(context);
     final category = state.maybe(
       'categories',
@@ -115,8 +124,14 @@ class CardTile extends StatelessWidget {
     ].join(', ');
     return Semantics(
       button: onOpen != null,
-      label: label,
+      label: carry == null
+          ? label
+          : '$label, ${tr(context, 'not finished', 'chưa xong')}',
       excludeSemantics: !detailed,
+      customSemanticsActions: {
+        if (carry != null && carryLabel != null)
+          CustomSemanticsAction(label: carryLabel!): carry,
+      },
       child: Material(
         color: p.surface,
         borderRadius: BorderRadius.circular(BoardsRadii.card),
@@ -187,6 +202,39 @@ class CardTile extends StatelessWidget {
                   ],
                 ),
               ),
+              if (carry != null)
+                Container(
+                  key: Key('card-carry-${card.id}'),
+                  color: p.dangerTint,
+                  padding: const EdgeInsets.fromLTRB(12, 0, 4, 0),
+                  child: Row(
+                    children: [
+                      Icon(Icons.history, size: 16, color: p.danger),
+                      const SizedBox(width: 6),
+                      Expanded(
+                        child: Text(
+                          tr(context, 'Not finished', 'Chưa xong'),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: theme.textTheme.labelMedium?.copyWith(
+                            color: p.ink,
+                          ),
+                        ),
+                      ),
+                      Flexible(
+                        child: TextButton(
+                          key: Key('card-carry-button-${card.id}'),
+                          onPressed: carry,
+                          child: Text(
+                            carryLabel ?? '',
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
               if (subtasks.isNotEmpty)
                 Padding(
                   padding: const EdgeInsets.fromLTRB(4, 0, 8, 6),

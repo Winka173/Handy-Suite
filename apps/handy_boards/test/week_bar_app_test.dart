@@ -15,8 +15,11 @@ DateTime ago(int days) => addDays(today, -days);
   DateTime? planned,
   DateTime? due,
   bool history = true,
+  String? timeline,
 }) {
-  var s = studyState();
+  // The study template starts on a weekly timeline; most tests here look
+  // at a card's own days on a plain board.
+  var s = setTimeline(studyState(), board, timeline, now: clock);
   final t = newTask(s, board, title).copy({
     if (planned != null) 'scheduled': isoDay(planned),
     if (due != null) 'due': {'kind': 'day', 'day': isoDay(due)},
@@ -58,7 +61,7 @@ void main() {
     final c = await boot(t, s, size: const Size(1280, 900));
     final status = s.get('tasks', id).str('status');
     await openBoard(t);
-    expect(find.byKey(const Key('week-bar')), findsOneWidget);
+    expect(find.byKey(const Key('week-bar')), findsNothing);
     expect(find.text('Assignment 2'), findsOneWidget);
     expect(find.textContaining('late'), findsWidgets);
     expect(find.text('1 still open from before'), findsOneWidget);
@@ -72,24 +75,56 @@ void main() {
     expect(c.state!.get('tasks', id).str('scheduled'), isoDay(ago(8)));
   });
 
-  testWidgets('next week shows what is planned then; card ⋯ › Do it today '
-      'moves only the plan, never the deadline', (t) async {
+  testWidgets('on a weekly timeline, next week shows what is planned then, '
+      'and a card added there is planned for that week', (t) async {
     final next = addDays(mondayOf(today), 9);
-    final (s, id) = withCard('Report', planned: next, due: addDays(next, 5));
+    final (s, id) = withCard('Report', planned: next, timeline: 'week');
     final c = await boot(t, s, size: const Size(1280, 900));
     await openBoard(t);
     expect(find.text('Report'), findsNothing);
     await tap(t, find.byKey(const Key('week-next')));
     expect(find.text('Report'), findsOneWidget);
-    expect(find.byKey(const Key('week-current')), findsOneWidget);
-    await cardMenuOf(t, id);
-    await tap(t, find.byKey(const Key('menu-do-today')));
-    final card = c.state!.get('tasks', id);
-    expect(card.str('scheduled'), isoDay(today));
-    expect(dueDay(card), addDays(next, 5));
-    // Back to this week, where it now is.
+    expect(find.text('Ahead'), findsOneWidget);
+    final todo = columnsOf(c.state!, board).first;
+    await tap(t, find.byKey(Key('add-card-open-${todo.id}')));
+    await t.enterText(find.byKey(Key('add-card-${todo.id}')), 'Plan slides');
+    await t.testTextInput.receiveAction(TextInputAction.done);
+    await t.pumpAndSettle();
+    final added = topTasks(
+      c.state!,
+      board: board,
+    ).firstWhere((x) => x.str('title') == 'Plan slides');
+    expect(scheduledDay(added), addDays(mondayOf(today), 7));
+    expect(c.state!.get('tasks', id).str('scheduled'), isoDay(next));
     await tap(t, find.byKey(const Key('week-current')));
-    expect(find.text('Report'), findsOneWidget);
+    expect(find.text('Plan slides'), findsNothing);
+  });
+
+  testWidgets('a week gone by is read only: unfinished cards are marked and '
+      'brought to this week one by one or all at once; Undo puts them back', (
+    t,
+  ) async {
+    final (s, id) = withCard('Assignment 2', planned: ago(8), timeline: 'week');
+    final c = await boot(t, s, size: const Size(1280, 900));
+    await openBoard(t);
+    // This week says what is left from before.
+    expect(find.text('1 not finished from earlier weeks'), findsOneWidget);
+    await tap(t, find.byKey(const Key('week-prev')));
+    expect(find.text('Gone by · read only'), findsOneWidget);
+    expect(find.text('Assignment 2'), findsOneWidget);
+    expect(find.byKey(Key('card-carry-$id')), findsOneWidget);
+    expect(find.textContaining('Add card'), findsNothing);
+    expect(find.byKey(Key('card-menu-$id')), findsNothing);
+    // Opening it reads it, with its two actions.
+    await tap(t, find.text('Assignment 2'));
+    expect(find.byKey(const Key('card-past-banner')), findsOneWidget);
+    await tap(t, find.byKey(const Key('past-carry')));
+    expect(c.state!.get('tasks', id).str('scheduled'), isoDay(today));
+    expect(find.text('Assignment 2'), findsNothing);
+    await tap(t, find.text('Undo'));
+    expect(c.state!.get('tasks', id).str('scheduled'), isoDay(ago(8)));
+    await tap(t, find.byKey(const Key('carry-all')));
+    expect(c.state!.get('tasks', id).str('scheduled'), isoDay(today));
   });
 
   testWidgets('a card with only a deadline asks first and keeps it', (t) async {
@@ -105,30 +140,29 @@ void main() {
     expect(dueDay(card), ago(2));
   });
 
-  testWidgets('cards with no date show in this week only; All shows every '
-      'card; the planned day can be taken off', (t) async {
-    final (s0, undated) = withCard('Someday');
-    var s = s0;
-    final dated = newTask(
-      s,
-      board,
-      'Later',
-    ).copy({'scheduled': isoDay(addDays(today, 30))});
-    s = saveTask(s, dated, now: clock);
+  testWidgets('the Time chip turns the timeline on in one tap and brings '
+      'open work to now; a shorter unit is never offered after a longer one', (
+    t,
+  ) async {
+    final (s, id) = withCard('Old task', planned: ago(8));
     final c = await boot(t, s, size: const Size(1280, 900));
     await openBoard(t);
-    expect(find.text('Someday'), findsOneWidget);
-    expect(find.text('Later'), findsNothing);
-    await tap(t, find.byKey(const Key('week-next')));
-    expect(find.text('Someday'), findsNothing);
-    await tap(t, find.byKey(const Key('week-all')));
-    expect(find.text('Someday'), findsOneWidget);
-    expect(find.text('Later'), findsOneWidget);
-    expect(find.text('All cards'), findsOneWidget);
-    await cardMenuOf(t, dated.id);
-    await tap(t, find.byKey(const Key('menu-unplan')));
-    expect(c.state!.get('tasks', dated.id).data['scheduled'], isNull);
-    expect(c.state!.maybe('tasks', undated), isNotNull);
+    expect(find.byKey(const Key('week-bar')), findsNothing);
+    await tap(t, find.byKey(const Key('board-timeline')));
+    await tap(t, find.byKey(const Key('timeline-month')));
+    expect(boardTimeline(c.state!.get('boards', board)), 'month');
+    expect(c.state!.get('tasks', id).str('scheduled'), isoDay(today));
+    expect(find.byKey(const Key('week-bar')), findsOneWidget);
+    expect(find.text('By month'), findsOneWidget);
+    await tap(t, find.byKey(const Key('board-timeline')));
+    final week = t.widget<ListTile>(find.byKey(const Key('timeline-week')));
+    expect(week.enabled, isFalse);
+    // Off asks first, and may archive what was finished earlier.
+    await tap(t, find.byKey(const Key('timeline-off')));
+    expect(find.byKey(const Key('timeline-off-confirm')), findsOneWidget);
+    await tap(t, find.byKey(const Key('timeline-off-confirm')));
+    expect(boardTimeline(c.state!.get('boards', board)), isNull);
+    expect(find.byKey(const Key('week-bar')), findsNothing);
   });
 
   testWidgets('a card names its days: "Do:" for the plan, "Due:" for the '
@@ -140,10 +174,8 @@ void main() {
     expect(find.text('Due: Tomorrow'), findsOneWidget);
   });
 
-  testWidgets('a board with no dates has no week bar and shows every card', (
-    t,
-  ) async {
-    var s = studyState();
+  testWidgets('a board off the timeline has no week bar', (t) async {
+    var s = setTimeline(studyState(), board, null, now: clock);
     for (final c in s.rows('tasks').toList()) {
       s = s.put('tasks', c.copy({'due': null, 'scheduled': null}));
     }

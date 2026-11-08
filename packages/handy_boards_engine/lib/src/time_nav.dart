@@ -574,3 +574,159 @@ List<(DateTime monday, int finished)> weeklyThroughput(
   }
   return [for (var i = 0; i < weeks; i++) (addDays(first, 7 * i), counts[i])];
 }
+
+// ─── A board's timeline ──────────────────────────────────────────────────
+//
+// A board may be laid out along time: by day, week or month. Each card then
+// belongs to exactly one period, the one holding its day: the day it is
+// planned for, or else the day it was made. A deadline never places a card.
+// The periods before the current one are read-only (only finishing a card
+// or bringing it forward); the current and later ones take new cards.
+//
+// Turning the timeline off changes no card, so turning it back on puts
+// every card in the same period again. A board may move to a longer unit
+// (day, then week, then month) without losing anything, never back to a
+// shorter one: a card planned for "December" cannot be placed in a week
+// without guessing. [timelineFloor] keeps the longest unit ever used.
+
+/// Timeline units, shortest first.
+const timelineUnits = ['day', 'week', 'month'];
+
+String? _unitOf(Object? v) =>
+    v is String && timelineUnits.contains(v) ? v : null;
+
+/// The board's timeline unit, or null when it is a plain Kanban.
+String? boardTimeline(BoardRecord b) => _unitOf(b.data['timeline']);
+
+/// The longest unit this board has used, or null if never.
+String? timelineFloor(BoardRecord b) => _unitOf(b.data['timelineFloor']);
+
+/// Whether [unit] may be chosen for [b]: never shorter than its floor.
+bool timelineAllowed(BoardRecord b, String unit) {
+  final floor = timelineFloor(b);
+  return floor == null ||
+      timelineUnits.indexOf(unit) >= timelineUnits.indexOf(floor);
+}
+
+/// The period of [unit] that holds [day].
+TimeWindow timelineWindow(String unit, DateTime day) =>
+    currentWindow(TimeRange(unit), day);
+
+/// The day that places [card] on a timeline: its plan, else the day it
+/// was made (local), else [fallback].
+DateTime cardDay(BoardRecord card, {DateTime? fallback}) {
+  final planned = scheduledDay(card);
+  if (planned != null) return planned;
+  final made = DateTime.tryParse(card.str('created'))?.toLocal();
+  return calendarDay(made ?? fallback ?? DateTime.now());
+}
+
+/// Open cards of [board] placed before [day], oldest first. [shows]
+/// applies the board's filter.
+List<BoardRecord> openBefore(
+  BoardsState s,
+  String board,
+  DateTime day, {
+  bool Function(BoardRecord card)? shows,
+}) {
+  final d = calendarDay(day);
+  return [
+    for (final t in topTasks(s, board: board))
+      if (isOpenCard(s, t) &&
+          (shows == null || shows(t)) &&
+          cardDay(t).isBefore(d))
+        t,
+  ]..sort((a, b) => cardDay(a).compareTo(cardDay(b)));
+}
+
+/// Open cards of [board] placed in [w].
+List<BoardRecord> openIn(
+  BoardsState s,
+  String board,
+  TimeWindow w, {
+  bool Function(BoardRecord card)? shows,
+}) => [
+  for (final t in topTasks(s, board: board))
+    if (isOpenCard(s, t) &&
+        (shows == null || shows(t)) &&
+        w.contains(cardDay(t)))
+      t,
+];
+
+/// What turning [board]'s timeline off would leave in the plain Kanban:
+/// finished cards from periods before today's, open ones from before, and
+/// open ones planned after today's period.
+({int doneBefore, int openBefore, int later}) timelineOffSummary(
+  BoardsState s,
+  String board,
+  DateTime today,
+) {
+  final unit = boardTimeline(s.get('boards', board)) ?? 'week';
+  final w = timelineWindow(unit, today);
+  var done = 0, open = 0, later = 0;
+  for (final t in topTasks(s, board: board)) {
+    if (!activeTask(t)) continue;
+    final d = cardDay(t);
+    if (completed(s, t)) {
+      if (d.isBefore(w.first)) done++;
+    } else if (d.isBefore(w.first)) {
+      open++;
+    } else if (!d.isBefore(w.end)) {
+      later++;
+    }
+  }
+  return (doneBefore: done, openBefore: open, later: later);
+}
+
+/// Turns [board]'s timeline on, changes its unit, or turns it off (null).
+///
+/// On (or a new unit): the open cards still placed before the current
+/// period are brought to today, so the board starts in the present; cards
+/// planned for later stay where they are. Off: nothing moves; with
+/// [archiveDone], finished cards from earlier periods are archived (they
+/// come back from Settings, Data). Throws when [unit] is shorter than the
+/// board's floor.
+BoardsState setTimeline(
+  BoardsState s,
+  String board,
+  String? unit, {
+  DateTime? now,
+  bool archiveDone = false,
+}) {
+  final at = now ?? DateTime.now(), today = calendarDay(at);
+  final b = s.get('boards', board);
+  if (unit == null) {
+    final old = boardTimeline(b);
+    if (old == null) return s;
+    final first = timelineWindow(old, today).first;
+    final e = BoardsEdit(s);
+    e.put('boards', b.copy({'timeline': null, 'updated': _now(now)}));
+    if (archiveDone) {
+      for (final t in topTasks(s, board: board)) {
+        if (activeTask(t) && completed(s, t) && cardDay(t).isBefore(first))
+          e.put('tasks', t.copy({'archived': true, 'updated': _now(now)}));
+      }
+    }
+    return e.finish();
+  }
+  if (!timelineUnits.contains(unit)) throw ArgumentError.value(unit, 'unit');
+  if (!timelineAllowed(b, unit))
+    throw StateError('A timeline never moves to a shorter unit');
+  final floor = timelineFloor(b);
+  final longest =
+      floor != null &&
+          timelineUnits.indexOf(floor) > timelineUnits.indexOf(unit)
+      ? floor
+      : unit;
+  var next = s.put(
+    'boards',
+    b.copy({'timeline': unit, 'timelineFloor': longest, 'updated': _now(now)}),
+  );
+  final behind = [
+    for (final t in openBefore(next, board, timelineWindow(unit, today).first))
+      t.id,
+  ];
+  if (behind.isNotEmpty)
+    next = scheduleCards(next, behind, today, reason: 'move to now', now: at);
+  return next;
+}

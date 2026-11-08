@@ -525,6 +525,11 @@ void validateKanban(BoardsState s) {
     final template = b.data['template'];
     if (template != null && (template is! String || template.length > 80))
       throw const FormatException('Invalid template id');
+    for (final k in ['timeline', 'timelineFloor']) {
+      final v = b.data[k];
+      if (v != null && !timelineUnits.contains(v))
+        throw const FormatException('Invalid timeline');
+    }
   }
   for (final t in s.rows('tasks')) {
     final every = t.data['repeatEvery'], left = t.data['repeatLeft'];
@@ -676,6 +681,8 @@ BoardsState repeatIfDone(BoardsState s, String card, {DateTime? now}) {
       if (v is int) v,
   ];
   DateTime step(DateTime d) => nextRepeatDay(d, every, n: n, days: days);
+  final board = s.maybe('boards', t.str('board'));
+  final onTimeline = board != null && boardTimeline(board) != null;
   final left = t.data['repeatLeft'];
   if (left is int && left <= 0) return s;
   final until = DateTime.tryParse('${t.data['repeatUntil'] ?? ''}');
@@ -717,8 +724,11 @@ BoardsState repeatIfDone(BoardsState s, String card, {DateTime? now}) {
       'completedAt': null,
       'due': nextDue,
       // A plan moves with its repeat, one period on.
+      // On a timeline a card without a plan sits in the period it was
+      // made, so its next one is planned one repeat on from that day.
       'scheduled': switch (scheduledDay(t)) {
         final d? => isoDay(step(d)),
+        null when onTimeline => isoDay(step(cardDay(t, fallback: now))),
         null => null,
       },
       if (left is int) 'repeatLeft': left - 1,

@@ -17,7 +17,16 @@ import 'cover_picker.dart';
 
 /// Opens a card: a sheet on phones, a dialog on wide screens. Every change
 /// is kept as it is made (with Undo), so closing never loses anything.
-Future<void> openCard(BuildContext context, BoardsScope scope, String card) {
+///
+/// [banner] sits above a [readOnly] card (a period gone by on a timeline):
+/// it is read, scrolled and acted on only through the banner's buttons.
+Future<void> openCard(
+  BuildContext context,
+  BoardsScope scope,
+  String card, {
+  bool readOnly = false,
+  Widget Function(BuildContext context)? banner,
+}) {
   final wide = MediaQuery.sizeOf(context).width >= 900;
   Widget body(BuildContext context, ScrollController? scroll) =>
       ListenableBuilder(
@@ -26,7 +35,13 @@ Future<void> openCard(BuildContext context, BoardsScope scope, String card) {
           final s = scope.controller.state;
           if (s == null || s.maybe('tasks', card) == null)
             return const SizedBox.shrink();
-          return CardDetail(scope: scope, card: card, scroll: scroll);
+          return CardDetail(
+            scope: scope,
+            card: card,
+            scroll: scroll,
+            readOnly: readOnly,
+            banner: banner?.call(context),
+          );
         },
       );
   if (wide)
@@ -58,11 +73,15 @@ class CardDetail extends StatefulWidget {
   final BoardsScope scope;
   final String card;
   final ScrollController? scroll;
+  final bool readOnly;
+  final Widget? banner;
   const CardDetail({
     super.key,
     required this.scope,
     required this.card,
     this.scroll,
+    this.readOnly = false,
+    this.banner,
   });
   @override
   State<CardDetail> createState() => _CardDetailState();
@@ -396,421 +415,435 @@ class _CardDetailState extends State<CardDetail> {
         controller: widget.scroll,
         padding: const EdgeInsets.only(bottom: 32),
         children: [
-          if (cover != null)
-            Semantics(
-              button: true,
-              label: tr(context, 'Change cover', 'Đổi ảnh bìa'),
-              child: InkWell(
-                key: const Key('card-cover-art'),
-                onTap: _cover,
-                child: SizedBox(height: 140, child: cover),
+          ?widget.banner,
+          for (final w in <Widget>[
+            if (cover != null)
+              Semantics(
+                button: true,
+                label: tr(context, 'Change cover', 'Đổi ảnh bìa'),
+                child: InkWell(
+                  key: const Key('card-cover-art'),
+                  onTap: _cover,
+                  child: SizedBox(height: 140, child: cover),
+                ),
+              ),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(20, 12, 8, 0),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Expanded(
+                    child: TextField(
+                      key: const Key('card-title'),
+                      controller: title,
+                      maxLines: null,
+                      maxLength: 1000,
+                      buildCounter:
+                          (
+                            _, {
+                            required currentLength,
+                            required isFocused,
+                            maxLength,
+                          }) => null,
+                      style: theme.textTheme.headlineSmall,
+                      decoration: const InputDecoration(
+                        filled: false,
+                        border: InputBorder.none,
+                        enabledBorder: InputBorder.none,
+                        focusedBorder: InputBorder.none,
+                        contentPadding: EdgeInsets.symmetric(vertical: 8),
+                      ),
+                      textInputAction: TextInputAction.done,
+                      onSubmitted: (_) => _saveTitle(),
+                      onTapOutside: (_) => _saveTitle(),
+                    ),
+                  ),
+                  IconButton(
+                    key: const Key('card-more'),
+                    tooltip: tr(context, 'Card options', 'Tuỳ chọn thẻ'),
+                    onPressed: () => cardMenu(
+                      context,
+                      scope,
+                      t.id,
+                      inSheet: true,
+                      onMoved: (card, col, i) => _change(
+                        (s) => moveCard(
+                          s,
+                          card,
+                          column: col,
+                          index: i,
+                          now: scope.clock(),
+                        ),
+                      ),
+                    ),
+                    icon: const Icon(Icons.more_vert),
+                  ),
+                ],
               ),
             ),
-          Padding(
-            padding: const EdgeInsets.fromLTRB(20, 12, 8, 0),
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Expanded(
-                  child: TextField(
-                    key: const Key('card-title'),
-                    controller: title,
-                    maxLines: null,
-                    maxLength: 1000,
-                    buildCounter:
-                        (
-                          _, {
-                          required currentLength,
-                          required isFocused,
-                          maxLength,
-                        }) => null,
-                    style: theme.textTheme.headlineSmall,
-                    decoration: const InputDecoration(
-                      filled: false,
-                      border: InputBorder.none,
-                      enabledBorder: InputBorder.none,
-                      focusedBorder: InputBorder.none,
-                      contentPadding: EdgeInsets.symmetric(vertical: 8),
-                    ),
-                    textInputAction: TextInputAction.done,
-                    onSubmitted: (_) => _saveTitle(),
-                    onTapOutside: (_) => _saveTitle(),
-                  ),
-                ),
-                IconButton(
-                  key: const Key('card-more'),
-                  tooltip: tr(context, 'Card options', 'Tuỳ chọn thẻ'),
-                  onPressed: () => cardMenu(
-                    context,
-                    scope,
-                    t.id,
-                    inSheet: true,
-                    onMoved: (card, col, i) => _change(
-                      (s) => moveCard(
-                        s,
-                        card,
-                        column: col,
-                        index: i,
-                        now: scope.clock(),
-                      ),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 4, 16, 8),
+              child: Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                children: [
+                  MenuAnchor(
+                    menuChildren: [
+                      for (final c in columns)
+                        MenuItemButton(
+                          key: Key('card-column-${c.id}'),
+                          leadingIcon: Icon(
+                            c.id == column.id ? Icons.check : null,
+                          ),
+                          onPressed: () => _change(
+                            (s) => moveCard(
+                              s,
+                              t.id,
+                              column: c.id,
+                              index: cardsIn(s, c.id).length,
+                              now: scope.clock(),
+                            ),
+                          ),
+                          child: Text(c.str('title')),
+                        ),
+                    ],
+                    builder: (context, menu, _) => chip(
+                      key: const Key('card-column'),
+                      icon: Icons.view_column_outlined,
+                      label: column.str('title'),
+                      set: true,
+                      onTap: () => menu.isOpen ? menu.close() : menu.open(),
                     ),
                   ),
-                  icon: const Icon(Icons.more_vert),
-                ),
-              ],
-            ),
-          ),
-          Padding(
-            padding: const EdgeInsets.fromLTRB(16, 4, 16, 8),
-            child: Wrap(
-              spacing: 8,
-              runSpacing: 8,
-              children: [
-                MenuAnchor(
-                  menuChildren: [
-                    for (final c in columns)
-                      MenuItemButton(
-                        key: Key('card-column-${c.id}'),
-                        leadingIcon: Icon(
-                          c.id == column.id ? Icons.check : null,
-                        ),
-                        onPressed: () => _change(
-                          (s) => moveCard(
-                            s,
-                            t.id,
-                            column: c.id,
-                            index: cardsIn(s, c.id).length,
-                            now: scope.clock(),
-                          ),
-                        ),
-                        child: Text(c.str('title')),
-                      ),
-                  ],
-                  builder: (context, menu, _) => chip(
-                    key: const Key('card-column'),
-                    icon: Icons.view_column_outlined,
-                    label: column.str('title'),
-                    set: true,
-                    onTap: () => menu.isOpen ? menu.close() : menu.open(),
-                  ),
-                ),
-                MenuAnchor(
-                  menuChildren: [
-                    for (final c in [null, ...categories])
-                      MenuItemButton(
-                        key: Key('card-category-${c?.id ?? 'none'}'),
-                        leadingIcon: Container(
-                          width: 12,
-                          height: 12,
-                          decoration: BoxDecoration(
-                            color: categoryHue(context, c).mark,
-                            shape: BoxShape.circle,
-                          ),
-                        ),
-                        onPressed: () => _change(
-                          (s) => saveTask(
-                            s,
-                            s.get('tasks', t.id).copy({'category': c?.id}),
-                            now: scope.clock(),
-                          ),
-                        ),
-                        child: Text(categoryName(context, c)),
-                      ),
-                  ],
-                  builder: (context, menu, _) => category == null
-                      ? chip(
-                          key: const Key('card-category'),
-                          icon: Icons.label_outline,
-                          label: tr(context, 'Category', 'Nhóm'),
-                          onTap: () => menu.isOpen ? menu.close() : menu.open(),
-                        )
-                      : ActionChip(
-                          key: const Key('card-category'),
-                          avatar: Container(
-                            width: 10,
-                            height: 10,
+                  MenuAnchor(
+                    menuChildren: [
+                      for (final c in [null, ...categories])
+                        MenuItemButton(
+                          key: Key('card-category-${c?.id ?? 'none'}'),
+                          leadingIcon: Container(
+                            width: 12,
+                            height: 12,
                             decoration: BoxDecoration(
-                              color: categoryHue(context, category).mark,
+                              color: categoryHue(context, c).mark,
                               shape: BoxShape.circle,
                             ),
                           ),
-                          label: Text(category.str('title')),
-                          backgroundColor: categoryHue(context, category).tint,
-                          side: BorderSide.none,
-                          onPressed: () =>
-                              menu.isOpen ? menu.close() : menu.open(),
-                        ),
-                ),
-                chip(
-                  key: const Key('card-due'),
-                  icon: Icons.event_outlined,
-                  label: due == null
-                      ? tr(context, 'Due date', 'Hạn')
-                      : dueLabel(context, due, now),
-                  set: due != null,
-                  onTap: _due,
-                ),
-                chip(
-                  key: const Key('card-planned'),
-                  icon: Icons.event_available_outlined,
-                  label: switch (scheduledDay(t)) {
-                    final d? => tr(
-                      context,
-                      'Work on ${dueLabel(context, d, now)}',
-                      'Làm ${dueLabel(context, d, now)}',
-                    ),
-                    null => tr(context, 'Plan a day', 'Ngày làm'),
-                  },
-                  set: scheduledDay(t) != null,
-                  onTap: _planned,
-                ),
-                chip(
-                  key: const Key('card-reminder'),
-                  icon: reminder == null
-                      ? Icons.notifications_none
-                      : Icons.notifications_active_outlined,
-                  label: reminder == null
-                      ? tr(context, 'Reminder', 'Nhắc')
-                      : () {
-                          final at = DateTime.parse(
-                            reminder.str('at'),
-                          ).toLocal();
-                          return '${dueLabel(context, DateTime(at.year, at.month, at.day), now)} ${at.hour.toString().padLeft(2, '0')}:${at.minute.toString().padLeft(2, '0')}';
-                        }(),
-                  set: reminder != null,
-                  onTap: () => _reminder(reminder),
-                ),
-                MenuAnchor(
-                  menuChildren: [
-                    for (final (v, en, vi) in const [
-                      (null, 'Does not repeat', 'Không lặp lại'),
-                      ('daily', 'Every day', 'Hằng ngày'),
-                      ('weekly', 'Every week', 'Hằng tuần'),
-                      ('monthly', 'Every month', 'Hằng tháng'),
-                    ])
-                      MenuItemButton(
-                        key: Key('card-repeat-${v ?? 'none'}'),
-                        leadingIcon: Icon(
-                          t.data['repeat'] == v ? Icons.check : null,
-                        ),
-                        trailingIcon: v == null || hasPro(context)
-                            ? null
-                            : const ProBadge(),
-                        onPressed: () => _repeat(v),
-                        child: Text(tr(context, en, vi)),
-                      ),
-                    MenuItemButton(
-                      key: const Key('card-repeat-custom'),
-                      leadingIcon: const Icon(Icons.tune),
-                      trailingIcon: hasPro(context) ? null : const ProBadge(),
-                      onPressed: _customRepeat,
-                      child: Text(tr(context, 'Custom…', 'Tuỳ chỉnh…')),
-                    ),
-                  ],
-                  builder: (context, menu, _) => chip(
-                    key: const Key('card-repeat'),
-                    icon: Icons.repeat,
-                    label:
-                        t.data['repeatEvery'] != null ||
-                            t.data['repeatDays'] != null ||
-                            t.data['repeatUntil'] != null ||
-                            t.data['repeatLeft'] != null
-                        ? tr(context, 'Custom repeat', 'Lặp tuỳ chỉnh')
-                        : switch (t.data['repeat']) {
-                            'daily' => tr(context, 'Every day', 'Hằng ngày'),
-                            'weekly' => tr(context, 'Every week', 'Hằng tuần'),
-                            'monthly' => tr(
-                              context,
-                              'Every month',
-                              'Hằng tháng',
+                          onPressed: () => _change(
+                            (s) => saveTask(
+                              s,
+                              s.get('tasks', t.id).copy({'category': c?.id}),
+                              now: scope.clock(),
                             ),
-                            _ => tr(context, 'Repeat', 'Lặp lại'),
-                          },
-                    set: t.data['repeat'] != null,
-                    onTap: () => menu.isOpen ? menu.close() : menu.open(),
+                          ),
+                          child: Text(categoryName(context, c)),
+                        ),
+                    ],
+                    builder: (context, menu, _) => category == null
+                        ? chip(
+                            key: const Key('card-category'),
+                            icon: Icons.label_outline,
+                            label: tr(context, 'Category', 'Nhóm'),
+                            onTap: () =>
+                                menu.isOpen ? menu.close() : menu.open(),
+                          )
+                        : ActionChip(
+                            key: const Key('card-category'),
+                            avatar: Container(
+                              width: 10,
+                              height: 10,
+                              decoration: BoxDecoration(
+                                color: categoryHue(context, category).mark,
+                                shape: BoxShape.circle,
+                              ),
+                            ),
+                            label: Text(category.str('title')),
+                            backgroundColor: categoryHue(
+                              context,
+                              category,
+                            ).tint,
+                            side: BorderSide.none,
+                            onPressed: () =>
+                                menu.isOpen ? menu.close() : menu.open(),
+                          ),
                   ),
-                ),
-                if (cover == null)
                   chip(
-                    key: const Key('card-cover'),
-                    icon: Icons.image_outlined,
-                    label: tr(context, 'Cover', 'Ảnh bìa'),
-                    onTap: _cover,
+                    key: const Key('card-due'),
+                    icon: Icons.event_outlined,
+                    label: due == null
+                        ? tr(context, 'Due date', 'Hạn')
+                        : dueLabel(context, due, now),
+                    set: due != null,
+                    onTap: _due,
                   ),
-              ],
-            ),
-          ),
-          CardFieldsSection(scope: scope, card: t),
-          const Divider(height: 24),
-          Padding(
-            padding: const EdgeInsets.fromLTRB(20, 0, 20, 6),
-            child: Row(
-              children: [
-                Flexible(
-                  child: Text(
-                    tr(context, 'Subtasks', 'Việc con'),
-                    style: theme.textTheme.titleMedium,
-                  ),
-                ),
-                const SizedBox(width: 10),
-                if (progress.total > 0)
-                  Text(
-                    '${progress.done}/${progress.total}',
-                    style: theme.textTheme.bodyMedium?.copyWith(
-                      color: p.muted,
-                      fontFeatures: const [FontFeature.tabularFigures()],
-                    ),
-                  ),
-              ],
-            ),
-          ),
-          if (progress.total > 0)
-            Padding(
-              padding: const EdgeInsets.fromLTRB(20, 0, 20, 4),
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(99),
-                child: LinearProgressIndicator(
-                  value: progress.done / progress.total,
-                  minHeight: 4,
-                  color: progress.done == progress.total
-                      ? p.positive
-                      : p.primary,
-                ),
-              ),
-            ),
-          ReorderableListView(
-            shrinkWrap: true,
-            physics: const NeverScrollableScrollPhysics(),
-            buildDefaultDragHandles: false,
-            onReorderItem: (from, to) {
-              final ids = items.map((c) => c.id).toList();
-              final id = ids.removeAt(from);
-              ids.insert(to, id);
-              _change((s) => reorder(s, 'checklist', ids));
-            },
-            children: [
-              for (var i = 0; i < items.length; i++)
-                _SubtaskRow(
-                  key: ValueKey(items[i].id),
-                  item: items[i],
-                  index: i,
-                  onTick: (v) => _change(
-                    (s) => finishWhenSubtasksDone(
-                      toggleChecklist(s, items[i].id, v, now: scope.clock()),
-                      widget.card,
-                      now: scope.clock(),
-                    ),
-                  ),
-                  onRename: (v) => _change(
-                    (s) => s.put(
-                      'checklist',
-                      s.get('checklist', items[i].id).copy({'title': v}),
-                    ),
-                  ),
-                  onRemove: () async {
-                    await _change((s) => s.remove('checklist', {items[i].id}));
-                    if (context.mounted)
-                      showUndo(
+                  chip(
+                    key: const Key('card-planned'),
+                    icon: Icons.event_available_outlined,
+                    label: switch (scheduledDay(t)) {
+                      final d? => tr(
                         context,
-                        scope,
-                        tr(context, 'Subtask removed', 'Đã xoá việc con'),
-                      );
-                  },
-                ),
-            ],
-          ),
-          Padding(
-            padding: const EdgeInsets.fromLTRB(16, 4, 16, 0),
-            child: TextField(
-              key: const Key('card-add-subtask'),
-              controller: newSubtask,
-              focusNode: subtaskFocus,
-              textInputAction: TextInputAction.done,
-              maxLength: 1000,
-              buildCounter:
-                  (
-                    _, {
-                    required currentLength,
-                    required isFocused,
-                    maxLength,
-                  }) => null,
-              decoration: InputDecoration(
-                prefixIcon: const Icon(Icons.add),
-                hintText: tr(context, 'Add a subtask', 'Thêm việc con'),
-              ),
-              onSubmitted: (_) => _addSubtask(),
-            ),
-          ),
-          const Divider(height: 32),
-          Padding(
-            padding: const EdgeInsets.fromLTRB(20, 0, 20, 6),
-            child: Text(
-              tr(context, 'Notes', 'Ghi chú'),
-              style: theme.textTheme.titleMedium,
-            ),
-          ),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            child: TextField(
-              key: const Key('card-notes'),
-              controller: notes,
-              minLines: 3,
-              maxLines: 12,
-              maxLength: 100000,
-              buildCounter:
-                  (
-                    _, {
-                    required currentLength,
-                    required isFocused,
-                    maxLength,
-                  }) => null,
-              decoration: InputDecoration(
-                hintText: tr(
-                  context,
-                  'Details, links, anything to remember',
-                  'Chi tiết, link, điều cần nhớ',
-                ),
-              ),
-              onChanged: _notesChanged,
-              onTapOutside: (_) => _flushNotes(),
-            ),
-          ),
-          if (links.isNotEmpty)
-            Padding(
-              padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
-              child: Wrap(
-                spacing: 8,
-                runSpacing: 4,
-                children: [
-                  for (final l in links)
-                    ActionChip(
-                      avatar: const Icon(Icons.open_in_new, size: 16),
-                      label: Text(
-                        Uri.parse(l).host,
-                        overflow: TextOverflow.ellipsis,
+                        'Work on ${dueLabel(context, d, now)}',
+                        'Làm ${dueLabel(context, d, now)}',
                       ),
-                      tooltip: l,
-                      onPressed: () => launchUrl(
-                        Uri.parse(l),
-                        mode: LaunchMode.externalApplication,
+                      null => tr(context, 'Plan a day', 'Ngày làm'),
+                    },
+                    set: scheduledDay(t) != null,
+                    onTap: _planned,
+                  ),
+                  chip(
+                    key: const Key('card-reminder'),
+                    icon: reminder == null
+                        ? Icons.notifications_none
+                        : Icons.notifications_active_outlined,
+                    label: reminder == null
+                        ? tr(context, 'Reminder', 'Nhắc')
+                        : () {
+                            final at = DateTime.parse(
+                              reminder.str('at'),
+                            ).toLocal();
+                            return '${dueLabel(context, DateTime(at.year, at.month, at.day), now)} ${at.hour.toString().padLeft(2, '0')}:${at.minute.toString().padLeft(2, '0')}';
+                          }(),
+                    set: reminder != null,
+                    onTap: () => _reminder(reminder),
+                  ),
+                  MenuAnchor(
+                    menuChildren: [
+                      for (final (v, en, vi) in const [
+                        (null, 'Does not repeat', 'Không lặp lại'),
+                        ('daily', 'Every day', 'Hằng ngày'),
+                        ('weekly', 'Every week', 'Hằng tuần'),
+                        ('monthly', 'Every month', 'Hằng tháng'),
+                      ])
+                        MenuItemButton(
+                          key: Key('card-repeat-${v ?? 'none'}'),
+                          leadingIcon: Icon(
+                            t.data['repeat'] == v ? Icons.check : null,
+                          ),
+                          trailingIcon: v == null || hasPro(context)
+                              ? null
+                              : const ProBadge(),
+                          onPressed: () => _repeat(v),
+                          child: Text(tr(context, en, vi)),
+                        ),
+                      MenuItemButton(
+                        key: const Key('card-repeat-custom'),
+                        leadingIcon: const Icon(Icons.tune),
+                        trailingIcon: hasPro(context) ? null : const ProBadge(),
+                        onPressed: _customRepeat,
+                        child: Text(tr(context, 'Custom…', 'Tuỳ chỉnh…')),
+                      ),
+                    ],
+                    builder: (context, menu, _) => chip(
+                      key: const Key('card-repeat'),
+                      icon: Icons.repeat,
+                      label:
+                          t.data['repeatEvery'] != null ||
+                              t.data['repeatDays'] != null ||
+                              t.data['repeatUntil'] != null ||
+                              t.data['repeatLeft'] != null
+                          ? tr(context, 'Custom repeat', 'Lặp tuỳ chỉnh')
+                          : switch (t.data['repeat']) {
+                              'daily' => tr(context, 'Every day', 'Hằng ngày'),
+                              'weekly' => tr(
+                                context,
+                                'Every week',
+                                'Hằng tuần',
+                              ),
+                              'monthly' => tr(
+                                context,
+                                'Every month',
+                                'Hằng tháng',
+                              ),
+                              _ => tr(context, 'Repeat', 'Lặp lại'),
+                            },
+                      set: t.data['repeat'] != null,
+                      onTap: () => menu.isOpen ? menu.close() : menu.open(),
+                    ),
+                  ),
+                  if (cover == null)
+                    chip(
+                      key: const Key('card-cover'),
+                      icon: Icons.image_outlined,
+                      label: tr(context, 'Cover', 'Ảnh bìa'),
+                      onTap: _cover,
+                    ),
+                ],
+              ),
+            ),
+            CardFieldsSection(scope: scope, card: t),
+            const Divider(height: 24),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(20, 0, 20, 6),
+              child: Row(
+                children: [
+                  Flexible(
+                    child: Text(
+                      tr(context, 'Subtasks', 'Việc con'),
+                      style: theme.textTheme.titleMedium,
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  if (progress.total > 0)
+                    Text(
+                      '${progress.done}/${progress.total}',
+                      style: theme.textTheme.bodyMedium?.copyWith(
+                        color: p.muted,
+                        fontFeatures: const [FontFeature.tabularFigures()],
                       ),
                     ),
                 ],
               ),
             ),
-          // What really happened to this card, read only.
-          Padding(
-            padding: const EdgeInsets.fromLTRB(12, 16, 16, 0),
-            child: Align(
-              alignment: Alignment.centerLeft,
-              child: TextButton.icon(
-                key: const Key('card-history'),
-                onPressed: () => showCardHistory(context, scope, widget.card),
-                icon: const Icon(Icons.history),
-                label: Text(tr(context, 'Card history', 'Lịch sử thẻ')),
+            if (progress.total > 0)
+              Padding(
+                padding: const EdgeInsets.fromLTRB(20, 0, 20, 4),
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(99),
+                  child: LinearProgressIndicator(
+                    value: progress.done / progress.total,
+                    minHeight: 4,
+                    color: progress.done == progress.total
+                        ? p.positive
+                        : p.primary,
+                  ),
+                ),
+              ),
+            ReorderableListView(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              buildDefaultDragHandles: false,
+              onReorderItem: (from, to) {
+                final ids = items.map((c) => c.id).toList();
+                final id = ids.removeAt(from);
+                ids.insert(to, id);
+                _change((s) => reorder(s, 'checklist', ids));
+              },
+              children: [
+                for (var i = 0; i < items.length; i++)
+                  _SubtaskRow(
+                    key: ValueKey(items[i].id),
+                    item: items[i],
+                    index: i,
+                    onTick: (v) => _change(
+                      (s) => finishWhenSubtasksDone(
+                        toggleChecklist(s, items[i].id, v, now: scope.clock()),
+                        widget.card,
+                        now: scope.clock(),
+                      ),
+                    ),
+                    onRename: (v) => _change(
+                      (s) => s.put(
+                        'checklist',
+                        s.get('checklist', items[i].id).copy({'title': v}),
+                      ),
+                    ),
+                    onRemove: () async {
+                      await _change(
+                        (s) => s.remove('checklist', {items[i].id}),
+                      );
+                      if (context.mounted)
+                        showUndo(
+                          context,
+                          scope,
+                          tr(context, 'Subtask removed', 'Đã xoá việc con'),
+                        );
+                    },
+                  ),
+              ],
+            ),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 4, 16, 0),
+              child: TextField(
+                key: const Key('card-add-subtask'),
+                controller: newSubtask,
+                focusNode: subtaskFocus,
+                textInputAction: TextInputAction.done,
+                maxLength: 1000,
+                buildCounter:
+                    (
+                      _, {
+                      required currentLength,
+                      required isFocused,
+                      maxLength,
+                    }) => null,
+                decoration: InputDecoration(
+                  prefixIcon: const Icon(Icons.add),
+                  hintText: tr(context, 'Add a subtask', 'Thêm việc con'),
+                ),
+                onSubmitted: (_) => _addSubtask(),
               ),
             ),
-          ),
+            const Divider(height: 32),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(20, 0, 20, 6),
+              child: Text(
+                tr(context, 'Notes', 'Ghi chú'),
+                style: theme.textTheme.titleMedium,
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: TextField(
+                key: const Key('card-notes'),
+                controller: notes,
+                minLines: 3,
+                maxLines: 12,
+                maxLength: 100000,
+                buildCounter:
+                    (
+                      _, {
+                      required currentLength,
+                      required isFocused,
+                      maxLength,
+                    }) => null,
+                decoration: InputDecoration(
+                  hintText: tr(
+                    context,
+                    'Details, links, anything to remember',
+                    'Chi tiết, link, điều cần nhớ',
+                  ),
+                ),
+                onChanged: _notesChanged,
+                onTapOutside: (_) => _flushNotes(),
+              ),
+            ),
+            if (links.isNotEmpty)
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+                child: Wrap(
+                  spacing: 8,
+                  runSpacing: 4,
+                  children: [
+                    for (final l in links)
+                      ActionChip(
+                        avatar: const Icon(Icons.open_in_new, size: 16),
+                        label: Text(
+                          Uri.parse(l).host,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        tooltip: l,
+                        onPressed: () => launchUrl(
+                          Uri.parse(l),
+                          mode: LaunchMode.externalApplication,
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+            // What really happened to this card, read only.
+            Padding(
+              padding: const EdgeInsets.fromLTRB(12, 16, 16, 0),
+              child: Align(
+                alignment: Alignment.centerLeft,
+                child: TextButton.icon(
+                  key: const Key('card-history'),
+                  onPressed: () => showCardHistory(context, scope, widget.card),
+                  icon: const Icon(Icons.history),
+                  label: Text(tr(context, 'Card history', 'Lịch sử thẻ')),
+                ),
+              ),
+            ),
+          ])
+            widget.readOnly ? AbsorbPointer(child: w) : w,
         ],
       ),
     );

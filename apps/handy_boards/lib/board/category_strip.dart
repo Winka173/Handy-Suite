@@ -7,14 +7,14 @@ import '../ui/look.dart';
 /// name, "done/total" across all columns and a thin bar), which is both the
 /// overview and the filter. Phones fit four as a 2×2; more scroll sideways.
 ///
-/// [selected] is a category id, [uncategorisedKey] for Uncategorised, or
-/// null for all cards.
+/// [selected] holds the picked category ids ([uncategorisedKey] for
+/// Uncategorised); empty shows every card. A tap adds or removes one.
 class CategoryStrip extends StatelessWidget {
   static const uncategorisedKey = '';
   final BoardsState state;
   final String board;
-  final String? selected;
-  final ValueChanged<String?> onSelect;
+  final Set<String> selected;
+  final ValueChanged<String> onSelect;
   final VoidCallback? onEdit;
 
   /// Controls beside the strip's heading (the board's quick filters).
@@ -54,8 +54,8 @@ class CategoryStrip extends StatelessWidget {
         width: width,
         child: _Block(
           progress: b,
-          selected: selected == key,
-          onTap: () => onSelect(selected == key ? null : key),
+          selected: selected.contains(key),
+          onTap: () => onSelect(key),
         ),
       );
     }

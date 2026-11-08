@@ -476,7 +476,11 @@ TimePreset _timeOf(BoardTemplate t, TimePreset? answer, bool dated) {
   return TimePreset(
     unit,
     count: unit == base.unit ? base.count : (answer?.count ?? 1),
-    pinned: base.pinIfDated ? dated : base.pinned,
+    // "Not by time" in the Smart Setup keeps the board off its timeline;
+    // otherwise the template decides ("pin if dated" waits for a date).
+    pinned: answer?.pinned == false
+        ? false
+        : (base.pinIfDated ? dated : base.pinned),
     open: base.open,
   );
 }
@@ -545,6 +549,11 @@ BoardsState buildBoard(
       'presentation': plan.presentation,
       'view': plan.time.open ? 'time' : 'board',
       'span': {'unit': plan.time.unit, 'count': plan.time.count},
+      // A template that lives by time starts on its timeline.
+      if (plan.time.pinned && timelineUnits.contains(plan.time.unit)) ...{
+        'timeline': plan.time.unit,
+        'timelineFloor': plan.time.unit,
+      },
       'timePinned': plan.time.pinned,
       if (plan.milestones.isNotEmpty)
         'milestones': [

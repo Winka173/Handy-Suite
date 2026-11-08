@@ -281,6 +281,27 @@ void main() {
     await shot(t, '06a-board-only');
   });
 
+  testWidgets('timeline', (t) async {
+    var s = sample();
+    // One open card from last week, so the past week has something left.
+    final old = topTasks(s, board: board).first;
+    s = s.put(
+      'tasks',
+      old.copy({
+        'scheduled': isoDay(DateTime.now().subtract(const Duration(days: 8))),
+      }),
+    );
+    if (boardTimeline(s.get('boards', board)) == null)
+      s = s.put('boards', s.get('boards', board).copy({'timeline': 'week'}));
+    await boot(t, s);
+    await tap(t, find.byKey(const Key('board-$board')));
+    await shot(t, '05c-board-week');
+    await tap(t, find.byKey(const Key('week-prev')));
+    await shot(t, '05d-board-past-week');
+    await tap(t, find.byKey(const Key('board-timeline')));
+    await shot(t, '05e-timeline-sheet');
+  });
+
   testWidgets('settings and pro', (t) async {
     await boot(t, sample());
     await tap(t, find.byKey(const Key('home-settings')));

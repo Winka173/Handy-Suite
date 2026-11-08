@@ -16,12 +16,19 @@ const _month = SetupOption(
   L10n('A month at a time', 'Theo tháng'),
   time: TimePreset('month'),
 );
+const _noTime = SetupOption(
+  'none',
+  L10n('Not by time', 'Không theo thời gian'),
+  time: TimePreset('week', pinned: false),
+);
 
 const _timeHelp = L10n(
-  'How much time the board shows at once when cards have dates; ‹ and › '
-      'move back and on. Columns stay your progress.',
-  'Bảng xem bao xa một lần khi thẻ có ngày; ‹ và › để lùi hay tới. Cột '
-      'vẫn là tiến độ.',
+  'Each card sits in the week or month it is planned for; ‹ and › move '
+      'back and on, and earlier ones stay to look back on. Columns stay your '
+      'progress. Change it later with the Time button on the board.',
+  'Mỗi thẻ nằm ở tuần hay tháng của nó; ‹ và › để lùi hay tới, các kỳ đã '
+      'qua giữ lại để xem. Cột vẫn là tiến độ. Đổi sau bằng nút Thời gian trên '
+      'bảng.',
 );
 
 /// The time-view question, starting on a week or on a month.
@@ -29,18 +36,18 @@ const _timeWeek = SetupField(
   'range',
   FieldKind.select,
   FieldRole.timeRange,
-  label: L10n('Show at a time', 'Xem mỗi lần'),
+  label: L10n('Lay it out by', 'Xếp theo'),
   help: _timeHelp,
-  options: [_week, _month],
+  options: [_week, _month, _noTime],
   optionDefault: 'week',
 );
 const _timeMonth = SetupField(
   'range',
   FieldKind.select,
   FieldRole.timeRange,
-  label: L10n('Show at a time', 'Xem mỗi lần'),
+  label: L10n('Lay it out by', 'Xếp theo'),
   help: _timeHelp,
-  options: [_week, _month],
+  options: [_week, _month, _noTime],
   optionDefault: 'month',
 );
 

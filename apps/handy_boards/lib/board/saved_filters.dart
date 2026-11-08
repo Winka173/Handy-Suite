@@ -138,7 +138,8 @@ class _NewFilter extends StatefulWidget {
 class _NewFilterState extends State<_NewFilter> {
   final name = TextEditingController();
   bool any = false;
-  String? column, category;
+  String? column;
+  Set<String> categories = {};
   int? priority;
   bool? reminder;
   String dueFrom = '', dueTo = '';
@@ -148,7 +149,8 @@ class _NewFilterState extends State<_NewFilter> {
     final s = widget.scope.state;
     final conditions = <Json>[
       if (column != null) {'status': column},
-      if (category != null) {'category': category},
+      if (categories.length == 1) {'category': categories.first},
+      if (categories.length > 1) {'categories': categories.toList()},
       if (priority != null) {'priority': priority},
       if (reminder != null) {'hasReminder': reminder},
       if (dueFrom.isNotEmpty || dueTo.isNotEmpty)
@@ -189,19 +191,38 @@ class _NewFilterState extends State<_NewFilter> {
               onChanged: (v) => setState(() => column = v),
             ),
             const SizedBox(height: 12),
-            DropdownButtonFormField<String?>(
-              key: const Key('filter-category'),
-              initialValue: category,
-              decoration: InputDecoration(
-                floatingLabelBehavior: FloatingLabelBehavior.always,
-                labelText: tr(context, 'Category', 'Nhóm'),
+            // Any of the picked categories; none picked means any.
+            Align(
+              alignment: AlignmentDirectional.centerStart,
+              child: Text(
+                tr(
+                  context,
+                  'Categories (any of them)',
+                  'Nhóm (thuộc nhóm nào cũng được)',
+                ),
+                style: Theme.of(context).textTheme.labelLarge,
               ),
-              items: [
-                item(null, tr(context, 'Any', 'Bất kỳ')),
-                for (final c in categoriesOf(s, widget.board))
-                  item(c.id, c.str('title')),
-              ],
-              onChanged: (v) => setState(() => category = v),
+            ),
+            const SizedBox(height: 6),
+            Align(
+              alignment: AlignmentDirectional.centerStart,
+              child: Wrap(
+                key: const Key('filter-category'),
+                spacing: 6,
+                runSpacing: 6,
+                children: [
+                  for (final c in categoriesOf(s, widget.board))
+                    FilterChip(
+                      key: Key('filter-category-${c.id}'),
+                      label: Text(c.str('title')),
+                      selected: categories.contains(c.id),
+                      onSelected: (v) => setState(
+                        () =>
+                            v ? categories.add(c.id) : categories.remove(c.id),
+                      ),
+                    ),
+                ],
+              ),
             ),
             const SizedBox(height: 12),
             DropdownButtonFormField<int?>(

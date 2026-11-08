@@ -100,15 +100,18 @@ Future<void> settle(WidgetTester t) async {
 
 /// Shows every card on the board (it opens on this week when cards have
 /// dates): the "All" chip, or on a phone the span menu's "All cards".
+/// Every card in one board: a board on a timeline is turned off (nothing
+/// moves, so the test sees every card).
 Future<void> showAll(WidgetTester t) async {
   if (find.byKey(const Key('week-bar')).evaluate().isEmpty) return;
-  final chip = find.byKey(const Key('week-all'));
-  if (chip.evaluate().isNotEmpty) {
-    await tap(t, chip);
-    return;
-  }
-  await tap(t, find.byKey(const Key('time-span')));
-  await tap(t, find.byKey(const Key('span-all')));
+  await tap(t, find.byKey(const Key('board-timeline')));
+  await tap(t, find.byKey(const Key('timeline-off')));
+  await tap(t, find.byKey(const Key('timeline-off-confirm')));
+  // The Undo message would sit over the columns' Add card buttons.
+  ScaffoldMessenger.of(
+    t.element(find.byType(Scaffold).last),
+  ).hideCurrentSnackBar();
+  await t.pumpAndSettle();
 }
 
 Future<void> tap(WidgetTester t, Finder f) async {

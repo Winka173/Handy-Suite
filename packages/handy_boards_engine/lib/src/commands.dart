@@ -337,6 +337,16 @@ BoardsState deleteCategory(BoardsState s, String id, {String? moveTo}) {
   for (final v in s.rows('views')) {
     final conditions = (v.data['conditions'] as List? ?? []).map((raw) {
       final condition = object(raw);
+      final any = condition['categories'];
+      if (any is List && any.contains(id)) {
+        final left = [
+          for (final c in any)
+            if (c != id) c,
+          if (moveTo != null && !any.contains(moveTo)) moveTo,
+        ];
+        return {...condition, 'categories': left.isEmpty ? null : left}
+          ..removeWhere((k, v) => k == 'categories' && v == null);
+      }
       return condition['category'] == id
           ? {...condition, 'category': moveTo}
           : condition;
@@ -442,6 +452,7 @@ bool blocked(BoardsState s, BoardRecord task) =>
 void validateTaskFilter(Json filter) {
   const supported = {
     'category',
+    'categories',
     'status',
     'priority',
     'assignee',
@@ -472,6 +483,13 @@ void validateTaskFilter(Json filter) {
           throw const FormatException('Boolean condition required');
       case 'category':
         if (e.value != null) text(e.value, max: 120, empty: false);
+      case 'categories':
+        // Any of several categories (a saved filter with more than one).
+        if (e.value is! List ||
+            (e.value as List).isEmpty ||
+            (e.value as List).length > 50)
+          throw const FormatException('Categories 1..50');
+        for (final c in e.value as List) text(c, max: 120, empty: false);
       case 'status' || 'tag':
         text(e.value, max: 120, empty: false);
       case 'assignee':
@@ -516,6 +534,9 @@ bool taskMatches(
   if (filter['parentOnly'] == true && t.data['parent'] != null) return false;
   for (final f in ['category', 'status', 'priority', 'assignee'])
     if (filter.containsKey(f) && t.data[f] != filter[f]) return false;
+  if (filter['categories'] is List &&
+      !(filter['categories'] as List).contains(t.data['category']))
+    return false;
   if (filter['blocked'] is bool && blocked(s, t) != filter['blocked'])
     return false;
   if (filter['tag'] != null && !t.strings('tags').contains(filter['tag']))

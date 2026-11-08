@@ -19,6 +19,11 @@ class KanbanActions {
 
   /// Column › From my templates (Pro): a fresh card from a card template.
   final void Function(String column)? fromTemplate;
+
+  /// In a period gone by: brings an unfinished card to the current one,
+  /// shown on the card with [carryLabel].
+  final void Function(BoardRecord card)? carry;
+  final String? carryLabel;
   const KanbanActions({
     this.open,
     this.move,
@@ -28,31 +33,31 @@ class KanbanActions {
     this.tick,
     this.addColumn,
     this.fromTemplate,
+    this.carry,
+    this.carryLabel,
   });
   bool get readOnly => move == null;
 }
 
-/// Which cards show: one category (or Uncategorised with [uncategorised]),
-/// a text search over titles and notes, "due in 3 days", a saved filter,
-/// and a stretch of time.
+/// Which cards show: any of the chosen categories (Uncategorised is
+/// [CategoryStrip.uncategorisedKey], an empty string), a text search over
+/// titles and notes, "due in 3 days", a saved filter, and on a timeline
+/// the period shown.
 class KanbanFilter {
-  final String? category;
-  final bool uncategorised;
+  /// Category ids; empty shows every category.
+  final Set<String> categories;
   final String query;
   final bool dueSoon;
 
   /// A saved filter in use: the ids of the cards it lets through.
   final Set<String>? only;
 
-  /// The stretch of time shown, or null for every card. A card shows when
-  /// its planned day, its due day or the day it was finished falls in it.
-  /// The stretch that holds today also shows open cards with no date and
-  /// open work left behind from before it, so nothing to do is out of
-  /// sight this week.
+  /// On a timeline, the period shown: a card shows when its day (the day it
+  /// is planned for, else the day it was made) falls in it. Null shows
+  /// every card.
   final TimeWindow? window;
   const KanbanFilter({
-    this.category,
-    this.uncategorised = false,
+    this.categories = const {},
     this.query = '',
     this.dueSoon = false,
     this.only,
@@ -60,44 +65,24 @@ class KanbanFilter {
   });
 
   bool get active =>
-      category != null ||
-      uncategorised ||
+      categories.isNotEmpty ||
       query.trim().isNotEmpty ||
       dueSoon ||
       only != null ||
       window != null;
 
-  bool _inWindow(BoardsState? s, BoardRecord card, DateTime now) {
-    final w = window;
-    if (w == null) return true;
-    bool within(DateTime? d) =>
-        d != null && !d.isBefore(w.first) && d.isBefore(w.end);
-    final planned = scheduledDay(card), due = dueDay(card);
-    final done = s == null
-        ? card.str('completedAt').isNotEmpty
-        : completed(s, card);
-    final at = DateTime.tryParse(card.str('completedAt'))?.toLocal();
-    if (within(planned) || within(due)) return true;
-    if (done && at != null && within(calendarDay(at))) return true;
-    final today = calendarDay(now);
-    if (!within(today)) return false;
-    // The stretch holding today: no date at all, or left behind.
-    if (planned == null && due == null) return !done || at == null;
-    return !done &&
-        ((planned != null && planned.isBefore(w.first)) ||
-            (due != null && due.isBefore(w.first)));
-  }
-
   bool shows(BoardRecord card, DateTime now, [BoardsState? s]) {
     if (only != null && !only!.contains(card.id)) return false;
-    if (category != null && card.data['category'] != category) return false;
-    if (uncategorised && card.data['category'] != null) return false;
+    if (categories.isNotEmpty &&
+        !categories.contains(card.data['category'] as String? ?? ''))
+      return false;
     if (dueSoon) {
       final d = dueDay(card);
       final today = DateTime(now.year, now.month, now.day);
       if (d == null || d.difference(today).inDays > 3) return false;
     }
-    if (!_inWindow(s, card, now)) return false;
+    if (window != null && !window!.contains(cardDay(card, fallback: now)))
+      return false;
     final q = query.trim().toLowerCase();
     if (q.isEmpty) return true;
     return card.str('title').toLowerCase().contains(q) ||
@@ -383,6 +368,8 @@ class _ColumnViewState extends State<ColumnView> {
         onOpen: a.open == null ? null : () => a.open!(card),
         onTick: a.tick,
         onMenu: a.cardMenu == null ? null : () => a.cardMenu!(card),
+        onCarry: a.carry == null ? null : () => a.carry!(card),
+        carryLabel: a.carryLabel,
       );
       final t = plain;
       if (a.readOnly) return t;

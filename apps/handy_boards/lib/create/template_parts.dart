@@ -225,7 +225,7 @@ class BoardPreview extends StatefulWidget {
 }
 
 class _BoardPreviewState extends State<BoardPreview> {
-  String? focus;
+  Set<String> focus = const {};
 
   @override
   Widget build(BuildContext context) {
@@ -259,7 +259,11 @@ class _BoardPreviewState extends State<BoardPreview> {
             state: s,
             board: previewBoard,
             selected: focus,
-            onSelect: (v) => setState(() => focus = v),
+            onSelect: (v) => setState(
+              () => focus = focus.contains(v)
+                  ? ({...focus}..remove(v))
+                  : {...focus, v},
+            ),
           ),
           const SizedBox(height: 8),
         ],
@@ -280,10 +284,7 @@ class _BoardPreviewState extends State<BoardPreview> {
             state: s,
             board: previewBoard,
             now: widget.now,
-            filter: KanbanFilter(
-              category: focus == CategoryStrip.uncategorisedKey ? null : focus,
-              uncategorised: focus == CategoryStrip.uncategorisedKey,
-            ),
+            filter: KanbanFilter(categories: focus),
           ),
         ),
       ],

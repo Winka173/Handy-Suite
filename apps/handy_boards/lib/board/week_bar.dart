@@ -3,7 +3,6 @@ import 'package:handy_ui/kit.dart';
 import '../design/theme.dart';
 import '../scope.dart';
 import 'time_actions.dart';
-import 'time_range_picker.dart';
 
 /// The window in words: its real dates, never "previous week".
 String windowLabel(BuildContext context, TimeWindow w, DateTime now) {
@@ -33,124 +32,200 @@ String windowLabel(BuildContext context, TimeWindow w, DateTime now) {
       ' – ${last.day}/${last.month}${year ? '/${last.year}' : ''}';
 }
 
-/// Above the board: which stretch of time it shows. ‹ and › go one whole
-/// span back or on; "This week" (or day, month) comes back; the span
-/// button sets 1 day to 3 months or one's own dates; "All" shows every
-/// card. A board with no dated card has no bar.
-class WeekBar extends StatelessWidget {
-  final TimeRange range;
+/// "This week", "Today" or "This month" for a timeline unit.
+String thisPeriod(BuildContext context, String unit) => switch (unit) {
+  'day' => tr(context, 'Today', 'Hôm nay'),
+  'month' => tr(context, 'This month', 'Tháng này'),
+  _ => tr(context, 'This week', 'Tuần này'),
+};
 
-  /// The window shown, or null for every card.
-  final TimeWindow? window;
+/// "to this week", "to today", "to this month".
+String toThisPeriod(BuildContext context, String unit) => switch (unit) {
+  'day' => tr(context, 'to today', 'về hôm nay'),
+  'month' => tr(context, 'to this month', 'qua tháng này'),
+  _ => tr(context, 'to this week', 'qua tuần này'),
+};
+
+/// Where a period stands against today.
+enum PeriodKind { past, current, future }
+
+PeriodKind periodKind(String unit, TimeWindow w, DateTime now) {
+  final current = timelineWindow(unit, now);
+  if (!w.end.isAfter(current.first)) return PeriodKind.past;
+  if (!w.first.isBefore(current.end)) return PeriodKind.future;
+  return PeriodKind.current;
+}
+
+/// Above a board on a timeline: the period shown with its dates, ‹ and ›
+/// one period back or on, and the way back to the current one. A period
+/// gone by says it is read-only; a later one that it is ahead.
+class TimelineBar extends StatelessWidget {
+  final String unit;
+  final TimeWindow window;
   final DateTime now;
-  final ValueChanged<TimeWindow?> onWindow;
-  final ValueChanged<TimeRange> onRange;
-  const WeekBar({
+  final ValueChanged<TimeWindow> onWindow;
+  const TimelineBar({
     super.key,
-    required this.range,
+    required this.unit,
     required this.window,
     required this.now,
     required this.onWindow,
-    required this.onRange,
   });
-
-  String _thisOne(BuildContext context) => switch (range.unit) {
-    'day' => tr(context, 'Today', 'Hôm nay'),
-    'month' => tr(context, 'This month', 'Tháng này'),
-    _ => tr(context, 'This week', 'Tuần này'),
-  };
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final p = BoardsPalette.of(context);
-    final current = currentWindow(range, now);
-    final w = window;
-    final atCurrent = w != null && w.first == current.first;
-    final nav = [
-      IconButton(
-        key: const Key('week-prev'),
-        tooltip: tr(context, 'Earlier', 'Trước'),
-        onPressed: () => onWindow(shiftWindow(range, w ?? current, -1)),
-        icon: const Icon(Icons.chevron_left),
-      ),
-      Flexible(
-        child: Semantics(
-          liveRegion: true,
-          child: Text(
-            w == null
-                ? tr(context, 'All cards', 'Mọi thẻ')
-                : windowLabel(context, w, now),
-            key: const Key('week-label'),
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: theme.textTheme.titleSmall,
-          ),
-        ),
-      ),
-      IconButton(
-        key: const Key('week-next'),
-        tooltip: tr(context, 'Later', 'Sau'),
-        onPressed: () => onWindow(shiftWindow(range, w ?? current, 1)),
-        icon: const Icon(Icons.chevron_right),
-      ),
-    ];
-    // A narrow phone keeps one row: "this week" and the span become icons
-    // (their tooltips say what they do); the label gives way first.
-    final narrow =
-        MediaQuery.sizeOf(context).width < 560 ||
-        MediaQuery.textScalerOf(context).scale(1) > 1.3;
-    final tools = [
-      if (!atCurrent)
-        narrow
-            ? IconButton(
-                key: const Key('week-current'),
-                tooltip: _thisOne(context),
-                onPressed: () => onWindow(current),
-                icon: const Icon(Icons.today_outlined),
-              )
-            : TextButton(
-                key: const Key('week-current'),
-                onPressed: () => onWindow(current),
-                child: Text(_thisOne(context)),
-              ),
-      TimeRangeButton(
-        range: range,
-        onRange: onRange,
-        from: (w ?? current).first,
-        compact: narrow,
-        all: narrow ? w == null : null,
-        onAll: (v) => onWindow(v ? null : current),
-      ),
-      if (!narrow) ...[
-        const SizedBox(width: 4),
-        FilterChip(
-          key: const Key('week-all'),
-          label: Text(tr(context, 'All', 'Tất cả')),
-          selected: w == null,
-          showCheckmark: false,
-          visualDensity: VisualDensity.compact,
-          side: BorderSide(color: p.line),
-          onSelected: (v) => onWindow(v ? null : current),
-        ),
-      ],
-    ];
+    final range = TimeRange(unit);
+    final kind = periodKind(unit, window, now);
+    final note = switch (kind) {
+      PeriodKind.current => thisPeriod(context, unit),
+      PeriodKind.past => tr(context, 'Gone by · read only', 'Đã qua · chỉ xem'),
+      PeriodKind.future => tr(context, 'Ahead', 'Sắp tới'),
+    };
     return Padding(
       key: const Key('week-bar'),
       padding: const EdgeInsets.fromLTRB(8, 0, 12, 4),
       child: Row(
         children: [
-          Expanded(child: Row(children: nav)),
-          ...tools,
+          IconButton(
+            key: const Key('week-prev'),
+            tooltip: tr(context, 'Earlier', 'Trước'),
+            onPressed: () => onWindow(shiftWindow(range, window, -1)),
+            icon: const Icon(Icons.chevron_left),
+          ),
+          Flexible(
+            child: Semantics(
+              liveRegion: true,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    windowLabel(context, window, now),
+                    key: const Key('week-label'),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: theme.textTheme.titleSmall,
+                  ),
+                  Text(
+                    note,
+                    key: const Key('week-kind'),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: kind == PeriodKind.current ? p.ink : p.muted,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          IconButton(
+            key: const Key('week-next'),
+            tooltip: tr(context, 'Later', 'Sau'),
+            onPressed: () => onWindow(shiftWindow(range, window, 1)),
+            icon: const Icon(Icons.chevron_right),
+          ),
+          const Spacer(),
+          // A narrow phone or large text keeps one row: the way back is an
+          // icon whose tooltip says it.
+          if (kind != PeriodKind.current)
+            MediaQuery.sizeOf(context).width < 560 ||
+                    MediaQuery.textScalerOf(context).scale(1) > 1.3
+                ? IconButton(
+                    key: const Key('week-current'),
+                    tooltip: thisPeriod(context, unit),
+                    onPressed: () => onWindow(timelineWindow(unit, now)),
+                    icon: const Icon(Icons.today_outlined),
+                  )
+                : TextButton(
+                    key: const Key('week-current'),
+                    onPressed: () => onWindow(timelineWindow(unit, now)),
+                    child: Text(thisPeriod(context, unit)),
+                  ),
         ],
       ),
     );
   }
 }
 
-/// Above the board, only while there is any: "3 still open from before",
-/// with "Move to today" (one Undo; a card with only a due date asks first)
-/// and "See them" (the list, each card a tap away).
+/// Unfinished work on a timeline, with one button that brings it to the
+/// current period: in a period gone by, its own open cards; in the current
+/// one, everything still open from before it.
+class CarryLine extends StatelessWidget {
+  final String unit;
+  final int count;
+  final bool pastPeriod;
+  final VoidCallback onCarry;
+  const CarryLine({
+    super.key,
+    required this.unit,
+    required this.count,
+    required this.pastPeriod,
+    required this.onCarry,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final p = BoardsPalette.of(context);
+    if (count == 0) return const SizedBox.shrink();
+    final before = switch (unit) {
+      'day' => tr(context, 'from earlier days', 'từ những ngày trước'),
+      'month' => tr(context, 'from earlier months', 'từ những tháng trước'),
+      _ => tr(context, 'from earlier weeks', 'từ những tuần trước'),
+    };
+    return Padding(
+      key: const Key('carry-line'),
+      padding: const EdgeInsets.fromLTRB(16, 0, 8, 4),
+      child: Row(
+        children: [
+          Icon(Icons.history, size: 18, color: p.danger),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Text(
+              pastPeriod
+                  ? tr(
+                      context,
+                      count == 1
+                          ? '1 not finished here'
+                          : '$count not finished here',
+                      '$count việc chưa xong ở kỳ này',
+                    )
+                  : tr(
+                      context,
+                      count == 1
+                          ? '1 not finished $before'
+                          : '$count not finished $before',
+                      '$count việc chưa xong $before',
+                    ),
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+              style: theme.textTheme.labelLarge,
+            ),
+          ),
+          TextButton(
+            key: const Key('carry-all'),
+            onPressed: onCarry,
+            child: Text(
+              tr(
+                context,
+                'Bring ${pastPeriod ? 'all ' : ''}${toThisPeriod(context, unit)}',
+                'Đem ${pastPeriod ? 'tất cả ' : ''}${toThisPeriod(context, unit)}',
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Above a board that is not on a timeline, only while there is any:
+/// "3 still open from before", with "Move to today" (one Undo; a card with
+/// only a due date asks first) and "See them" (the list, each card a tap
+/// away).
 class BacklogLine extends StatelessWidget {
   final BoardsScope scope;
   final String board;

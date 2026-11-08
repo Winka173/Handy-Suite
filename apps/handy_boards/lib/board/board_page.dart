@@ -16,6 +16,7 @@ import 'category_strip.dart';
 import 'kanban_view.dart';
 import 'key_dates.dart';
 import 'look_picker.dart';
+import 'timeline_sheet.dart';
 import 'week_bar.dart';
 
 /// Shows [message] with an Undo that steps the controller back once.
@@ -45,15 +46,15 @@ class BoardPage extends StatefulWidget {
 }
 
 class _BoardPageState extends State<BoardPage> {
-  /// The category picked (an id, [CategoryStrip.uncategorisedKey], or
-  /// null): the board shows only its cards.
-  String? focus;
+  /// The categories picked (ids, [CategoryStrip.uncategorisedKey] for
+  /// Uncategorised): the board shows only their cards; empty shows all.
+  Set<String> focus = {};
   bool searching = false, dueSoon = false, showStrip = true;
 
-  /// The stretch of time shown (null: every card). Set once when the board
-  /// opens: this week (or the board's span) when any card has a date.
+  /// On a timeline, the period shown; it opens on the current one, and
+  /// again whenever the board's unit changes.
   TimeWindow? window;
-  bool windowSet = false;
+  String? windowUnit;
 
   /// While choosing a look: the one being tried (shown, not saved).
   String? previewLook;
@@ -100,21 +101,112 @@ class _BoardPageState extends State<BoardPage> {
   }
 
   KanbanFilter get filter => KanbanFilter(
-    category: focus == null || focus == CategoryStrip.uncategorisedKey
-        ? null
-        : focus,
-    uncategorised: focus == CategoryStrip.uncategorisedKey,
+    categories: focus,
     query: query.text,
     dueSoon: dueSoon,
     only: _only,
     window: window,
   );
 
-  /// Whether any card of the board has a planned or due day.
-  bool _dated(BoardsState s) => topTasks(
-    s,
-    board: widget.board,
-  ).any((t) => activeTask(t) && (scheduledDay(t) != null || dueDay(t) != null));
+  /// The category filter alone (for the lines about unfinished work).
+  bool _inFocus(BoardRecord t) =>
+      KanbanFilter(categories: focus, only: _only).shows(t, scope.clock());
+
+  void _toggle(String key) => setState(
+    () => focus = focus.contains(key)
+        ? ({...focus}..remove(key))
+        : {...focus, key},
+  );
+
+  /// Brings [ids] to today, so they sit in the current period; one Undo.
+  Future<void> _carry(List<String> ids, String unit) async {
+    if (ids.isEmpty) return;
+    final now = scope.clock();
+    await scope.run(
+      context,
+      () => scope.controller.change(
+        (s) => scheduleCards(s, ids, now, reason: 'move to now', now: now),
+      ),
+    );
+    if (!mounted) return;
+    showUndo(
+      context,
+      scope,
+      tr(
+        context,
+        ids.length == 1
+            ? 'Brought ${toThisPeriod(context, unit)}'
+            : '${ids.length} brought ${toThisPeriod(context, unit)}',
+        'Đã đem ${ids.length} việc ${toThisPeriod(context, unit)}',
+      ),
+    );
+  }
+
+  /// A card of a period gone by opens read-only, with its two actions.
+  void _openPast(BoardRecord card, String unit) => openCard(
+    context,
+    scope,
+    card.id,
+    readOnly: true,
+    banner: (sheet) {
+      final s = scope.state, t = s.maybe('tasks', card.id);
+      if (t == null) return const SizedBox.shrink();
+      final open = !completed(s, t);
+      final p = BoardsPalette.of(sheet);
+      return Container(
+        key: const Key('card-past-banner'),
+        color: p.raised,
+        padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              tr(
+                sheet,
+                'From a period gone by: read only.',
+                'Thuộc kỳ đã qua: chỉ xem.',
+              ),
+              style: Theme.of(sheet).textTheme.bodyMedium,
+            ),
+            if (open) ...[
+              const SizedBox(height: 8),
+              Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                children: [
+                  FilledButton.tonal(
+                    key: const Key('past-done'),
+                    onPressed: () async {
+                      final done = columnsOf(s, t.str('board')).lastWhere(
+                        (c) => c.flag('done'),
+                        orElse: () => columnsOf(s, t.str('board')).last,
+                      );
+                      await _move(t.id, done.id, 0);
+                    },
+                    child: Text(tr(sheet, 'Mark finished', 'Đánh dấu xong')),
+                  ),
+                  FilledButton(
+                    key: const Key('past-carry'),
+                    onPressed: () async {
+                      Navigator.pop(sheet);
+                      await _carry([t.id], unit);
+                    },
+                    child: Text(
+                      tr(
+                        sheet,
+                        'Bring ${toThisPeriod(sheet, unit)}',
+                        'Đem ${toThisPeriod(sheet, unit)}',
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ],
+        ),
+      );
+    },
+  );
 
   Future<void> _move(String card, String column, int index) async {
     final s = scope.state;
@@ -143,29 +235,23 @@ class _BoardPageState extends State<BoardPage> {
     );
   }
 
-  /// The board's view and time span are remembered per board, outside
-  /// the undo history.
-  Future<void> _look({TimeRange? span}) => scope.run(
-    context,
-    () => scope.controller.change(
-      (s) => setBoardLook(s, widget.board, span: span?.toJson()),
-      history: false,
-    ),
-  );
-
   Future<void> _add(String column, String title) => scope.run(
     context,
     () => scope.controller.change((s) {
-      // A card added while a category is in focus belongs to it.
-      final cat = focus == null || focus == CategoryStrip.uncategorisedKey
-          ? null
-          : focus;
-      final card = newTask(
-        s,
-        widget.board,
-        title,
-        category: cat,
-      ).copy({'status': column, 'order': cardsIn(s, column).length});
+      // A card added while categories are picked belongs to the first one
+      // picked, so it stays in sight.
+      final cat = focus
+          .where((k) => k != CategoryStrip.uncategorisedKey)
+          .firstOrNull;
+      // On a timeline, a card added to a later period is planned for its
+      // first day; one added now sits in today's period by its own date.
+      final w = window, today = calendarDay(scope.clock());
+      final later = w != null && w.first.isAfter(today);
+      final card = newTask(s, widget.board, title, category: cat).copy({
+        'status': column,
+        'order': cardsIn(s, column).length,
+        if (later) 'scheduled': isoDay(w.first),
+      });
       return saveTask(s, card, now: scope.clock());
     }),
   );
@@ -212,12 +298,15 @@ class _BoardPageState extends State<BoardPage> {
     final hasCategories = categoryProgress(s, widget.board).isNotEmpty;
     final p = BoardsPalette.of(context);
     final ground = boardGround(context, b, look: previewLook);
-    final range = TimeRange.read(b.data['span']);
-    final dated = _dated(s);
-    if (!windowSet) {
-      windowSet = true;
-      window = dated ? currentWindow(range, now) : null;
+    final unit = boardTimeline(b);
+    if (unit != windowUnit) {
+      windowUnit = unit;
+      window = unit == null ? null : timelineWindow(unit, now);
     }
+    final kind = unit == null || window == null
+        ? null
+        : periodKind(unit, window!, now);
+    final past = kind == PeriodKind.past;
     final milestones = milestonesOf(b);
     // A narrow phone or very large text keeps the board's height: the
     // key dates move into the board menu.
@@ -327,33 +416,24 @@ class _BoardPageState extends State<BoardPage> {
       onSelected: (v) => setState(() => dueSoon = v),
     );
     final stripShown = showStrip && hasCategories;
+    String nameOf(String key) => categoryName(
+      context,
+      key == CategoryStrip.uncategorisedKey ? null : s.maybe('categories', key),
+    );
     final chips = <Widget>[
-      if (focus != null)
+      for (final key in focus)
         InputChip(
-          label: Text(
-            categoryName(
-              context,
-              focus == CategoryStrip.uncategorisedKey
-                  ? null
-                  : s.maybe('categories', focus),
-            ),
-          ),
-          onDeleted: () => setState(() => focus = null),
+          label: Text(nameOf(key)),
+          onDeleted: () => _toggle(key),
           deleteButtonTooltipMessage: tr(
             context,
-            'Show all categories',
-            'Hiện mọi nhóm',
+            'Stop showing only this',
+            'Bỏ lọc nhóm này',
           ),
         ),
     ];
-    final focusName = focus == null
-        ? null
-        : categoryName(
-            context,
-            focus == CategoryStrip.uncategorisedKey
-                ? null
-                : s.maybe('categories', focus),
-          );
+    final focusName = focus.isEmpty ? null : focus.map(nameOf).join(', ');
+    final time = TimelineChip(scope: scope, board: widget.board);
     // The board's cover across the top, its buttons on round white
     // backs so they read on any picture.
     Widget round(Widget button) => Padding(
@@ -426,38 +506,63 @@ class _BoardPageState extends State<BoardPage> {
           state: s,
           board: widget.board,
           selected: focus,
-          onSelect: (v) => setState(() => focus = v),
+          onSelect: _toggle,
           onEdit: () => editCategories(context, scope, widget.board),
-          trailing: [filters, due],
+          trailing: [time, filters, due],
         ),
         const SizedBox(height: 8),
       ],
       if (focusName != null)
-        FocusBar(name: focusName, onClear: () => setState(() => focus = null)),
-      if (dated || window != null)
-        WeekBar(
-          range: range,
-          window: window,
+        FocusBar(name: focusName, onClear: () => setState(() => focus = {})),
+      if (unit != null && window != null) ...[
+        TimelineBar(
+          unit: unit,
+          window: window!,
           now: now,
           onWindow: (w) => setState(() => window = w),
-          onRange: (r) {
-            setState(
-              () => window = window == null ? null : currentWindow(r, now),
-            );
-            _look(span: r);
-          },
         ),
-      if (window == null ||
-          (!now.isBefore(window!.first) && now.isBefore(window!.end)))
-        BacklogLine(
-          scope: scope,
-          board: widget.board,
-          shows: (t) => KanbanFilter(
-            category: filter.category,
-            uncategorised: filter.uncategorised,
-            only: filter.only,
-          ).shows(t, now, s),
-        ),
+        if (past)
+          Builder(
+            builder: (context) {
+              final ids = [
+                for (final t in openIn(
+                  s,
+                  widget.board,
+                  window!,
+                  shows: _inFocus,
+                ))
+                  t.id,
+              ];
+              return CarryLine(
+                unit: unit,
+                count: ids.length,
+                pastPeriod: true,
+                onCarry: () => _carry(ids, unit),
+              );
+            },
+          )
+        else if (kind == PeriodKind.current)
+          Builder(
+            builder: (context) {
+              final ids = [
+                for (final t in openBefore(
+                  s,
+                  widget.board,
+                  window!.first,
+                  shows: _inFocus,
+                ))
+                  t.id,
+              ];
+              return CarryLine(
+                unit: unit,
+                count: ids.length,
+                pastPeriod: false,
+                onCarry: () => _carry(ids, unit),
+              );
+            },
+          ),
+      ] else
+        BacklogLine(scope: scope, board: widget.board, shows: _inFocus),
       if (!stripShown)
         SizedBox(
           height: 48,
@@ -465,7 +570,7 @@ class _BoardPageState extends State<BoardPage> {
             scrollDirection: Axis.horizontal,
             padding: const EdgeInsets.symmetric(horizontal: 16),
             children: [
-              for (final c in [...chips, filters, due])
+              for (final c in [...chips, time, filters, due])
                 Padding(
                   padding: const EdgeInsets.only(right: 8),
                   child: Center(child: c),
@@ -484,16 +589,31 @@ class _BoardPageState extends State<BoardPage> {
         detailed: detailed,
         columnColor: ground.column,
         filter: filter,
-        actions: KanbanActions(
-          open: (card) => openCard(context, scope, card.id),
-          move: _move,
-          add: _add,
-          tick: _tick,
-          cardMenu: (card) => cardMenu(context, scope, card.id, onMoved: _move),
-          columnMenu: (column) => columnMenu(context, scope, column.id),
-          addColumn: () => addColumnDialog(context, scope, widget.board),
-          fromTemplate: (column) => addFromCardTemplate(context, scope, column),
-        ),
+        // A period gone by is read-only: cards open to read, subtasks may
+        // still be ticked, and unfinished ones can be brought forward.
+        actions: past
+            ? KanbanActions(
+                open: (card) => _openPast(card, unit),
+                tick: _tick,
+                carry: (card) => _carry([card.id], unit),
+                carryLabel: tr(
+                  context,
+                  'Bring ${toThisPeriod(context, unit!)}',
+                  'Đem ${toThisPeriod(context, unit)}',
+                ),
+              )
+            : KanbanActions(
+                open: (card) => openCard(context, scope, card.id),
+                move: _move,
+                add: _add,
+                tick: _tick,
+                cardMenu: (card) =>
+                    cardMenu(context, scope, card.id, onMoved: _move),
+                columnMenu: (column) => columnMenu(context, scope, column.id),
+                addColumn: () => addColumnDialog(context, scope, widget.board),
+                fromTemplate: (column) =>
+                    addFromCardTemplate(context, scope, column),
+              ),
       ),
     );
     final body = LayoutBuilder(
