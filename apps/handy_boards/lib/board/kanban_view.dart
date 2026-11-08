@@ -483,7 +483,8 @@ class _ColumnViewState extends State<ColumnView> {
                 ),
                 const SizedBox(width: 8),
                 Text(
-                  widget.filter.active
+                  // "2/6" only when some cards are filtered out.
+                  cards.length != all.length
                       ? '${cards.length}/${all.length}'
                       : '${all.length}',
                   style: theme.textTheme.labelMedium?.copyWith(

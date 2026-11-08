@@ -3,9 +3,9 @@ import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:handy_boards/pro/pro.dart';
 import 'package:handy_boards/settings/help_links.dart';
-import 'package:handy_boards_engine/handy_boards_engine.dart';
+import 'package:handy_boards_engine/handy_boards_engine.dart' hide clock;
 import 'package:handy_ui/kit.dart';
-import 'kanban_app_test.dart' show boot, board, studyState, tap;
+import 'kanban_app_test.dart' show boot, board, studyState, tap, clock;
 
 /// Settings is a lazy list: tall enough to hold all of it.
 const tall = Size(400, 3200);
@@ -174,14 +174,11 @@ void main() {
   });
 
   testWidgets('the purpose picked in Settings puts its templates first in '
-      'the gallery; the Free and Pro table opens', (t) async {
+      'the gallery', (t) async {
     await boot(t, studyState(), size: tall);
     await openSettings(t);
-    await tap(t, find.byKey(const Key('settings-plans')));
-    expect(find.text('What Free and Pro include'), findsWidgets);
-    expect(find.text('14 + blank'), findsOneWidget);
-    await t.tapAt(const Offset(10, 10));
-    await t.pumpAndSettle();
+    // Free and Pro are compared on the Pro page, not in a row here.
+    expect(find.byKey(const Key('settings-plans')), findsNothing);
     await tap(t, find.text('Work').last);
     await t.pageBack();
     await t.pumpAndSettle();
@@ -209,5 +206,23 @@ void main() {
     expect(find.byKey(const Key('board-view')), findsNothing);
     expect(find.byKey(const Key('board-view-toggle')), findsNothing);
     expect(c.state!.get('boards', board), isNotNull);
+  });
+
+  testWidgets('trash: each card says where it goes back to; putting back '
+      'asks first; deleting all says it is for good', (t) async {
+    var s = studyState();
+    final card = topTasks(s, board: board).first;
+    s = trashTasks(s, {card.id}, now: clock);
+    final c = await boot(t, s, size: tall);
+    await openSettings(t);
+    await tap(t, find.byKey(const Key('settings-trash')));
+    expect(find.text('Delete all forever'), findsOneWidget);
+    expect(find.textContaining('deleted today'), findsOneWidget);
+    expect(find.textContaining('›'), findsOneWidget);
+    await tap(t, find.byKey(Key('trash-restore-${card.id}')));
+    expect(find.textContaining('It goes back to'), findsOneWidget);
+    expect(c.state!.get('tasks', card.id).flag('trashed'), isTrue);
+    await tap(t, find.text('Put back').last);
+    expect(c.state!.get('tasks', card.id).flag('trashed'), isFalse);
   });
 }

@@ -124,15 +124,19 @@ class TrashPage extends StatelessWidget {
                     context,
                     title: tr(
                       context,
-                      'Empty the trash?',
-                      'Dọn sạch thùng rác?',
+                      'Delete everything in the trash for good?',
+                      'Xoá vĩnh viễn mọi thứ trong thùng rác?',
                     ),
                     message: tr(
                       context,
-                      '${cards.length} cards and their photos are removed from this device.',
-                      '${cards.length} thẻ và ảnh của chúng sẽ bị xoá khỏi máy này.',
+                      '${cards.length} cards, their subtasks and photos are removed from this device. This cannot be undone.',
+                      '${cards.length} thẻ cùng việc con và ảnh sẽ bị xoá khỏi máy này. Không hoàn tác được.',
                     ),
-                    confirmLabel: tr(context, 'Empty trash', 'Dọn sạch'),
+                    confirmLabel: tr(
+                      context,
+                      'Delete all forever',
+                      'Xoá vĩnh viễn tất cả',
+                    ),
                     destructive: true,
                   );
                   if (!ok || !context.mounted) return;
@@ -147,7 +151,9 @@ class TrashPage extends StatelessWidget {
                     ),
                   );
                 },
-                child: Text(tr(context, 'Empty', 'Dọn sạch')),
+                child: Text(
+                  tr(context, 'Delete all forever', 'Xoá vĩnh viễn tất cả'),
+                ),
               ),
           ],
         ),
@@ -156,20 +162,103 @@ class TrashPage extends StatelessWidget {
                 title: tr(context, 'The trash is empty', 'Thùng rác trống'),
               )
             : ListView.separated(
-                itemCount: cards.length,
-                separatorBuilder: (_, _) => const Divider(indent: 16),
+                itemCount: cards.length + 1,
+                separatorBuilder: (_, i) => i == 0
+                    ? const SizedBox.shrink()
+                    : const Divider(indent: 16),
                 itemBuilder: (context, i) {
-                  final t = cards[i];
+                  if (i == 0) {
+                    return Padding(
+                      padding: const EdgeInsets.fromLTRB(16, 4, 16, 8),
+                      child: Text(
+                        tr(
+                          context,
+                          'Deleted cards wait here until you delete them for good. Put back returns a card to the column it was in.',
+                          'Thẻ đã xoá nằm ở đây cho tới khi bạn xoá vĩnh viễn. Khôi phục đưa thẻ về đúng cột cũ.',
+                        ),
+                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                          color: BoardsPalette.of(context).muted,
+                        ),
+                      ),
+                    );
+                  }
+                  final t = cards[i - 1];
                   final b = s.maybe('boards', t.str('board'));
+                  final column = s.maybe('statuses', t.str('status'));
+                  final subtasks = subtasksOf(s, t.id).length;
+                  final photos = s.related('attachments', t.id).length;
+                  final at = DateTime.tryParse(t.str('trashedAt'))?.toLocal();
+                  final days = at == null
+                      ? null
+                      : daysBetween(
+                          calendarDay(at),
+                          calendarDay(scope.clock()),
+                        ).clamp(0, 9999);
+                  final when = days == null
+                      ? null
+                      : days == 0
+                      ? tr(context, 'deleted today', 'xoá hôm nay')
+                      : days == 1
+                      ? tr(context, 'deleted yesterday', 'xoá hôm qua')
+                      : tr(
+                          context,
+                          'deleted $days days ago',
+                          'xoá $days ngày trước',
+                        );
+                  final where = [
+                    b?.str('title') ?? '',
+                    if (column != null) column.str('title'),
+                  ].where((x) => x.isNotEmpty).join(' › ');
+                  final extra = [
+                    ?when,
+                    if (subtasks > 0)
+                      tr(
+                        context,
+                        subtasks == 1 ? '1 subtask' : '$subtasks subtasks',
+                        '$subtasks việc con',
+                      ),
+                    if (photos > 0)
+                      tr(
+                        context,
+                        photos == 1 ? '1 photo' : '$photos photos',
+                        '$photos ảnh',
+                      ),
+                  ].join(' · ');
                   return ListTile(
+                    key: Key('trash-${t.id}'),
                     title: Text(
                       t.str('title'),
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
                     ),
-                    subtitle: Text(b?.str('title') ?? ''),
+                    subtitle: Text(
+                      [where, extra].where((x) => x.isNotEmpty).join('\n'),
+                    ),
+                    isThreeLine: extra.isNotEmpty && where.isNotEmpty,
                     trailing: TextButton(
+                      key: Key('trash-restore-${t.id}'),
                       onPressed: () async {
+                        final ok = await confirmHandy(
+                          context,
+                          title: tr(
+                            context,
+                            'Put "${t.str('title')}" back?',
+                            'Khôi phục "${t.str('title')}"?',
+                          ),
+                          message: where.isEmpty
+                              ? tr(
+                                  context,
+                                  'It goes back to its board.',
+                                  'Thẻ trở về bảng của nó.',
+                                )
+                              : tr(
+                                  context,
+                                  'It goes back to $where.',
+                                  'Thẻ trở về $where.',
+                                ),
+                          confirmLabel: tr(context, 'Put back', 'Khôi phục'),
+                        );
+                        if (!ok || !context.mounted) return;
                         await scope.run(
                           context,
                           () => scope.controller.change(
