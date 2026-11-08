@@ -1,5 +1,7 @@
 import 'package:handy_boards_engine/handy_boards_engine.dart';
 import 'package:handy_ui/kit.dart';
+import '../card/fields_ui.dart';
+import '../card/card_templates_ui.dart';
 import '../design/theme.dart';
 import 'key_dates.dart';
 import '../pro/pro.dart';
@@ -169,6 +171,13 @@ Future<void> boardMenu(
         Icons.view_column_outlined,
         tr(sheet, 'Add column', 'Thêm cột'),
         () => then(() => addColumnDialog(context, scope, board)),
+      ),
+      _row(
+        sheet,
+        Icons.tune,
+        tr(sheet, 'Custom fields', 'Trường tuỳ chỉnh'),
+        () => then(() => fieldsSheet(context, scope, board)),
+        key: const Key('menu-fields'),
       ),
       _row(
         sheet,
@@ -382,6 +391,13 @@ Future<void> cardMenu(
         tr(sheet, 'Move to…', 'Chuyển tới…'),
         () => then(() => moveCardSheet(context, scope, card, onMoved)),
         key: const Key('menu-move-card'),
+      ),
+      _row(
+        sheet,
+        Icons.content_copy_outlined,
+        tr(sheet, 'Save as card template', 'Lưu làm mẫu thẻ'),
+        () => then(() => saveAsCardTemplate(context, scope, card)),
+        key: const Key('menu-save-template'),
       ),
       _row(
         sheet,

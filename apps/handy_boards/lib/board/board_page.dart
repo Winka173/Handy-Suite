@@ -1,6 +1,7 @@
 import 'package:flutter/services.dart';
 import 'package:handy_boards_engine/handy_boards_engine.dart';
 import 'package:handy_ui/kit.dart';
+import '../card/card_templates_ui.dart';
 import '../card/card_sheet.dart';
 import '../card/cover_picker.dart';
 import '../design/looks.dart';
@@ -491,6 +492,8 @@ class _BoardPageState extends State<BoardPage> {
                     cardMenu(context, scope, card.id, onMoved: _move),
                 columnMenu: (column) => columnMenu(context, scope, column.id),
                 addColumn: () => addColumnDialog(context, scope, widget.board),
+                fromTemplate: (column) =>
+                    addFromCardTemplate(context, scope, column),
               ),
             ),
     );

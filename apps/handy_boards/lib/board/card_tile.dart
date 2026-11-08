@@ -60,6 +60,16 @@ class CardTile extends StatelessWidget {
           text: dueLabel(context, due, now),
           color: overdue ? p.danger : p.muted,
         ),
+      // Custom fields chosen for the card front, as "Name value".
+      for (final f in fieldsOf(state, card.str('board')))
+        if (f.flag('onCard') &&
+            object(card.data['custom'] ?? {}).containsKey(f.id))
+          _Fact(
+            icon: Icons.tune,
+            text:
+                '${f.str('title')} ${fieldText(f, object(card.data['custom'])[f.id], vi: Localizations.localeOf(context).languageCode == 'vi')}',
+            color: p.muted,
+          ),
     ];
     final label = [
       card.str('title'),

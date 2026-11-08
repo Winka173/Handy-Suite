@@ -49,6 +49,13 @@ class HomePage extends StatelessWidget {
               onPressed: () => Navigator.pushNamed(context, '/search'),
               icon: const Icon(Icons.search),
             ),
+          if (s != null && s.rows('boards').isNotEmpty)
+            IconButton(
+              key: const Key('home-my-work'),
+              tooltip: tr(context, 'My Work (Pro)', 'Việc của tôi (Pro)'),
+              onPressed: () => Navigator.pushNamed(context, '/my-work'),
+              icon: const Icon(Icons.dashboard_outlined),
+            ),
           IconButton(
             key: const Key('home-settings'),
             tooltip: tr(context, 'Settings', 'Cài đặt'),

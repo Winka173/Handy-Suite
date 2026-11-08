@@ -346,7 +346,7 @@ const _examRevision = BoardTemplate(
 
 const _course = BoardTemplate(
   id: 'course',
-  pro: true,
+  pro: false,
   group: TemplateGroup.study,
   name: L10n('Personal Course', 'Khóa học cá nhân'),
   goal: L10n(
@@ -358,7 +358,7 @@ const _course = BoardTemplate(
     'Đọc một học phần, làm bài tập, hoàn thành dự án nhỏ.',
   ),
   tags: ['course', 'learning', 'module', 'khóa học', 'tự học', 'học phần'],
-  cover: 'study.library-steps',
+  cover: 'study.pencil-case',
   look: 'linen',
   hues: [4, 1, 0, 3],
   time: TimePreset('week', pinned: false),
@@ -417,7 +417,7 @@ const _course = BoardTemplate(
         L10n('Write a short summary', 'Viết tóm tắt ngắn'),
       ],
       done: 1,
-      cover: 'study.orbital-notes',
+      cover: 'study.open-book',
     ),
     SampleCard(
       L10n('Try the first exercise', 'Làm thử bài tập đầu tiên'),
@@ -2769,7 +2769,7 @@ const _workshop = BoardTemplate(
 
 const _moving = BoardTemplate(
   id: 'moving',
-  pro: false,
+  pro: true,
   group: TemplateGroup.planning,
   name: L10n('Moving Home', 'Chuyển nhà'),
   goal: L10n(

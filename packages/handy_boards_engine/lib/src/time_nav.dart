@@ -429,3 +429,126 @@ void _logCardChanges(
     log('edited', {});
   }
 }
+
+/// One card in My Work: where it lives and why it is listed. Each card is
+/// listed once, in the first section that fits it.
+class WorkItem {
+  final BoardRecord card, board;
+  final DateTime? planned, due;
+  final bool overdue;
+
+  /// Listed for today only because it is due today (no plan): labelled so.
+  final bool dueOnly;
+  const WorkItem(
+    this.card,
+    this.board, {
+    this.planned,
+    this.due,
+    this.overdue = false,
+    this.dueOnly = false,
+  });
+}
+
+/// My Work across boards (a derived view, never a board): open cards
+/// planned for [today] (or due today without a plan), those left behind
+/// (planned or due earlier), and those coming up in the next [days] days.
+/// [boards] narrows the scope (null = every board).
+({List<WorkItem> today, List<WorkItem> behind, List<WorkItem> upcoming}) myWork(
+  BoardsState s,
+  DateTime today, {
+  Set<String>? boards,
+  int days = 14,
+  bool Function(BoardRecord card)? shows,
+}) {
+  final d = calendarDay(today), end = addDays(d, days);
+  final now = <WorkItem>[], behind = <WorkItem>[], later = <WorkItem>[];
+  for (final t in topTasks(s)) {
+    final b = t.str('board');
+    if (boards != null && !boards.contains(b)) continue;
+    if (!isOpenCard(s, t) || (shows != null && !shows(t))) continue;
+    final board = s.get('boards', b);
+    final planned = scheduledDay(t), due = dueDay(t);
+    final late = due != null && due.isBefore(d);
+    if ((planned != null && planned.isBefore(d)) || late) {
+      behind.add(WorkItem(t, board, planned: planned, due: due, overdue: late));
+    } else if (planned == d || (planned == null && due == d)) {
+      now.add(
+        WorkItem(
+          t,
+          board,
+          planned: planned,
+          due: due,
+          dueOnly: planned == null,
+        ),
+      );
+    } else {
+      final next = planned ?? due;
+      if (next != null && next.isAfter(d) && next.isBefore(end))
+        later.add(WorkItem(t, board, planned: planned, due: due));
+    }
+  }
+  int by(WorkItem a, WorkItem b) =>
+      (a.planned ?? a.due!).compareTo(b.planned ?? b.due!);
+  behind.sort(by);
+  later.sort(by);
+  return (today: now, behind: behind, upcoming: later);
+}
+
+/// Smart carry-over (Pro): which cards a run would move to [today] — open
+/// cards planned for an earlier day (a deadline alone never moves; it is
+/// offered with a question in the review instead), on [boards] when given.
+/// A card already re-planned for today or later is not touched.
+List<BoardRecord> carryOverCandidates(
+  BoardsState s,
+  DateTime today, {
+  Set<String>? boards,
+  int max = 200,
+}) {
+  final d = calendarDay(today);
+  final out = <BoardRecord>[];
+  for (final t in topTasks(s)) {
+    if (boards != null && !boards.contains(t.str('board'))) continue;
+    if (!isOpenCard(s, t)) continue;
+    final planned = scheduledDay(t);
+    if (planned != null && planned.isBefore(d)) out.add(t);
+    if (out.length >= max) break;
+  }
+  return out;
+}
+
+/// The key of the period a carry-over runs in: one run per day, so opening
+/// the app again never moves cards twice.
+String carryOverPeriod(DateTime today) => isoDay(calendarDay(today));
+
+/// Runs the automatic carry-over once for [today]: moves the candidates'
+/// plans to today, logs it ('carry over') and records the period in
+/// preferences so another open the same day does nothing. Returns the state
+/// unchanged when it already ran, is off, or has nothing to move.
+({BoardsState state, Map<String, String?> before}) runCarryOver(
+  BoardsState s,
+  DateTime today, {
+  DateTime? now,
+}) {
+  final pref = object(s.preferences['carryOver'] ?? {});
+  final period = carryOverPeriod(today);
+  if (pref['mode'] != 'auto' || pref['last'] == period) {
+    return (state: s, before: const {});
+  }
+  final boards = pref['boards'] is List
+      ? {for (final b in pref['boards'] as List) '$b'}
+      : null;
+  final ids = [
+    for (final t in carryOverCandidates(s, today, boards: boards)) t.id,
+  ];
+  final before = plansOf(s, ids);
+  var next = ids.isEmpty
+      ? s
+      : scheduleCards(s, ids, today, reason: 'carry over', now: now);
+  next = next.copy(
+    preferences: {
+      ...next.preferences,
+      'carryOver': {...pref, 'last': period, 'moved': ids.length},
+    },
+  );
+  return (state: next, before: before);
+}

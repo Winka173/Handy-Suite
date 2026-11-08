@@ -1,6 +1,9 @@
+import 'package:handy_boards_engine/handy_boards_engine.dart';
 import 'package:flutter/foundation.dart';
 import 'package:handy_ui/kit.dart';
 import 'package:handy_monetization/handy_monetization.dart';
+import '../home/my_work_page.dart';
+import '../card/card_templates_ui.dart';
 import '../design/theme.dart';
 import '../features/portability.dart';
 import '../pro/pro.dart';
@@ -381,6 +384,40 @@ class SettingsPage extends StatelessWidget {
                         _pref(context, 'purpose', v == 'none' ? null : v),
                   ),
                   SettingsRow(
+                    key: const Key('settings-carry-over'),
+                    icon: Icons.event_repeat_outlined,
+                    title: tr(
+                      context,
+                      'Smart carry-over',
+                      'Tự chuyển việc tồn',
+                    ),
+                    subtitle: switch (object(
+                      scope.state.preferences['carryOver'] ?? {},
+                    )['mode']) {
+                      'auto' => tr(context, 'Moves by itself', 'Tự chuyển'),
+                      'review' => tr(
+                        context,
+                        'Asks each new day',
+                        'Hỏi mỗi ngày mới',
+                      ),
+                      _ => tr(context, 'Off', 'Tắt'),
+                    },
+                    navigates: true,
+                    onTap: () => carryOverSettings(context, scope),
+                  ),
+                  SettingsRow(
+                    key: const Key('settings-card-templates'),
+                    icon: Icons.content_copy_outlined,
+                    title: tr(context, 'My card templates', 'Mẫu thẻ của tôi'),
+                    navigates: true,
+                    onTap: () => Navigator.push(
+                      context,
+                      MaterialPageRoute<void>(
+                        builder: (_) => CardTemplatesPage(scope: scope),
+                      ),
+                    ),
+                  ),
+                  SettingsRow(
                     key: const Key('settings-plans'),
                     icon: Icons.table_chart_outlined,
                     title: tr(
@@ -576,7 +613,11 @@ Future<void> showPlans(BuildContext context) => showModalBottomSheet<void>(
       ),
       (
         tr(sheet, 'Templates', 'Mẫu bảng'),
-        tr(sheet, '14 + blank', '14 + bảng trống'),
+        tr(
+          sheet,
+          '$freeTemplateCount + blank',
+          '$freeTemplateCount + bảng trống',
+        ),
         '30 + ${tr(sheet, 'blank', 'bảng trống')}',
       ),
       (tr(sheet, 'Covers', 'Ảnh bìa'), '30', '60'),

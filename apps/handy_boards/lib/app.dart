@@ -12,6 +12,7 @@ import 'create/setup_page.dart';
 import 'design/identity.dart';
 import 'design/theme.dart';
 import 'export/export_page.dart';
+import 'home/my_work_page.dart';
 import 'home/home_page.dart';
 import 'pages/more_pages.dart';
 import 'platform/export_job.dart';
@@ -101,12 +102,78 @@ class _BoardsAppState extends State<BoardsApp> with WidgetsBindingObserver {
 
   void _started() {
     _tidy();
+    unawaited(_carryOver());
     if (c.state != null) scope.autoBackup?.attach();
     if (scope.drive case final drive?) {
       c.addListener(drive.changed);
       // Sync left on: the other devices' changes arrive now.
       unawaited(drive.syncNow());
     }
+  }
+
+  /// Smart carry-over (Pro), once per day at start or resume: either moves
+  /// plans from earlier days to today (with Undo) or offers a review.
+  Future<void> _carryOver() async {
+    final ctx = navigator.currentContext;
+    final s = c.state;
+    if (ctx == null || s == null || !hasPro(ctx)) return;
+    final pref = object(s.preferences['carryOver'] ?? {});
+    final today = scope.clock(), period = carryOverPeriod(today);
+    if (pref['mode'] == null || pref['last'] == period) return;
+    final messenger = ScaffoldMessenger.maybeOf(ctx);
+    if (pref['mode'] == 'auto') {
+      var before = const <String, String?>{};
+      await c.change((s) {
+        final r = runCarryOver(s, today, now: scope.clock());
+        before = r.before;
+        return r.state;
+      }, history: false);
+      if (before.isEmpty || messenger == null || !ctx.mounted) return;
+      messenger.showSnackBar(
+        SnackBar(
+          content: Text(
+            tr(
+              ctx,
+              'Moved ${before.length} cards from earlier days to today',
+              'Đã chuyển ${before.length} thẻ từ hôm trước về hôm nay',
+            ),
+          ),
+          action: SnackBarAction(
+            label: tr(ctx, 'Undo', 'Hoàn tác'),
+            onPressed: () =>
+                c.change((s) => restorePlans(s, before, now: scope.clock())),
+          ),
+        ),
+      );
+      return;
+    }
+    final waiting = carryOverCandidates(s, today).length;
+    await c.change(
+      (s) => s.copy(
+        preferences: {
+          ...s.preferences,
+          'carryOver': {...pref, 'last': period},
+        },
+      ),
+      history: false,
+    );
+    if (waiting == 0 || messenger == null || !ctx.mounted) return;
+    messenger.showSnackBar(
+      SnackBar(
+        duration: const Duration(seconds: 8),
+        content: Text(
+          tr(
+            ctx,
+            '$waiting cards are left from earlier days',
+            'Còn $waiting việc từ hôm trước',
+          ),
+        ),
+        action: SnackBarAction(
+          label: tr(ctx, 'Review', 'Xem lại'),
+          onPressed: () => navigator.currentState?.pushNamed('/my-work'),
+        ),
+      ),
+    );
   }
 
   void _replay() {
@@ -200,6 +267,7 @@ class _BoardsAppState extends State<BoardsApp> with WidgetsBindingObserver {
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state == AppLifecycleState.resumed) {
       unawaited(_takeShares());
+      unawaited(_carryOver());
       scope.drive?.resumed();
     }
     if (state == AppLifecycleState.paused) scope.drive?.paused();
@@ -273,6 +341,7 @@ class _BoardsAppState extends State<BoardsApp> with WidgetsBindingObserver {
         '/how-to' => HowToPage(onReplayWelcome: _replay),
         '/pro' => ProPage(focus: settings.arguments as ProFeature?),
         '/search' => SearchPage(scope: scope),
+        '/my-work' => MyWorkPage(scope: scope),
         '/trash' => TrashPage(scope: scope),
         '/insights' => InsightsPage(
           scope: scope,

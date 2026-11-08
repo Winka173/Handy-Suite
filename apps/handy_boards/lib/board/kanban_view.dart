@@ -16,6 +16,9 @@ class KanbanActions {
   final void Function(BoardRecord card)? cardMenu;
   final void Function(String subtask, bool done)? tick;
   final VoidCallback? addColumn;
+
+  /// Column › From my templates (Pro): a fresh card from a card template.
+  final void Function(String column)? fromTemplate;
   const KanbanActions({
     this.open,
     this.move,
@@ -24,6 +27,7 @@ class KanbanActions {
     this.cardMenu,
     this.tick,
     this.addColumn,
+    this.fromTemplate,
   });
   bool get readOnly => move == null;
 }
@@ -523,14 +527,25 @@ class _ColumnViewState extends State<ColumnView> {
               },
             ),
           )
-        : Align(
-            alignment: Alignment.centerLeft,
-            child: TextButton.icon(
-              key: Key('add-card-open-${widget.column.id}'),
-              onPressed: () => setState(() => adding = true),
-              icon: const Icon(Icons.add),
-              label: Text(tr(context, 'Add card', 'Thêm thẻ')),
-            ),
+        : Row(
+            children: [
+              Flexible(
+                child: TextButton.icon(
+                  key: Key('add-card-open-${widget.column.id}'),
+                  onPressed: () => setState(() => adding = true),
+                  icon: const Icon(Icons.add),
+                  label: Text(tr(context, 'Add card', 'Thêm thẻ')),
+                ),
+              ),
+              const Spacer(),
+              if (a.fromTemplate != null)
+                IconButton(
+                  key: Key('add-from-template-${widget.column.id}'),
+                  tooltip: tr(context, 'From my templates', 'Từ mẫu của tôi'),
+                  onPressed: () => a.fromTemplate!(widget.column.id),
+                  icon: Icon(Icons.content_copy_outlined, color: p.muted),
+                ),
+            ],
           );
 
     // Dropped on the empty part of a column: at its end.

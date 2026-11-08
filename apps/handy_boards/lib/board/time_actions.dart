@@ -220,6 +220,11 @@ String _eventText(BuildContext context, BoardRecord e) {
         'Moved to now: plan ${day(d['from'])} → ${day(d['to'])}',
         'Chuyển về hiện tại: ngày làm ${day(d['from'])} → ${day(d['to'])}',
       ),
+      'carry over' => tr(
+        context,
+        'Carried over: plan ${day(d['from'])} → ${day(d['to'])}',
+        'Tự chuyển tồn: ngày làm ${day(d['from'])} → ${day(d['to'])}',
+      ),
       'do early' => tr(
         context,
         'Done early: plan ${day(d['from'])} → ${day(d['to'])}',
@@ -249,6 +254,16 @@ String _eventText(BuildContext context, BoardRecord e) {
       'Khôi phục từ thùng rác',
     ),
     'edited' => tr(context, 'Title or note edited', 'Sửa tên hoặc ghi chú'),
+    'from template' => tr(
+      context,
+      'Made from a card template',
+      'Tạo từ mẫu thẻ',
+    ),
+    'field changed' => tr(
+      context,
+      'Field changed: ${name('name') ?? ''}',
+      'Đổi trường: ${name('name') ?? ''}',
+    ),
     final other => other,
   };
 }

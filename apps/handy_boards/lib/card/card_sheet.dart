@@ -4,6 +4,7 @@ import 'package:flutter/foundation.dart';
 import 'package:handy_boards_engine/handy_boards_engine.dart';
 import 'package:handy_ui/kit.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'fields_ui.dart';
 import '../board/time_actions.dart';
 import '../board/board_menus.dart';
 import '../board/board_page.dart' show showUndo;
@@ -601,6 +602,7 @@ class _CardDetailState extends State<CardDetail> {
               ],
             ),
           ),
+          CardFieldsSection(scope: scope, card: t),
           const Divider(height: 24),
           Padding(
             padding: const EdgeInsets.fromLTRB(20, 0, 20, 6),

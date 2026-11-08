@@ -1,3 +1,4 @@
+import 'package:handy_boards_engine/handy_boards_engine.dart';
 import 'package:handy_monetization/handy_monetization.dart';
 import 'package:handy_ui/kit.dart';
 import '../design/theme.dart';
@@ -5,7 +6,18 @@ import '../design/theme.dart';
 /// What Pro Lifetime adds. Everything a board needs to work stays free:
 /// boards, cards, categories, subtasks, drag and drop, due dates, search,
 /// backup and plain export.
-enum ProFeature { templates, covers, looks, automation, export, insights }
+enum ProFeature {
+  templates,
+  covers,
+  looks,
+  automation,
+  export,
+  insights,
+  cardTemplates,
+  myWork,
+  carryOver,
+  fields,
+}
 
 /// Whether this device has a verified Pro Lifetime.
 bool hasPro(BuildContext context) =>
@@ -37,7 +49,11 @@ class ProPage extends StatelessWidget {
       (
         ProFeature.templates,
         Icons.dashboard_customize_outlined,
-        tr(context, '16 more templates', 'Thêm 16 mẫu bảng'),
+        tr(
+          context,
+          '$proTemplateCount more templates',
+          'Thêm $proTemplateCount mẫu bảng',
+        ),
         tr(
           context,
           'Thesis, sprints, launches, events, 90-day goals, writing, games and more, each with its own covers and look. Open any of them to see its board with example cards for free; Pro unlocks it before its questions, so nothing you type is wasted.',
@@ -82,6 +98,46 @@ class ProPage extends StatelessWidget {
           context,
           'Your board as a picture or PDF in poster and printable styles. Plain export and backups stay free.',
           'Bảng thành ảnh hoặc PDF kiểu poster và bản in. Xuất thường và sao lưu vẫn miễn phí.',
+        ),
+      ),
+      (
+        ProFeature.cardTemplates,
+        Icons.content_copy_outlined,
+        tr(context, 'Your own card templates', 'Mẫu thẻ của riêng bạn'),
+        tr(
+          context,
+          'Save a card you repeat (subtasks, note, category, when it is due) and make a fresh one in any column with a tap.',
+          'Lưu một thẻ hay lặp lại (việc con, ghi chú, nhóm, hạn sau mấy ngày) rồi tạo thẻ mới ở cột bất kỳ bằng một chạm.',
+        ),
+      ),
+      (
+        ProFeature.myWork,
+        Icons.dashboard_outlined,
+        tr(context, 'My Work across boards', 'Việc của tôi trên mọi bảng'),
+        tr(
+          context,
+          'Today, left behind and coming up from every board in one list, each card still in its own board.',
+          'Hôm nay, còn tồn và sắp tới của mọi bảng trong một danh sách; thẻ vẫn nằm ở bảng của nó.',
+        ),
+      ),
+      (
+        ProFeature.carryOver,
+        Icons.event_repeat_outlined,
+        tr(context, 'Smart carry-over', 'Tự chuyển việc tồn'),
+        tr(
+          context,
+          'When a new week or day starts, review what was left behind, or let it move to today by itself. Only the day you plan to work changes, never a due date. Moving cards by hand stays free.',
+          'Khi sang tuần hay ngày mới, xem lại việc còn tồn, hoặc để app tự chuyển về hôm nay. Chỉ đổi ngày làm, không bao giờ đổi hạn nộp. Tự chuyển bằng tay vẫn miễn phí.',
+        ),
+      ),
+      (
+        ProFeature.fields,
+        Icons.tune,
+        tr(context, 'Custom fields', 'Trường tuỳ chỉnh'),
+        tr(
+          context,
+          'Add a few fields of your own to a board: text, number, date, yes/no, one choice, link. Values you saved stay readable without Pro.',
+          'Thêm vài trường riêng cho bảng: chữ, số, ngày, có/không, một lựa chọn, đường link. Giá trị đã lưu vẫn xem được khi không còn Pro.',
         ),
       ),
       (

@@ -16,12 +16,37 @@ void main() {
       expect(boardTemplates.where((t) => !t.pro), hasLength(14));
       expect(boardTemplates.where((t) => t.pro), hasLength(16));
       final free = {
-        TemplateGroup.study: 3,
+        TemplateGroup.study: 4,
         TemplateGroup.work: 3,
         TemplateGroup.personal: 2,
         TemplateGroup.creative: 2,
-        TemplateGroup.planning: 4,
+        TemplateGroup.planning: 3,
       };
+      // The owner's list (2026-11-08): Personal Course Free, Moving Pro.
+      expect(
+        {
+          for (final t in boardTemplates)
+            if (!t.pro) t.id,
+        },
+        {
+          'semester',
+          'group-assignment',
+          'exam-revision',
+          'course',
+          'project',
+          'weekly',
+          'ideas',
+          'personal',
+          'shopping',
+          'content',
+          'inspiration',
+          'trip',
+          'monthly',
+          'daily',
+        },
+      );
+      expect(freeTemplateCount, 14);
+      expect(proTemplateCount, 16);
       for (final g in TemplateGroup.values) {
         final inGroup = boardTemplates.where((t) => t.group == g);
         expect(inGroup, hasLength(6), reason: '$g');

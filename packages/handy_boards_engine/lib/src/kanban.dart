@@ -491,6 +491,8 @@ BoardsState kanbanize(BoardsState s, {DateTime? now}) {
 
 /// Checks the Kanban fields (called from [BoardsState.validate]).
 void validateKanban(BoardsState s) {
+  for (final r in s.rows('templates'))
+    if (r.str('kind') == 'card') validateCardTemplate(r);
   for (final b in s.rows('boards')) {
     final cover = b.data['cover'];
     if (cover != null &&

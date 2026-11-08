@@ -763,3 +763,8 @@ void validateTemplateFields(BoardsState s) {
       throw const FormatException('Invalid template version');
   }
 }
+
+/// How many content templates each tier has, counted from the registry (the
+/// one source for labels, the Pro page and tests).
+int get freeTemplateCount => boardTemplates.where((t) => !t.pro).length;
+int get proTemplateCount => boardTemplates.where((t) => t.pro).length;
