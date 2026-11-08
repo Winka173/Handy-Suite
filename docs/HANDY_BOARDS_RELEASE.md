@@ -82,8 +82,24 @@ One-time setup by the owner, click by click in Sticky Wall's
 
 Verified 2026-11-08: engine merge tests (two devices, both-side edits,
 delete vs edit, deleted column, attachments, concurrent write, edits during
-a sync) and app controller tests with an in-memory Drive. Not yet run
-against real Google Drive (needs the clients above), not on iOS.
+a sync) and app controller tests with an in-memory Drive.
+
+Real Google Drive, 2026-11-08, debug build on two BlueStacks Android 11
+instances (emulators, not phones), the owner picking the same Google account
+on each:
+
+| Step | Result |
+|---|---|
+| 1. Turn sync on, first device (4 boards) | Uploaded; status "Synced" |
+| 2. Turn sync on, second device (its own board) | Merged both ways: 5 boards on each |
+| 3a. Edit a card on one device | Seen on the other after its sync ("9 cards · 1 done") |
+| 3b. Delete a card on one device while the other adds one | Both changes kept on both ("9 cards · 2 done") |
+| 4. Turn sync off and on again on one device | Waiting for the owner to pick the account in the chooser |
+
+Found and fixed during the run: Undo bars that stayed until tapped
+(`persist: false`), Settings rows in the wrong group, "no cloud" wording
+while Drive sync exists. Not yet run on device: attachments and offline
+edits (covered by `sync_test` / `drive_sync_test`); not on iOS.
 
 ## What the owner still does in Play Console (once)
 
