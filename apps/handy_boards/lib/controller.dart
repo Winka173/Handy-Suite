@@ -105,6 +105,13 @@ class BoardsController extends ChangeNotifier {
     if (!_disposed) notifyListeners();
   }
 
+  /// After Delete all data: nothing to undo back into.
+  void forgetHistory() {
+    _undo.clear();
+    _redo.clear();
+    if (!_disposed) notifyListeners();
+  }
+
   @override
   void dispose() {
     _disposed = true;

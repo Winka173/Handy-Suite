@@ -1,24 +1,21 @@
-import 'package:handy_boards_engine/handy_boards_engine.dart';
-import 'package:handy_monetization/handy_monetization.dart';
 import 'package:handy_ui/kit.dart';
-import '../board/board_page.dart' show showUndo;
+import 'package:handy_monetization/handy_monetization.dart';
 import '../design/theme.dart';
 import '../features/portability.dart';
 import '../pro/pro.dart';
 import '../scope.dart';
-import '../ui/look.dart';
+import 'data_rows.dart';
+import 'help_links.dart';
 import 'settings_parts.dart';
 
-/// Settings, built like Handy Bookmark's: a few groups, each a title and
-/// its panels of rows; every switch keeps itself.
+/// Settings, as Handy Bookmark and Sticky Wall have them: Pro first, then
+/// General (language, light or dark, reminders), Automations, Data (backup
+/// and restore, the automatic copy, the archive, Trash, delete everything),
+/// Help (How to use) and About (feedback, privacy policy, terms, licenses,
+/// the other Handy apps). Every control saves itself.
 class SettingsPage extends StatelessWidget {
   final BoardsScope scope;
-  final VoidCallback onReplayWelcome;
-  const SettingsPage({
-    super.key,
-    required this.scope,
-    required this.onReplayWelcome,
-  });
+  const SettingsPage({super.key, required this.scope});
 
   Future<void> _pref(BuildContext context, String key, Object? value) =>
       scope.run(
@@ -36,16 +33,17 @@ class SettingsPage extends StatelessWidget {
       final s = scope.controller.state;
       if (s == null) return const Scaffold(body: HandyLoading());
       final prefs = s.preferences;
-      final p = BoardsPalette.of(context);
-      final archived = s
+      final system = tr(context, 'System', 'Hệ thống');
+      final archivedBoards = s
           .rows('boards')
           .where((b) => b.flag('archived'))
-          .toList();
+          .length;
+      final archived = archivedCards(s).length;
       final trashed = s
           .rows('tasks')
           .where((t) => t.flag('trashed') && t.data['parent'] == null)
           .length;
-      final store = LifetimeScope.maybeOf(context);
+      final reminders = s.rows('reminders').where((r) => r.flag('enabled'));
       final pro = hasPro(context);
       final automation = prefs['automation'] is Map
           ? Map<String, dynamic>.from(prefs['automation'] as Map)
@@ -56,370 +54,404 @@ class SettingsPage extends StatelessWidget {
         await _pref(context, 'automation', {...automation, key: on});
       }
 
-      return Scaffold(
-        appBar: AppBar(title: Text(tr(context, 'Settings', 'Cài đặt'))),
-        body: Center(
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 960),
-            child: ListView(
-              padding: const EdgeInsets.fromLTRB(16, 0, 16, 40),
-              children: [
-                SettingsGroup(
-                  first: true,
-                  title: tr(context, 'Look', 'Giao diện'),
-                  note: tr(
-                    context,
-                    'How the app looks on this device.',
-                    'App trông thế nào trên máy này.',
+      return HandyPage(
+        title: tr(context, 'Settings', 'Cài đặt'),
+        children: [
+          const SizedBox(height: HandySpace.s),
+          const _ProCard(),
+
+          // General.
+          SettingsGroup(
+            title: tr(context, 'General', 'Chung'),
+            children: [
+              SettingsPanel(
+                gap: false,
+                rows: [
+                  SettingsChoice<String>(
+                    controlKey: const Key('settings-locale'),
+                    icon: Icons.translate,
+                    title: tr(context, 'Language', 'Ngôn ngữ'),
+                    value: prefs['locale'] as String? ?? 'system',
+                    options: [
+                      ('en', 'English'),
+                      ('vi', 'Tiếng Việt'),
+                      ('system', system),
+                    ],
+                    onChanged: (v) => _pref(context, 'locale', v),
                   ),
-                  children: [
-                    SettingsPanel(
-                      gap: false,
-                      rows: [
-                        SettingsChoice<String>(
-                          icon: Icons.contrast,
-                          title: tr(context, 'Theme', 'Chủ đề'),
-                          value: prefs['theme'] as String? ?? 'system',
-                          controlKey: const Key('settings-theme'),
-                          options: [
-                            ('system', tr(context, 'System', 'Theo máy')),
-                            ('light', tr(context, 'Light', 'Sáng')),
-                            ('dark', tr(context, 'Dark', 'Tối')),
-                          ],
-                          onChanged: (v) => _pref(context, 'theme', v),
-                        ),
-                        SettingsChoice<String>(
-                          icon: Icons.translate,
-                          title: tr(context, 'Language', 'Ngôn ngữ'),
-                          value: prefs['locale'] as String? ?? 'system',
-                          controlKey: const Key('settings-locale'),
-                          options: [
-                            ('system', tr(context, 'System', 'Theo máy')),
-                            ('en', 'English'),
-                            ('vi', 'Tiếng Việt'),
-                          ],
-                          onChanged: (v) => _pref(context, 'locale', v),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-                SettingsGroup(
-                  title: tr(context, 'Reminders', 'Nhắc việc'),
-                  note: tr(
-                    context,
-                    'Set on a card. Permission is asked the first time you set one.',
-                    'Đặt trên từng thẻ. Quyền thông báo chỉ được hỏi khi bạn đặt nhắc lần đầu.',
+                  SettingsChoice<String>(
+                    controlKey: const Key('settings-theme'),
+                    icon: Icons.contrast,
+                    title: tr(context, 'Light or dark', 'Sáng hay tối'),
+                    value: prefs['theme'] as String? ?? 'system',
+                    options: [
+                      ('light', tr(context, 'Light', 'Sáng')),
+                      ('dark', tr(context, 'Dark', 'Tối')),
+                      ('system', system),
+                    ],
+                    onChanged: (v) => _pref(context, 'theme', v),
                   ),
-                  children: [
-                    SettingsPanel(
-                      gap: false,
-                      rows: [
-                        SettingsRow(
-                          icon: Icons.notifications_none,
-                          title: scope.reminders.supported
-                              ? tr(
-                                  context,
-                                  'Notifications on this device',
-                                  'Thông báo trên máy này',
-                                )
-                              : tr(
-                                  context,
-                                  'Reminders show inside the app',
-                                  'Nhắc hiện ngay trong app',
-                                ),
-                          subtitle: tr(
-                            context,
-                            '${s.rows('reminders').where((r) => r.flag('enabled')).length} reminders set',
-                            'Đang có ${s.rows('reminders').where((r) => r.flag('enabled')).length} lời nhắc',
-                          ),
-                          trailing: scope.reminders.supported
-                              ? TextButton(
-                                  onPressed: () => scope.reminders.request(),
-                                  child: Text(tr(context, 'Allow', 'Cho phép')),
-                                )
-                              : null,
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-                SettingsGroup(
-                  title: tr(context, 'Pro', 'Pro'),
-                  note: pro
-                      ? tr(
+                  SettingsRow(
+                    key: const Key('settings-reminders'),
+                    icon: Icons.notifications_none,
+                    title: tr(context, 'Reminders', 'Nhắc việc'),
+                    subtitle: [
+                      reminders.isEmpty
+                          ? tr(
+                              context,
+                              'None set. Set one on a card.',
+                              'Chưa có. Đặt nhắc trên từng thẻ.',
+                            )
+                          : tr(
+                              context,
+                              reminders.length == 1
+                                  ? '1 reminder set'
+                                  : '${reminders.length} reminders set',
+                              'Đang có ${reminders.length} lời nhắc',
+                            ),
+                      if (!scope.reminders.supported)
+                        tr(
                           context,
-                          'Pro Lifetime is active.',
-                          'Pro trọn đời đang dùng.',
-                        )
-                      : tr(
-                          context,
-                          'One purchase, yours to keep. Boards stay free.',
-                          'Mua một lần, dùng mãi. Bảng vẫn miễn phí.',
+                          'They show inside the app here.',
+                          'Ở đây nhắc hiện ngay trong app.',
                         ),
-                  children: [
-                    SettingsPanel(
-                      gap: false,
-                      rows: [
-                        SettingsRow(
-                          key: const Key('settings-pro'),
-                          icon: Icons.workspace_premium_outlined,
-                          title: 'Handy Boards Pro',
-                          subtitle: pro
-                              ? tr(
-                                  context,
-                                  'Thank you for supporting Handy Boards.',
-                                  'Cảm ơn bạn đã ủng hộ Handy Boards.',
-                                )
-                              : store?.snapshot?.price != null
-                              ? tr(
-                                  context,
-                                  'One-time ${store?.snapshot?.price}',
-                                  'Một lần ${store?.snapshot?.price}',
-                                )
-                              : tr(
-                                  context,
-                                  'Templates, covers, automations, designed exports',
-                                  'Mẫu, bìa, tự động hoá, bản xuất đẹp',
-                                ),
-                          navigates: true,
-                          onTap: () => Navigator.pushNamed(context, '/pro'),
-                        ),
-                      ],
-                    ),
-                    SettingsPanel(
-                      title: tr(context, 'Automations', 'Tự động hoá'),
-                      note: tr(
-                        context,
-                        'Each one is off until you turn it on. Undo always works.',
-                        'Mỗi cái tắt cho tới khi bạn bật. Luôn hoàn tác được.',
-                      ),
-                      rows: [
-                        SettingsSwitch(
-                          key: const Key('auto-subtasks-done'),
-                          icon: Icons.task_alt,
-                          title: tr(
-                            context,
-                            'Finish a card when its subtasks are done',
-                            'Chuyển thẻ sang cột xong khi đủ việc con',
-                          ),
-                          subtitle: tr(
-                            context,
-                            'Moves it to the board’s finished column.',
-                            'Chuyển thẻ sang cột “đã xong” của bảng.',
-                          ),
-                          value: pro && automation['subtasksDone'] == true,
-                          onChanged: (v) => auto('subtasksDone', v),
-                        ),
-                        SettingsSwitch(
-                          key: const Key('auto-archive-done'),
-                          icon: Icons.archive_outlined,
-                          title: tr(
-                            context,
-                            'Archive finished cards after 14 days',
-                            'Lưu trữ thẻ đã xong sau 14 ngày',
-                          ),
-                          subtitle: tr(
-                            context,
-                            'Archived cards can be brought back from Data.',
-                            'Thẻ đã lưu trữ khôi phục được ở mục Dữ liệu.',
-                          ),
-                          value: pro && automation['archiveDone'] == true,
-                          onChanged: (v) => auto('archiveDone', v),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-                SettingsGroup(
-                  title: tr(context, 'Data', 'Dữ liệu'),
-                  note: tr(
-                    context,
-                    'Your boards live only on this device. A backup is the way to move or keep them.',
-                    'Bảng chỉ nằm trên máy này. Sao lưu là cách để chuyển hoặc giữ chúng.',
+                    ].join(' '),
+                    trailing: scope.reminders.supported
+                        ? TextButton(
+                            key: const Key('settings-allow-notifications'),
+                            onPressed: () => scope.reminders.request(),
+                            child: Text(tr(context, 'Allow', 'Cho phép')),
+                          )
+                        : null,
                   ),
-                  children: [
-                    SettingsPanel(
-                      gap: false,
-                      rows: [
-                        SettingsRow(
-                          key: const Key('settings-backup'),
-                          icon: Icons.save_alt,
-                          title: tr(
-                            context,
-                            'Back up all boards',
-                            'Sao lưu mọi bảng',
-                          ),
-                          subtitle: tr(
-                            context,
-                            'A ZIP file with cards, covers and photos.',
-                            'Một tệp ZIP gồm thẻ, ảnh bìa và ảnh.',
-                          ),
-                          navigates: true,
-                          onTap: () => scope.run(
-                            context,
-                            () => exportBoards(context, scope, null),
-                          ),
-                        ),
-                        SettingsRow(
-                          key: const Key('settings-restore'),
-                          icon: Icons.restore,
-                          title: tr(
-                            context,
-                            'Restore a backup',
-                            'Khôi phục bản sao lưu',
-                          ),
-                          subtitle: tr(
-                            context,
-                            'Preview first; merge or replace.',
-                            'Xem trước; gộp hoặc thay thế.',
-                          ),
-                          navigates: true,
-                          onTap: () => scope.run(
-                            context,
-                            () => importBoards(context, scope, null),
-                          ),
-                        ),
-                      ],
-                    ),
-                    SettingsPanel(
-                      title: tr(context, 'Put away', 'Đã cất đi'),
-                      rows: [
-                        SettingsRow(
-                          key: const Key('settings-archived'),
-                          icon: Icons.inventory_2_outlined,
-                          title: tr(
-                            context,
-                            'Archived boards',
-                            'Bảng đã lưu trữ',
-                          ),
-                          subtitle: archived.isEmpty
-                              ? tr(context, 'None', 'Không có')
-                              : archived.map((b) => b.str('title')).join(', '),
-                          navigates: archived.isNotEmpty,
-                          onTap: archived.isEmpty
-                              ? null
-                              : () => _archived(context, archived),
-                        ),
-                        SettingsRow(
-                          key: const Key('settings-trash'),
-                          icon: Icons.delete_outline,
-                          title: tr(context, 'Trash', 'Thùng rác'),
-                          subtitle: trashed == 0
-                              ? tr(context, 'Empty', 'Trống')
-                              : tr(context, '$trashed cards', '$trashed thẻ'),
-                          navigates: trashed > 0,
-                          onTap: trashed == 0
-                              ? null
-                              : () => Navigator.pushNamed(context, '/trash'),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-                SettingsGroup(
-                  title: tr(context, 'Help', 'Trợ giúp'),
-                  children: [
-                    SettingsPanel(
-                      gap: false,
-                      rows: [
-                        SettingsRow(
-                          key: const Key('settings-welcome'),
-                          icon: Icons.play_circle_outline,
-                          title: tr(
-                            context,
-                            'Replay the 30-second tour',
-                            'Xem lại hướng dẫn 30 giây',
-                          ),
-                          navigates: true,
-                          onTap: onReplayWelcome,
-                        ),
-                        SettingsRow(
-                          icon: Icons.keyboard_outlined,
-                          title: tr(context, 'Keyboard', 'Bàn phím'),
-                          subtitle: tr(
-                            context,
-                            'Ctrl+F search · Ctrl+Z undo · Alt+arrows move the focused card',
-                            'Ctrl+F tìm · Ctrl+Z hoàn tác · Alt+mũi tên chuyển thẻ đang chọn',
-                          ),
-                        ),
-                        SettingsRow(
-                          icon: Icons.lock_outline,
-                          title: tr(context, 'Privacy', 'Quyền riêng tư'),
-                          subtitle: tr(
-                            context,
-                            'No account, no tracking, no cloud. Boards, covers and photos stay on this device.',
-                            'Không tài khoản, không theo dõi, không đám mây. Bảng, ảnh bìa và ảnh nằm trên máy này.',
-                          ),
-                        ),
-                      ],
-                    ),
-                    const KitSection(child: HandyMoreApps(app: 'boards')),
-                  ],
-                ),
-                const SizedBox(height: 24),
-                Text(
-                  'Handy Boards',
-                  textAlign: TextAlign.center,
-                  style: Theme.of(
-                    context,
-                  ).textTheme.bodySmall?.copyWith(color: p.muted),
-                ),
-              ],
-            ),
+                ],
+              ),
+            ],
           ),
-        ),
+
+          // Automations (Pro).
+          SettingsGroup(
+            title: tr(context, 'Automations', 'Tự động hoá'),
+            note: tr(
+              context,
+              'Pro. Each one is off until you turn it on; Undo always works.',
+              'Pro. Mỗi cái tắt cho tới khi bạn bật; luôn hoàn tác được.',
+            ),
+            children: [
+              SettingsPanel(
+                gap: false,
+                rows: [
+                  SettingsSwitch(
+                    key: const Key('auto-subtasks-done'),
+                    icon: Icons.task_alt,
+                    title: tr(
+                      context,
+                      'Finish a card when its subtasks are done',
+                      'Chuyển thẻ sang cột xong khi đủ việc con',
+                    ),
+                    subtitle: tr(
+                      context,
+                      'Moves it to the board’s finished column.',
+                      'Chuyển thẻ sang cột “đã xong” của bảng.',
+                    ),
+                    value: pro && automation['subtasksDone'] == true,
+                    onChanged: (v) => auto('subtasksDone', v),
+                  ),
+                  SettingsSwitch(
+                    key: const Key('auto-archive-done'),
+                    icon: Icons.archive_outlined,
+                    title: tr(
+                      context,
+                      'Archive finished cards after 14 days',
+                      'Lưu trữ thẻ đã xong sau 14 ngày',
+                    ),
+                    subtitle: tr(
+                      context,
+                      'They wait in Data › Archived cards.',
+                      'Thẻ nằm ở Dữ liệu › Thẻ đã lưu trữ.',
+                    ),
+                    value: pro && automation['archiveDone'] == true,
+                    onChanged: (v) => auto('archiveDone', v),
+                  ),
+                ],
+              ),
+            ],
+          ),
+
+          // Data.
+          SettingsGroup(
+            title: tr(context, 'Data', 'Dữ liệu'),
+            note: tr(
+              context,
+              'Kept on this device. It leaves only when you back it up, export or share it.',
+              'Lưu trên máy này. Chỉ rời máy khi bạn sao lưu, xuất hoặc chia sẻ.',
+            ),
+            children: [
+              SettingsPanel(
+                gap: false,
+                title: tr(context, 'Backup and restore', 'Sao lưu & khôi phục'),
+                rows: [
+                  Padding(
+                    padding: const EdgeInsets.all(HandySpace.m),
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: FilledButton.icon(
+                            key: const Key('settings-backup'),
+                            onPressed: () => scope.run(
+                              context,
+                              () => exportBoards(context, scope, null),
+                            ),
+                            icon: const Icon(Icons.backup_outlined, size: 20),
+                            label: Text(tr(context, 'Back up', 'Sao lưu')),
+                          ),
+                        ),
+                        const SizedBox(width: HandySpace.m),
+                        Expanded(
+                          child: OutlinedButton.icon(
+                            key: const Key('settings-restore'),
+                            onPressed: () => scope.run(
+                              context,
+                              () => importBoards(context, scope, null),
+                            ),
+                            icon: const Icon(
+                              Icons.settings_backup_restore,
+                              size: 20,
+                            ),
+                            label: Text(tr(context, 'Restore', 'Khôi phục')),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  if (scope.autoBackup?.folders.supported ?? false)
+                    AutoBackupRow(scope: scope),
+                ],
+              ),
+              SettingsPanel(
+                rows: [
+                  SettingsRow(
+                    key: const Key('settings-archived'),
+                    icon: Icons.inventory_2_outlined,
+                    title: tr(context, 'Archived boards', 'Bảng đã lưu trữ'),
+                    subtitle: archivedBoards == 0
+                        ? tr(context, 'None', 'Không có')
+                        : tr(
+                            context,
+                            archivedBoards == 1
+                                ? '1 board'
+                                : '$archivedBoards boards',
+                            '$archivedBoards bảng',
+                          ),
+                    navigates: archivedBoards > 0,
+                    onTap: archivedBoards == 0
+                        ? null
+                        : () => showArchived(context, scope, boards: true),
+                  ),
+                  SettingsRow(
+                    key: const Key('settings-archived-cards'),
+                    icon: Icons.archive_outlined,
+                    title: tr(context, 'Archived cards', 'Thẻ đã lưu trữ'),
+                    subtitle: archived == 0
+                        ? tr(context, 'None', 'Không có')
+                        : tr(
+                            context,
+                            archived == 1 ? '1 card' : '$archived cards',
+                            '$archived thẻ',
+                          ),
+                    navigates: archived > 0,
+                    onTap: archived == 0
+                        ? null
+                        : () => showArchived(context, scope, boards: false),
+                  ),
+                  SettingsRow(
+                    key: const Key('settings-trash'),
+                    icon: Icons.delete_outline,
+                    title: tr(context, 'Trash', 'Thùng rác'),
+                    subtitle: trashed == 0
+                        ? tr(context, 'Empty', 'Trống')
+                        : tr(
+                            context,
+                            trashed == 1 ? '1 card' : '$trashed cards',
+                            '$trashed thẻ',
+                          ),
+                    navigates: true,
+                    onTap: () => Navigator.pushNamed(context, '/trash'),
+                  ),
+                  SettingsRow(
+                    key: const Key('settings-delete-all'),
+                    icon: Icons.delete_forever_outlined,
+                    destructive: true,
+                    title: tr(
+                      context,
+                      'Delete all data',
+                      'Xoá toàn bộ dữ liệu',
+                    ),
+                    subtitle: tr(
+                      context,
+                      'Everything this app keeps on this device. Cannot be undone.',
+                      'Mọi thứ app lưu trên máy này. Không hoàn tác được.',
+                    ),
+                    onTap: () => deleteEverything(context, scope),
+                  ),
+                ],
+              ),
+            ],
+          ),
+
+          // Help.
+          SettingsGroup(
+            title: tr(context, 'Help', 'Trợ giúp'),
+            children: [
+              SettingsPanel(
+                gap: false,
+                rows: [
+                  SettingsRow(
+                    key: const Key('settings-howto'),
+                    icon: Icons.school_outlined,
+                    title: tr(context, 'How to use', 'Cách dùng'),
+                    subtitle: tr(
+                      context,
+                      'The welcome again, and each thing step by step',
+                      'Xem lại phần giới thiệu và từng việc theo từng bước',
+                    ),
+                    navigates: true,
+                    onTap: () => Navigator.pushNamed(context, '/how-to'),
+                  ),
+                ],
+              ),
+            ],
+          ),
+
+          // About.
+          SettingsGroup(
+            title: tr(context, 'About', 'Giới thiệu'),
+            children: [
+              SettingsPanel(
+                gap: false,
+                rows: [
+                  SettingsRow(
+                    key: const Key('settings-feedback'),
+                    icon: Icons.mail_outline,
+                    title: tr(context, 'Send feedback', 'Gửi góp ý'),
+                    subtitle: feedbackEmail,
+                    onTap: () => sendFeedback(context),
+                  ),
+                  SettingsRow(
+                    key: const Key('settings-privacy'),
+                    icon: Icons.policy_outlined,
+                    title: tr(
+                      context,
+                      'Privacy policy',
+                      'Chính sách quyền riêng tư',
+                    ),
+                    subtitle: tr(
+                      context,
+                      'No account, no tracking, no cloud',
+                      'Không tài khoản, không theo dõi, không đám mây',
+                    ),
+                    navigates: true,
+                    onTap: () => openLegal(context, privacyPolicyUrl!),
+                  ),
+                  SettingsRow(
+                    key: const Key('settings-terms'),
+                    icon: Icons.gavel_outlined,
+                    title: tr(
+                      context,
+                      'Terms of service',
+                      'Điều khoản sử dụng',
+                    ),
+                    navigates: true,
+                    onTap: () => openLegal(context, termsUrl!),
+                  ),
+                  SettingsRow(
+                    key: const Key('settings-licenses'),
+                    icon: Icons.info_outline,
+                    title: tr(context, 'Licenses', 'Giấy phép'),
+                    subtitle: tr(
+                      context,
+                      'Open-source licenses and fonts',
+                      'Giấy phép mã nguồn mở và phông chữ',
+                    ),
+                    navigates: true,
+                    onTap: () => showLicensePage(
+                      context: context,
+                      applicationName: 'Handy Boards',
+                    ),
+                  ),
+                ],
+              ),
+              const KitSection(child: HandyMoreApps(app: 'boards')),
+            ],
+          ),
+        ],
       );
     },
   );
+}
 
-  Future<void> _archived(BuildContext context, List<BoardRecord> boards) =>
-      showModalBottomSheet<void>(
-        context: context,
-        useSafeArea: true,
-        builder: (sheet) => SafeArea(
-          child: ListView(
-            shrinkWrap: true,
+/// The first thing in Settings: Pro, on a soft card in the app's hue; a
+/// thank-you once it is owned.
+class _ProCard extends StatelessWidget {
+  const _ProCard();
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final p = BoardsPalette.of(context);
+    final pro = hasPro(context);
+    final price = LifetimeScope.maybeOf(context)?.snapshot?.price;
+    return Material(
+      color: p.tint,
+      borderRadius: BorderRadius.circular(BoardsRadii.tile),
+      child: InkWell(
+        key: const Key('settings-pro'),
+        borderRadius: BorderRadius.circular(BoardsRadii.tile),
+        onTap: () => Navigator.pushNamed(context, '/pro'),
+        child: Padding(
+          padding: const EdgeInsets.all(HandySpace.l),
+          child: Row(
             children: [
-              for (final b in boards)
-                ListTile(
-                  leading: ClipRRect(
-                    borderRadius: BorderRadius.circular(8),
-                    child: SizedBox(
-                      width: 40,
-                      height: 40,
-                      child: boardCover(b),
+              Icon(Icons.workspace_premium_outlined, size: 32, color: p.ink),
+              const SizedBox(width: HandySpace.m),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      pro
+                          ? tr(context, 'Pro is yours', 'Bạn đã có Pro')
+                          : tr(context, 'Upgrade to Pro', 'Nâng cấp Pro'),
+                      style: theme.textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.w700,
+                        color: p.ink,
+                      ),
                     ),
-                  ),
-                  title: Text(b.str('title')),
-                  trailing: TextButton(
-                    onPressed: () async {
-                      Navigator.pop(sheet);
-                      await scope.run(
-                        context,
-                        () => scope.controller.change(
-                          (s) => s.put(
-                            'boards',
-                            s.get('boards', b.id).copy({'archived': false}),
-                          ),
-                        ),
-                      );
-                      if (context.mounted)
-                        showUndo(
-                          context,
-                          scope,
-                          tr(
-                            context,
-                            'Board is back on the home',
-                            'Bảng đã trở lại Trang chủ',
-                          ),
-                        );
-                    },
-                    child: Text(tr(context, 'Restore', 'Khôi phục')),
-                  ),
+                    const SizedBox(height: 2),
+                    Text(
+                      pro
+                          ? tr(
+                              context,
+                              'Thank you. Everything Pro adds is on.',
+                              'Cảm ơn bạn. Mọi thứ của Pro đã mở.',
+                            )
+                          : tr(
+                              context,
+                              'Templates, covers, looks, repeating cards, automations, designed exports. One payment${price == null ? '' : ' ($price)'}; buy or restore inside.',
+                              'Mẫu, ảnh bìa, giao diện, thẻ lặp lại, tự động hoá, bản xuất đẹp. Trả một lần${price == null ? '' : ' ($price)'}; mua hoặc khôi phục ở trong.',
+                            ),
+                      style: theme.textTheme.bodyMedium?.copyWith(color: p.ink),
+                    ),
+                  ],
                 ),
+              ),
+              Icon(
+                pro ? Icons.check_circle : Icons.chevron_right,
+                color: p.ink,
+              ),
             ],
           ),
         ),
-      );
+      ),
+    );
+  }
 }

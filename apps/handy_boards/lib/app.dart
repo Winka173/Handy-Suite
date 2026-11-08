@@ -1,5 +1,7 @@
 import 'dart:async';
+import 'package:flutter/foundation.dart';
 import 'package:handy_boards_engine/handy_boards_engine.dart';
+import 'package:handy_files/backup_folder.dart' show privateBackupFolders;
 import 'package:handy_ui/kit.dart';
 import 'board/board_page.dart';
 import 'card/card_sheet.dart';
@@ -10,11 +12,13 @@ import 'design/theme.dart';
 import 'export/export_page.dart';
 import 'home/home_page.dart';
 import 'pages/more_pages.dart';
+import 'platform/export_job.dart';
 import 'platform/home_surface.dart';
 import 'platform/reminders.dart';
 import 'platform/share_inbox.dart';
 import 'pro/pro.dart';
 import 'scope.dart';
+import 'settings/how_to_page.dart';
 import 'settings/settings_page.dart';
 import 'welcome/welcome_page.dart';
 
@@ -48,6 +52,17 @@ class _BoardsAppState extends State<BoardsApp> with WidgetsBindingObserver {
     c,
     clock: widget.clock,
     reminders: reminderPort,
+    // On a device only (tests pass their own controller): a copy a day
+    // when something changed, kept in the app's own storage.
+    autoBackup: widget.controller == null && !kIsWeb
+        ? HandyAutoBackup.local(
+            app: 'boards',
+            extension: 'zip',
+            build: () => fullBackupBytes(c.state!, c.store),
+            folders: privateBackupFolders(),
+            revision: () => c.state?.revision.toString(),
+          )
+        : null,
   );
   bool replayWelcome = false, tidied = false;
 
@@ -63,9 +78,9 @@ class _BoardsAppState extends State<BoardsApp> with WidgetsBindingObserver {
         ]);
       };
     if (c.state == null) {
-      c.load().then((_) => _tidy());
+      c.load().then((_) => _started());
     } else {
-      _tidy();
+      _started();
     }
     inbox.listen(_takeShares);
     _takeShares();
@@ -77,6 +92,16 @@ class _BoardsAppState extends State<BoardsApp> with WidgetsBindingObserver {
       ((s.preferences['locale'] ?? 'system') == 'system' &&
           WidgetsBinding.instance.platformDispatcher.locale.languageCode ==
               'vi');
+
+  void _started() {
+    _tidy();
+    if (c.state != null) scope.autoBackup?.attach();
+  }
+
+  void _replay() {
+    navigator.currentState?.popUntil((r) => r.isFirst);
+    setState(() => replayWelcome = true);
+  }
 
   /// Once per start: older data becomes one-level Kanban (nothing lost),
   /// and the archive preset runs if it is on.
@@ -169,6 +194,7 @@ class _BoardsAppState extends State<BoardsApp> with WidgetsBindingObserver {
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
     homeSurface.dispose();
+    scope.autoBackup?.dispose();
     inbox.dispose();
     noAds.dispose();
     if (widget.controller == null) c.dispose();
@@ -208,13 +234,8 @@ class _BoardsAppState extends State<BoardsApp> with WidgetsBindingObserver {
     } else {
       page = switch (name) {
         '/templates' => TemplateGallery(scope: scope),
-        '/settings' => SettingsPage(
-          scope: scope,
-          onReplayWelcome: () {
-            navigator.currentState?.popUntil((r) => r.isFirst);
-            setState(() => replayWelcome = true);
-          },
-        ),
+        '/settings' => SettingsPage(scope: scope),
+        '/how-to' => HowToPage(onReplayWelcome: _replay),
         '/pro' => ProPage(focus: settings.arguments as ProFeature?),
         '/search' => SearchPage(scope: scope),
         '/trash' => TrashPage(scope: scope),

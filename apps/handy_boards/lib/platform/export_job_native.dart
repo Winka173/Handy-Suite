@@ -10,6 +10,7 @@ import 'package:path_provider/path_provider.dart';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 import 'package:handy_boards_engine/handy_boards_engine.dart';
+import '../data/store.dart';
 import '../data/store_native.dart';
 import 'export_job.dart';
 
@@ -77,6 +78,27 @@ Future<String?> saveStreamingExport(
     }
   } finally {
     job.interrupt = null;
+    await dir.delete(recursive: true);
+  }
+}
+
+/// The full backup ZIP as bytes, for the automatic copies. On the device
+/// store it is written by the export worker (originals included) into a
+/// private temporary folder, read, and the folder removed.
+Future<Uint8List> fullBackupBytes(BoardsState state, BoardsStore? store) async {
+  if (store is! NativeBoardsStore) return exportBackupAsync(state);
+  final dir = await (await getTemporaryDirectory()).createTemp('boards-auto-');
+  try {
+    final output = '${dir.path}/handy-boards.zip';
+    await runBoardsExportWorker(
+      store.path,
+      state.revision,
+      'zip',
+      output,
+      BoardsJob(),
+    );
+    return await File(output).readAsBytes();
+  } finally {
     await dir.delete(recursive: true);
   }
 }

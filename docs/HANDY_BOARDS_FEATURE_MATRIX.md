@@ -1,6 +1,6 @@
 # Handy Boards feature matrix
 
-Updated 2026-11-07 for the Kanban-first rebuild (owner brief:
+Updated 2026-11-08 for the Kanban-first rebuild (owner brief:
 `docs/HANDY_BOARDS_KANBAN_SPEC.md`, contract: `docs/UX_REDESIGN.md` › "Hợp đồng: Handy
 Boards · Kanban"). IMPLEMENTED is code; AUTOMATED_TESTED names host tests; nothing here is
 device- or store-verified unless it says so.
@@ -19,8 +19,9 @@ device- or store-verified unless it says so.
 | Columns and boards | AUTOMATED_TESTED engine | Add/rename/reorder/mark finished/delete column (cards must go somewhere); duplicate, pin, archive, delete board (confirmed, Undo) |
 | Time view | AUTOMATED_TESTED host UI | "Board | Time" per board: cards by due day (≤ 14 days) or by week (longer); spans Today, 3 days, Week, 2 weeks, Month, 3 months or custom 1–12 days/weeks/months, remembered per board; Overdue first, No due date tray; drop on a day sets the due day (Undo); opens on today. Not a Gantt (no bars, no times) |
 | Search and filters | IMPLEMENTED | Board search, category filter, "due in 3 days"; search across boards |
-| Onboarding | AUTOMATED_TESTED host UI | Tour on a temporary board (never saved): add a card, move it, category stays when finished; makes a study or blank board, or skip; replay from Settings |
-| Settings | IMPLEMENTED | Bookmark-style groups: look, reminders, Pro + automations, data (backup/restore, archived boards, trash), help, more apps |
+| Onboarding | AUTOMATED_TESTED host UI | Tour on a temporary board (never saved): add a card, move it, category stays when finished; makes a study or blank board, or skip; replay from Settings › How to use |
+| Settings | AUTOMATED_TESTED host UI (`test/settings_test.dart`) | Bookmark/Sticky Wall order: Pro card first; General (language, light or dark, reminders); Automations (Pro); Data (Back up / Restore, Back up automatically: a daily copy when something changed, last 7 in the app's own storage, Restore or Save a copy; archived boards; archived cards (new); Trash; Delete all data, confirmed, keeps language and theme, starts the welcome again); Help (How to use); About (feedback mail, privacy policy, terms, licences, other Handy apps). Auto backup is device-only (none on web) and not yet run on a device |
+| How to use | AUTOMATED_TESTED host UI | Settings › Help › How to use (`/how-to`): replay the welcome (nothing saved), 12 topics as step sheets with drawn pictures (start, cards, categories, subtasks, time, covers and looks, repeat and automate, find, export and share, keep it safe, keyboard on computers, Pro); Previous / Next / Done |
 | Pro Lifetime | IMPLEMENTED, store UNVERIFIED | Gate only on Use/Apply/turn on; previews free. Pro: 5 templates, 30 covers, 5 board looks, automations (finish a card when all subtasks are done; archive finished after 14 days, restorable; repeating cards), designed exports, board insights. No Boards product id is configured yet, so the purchase panel says purchases are not set up |
 | Repeating cards (Pro) | AUTOMATED_TESTED | Daily/weekly/monthly; entering a finished column makes the next card once (top of the first column, subtasks unticked, due one period later, month ends clamped); moving back and forth never multiplies it |
 | Board looks (Pro) | AUTOMATED_TESTED host UI | Pinboard (free) + Linen, Blueprint, Meadow, Blush, Sand, light and dark; tried live on the board, Apply/Cancel; only page and column grounds change |

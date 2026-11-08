@@ -10,10 +10,14 @@ class BoardsScope {
   final BoardsController controller;
   final HandyFiles files;
   final DateTime Function() clock;
+
+  /// Daily copies in the app's own storage; none on the web and in tests.
+  final HandyAutoBackup? autoBackup;
   bool adsAllowed = false;
   BoardsScope(
     this.controller, {
     this.files = const SystemHandyFiles(),
+    this.autoBackup,
     DateTime Function()? clock,
     BoardsReminders? reminders,
   }) : clock = clock ?? DateTime.now,

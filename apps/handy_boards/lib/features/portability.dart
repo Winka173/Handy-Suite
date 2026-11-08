@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:flutter/services.dart';
 import 'package:handy_ui/kit.dart';
+import 'package:handy_files/handy_files.dart' show ImportedBytes;
 import 'package:handy_boards_engine/handy_boards_engine.dart';
 import 'package:pdf/widgets.dart' as pw;
 import '../scope.dart';
@@ -243,16 +244,21 @@ Future<void> exportBoards(
 Future<void> importBoards(
   BuildContext context,
   BoardsScope scope,
-  String? board,
-) async {
-  final prepared = supportsStagedImport(scope.controller.store, scope.files)
+  String? board, {
+  // A file already in hand (an automatic copy): no picker.
+  ImportedBytes? given,
+}) async {
+  final staged =
+      given == null &&
+      supportsStagedImport(scope.controller.store, scope.files);
+  final prepared = staged
       ? await runBoardsJob(context, prepareBoardsImport)
       : null;
-  if (supportsStagedImport(scope.controller.store, scope.files) &&
-      prepared == null)
-    return;
+  if (staged && prepared == null) return;
+  if (!context.mounted) return;
   try {
     final file =
+        given ??
         prepared?.file ??
         (prepared?.snapshot == null
             ? await scope.files.importBytes(

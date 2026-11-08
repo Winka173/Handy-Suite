@@ -2755,3 +2755,27 @@ xem trước trước khi mua), không chép nền ngà/teal và không gọi l�
   mỗi ngày một cột/mục; dài hơn: gom theo tuần ("Tuần 10–16/11"), kéo thẻ vào một tuần là đặt hạn
   ngày đầu tuần đó (Thứ Hai) trừ khi thẻ đã có hạn trong tuần ấy. ‹ › nhảy đúng một khoảng; nút
   chuyển ghi "Bảng | Thời gian"; mỗi bảng nhớ chế độ và khoảng (trường `view`, `span`).
+
+### Handy Boards · Cài đặt và "Cách dùng" như Bookmark/Sticky Wall (2026-11-08, chủ yêu cầu)
+- Việc của màn: đổi cách app chạy trên máy này và tìm lại cách làm một việc; không màn nào ở đây
+  sửa thẻ. Một câu hỏi: "chỉnh gì, hay học gì?". Hành động chính: mở Pro (thẻ đầu trang).
+- Thứ tự nhóm (giống Bookmark, Sticky Wall): thẻ Pro (nền `tint`, "Nâng cấp Pro" / "Bạn đã có
+  Pro") → Chung (ngôn ngữ, sáng/tối, nhắc việc) → Tự động hoá (Pro, có khoá trên công tắc) → Dữ liệu
+  (Sao lưu | Khôi phục là hai nút; Tự sao lưu mỗi ngày khi có thay đổi, giữ 7 bản trong bộ nhớ của
+  app, có Khôi phục/Chia sẻ bản gần nhất; Bảng đã lưu trữ; Thẻ đã lưu trữ (mới, trước đây ghi chú
+  hứa "khôi phục ở mục Dữ liệu" mà không có chỗ); Thùng rác; Xoá toàn bộ dữ liệu, đỏ, hỏi lại) →
+  Trợ giúp (Cách dùng) → Giới thiệu (Gửi góp ý, Chính sách quyền riêng tư, Điều khoản sử dụng,
+  Giấy phép, Các app Handy khác).
+- Cách dùng (`/how-to`): thẻ lớn "Xem lại phần giới thiệu" (mở lại màn chào, không lưu gì) rồi
+  danh sách chủ đề; mỗi chủ đề mở thành sheet các bước đánh số, Trước/Tiếp/Xong ghim ở chân. Hình
+  của bước là mảnh màn hình vẽ bằng code theo màu của app (cột Kanban, dải nhóm, thanh thời gian,
+  hàng cài đặt), chỗ cần bấm được khoanh viền màu nhấn; không ảnh chụp. Chủ đề: bắt đầu một bảng,
+  thêm và chuyển thẻ, nhóm, việc con và chi tiết thẻ, xem theo thời gian, bìa và giao diện, lặp lại
+  và tự động hoá, tìm, xuất và chia sẻ, giữ an toàn, phím tắt (chỉ máy tính), Pro.
+- Trạng thái: chưa có bản tự sao lưu → "Chưa có bản nào", không hiện Khôi phục/Chia sẻ; lỗi ghi →
+  "Lần gần nhất chưa ghi được"; không có lưu trữ/thùng rác → hàng ghi "Không có"/"Trống" và không
+  điều hướng. Web: không có Tự sao lưu (không có thư mục riêng). Chính sách/điều khoản mở trang
+  GitHub; không mở được → báo một dòng.
+- Đáp ứng: 320–1440, nội dung tối đa 720 px giữa màn; sheet chủ đề tối đa 640 px; chữ ×2 không
+  tràn. Quay lại: nút Back/Esc đóng sheet rồi trang. Web URL `/settings`, `/how-to`.
+- Từ chối: trang trợ giúp dạng FAQ dài, video, ảnh chụp màn hình thật, biểu tượng trong ô màu.

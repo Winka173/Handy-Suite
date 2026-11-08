@@ -207,6 +207,37 @@ void main() {
     await shot(t, '13-pro');
   });
 
+  testWidgets('settings, whole', (t) async {
+    await boot(t, sample(), size: const Size(390, 2600));
+    await tap(t, find.byKey(const Key('home-settings')));
+    await shot(t, '12a-settings-whole');
+  });
+
+  testWidgets('how to use', (t) async {
+    await boot(t, sample(), size: const Size(390, 1500));
+    await tap(t, find.byKey(const Key('home-settings')));
+    await tap(t, find.byKey(const Key('settings-howto')));
+    await shot(t, '26-howto');
+    for (final topic in ['cards', 'categories', 'details', 'time', 'look']) {
+      await tap(t, find.byKey(Key('howto-topic-$topic')));
+      await shot(t, '27-howto-$topic');
+      await tap(t, find.byKey(const Key('howto-done')));
+    }
+  });
+
+  testWidgets('how to use, dark, 320 px, text x2', (t) async {
+    await boot(t, sample(theme: 'dark'), size: const Size(320, 1400), text: 2);
+    await tap(t, find.byKey(const Key('home-settings')));
+    await t.scrollUntilVisible(
+      find.byKey(const Key('settings-howto')),
+      400,
+      scrollable: find.byType(Scrollable).first,
+    );
+    await tap(t, find.byKey(const Key('settings-howto')));
+    await tap(t, find.byKey(const Key('howto-topic-cards')));
+    await shot(t, '28-howto-small-dark');
+  });
+
   testWidgets('desktop light and dark', (t) async {
     await boot(t, sample(locale: 'en'), size: const Size(1280, 800));
     await shot(t, '14-desktop-home');
