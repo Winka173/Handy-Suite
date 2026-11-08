@@ -24,6 +24,8 @@ void showUndo(BuildContext context, BoardsScope scope, String message) {
   m.hideCurrentSnackBar();
   m.showSnackBar(
     SnackBar(
+      // Undo stays a few seconds, then goes; it never sits over the board.
+      persist: false,
       content: Text(message),
       action: SnackBarAction(
         label: tr(context, 'Undo', 'Hoàn tác'),

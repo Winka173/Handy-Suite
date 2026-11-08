@@ -48,6 +48,8 @@ Future<void> sendFeedback(BuildContext context) async {
     ?..hideCurrentSnackBar()
     ..showSnackBar(
       SnackBar(
+        // Undo stays a few seconds, then goes; it never sits over the board.
+        persist: false,
         key: const Key('feedback-no-mail'),
         content: Text(
           tr(

@@ -201,6 +201,40 @@ class SettingsPage extends StatelessWidget {
                     value: pro && automation['archiveDone'] == true,
                     onChanged: (v) => auto('archiveDone', v),
                   ),
+                  SettingsRow(
+                    key: const Key('settings-carry-over'),
+                    icon: Icons.event_repeat_outlined,
+                    title: tr(
+                      context,
+                      'Smart carry-over',
+                      'Tự chuyển việc tồn',
+                    ),
+                    subtitle: switch (object(
+                      scope.state.preferences['carryOver'] ?? {},
+                    )['mode']) {
+                      'auto' => tr(context, 'Moves by itself', 'Tự chuyển'),
+                      'review' => tr(
+                        context,
+                        'Asks each new day',
+                        'Hỏi mỗi ngày mới',
+                      ),
+                      _ => tr(context, 'Off', 'Tắt'),
+                    },
+                    navigates: true,
+                    onTap: () => carryOverSettings(context, scope),
+                  ),
+                  SettingsRow(
+                    key: const Key('settings-card-templates'),
+                    icon: Icons.content_copy_outlined,
+                    title: tr(context, 'My card templates', 'Mẫu thẻ của tôi'),
+                    navigates: true,
+                    onTap: () => Navigator.push(
+                      context,
+                      MaterialPageRoute<void>(
+                        builder: (_) => CardTemplatesPage(scope: scope),
+                      ),
+                    ),
+                  ),
                 ],
               ),
             ],
@@ -386,40 +420,6 @@ class SettingsPage extends StatelessWidget {
                         _pref(context, 'purpose', v == 'none' ? null : v),
                   ),
                   SettingsRow(
-                    key: const Key('settings-carry-over'),
-                    icon: Icons.event_repeat_outlined,
-                    title: tr(
-                      context,
-                      'Smart carry-over',
-                      'Tự chuyển việc tồn',
-                    ),
-                    subtitle: switch (object(
-                      scope.state.preferences['carryOver'] ?? {},
-                    )['mode']) {
-                      'auto' => tr(context, 'Moves by itself', 'Tự chuyển'),
-                      'review' => tr(
-                        context,
-                        'Asks each new day',
-                        'Hỏi mỗi ngày mới',
-                      ),
-                      _ => tr(context, 'Off', 'Tắt'),
-                    },
-                    navigates: true,
-                    onTap: () => carryOverSettings(context, scope),
-                  ),
-                  SettingsRow(
-                    key: const Key('settings-card-templates'),
-                    icon: Icons.content_copy_outlined,
-                    title: tr(context, 'My card templates', 'Mẫu thẻ của tôi'),
-                    navigates: true,
-                    onTap: () => Navigator.push(
-                      context,
-                      MaterialPageRoute<void>(
-                        builder: (_) => CardTemplatesPage(scope: scope),
-                      ),
-                    ),
-                  ),
-                  SettingsRow(
                     key: const Key('settings-plans'),
                     icon: Icons.table_chart_outlined,
                     title: tr(
@@ -459,8 +459,8 @@ class SettingsPage extends StatelessWidget {
                     ),
                     subtitle: tr(
                       context,
-                      'No account, no tracking, no cloud',
-                      'Không tài khoản, không theo dõi, không đám mây',
+                      'No account, no tracking; Drive only if you turn sync on',
+                      'Không tài khoản, không theo dõi; chỉ lên Drive khi bạn bật đồng bộ',
                     ),
                     navigates: true,
                     onTap: () => openLegal(context, privacyPolicyUrl!),

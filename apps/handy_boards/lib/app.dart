@@ -159,6 +159,8 @@ class _BoardsAppState extends State<BoardsApp> with WidgetsBindingObserver {
       if (before.isEmpty || messenger == null || !ctx.mounted) return;
       messenger.showSnackBar(
         SnackBar(
+          // Undo stays a few seconds, then goes; it never sits over the board.
+          persist: false,
           content: Text(
             tr(
               ctx,
@@ -188,6 +190,8 @@ class _BoardsAppState extends State<BoardsApp> with WidgetsBindingObserver {
     if (waiting == 0 || messenger == null || !ctx.mounted) return;
     messenger.showSnackBar(
       SnackBar(
+        // Undo stays a few seconds, then goes; it never sits over the board.
+        persist: false,
         duration: const Duration(seconds: 8),
         content: Text(
           tr(
