@@ -94,7 +94,7 @@ on each:
 | 2. Turn sync on, second device (its own board) | Merged both ways: 5 boards on each |
 | 3a. Edit a card on one device | Seen on the other after its sync ("9 cards · 1 done") |
 | 3b. Delete a card on one device while the other adds one | Both changes kept on both ("9 cards · 2 done") |
-| 4. Turn sync off and on again on one device | Waiting for the owner to pick the account in the chooser |
+| 4. Turn sync off and on again on one device | Same account picked again: a union, nothing lost or doubled; both devices show the same 5 boards with the same counts (9/2, 0/0, 1/0, 10/3, 0/0) |
 
 Found and fixed during the run: Undo bars that stayed until tapped
 (`persist: false`), Settings rows in the wrong group, "no cloud" wording
