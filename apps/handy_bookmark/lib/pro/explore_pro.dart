@@ -230,7 +230,9 @@ class _ExploreProState extends State<ExplorePro> {
     );
     // The stage keeps the drawing's 16:9 up to the column's 720 px.
     final width = MediaQuery.sizeOf(context).width.clamp(0.0, 720.0) - 32;
-    final stageHeight = (width * 9 / 16).clamp(170.0, 340.0);
+    // A short (landscape) screen keeps room for the words under it.
+    final tall = MediaQuery.sizeOf(context).height * .42;
+    final stageHeight = (width * 9 / 16).clamp(150.0, tall.clamp(150.0, 340.0));
     return Scaffold(
       appBar: AppBar(title: const Text('Handy Bookmark Pro')),
       bottomNavigationBar: _Purchase(
