@@ -1,0 +1,5 @@
+• Xếp bảng theo ngày, tuần hoặc tháng từ một chip Thời gian. Tuần đã qua giữ nguyên; việc chưa xong đem qua tuần này bằng một chạm.
+• Chọn nhiều nhóm cùng lúc để chỉ xem thẻ của chúng.
+• Mẫu bảng gợi ý trường cho thẻ (chi phí, link, đã đặt…), điền miễn phí; thẻ nào cũng có mục Trường.
+• Trang Pro rõ hơn, thùng rác và menu gọn hơn.
+• Chính sách và điều khoản trên winka.top.
