@@ -125,7 +125,12 @@ void main() {
     expect(opened.single.path, feedbackEmail);
     expect(opened.single.query, contains('Handy%20Boards'));
     await tap(t, find.byKey(const Key('settings-privacy')));
-    expect(opened.last.toString(), privacyPolicyUrl);
+    // On winka.top, in the app's language.
+    expect(opened.last.host, 'winka.top');
+    expect(
+      opened.last.path,
+      matches(RegExp(r'^/(en|vi)/apps/handy-boards/privacy/$')),
+    );
   });
 
   testWidgets('on Android the home-screen widget shows card names only once '

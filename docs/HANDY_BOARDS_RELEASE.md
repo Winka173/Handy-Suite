@@ -15,9 +15,8 @@ Handy Bookmark's `docs/HANDY_BOOKMARK_RELEASE.md` is the sibling it copies.
 | Pro product | one-time product `handy_boards_pro`, created and ACTIVE 2026-11-08 by the API: 99,000 VND (the same as Handy Bookmark Pro; US 3.89 USD, other regions converted by Play), listing EN + VI |
 | Upload key | `C:\Users\Winka\handy-boards-upload.jks`, alias `upload`; SHA-1 `39:52:00:F5:76:BD:4F:28:7C:95:F3:EC:CA:FE:FC:E1:F8:A6:5B:03` |
 | Key passwords | `~/.secrets/handy-boards-upload.properties`, copied to the gitignored `apps/handy_boards/android/key.properties`. Never print or commit |
-| Privacy policy | `https://github.com/Winka173/Handy-Suite/blob/ui-rebuild/apps/handy_boards/PRIVACY.md` |
-| Terms | `https://github.com/Winka173/Handy-Suite/blob/ui-rebuild/apps/handy_boards/TERMS.md` |
-| winka.top legal | Not yet: `https://winka.top/en/apps/handy-boards/privacy/` is still a "not effective" preview (checked 2026-11-09). Keep the GitHub links until the website imports `OneDrive/Documents/Handy-Website-Kit/handy-boards` (its `legal/` is PRIVACY.md and TERMS.md verbatim), then switch the app (`lib/settings/help_links.dart`, as Bookmark does), Play Console and OAuth branding together |
+| Privacy policy | `https://winka.top/en/apps/handy-boards/privacy/` (VI: `/vi/…`; since 2026-11-09, the GitHub copy stays online for build 3); text from `apps/handy_boards/PRIVACY.md` |
+| Terms | `https://winka.top/en/apps/handy-boards/terms/`; data deletion `…/data-deletion/`; support `https://winka.top/en/support/handy-boards/`. Legal text changes go to the website repo (`winka-studio`: `docs/website-kits/handy-boards/legal/` and `src/content/website-kits.json`) too |
 
 Back up the keystore and its properties file with the owner's other secrets:
 a lost upload key needs an upload-key reset in Play Console.
@@ -69,10 +68,11 @@ One-time setup by the owner, click by click in Sticky Wall's
 - **Its own project** "Handy Boards" (never `play-publisher-513712`, never
   Handy Bookmark's): Drive API on; Google Auth Platform: name *Handy Boards*,
   External, support/contact `apps.winka.studio@gmail.com`; Branding with **no
-  logo**, home page `https://github.com/Winka173/Handy-Suite`, privacy
-  `https://github.com/Winka173/Handy-Suite/blob/ui-rebuild/apps/handy_boards/PRIVACY.md`,
-  terms `https://github.com/Winka173/Handy-Suite/blob/ui-rebuild/apps/handy_boards/TERMS.md`,
-  authorized domain `github.com`; Data Access scope `.../auth/drive.appdata`;
+  logo**, home page `https://winka.top/en/apps/handy-boards/`, privacy
+  `https://winka.top/en/apps/handy-boards/privacy/`,
+  terms `https://winka.top/en/apps/handy-boards/terms/`,
+  authorized domain `winka.top` (the domain must be verified in Search
+  Console by the owner; switched from GitHub on 2026-11-09); Data Access scope `.../auth/drive.appdata`;
   Audience → **Publish app**.
 - **Android OAuth clients**:
 
