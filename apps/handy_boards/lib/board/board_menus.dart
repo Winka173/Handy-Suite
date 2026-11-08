@@ -1,6 +1,7 @@
 import 'package:handy_boards_engine/handy_boards_engine.dart';
 import 'package:handy_ui/kit.dart';
 import 'board_history.dart';
+import 'time_actions.dart';
 import 'rules_page.dart';
 import '../card/fields_ui.dart';
 import '../card/card_templates_ui.dart';
@@ -10,7 +11,6 @@ import '../pro/pro.dart';
 import '../scope.dart';
 import '../ui/look.dart';
 import 'board_page.dart';
-import 'categories_sheet.dart';
 
 Future<T?> _sheet<T>(
   BuildContext context,
@@ -20,6 +20,10 @@ Future<T?> _sheet<T>(
   context: context,
   useSafeArea: true,
   isScrollControlled: true,
+  // Never the whole height: a tap above the sheet still closes it.
+  constraints: BoxConstraints(
+    maxHeight: MediaQuery.sizeOf(context).height * .85,
+  ),
   builder: (context) => SafeArea(
     child: SingleChildScrollView(
       padding: const EdgeInsets.only(bottom: 12),
@@ -39,6 +43,21 @@ Future<T?> _sheet<T>(
           ...rows(context),
         ],
       ),
+    ),
+  ),
+);
+
+/// A small heading that groups a menu's rows.
+Widget _section(BuildContext context, String title, {Key? key}) => Padding(
+  key: key,
+  padding: const EdgeInsets.fromLTRB(20, 16, 20, 4),
+  child: Semantics(
+    header: true,
+    child: Text(
+      title,
+      style: Theme.of(
+        context,
+      ).textTheme.labelLarge?.copyWith(color: BoardsPalette.of(context).muted),
     ),
   ),
 );
@@ -113,7 +132,13 @@ Future<void> boardMenu(
       action();
     }
 
+    final pro = hasPro(sheet);
     return [
+      _section(
+        sheet,
+        tr(sheet, 'Board', 'Bảng'),
+        key: const Key('menu-sec-board'),
+      ),
       _row(
         sheet,
         Icons.edit_outlined,
@@ -135,117 +160,22 @@ Future<void> boardMenu(
         }),
         key: const Key('menu-rename-board'),
       ),
-      _row(
-        sheet,
-        Icons.image_outlined,
-        tr(sheet, 'Change cover', 'Đổi ảnh bìa'),
-        () => then(() => pickBoardCover(context, scope, board)),
-        key: const Key('menu-board-cover'),
-      ),
-      _row(
-        sheet,
-        detailed ? Icons.view_agenda_outlined : Icons.view_stream_outlined,
-        detailed
-            ? tr(sheet, 'Show compact cards', 'Hiện thẻ gọn')
-            : tr(sheet, 'Show subtasks on cards', 'Hiện việc con trên thẻ'),
-        () => then(
-          () => scope.run(
-            context,
-            () => scope.controller.change(
-              (s) => setBoardLook(
-                s,
-                board,
-                presentation: detailed ? 'compact' : 'detailed',
-              ),
-            ),
-          ),
+      if (onLook != null)
+        _row(
+          sheet,
+          Icons.palette_outlined,
+          tr(sheet, 'Look and cover', 'Giao diện và ảnh bìa'),
+          () => then(() async => onLook()),
+          key: const Key('menu-board-look'),
         ),
-        key: const Key('menu-presentation'),
-      ),
-      _row(
-        sheet,
-        Icons.space_dashboard_outlined,
-        tr(sheet, 'Edit categories', 'Sửa nhóm'),
-        () => then(() => editCategories(context, scope, board)),
-      ),
-      _row(
-        sheet,
-        Icons.view_column_outlined,
-        tr(sheet, 'Add column', 'Thêm cột'),
-        () => then(() => addColumnDialog(context, scope, board)),
-      ),
-      _row(
-        sheet,
-        Icons.history,
-        tr(sheet, 'Board history', 'Lịch sử bảng'),
-        () => then(() async {
-          if (!await requirePro(context, ProFeature.history) ||
-              !context.mounted) {
-            return;
-          }
-          await Navigator.push(
-            context,
-            MaterialPageRoute<void>(
-              builder: (_) => BoardHistoryPage(scope: scope, board: board),
-            ),
-          );
-        }),
-        key: const Key('menu-board-history'),
-      ),
-      _row(
-        sheet,
-        Icons.bolt_outlined,
-        tr(sheet, 'Automation rules', 'Luật tự động'),
-        () => then(
-          () => Navigator.push(
-            context,
-            MaterialPageRoute<void>(
-              builder: (_) => RulesPage(scope: scope, board: board),
-            ),
-          ),
+      if (onLook == null)
+        _row(
+          sheet,
+          Icons.image_outlined,
+          tr(sheet, 'Change cover', 'Đổi ảnh bìa'),
+          () => then(() => pickBoardCover(context, scope, board)),
+          key: const Key('menu-board-cover'),
         ),
-        key: const Key('menu-rules'),
-        trailing: hasPro(sheet) ? null : const ProBadge(),
-      ),
-      _row(
-        sheet,
-        Icons.tune,
-        tr(sheet, 'Custom fields', 'Trường tuỳ chỉnh'),
-        () => then(() => fieldsSheet(context, scope, board)),
-        key: const Key('menu-fields'),
-      ),
-      _row(
-        sheet,
-        Icons.flag_outlined,
-        tr(sheet, 'Key dates', 'Ngày quan trọng'),
-        () => then(() => editMilestones(context, scope, board)),
-        key: const Key('menu-key-dates'),
-      ),
-      _row(
-        sheet,
-        timePinned(b) ? Icons.date_range : Icons.date_range_outlined,
-        timePinned(b)
-            ? tr(
-                sheet,
-                'Move the Time switch to the top bar',
-                'Đưa nút Thời gian lên thanh trên',
-              )
-            : tr(
-                sheet,
-                'Pin the Board | Time switch',
-                'Ghim nút Bảng | Thời gian cạnh tên',
-              ),
-        () => then(
-          () => scope.run(
-            context,
-            () => scope.controller.change(
-              (s) => setBoardLook(s, board, timePinned: !timePinned(b)),
-              history: false,
-            ),
-          ),
-        ),
-        key: const Key('menu-time-pin'),
-      ),
       _row(
         sheet,
         b.flag('pinned') ? Icons.push_pin : Icons.push_pin_outlined,
@@ -291,14 +221,101 @@ Future<void> boardMenu(
             );
         }),
       ),
-      if (onLook != null)
-        _row(
-          sheet,
-          Icons.palette_outlined,
-          tr(sheet, 'Board look', 'Giao diện bảng'),
-          () => then(() async => onLook()),
-          key: const Key('menu-board-look'),
+      _section(
+        sheet,
+        tr(sheet, 'Show and set up', 'Hiển thị và cấu trúc'),
+        key: const Key('menu-sec-setup'),
+      ),
+      _row(
+        sheet,
+        detailed ? Icons.view_agenda_outlined : Icons.view_stream_outlined,
+        detailed
+            ? tr(sheet, 'Show compact cards', 'Hiện thẻ gọn')
+            : tr(sheet, 'Show subtasks on cards', 'Hiện việc con trên thẻ'),
+        () => then(
+          () => scope.run(
+            context,
+            () => scope.controller.change(
+              (s) => setBoardLook(
+                s,
+                board,
+                presentation: detailed ? 'compact' : 'detailed',
+              ),
+            ),
+          ),
         ),
+        key: const Key('menu-presentation'),
+      ),
+      _row(
+        sheet,
+        Icons.view_column_outlined,
+        tr(sheet, 'Add column', 'Thêm cột'),
+        () => then(() => addColumnDialog(context, scope, board)),
+      ),
+      _row(
+        sheet,
+        Icons.tune,
+        tr(sheet, 'Custom fields', 'Trường tuỳ chỉnh'),
+        () => then(() async {
+          if (!await requirePro(context, ProFeature.fields) ||
+              !context.mounted) {
+            return;
+          }
+          await fieldsSheet(context, scope, board);
+        }),
+        key: const Key('menu-fields'),
+        trailing: pro ? null : const ProBadge(),
+      ),
+      _row(
+        sheet,
+        Icons.flag_outlined,
+        tr(sheet, 'Key dates', 'Ngày quan trọng'),
+        () => then(() => editMilestones(context, scope, board)),
+        key: const Key('menu-key-dates'),
+      ),
+      _section(
+        sheet,
+        tr(sheet, 'Pro tools', 'Công cụ Pro'),
+        key: const Key('menu-sec-pro'),
+      ),
+      _row(
+        sheet,
+        Icons.bolt_outlined,
+        tr(sheet, 'Automation rules', 'Luật tự động'),
+        () => then(() async {
+          if (!await requirePro(context, ProFeature.automation) ||
+              !context.mounted) {
+            return;
+          }
+          await Navigator.push(
+            context,
+            MaterialPageRoute<void>(
+              builder: (_) => RulesPage(scope: scope, board: board),
+            ),
+          );
+        }),
+        key: const Key('menu-rules'),
+        trailing: pro ? null : const ProBadge(),
+      ),
+      _row(
+        sheet,
+        Icons.history,
+        tr(sheet, 'Board history', 'Lịch sử bảng'),
+        () => then(() async {
+          if (!await requirePro(context, ProFeature.history) ||
+              !context.mounted) {
+            return;
+          }
+          await Navigator.push(
+            context,
+            MaterialPageRoute<void>(
+              builder: (_) => BoardHistoryPage(scope: scope, board: board),
+            ),
+          );
+        }),
+        key: const Key('menu-board-history'),
+        trailing: pro ? null : const ProBadge(),
+      ),
       _row(
         sheet,
         Icons.insights_outlined,
@@ -307,7 +324,13 @@ Future<void> boardMenu(
           if (await requirePro(context, ProFeature.insights) && context.mounted)
             await Navigator.pushNamed(context, '/insights', arguments: board);
         }),
-        trailing: const ProBadge(),
+        trailing: pro ? null : const ProBadge(),
+        key: const Key('menu-insights'),
+      ),
+      _section(
+        sheet,
+        tr(sheet, 'Share', 'Chia sẻ'),
+        key: const Key('menu-sec-share'),
       ),
       _row(
         sheet,
@@ -318,6 +341,7 @@ Future<void> boardMenu(
         }),
         key: const Key('menu-export'),
       ),
+      const Divider(height: 24),
       _row(
         sheet,
         Icons.archive_outlined,
@@ -405,14 +429,20 @@ Future<void> addColumnDialog(
   );
 }
 
-/// A card's menu: the drag-free way to move it, and copy, archive, delete.
+/// A card's menu: when to work on it, the drag-free way to move it, and
+/// copy, archive, delete. [inSheet]: opened from the card itself, which
+/// already has its column, so "Move to…" is left out there.
 Future<void> cardMenu(
   BuildContext context,
   BoardsScope scope,
   String card, {
   required Future<void> Function(String card, String column, int index) onMoved,
+  bool inSheet = false,
 }) {
   final t = scope.state.get('tasks', card);
+  final now = scope.clock(), today = calendarDay(now);
+  final planned = scheduledDay(t);
+  final open = isOpenCard(scope.state, t);
   return _sheet<void>(context, t.str('title'), (sheet) {
     void then(Future<void> Function() action) {
       Navigator.pop(sheet);
@@ -420,13 +450,76 @@ Future<void> cardMenu(
     }
 
     return [
-      _row(
-        sheet,
-        Icons.drive_file_move_outline,
-        tr(sheet, 'Move to…', 'Chuyển tới…'),
-        () => then(() => moveCardSheet(context, scope, card, onMoved)),
-        key: const Key('menu-move-card'),
-      ),
+      if (open && planned != today)
+        _row(
+          sheet,
+          Icons.today_outlined,
+          tr(sheet, 'Do it today', 'Làm hôm nay'),
+          () => then(
+            () => quickSchedule(
+              context,
+              scope,
+              [card],
+              reason: planned != null && planned.isBefore(today)
+                  ? 'move to now'
+                  : 'do early',
+            ),
+          ),
+          key: const Key('menu-do-today'),
+        ),
+      if (open)
+        _row(
+          sheet,
+          Icons.event_available_outlined,
+          planned == null
+              ? tr(sheet, 'Plan a day…', 'Lên lịch…')
+              : tr(
+                  sheet,
+                  'Plan another day… (now ${shortDay(planned, now)})',
+                  'Đổi ngày làm… (đang ${shortDay(planned, now)})',
+                ),
+          () => then(() async {
+            final day = await pickHandyDate(context, isoDay(planned ?? today));
+            if (day == null || !context.mounted) return;
+            await quickSchedule(
+              context,
+              scope,
+              [card],
+              reason: 'plan',
+              day: DateTime.parse(day),
+            );
+          }),
+          key: const Key('menu-plan'),
+        ),
+      if (open && planned != null)
+        _row(
+          sheet,
+          Icons.event_busy_outlined,
+          tr(sheet, 'Take the planned day off', 'Bỏ ngày làm'),
+          () => then(() async {
+            await scope.run(
+              context,
+              () => scope.controller.change(
+                (s) => scheduleCards(s, [card], null, reason: 'plan', now: now),
+              ),
+            );
+            if (context.mounted)
+              showUndo(
+                context,
+                scope,
+                tr(context, 'Planned day taken off', 'Đã bỏ ngày làm'),
+              );
+          }),
+          key: const Key('menu-unplan'),
+        ),
+      if (!inSheet)
+        _row(
+          sheet,
+          Icons.drive_file_move_outline,
+          tr(sheet, 'Move to…', 'Chuyển tới…'),
+          () => then(() => moveCardSheet(context, scope, card, onMoved)),
+          key: const Key('menu-move-card'),
+        ),
       _row(
         sheet,
         Icons.content_copy_outlined,

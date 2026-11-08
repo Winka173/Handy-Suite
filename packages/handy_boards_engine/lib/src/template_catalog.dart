@@ -18,10 +18,10 @@ const _month = SetupOption(
 );
 
 const _timeHelp = L10n(
-  'How much the Time view shows when you open it. Columns stay your '
-      'progress; this only lays cards out by their dates.',
-  'Thời gian mở ra xem bao xa. Cột vẫn là tiến độ; phần này chỉ xếp thẻ '
-      'theo ngày hạn.',
+  'How much time the board shows at once when cards have dates; ‹ and › '
+      'move back and on. Columns stay your progress.',
+  'Bảng xem bao xa một lần khi thẻ có ngày; ‹ và › để lùi hay tới. Cột '
+      'vẫn là tiến độ.',
 );
 
 /// The time-view question, starting on a week or on a month.
@@ -29,7 +29,7 @@ const _timeWeek = SetupField(
   'range',
   FieldKind.select,
   FieldRole.timeRange,
-  label: L10n('Time view', 'Chế độ Thời gian'),
+  label: L10n('Show at a time', 'Xem mỗi lần'),
   help: _timeHelp,
   options: [_week, _month],
   optionDefault: 'week',
@@ -38,7 +38,7 @@ const _timeMonth = SetupField(
   'range',
   FieldKind.select,
   FieldRole.timeRange,
-  label: L10n('Time view', 'Chế độ Thời gian'),
+  label: L10n('Show at a time', 'Xem mỗi lần'),
   help: _timeHelp,
   options: [_week, _month],
   optionDefault: 'month',

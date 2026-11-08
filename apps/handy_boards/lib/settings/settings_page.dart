@@ -228,12 +228,21 @@ class SettingsPage extends StatelessWidget {
                     icon: Icons.content_copy_outlined,
                     title: tr(context, 'My card templates', 'Mẫu thẻ của tôi'),
                     navigates: true,
-                    onTap: () => Navigator.push(
-                      context,
-                      MaterialPageRoute<void>(
-                        builder: (_) => CardTemplatesPage(scope: scope),
-                      ),
-                    ),
+                    onTap: () async {
+                      if (!await requirePro(
+                            context,
+                            ProFeature.cardTemplates,
+                          ) ||
+                          !context.mounted) {
+                        return;
+                      }
+                      await Navigator.push(
+                        context,
+                        MaterialPageRoute<void>(
+                          builder: (_) => CardTemplatesPage(scope: scope),
+                        ),
+                      );
+                    },
                   ),
                 ],
               ),

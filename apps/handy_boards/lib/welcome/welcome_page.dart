@@ -140,23 +140,23 @@ class _WelcomePageState extends State<WelcomePage>
           ? tr(
               context,
               'Columns are progress, categories are work areas, dates are '
-                  'separate: Time shows them by day and brings unfinished '
-                  'work to today. When it is done, you drag it to Done '
+                  'separate: the week bar shows what is planned or due, and '
+                  'unfinished work comes back to today. When it is done, you drag it to Done '
                   'yourself. This was practice; nothing was saved.',
-              'Cột là tiến độ, nhóm là mảng việc, ngày là chuyện riêng: chế '
-                  'độ Thời gian xếp thẻ theo ngày và đưa việc còn tồn về hôm '
-                  'nay. Khi xong, bạn tự kéo thẻ sang Xong. Đây là bản tập, '
+              'Cột là tiến độ, nhóm là mảng việc, ngày là chuyện riêng: thanh '
+                  'tuần cho thấy việc định làm hay đến hạn, việc chưa xong '
+                  'quay về hôm nay. Khi xong, bạn tự kéo thẻ sang Xong. Đây là bản tập, '
                   'chưa lưu gì.',
             )
           : tr(
               context,
               'Columns are progress, categories are subjects, dates are '
-                  'separate: Time shows them by day and brings unfinished '
-                  'work to today. When it is done, you drag it to Done '
+                  'separate: the week bar shows what is planned or due, and '
+                  'unfinished work comes back to today. When it is done, you drag it to Done '
                   'yourself. This was practice; nothing was saved.',
-              'Cột là tiến độ, nhóm là môn học, ngày là chuyện riêng: chế độ '
-                  'Thời gian xếp thẻ theo ngày và đưa việc còn tồn về hôm '
-                  'nay. Khi xong, bạn tự kéo thẻ sang Xong. Đây là bản tập, '
+              'Cột là tiến độ, nhóm là môn học, ngày là chuyện riêng: thanh tuần '
+                  'cho thấy việc định làm hay đến hạn, việc chưa xong quay về '
+                  'hôm nay. Khi xong, bạn tự kéo thẻ sang Xong. Đây là bản tập, '
                   'chưa lưu gì.',
             ),
       primary: tr(context, 'Next', 'Tiếp'),

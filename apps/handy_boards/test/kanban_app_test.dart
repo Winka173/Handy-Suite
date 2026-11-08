@@ -98,6 +98,19 @@ Future<void> settle(WidgetTester t) async {
   }
 }
 
+/// Shows every card on the board (it opens on this week when cards have
+/// dates): the "All" chip, or on a phone the span menu's "All cards".
+Future<void> showAll(WidgetTester t) async {
+  if (find.byKey(const Key('week-bar')).evaluate().isEmpty) return;
+  final chip = find.byKey(const Key('week-all'));
+  if (chip.evaluate().isNotEmpty) {
+    await tap(t, chip);
+    return;
+  }
+  await tap(t, find.byKey(const Key('time-span')));
+  await tap(t, find.byKey(const Key('span-all')));
+}
+
 Future<void> tap(WidgetTester t, Finder f) async {
   await t.ensureVisible(f.first);
   await t.pumpAndSettle();
@@ -195,9 +208,7 @@ void main() {
       final c = await boot(t, studyState());
       await tap(t, find.byKey(const Key('board-$board')));
       final maths = categoriesOf(c.state!, board).first;
-      await tap(t, find.byKey(Key('strip-${maths.id}')));
-      // Focus keeps every card; the explicit filter then hides the rest.
-      expect(find.text('Focus: Web Development'), findsOneWidget);
+      await showAll(t);
       final others = topTasks(c.state!, board: board).where(
         (x) =>
             x.str('category') != maths.id &&
@@ -205,8 +216,9 @@ void main() {
       );
       for (final o in others)
         expect(find.byKey(ValueKey('card-${o.id}')), findsOneWidget);
-      await tap(t, find.byKey(const Key('focus-only')));
-      expect(find.text('Only Web Development'), findsOneWidget);
+      // Picking a category shows only its cards, at once.
+      await tap(t, find.byKey(Key('strip-${maths.id}')));
+      expect(find.text('Showing only Web Development'), findsOneWidget);
       for (final o in others)
         expect(find.byKey(ValueKey('card-${o.id}')), findsNothing);
       // A card added now joins the category in focus.
@@ -270,20 +282,17 @@ void main() {
     expect(c.state!.get('tasks', card.id).str('status'), card.str('status'));
   });
 
-  testWidgets('a Pro template is previewed free; Pro is asked for before '
-      'any question, and nothing is made without it', (t) async {
+  testWidgets('a Pro template asks for Pro as soon as it is tapped, and '
+      'nothing is made without it', (t) async {
     final c = await boot(t, studyState());
     await tap(t, find.byKey(const Key('home-new')));
     await tap(t, find.byKey(const Key('new-template')));
     await t.enterText(find.byKey(const Key('gallery-search')), 'sprint');
     await t.pumpAndSettle();
     await tap(t, find.byKey(const Key('template-sprint')));
-    // The preview is free and says what the button will ask.
-    expect(find.text('Unlock with Pro'), findsOneWidget);
-    expect(find.textContaining('free to look at, Pro to use'), findsOneWidget);
-    await tap(t, find.byKey(const Key('template-use')));
-    // The Pro page comes first: no setup questions behind it.
+    // The Pro page comes first: no preview or questions behind it.
     expect(find.text('Pay once. Keep it.'), findsOneWidget);
+    expect(find.byKey(const Key('template-use')), findsNothing);
     expect(find.byKey(const Key('setup-preview')), findsNothing);
     await t.binding.handlePopRoute();
     await settle(t);
@@ -352,6 +361,7 @@ void main() {
   ) async {
     final c = await boot(t, studyState());
     await tap(t, find.byKey(const Key('board-$board')));
+    await showAll(t);
     final card = topTasks(
       c.state!,
       board: board,
@@ -466,97 +476,5 @@ void main() {
     await t.pageBack();
     await settle(t);
     expect(c.state!.get('tasks', card.id).str('repeat'), 'weekly');
-  });
-
-  testWidgets('the time view lays cards out by day; its span is kept per '
-      'board, presets and custom', (t) async {
-    final c = await boot(t, studyState(), size: const Size(1000, 800));
-    await tap(t, find.byKey(const Key('board-$board')));
-    await tap(t, find.text('Time'));
-    expect(c.state!.get('boards', board).str('view'), 'time');
-    expect(find.byKey(const Key('time-range')), findsOneWidget);
-    // A card due in the shown week sits under its day.
-    final monday = DateTime(
-      clock.year,
-      clock.month,
-      clock.day - (clock.weekday - 1),
-    );
-    final sunday = DateTime(monday.year, monday.month, monday.day + 7);
-    final due = topTasks(c.state!, board: board).where((x) {
-      final d = dueDay(x);
-      return d != null && !d.isBefore(monday) && d.isBefore(sunday);
-    });
-    expect(due, isNotEmpty);
-    expect(
-      due.any(
-        (x) => find.byKey(ValueKey('time-card-${x.id}')).evaluate().isNotEmpty,
-      ),
-      isTrue,
-    );
-    await tap(t, find.byKey(const Key('time-span')));
-    await tap(t, find.byKey(const Key('span-day-3')));
-    expect(c.state!.get('boards', board).data['span'], {
-      'unit': 'day',
-      'count': 3,
-    });
-    await tap(t, find.byKey(const Key('time-span')));
-    await tap(t, find.byKey(const Key('span-custom')));
-    await tap(t, find.byKey(const Key('span-more')));
-    await tap(t, find.text('Months'));
-    await tap(t, find.byKey(const Key('span-apply')));
-    expect(c.state!.get('boards', board).data['span'], {
-      'unit': 'month',
-      'count': 4,
-    });
-    // Back to the board, the choice stays with this board.
-    await tap(t, find.text('Board'));
-    expect(c.state!.get('boards', board).str('view'), 'board');
-    expect(c.state!.get('boards', board).data['span'], {
-      'unit': 'month',
-      'count': 4,
-    });
-  });
-
-  testWidgets('dropping a card on a day sets its due day, with Undo', (
-    t,
-  ) async {
-    final c = await boot(t, studyState(), size: const Size(1280, 800));
-    await tap(t, find.byKey(const Key('board-$board')));
-    await tap(t, find.text('Time'));
-    final monday0 = DateTime(
-      clock.year,
-      clock.month,
-      clock.day - (clock.weekday - 1),
-    );
-    final target = DateTime(monday0.year, monday0.month, monday0.day + 2);
-    final done = columnsOf(c.state!, board).last.id;
-    // A card shown this week (it has a due day) that is not due Wednesday.
-    final card = topTasks(c.state!, board: board).firstWhere((x) {
-      final d = dueDay(x);
-      return x.str('status') != done &&
-          d != null &&
-          d != target &&
-          find.byKey(ValueKey('time-card-${x.id}')).evaluate().isNotEmpty;
-    });
-    final before = dueDay(card);
-    // The view opened on today; bring Wednesday in beside it.
-    await t.ensureVisible(find.byKey(const Key('time-d2')));
-    await t.pumpAndSettle();
-    final from = t.getCenter(find.byKey(ValueKey('time-card-${card.id}')));
-    final to = t.getCenter(find.byKey(const Key('time-d2')));
-    final g = await t.startGesture(from);
-    // Touch platforms lift a card after a long press.
-    await t.pump(const Duration(milliseconds: 700));
-    await g.moveTo(to);
-    await t.pump();
-    await g.up();
-    await settle(t);
-    final monday = clock.subtract(Duration(days: clock.weekday - 1));
-    expect(
-      dueDay(c.state!.get('tasks', card.id)),
-      DateTime(monday.year, monday.month, monday.day + 2),
-    );
-    await tap(t, find.text('Undo'));
-    expect(dueDay(c.state!.get('tasks', card.id)), before);
   });
 }

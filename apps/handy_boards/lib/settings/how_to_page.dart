@@ -199,33 +199,32 @@ List<_Topic> _topics(BuildContext context) => [
   _Topic(
     'time',
     Icons.view_timeline_outlined,
-    tr(context, 'See it by time', 'Xem theo thời gian'),
+    tr(context, 'Plan by the week', 'Lên kế hoạch theo tuần'),
     tr(
       context,
-      'Which card is due on which day, from today to three months.',
-      'Thẻ nào hạn ngày nào, từ hôm nay tới ba tháng.',
+      'What is planned, due or finished in a week, and the day you mean to do each card.',
+      'Việc định làm, đến hạn hay đã xong trong một tuần, và ngày bạn định làm từng thẻ.',
     ),
     [
       _Step(
         tr(
           context,
-          'Beside the board’s name, switch Board to Time (or use the calendar button on top when the switch is not pinned; … › Pin the switch). Columns stay your progress; Time lays cards out by due date.',
-          'Cạnh tên bảng, chuyển Bảng sang Thời gian (hoặc nút lịch ở thanh trên khi nút chưa được ghim; … › Ghim nút). Cột vẫn là tiến độ; Thời gian xếp thẻ theo ngày hạn.',
-        ),
-        picture: const MockTime(),
-      ),
-      _Step(
-        tr(
-          context,
-          'Choose the span: today, 3 days, a week, 2 weeks, a month, 3 months, or Custom… up to 12 days, weeks or months.',
-          'Chọn khoảng: hôm nay, 3 ngày, tuần, 2 tuần, tháng, 3 tháng, hoặc Tuỳ chỉnh… tới 12 ngày, tuần hay tháng.',
+          'When cards have dates, a bar above the board shows this week. ‹ and › go a week back or on; This week comes back; All shows every card. Columns stay your progress.',
+          'Khi thẻ có ngày, thanh phía trên bảng cho thấy tuần này. ‹ và › lùi hay tới một tuần; Tuần này để quay về; Tất cả để xem mọi thẻ. Cột vẫn là tiến độ.',
         ),
       ),
       _Step(
         tr(
           context,
-          'Drag a card onto a day to set its due date; drop it on No due date to take it off. Overdue cards come first.',
-          'Kéo thẻ vào một ngày để đặt hạn; thả vào Chưa có hạn để bỏ hạn. Thẻ quá hạn đứng đầu.',
+          'The calendar button sets how much the bar shows: a day, a week, 2 weeks, a month, 3 months, or your own dates.',
+          'Nút lịch đặt thanh xem bao xa: một ngày, một tuần, 2 tuần, một tháng, 3 tháng, hay khoảng ngày tự chọn.',
+        ),
+      ),
+      _Step(
+        tr(
+          context,
+          'Card ⋯ › Do it today, or Plan a day…, sets the day you mean to work on it. Its due date never changes by itself. Work left over from before shows above the board with Move to today.',
+          '⋯ trên thẻ › Làm hôm nay, hoặc Lên lịch…, đặt ngày bạn định làm. Hạn nộp không bao giờ tự đổi. Việc chưa xong từ trước hiện phía trên bảng, kèm nút Về hôm nay.',
         ),
       ),
     ],

@@ -51,6 +51,10 @@ Future<void> addFromCardTemplate(
   BoardsScope scope,
   String column,
 ) async {
+  if (!await requirePro(context, ProFeature.cardTemplates) ||
+      !context.mounted) {
+    return;
+  }
   final picked = await showModalBottomSheet<String>(
     context: context,
     isScrollControlled: true,
@@ -59,10 +63,6 @@ Future<void> addFromCardTemplate(
     builder: (sheet) => _TemplateList(scope: scope, pick: true),
   );
   if (picked == null || !context.mounted) return;
-  if (!await requirePro(context, ProFeature.cardTemplates) ||
-      !context.mounted) {
-    return;
-  }
   late TemplateApply result;
   await scope.run(
     context,

@@ -280,7 +280,10 @@ class _BoardPreviewState extends State<BoardPreview> {
             state: s,
             board: previewBoard,
             now: widget.now,
-            filter: KanbanFilter(focus: focus),
+            filter: KanbanFilter(
+              category: focus == CategoryStrip.uncategorisedKey ? null : focus,
+              uncategorised: focus == CategoryStrip.uncategorisedKey,
+            ),
           ),
         ),
       ],

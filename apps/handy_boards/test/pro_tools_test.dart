@@ -57,7 +57,7 @@ void main() {
     expect(cardsIn(c.state!, col).first.id, isNot(card.id));
   });
 
-  testWidgets('without Pro the templates list is shown and making one asks', (
+  testWidgets('without Pro, From my templates opens the Pro page first', (
     t,
   ) async {
     var s = studyState();
@@ -68,9 +68,8 @@ void main() {
     // Tapped in place: scrolling would page the phone's columns away.
     await t.tap(find.byKey(Key('add-from-template-$col')));
     await t.pumpAndSettle();
-    expect(find.text('Weekly review'), findsOneWidget);
-    await tap(t, find.text('Weekly review'));
     expect(find.text('Pay once. Keep it.'), findsOneWidget);
+    expect(find.text('Weekly review'), findsNothing);
     expect(
       topTasks(
         c.state!,
@@ -90,13 +89,15 @@ void main() {
       'Left from Monday',
     ).copy({'scheduled': isoDay(addDays(today, -5))});
     s = saveTask(s, old, now: clock);
-    // Without Pro: visible, acting asks.
+    // Without Pro: the Pro page opens instead.
     final c = await boot(t, s);
     await tap(t, find.byKey(const Key('home-my-work')));
-    expect(find.byKey(const Key('work-unlock')), findsOneWidget);
-    expect(find.text('Left from Monday'), findsOneWidget);
-    debugProOverride = true;
+    expect(find.text('Pay once. Keep it.'), findsOneWidget);
+    await t.binding.handlePopRoute();
     await t.pumpAndSettle();
+    debugProOverride = true;
+    await tap(t, find.byKey(const Key('home-my-work')));
+    expect(find.text('Left from Monday'), findsOneWidget);
     await t.ensureVisible(find.byKey(Key('work-move-${old.id}')));
     await tap(t, find.byKey(Key('work-move-${old.id}')));
     expect(c.state!.get('tasks', old.id).str('scheduled'), isoDay(today));
@@ -139,14 +140,15 @@ void main() {
     await tap(t, find.byKey(const Key('board-$board')));
     await tap(t, find.byKey(const Key('board-more')));
     await menuTap(t, 'menu-fields');
-    await tap(t, find.byKey(const Key('field-add')));
-    // Free: asked for Pro, nothing made.
+    // Free: the Pro page opens at once, not the fields first.
     expect(find.text('Pay once. Keep it.'), findsOneWidget);
+    expect(find.byKey(const Key('field-add')), findsNothing);
     expect(fieldsOf(c.state!, board), isEmpty);
     await t.binding.handlePopRoute();
     await t.pumpAndSettle();
     debugProOverride = true;
-    await t.pumpAndSettle();
+    await tap(t, find.byKey(const Key('board-more')));
+    await menuTap(t, 'menu-fields');
     await tap(t, find.byKey(const Key('field-add')));
     await t.enterText(find.byKey(const Key('field-name')), 'Points');
     await tap(t, find.byKey(const Key('field-save')));

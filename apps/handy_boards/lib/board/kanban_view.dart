@@ -33,43 +33,62 @@ class KanbanActions {
 }
 
 /// Which cards show: one category (or Uncategorised with [uncategorised]),
-/// and a text search over titles and notes. [focus] only highlights a
-/// category's cards (the rest stay, quieter); it never hides anything.
+/// a text search over titles and notes, "due in 3 days", a saved filter,
+/// and a stretch of time.
 class KanbanFilter {
   final String? category;
   final bool uncategorised;
   final String query;
   final bool dueSoon;
 
-  /// A category id, [uncategorisedFocus], or null.
-  final String? focus;
-
   /// A saved filter in use: the ids of the cards it lets through.
   final Set<String>? only;
+
+  /// The stretch of time shown, or null for every card. A card shows when
+  /// its planned day, its due day or the day it was finished falls in it.
+  /// The stretch that holds today also shows open cards with no date and
+  /// open work left behind from before it, so nothing to do is out of
+  /// sight this week.
+  final TimeWindow? window;
   const KanbanFilter({
     this.category,
     this.uncategorised = false,
     this.query = '',
     this.dueSoon = false,
-    this.focus,
     this.only,
+    this.window,
   });
 
-  static const uncategorisedFocus = '';
-
-  /// Whether [card] is one of the focused category's (null: no focus).
-  bool? focused(BoardRecord card) => focus == null
-      ? null
-      : focus == uncategorisedFocus
-      ? card.data['category'] == null
-      : card.data['category'] == focus;
   bool get active =>
       category != null ||
       uncategorised ||
       query.trim().isNotEmpty ||
       dueSoon ||
-      only != null;
-  bool shows(BoardRecord card, DateTime now) {
+      only != null ||
+      window != null;
+
+  bool _inWindow(BoardsState? s, BoardRecord card, DateTime now) {
+    final w = window;
+    if (w == null) return true;
+    bool within(DateTime? d) =>
+        d != null && !d.isBefore(w.first) && d.isBefore(w.end);
+    final planned = scheduledDay(card), due = dueDay(card);
+    final done = s == null
+        ? card.str('completedAt').isNotEmpty
+        : completed(s, card);
+    final at = DateTime.tryParse(card.str('completedAt'))?.toLocal();
+    if (within(planned) || within(due)) return true;
+    if (done && at != null && within(calendarDay(at))) return true;
+    final today = calendarDay(now);
+    if (!within(today)) return false;
+    // The stretch holding today: no date at all, or left behind.
+    if (planned == null && due == null) return !done || at == null;
+    return !done &&
+        ((planned != null && planned.isBefore(w.first)) ||
+            (due != null && due.isBefore(w.first)));
+  }
+
+  bool shows(BoardRecord card, DateTime now, [BoardsState? s]) {
     if (only != null && !only!.contains(card.id)) return false;
     if (category != null && card.data['category'] != category) return false;
     if (uncategorised && card.data['category'] != null) return false;
@@ -78,6 +97,7 @@ class KanbanFilter {
       final today = DateTime(now.year, now.month, now.day);
       if (d == null || d.difference(today).inDays > 3) return false;
     }
+    if (!_inWindow(s, card, now)) return false;
     final q = query.trim().toLowerCase();
     if (q.isEmpty) return true;
     return card.str('title').toLowerCase().contains(q) ||
@@ -313,7 +333,9 @@ class _ColumnViewState extends State<ColumnView> {
     final p = BoardsPalette.of(context);
     final theme = Theme.of(context);
     final all = cardsIn(widget.state, widget.column.id);
-    final cards = all.where((c) => widget.filter.shows(c, widget.now)).toList();
+    final cards = all
+        .where((c) => widget.filter.shows(c, widget.now, widget.state))
+        .toList();
     final done = widget.column.flag('done');
     final a = widget.actions;
 
@@ -362,7 +384,7 @@ class _ColumnViewState extends State<ColumnView> {
         onTick: a.tick,
         onMenu: a.cardMenu == null ? null : () => a.cardMenu!(card),
       );
-      final t = _focusMark(context, widget.state, widget.filter, card, plain);
+      final t = plain;
       if (a.readOnly) return t;
       final feedback = Material(
         color: Colors.transparent,
@@ -444,28 +466,34 @@ class _ColumnViewState extends State<ColumnView> {
             Icon(Icons.check_circle, size: 18, color: p.positive),
             const SizedBox(width: 6),
           ],
-          Flexible(
-            child: Semantics(
-              header: true,
-              child: Text(
-                widget.column.str('title'),
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: theme.textTheme.titleSmall,
-              ),
+          // The name and its count take the room; the menu sits at the edge.
+          Expanded(
+            child: Row(
+              children: [
+                Flexible(
+                  child: Semantics(
+                    header: true,
+                    child: Text(
+                      widget.column.str('title'),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: theme.textTheme.titleSmall,
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Text(
+                  widget.filter.active
+                      ? '${cards.length}/${all.length}'
+                      : '${all.length}',
+                  style: theme.textTheme.labelMedium?.copyWith(
+                    color: p.muted,
+                    fontFeatures: const [FontFeature.tabularFigures()],
+                  ),
+                ),
+              ],
             ),
           ),
-          const SizedBox(width: 8),
-          Text(
-            widget.filter.active
-                ? '${cards.length}/${all.length}'
-                : '${all.length}',
-            style: theme.textTheme.labelMedium?.copyWith(
-              color: p.muted,
-              fontFeatures: const [FontFeature.tabularFigures()],
-            ),
-          ),
-          const Spacer(),
           if (a.columnMenu != null)
             IconButton(
               tooltip: tr(context, 'Column options', 'Tuỳ chọn cột'),
@@ -538,15 +566,17 @@ class _ColumnViewState extends State<ColumnView> {
           )
         : Row(
             children: [
-              Flexible(
-                child: TextButton.icon(
-                  key: Key('add-card-open-${widget.column.id}'),
-                  onPressed: () => setState(() => adding = true),
-                  icon: const Icon(Icons.add),
-                  label: Text(tr(context, 'Add card', 'Thêm thẻ')),
+              Expanded(
+                child: Align(
+                  alignment: AlignmentDirectional.centerStart,
+                  child: TextButton.icon(
+                    key: Key('add-card-open-${widget.column.id}'),
+                    onPressed: () => setState(() => adding = true),
+                    icon: const Icon(Icons.add),
+                    label: Text(tr(context, 'Add card', 'Thêm thẻ')),
+                  ),
                 ),
               ),
-              const Spacer(),
               if (a.fromTemplate != null)
                 IconButton(
                   key: Key('add-from-template-${widget.column.id}'),
@@ -672,34 +702,4 @@ class _AddColumn extends StatelessWidget {
       ),
     );
   }
-}
-
-/// Category focus: the focused category's cards get a ring in its colour
-/// and say so to screen readers; the others stay in place, quieter. Never
-/// colour alone: the ring is thick and the label is spoken.
-Widget _focusMark(
-  BuildContext context,
-  BoardsState s,
-  KanbanFilter filter,
-  BoardRecord card,
-  Widget tile,
-) {
-  final on = filter.focused(card);
-  if (on == null) return tile;
-  if (!on) return Opacity(opacity: .45, child: tile);
-  final category = s.maybe('categories', card.data['category']);
-  final hue = category == null
-      ? BoardsPalette.of(context).ink
-      : HandyPalette.of(context, category.number('color')).mark;
-  return Semantics(
-    label: tr(context, 'In focus', 'Đang làm nổi'),
-    child: DecoratedBox(
-      position: DecorationPosition.foreground,
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(BoardsRadii.card),
-        border: Border.all(color: hue, width: 3),
-      ),
-      child: tile,
-    ),
-  );
 }

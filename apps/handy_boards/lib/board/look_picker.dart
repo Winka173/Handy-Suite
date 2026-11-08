@@ -9,12 +9,17 @@ class LookPicker extends StatelessWidget {
   final String current;
   final ValueChanged<String> onPick;
   final VoidCallback onCancel, onApply;
+
+  /// The board's cover picture, changed from here too (one place for how
+  /// the board looks).
+  final VoidCallback? onCover;
   const LookPicker({
     super.key,
     required this.current,
     required this.onPick,
     required this.onCancel,
     required this.onApply,
+    this.onCover,
   });
 
   @override
@@ -33,10 +38,23 @@ class LookPicker extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             Padding(
-              padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
-              child: Text(
-                tr(context, 'Board look', 'Giao diện bảng'),
-                style: theme.textTheme.titleMedium,
+              padding: const EdgeInsets.fromLTRB(16, 8, 8, 0),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      tr(context, 'Look and cover', 'Giao diện và ảnh bìa'),
+                      style: theme.textTheme.titleMedium,
+                    ),
+                  ),
+                  if (onCover != null)
+                    TextButton.icon(
+                      key: const Key('look-cover'),
+                      onPressed: onCover,
+                      icon: const Icon(Icons.image_outlined, size: 18),
+                      label: Text(tr(context, 'Cover…', 'Ảnh bìa…')),
+                    ),
+                ],
               ),
             ),
             SizedBox(

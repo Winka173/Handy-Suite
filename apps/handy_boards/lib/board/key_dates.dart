@@ -41,20 +41,12 @@ class KeyDateChip extends StatelessWidget {
   }
 }
 
-/// While a category is in focus: which one, the explicit "only this one"
-/// filter (with its own words when it is on), and a way out. Focus never
-/// hides cards by itself.
+/// While a category is picked: the board shows only its cards; this says
+/// so, with a way back to every card.
 class FocusBar extends StatelessWidget {
   final String name;
-  final bool only;
-  final VoidCallback onOnly, onClear;
-  const FocusBar({
-    super.key,
-    required this.name,
-    required this.only,
-    required this.onOnly,
-    required this.onClear,
-  });
+  final VoidCallback onClear;
+  const FocusBar({super.key, required this.name, required this.onClear});
 
   @override
   Widget build(BuildContext context) {
@@ -66,42 +58,19 @@ class FocusBar extends StatelessWidget {
         liveRegion: true,
         child: Row(
           children: [
-            Icon(
-              only ? Icons.filter_alt : Icons.center_focus_strong_outlined,
-              size: 18,
-              color: p.ink,
-            ),
+            Icon(Icons.filter_alt, size: 18, color: p.ink),
             const SizedBox(width: 6),
-            // The button drops under the name when they do not fit side
-            // by side (a narrow phone, large text).
             Expanded(
-              child: Wrap(
-                crossAxisAlignment: WrapCrossAlignment.center,
-                spacing: 4,
-                children: [
-                  Text(
-                    only
-                        ? tr(context, 'Only $name', 'Đang lọc: chỉ $name')
-                        : tr(context, 'Focus: $name', 'Đang làm nổi: $name'),
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                    style: theme.textTheme.labelLarge,
-                  ),
-                  TextButton(
-                    key: const Key('focus-only'),
-                    onPressed: onOnly,
-                    child: Text(
-                      only
-                          ? tr(context, 'Show all cards', 'Hiện mọi thẻ')
-                          : tr(context, 'Only this one', 'Chỉ hiện nhóm này'),
-                    ),
-                  ),
-                ],
+              child: Text(
+                tr(context, 'Showing only $name', 'Đang lọc: chỉ $name'),
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                style: theme.textTheme.labelLarge,
               ),
             ),
             IconButton(
               key: const Key('focus-clear'),
-              tooltip: tr(context, 'Clear', 'Bỏ chọn'),
+              tooltip: tr(context, 'Show every card', 'Hiện mọi thẻ'),
               onPressed: onClear,
               icon: const Icon(Icons.close),
             ),

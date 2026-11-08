@@ -445,6 +445,7 @@ class _CardDetailState extends State<CardDetail> {
                     context,
                     scope,
                     t.id,
+                    inSheet: true,
                     onMoved: (card, col, i) => _change(
                       (s) => moveCard(
                         s,

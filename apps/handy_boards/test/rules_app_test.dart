@@ -23,6 +23,14 @@ void main() {
     await tap(t, find.byKey(const Key('board-$board')));
     await tap(t, find.byKey(const Key('board-more')));
     await menuTap(t, 'menu-rules');
+    // Free: the Pro page opens at once, not the rules first.
+    expect(find.text('Pay once. Keep it.'), findsOneWidget);
+    expect(find.byKey(const Key('rules-page')), findsNothing);
+    await t.binding.handlePopRoute();
+    await t.pumpAndSettle();
+    debugProOverride = true;
+    await tap(t, find.byKey(const Key('board-more')));
+    await menuTap(t, 'menu-rules');
     expect(find.byKey(const Key('rules-page')), findsOneWidget);
     await tap(t, find.byKey(const Key('rule-example-0')));
     await t.scrollUntilVisible(
@@ -31,14 +39,7 @@ void main() {
       scrollable: find.byType(Scrollable).first,
     );
     expect(find.textContaining('add subtask'), findsWidgets);
-    // Free: the preview is open, saving asks.
-    await tap(t, find.byKey(const Key('rule-save')));
-    expect(find.text('Pay once. Keep it.'), findsOneWidget);
     expect(c.state!.rows('rules'), isEmpty);
-    await t.binding.handlePopRoute();
-    await t.pumpAndSettle();
-    debugProOverride = true;
-    await t.pumpAndSettle();
     // A second step: High priority.
     await tap(t, find.byKey(const Key('rule-add-action')));
     await tap(t, find.byKey(const Key('rule-pick-priority')));

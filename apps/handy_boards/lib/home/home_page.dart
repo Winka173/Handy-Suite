@@ -3,6 +3,7 @@ import 'package:handy_ui/kit.dart';
 import '../create/new_board.dart';
 import '../design/looks.dart';
 import '../design/theme.dart';
+import '../pro/pro.dart';
 import '../scope.dart';
 import '../ui/look.dart';
 
@@ -53,7 +54,13 @@ class HomePage extends StatelessWidget {
             IconButton(
               key: const Key('home-my-work'),
               tooltip: tr(context, 'My Work (Pro)', 'Việc của tôi (Pro)'),
-              onPressed: () => Navigator.pushNamed(context, '/my-work'),
+              // Pro: the Pro page first, never the page it unlocks.
+              onPressed: () async {
+                if (await requirePro(context, ProFeature.myWork) &&
+                    context.mounted) {
+                  await Navigator.pushNamed(context, '/my-work');
+                }
+              },
               icon: const Icon(Icons.dashboard_outlined),
             ),
           IconButton(

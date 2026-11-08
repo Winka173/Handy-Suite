@@ -204,24 +204,10 @@ void main() {
     ]);
     final c = await boot(t, s);
     await tap(t, find.byKey(const Key('board-$board')));
-    expect(find.byKey(const Key('board-view')), findsOneWidget);
     expect(find.textContaining('Finals'), findsOneWidget);
-    await tap(t, find.byKey(const Key('board-more')));
-    await t.scrollUntilVisible(
-      find.byKey(const Key('menu-time-pin')),
-      120,
-      scrollable: find
-          .descendant(
-            of: find.byType(BottomSheet),
-            matching: find.byType(Scrollable),
-          )
-          .first,
-    );
-    await tap(t, find.byKey(const Key('menu-time-pin')));
-    expect(timePinned(c.state!.get('boards', board)), isFalse);
+    // One way to look at a board: no Board | Time switch any more.
     expect(find.byKey(const Key('board-view')), findsNothing);
-    expect(find.byKey(const Key('board-view-toggle')), findsOneWidget);
-    await tap(t, find.byKey(const Key('board-view-toggle')));
-    expect(c.state!.get('boards', board).str('view'), 'time');
+    expect(find.byKey(const Key('board-view-toggle')), findsNothing);
+    expect(c.state!.get('boards', board), isNotNull);
   });
 }

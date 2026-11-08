@@ -1,6 +1,7 @@
 import 'package:handy_boards_engine/handy_boards_engine.dart';
 import 'package:handy_ui/kit.dart';
 import '../design/theme.dart';
+import '../pro/pro.dart';
 import '../scope.dart';
 import 'new_board.dart';
 import 'setup_page.dart';
@@ -47,12 +48,18 @@ class _TemplateGalleryState extends State<TemplateGallery> {
         _ => null,
       };
 
-  void _open(BoardTemplate t) => Navigator.push(
-    context,
-    MaterialPageRoute<void>(
-      builder: (_) => TemplatePreviewPage(scope: widget.scope, template: t),
-    ),
-  );
+  /// A Pro template asks for Pro first: the Pro page, then (once bought)
+  /// its preview and questions.
+  Future<void> _open(BoardTemplate t) async {
+    if (t.pro && !await requirePro(context, ProFeature.templates)) return;
+    if (!mounted) return;
+    await Navigator.push(
+      context,
+      MaterialPageRoute<void>(
+        builder: (_) => TemplatePreviewPage(scope: widget.scope, template: t),
+      ),
+    );
+  }
 
   /// Phones list the templates as rows with every word showing; wider
   /// screens lay them out as cards. Both are built lazily.

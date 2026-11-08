@@ -23,11 +23,22 @@ class TimeRangeButton extends StatelessWidget {
 
   /// Where a new custom span starts: the first day on screen.
   final DateTime from;
+
+  /// A narrow phone: the calendar icon only (its tooltip names the span).
+  final bool compact;
+
+  /// "All cards" as the menu's first choice (where there is no room for
+  /// its own button); [all] says whether it is on.
+  final bool? all;
+  final ValueChanged<bool>? onAll;
   const TimeRangeButton({
     super.key,
     required this.range,
     required this.onRange,
     required this.from,
+    this.compact = false,
+    this.all,
+    this.onAll,
   });
 
   @override
@@ -35,11 +46,21 @@ class TimeRangeButton extends StatelessWidget {
     key: const Key('time-span'),
     tooltip: tr(context, 'How long to show', 'Khoảng thời gian'),
     onSelected: (v) async {
+      if (v == 'all') return onAll?.call(!(all ?? false));
       if (v is TimeRange) return onRange(v);
       final picked = await pickTimeRange(context, range, from);
       if (picked != null) onRange(picked);
     },
     itemBuilder: (context) => [
+      if (all != null) ...[
+        CheckedPopupMenuItem<Object>(
+          key: const Key('span-all'),
+          value: 'all',
+          checked: all!,
+          child: Text(tr(context, 'All cards', 'Mọi thẻ')),
+        ),
+        const PopupMenuDivider(),
+      ],
       for (final r in TimeRange.presets)
         CheckedPopupMenuItem<Object>(
           key: Key('span-${r.unit}-${r.count}'),
@@ -59,10 +80,12 @@ class TimeRangeButton extends StatelessWidget {
         ),
       ),
     ],
-    child: Chip(
-      avatar: const Icon(Icons.date_range, size: 18),
-      label: Text(rangeLabel(context, range)),
-    ),
+    child: compact
+        ? const SizedBox(width: 48, height: 48, child: Icon(Icons.date_range))
+        : Chip(
+            avatar: const Icon(Icons.date_range, size: 18),
+            label: Text(rangeLabel(context, range)),
+          ),
   );
 }
 

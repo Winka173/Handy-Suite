@@ -212,14 +212,16 @@ Future<void> _sweep(
     await t.tapAt(Offset.zero);
     await settle(t);
   }
-  at('time view');
-  var toggle = find.byKey(const Key('board-view-toggle'));
-  if (toggle.evaluate().isEmpty) toggle = find.text('Thời gian');
-  await t.ensureVisible(toggle.first);
-  await settle(t);
-  await t.tap(toggle.first);
-  await settle(t);
-  _boardRoom(t, shape, problems, 'time view');
+  at('week bar');
+  // The week bar never takes the board's room: one row, even on a phone.
+  final next = find.byKey(const Key('week-next'));
+  if (next.evaluate().isNotEmpty) {
+    await t.ensureVisible(next.first);
+    await settle(t);
+    await t.tap(next.first);
+    await settle(t);
+    _boardRoom(t, shape, problems, 'next week');
+  }
   await t.pumpWidget(const SizedBox());
 }
 

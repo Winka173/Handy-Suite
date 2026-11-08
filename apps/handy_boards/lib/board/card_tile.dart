@@ -40,6 +40,8 @@ class CardTile extends StatelessWidget {
     final due = dueDay(card);
     final today = DateTime(now.year, now.month, now.day);
     final overdue = !done && due != null && due.isBefore(today);
+    final planned = scheduledDay(card);
+    final behind = !done && planned != null && planned.isBefore(today);
     final cover = cardCover(context, state, card);
     final subtasks = detailed
         ? subtasksOf(state, card.id).take(3).toList()
@@ -54,10 +56,28 @@ class CardTile extends StatelessWidget {
           text: '${progress.done}/${progress.total}',
           color: progress.done == progress.total ? p.positive : p.muted,
         ),
+      // The day it is planned for and its deadline, always named, so the
+      // two are never mistaken for each other.
+      if (planned != null && !done)
+        _Fact(
+          icon: Icons.event_available_outlined,
+          text: tr(
+            context,
+            'Do: ${dueLabel(context, planned, now)}',
+            'Làm: ${dueLabel(context, planned, now)}',
+          ),
+          color: behind ? p.warning : p.muted,
+        ),
       if (due != null && !done)
         _Fact(
           icon: Icons.event_outlined,
-          text: dueLabel(context, due, now),
+          text:
+              tr(
+                context,
+                'Due: ${dueLabel(context, due, now)}',
+                'Hạn: ${dueLabel(context, due, now)}',
+              ) +
+              (overdue ? tr(context, ' · late', ' · trễ') : ''),
           color: overdue ? p.danger : p.muted,
         ),
       // Custom fields chosen for the card front, as "Name value".
@@ -85,9 +105,11 @@ class CardTile extends StatelessWidget {
           '${progress.done} of ${progress.total} subtasks',
           '${progress.done} trên ${progress.total} việc con',
         ),
+      if (planned != null && !done)
+        tr(context, 'do ', 'làm ') + dueLabel(context, planned, now),
       if (due != null && !done)
         (overdue
-                ? tr(context, 'overdue ', 'quá hạn ')
+                ? tr(context, 'late, due ', 'trễ, hạn ')
                 : tr(context, 'due ', 'hạn ')) +
             dueLabel(context, due, now),
     ].join(', ');
@@ -149,13 +171,14 @@ class CardTile extends StatelessWidget {
                       ),
                     ),
                     if (onMenu != null)
+                      // A full 48 pt target, the icon kept small.
                       SizedBox(
-                        width: 36,
-                        height: 36,
+                        width: 48,
+                        height: 48,
                         child: IconButton(
+                          key: Key('card-menu-${card.id}'),
                           padding: EdgeInsets.zero,
                           iconSize: 20,
-                          visualDensity: VisualDensity.compact,
                           tooltip: tr(context, 'Card options', 'Tuỳ chọn thẻ'),
                           onPressed: onMenu,
                           icon: Icon(Icons.more_horiz, color: p.muted),
@@ -198,11 +221,15 @@ class _Fact extends StatelessWidget {
     children: [
       Icon(icon, size: 15, color: color),
       const SizedBox(width: 3),
-      Text(
-        text,
-        style: Theme.of(context).textTheme.labelMedium?.copyWith(
-          color: color,
-          fontFeatures: const [FontFeature.tabularFigures()],
+      Flexible(
+        child: Text(
+          text,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          style: Theme.of(context).textTheme.labelMedium?.copyWith(
+            color: color,
+            fontFeatures: const [FontFeature.tabularFigures()],
+          ),
         ),
       ),
     ],

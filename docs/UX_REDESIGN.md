@@ -3098,3 +3098,23 @@ Mất mạng tạm thời không báo.
 **Kiểm tra:**
 - engine/app: test cho các lựa chọn giờ, các nút trên thông báo, thông báo cần xử lý (không lặp, tự gỡ), dữ liệu widget;
 - soát ảnh §2.7 trên BlueStacks.
+
+### Handy Boards · một cách xem, thanh tuần, lọc theo nhóm, menu gọn (2026-11-08, danh sách bug của chủ)
+- **Bỏ chế độ Thời gian, gộp vào Bảng.** Một bảng chỉ còn một cách xem. Phía trên các cột có thanh "‹ 2/11 – 8/11 ›" (key `week-bar`):
+  - ‹ › đi đúng một khoảng; "Tuần này" để quay về; nút lịch chọn khoảng (ngày, tuần, 2 tuần, tháng, 3 tháng, tự chọn); "Tất cả" xem mọi thẻ.
+  - Trên điện thoại vẫn một hàng: "Tuần này" và khoảng thành icon, "Mọi thẻ" nằm trong menu khoảng.
+  - Mỗi khoảng hiện thẻ có ngày làm, hạn nộp hoặc lúc hoàn thành rơi vào khoảng đó.
+  - Khoảng chứa hôm nay hiện thêm thẻ chưa có ngày và việc chưa xong từ trước.
+  - Bảng có thẻ mang ngày thì mở sẵn ở tuần này; bảng không có thẻ nào mang ngày thì không có thanh.
+- **Việc chưa xong từ trước:** một dòng phía trên bảng, "N việc chưa xong từ trước ›" (chạm để xem) cùng nút "Về hôm nay", có Hoàn tác. Dòng tự ẩn khi không còn việc.
+- **Ngày trên thẻ luôn có tên:** "Làm: Thứ Ba" và "Hạn: Thứ Ba", kèm "· trễ" khi quá hạn.
+- **Lên lịch:** ⋯ trên thẻ có "Làm hôm nay", "Lên lịch… / Đổi ngày làm…" và "Bỏ ngày làm". Hạn nộp không bao giờ tự đổi; thẻ chỉ có hạn nộp thì hỏi trước. Mở ⋯ từ trong chi tiết thẻ thì không có "Chuyển tới…", vì chi tiết thẻ đã có ô chọn cột.
+- **Chọn một nhóm là lọc ngay.** Thanh dưới ghi "Đang lọc: chỉ X" kèm ✕. Bỏ cách làm mờ thẻ khác và nút "Chỉ hiện nhóm này".
+- **Menu ⋮ của bảng** chia 4 nhóm: Bảng · Hiển thị và cấu trúc · Công cụ Pro · Chia sẻ, rồi Lưu trữ và Xoá ở cuối.
+  - Bỏ "Sửa nhóm" (đã có nút Sửa trên bảng) và "Ghim nút Thời gian".
+  - "Giao diện và ảnh bìa" là một mục; thanh giao diện có nút "Ảnh bìa…".
+  - Sheet cao tối đa 85% màn, để chạm ra ngoài vẫn đóng được.
+  - Dấu Pro chỉ hiện khi chưa có Pro, và giống nhau ở mọi dòng.
+- **Pro hỏi ngay khi bấm**, mở thẳng trang Pro, không vào trang chi tiết trước: Luật tự động, Trường tuỳ chỉnh, Bộ lọc đã lưu, Việc của tôi, Mẫu thẻ (Cài đặt và chân cột), mẫu bảng Pro. Nền bảng, ảnh bìa, kiểu xuất và kiểu widget vẫn cho xem thử tại chỗ.
+- **Căn lề:** nút ⋯ ở đầu cột và nút mẫu thẻ ở chân cột luôn sát mép phải. Nút ⋯ trên thẻ có vùng chạm 48 pt.
+- **Kiểm tra:** `week_bar_app_test` (8), `kanban_app_test`, `pro_tools_test`, `rules_app_test`, `settings_test`, `layout_sweep_test` (11 kích thước).

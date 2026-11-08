@@ -211,8 +211,8 @@ Future<void> carryOverSettings(BuildContext context, BoardsScope scope) async {
                 'off',
                 'Off',
                 'Tắt',
-                'Move cards yourself from Time (always free).',
-                'Tự chuyển trong chế độ Thời gian (luôn miễn phí).',
+                'Move cards yourself: card ⋯ › Do it today (always free).',
+                'Tự chuyển: ⋯ trên thẻ › Làm hôm nay (luôn miễn phí).',
               ),
               (
                 'review',

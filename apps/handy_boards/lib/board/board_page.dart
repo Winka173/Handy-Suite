@@ -16,7 +16,7 @@ import 'category_strip.dart';
 import 'kanban_view.dart';
 import 'key_dates.dart';
 import 'look_picker.dart';
-import 'time_view.dart';
+import 'week_bar.dart';
 
 /// Shows [message] with an Undo that steps the controller back once.
 void showUndo(BuildContext context, BoardsScope scope, String message) {
@@ -45,11 +45,15 @@ class BoardPage extends StatefulWidget {
 }
 
 class _BoardPageState extends State<BoardPage> {
-  /// The category in focus (an id, [CategoryStrip.uncategorisedKey], or
-  /// null). Focus only highlights; [only] is the separate, explicit filter.
+  /// The category picked (an id, [CategoryStrip.uncategorisedKey], or
+  /// null): the board shows only its cards.
   String? focus;
-  bool only = false;
   bool searching = false, dueSoon = false, showStrip = true;
+
+  /// The stretch of time shown (null: every card). Set once when the board
+  /// opens: this week (or the board's span) when any card has a date.
+  TimeWindow? window;
+  bool windowSet = false;
 
   /// While choosing a look: the one being tried (shown, not saved).
   String? previewLook;
@@ -84,6 +88,7 @@ class _BoardPageState extends State<BoardPage> {
   }
 
   Future<void> _filters() async {
+    if (!await requirePro(context, ProFeature.automation) || !mounted) return;
     final picked = await savedFiltersSheet(
       context,
       scope,
@@ -95,15 +100,21 @@ class _BoardPageState extends State<BoardPage> {
   }
 
   KanbanFilter get filter => KanbanFilter(
-    category: !only || focus == null || focus == CategoryStrip.uncategorisedKey
+    category: focus == null || focus == CategoryStrip.uncategorisedKey
         ? null
         : focus,
-    uncategorised: only && focus == CategoryStrip.uncategorisedKey,
+    uncategorised: focus == CategoryStrip.uncategorisedKey,
     query: query.text,
     dueSoon: dueSoon,
-    focus: only ? null : focus,
     only: _only,
+    window: window,
   );
+
+  /// Whether any card of the board has a planned or due day.
+  bool _dated(BoardsState s) => topTasks(
+    s,
+    board: widget.board,
+  ).any((t) => activeTask(t) && (scheduledDay(t) != null || dueDay(t) != null));
 
   Future<void> _move(String card, String column, int index) async {
     final s = scope.state;
@@ -134,33 +145,13 @@ class _BoardPageState extends State<BoardPage> {
 
   /// The board's view and time span are remembered per board, outside
   /// the undo history.
-  Future<void> _look({String? view, TimeRange? span}) => scope.run(
+  Future<void> _look({TimeRange? span}) => scope.run(
     context,
     () => scope.controller.change(
-      (s) => setBoardLook(s, widget.board, view: view, span: span?.toJson()),
+      (s) => setBoardLook(s, widget.board, span: span?.toJson()),
       history: false,
     ),
   );
-
-  Future<void> _setDue(String card, DateTime? day) async {
-    await scope.run(
-      context,
-      () => scope.controller.change(
-        (s) => setDueDay(s, card, day, now: scope.clock()),
-      ),
-    );
-    if (!mounted) return;
-    final when = day == null ? '' : dueLabel(context, day, scope.clock());
-    final date = day == null ? '' : '${day.day}/${day.month}';
-    final label = when == date ? date : '$when $date';
-    showUndo(
-      context,
-      scope,
-      day == null
-          ? tr(context, 'Due date taken off', 'Đã bỏ hạn')
-          : tr(context, 'Due $label', 'Hạn: $label'),
-    );
-  }
 
   Future<void> _add(String column, String title) => scope.run(
     context,
@@ -221,11 +212,15 @@ class _BoardPageState extends State<BoardPage> {
     final hasCategories = categoryProgress(s, widget.board).isNotEmpty;
     final p = BoardsPalette.of(context);
     final ground = boardGround(context, b, look: previewLook);
-    final timeView = b.str('view') == 'time';
-    final pinned = timePinned(b);
+    final range = TimeRange.read(b.data['span']);
+    final dated = _dated(s);
+    if (!windowSet) {
+      windowSet = true;
+      window = dated ? currentWindow(range, now) : null;
+    }
     final milestones = milestonesOf(b);
     // A narrow phone or very large text keeps the board's height: the
-    // Board | Time switch moves into the buttons on the cover.
+    // key dates move into the board menu.
     final roomy =
         MediaQuery.sizeOf(context).width >= 360 &&
         MediaQuery.textScalerOf(context).scale(1) <= 1.3;
@@ -271,42 +266,10 @@ class _BoardPageState extends State<BoardPage> {
               ],
             ),
           ],
-          if (roomy && pinned) ...[
-            const SizedBox(height: 10),
-            // Where things are (columns) or when they are due (time).
-            SegmentedButton<String>(
-              key: const Key('board-view'),
-              showSelectedIcon: false,
-              style: const ButtonStyle(visualDensity: VisualDensity.compact),
-              segments: [
-                ButtonSegment(
-                  value: 'board',
-                  icon: const Icon(Icons.view_week_outlined, size: 18),
-                  label: Text(tr(context, 'Board', 'Bảng')),
-                ),
-                ButtonSegment(
-                  value: 'time',
-                  icon: const Icon(Icons.date_range, size: 18),
-                  label: Text(tr(context, 'Time', 'Thời gian')),
-                ),
-              ],
-              selected: {timeView ? 'time' : 'board'},
-              onSelectionChanged: (v) => _look(view: v.first),
-            ),
-          ],
         ],
       ),
     );
     final actions = <Widget>[
-      if (!roomy || !pinned)
-        IconButton(
-          key: const Key('board-view-toggle'),
-          tooltip: timeView
-              ? tr(context, 'Show the board', 'Xem bảng')
-              : tr(context, 'Show by time', 'Xem theo thời gian'),
-          onPressed: () => _look(view: timeView ? 'board' : 'time'),
-          icon: Icon(timeView ? Icons.view_week_outlined : Icons.date_range),
-        ),
       IconButton(
         key: const Key('board-search'),
         tooltip: tr(context, 'Search cards', 'Tìm thẻ'),
@@ -375,10 +338,7 @@ class _BoardPageState extends State<BoardPage> {
                   : s.maybe('categories', focus),
             ),
           ),
-          onDeleted: () => setState(() {
-            focus = null;
-            only = false;
-          }),
+          onDeleted: () => setState(() => focus = null),
           deleteButtonTooltipMessage: tr(
             context,
             'Show all categories',
@@ -466,24 +426,37 @@ class _BoardPageState extends State<BoardPage> {
           state: s,
           board: widget.board,
           selected: focus,
-          onSelect: (v) => setState(() {
-            focus = v;
-            if (v == null) only = false;
-          }),
+          onSelect: (v) => setState(() => focus = v),
           onEdit: () => editCategories(context, scope, widget.board),
           trailing: [filters, due],
         ),
         const SizedBox(height: 8),
       ],
       if (focusName != null)
-        FocusBar(
-          name: focusName,
-          only: only,
-          onOnly: () => setState(() => only = !only),
-          onClear: () => setState(() {
-            focus = null;
-            only = false;
-          }),
+        FocusBar(name: focusName, onClear: () => setState(() => focus = null)),
+      if (dated || window != null)
+        WeekBar(
+          range: range,
+          window: window,
+          now: now,
+          onWindow: (w) => setState(() => window = w),
+          onRange: (r) {
+            setState(
+              () => window = window == null ? null : currentWindow(r, now),
+            );
+            _look(span: r);
+          },
+        ),
+      if (window == null ||
+          (!now.isBefore(window!.first) && now.isBefore(window!.end)))
+        BacklogLine(
+          scope: scope,
+          board: widget.board,
+          shows: (t) => KanbanFilter(
+            category: filter.category,
+            uncategorised: filter.uncategorised,
+            only: filter.only,
+          ).shows(t, now, s),
         ),
       if (!stripShown)
         SizedBox(
@@ -503,39 +476,25 @@ class _BoardPageState extends State<BoardPage> {
     ];
     final board = Padding(
       padding: const EdgeInsets.only(bottom: 8),
-      child: timeView
-          ? TimeView(
-              state: s,
-              board: widget.board,
-              now: now,
-              filter: filter,
-              range: TimeRange.read(b.data['span']),
-              onRange: (span) => _look(span: span),
-              scope: scope,
-              open: (card) => openCard(context, scope, card.id),
-              setDue: _setDue,
-            )
-          : KanbanView(
-              key: short ? kanbanShort : kanban,
-              state: s,
-              board: widget.board,
-              now: now,
-              detailed: detailed,
-              columnColor: ground.column,
-              filter: filter,
-              actions: KanbanActions(
-                open: (card) => openCard(context, scope, card.id),
-                move: _move,
-                add: _add,
-                tick: _tick,
-                cardMenu: (card) =>
-                    cardMenu(context, scope, card.id, onMoved: _move),
-                columnMenu: (column) => columnMenu(context, scope, column.id),
-                addColumn: () => addColumnDialog(context, scope, widget.board),
-                fromTemplate: (column) =>
-                    addFromCardTemplate(context, scope, column),
-              ),
-            ),
+      child: KanbanView(
+        key: short ? kanbanShort : kanban,
+        state: s,
+        board: widget.board,
+        now: now,
+        detailed: detailed,
+        columnColor: ground.column,
+        filter: filter,
+        actions: KanbanActions(
+          open: (card) => openCard(context, scope, card.id),
+          move: _move,
+          add: _add,
+          tick: _tick,
+          cardMenu: (card) => cardMenu(context, scope, card.id, onMoved: _move),
+          columnMenu: (column) => columnMenu(context, scope, column.id),
+          addColumn: () => addColumnDialog(context, scope, widget.board),
+          fromTemplate: (column) => addFromCardTemplate(context, scope, column),
+        ),
+      ),
     );
     final body = LayoutBuilder(
       builder: (context, box) {
@@ -650,6 +609,7 @@ class _BoardPageState extends State<BoardPage> {
               ? null
               : LookPicker(
                   current: previewLook!,
+                  onCover: () => pickBoardCover(context, scope, widget.board),
                   onPick: (id) => setState(() => previewLook = id),
                   onCancel: () => setState(() => previewLook = null),
                   onApply: () async {
