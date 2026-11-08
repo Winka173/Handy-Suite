@@ -24,7 +24,7 @@ the app you accept them.
 - The price is the one Google Play shows before you buy, in your currency.
 - Pro is tied to the Google account that bought it. Reinstalling the app, or
   using it on another device with the same account, restores it (Settings ›
-  Handy Bookmark Pro › Restore purchase).
+  Upgrade to Pro › Restore).
 - Payments and refunds are handled by Google Play under its terms and refund
   policy. Where the law of your country gives you further rights, they apply.
 
@@ -82,8 +82,8 @@ dùng app, bạn đồng ý với chúng.
   không có gì phải gia hạn hay huỷ.
 - Giá là giá Google Play hiện trước khi bạn mua, theo đơn vị tiền của bạn.
 - Pro gắn với tài khoản Google đã mua. Cài lại app, hoặc dùng trên máy khác
-  với cùng tài khoản, sẽ khôi phục được (Cài đặt › Handy Bookmark Pro ›
-  Khôi phục giao dịch).
+  với cùng tài khoản, sẽ khôi phục được (Cài đặt › Nâng cấp Pro ›
+  Khôi phục).
 - Thanh toán và hoàn tiền do Google Play xử lý theo điều khoản và chính sách
   hoàn tiền của Google Play. Nếu luật nước bạn cho bạn thêm quyền, các quyền
   đó vẫn được áp dụng.
