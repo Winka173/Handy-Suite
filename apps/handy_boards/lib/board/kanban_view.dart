@@ -43,12 +43,16 @@ class KanbanFilter {
 
   /// A category id, [uncategorisedFocus], or null.
   final String? focus;
+
+  /// A saved filter in use: the ids of the cards it lets through.
+  final Set<String>? only;
   const KanbanFilter({
     this.category,
     this.uncategorised = false,
     this.query = '',
     this.dueSoon = false,
     this.focus,
+    this.only,
   });
 
   static const uncategorisedFocus = '';
@@ -60,8 +64,13 @@ class KanbanFilter {
       ? card.data['category'] == null
       : card.data['category'] == focus;
   bool get active =>
-      category != null || uncategorised || query.trim().isNotEmpty || dueSoon;
+      category != null ||
+      uncategorised ||
+      query.trim().isNotEmpty ||
+      dueSoon ||
+      only != null;
   bool shows(BoardRecord card, DateTime now) {
+    if (only != null && !only!.contains(card.id)) return false;
     if (category != null && card.data['category'] != category) return false;
     if (uncategorised && card.data['category'] != null) return false;
     if (dueSoon) {

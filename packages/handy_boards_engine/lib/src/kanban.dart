@@ -526,6 +526,18 @@ void validateKanban(BoardsState s) {
       throw const FormatException('Invalid template id');
   }
   for (final t in s.rows('tasks')) {
+    final every = t.data['repeatEvery'], left = t.data['repeatLeft'];
+    if (every != null && (every is! int || every < 1 || every > 30))
+      throw const FormatException('Repeat every 1..30');
+    if (left != null && (left is! int || left < 0 || left > 999))
+      throw const FormatException('Repeat count 0..999');
+    final days = t.data['repeatDays'];
+    if (days != null &&
+        (days is! List || days.any((d) => d is! int || d < 1 || d > 7)))
+      throw const FormatException('Repeat weekdays 1..7');
+    if (t.data['repeatUntil'] != null &&
+        DateTime.tryParse('${t.data['repeatUntil']}') == null)
+      throw const FormatException('Repeat end date');
     final cover = t.data['cover'];
     if (cover != null && (cover is! String || !_coverValue.hasMatch(cover)))
       throw const FormatException('Invalid card cover');
@@ -602,6 +614,33 @@ BoardsState archiveFinished(BoardsState s, {int days = 14, DateTime? now}) {
 /// How often a repeating card comes back.
 const repeatEvery = {'daily', 'weekly', 'monthly'};
 
+/// The next day of a repeat with its options: every [n] periods, and for
+/// weekly repeats only on [days] (1 = Monday ... 7 = Sunday) when given.
+DateTime nextRepeatDay(
+  DateTime d,
+  String every, {
+  int n = 1,
+  List<int> days = const [],
+}) {
+  if (every == 'weekly' && days.isNotEmpty) {
+    final chosen = days.toSet();
+    // Later in the same week (Monday to Sunday)...
+    for (var w = d.weekday + 1; w <= 7; w++) {
+      if (chosen.contains(w))
+        return DateTime(d.year, d.month, d.day + w - d.weekday);
+    }
+    // ...else the first chosen day of the week n weeks on.
+    final monday = DateTime(d.year, d.month, d.day - (d.weekday - 1) + 7 * n);
+    for (var w = 1; w <= 7; w++) {
+      if (chosen.contains(w))
+        return DateTime(monday.year, monday.month, monday.day + w - 1);
+    }
+  }
+  var next = d;
+  for (var i = 0; i < n; i++) next = _nextDay(next, every);
+  return next;
+}
+
 DateTime _nextDay(DateTime d, String every) => switch (every) {
   'daily' => DateTime(d.year, d.month, d.day + 1),
   'weekly' => DateTime(d.year, d.month, d.day + 7),
@@ -629,9 +668,21 @@ BoardsState repeatIfDone(BoardsState s, String card, {DateTime? now}) {
   );
   final id = newId(), at = _now(now), e = BoardsEdit(s);
   final due = dueDay(t);
+  // Pro options: every n periods, chosen weekdays, an end date or a count.
+  final n = t.data['repeatEvery'] is int ? t.data['repeatEvery'] as int : 1;
+  final days = [
+    for (final v in (t.data['repeatDays'] as List? ?? const []))
+      if (v is int) v,
+  ];
+  DateTime step(DateTime d) => nextRepeatDay(d, every, n: n, days: days);
+  final left = t.data['repeatLeft'];
+  if (left is int && left <= 0) return s;
+  final until = DateTime.tryParse('${t.data['repeatUntil'] ?? ''}');
+  final anchor = due ?? scheduledDay(t);
+  if (until != null && anchor != null && step(anchor).isAfter(until)) return s;
   Json? nextDue;
   if (due != null) {
-    final n = _nextDay(due, every);
+    final n = step(due);
     final old = t.data['due'] as Map;
     nextDue = old['kind'] == 'day'
         ? {
@@ -643,10 +694,9 @@ BoardsState repeatIfDone(BoardsState s, String card, {DateTime? now}) {
           }
         : {
             ...Map<String, dynamic>.from(old),
-            'at': DateTime.parse(old['at'] as String)
-                .add(_nextDay(due, every).difference(due))
-                .toUtc()
-                .toIso8601String(),
+            'at': DateTime.parse(
+              old['at'] as String,
+            ).add(step(due).difference(due)).toUtc().toIso8601String(),
           };
   }
   final ids = <String, String>{};
@@ -667,9 +717,10 @@ BoardsState repeatIfDone(BoardsState s, String card, {DateTime? now}) {
       'due': nextDue,
       // A plan moves with its repeat, one period on.
       'scheduled': switch (scheduledDay(t)) {
-        final d? => isoDay(_nextDay(d, every)),
+        final d? => isoDay(step(d)),
         null => null,
       },
+      if (left is int) 'repeatLeft': left - 1,
       'repeatedAs': null,
       'suggestedStatus': null,
       'coverPhoto': ids[t.data['coverPhoto']],

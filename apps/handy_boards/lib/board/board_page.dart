@@ -9,6 +9,7 @@ import '../design/theme.dart';
 import '../pro/pro.dart';
 import '../scope.dart';
 import '../ui/look.dart';
+import 'saved_filters.dart';
 import 'board_menus.dart';
 import 'categories_sheet.dart';
 import 'category_strip.dart';
@@ -67,6 +68,30 @@ class _BoardPageState extends State<BoardPage> {
     super.dispose();
   }
 
+  /// The saved filter in use (Pro), or null.
+  String? savedFilter;
+
+  Set<String>? get _only {
+    final s = scope.state;
+    final view = savedFilter == null ? null : s.maybe('views', savedFilter!);
+    if (view == null) return null;
+    return {
+      for (final t in topTasks(s, board: widget.board))
+        if (filterMatches(s, view, t)) t.id,
+    };
+  }
+
+  Future<void> _filters() async {
+    final picked = await savedFiltersSheet(
+      context,
+      scope,
+      widget.board,
+      savedFilter,
+    );
+    if (picked == null || !mounted) return;
+    setState(() => savedFilter = picked.isEmpty ? null : picked);
+  }
+
   KanbanFilter get filter => KanbanFilter(
     category: !only || focus == null || focus == CategoryStrip.uncategorisedKey
         ? null
@@ -75,6 +100,7 @@ class _BoardPageState extends State<BoardPage> {
     query: query.text,
     dueSoon: dueSoon,
     focus: only ? null : focus,
+    only: _only,
   );
 
   Future<void> _move(String card, String column, int index) async {
@@ -316,6 +342,18 @@ class _BoardPageState extends State<BoardPage> {
         icon: const Icon(Icons.more_vert),
       ),
     ];
+    final saved = savedFilter == null
+        ? null
+        : scope.state.maybe('views', savedFilter!);
+    final filters = ActionChip(
+      key: const Key('board-filters'),
+      avatar: Icon(
+        saved == null ? Icons.filter_alt_outlined : Icons.filter_alt,
+        size: 18,
+      ),
+      label: Text(saved?.str('title') ?? tr(context, 'Filters', 'Bộ lọc')),
+      onPressed: _filters,
+    );
     final due = FilterChip(
       key: const Key('filter-due-soon'),
       selected: dueSoon,
@@ -431,7 +469,7 @@ class _BoardPageState extends State<BoardPage> {
             if (v == null) only = false;
           }),
           onEdit: () => editCategories(context, scope, widget.board),
-          trailing: [due],
+          trailing: [filters, due],
         ),
         const SizedBox(height: 8),
       ],
@@ -452,7 +490,7 @@ class _BoardPageState extends State<BoardPage> {
             scrollDirection: Axis.horizontal,
             padding: const EdgeInsets.symmetric(horizontal: 16),
             children: [
-              for (final c in [...chips, due])
+              for (final c in [...chips, filters, due])
                 Padding(
                   padding: const EdgeInsets.only(right: 8),
                   child: Center(child: c),

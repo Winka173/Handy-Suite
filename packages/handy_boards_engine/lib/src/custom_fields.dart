@@ -127,3 +127,50 @@ String fieldText(BoardRecord field, Object? value, {bool vi = false}) {
     _ => '$value',
   };
 }
+
+// Saved filters (Pro) reuse the `views` kind: a name, AND/OR, and up to
+// thirty conditions from [validateTaskFilter] (column, category, priority,
+// due range, reminder...). No expression language.
+
+List<BoardRecord> savedFilters(BoardsState s, String board) =>
+    s.rows('views').where((v) => v.str('board') == board).toList()
+      ..sort((a, b) => a.str('title').compareTo(b.str('title')));
+
+BoardsState saveFilter(
+  BoardsState s,
+  String board,
+  String title,
+  List<Json> conditions, {
+  bool any = false,
+  String? id,
+}) {
+  final name = text(title.trim(), empty: false, max: 60);
+  if (conditions.isEmpty) throw const FormatException('Choose a condition');
+  return s.put(
+    'views',
+    BoardRecord({
+      'id': id ?? newId(),
+      'board': board,
+      'title': name,
+      'mode': any ? 'or' : 'and',
+      'conditions': conditions,
+      'sort': 'manual',
+      'group': 'flat',
+    }),
+  )..validate();
+}
+
+BoardsState deleteFilter(BoardsState s, String id) => s.remove('views', {id});
+
+/// Whether [t] passes saved filter [view]: all of its conditions, or any
+/// of them in OR mode.
+bool filterMatches(BoardsState s, BoardRecord view, BoardRecord t) {
+  final conditions = [
+    for (final c in (view.data['conditions'] as List? ?? const [])) object(c),
+  ];
+  if (conditions.isEmpty) return true;
+  bool one(Json c) => taskMatches(s, t, filter: c);
+  return view.str('mode', 'and') == 'or'
+      ? conditions.any(one)
+      : conditions.every(one);
+}

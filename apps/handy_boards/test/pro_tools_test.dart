@@ -175,4 +175,40 @@ void main() {
     await tap(t, find.byKey(const Key('ask-text-save')));
     expect(homeBoards(c.state!), hasLength(boards + 1));
   });
+
+  testWidgets('a saved filter narrows the board; a custom repeat is kept', (
+    t,
+  ) async {
+    debugProOverride = true;
+    var s = studyState();
+    final cat = categoriesOf(s, board).first;
+    s = saveFilter(s, board, 'First subject', [
+      {'category': cat.id},
+    ]);
+    final c = await boot(t, s);
+    await tap(t, find.byKey(const Key('board-$board')));
+    await tap(t, find.byKey(const Key('board-filters')));
+    final f = savedFilters(c.state!, board).single;
+    await tap(t, find.byKey(Key('filter-${f.id}')));
+    expect(find.text('First subject'), findsOneWidget);
+    final shown = topTasks(
+      c.state!,
+      board: board,
+    ).where((x) => x.data['category'] == cat.id).first;
+    final hidden = topTasks(
+      c.state!,
+      board: board,
+    ).where((x) => x.data['category'] != cat.id).first;
+    expect(find.text(shown.str('title')), findsWidgets);
+    expect(find.text(hidden.str('title')), findsNothing);
+    // Custom repeat on that card: every 2 weeks.
+    await tap(t, find.text(shown.str('title')).first);
+    await tap(t, find.byKey(const Key('card-repeat')));
+    await tap(t, find.byKey(const Key('card-repeat-custom')));
+    await tap(t, find.byKey(const Key('repeat-more')));
+    await tap(t, find.byKey(const Key('repeat-save')));
+    final card = c.state!.get('tasks', shown.id);
+    expect(card.str('repeat'), 'weekly');
+    expect(card.data['repeatEvery'], 2);
+  });
 }

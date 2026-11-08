@@ -4,6 +4,7 @@ import 'package:flutter/foundation.dart';
 import 'package:handy_boards_engine/handy_boards_engine.dart';
 import 'package:handy_ui/kit.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'repeat_dialog.dart';
 import 'fields_ui.dart';
 import '../board/time_actions.dart';
 import '../board/board_menus.dart';
@@ -218,6 +219,16 @@ class _CardDetailState extends State<CardDetail> {
   }
 
   /// Repeating is Pro; taking a repeat off never is.
+  Future<void> _customRepeat() async {
+    if (!await requirePro(context, ProFeature.automation) || !mounted) return;
+    final v = await customRepeat(context, _card);
+    if (v == null || !mounted) return;
+    await _change(
+      (s) =>
+          saveTask(s, s.get('tasks', widget.card).copy(v), now: scope.clock()),
+    );
+  }
+
   Future<void> _repeat(String? every) async {
     if (every != null && !await requirePro(context, ProFeature.automation))
       return;
@@ -225,7 +236,14 @@ class _CardDetailState extends State<CardDetail> {
     await _change(
       (s) => saveTask(
         s,
-        s.get('tasks', widget.card).copy({'repeat': every, 'repeatedAs': null}),
+        s.get('tasks', widget.card).copy({
+          'repeat': every,
+          'repeatedAs': null,
+          'repeatEvery': null,
+          'repeatDays': null,
+          'repeatUntil': null,
+          'repeatLeft': null,
+        }),
         now: scope.clock(),
       ),
     );
@@ -581,16 +599,33 @@ class _CardDetailState extends State<CardDetail> {
                         onPressed: () => _repeat(v),
                         child: Text(tr(context, en, vi)),
                       ),
+                    MenuItemButton(
+                      key: const Key('card-repeat-custom'),
+                      leadingIcon: const Icon(Icons.tune),
+                      trailingIcon: hasPro(context) ? null : const ProBadge(),
+                      onPressed: _customRepeat,
+                      child: Text(tr(context, 'Custom…', 'Tuỳ chỉnh…')),
+                    ),
                   ],
                   builder: (context, menu, _) => chip(
                     key: const Key('card-repeat'),
                     icon: Icons.repeat,
-                    label: switch (t.data['repeat']) {
-                      'daily' => tr(context, 'Every day', 'Hằng ngày'),
-                      'weekly' => tr(context, 'Every week', 'Hằng tuần'),
-                      'monthly' => tr(context, 'Every month', 'Hằng tháng'),
-                      _ => tr(context, 'Repeat', 'Lặp lại'),
-                    },
+                    label:
+                        t.data['repeatEvery'] != null ||
+                            t.data['repeatDays'] != null ||
+                            t.data['repeatUntil'] != null ||
+                            t.data['repeatLeft'] != null
+                        ? tr(context, 'Custom repeat', 'Lặp tuỳ chỉnh')
+                        : switch (t.data['repeat']) {
+                            'daily' => tr(context, 'Every day', 'Hằng ngày'),
+                            'weekly' => tr(context, 'Every week', 'Hằng tuần'),
+                            'monthly' => tr(
+                              context,
+                              'Every month',
+                              'Hằng tháng',
+                            ),
+                            _ => tr(context, 'Repeat', 'Lặp lại'),
+                          },
                     set: t.data['repeat'] != null,
                     onTap: () => menu.isOpen ? menu.close() : menu.open(),
                   ),
