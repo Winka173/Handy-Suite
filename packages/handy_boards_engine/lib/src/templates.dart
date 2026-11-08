@@ -235,7 +235,12 @@ TemplateAnswers defaultAnswers(
   DateTime? now,
 }) {
   final today = now ?? DateTime.now();
-  final a = <String, Object?>{examplesKey: false};
+  final a = <String, Object?>{
+    examplesKey: false,
+    cardFieldsKey: [
+      for (var i = 0; i < templateCardFields(t.id).length; i++) i,
+    ],
+  };
   for (final f in t.fields) {
     a[f.id] = switch (f.kind) {
       FieldKind.text => f.textDefault?.of(vi) ?? '',
@@ -326,6 +331,10 @@ class BoardPlan {
   final List<(String, String)> milestones;
   final TimePreset time;
   final List<PlannedCard> cards;
+
+  /// Fields the board starts with: name, type, choices, shown on the card
+  /// front. They came with the template, so they are free to fill.
+  final List<(String, String, List<String>, bool)> cardFields;
   const BoardPlan({
     required this.title,
     required this.columns,
@@ -338,6 +347,7 @@ class BoardPlan {
     this.milestones = const [],
     this.time = const TimePreset('week'),
     this.cards = const [],
+    this.cardFields = const [],
   });
 }
 
@@ -463,6 +473,16 @@ BoardPlan planBoard(
     milestones: milestones,
     time: _timeOf(t, option(FieldRole.timeRange)?.time, dates.isNotEmpty),
     cards: cards,
+    cardFields: [
+      for (final (i, f) in templateCardFields(t.id).indexed)
+        if ((answers[cardFieldsKey] as List? ?? const []).contains(i))
+          (
+            f.name.of(vi),
+            f.type,
+            [for (final o in f.options) o.of(vi)],
+            f.onCard,
+          ),
+    ],
   );
 }
 
@@ -590,6 +610,23 @@ BoardsState buildBoard(
         'color': plan.categories[i].$2,
         'icon': 'folder',
         'preview': 3,
+      }),
+    );
+  }
+  for (final (i, f) in plan.cardFields.indexed) {
+    if (!fieldTypes.contains(f.$2)) continue;
+    e.put(
+      'fields',
+      BoardRecord({
+        'id': newId(),
+        'board': b,
+        'title': text(f.$1.trim(), empty: false, max: 60),
+        'type': f.$2,
+        'options': f.$2 == 'single' ? f.$3 : <String>[],
+        'onCard': f.$4,
+        'order': i,
+        // Came with the template: free to fill without Pro.
+        'template': true,
       }),
     );
   }

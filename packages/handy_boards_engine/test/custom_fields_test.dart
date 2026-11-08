@@ -9,7 +9,8 @@ void main() {
     var s = createFromTemplate(
       BoardsState(),
       templateById('project')!,
-      answers: {'title': 'A'},
+      // Without the template's suggested fields: this test makes its own.
+      answers: {'title': 'A', cardFieldsKey: <int>[]},
       now: now,
       boardId: a,
     );

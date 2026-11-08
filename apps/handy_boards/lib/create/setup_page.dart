@@ -5,6 +5,7 @@ import '../design/theme.dart';
 import '../pro/pro.dart';
 import '../scope.dart';
 import 'new_board.dart';
+import '../card/fields_ui.dart' show fieldTypeName;
 import 'template_parts.dart';
 
 String timeLine(BuildContext context, TimePreset t) {
@@ -208,6 +209,63 @@ class _SetupPageState extends State<SetupPage> {
         ]
       : [null, null];
 
+  /// The fields the template suggests for every card, each ticked; free to
+  /// fill on the board.
+  Widget _cardFields(BoardTemplate t) {
+    final theme = Theme.of(context);
+    final p = BoardsPalette.of(context);
+    final vi = isVi(context);
+    final kept = [
+      for (final v in (answers![cardFieldsKey] as List? ?? const []))
+        if (v is int) v,
+    ];
+    return Padding(
+      key: const Key('setup-card-fields'),
+      padding: const EdgeInsets.only(bottom: 24),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Text(
+            tr(context, 'Fields on every card', 'Trường cho mỗi thẻ'),
+            style: theme.textTheme.titleMedium,
+          ),
+          const SizedBox(height: 4),
+          Text(
+            tr(
+              context,
+              'Untick what you do not need. Fill them in each card; add more there any time.',
+              'Bỏ chọn trường không cần. Điền trong từng thẻ; thêm trường khác ở đó lúc nào cũng được.',
+            ),
+            style: theme.textTheme.bodySmall?.copyWith(color: p.muted),
+          ),
+          const SizedBox(height: 8),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: [
+              for (final (i, f) in templateCardFields(t.id).indexed)
+                FilterChip(
+                  key: Key('setup-card-field-$i'),
+                  label: Text(
+                    '${f.name.of(vi)} · ${fieldTypeName(context, f.type)}',
+                  ),
+                  selected: kept.contains(i),
+                  onSelected: (v) => _set(
+                    cardFieldsKey,
+                    [
+                      for (final k in kept)
+                        if (k != i) k,
+                      if (v) i,
+                    ]..sort(),
+                  ),
+                ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _field(SetupField f) {
     final theme = Theme.of(context);
     final p = BoardsPalette.of(context);
@@ -331,6 +389,7 @@ class _SetupPageState extends State<SetupPage> {
             padding: const EdgeInsets.fromLTRB(16, 4, 16, 24),
             children: [
               for (final f in t.fields) _field(f),
+              if (templateCardFields(t.id).isNotEmpty) _cardFields(t),
               SwitchListTile(
                 key: const Key('setup-examples'),
                 contentPadding: EdgeInsets.zero,
@@ -400,7 +459,8 @@ class PlanPreviewPage extends StatelessWidget {
           padding: const EdgeInsets.fromLTRB(16, 0, 16, 10),
           child: Text(
             '${plan.columns.map((c) => c.$1).join(' → ')}\n'
-            '${timeLine(context, plan.time)}',
+            '${timeLine(context, plan.time)}'
+            '${plan.cardFields.isEmpty ? '' : '\n${tr(context, 'Fields', 'Trường')}: ${plan.cardFields.map((f) => f.$1).join(', ')}'}',
             style: theme.textTheme.bodySmall?.copyWith(color: p.muted),
           ),
         ),

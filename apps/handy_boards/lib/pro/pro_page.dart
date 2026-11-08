@@ -111,8 +111,8 @@ List<(String, List<ProPart>)> proGroups(BuildContext context) {
             'Ngân sách, link, có/không trên mỗi thẻ',
           ),
           t(
-            'Add a few fields of your own to a board: text, number, date, yes/no, one choice, link. Values you saved stay readable without Pro.',
-            'Thêm vài trường riêng cho bảng: chữ, số, ngày, có/không, một lựa chọn, link. Giá trị đã lưu vẫn xem được khi không còn Pro.',
+            'Make fields of your own for a board: text, number, date, yes/no, one choice, link. Fields that come with a template are free to fill; values you saved stay readable without Pro.',
+            'Tạo trường riêng cho bảng: chữ, số, ngày, có/không, một lựa chọn, link. Trường đi kèm mẫu thì điền miễn phí; giá trị đã lưu vẫn xem được khi không còn Pro.',
           ),
         ),
       ],

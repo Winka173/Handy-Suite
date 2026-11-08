@@ -219,8 +219,10 @@ Future<(String, String, List<String>)?> _newField(BuildContext context) {
   );
 }
 
-/// Card detail: the board's fields with this card's values. Values stay
-/// readable without Pro (and for set-aside fields); changing one asks.
+/// Card detail: the board's fields with this card's values, always there
+/// (with "Add a field" when the board has none). Fields that came with the
+/// board's template are free to fill; the person's own ones ask for Pro to
+/// change, and stay readable without it (set-aside ones too).
 class CardFieldsSection extends StatelessWidget {
   final BoardsScope scope;
   final BoardRecord card;
@@ -236,10 +238,10 @@ class CardFieldsSection extends StatelessWidget {
       card.str('board'),
       all: true,
     ).where((f) => !f.flag('archived') || values.containsKey(f.id)).toList();
-    if (fields.isEmpty) return const SizedBox.shrink();
     final vi = isVi(context);
     Future<void> edit(BoardRecord f) async {
-      if (!await requirePro(context, ProFeature.fields) || !context.mounted) {
+      if (!f.flag('template') &&
+          (!await requirePro(context, ProFeature.fields) || !context.mounted)) {
         return;
       }
       final old = values[f.id];
@@ -294,10 +296,40 @@ class CardFieldsSection extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Text(
-            tr(context, 'Fields', 'Trường'),
-            style: theme.textTheme.titleMedium,
+          Row(
+            children: [
+              Expanded(
+                child: Text(
+                  tr(context, 'Fields', 'Trường'),
+                  style: theme.textTheme.titleMedium,
+                ),
+              ),
+              Flexible(
+                child: TextButton.icon(
+                  key: const Key('card-fields-add'),
+                  onPressed: () =>
+                      fieldsSheet(context, scope, card.str('board')),
+                  icon: Icon(fields.isEmpty ? Icons.add : Icons.tune, size: 18),
+                  label: Text(
+                    fields.isEmpty
+                        ? tr(context, 'Add a field', 'Thêm trường')
+                        : tr(context, 'Edit fields', 'Sửa trường'),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+              ),
+            ],
           ),
+          if (fields.isEmpty)
+            Text(
+              tr(
+                context,
+                'Your own properties for every card: a budget, a link, yes or no.',
+                'Thông tin riêng cho mọi thẻ: ngân sách, link, có hay không.',
+              ),
+              style: theme.textTheme.bodySmall?.copyWith(color: p.muted),
+            ),
           for (final f in fields)
             ListTile(
               key: Key('card-field-${f.id}'),

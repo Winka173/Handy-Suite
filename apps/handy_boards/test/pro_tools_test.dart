@@ -144,7 +144,8 @@ void main() {
     // Free: the Pro page opens at once, not the fields first.
     expect(find.byKey(const Key('pro-page')), findsOneWidget);
     expect(find.byKey(const Key('field-add')), findsNothing);
-    expect(fieldsOf(c.state!, board), isEmpty);
+    // Only the field the template suggested.
+    expect(fieldsOf(c.state!, board).map((f) => f.str('title')), ['Grade']);
     await t.binding.handlePopRoute();
     await t.pumpAndSettle();
     debugProOverride = true;
@@ -153,7 +154,30 @@ void main() {
     await tap(t, find.byKey(const Key('field-add')));
     await t.enterText(find.byKey(const Key('field-name')), 'Points');
     await tap(t, find.byKey(const Key('field-save')));
-    expect(fieldsOf(c.state!, board).single.str('title'), 'Points');
+    expect(fieldsOf(c.state!, board).map((f) => f.str('title')), [
+      'Grade',
+      'Points',
+    ]);
+  });
+
+  testWidgets('a field that came with the template is free to fill, right '
+      'in the card', (t) async {
+    final s = studyState();
+    final c = await boot(t, s, size: const Size(1280, 900));
+    await tap(t, find.byKey(const Key('board-$board')));
+    final grade = fieldsOf(c.state!, board).single;
+    final card = topTasks(c.state!, board: board).first;
+    await tap(t, find.byKey(ValueKey('card-${card.id}')));
+    await t.ensureVisible(find.byKey(const Key('card-fields')));
+    await t.pumpAndSettle();
+    expect(find.byKey(const Key('card-fields-add')), findsOneWidget);
+    await tap(t, find.byKey(Key('card-field-${grade.id}')));
+    expect(find.byKey(const Key('pro-page')), findsNothing);
+    await t.enterText(find.byType(TextField).last, '9');
+    await t.testTextInput.receiveAction(TextInputAction.done);
+    await t.pumpAndSettle();
+    final saved = object(c.state!.get('tasks', card.id).data['custom'] ?? {});
+    expect('${saved[grade.id]}', '9');
   });
 
   testWidgets('board history: Pro opens a read-only day-by-day list of '

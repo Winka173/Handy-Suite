@@ -165,7 +165,10 @@ void main() {
       'fields are a Pro option on any style', (t) async {
     var s = studyState();
     s = addField(s, board, 'Teacher', 'text');
-    final field = fieldsOf(s, board).single.id;
+    final field = fieldsOf(
+      s,
+      board,
+    ).firstWhere((f) => f.str('title') == 'Teacher').id;
     final card = topTasks(s, board: board).first;
     s = setFieldValue(s, card.id, field, 'Ms Lan', now: clock);
     await boot(t, s, size: const Size(1000, 900));
