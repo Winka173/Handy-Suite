@@ -73,7 +73,7 @@ void main() {
     final s = withTask(fixture()), j = s.toJson()..['schema'] = 1;
     final migrated = BoardsState.fromJson(j);
     expect(migrated.get('tasks', 't').data, s.get('tasks', 't').data);
-    expect(migrated.toJson()['schema'], 3);
+    expect(migrated.toJson()['schema'], 4);
   });
   test(
     'Trello import separates categories/status/tags, does not guess completion, preserves subset round trip',

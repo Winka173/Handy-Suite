@@ -35,13 +35,13 @@ void main() {
     ]);
   });
 
-  test('the study template shows Toán, Văn, Anh, Lý with real cards', () {
+  test('the study template shows four university subjects with cards', () {
     final s = studyBoard(), b = boardOf(s);
     expect(categoriesOf(s, b).map((c) => c.str('title')), [
-      'Toán',
-      'Văn',
-      'Anh',
-      'Lý',
+      'Lập trình Web',
+      'Cơ sở dữ liệu',
+      'Mạng máy tính',
+      'Tiếng Anh B2',
     ]);
     final progress = categoryProgress(s, b);
     expect(progress.where((p) => p.category != null), hasLength(4));
@@ -245,13 +245,13 @@ void main() {
     expect(identical(kanbanize(next), next), isTrue);
   });
 
-  test('schema 3 round-trips covers and looks; schema 2 still opens', () {
+  test('schema 4 round-trips covers and looks; schema 2 still opens', () {
     var s = studyBoard();
     final b = boardOf(s);
     s = setBoardLook(s, b, presentation: 'detailed', pinned: true);
     s = setCardCover(s, topTasks(s).first.id, color: 2);
     final json = jsonDecode(jsonEncode(s.toJson()));
-    expect(json['schema'], 3);
+    expect(json['schema'], 4);
     final back = BoardsState.fromJson(json);
     expect(back.get('boards', b).str('presentation'), 'detailed');
     expect(back.get('boards', b).flag('pinned'), isTrue);

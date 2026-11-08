@@ -150,8 +150,12 @@ BoardsState createKanbanBoard(
   bool vi = false,
   DateTime? now,
   String? boardId,
+  bool sample = true,
 }) {
   text(title, empty: false);
+  final type = preset?.type ?? 'standard';
+  final day = now ?? DateTime.now();
+  final monday = DateTime(day.year, day.month, day.day - (day.weekday - 1));
   final e = BoardsEdit(s),
       at = _now(now),
       b = boardId ?? newId(),
@@ -179,6 +183,20 @@ BoardsState createKanbanBoard(
       'cover': ?preset?.cover,
       'template': preset?.id ?? 'blank',
       'presentation': 'compact',
+      'type': type,
+      if (preset?.termWeeks != null)
+        'term': {
+          'start': isoDay(monday),
+          'end': isoDay(
+            DateTime(
+              monday.year,
+              monday.month,
+              monday.day + preset!.termWeeks! * 7 - 1,
+            ),
+          ),
+        },
+      if (sample && preset?.budget != null)
+        'budget': {'amount': preset!.budget, 'currency': 'VND'},
     }),
   );
   final names = preset == null || preset.columns.isEmpty
@@ -198,11 +216,17 @@ BoardsState createKanbanBoard(
         'title': names[i],
         'order': i,
         'done': i == names.length - 1,
+        if (preset?.stages != null && i < preset!.stages!.length)
+          'stage': preset.stages![i],
       }),
     );
   }
   final categories = <String>[];
-  for (var i = 0; i < (preset?.categories.length ?? 0); i++) {
+  // An empty study board starts without the sample subjects: a student's
+  // subjects are their own.
+  final keepCategories = sample || type != 'study';
+  final categoryCount = keepCategories ? preset?.categories.length ?? 0 : 0;
+  for (var i = 0; i < categoryCount; i++) {
     final c = preset!.categories[i], id = newId();
     categories.add(id);
     e.put(
@@ -217,9 +241,35 @@ BoardsState createKanbanBoard(
         'preview': 3,
       }),
     );
+    if (type == 'study')
+      e.put(
+        'subjects',
+        BoardRecord({
+          'id': newId(),
+          'board': b,
+          'category': id,
+          'code': c.code ?? '',
+          'credits': c.credits,
+        }),
+      );
   }
-  final day = now ?? DateTime.now();
-  for (var i = 0; i < (preset?.cards.length ?? 0); i++) {
+  if (sample)
+    for (final c in preset?.classes ?? const <PresetClass>[])
+      e.put(
+        'classes',
+        BoardRecord({
+          'id': newId(),
+          'board': b,
+          'category': categories[c.category],
+          'weekday': c.weekday,
+          'startMinute': c.start,
+          'endMinute': c.end,
+          'room': c.room,
+          'zone': 'Asia/Ho_Chi_Minh',
+        }),
+      );
+  final cardCount = sample ? preset?.cards.length ?? 0 : 0;
+  for (var i = 0; i < cardCount; i++) {
     final card = preset!.cards[i], id = newId();
     final column = columns[card.column.clamp(0, columns.length - 1)];
     final due = card.dueInDays == null
@@ -243,6 +293,44 @@ BoardsState createKanbanBoard(
         'updated': at,
         'completedAt': column == columns.last ? at : null,
         if (card.cover != null) 'cover': 'art:${card.cover}',
+        if (card.exam case final x?)
+          'exam': {
+            'day': isoDay(DateTime(day.year, day.month, day.day + x.inDays)),
+            if (x.minute != null) 'time': clock(x.minute!),
+            if (x.room.isNotEmpty) 'location': x.room,
+          },
+        if (card.product case final p?)
+          'product': {
+            'price': ?p.price,
+            'currency': 'VND',
+            'qty': p.qty,
+            if (p.store.isNotEmpty) 'store': p.store,
+            'size': ?p.size,
+            'unit': ?p.unit,
+          },
+        if (card.post case final p?)
+          'post': {
+            'format': p.format,
+            'platforms': p.platforms,
+            if (p.inDays != null)
+              'scheduleAt': DateTime(
+                day.year,
+                day.month,
+                day.day + p.inDays!,
+                0,
+                p.minute ?? 9 * 60,
+              ).toUtc().toIso8601String(),
+            'published': [
+              if (p.publishedDaysAgo != null)
+                {
+                  'platform': p.platforms.first,
+                  'at': day
+                      .subtract(Duration(days: p.publishedDaysAgo!))
+                      .toUtc()
+                      .toIso8601String(),
+                },
+            ],
+          },
         if (due != null)
           'due': {
             'kind': 'day',
@@ -322,6 +410,7 @@ BoardsState duplicateCard(BoardsState s, String card, {DateTime? now}) {
       'trashBatch': null,
       'suggestedStatus': null,
       'coverPhoto': ids[t.data['coverPhoto']],
+      ...typedCopy(s, t),
     }),
   );
   for (final c in s.related('checklist', card))
@@ -331,6 +420,15 @@ BoardsState duplicateCard(BoardsState s, String card, {DateTime? now}) {
     );
   e.event(id, 'created', now ?? DateTime.now(), details: {'copyOf': card});
   final copied = e.finish();
+  // A copy of something bought or published starts where nothing counts.
+  final target = copyColumn(s, t);
+  if (target != t.str('status')) {
+    final placed = copied.put(
+      'tasks',
+      copied.get('tasks', id).copy({'status': target}),
+    );
+    return moveCard(placed, id, column: target, index: 0, now: now);
+  }
   final column = cardsIn(copied, t.str('status'));
   final at0 = column.indexWhere((c) => c.id == card);
   return moveCard(
@@ -370,6 +468,16 @@ BoardsState duplicateBoard(
     e.put('statuses', c.copy({'id': map(c.id), 'board': ids[board]}));
   for (final c in categoriesOf(s, board))
     e.put('categories', c.copy({'id': map(c.id), 'board': ids[board]}));
+  for (final k in const ['subjects', 'classes'])
+    for (final r in s.rows(k).where((r) => r.str('board') == board))
+      e.put(
+        k,
+        r.copy({
+          'id': newId(),
+          'board': ids[board],
+          'category': map(r.str('category')),
+        }),
+      );
   for (final t in topTasks(s, board: board)) {
     final id = map(t.id);
     for (final a in s.related('attachments', t.id))
@@ -384,7 +492,7 @@ BoardsState duplicateBoard(
         ...t.toJson(),
         'id': id,
         'board': ids[board],
-        'status': map(t.str('status')),
+        'status': map(copyColumn(s, t)),
         'category': cat == null ? null : map(cat),
         'parent': null,
         'created': at,
@@ -394,6 +502,7 @@ BoardsState duplicateBoard(
         'custom': <String, dynamic>{},
         'suggestedStatus': null,
         'coverPhoto': photo is String ? ids[photo] : null,
+        ...typedCopy(s, t),
       }),
     );
     for (final c in s.related('checklist', t.id))
@@ -665,6 +774,7 @@ void validateKanban(BoardsState s) {
     if (merged != null && merged is! String)
       throw const FormatException('Invalid merge pointer');
   }
+  validateTypes(s);
 }
 
 /// The automation presets the person turned on (Pro), read from
@@ -789,6 +899,7 @@ BoardsState repeatIfDone(BoardsState s, String card, {DateTime? now}) {
       'repeatedAs': null,
       'suggestedStatus': null,
       'coverPhoto': ids[t.data['coverPhoto']],
+      if (postOf(t) case final p?) 'post': _nextPost(p, t, every),
     }),
   );
   for (final c in s.related('checklist', card))
@@ -799,6 +910,25 @@ BoardsState repeatIfDone(BoardsState s, String card, {DateTime? now}) {
   e.put('tasks', t.copy({'repeatedAs': id}));
   e.event(id, 'created', now ?? DateTime.now(), details: {'repeatOf': card});
   return e.finish();
+}
+
+/// A repeating post's next time: no published records, its slot one
+/// period later.
+Json _nextPost(Json p, BoardRecord t, String every) {
+  final next = {...p, 'published': const []};
+  final at = p['scheduleAt'] as String?;
+  if (at != null) {
+    final when = DateTime.parse(at).toLocal();
+    final moved = _nextDay(when, every);
+    next['scheduleAt'] = DateTime(
+      moved.year,
+      moved.month,
+      moved.day,
+      when.hour,
+      when.minute,
+    ).toUtc().toIso8601String();
+  }
+  return next;
 }
 
 /// Sets a card's due day (a whole day, no time), or takes it off with

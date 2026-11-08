@@ -20,7 +20,7 @@ Future<Uint8List> exportBackupAsync(
 
   append(
     metadata,
-    '{"app":"handy-boards","schema":2,"revision":${s.revision},"preferences":${jsonEncode(s.preferences)}',
+    '{"app":"handy-boards","schema":4,"revision":${s.revision},"preferences":${jsonEncode(s.preferences)}',
     28000000,
   );
   for (final kind in kinds) {
@@ -76,7 +76,7 @@ Future<Uint8List> exportBackupAsync(
     throw const FormatException('Backup exceeds portable bounds');
   final manifest = {
     'app': 'handy-boards',
-    'schema': 3,
+    'schema': 4,
     'exportedAt': DateTime.now().toUtc().toIso8601String(),
     'files': {
       for (final e in entries.entries)
@@ -120,7 +120,7 @@ Uint8List exportBackup(BoardsState s, {bool zip = true}) {
     throw const FormatException('Backup exceeds portable bounds');
   final manifest = {
     'app': 'handy-boards',
-    'schema': 3,
+    'schema': 4,
     'exportedAt': DateTime.now().toUtc().toIso8601String(),
     'files': {
       for (final e in entries.entries)
@@ -162,7 +162,7 @@ BoardsState readBackup(Uint8List bytes) {
       jsonDecode(utf8.decode(entries.remove('manifest.json')!)),
     );
     if (manifest['app'] != 'handy-boards' ||
-        ![1, 2, 3].contains(manifest['schema']))
+        ![1, 2, 3, 4].contains(manifest['schema']))
       throw const FormatException('Unsupported manifest');
     final checks = object(manifest['files']);
     if (checks.length != entries.length)

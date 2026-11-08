@@ -5,19 +5,15 @@ void main() {
   test('preset order and free/pro boundary are stable', () {
     expect(templatePresets.map((p) => p.id), [
       'blank',
-      'study',
       'personal',
-      'shopping',
       'project',
+      'study',
+      'shopping',
       'content',
-      'goals',
-      'event',
-      'moodboard',
-      'renovation',
     ]);
-    expect(templatePresets.where((p) => !p.pro).length, 5);
-    expect(templatePresets.take(5).every((p) => !p.pro), isTrue);
-    expect(templatePresets.skip(5).every((p) => p.pro), isTrue);
+    // Standard and Study are free; Shopping and Content are Pro modules.
+    expect(templatePresets.take(4).every((p) => !p.pro), isTrue);
+    expect(templatePresets.skip(4).every((p) => p.pro), isTrue);
     expect(presetById('missing'), isNull);
     final blank = presetById('blank')!;
     expect(blank.columns, [
@@ -27,11 +23,11 @@ void main() {
     ]);
     expect(blank.cards, isEmpty);
     expect(blank.categories, isEmpty);
-    expect(presetById('study')!.categories.map((c) => (c.nameEn, c.nameVi)), [
-      ('Maths', 'Toán'),
-      ('Literature', 'Văn'),
-      ('English', 'Anh'),
-      ('Physics', 'Lý'),
+    expect(presetById('study')!.categories.map((c) => c.nameVi), [
+      'Lập trình Web',
+      'Cơ sở dữ liệu',
+      'Mạng máy tính',
+      'Tiếng Anh B2',
     ]);
     expect(presetById('project')!.columns.map((c) => c.$1), [
       'Backlog',
@@ -39,16 +35,17 @@ void main() {
       'Review',
       'Done',
     ]);
-    expect(presetById('content')!.columns.map((c) => c.$1), [
-      'Ideas',
-      'Draft',
-      'Edit',
-      'Publish',
+    expect(presetById('content')!.columns.map((c) => c.$2), [
+      'Ý tưởng',
+      'Đang sản xuất',
+      'Sẵn sàng đăng',
+      'Đã đăng',
     ]);
-    expect(presetById('goals')!.columns.map((c) => c.$1), [
-      'Plan',
-      'Do',
-      'Review',
+    expect(presetById('shopping')!.stages, [
+      'want',
+      'want',
+      'ordered',
+      'received',
     ]);
   });
 
@@ -109,7 +106,6 @@ void main() {
           expect(coverById(c.cover), isNotNull, reason: '${p.id}: ${c.cover}');
           if (!p.pro) expect(coverById(c.cover)!.pro, isFalse);
         }
-        if (p.id == 'moodboard') expect(c.cover, isNotNull);
       }
       if (!p.pro) expect(coverById(p.cover)!.pro, isFalse);
     });

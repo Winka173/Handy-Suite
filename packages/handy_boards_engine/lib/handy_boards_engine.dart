@@ -21,6 +21,7 @@ part 'src/snapshot.dart';
 part 'src/kanban.dart';
 part 'src/covers.dart';
 part 'src/presets.dart';
+part 'src/types.dart';
 
 typedef Json = Map<String, dynamic>;
 

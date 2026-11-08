@@ -2779,3 +2779,53 @@ xem trước trước khi mua), không chép nền ngà/teal và không gọi l�
 - Đáp ứng: 320–1440, nội dung tối đa 720 px giữa màn; sheet chủ đề tối đa 640 px; chữ ×2 không
   tràn. Quay lại: nút Back/Esc đóng sheet rồi trang. Web URL `/settings`, `/how-to`.
 - Từ chối: trang trợ giúp dạng FAQ dài, video, ảnh chụp màn hình thật, biểu tượng trong ô màu.
+
+## Hợp đồng: Handy Boards · bốn loại bảng (2026-11-08, theo review + chủ)
+Nguồn: prompt review của chủ (bốn loại bảng, mỗi loại một module riêng) và `review-shots/handy-boards-review.html`
+(baseline 1506528). Vẫn một app Kanban; không thêm view chung, không trường tuỳ biến.
+
+### Kiểm kê (dữ liệu và việc)
+- Bảng → Cột (trạng thái) → Nhóm (chủ đề) → Thẻ → Việc con một tầng. Thêm `board.type` = standard | study |
+  shopping | content (thiếu = standard, không tự đổi bảng cũ).
+- Học tập: môn = nhóm của bảng + bản ghi `subjects` (mã môn, tín chỉ); giờ học `classes` (thứ, giờ bắt đầu/kết
+  thúc, phòng) lặp hằng tuần trong học kỳ (`board.term`); bài thi = thẻ có `exam` (ngày, giờ, phòng) khác hẳn hạn
+  của thẻ. 4 môn, ~6 giờ học/tuần, 2–6 bài thi/kỳ, 20–40 thẻ.
+- Mua sắm (Pro): thẻ có `product` (đơn giá số nguyên theo đơn vị nhỏ nhất, tiền tệ, số lượng, cửa hàng, link,
+  quy cách để so giá/đơn vị); bảng có ngân sách; cột có giai đoạn want / ordered / received / cancelled. Đã chi =
+  thẻ ở cột ordered + received; huỷ không tính; thiếu giá không cộng và ghi "chưa có giá". 5–30 món, 50.000–
+  20.000.000 đ.
+- Nội dung (Pro): thẻ có `post` (định dạng, nền tảng, giờ đăng dự kiến, lịch sử đã đăng: nền tảng, lúc, link
+  do người dùng nhập); cột có giai đoạn idea / making / ready / published. 4–20 bài/tháng.
+- Người dùng: sinh viên mở hằng ngày trên điện thoại (lịch học hôm nay, hạn, bài thi); người mua sắm mở khi cân
+  nhắc (còn bao nhiêu tiền); người làm nội dung mở mỗi ngày (hôm nay đăng gì).
+
+### Câu hỏi của từng màn
+- Trang chủ: "Bảng nào cần tôi hôm nay?" Mỗi ô bảng có huy hiệu loại và một dòng đúng loại: Kanban "12 thẻ ·
+  4 xong"; Học tập "Tiết sau: Mạng máy tính 13:30 · Thi CSDL còn 5 ngày"; Mua sắm "Còn 1.250.000 đ trong ngân
+  sách"; Nội dung "Đăng tiếp: T5 19:00 · TikTok".
+- Bảng (mọi loại): "Việc nào đang ở đâu?" Cột lớn nhất. Chuyển chế độ ngay dưới tên: Bảng | Thời gian, thêm
+  "Lịch học" (Học tập) hoặc "Lịch đăng" (Nội dung). Một dòng giải thích cột ≠ ngày, tắt được.
+- Lịch học: "Hôm nay học gì, sắp thi gì?" Lớn nhất là thẻ "Tiết tiếp theo"; dưới là tuần T2–CN theo giờ; rồi
+  danh sách bài thi sắp tới. Thêm giờ học / thêm bài thi là hai nút ở đầu.
+- Mua sắm: dải ngân sách trên các cột: Dự kiến · Đã chi · Còn lại (số lớn là "Còn lại"). Bấm mở sheet ngân sách
+  và "So sánh" (chọn 2–4 món, bảng giá, giá/đơn vị). Không lấy giá từ mạng.
+- Lịch đăng: "Hôm nay/tuần này đăng gì?" Danh sách sắp đăng theo ngày, rồi "Đã đăng gần đây" (link do người dùng
+  ghi). Kéo thẻ vào cột "Đã đăng" → sheet ghi ngày giờ thật + link (bỏ qua được, không bịa link).
+- Chi tiết thẻ: một khung chung; phần riêng đúng loại ở trên việc con (thi / sản phẩm / bài đăng), chỉ trường cần
+  thiết, phần nâng cao gập lại.
+- Nhóm: chạm = làm nổi (viền màu trên thẻ khớp, thẻ khác vẫn hiện); nút riêng "Chỉ hiện nhóm này" để ẩn; "Bỏ
+  chọn" luôn thấy khi đang chọn.
+- Tạo bảng: bốn loại, mỗi loại một dòng lợi ích + "Chỉ loại này có …" + xem trước thật; trong loại mới chọn mẫu
+  (Kanban: Trống, Cá nhân, Dự án); "Có dữ liệu mẫu" hoặc "Bảng trống". Pro chỉ hỏi khi bấm Tạo.
+- Màn chào: câu đầu tiên là "Bạn dùng Boards để làm gì?" (Học tập / Việc & dự án / Mua sắm / Làm nội dung),
+  rồi câu chuyện + bảng tập riêng cho lựa chọn đó (tập làm đúng việc riêng của loại: thêm giờ học, nhập giá, ghi
+  link đã đăng), kết thúc bằng tạo đúng loại bảng đó (Pro: xem thử đầy đủ, tạo thì hỏi Pro hoặc chọn Kanban).
+
+### Trạng thái, đáp ứng, từ chối
+- Rỗng: Lịch học chưa có giờ → "Thêm giờ học đầu tiên"; mua sắm chưa ngân sách → "Đặt ngân sách"; chưa có bài
+  hẹn đăng → "Chưa hẹn bài nào". Lỗi lưu → SnackBar, dữ liệu giữ nguyên. Pro mất tạm thời: bảng đã có vẫn dùng
+  đầy đủ.
+- 320–1440 px, chữ ×2, tối/sáng, đọc màn hình, giảm chuyển động. Web URL giữ nguyên `/board/<id>`; chế độ là
+  trường của bảng.
+- Từ chối: trình tạo trường tuỳ biến, công thức, Gantt/lịch tháng lớn, tự đăng mạng xã hội, lấy giá tự động,
+  thêm loại bảng mới, thư viện mẫu toàn bảng giống nhau.

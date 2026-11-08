@@ -202,7 +202,7 @@ Future<void> writeBoardsZip(
         sink = metadata.openWrite();
     try {
       sink.write(
-        '{"app":"handy-boards","schema":2,"revision":${s.revision},"preferences":${jsonEncode(s.preferences)}',
+        '{"app":"handy-boards","schema":4,"revision":${s.revision},"preferences":${jsonEncode(s.preferences)}',
       );
       for (final k in kinds) {
         sink.write(',${jsonEncode(k)}:[');
@@ -251,7 +251,7 @@ Future<void> writeBoardsZip(
     await manifest.writeAsString(
       jsonEncode({
         'app': 'handy-boards',
-        'schema': 2,
+        'schema': 4,
         'exportedAt': DateTime.now().toUtc().toIso8601String(),
         'files': checks,
       }),

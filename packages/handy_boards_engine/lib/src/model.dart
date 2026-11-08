@@ -154,7 +154,7 @@ class BoardsState {
 
   Json toJson({bool includeFiles = true}) => {
     'app': 'handy-boards',
-    'schema': 3,
+    'schema': 4,
     'revision': revision,
     'preferences': preferences,
     for (final k in kinds) k: rows(k).map((r) => r.data).toList(),
@@ -163,7 +163,7 @@ class BoardsState {
   };
   factory BoardsState.fromJson(dynamic input, {Map<String, Uint8List>? files}) {
     final j = object(input);
-    if (j['app'] != 'handy-boards' || ![1, 2, 3].contains(j['schema']))
+    if (j['app'] != 'handy-boards' || ![1, 2, 3, 4].contains(j['schema']))
       throw const FormatException('Unsupported Boards schema');
     final s = BoardsState(
       revision: j['revision'] as int? ?? 0,

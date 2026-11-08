@@ -206,7 +206,7 @@ Future<BoardsState> readStagedBoardsZip(
       jsonDecode(await File('$directory/manifest.json').readAsString()),
     );
     if (manifest['app'] != 'handy-boards' ||
-        ![1, 2].contains(manifest['schema']))
+        ![1, 2, 3, 4].contains(manifest['schema']))
       throw const FormatException('Unsupported manifest');
     final checks = object(manifest['files']);
     actual.remove('manifest.json');
@@ -226,7 +226,7 @@ Future<BoardsState> readStagedBoardsZip(
     final j = object(
       jsonDecode(await File('$directory/boards.json').readAsString()),
     );
-    if (j['app'] != 'handy-boards' || ![1, 2].contains(j['schema']))
+    if (j['app'] != 'handy-boards' || ![1, 2, 3, 4].contains(j['schema']))
       throw const FormatException('Unsupported Boards schema');
     final records = <String, BoardsSnapshotMap<BoardRecord>>{};
     for (final kind in kinds) {

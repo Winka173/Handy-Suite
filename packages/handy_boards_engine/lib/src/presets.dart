@@ -5,10 +5,69 @@ class PresetCategory {
 
   /// Stable HandyPalette identity hue, 0 through 7.
   final int hue;
+
+  /// Study boards: the subject's course code and credits.
+  final String? code;
+  final int credits;
   const PresetCategory({
     required this.nameEn,
     required this.nameVi,
     required this.hue,
+    this.code,
+    this.credits = 0,
+  });
+}
+
+/// A weekly class of a study preset: subject (category index), weekday
+/// 1 (Monday) to 7, start and end minutes, room.
+class PresetClass {
+  final int category, weekday, start, end;
+  final String room;
+  const PresetClass(
+    this.category,
+    this.weekday,
+    this.start,
+    this.end,
+    this.room,
+  );
+}
+
+/// An exam [inDays] after the board is made, at [minute] past midnight.
+class PresetExam {
+  final int inDays;
+  final int? minute;
+  final String room;
+  const PresetExam(this.inDays, this.minute, this.room);
+}
+
+/// A product with its price in minor units (null: no price yet).
+class PresetProduct {
+  final int? price;
+  final int qty;
+  final String store;
+  final num? size;
+  final String? unit;
+  const PresetProduct(
+    this.price, {
+    this.qty = 1,
+    this.store = '',
+    this.size,
+    this.unit,
+  });
+}
+
+/// A post: format, platforms, an optional slot [inDays] ahead at [minute],
+/// or a published record [publishedDaysAgo] (never with a made-up link).
+class PresetPost {
+  final String format;
+  final List<String> platforms;
+  final int? inDays, minute, publishedDaysAgo;
+  const PresetPost(
+    this.format,
+    this.platforms, {
+    this.inDays,
+    this.minute,
+    this.publishedDaysAgo,
   });
 }
 
@@ -25,6 +84,9 @@ class PresetCard {
 
   /// Calendar days relative to the board's creation date.
   final int? dueInDays;
+  final PresetExam? exam;
+  final PresetProduct? product;
+  final PresetPost? post;
   const PresetCard({
     required this.titleEn,
     required this.titleVi,
@@ -36,6 +98,9 @@ class PresetCard {
     this.done = 0,
     this.cover,
     this.dueInDays,
+    this.exam,
+    this.product,
+    this.post,
   });
 }
 
@@ -47,7 +112,25 @@ class TemplatePreset {
   final List<(String, String)> columns;
   final List<PresetCategory> categories;
   final List<PresetCard> cards;
+
+  /// The board type it makes (see [boardTypes]).
+  final String type;
+
+  /// Column stages for shopping and content boards, one per column.
+  final List<String>? stages;
+  final List<PresetClass> classes;
+
+  /// Study: the term runs this many weeks from the creation week's Monday.
+  final int? termWeeks;
+
+  /// Shopping: a budget in VND.
+  final int? budget;
   const TemplatePreset({
+    this.type = 'standard',
+    this.stages,
+    this.classes = const [],
+    this.termWeeks,
+    this.budget,
     required this.id,
     required this.nameEn,
     required this.nameVi,
@@ -74,135 +157,6 @@ const List<TemplatePreset> templatePresets = [
     columns: [('To Do', 'Cần làm'), ('Doing', 'Đang làm'), ('Done', 'Xong')],
     categories: [],
     cards: [],
-  ),
-  TemplatePreset(
-    id: 'study',
-    nameEn: 'Semester 1',
-    nameVi: 'Học kỳ 1',
-    blurbEn:
-        'Keep lessons, revision and assignments together for the semester.',
-    blurbVi: 'Theo dõi bài học, bài tập và lịch ôn trong học kỳ.',
-    pro: false,
-    cover: 'study.notebook-grid',
-    columns: [('To Do', 'Cần làm'), ('Doing', 'Đang làm'), ('Done', 'Xong')],
-    categories: [
-      PresetCategory(nameEn: 'Maths', nameVi: 'Toán', hue: 0),
-      PresetCategory(nameEn: 'Literature', nameVi: 'Văn', hue: 1),
-      PresetCategory(nameEn: 'English', nameVi: 'Anh', hue: 4),
-      PresetCategory(nameEn: 'Physics', nameVi: 'Lý', hue: 2),
-    ],
-    cards: [
-      PresetCard(
-        titleEn: 'Revise chapter 3: quadratic equations',
-        titleVi: 'Ôn chương 3: phương trình bậc hai',
-        column: 1,
-        category: 0,
-        noteEn: 'Work through the examples before timing a practice set.',
-        noteVi: 'Làm lại ví dụ trước khi bấm giờ giải đề.',
-        subtasks: [
-          ('Review the discriminant', 'Ôn biệt thức delta'),
-          ('Solve five basic equations', 'Giải năm phương trình cơ bản'),
-          ('Try three word problems', 'Làm ba bài toán có lời văn'),
-          ('Check common mistakes', 'Xem lại lỗi hay mắc'),
-          ('Finish a timed exercise', 'Làm một bài có bấm giờ'),
-        ],
-        done: 2,
-        cover: 'study.notebook-grid',
-        dueInDays: 3,
-      ),
-      PresetCard(
-        titleEn: 'Outline an essay on a short story',
-        titleVi: 'Lập dàn ý phân tích truyện ngắn',
-        column: 0,
-        category: 1,
-        subtasks: [
-          ('Choose a central argument', 'Chọn luận điểm chính'),
-          ('Find three supporting passages', 'Tìm ba dẫn chứng'),
-          ('Arrange the paragraphs', 'Sắp xếp các đoạn'),
-        ],
-        done: 0,
-        dueInDays: 5,
-      ),
-      PresetCard(
-        titleEn: 'Practise describing a favourite place',
-        titleVi: 'Luyện nói về nơi yêu thích',
-        column: 0,
-        category: 2,
-        noteEn: 'Aim for two minutes without reading a script.',
-        noteVi: 'Nói trong hai phút, không đọc bài soạn.',
-        cover: 'travel.coastal-route',
-        dueInDays: 0,
-      ),
-      PresetCard(
-        titleEn: 'Prepare the pendulum experiment',
-        titleVi: 'Chuẩn bị thí nghiệm con lắc',
-        column: 0,
-        category: 3,
-        subtasks: [
-          ('Read the procedure', 'Đọc quy trình'),
-          ('List the equipment', 'Liệt kê dụng cụ'),
-          ('Draw a results table', 'Kẻ bảng kết quả'),
-        ],
-        done: 0,
-        cover: 'study.pencil-case',
-        dueInDays: 7,
-      ),
-      PresetCard(
-        titleEn: 'Review vocabulary about the environment',
-        titleVi: 'Ôn từ vựng về môi trường',
-        column: 1,
-        category: 2,
-        subtasks: [
-          ('Collect twelve useful words', 'Chọn mười hai từ hữu ích'),
-          ('Write example sentences', 'Đặt câu ví dụ'),
-          ('Record a short summary', 'Thu âm đoạn tóm tắt'),
-        ],
-        done: 1,
-        dueInDays: 1,
-      ),
-      PresetCard(
-        titleEn: 'Compare two poem openings',
-        titleVi: 'So sánh mở đầu hai bài thơ',
-        column: 1,
-        category: 1,
-        noteEn: 'Focus on imagery and tone rather than retelling the poems.',
-        noteVi: 'Tập trung vào hình ảnh và giọng điệu, tránh kể lại nội dung.',
-        cover: 'study.open-book',
-        dueInDays: 9,
-      ),
-      PresetCard(
-        titleEn: 'Plot a quadratic function by hand',
-        titleVi: 'Vẽ đồ thị hàm bậc hai',
-        column: 0,
-        category: 0,
-        dueInDays: 2,
-      ),
-      PresetCard(
-        titleEn: 'Sort the first month of class notes',
-        titleVi: 'Sắp xếp ghi chép tháng đầu',
-        column: 2,
-        category: null,
-        subtasks: [
-          ('Separate notes by subject', 'Chia ghi chép theo môn'),
-          ('Add missing lesson dates', 'Bổ sung ngày học còn thiếu'),
-          ('File loose pages', 'Kẹp các tờ rời vào vở'),
-        ],
-        done: 3,
-      ),
-      PresetCard(
-        titleEn: 'Finish the unit conversion worksheet',
-        titleVi: 'Hoàn thành phiếu đổi đơn vị',
-        column: 2,
-        category: 3,
-      ),
-      PresetCard(
-        titleEn: 'Read the first assigned short story',
-        titleVi: 'Đọc truyện ngắn đầu học kỳ',
-        column: 2,
-        category: 1,
-        cover: 'study.open-book',
-      ),
-    ],
   ),
   TemplatePreset(
     id: 'personal',
@@ -328,139 +282,6 @@ const List<TemplatePreset> templatePresets = [
           ('Move the charger away from the bed', 'Đặt bộ sạc xa giường'),
         ],
         done: 3,
-      ),
-    ],
-  ),
-  TemplatePreset(
-    id: 'shopping',
-    nameEn: 'Wishlist & shopping',
-    nameVi: 'Danh sách mua sắm',
-    blurbEn: 'Compare what you need and prepare thoughtful shopping trips.',
-    blurbVi: 'Cân nhắc món cần mua và chuẩn bị cho mỗi lần đi mua sắm.',
-    pro: false,
-    cover: 'shopping.market-tote',
-    columns: [
-      ('Wishlist', 'Muốn mua'),
-      ('Planning', 'Đang cân nhắc'),
-      ('Ready to buy', 'Sẵn sàng mua'),
-      ('Bought', 'Đã mua'),
-    ],
-    categories: [
-      PresetCategory(nameEn: 'Kitchen', nameVi: 'Nhà bếp', hue: 1),
-      PresetCategory(nameEn: 'Home', nameVi: 'Đồ dùng trong nhà', hue: 4),
-      PresetCategory(nameEn: 'Everyday', nameVi: 'Đồ dùng hằng ngày', hue: 0),
-      PresetCategory(nameEn: 'Gifts', nameVi: 'Quà tặng', hue: 2),
-    ],
-    cards: [
-      PresetCard(
-        titleEn: 'Find stackable food containers',
-        titleVi: 'Tìm hộp thực phẩm xếp chồng được',
-        column: 0,
-        category: 0,
-        noteEn:
-            'Choose lids that are easy to clean and a size that fits the fridge.',
-        noteVi: 'Ưu tiên nắp dễ rửa và kích thước vừa ngăn tủ lạnh.',
-        cover: 'shopping.wish-shelf',
-        dueInDays: 0,
-      ),
-      PresetCard(
-        titleEn: 'Choose a reading lamp for the desk',
-        titleVi: 'Chọn đèn đọc sách để bàn',
-        column: 1,
-        category: 1,
-        subtasks: [
-          ('Measure the free desk space', 'Đo khoảng trống trên bàn'),
-          ('Check the switch position', 'Xem vị trí công tắc'),
-          ('Compare two practical options', 'So sánh hai lựa chọn phù hợp'),
-        ],
-        done: 1,
-        cover: 'work.desk-light',
-        dueInDays: 1,
-      ),
-      PresetCard(
-        titleEn: 'Replace worn everyday socks',
-        titleVi: 'Thay những đôi tất đã cũ',
-        column: 2,
-        category: 2,
-        subtasks: [
-          ('Check the sizes needed', 'Kiểm tra cỡ cần mua'),
-          ('Count the pairs to replace', 'Đếm số đôi cần thay'),
-          ('Choose an easy-care fabric', 'Chọn chất liệu dễ giặt'),
-        ],
-        done: 0,
-        dueInDays: 2,
-      ),
-      PresetCard(
-        titleEn: 'Pick a small housewarming gift',
-        titleVi: 'Chọn quà mừng nhà mới',
-        column: 0,
-        category: 3,
-        cover: 'shopping.wrapped-parcel',
-        dueInDays: 9,
-      ),
-      PresetCard(
-        titleEn: 'Look for a compact shoe rack',
-        titleVi: 'Tìm kệ giày gọn',
-        column: 1,
-        category: 1,
-        subtasks: [
-          ('Measure the entryway', 'Đo chỗ đặt ở lối vào'),
-          ('Count the shoes it must hold', 'Đếm số đôi cần để'),
-          ('Check how it is assembled', 'Xem cách lắp ráp'),
-        ],
-        done: 2,
-        dueInDays: 2,
-      ),
-      PresetCard(
-        titleEn: 'Restock rice and dried beans',
-        titleVi: 'Mua thêm gạo và đậu khô',
-        column: 2,
-        category: 0,
-        subtasks: [
-          ('Check the pantry', 'Kiểm tra ngăn đồ khô'),
-          ('Write the quantities needed', 'Ghi lượng cần mua'),
-          ('Pack reusable bags', 'Mang túi dùng lại'),
-        ],
-        done: 1,
-        cover: 'shopping.market-tote',
-        dueInDays: 1,
-      ),
-      PresetCard(
-        titleEn: 'Choose a lightweight raincoat',
-        titleVi: 'Chọn áo mưa nhẹ',
-        column: 0,
-        category: 2,
-        noteEn:
-            'Look for a hood that stays in place and a pouch that fits the bag.',
-        noteVi: 'Chọn mũ trùm chắc và túi đựng vừa ba lô.',
-        dueInDays: 7,
-      ),
-      PresetCard(
-        titleEn: 'Buy wrapping paper for a birthday',
-        titleVi: 'Mua giấy gói quà sinh nhật',
-        column: 3,
-        category: 3,
-        subtasks: [
-          ('Measure the gift box', 'Đo hộp quà'),
-          ('Choose paper and twine', 'Chọn giấy và dây buộc'),
-          ('Store the spare paper flat', 'Cất phẳng phần giấy thừa'),
-        ],
-        done: 3,
-        cover: 'shopping.wrapped-parcel',
-      ),
-      PresetCard(
-        titleEn: 'Bring home a replacement dish brush',
-        titleVi: 'Mua bàn chải rửa bát mới',
-        column: 3,
-        category: 0,
-      ),
-      PresetCard(
-        titleEn: 'Find a washable cushion cover',
-        titleVi: 'Tìm vỏ gối tựa dễ giặt',
-        column: 1,
-        category: 1,
-        cover: 'home.woven-linen',
-        dueInDays: 4,
       ),
     ],
   ),
@@ -597,702 +418,370 @@ const List<TemplatePreset> templatePresets = [
     ],
   ),
   TemplatePreset(
-    id: 'content',
-    nameEn: 'Content production',
-    nameVi: 'Sản xuất nội dung',
+    id: 'study',
+    type: 'study',
+    nameEn: 'University term',
+    nameVi: 'Học kỳ đại học',
     blurbEn:
-        'Shape useful ideas into finished posts with a clear editing process.',
-    blurbVi:
-        'Biến ý tưởng hữu ích thành bài đăng qua quy trình biên tập rõ ràng.',
+        'Subjects, a weekly timetable, exams and assignments for one term.',
+    blurbVi: 'Môn học, thời khoá biểu, lịch thi và bài tập trong một học kỳ.',
+    pro: false,
+    cover: 'study.notebook-grid',
+    termWeeks: 15,
+    columns: [('To Do', 'Cần làm'), ('Doing', 'Đang làm'), ('Done', 'Xong')],
+    categories: [
+      PresetCategory(
+        nameEn: 'Web Programming',
+        nameVi: 'Lập trình Web',
+        hue: 0,
+        code: 'WEB201',
+        credits: 3,
+      ),
+      PresetCategory(
+        nameEn: 'Databases',
+        nameVi: 'Cơ sở dữ liệu',
+        hue: 1,
+        code: 'DB202',
+        credits: 3,
+      ),
+      PresetCategory(
+        nameEn: 'Computer Networks',
+        nameVi: 'Mạng máy tính',
+        hue: 2,
+        code: 'NET203',
+        credits: 3,
+      ),
+      PresetCategory(
+        nameEn: 'English B2',
+        nameVi: 'Tiếng Anh B2',
+        hue: 4,
+        code: 'ENG204',
+        credits: 4,
+      ),
+    ],
+    classes: [
+      PresetClass(0, 1, 7 * 60, 9 * 60 + 30, 'P.301'),
+      PresetClass(0, 4, 13 * 60 + 30, 15 * 60 + 30, 'Lab 2'),
+      PresetClass(1, 2, 9 * 60 + 30, 11 * 60 + 30, 'P.204'),
+      PresetClass(2, 3, 13 * 60 + 30, 16 * 60, 'P.105'),
+      PresetClass(2, 5, 7 * 60 + 30, 9 * 60 + 30, 'Lab 1'),
+      PresetClass(3, 2, 15 * 60, 17 * 60, 'P.402'),
+    ],
+    cards: [
+      PresetCard(
+        titleEn: 'Group project: bookshop website',
+        titleVi: 'Bài tập lớn: web bán sách (nhóm 4 người)',
+        column: 1,
+        category: 0,
+        subtasks: [
+          ('Design the pages', 'Thiết kế giao diện'),
+          ('Cart API', 'API giỏ hàng'),
+          ('Test the checkout', 'Kiểm thử thanh toán'),
+          ('Write the report', 'Viết báo cáo'),
+        ],
+        done: 1,
+        cover: 'study.open-book',
+        dueInDays: 12,
+      ),
+      PresetCard(
+        titleEn: 'Lab 3: sign-up form with validation',
+        titleVi: 'Lab 3: form đăng ký có kiểm tra dữ liệu',
+        column: 0,
+        category: 0,
+        cover: 'study.pencil-case',
+        subtasks: [
+          ('HTML form', 'Form HTML'),
+          ('Validate in JavaScript', 'Kiểm tra bằng JavaScript'),
+          ('Submit on the course site', 'Nộp lên trang môn học'),
+        ],
+        dueInDays: 3,
+      ),
+      PresetCard(
+        titleEn: 'Draw the ERD for the library topic',
+        titleVi: 'Vẽ ERD cho đề tài quản lý thư viện',
+        column: 0,
+        category: 1,
+        cover: 'study.notebook-grid',
+        dueInDays: 6,
+      ),
+      PresetCard(
+        titleEn: 'Databases midterm',
+        titleVi: 'Thi giữa kỳ Cơ sở dữ liệu',
+        column: 0,
+        category: 1,
+        subtasks: [
+          ('Normal forms', 'Ôn chuẩn hoá'),
+          ('SQL joins', 'Luyện SQL JOIN'),
+          ('Last year paper', 'Làm đề năm trước'),
+        ],
+        exam: PresetExam(9, 8 * 60, 'P.204'),
+      ),
+      PresetCard(
+        titleEn: 'Wireshark lab: read a TCP handshake',
+        titleVi: 'Lab Wireshark: phân tích bắt tay TCP',
+        column: 1,
+        category: 2,
+        subtasks: [
+          ('Capture traffic', 'Bắt gói tin'),
+          ('Mark the three steps', 'Đánh dấu ba bước'),
+        ],
+        done: 1,
+        dueInDays: 4,
+      ),
+      PresetCard(
+        titleEn: 'Group report: an office network',
+        titleVi: 'Báo cáo nhóm: mô hình mạng doanh nghiệp',
+        column: 0,
+        category: 2,
+        subtasks: [
+          ('Split the work', 'Chia việc trong nhóm'),
+          ('Draw the topology', 'Vẽ sơ đồ mạng'),
+          ('Write it up', 'Viết báo cáo'),
+        ],
+        dueInDays: 15,
+      ),
+      PresetCard(
+        titleEn: 'Essay, 250 words: technology in class',
+        titleVi: 'Essay 250 từ: công nghệ trong lớp học',
+        column: 0,
+        category: 3,
+        dueInDays: 2,
+      ),
+      PresetCard(
+        titleEn: 'English speaking midterm',
+        titleVi: 'Thi nói giữa kỳ Tiếng Anh',
+        column: 0,
+        category: 3,
+        exam: PresetExam(6, 14 * 60, 'P.402'),
+      ),
+      PresetCard(
+        titleEn: 'Hand in lab 2: CSS flexbox',
+        titleVi: 'Nộp lab 2: CSS Flexbox',
+        column: 2,
+        category: 0,
+      ),
+      PresetCard(
+        titleEn: 'Computer Networks final',
+        titleVi: 'Thi cuối kỳ Mạng máy tính',
+        column: 0,
+        category: 2,
+        exam: PresetExam(40, 7 * 60 + 30, 'Hội trường A'),
+      ),
+    ],
+  ),
+  TemplatePreset(
+    id: 'shopping',
+    type: 'shopping',
+    nameEn: 'New room shopping',
+    nameVi: 'Sắm đồ phòng trọ mới',
+    blurbEn: 'Products with prices, a budget, and what is left to spend.',
+    blurbVi: 'Món cần mua có giá, ngân sách và số tiền còn lại.',
+    pro: true,
+    cover: 'shopping.market-tote',
+    budget: 5000000,
+    columns: [
+      ('Want', 'Muốn mua'),
+      ('Thinking it over', 'Đang cân nhắc'),
+      ('Ordered', 'Đã đặt mua'),
+      ('Received', 'Đã nhận'),
+    ],
+    stages: ['want', 'want', 'ordered', 'received'],
+    categories: [
+      PresetCategory(nameEn: 'Kitchen', nameVi: 'Nhà bếp', hue: 1),
+      PresetCategory(nameEn: 'Bedroom', nameVi: 'Phòng ngủ', hue: 4),
+      PresetCategory(nameEn: 'Study corner', nameVi: 'Góc học tập', hue: 0),
+      PresetCategory(nameEn: 'Everyday', nameVi: 'Đồ dùng hằng ngày', hue: 2),
+    ],
+    cards: [
+      PresetCard(
+        titleEn: 'Rice cooker 1.2 L',
+        titleVi: 'Nồi cơm điện 1,2 L',
+        column: 1,
+        category: 0,
+        subtasks: [
+          ('Compare two models', 'So sánh hai mẫu'),
+          ('Ask about the warranty', 'Hỏi thời gian bảo hành'),
+        ],
+        done: 1,
+        cover: 'shopping.pantry-jars',
+        dueInDays: 7,
+        product: PresetProduct(890000, store: 'Điện máy gần nhà'),
+      ),
+      PresetCard(
+        titleEn: 'Two non-stick pans',
+        titleVi: 'Bộ 2 chảo chống dính',
+        column: 2,
+        category: 0,
+        cover: 'shopping.ceramic-picks',
+        product: PresetProduct(450000, store: 'Shop online'),
+      ),
+      PresetCard(
+        titleEn: 'Bedding set',
+        titleVi: 'Bộ chăn ga gối',
+        column: 3,
+        category: 1,
+        subtasks: [('Wash before use', 'Giặt trước khi dùng')],
+        done: 1,
+        cover: 'shopping.fabric-swatches',
+        product: PresetProduct(620000),
+      ),
+      PresetCard(
+        titleEn: 'LED desk lamp',
+        titleVi: 'Đèn bàn học LED',
+        column: 1,
+        category: 2,
+        dueInDays: 5,
+        product: PresetProduct(350000),
+        subtasks: [
+          ('Warm light', 'Có ánh sáng ấm'),
+          ('USB-C power', 'Cấp nguồn USB-C'),
+        ],
+      ),
+      PresetCard(
+        titleEn: 'Desk chair',
+        titleVi: 'Ghế ngồi học',
+        column: 0,
+        category: 2,
+        noteEn: 'Try one in a shop before buying.',
+        noteVi: 'Ra cửa hàng ngồi thử trước khi mua.',
+        product: PresetProduct(null),
+      ),
+      PresetCard(
+        titleEn: 'Laundry liquid 3.6 kg',
+        titleVi: 'Nước giặt 3,6 kg',
+        column: 0,
+        category: 3,
+        product: PresetProduct(189000, size: 3.6, unit: 'kg'),
+      ),
+      PresetCard(
+        titleEn: 'Laundry liquid 2.4 kg',
+        titleVi: 'Nước giặt 2,4 kg',
+        column: 0,
+        category: 3,
+        product: PresetProduct(139000, size: 2.4, unit: 'kg'),
+      ),
+      PresetCard(
+        titleEn: 'Four-shelf bookcase',
+        titleVi: 'Giá sách 4 tầng',
+        column: 0,
+        category: 2,
+        subtasks: [
+          ('Measure the wall', 'Đo chỗ đặt'),
+          ('Pick the wood colour', 'Chọn màu gỗ'),
+        ],
+        cover: 'shopping.wish-shelf',
+        product: PresetProduct(520000),
+      ),
+    ],
+  ),
+  TemplatePreset(
+    id: 'content',
+    type: 'content',
+    nameEn: 'Publishing pipeline',
+    nameVi: 'Kênh nội dung tháng này',
+    blurbEn: 'Ideas to published posts, with a schedule and what went out.',
+    blurbVi: 'Từ ý tưởng tới bài đã đăng, có lịch đăng và lịch sử đăng.',
     pro: true,
     cover: 'creative.printing-blocks',
     columns: [
       ('Ideas', 'Ý tưởng'),
-      ('Draft', 'Bản nháp'),
-      ('Edit', 'Biên tập'),
-      ('Publish', 'Đăng bài'),
+      ('In production', 'Đang sản xuất'),
+      ('Ready to post', 'Sẵn sàng đăng'),
+      ('Published', 'Đã đăng'),
     ],
+    stages: ['idea', 'making', 'ready', 'published'],
     categories: [
-      PresetCategory(nameEn: 'Practical tips', nameVi: 'Mẹo thực tế', hue: 1),
-      PresetCategory(nameEn: 'Stories', nameVi: 'Câu chuyện', hue: 2),
-      PresetCategory(nameEn: 'Behind the scenes', nameVi: 'Hậu trường', hue: 4),
-      PresetCategory(nameEn: 'Visuals', nameVi: 'Hình ảnh', hue: 0),
+      PresetCategory(nameEn: 'Tips', nameVi: 'Mẹo thực tế', hue: 0),
+      PresetCategory(nameEn: 'Stories', nameVi: 'Câu chuyện', hue: 1),
+      PresetCategory(nameEn: 'Behind the scenes', nameVi: 'Hậu trường', hue: 2),
     ],
     cards: [
       PresetCard(
-        titleEn: 'Five ways to keep a small desk clear',
-        titleVi: 'Năm cách giữ bàn nhỏ gọn gàng',
-        column: 0,
-        category: 0,
-        subtasks: [
-          ('Choose five useful habits', 'Chọn năm thói quen hữu ích'),
-          ('Try each one at the desk', 'Thử từng cách ngay tại bàn'),
-          ('Photograph the result', 'Chụp lại kết quả'),
-        ],
-        done: 0,
-        cover: 'work.architect-desk',
-        dueInDays: 0,
-      ),
-      PresetCard(
-        titleEn: 'A weekend spent learning pottery',
-        titleVi: 'Cuối tuần thử làm gốm',
-        column: 1,
-        category: 1,
-        subtasks: [
-          ('Choose one memorable moment', 'Chọn một khoảnh khắc đáng nhớ'),
-          ('Write a simple opening', 'Viết đoạn mở đầu tự nhiên'),
-          (
-            'Add what went differently than expected',
-            'Kể điều khác với dự tính',
-          ),
-        ],
-        done: 1,
-        cover: 'creative.ceramic-studio',
-        dueInDays: 4,
-      ),
-      PresetCard(
-        titleEn: 'Film the paper collage process',
-        titleVi: 'Quay quá trình ghép giấy',
-        column: 1,
-        category: 2,
-        subtasks: [
-          ('Set up an overhead view', 'Đặt góc quay từ trên xuống'),
-          ('Record the main steps', 'Quay các bước chính'),
-          ('Capture a finished detail', 'Quay cận cảnh thành phẩm'),
-        ],
-        done: 2,
-        cover: 'creative.paper-collage',
-        dueInDays: 1,
-      ),
-      PresetCard(
-        titleEn: 'Edit the balcony herb guide',
-        titleVi: 'Biên tập bài trồng rau thơm ở ban công',
-        column: 2,
-        category: 0,
-        subtasks: [
-          ('Check the care instructions', 'Kiểm tra hướng dẫn chăm sóc'),
-          ('Shorten repeated sections', 'Rút gọn đoạn bị lặp'),
-          ('Add image descriptions', 'Thêm mô tả ảnh'),
-        ],
-        done: 1,
-        cover: 'wellness.morning-leaves',
-        dueInDays: 2,
-      ),
-      PresetCard(
-        titleEn: 'Choose a warm cover composition',
-        titleVi: 'Chọn bố cục ảnh bìa tông ấm',
-        column: 2,
-        category: 3,
-        noteEn:
-            'Leave breathing room around the main subject for small-screen crops.',
-        noteVi:
-            'Chừa khoảng thoáng quanh chủ thể để cắt ảnh trên màn hình nhỏ.',
-        cover: 'abstract.balanced-forms',
-        dueInDays: 9,
-      ),
-      PresetCard(
-        titleEn: 'Outline a guide to reusable gift wrap',
-        titleVi: 'Lên ý cho bài gói quà dùng lại được',
-        column: 0,
-        category: 0,
-        cover: 'events.ribbon-invite',
-        dueInDays: 2,
-      ),
-      PresetCard(
-        titleEn: 'Write captions for the studio photos',
-        titleVi: 'Viết chú thích cho ảnh góc làm việc',
-        column: 1,
-        category: 3,
-        dueInDays: 4,
-      ),
-      PresetCard(
-        titleEn: 'Publish the reading-corner story',
-        titleVi: 'Đăng bài về góc đọc sách',
-        column: 3,
-        category: 1,
-        subtasks: [
-          ('Read the final version aloud', 'Đọc lại bản cuối thành tiếng'),
-          ('Check every image crop', 'Kiểm tra cách cắt từng ảnh'),
-          ('Save the published copy', 'Lưu bản đã đăng'),
-        ],
-        done: 3,
-        cover: 'home.reading-corner',
-      ),
-      PresetCard(
-        titleEn: 'Schedule the next practical tip',
-        titleVi: 'Lên lịch đăng mẹo tiếp theo',
-        column: 3,
-        category: 0,
-        dueInDays: 6,
-      ),
-      PresetCard(
-        titleEn: 'Collect questions for a process post',
-        titleVi: 'Gom câu hỏi cho bài chia sẻ quy trình',
-        column: 0,
-        category: 2,
-        noteEn:
-            'Use real questions from your own notes instead of making up quotes.',
-        noteVi: 'Lấy câu hỏi trong ghi chép của mình, không bịa lời trích dẫn.',
-        cover: 'creative.paint-palette',
-        dueInDays: 8,
-      ),
-    ],
-  ),
-  TemplatePreset(
-    id: 'goals',
-    nameEn: 'Goal roadmap',
-    nameVi: 'Lộ trình mục tiêu',
-    blurbEn: 'Break meaningful goals into small actions and regular reviews.',
-    blurbVi: 'Chia mục tiêu quan trọng thành bước nhỏ và nhìn lại đều đặn.',
-    pro: true,
-    cover: 'goals.sunrise-stairs',
-    columns: [
-      ('Plan', 'Lên kế hoạch'),
-      ('Do', 'Thực hiện'),
-      ('Review', 'Nhìn lại'),
-    ],
-    categories: [
-      PresetCategory(nameEn: 'Health', nameVi: 'Sức khỏe', hue: 4),
-      PresetCategory(nameEn: 'Learning', nameVi: 'Học hỏi', hue: 0),
-      PresetCategory(
-        nameEn: 'Money habits',
-        nameVi: 'Thói quen tài chính',
-        hue: 1,
-      ),
-      PresetCategory(
-        nameEn: 'Personal projects',
-        nameVi: 'Dự án cá nhân',
-        hue: 2,
-      ),
-    ],
-    cards: [
-      PresetCard(
-        titleEn: 'Build a comfortable walking routine',
-        titleVi: 'Tạo thói quen đi bộ vừa sức',
-        column: 0,
-        category: 0,
-        subtasks: [
-          ('Choose two realistic walking days', 'Chọn hai ngày có thể đi đều'),
-          ('Find a nearby route', 'Tìm đường đi gần nhà'),
-          (
-            'Set a gentle starting distance',
-            'Chọn quãng đường khởi đầu nhẹ nhàng',
-          ),
-        ],
-        done: 0,
-        cover: 'goals.stepping-stones',
-        dueInDays: 3,
-      ),
-      PresetCard(
-        titleEn: 'Finish a beginner sketchbook',
-        titleVi: 'Vẽ hết một cuốn sổ tập',
-        column: 1,
-        category: 1,
-        subtasks: [
-          ('Set aside ten blank pages', 'Dành sẵn mười trang trống'),
-          ('Draw everyday objects', 'Vẽ đồ vật thường ngày'),
-          ('Try a page of shadows', 'Thử một trang luyện bóng'),
-          ('Draw a small scene', 'Vẽ một cảnh nhỏ'),
-          ('Choose a favourite page', 'Chọn trang yêu thích'),
-        ],
-        done: 2,
-        cover: 'creative.paper-collage',
-        dueInDays: 0,
-      ),
-      PresetCard(
-        titleEn: 'Set up a small monthly buffer',
-        titleVi: 'Tạo khoản dự phòng hằng tháng',
-        column: 0,
-        category: 2,
-        noteEn: 'Choose an amount that leaves room for ordinary expenses.',
-        noteVi: 'Chọn mức để dành vẫn đủ thoải mái cho chi tiêu thường ngày.',
-        subtasks: [
-          ('List regular expenses', 'Liệt kê chi phí định kỳ'),
-          ('Choose a manageable saving amount', 'Chọn mức tiết kiệm vừa sức'),
-          ('Pick a monthly review day', 'Chọn ngày xem lại mỗi tháng'),
-        ],
-        done: 0,
-        dueInDays: 7,
-      ),
-      PresetCard(
-        titleEn: 'Make a balcony herb planter',
-        titleVi: 'Làm chậu rau thơm ở ban công',
-        column: 1,
-        category: 3,
-        subtasks: [
-          ('Measure the sunny corner', 'Đo góc có nắng'),
-          ('Choose two suitable herbs', 'Chọn hai loại rau phù hợp'),
-          ('Prepare pots and drainage', 'Chuẩn bị chậu và lỗ thoát nước'),
-        ],
-        done: 1,
-        cover: 'goals.growing-branch',
-        dueInDays: 1,
-      ),
-      PresetCard(
-        titleEn: 'Review the first two walking weeks',
-        titleVi: 'Nhìn lại hai tuần đi bộ đầu',
-        column: 2,
-        category: 0,
-        subtasks: [
-          ('Notice which days worked best', 'Xem ngày nào dễ duy trì nhất'),
-          ('Adjust the route if needed', 'Đổi đường đi nếu cần'),
-          ('Choose the next small step', 'Chọn bước nhỏ tiếp theo'),
-        ],
-        done: 1,
-      ),
-      PresetCard(
-        titleEn: 'Choose a practical course to finish',
-        titleVi: 'Chọn khóa học thực tế để hoàn thành',
-        column: 0,
-        category: 1,
-        cover: 'study.library-steps',
-        dueInDays: 9,
-      ),
-      PresetCard(
-        titleEn: 'Keep a weekly spending reflection',
-        titleVi: 'Ghi lại cảm nhận về chi tiêu mỗi tuần',
-        column: 1,
-        category: 2,
-        dueInDays: 5,
-      ),
-      PresetCard(
-        titleEn: 'Review the first planter setup',
-        titleVi: 'Xem lại cách bố trí chậu cây đầu tiên',
-        column: 2,
-        category: 3,
-        cover: 'home.courtyard',
-      ),
-      PresetCard(
-        titleEn: 'Protect one evening for a personal project',
-        titleVi: 'Dành riêng một buổi tối cho dự án cá nhân',
-        column: 0,
-        category: 3,
-        dueInDays: 2,
-      ),
-      PresetCard(
-        titleEn: 'Notice what helped concentration this week',
-        titleVi: 'Nhìn lại điều giúp tập trung trong tuần',
-        column: 2,
-        category: 1,
-        noteEn:
-            'Keep one useful habit and change one thing that got in the way.',
-        noteVi: 'Giữ lại một thói quen tốt và thay một điều gây xao nhãng.',
-        cover: 'goals.target-rings',
-      ),
-    ],
-  ),
-  TemplatePreset(
-    id: 'event',
-    nameEn: 'Event planning',
-    nameVi: 'Chuẩn bị sự kiện',
-    blurbEn:
-        'Bring a small gathering together from the first idea to the final check.',
-    blurbVi: 'Chuẩn bị một buổi gặp mặt từ ý tưởng đầu đến bước kiểm tra cuối.',
-    pro: true,
-    cover: 'events.garden-table',
-    columns: [
-      ('Ideas', 'Ý tưởng'),
-      ('Arrange', 'Sắp xếp'),
-      ('Prepare', 'Chuẩn bị'),
-      ('Ready', 'Sẵn sàng'),
-    ],
-    categories: [
-      PresetCategory(nameEn: 'Space', nameVi: 'Địa điểm', hue: 1),
-      PresetCategory(nameEn: 'Food', nameVi: 'Ăn uống', hue: 4),
-      PresetCategory(nameEn: 'Guests', nameVi: 'Khách mời', hue: 0),
-      PresetCategory(nameEn: 'Atmosphere', nameVi: 'Không khí', hue: 2),
-    ],
-    cards: [
-      PresetCard(
-        titleEn: 'Choose a shaded outdoor spot',
-        titleVi: 'Chọn chỗ ngoài trời có bóng mát',
-        column: 0,
-        category: 0,
-        subtasks: [
-          ('Check seating capacity', 'Xem đủ chỗ ngồi không'),
-          ('Find a wet-weather alternative', 'Tìm phương án khi trời mưa'),
-          (
-            'Check access and nearby facilities',
-            'Kiểm tra lối đi và tiện ích gần đó',
-          ),
-        ],
-        done: 0,
-        cover: 'home.courtyard',
-        dueInDays: 3,
-      ),
-      PresetCard(
-        titleEn: 'Plan a simple shared menu',
-        titleVi: 'Lên thực đơn đơn giản để cùng ăn',
-        column: 1,
-        category: 1,
-        subtasks: [
-          ('Choose dishes easy to share', 'Chọn món dễ chia phần'),
-          ('Ask about dietary needs', 'Hỏi nhu cầu ăn uống'),
-          ('List what can be prepared early', 'Ghi món có thể chuẩn bị trước'),
-        ],
-        done: 1,
-        cover: 'events.garden-table',
-        dueInDays: 0,
-      ),
-      PresetCard(
-        titleEn: 'Send a clear invitation',
-        titleVi: 'Gửi lời mời đầy đủ thông tin',
-        column: 1,
-        category: 2,
-        subtasks: [
-          ('Confirm the day and time', 'Chốt ngày giờ'),
-          ('Include directions', 'Thêm hướng dẫn đường đi'),
-          ('Ask for a reply by a clear date', 'Ghi ngày cần phản hồi'),
-        ],
-        done: 2,
-        cover: 'events.ribbon-invite',
-        dueInDays: 2,
-      ),
-      PresetCard(
-        titleEn: 'Prepare a table arrangement',
-        titleVi: 'Chuẩn bị cách bày bàn',
-        column: 2,
-        category: 3,
-        subtasks: [
-          ('Count plates and glasses', 'Đếm đĩa và ly'),
-          ('Choose a reusable tablecloth', 'Chọn khăn trải bàn dùng lại được'),
-          ('Make a small centrepiece', 'Làm đồ trang trí nhỏ giữa bàn'),
-        ],
-        done: 1,
-        cover: 'events.paper-lanterns',
-        dueInDays: 1,
-      ),
-      PresetCard(
-        titleEn: 'Check the final guest count',
-        titleVi: 'Kiểm tra số khách cuối cùng',
-        column: 2,
-        category: 2,
-        dueInDays: 6,
-      ),
-      PresetCard(
-        titleEn: 'Collect ideas for a short group activity',
-        titleVi: 'Gom ý tưởng trò chơi nhóm ngắn',
-        column: 0,
-        category: 3,
-        noteEn:
-            'Choose something that works with the available space and needs no special kit.',
-        noteVi: 'Chọn hoạt động vừa chỗ và không cần dụng cụ cầu kỳ.',
-        cover: 'events.confetti-cutouts',
-        dueInDays: 9,
-      ),
-      PresetCard(
-        titleEn: 'Arrange drinking water and refill jugs',
-        titleVi: 'Chuẩn bị nước uống và bình châm thêm',
-        column: 2,
-        category: 1,
-        dueInDays: 2,
-      ),
-      PresetCard(
-        titleEn: 'Pack the welcome table box',
-        titleVi: 'Soạn thùng đồ cho bàn đón khách',
-        column: 3,
-        category: 2,
-        subtasks: [
-          ('Pack blank place cards', 'Xếp thẻ tên trống'),
-          ('Add pens and tape', 'Thêm bút và băng dính'),
-          ('Pack the printed directions', 'Cho bản hướng dẫn đường đi vào'),
-        ],
-        done: 3,
-        cover: 'events.ticket-pair',
-      ),
-      PresetCard(
-        titleEn: 'Confirm the backup indoor space',
-        titleVi: 'Chốt chỗ trong nhà dự phòng',
-        column: 3,
-        category: 0,
-      ),
-      PresetCard(
-        titleEn: 'Plan a quick clean-up at the end',
-        titleVi: 'Sắp xếp việc dọn dẹp cuối buổi',
+        titleEn: '30-second video: three morning English habits',
+        titleVi: 'Video 30 giây: 3 thói quen học tiếng Anh buổi sáng',
         column: 1,
         category: 0,
-        cover: 'home.woven-linen',
-        dueInDays: 4,
-      ),
-    ],
-  ),
-  TemplatePreset(
-    id: 'moodboard',
-    nameEn: 'Creative moodboard',
-    nameVi: 'Bảng cảm hứng',
-    blurbEn:
-        'Collect visual references and turn a clear direction into a small creative project.',
-    blurbVi:
-        'Gom hình ảnh tham khảo rồi chọn hướng sáng tạo cho một dự án nhỏ.',
-    pro: true,
-    cover: 'creative.paper-collage',
-    columns: [
-      ('Gather', 'Thu thập'),
-      ('Explore', 'Khám phá'),
-      ('Choose', 'Chọn lọc'),
-      ('Apply', 'Ứng dụng'),
-    ],
-    categories: [
-      PresetCategory(nameEn: 'Colour', nameVi: 'Màu sắc', hue: 1),
-      PresetCategory(nameEn: 'Materials', nameVi: 'Chất liệu', hue: 4),
-      PresetCategory(nameEn: 'Forms', nameVi: 'Hình khối', hue: 0),
-      PresetCategory(nameEn: 'Spaces', nameVi: 'Không gian', hue: 2),
-    ],
-    cards: [
-      PresetCard(
-        titleEn: 'Start with sage, sand and warm clay',
-        titleVi: 'Bắt đầu với xanh lá dịu, màu cát và đất nung',
-        column: 0,
-        category: 0,
-        noteEn:
-            'Use a calm base and reserve the strongest colour for a small area.',
-        noteVi: 'Dùng màu nền dịu, để màu đậm nhất ở một vùng nhỏ.',
-        cover: 'abstract.balanced-forms',
-        dueInDays: 0,
-      ),
-      PresetCard(
-        titleEn: 'Compare linen weave and plain cotton',
-        titleVi: 'So sánh vải lanh dệt với cotton trơn',
-        column: 1,
-        category: 1,
         subtasks: [
-          ('Look at both in daylight', 'Xem cả hai dưới ánh sáng ban ngày'),
-          (
-            'Compare the texture at a distance',
-            'So sánh bề mặt khi nhìn từ xa',
-          ),
-          ('Choose the quieter base', 'Chọn nền dịu hơn'),
-        ],
-        done: 1,
-        cover: 'home.woven-linen',
-        dueInDays: 1,
-      ),
-      PresetCard(
-        titleEn: 'Explore circles against folded paper',
-        titleVi: 'Thử đặt hình tròn cạnh giấy gấp',
-        column: 1,
-        category: 2,
-        subtasks: [
-          ('Cut three simple circles', 'Cắt ba hình tròn đơn giản'),
-          ('Fold two sheets of paper', 'Gấp hai tờ giấy'),
-          ('Photograph two arrangements', 'Chụp hai cách bố trí'),
-        ],
-        done: 1,
-        cover: 'abstract.folded-rhythm',
-        dueInDays: 9,
-      ),
-      PresetCard(
-        titleEn: 'Collect ideas for a shaded courtyard',
-        titleVi: 'Gom ý tưởng cho sân trong có bóng mát',
-        column: 0,
-        category: 3,
-        cover: 'home.courtyard',
-        dueInDays: 2,
-      ),
-      PresetCard(
-        titleEn: 'Choose a botanical silhouette',
-        titleVi: 'Chọn dáng lá làm điểm nhấn',
-        column: 2,
-        category: 2,
-        subtasks: [
-          (
-            'Compare broad and slender leaves',
-            'So sánh lá bản rộng với lá thon',
-          ),
-          ('Test a single stem', 'Thử dùng một cành'),
-          ('Check the small crop', 'Kiểm tra khi cắt ảnh nhỏ'),
-        ],
-        done: 2,
-        cover: 'creative.cutout-garden',
-        dueInDays: 4,
-      ),
-      PresetCard(
-        titleEn: 'Try a clay and chalk material pairing',
-        titleVi: 'Thử phối đất nung với sắc phấn',
-        column: 1,
-        category: 1,
-        cover: 'creative.ceramic-studio',
-        dueInDays: 4,
-      ),
-      PresetCard(
-        titleEn: 'Narrow the palette to three colours',
-        titleVi: 'Rút bảng màu còn ba màu',
-        column: 2,
-        category: 0,
-        subtasks: [
-          ('Choose a dominant ground', 'Chọn màu nền chủ đạo'),
-          ('Keep one supporting colour', 'Giữ một màu phụ'),
-          ('Reserve a small accent', 'Dành một màu nhấn nhỏ'),
+          ('Script', 'Kịch bản'),
+          ('Shoot', 'Quay'),
+          ('Edit', 'Dựng'),
+          ('Subtitles', 'Phụ đề'),
         ],
         done: 1,
         cover: 'creative.paint-palette',
-        dueInDays: 3,
+        dueInDays: 1,
+        post: PresetPost(
+          'video',
+          ['tiktok', 'youtube'],
+          inDays: 2,
+          minute: 19 * 60,
+        ),
       ),
       PresetCard(
-        titleEn: 'Make the first paper composition',
-        titleVi: 'Làm bố cục giấy đầu tiên',
-        column: 3,
-        category: 2,
-        subtasks: [
-          ('Place the largest piece first', 'Đặt mảng lớn nhất trước'),
-          ('Leave a clear resting area', 'Chừa khoảng trống cho mắt nghỉ'),
-          ('Save a square and a wide crop', 'Lưu bản cắt vuông và ngang'),
-        ],
-        done: 3,
-        cover: 'creative.paper-collage',
-      ),
-      PresetCard(
-        titleEn: 'Use an arch as the framing idea',
-        titleVi: 'Dùng vòm làm ý tưởng khung hình',
-        column: 3,
-        category: 3,
-        cover: 'abstract.sculpted-arches',
-      ),
-      PresetCard(
-        titleEn: 'Save a gentle coastal colour reference',
-        titleVi: 'Lưu bảng màu ven biển dịu nhẹ',
-        column: 0,
-        category: 0,
-        cover: 'travel.coastal-route',
-        dueInDays: 7,
-      ),
-    ],
-  ),
-  TemplatePreset(
-    id: 'renovation',
-    nameEn: 'Home renovation',
-    nameVi: 'Sửa sang nhà cửa',
-    blurbEn:
-        'Plan a small home refresh with practical choices and a clear finishing list.',
-    blurbVi:
-        'Lên kế hoạch sửa sang một góc nhà với lựa chọn thực tế và việc cần hoàn tất.',
-    pro: true,
-    cover: 'home.reading-corner',
-    columns: [
-      ('Plan', 'Lên kế hoạch'),
-      ('Source', 'Tìm vật tư'),
-      ('In Progress', 'Đang thi công'),
-      ('Finished', 'Đã hoàn tất'),
-    ],
-    categories: [
-      PresetCategory(nameEn: 'Surfaces', nameVi: 'Bề mặt', hue: 1),
-      PresetCategory(nameEn: 'Furniture', nameVi: 'Nội thất', hue: 4),
-      PresetCategory(nameEn: 'Lighting', nameVi: 'Ánh sáng', hue: 0),
-      PresetCategory(
-        nameEn: 'Practical details',
-        nameVi: 'Chi tiết sử dụng',
-        hue: 2,
-      ),
-    ],
-    cards: [
-      PresetCard(
-        titleEn: 'Measure the reading corner',
-        titleVi: 'Đo góc đọc sách',
-        column: 0,
-        category: 1,
-        subtasks: [
-          ('Measure wall widths', 'Đo chiều rộng tường'),
-          ('Mark doors and sockets', 'Đánh dấu cửa và ổ điện'),
-          ('Check room for the chair', 'Kiểm tra khoảng đặt ghế'),
-        ],
-        done: 0,
-        cover: 'home.reading-corner',
-        dueInDays: 2,
-      ),
-      PresetCard(
-        titleEn: 'Test two wall paint samples',
-        titleVi: 'Thử hai mẫu sơn tường',
-        column: 1,
-        category: 0,
-        subtasks: [
-          ('Paint small sample patches', 'Sơn thử từng mảng nhỏ'),
-          ('Check morning and evening light', 'Xem dưới ánh sáng sáng và tối'),
-          ('Choose after the paint dries', 'Chọn sau khi sơn khô'),
-        ],
-        done: 1,
-        cover: 'creative.paint-palette',
-        dueInDays: 5,
-      ),
-      PresetCard(
-        titleEn: 'Choose a washable curtain fabric',
-        titleVi: 'Chọn vải rèm dễ giặt',
-        column: 1,
-        category: 1,
-        subtasks: [
-          ('Measure the window drop', 'Đo chiều dài rèm'),
-          ('Compare light filtering', 'So sánh độ lọc sáng'),
-          ('Check washing instructions', 'Xem hướng dẫn giặt'),
-        ],
-        done: 1,
-        cover: 'shopping.fabric-swatches',
-        dueInDays: 0,
-      ),
-      PresetCard(
-        titleEn: 'Reposition the task lamp',
-        titleVi: 'Đổi vị trí đèn đọc sách',
+        titleEn: 'Photo: my desk in the morning',
+        titleVi: 'Ảnh: góc làm việc buổi sáng',
         column: 2,
         category: 2,
+        cover: 'creative.paper-collage',
+        post: PresetPost('image', ['instagram'], inDays: 1, minute: 8 * 60),
+      ),
+      PresetCard(
+        titleEn: 'Post: how I plan my week',
+        titleVi: 'Bài viết: cách mình lên kế hoạch tuần',
+        column: 0,
+        category: 1,
+        post: PresetPost('post', ['facebook']),
+      ),
+      PresetCard(
+        titleEn: 'Story: ask what to make next',
+        titleVi: 'Story: hỏi người xem chủ đề tiếp theo',
+        column: 0,
+        category: 1,
         subtasks: [
-          ('Try the seated reading position', 'Thử ngồi đọc ở vị trí dự kiến'),
-          ('Reduce glare on the page', 'Chỉnh để trang sách không bị chói'),
-          ('Secure the cable neatly', 'Cố định dây điện gọn gàng'),
+          ('Write three options', 'Viết ba lựa chọn'),
+          ('Add a poll sticker', 'Gắn sticker bình chọn'),
+        ],
+        post: PresetPost('story', ['instagram']),
+      ),
+      PresetCard(
+        titleEn: 'Behind the scenes of last week shoot',
+        titleVi: 'Hậu trường buổi quay tuần trước',
+        column: 3,
+        category: 2,
+        post: PresetPost('video', ['tiktok'], publishedDaysAgo: 3),
+      ),
+      PresetCard(
+        titleEn: 'Carousel: five free study apps',
+        titleVi: 'Carousel: 5 app học miễn phí',
+        column: 1,
+        category: 0,
+        subtasks: [
+          ('Pick the apps', 'Chọn app'),
+          ('Make the slides', 'Làm 5 trang ảnh'),
+          ('Write the caption', 'Viết chú thích'),
         ],
         done: 2,
-        cover: 'work.desk-light',
-        dueInDays: 1,
-      ),
-      PresetCard(
-        titleEn: 'Patch the small shelf screw holes',
-        titleVi: 'Trám lỗ vít nhỏ ở kệ',
-        column: 2,
-        category: 0,
         dueInDays: 3,
+        post: PresetPost('image', ['instagram'], inDays: 4, minute: 12 * 60),
       ),
       PresetCard(
-        titleEn: 'Find a shallow storage basket',
-        titleVi: 'Tìm giỏ đựng đồ nông',
-        column: 1,
-        category: 3,
-        noteEn:
-            'Leave enough clearance to pull the basket out without moving the chair.',
-        noteVi: 'Chừa đủ khoảng để kéo giỏ ra mà không phải dịch ghế.',
-        cover: 'home.woven-linen',
-        dueInDays: 9,
-      ),
-      PresetCard(
-        titleEn: 'Plan an easy-to-reach charging spot',
-        titleVi: 'Chọn chỗ sạc dễ với tới',
+        titleEn: 'Video: a book I read this month',
+        titleVi: 'Video: review cuốn sách đọc trong tháng',
         column: 0,
-        category: 3,
-        dueInDays: 2,
-      ),
-      PresetCard(
-        titleEn: 'Finish the shelf safety check',
-        titleVi: 'Kiểm tra độ chắc của kệ',
-        column: 3,
-        category: 3,
+        category: 1,
         subtasks: [
-          ('Check each fixing', 'Kiểm tra từng điểm cố định'),
-          ('Remove sharp edges', 'Xử lý cạnh sắc'),
-          ('Test with the intended load', 'Thử với lượng đồ dự định đặt'),
+          ('Note three ideas', 'Ghi ba ý chính'),
+          ('Find a quiet spot to film', 'Tìm chỗ quay yên tĩnh'),
         ],
-        done: 3,
-        cover: 'work.architect-desk',
+        post: PresetPost('video', ['youtube']),
       ),
       PresetCard(
-        titleEn: 'Keep a clear route through the room',
-        titleVi: 'Chừa lối đi thoáng trong phòng',
+        titleEn: 'Video: a day at school',
+        titleVi: 'Video: một ngày đi học',
         column: 3,
         category: 1,
-        cover: 'home.courtyard',
-      ),
-      PresetCard(
-        titleEn: 'Compare warm light in the evening',
-        titleVi: 'So sánh ánh đèn ấm vào buổi tối',
-        column: 0,
-        category: 2,
-        cover: 'home.arched-window',
-        dueInDays: 4,
+        cover: 'events.stage-curtain',
+        post: PresetPost('video', ['tiktok'], publishedDaysAgo: 6),
       ),
     ],
   ),
