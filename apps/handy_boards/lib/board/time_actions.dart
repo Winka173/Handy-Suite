@@ -170,7 +170,7 @@ Future<_DueChoice?> _confirmDueOnly(
 }
 
 /// One history line in words.
-String _eventText(BuildContext context, BoardRecord e) {
+String eventText(BuildContext context, BoardRecord e) {
   final d = e.data['details'] is Map
       ? Map<String, Object?>.from(e.data['details'] as Map)
       : const <String, Object?>{};
@@ -339,8 +339,12 @@ Future<void> showCardHistory(
               ListTile(
                 contentPadding: EdgeInsets.zero,
                 dense: true,
-                leading: Icon(_icon(e.str('action')), color: p.muted, size: 20),
-                title: Text(_eventText(context, e)),
+                leading: Icon(
+                  eventIcon(e.str('action')),
+                  color: p.muted,
+                  size: 20,
+                ),
+                title: Text(eventText(context, e)),
                 subtitle: Text(when(e)),
               ),
             if (events.isNotEmpty && !fromStart)
@@ -365,7 +369,7 @@ Future<void> showCardHistory(
   );
 }
 
-IconData _icon(String action) => switch (action) {
+IconData eventIcon(String action) => switch (action) {
   'created' => Icons.add_circle_outline,
   'completed' => Icons.check_circle_outline,
   'reopened' => Icons.replay,

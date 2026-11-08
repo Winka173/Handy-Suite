@@ -177,14 +177,18 @@ Future<void> boardMenu(
         sheet,
         Icons.history,
         tr(sheet, 'Board history', 'Lịch sử bảng'),
-        () => then(
-          () => Navigator.push(
+        () => then(() async {
+          if (!await requirePro(context, ProFeature.history) ||
+              !context.mounted) {
+            return;
+          }
+          await Navigator.push(
             context,
             MaterialPageRoute<void>(
               builder: (_) => BoardHistoryPage(scope: scope, board: board),
             ),
-          ),
-        ),
+          );
+        }),
         key: const Key('menu-board-history'),
       ),
       _row(

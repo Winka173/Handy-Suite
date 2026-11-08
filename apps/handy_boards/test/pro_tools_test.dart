@@ -153,27 +153,29 @@ void main() {
     expect(fieldsOf(c.state!, board).single.str('title'), 'Points');
   });
 
-  testWidgets('board history: pictures listed, opened with Pro, copied into a '
-      'new board', (t) async {
-    var s = studyState();
-    s = captureSnapshots(s, clock.subtract(const Duration(days: 1)));
+  testWidgets('board history: Pro opens a read-only day-by-day list of '
+      'what happened', (t) async {
+    final s = studyState();
     final c = await boot(t, s);
     await tap(t, find.byKey(const Key('board-$board')));
     await tap(t, find.byKey(const Key('board-more')));
     await menuTap(t, 'menu-board-history');
-    final snap = snapshotsOf(c.state!, board).single;
-    await tap(t, find.byKey(Key('snapshot-${snap.id}')));
     expect(find.text('Pay once. Keep it.'), findsOneWidget);
     await t.binding.handlePopRoute();
     await t.pumpAndSettle();
     debugProOverride = true;
+    await tap(t, find.byKey(const Key('board-more')));
+    await menuTap(t, 'menu-board-history');
+    expect(find.byKey(const Key('board-history')), findsOneWidget);
+    expect(boardHistory(c.state!, board), isNotEmpty);
+    expect(find.textContaining('Due date'), findsWidgets);
+    await tap(t, find.text('All'));
+    // Read only: tapping a line changes nothing and goes nowhere.
+    final before = c.state;
+    await t.tap(find.textContaining('Due date').first, warnIfMissed: false);
     await t.pumpAndSettle();
-    await tap(t, find.byKey(Key('snapshot-${snap.id}')));
-    expect(find.byKey(const Key('snapshot-view')), findsOneWidget);
-    final boards = homeBoards(c.state!).length;
-    await tap(t, find.byKey(const Key('snapshot-clone')));
-    await tap(t, find.byKey(const Key('ask-text-save')));
-    expect(homeBoards(c.state!), hasLength(boards + 1));
+    expect(identical(c.state, before), isTrue);
+    expect(find.byKey(const Key('board-history')), findsOneWidget);
   });
 
   testWidgets('a saved filter narrows the board; a custom repeat is kept', (

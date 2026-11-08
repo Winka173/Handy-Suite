@@ -98,15 +98,12 @@ class _BoardsAppState extends State<BoardsApp> with WidgetsBindingObserver {
     homeSurface.listen(_link);
   }
 
-  /// Once a day per board, a picture for Board history (on a device; host
-  /// tests pass their own controller and keep their state as given).
+  /// Earlier test builds kept daily board pictures; Board history now
+  /// reads the cards' own history, so those rows are removed once.
   void _snapshot() {
     if (widget.controller != null || c.state == null) return;
-    final next = captureSnapshots(c.state!, scope.clock());
-    if (!identical(next, c.state)) {
-      unawaited(
-        c.change((s) => captureSnapshots(s, scope.clock()), history: false),
-      );
+    if (!identical(dropBoardPictures(c.state!), c.state)) {
+      unawaited(c.change(dropBoardPictures, history: false));
     }
   }
 

@@ -27,7 +27,7 @@ part 'src/time_nav.dart';
 part 'src/card_templates.dart';
 part 'src/custom_fields.dart';
 part 'src/notify_plan.dart';
-part 'src/snapshots.dart';
+part 'src/board_history.dart';
 
 typedef Json = Map<String, dynamic>;
 

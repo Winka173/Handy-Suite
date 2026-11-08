@@ -137,8 +137,8 @@ class ProPage extends StatelessWidget {
         tr(context, 'Board history', 'Lịch sử bảng'),
         tr(
           context,
-          'See a whole board as it was on an earlier day, what changed since, and copy it into a new board. Kept from the day you start; nothing earlier is made up.',
-          'Xem cả bảng như vào một ngày trước, những gì đã đổi, và chép sang bảng mới. Ghi từ ngày bắt đầu dùng; không bịa những ngày trước.',
+          'Everything that happened on a board, day by day, newest first: cards made, moved, finished, dates and categories changed. Read only; recorded from this version on.',
+          'Mọi việc đã xảy ra trên một bảng, theo từng ngày, mới nhất trước: thẻ được tạo, chuyển cột, xong, đổi ngày, đổi nhóm. Chỉ xem; ghi từ phiên bản này.',
         ),
       ),
       (
