@@ -72,23 +72,31 @@ class FocusBar extends StatelessWidget {
               color: p.ink,
             ),
             const SizedBox(width: 6),
+            // The button drops under the name when they do not fit side
+            // by side (a narrow phone, large text).
             Expanded(
-              child: Text(
-                only
-                    ? tr(context, 'Only $name', 'Đang lọc: chỉ $name')
-                    : tr(context, 'Focus: $name', 'Đang làm nổi: $name'),
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: theme.textTheme.labelLarge,
-              ),
-            ),
-            TextButton(
-              key: const Key('focus-only'),
-              onPressed: onOnly,
-              child: Text(
-                only
-                    ? tr(context, 'Show all cards', 'Hiện mọi thẻ')
-                    : tr(context, 'Only this one', 'Chỉ hiện nhóm này'),
+              child: Wrap(
+                crossAxisAlignment: WrapCrossAlignment.center,
+                spacing: 4,
+                children: [
+                  Text(
+                    only
+                        ? tr(context, 'Only $name', 'Đang lọc: chỉ $name')
+                        : tr(context, 'Focus: $name', 'Đang làm nổi: $name'),
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: theme.textTheme.labelLarge,
+                  ),
+                  TextButton(
+                    key: const Key('focus-only'),
+                    onPressed: onOnly,
+                    child: Text(
+                      only
+                          ? tr(context, 'Show all cards', 'Hiện mọi thẻ')
+                          : tr(context, 'Only this one', 'Chỉ hiện nhóm này'),
+                    ),
+                  ),
+                ],
               ),
             ),
             IconButton(

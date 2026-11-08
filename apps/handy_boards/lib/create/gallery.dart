@@ -162,7 +162,9 @@ class _TemplateGalleryState extends State<TemplateGallery> {
                     ),
                   ),
                   const SizedBox(height: 6),
-                  Row(
+                  // Wraps on a narrow phone or with large text.
+                  Wrap(
+                    runSpacing: 6,
                     children: [
                       chip(
                         'tier-all',

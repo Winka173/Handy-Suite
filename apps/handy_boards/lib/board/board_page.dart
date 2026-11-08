@@ -50,12 +50,19 @@ class _BoardPageState extends State<BoardPage> {
   /// While choosing a look: the one being tried (shown, not saved).
   String? previewLook;
   final query = TextEditingController();
+  // The short page's own scroll, so a column scrolled to its end hands
+  // the rest of the swipe to the page.
+  final page = ScrollController();
+  // One per layout: a board is never moved between the tall and the
+  // short page (rotating rebuilds it).
   final kanban = GlobalKey<KanbanViewState>();
+  final kanbanShort = GlobalKey<KanbanViewState>();
   BoardsScope get scope => widget.scope;
 
   @override
   void dispose() {
     query.dispose();
+    page.dispose();
     super.dispose();
   }
 
@@ -388,106 +395,198 @@ class _BoardPageState extends State<BoardPage> {
         ],
       ),
     );
-    final body = Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        band,
-        title,
-        if (searching)
-          Padding(
-            padding: const EdgeInsets.fromLTRB(16, 4, 16, 8),
-            child: TextField(
-              key: const Key('board-search-field'),
-              controller: query,
-              autofocus: true,
-              onChanged: (_) => setState(() {}),
-              decoration: InputDecoration(
-                prefixIcon: const Icon(Icons.search),
-                hintText: tr(
-                  context,
-                  'Search this board',
-                  'Tìm trong bảng này',
-                ),
-              ),
+    // A tall screen keeps the board under a fixed header. A short one
+    // (a phone on its side, a small phone, a tablet in landscape) scrolls
+    // the header away under a pinned bar of buttons, so the board always
+    // gets nearly the whole height; so does very large text. Decided by
+    // the screen, not by the space left, so the keyboard never flips it.
+    final short =
+        MediaQuery.sizeOf(context).height < 720 ||
+        MediaQuery.textScalerOf(context).scale(1) > 1.3;
+    // What sits above the board: its name, search, categories, focus.
+    final top = <Widget>[
+      title,
+      if (searching)
+        Padding(
+          padding: const EdgeInsets.fromLTRB(16, 4, 16, 8),
+          child: TextField(
+            key: const Key('board-search-field'),
+            controller: query,
+            autofocus: true,
+            onChanged: (_) => setState(() {}),
+            decoration: InputDecoration(
+              prefixIcon: const Icon(Icons.search),
+              hintText: tr(context, 'Search this board', 'Tìm trong bảng này'),
             ),
-          ),
-        if (showStrip) ...[
-          CategoryStrip(
-            state: s,
-            board: widget.board,
-            selected: focus,
-            onSelect: (v) => setState(() {
-              focus = v;
-              if (v == null) only = false;
-            }),
-            onEdit: () => editCategories(context, scope, widget.board),
-            trailing: [due],
-          ),
-          const SizedBox(height: 8),
-        ],
-        if (focusName != null)
-          FocusBar(
-            name: focusName,
-            only: only,
-            onOnly: () => setState(() => only = !only),
-            onClear: () => setState(() {
-              focus = null;
-              only = false;
-            }),
-          ),
-        if (!stripShown)
-          SizedBox(
-            height: 48,
-            child: ListView(
-              scrollDirection: Axis.horizontal,
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              children: [
-                for (final c in [...chips, due])
-                  Padding(
-                    padding: const EdgeInsets.only(right: 8),
-                    child: Center(child: c),
-                  ),
-              ],
-            ),
-          ),
-        Expanded(
-          child: Padding(
-            padding: const EdgeInsets.only(bottom: 8),
-            child: timeView
-                ? TimeView(
-                    state: s,
-                    board: widget.board,
-                    now: now,
-                    filter: filter,
-                    span: TimeSpan.read(b.data['span']),
-                    onSpan: (span) => _look(span: span),
-                    open: (card) => openCard(context, scope, card.id),
-                    setDue: _setDue,
-                  )
-                : KanbanView(
-                    key: kanban,
-                    state: s,
-                    board: widget.board,
-                    now: now,
-                    detailed: detailed,
-                    columnColor: ground.column,
-                    filter: filter,
-                    actions: KanbanActions(
-                      open: (card) => openCard(context, scope, card.id),
-                      move: _move,
-                      add: _add,
-                      tick: _tick,
-                      cardMenu: (card) =>
-                          cardMenu(context, scope, card.id, onMoved: _move),
-                      columnMenu: (column) =>
-                          columnMenu(context, scope, column.id),
-                      addColumn: () =>
-                          addColumnDialog(context, scope, widget.board),
-                    ),
-                  ),
           ),
         ),
+      if (showStrip) ...[
+        CategoryStrip(
+          state: s,
+          board: widget.board,
+          selected: focus,
+          onSelect: (v) => setState(() {
+            focus = v;
+            if (v == null) only = false;
+          }),
+          onEdit: () => editCategories(context, scope, widget.board),
+          trailing: [due],
+        ),
+        const SizedBox(height: 8),
       ],
+      if (focusName != null)
+        FocusBar(
+          name: focusName,
+          only: only,
+          onOnly: () => setState(() => only = !only),
+          onClear: () => setState(() {
+            focus = null;
+            only = false;
+          }),
+        ),
+      if (!stripShown)
+        SizedBox(
+          height: 48,
+          child: ListView(
+            scrollDirection: Axis.horizontal,
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            children: [
+              for (final c in [...chips, due])
+                Padding(
+                  padding: const EdgeInsets.only(right: 8),
+                  child: Center(child: c),
+                ),
+            ],
+          ),
+        ),
+    ];
+    final board = Padding(
+      padding: const EdgeInsets.only(bottom: 8),
+      child: timeView
+          ? TimeView(
+              state: s,
+              board: widget.board,
+              now: now,
+              filter: filter,
+              span: TimeSpan.read(b.data['span']),
+              onSpan: (span) => _look(span: span),
+              open: (card) => openCard(context, scope, card.id),
+              setDue: _setDue,
+            )
+          : KanbanView(
+              key: short ? kanbanShort : kanban,
+              state: s,
+              board: widget.board,
+              now: now,
+              detailed: detailed,
+              columnColor: ground.column,
+              filter: filter,
+              actions: KanbanActions(
+                open: (card) => openCard(context, scope, card.id),
+                move: _move,
+                add: _add,
+                tick: _tick,
+                cardMenu: (card) =>
+                    cardMenu(context, scope, card.id, onMoved: _move),
+                columnMenu: (column) => columnMenu(context, scope, column.id),
+                addColumn: () => addColumnDialog(context, scope, widget.board),
+              ),
+            ),
+    );
+    final body = LayoutBuilder(
+      builder: (context, box) {
+        if (!short) {
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              band,
+              ...top,
+              Expanded(
+                child: LayoutBuilder(
+                  // Never squeezed below a usable column (the keyboard, a
+                  // tall look picker): then it scrolls instead. One shape
+                  // either way, so the board is never moved to a new parent.
+                  builder: (context, rest) => SingleChildScrollView(
+                    physics: rest.maxHeight >= 260
+                        ? const NeverScrollableScrollPhysics()
+                        : null,
+                    child: SizedBox(
+                      height: rest.maxHeight.clamp(260.0, double.infinity),
+                      child: board,
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          );
+        }
+        final bar = kToolbarHeight + MediaQuery.paddingOf(context).top;
+        return NotificationListener<OverscrollNotification>(
+          // A column at its top or bottom passes the swipe on to the page,
+          // so the header comes back with the same thumb movement.
+          onNotification: (n) {
+            if (n.depth == 0 ||
+                n.metrics.axis != Axis.vertical ||
+                !page.hasClients) {
+              return false;
+            }
+            final p = page.position;
+            final to = (p.pixels + n.overscroll).clamp(
+              p.minScrollExtent,
+              p.maxScrollExtent,
+            );
+            if (to != p.pixels) p.jumpTo(to);
+            return false;
+          },
+          child: CustomScrollView(
+            key: const Key('board-scroll'),
+            controller: page,
+            slivers: [
+              SliverAppBar(
+                pinned: true,
+                automaticallyImplyLeading: false,
+                toolbarHeight: kToolbarHeight,
+                expandedHeight: wide ? 140 : 96,
+                backgroundColor: ground.page,
+                surfaceTintColor: Colors.transparent,
+                scrolledUnderElevation: 0,
+                elevation: 0,
+                flexibleSpace: FlexibleSpaceBar(background: boardCover(b)),
+                leadingWidth: 64,
+                leading: Padding(
+                  padding: const EdgeInsets.only(left: 8),
+                  child: round(
+                    IconButton(
+                      key: const Key('board-back'),
+                      tooltip: MaterialLocalizations.of(
+                        context,
+                      ).backButtonTooltip,
+                      onPressed: () => Navigator.of(context).maybePop(),
+                      icon: const Icon(Icons.arrow_back),
+                    ),
+                  ),
+                ),
+                actions: [
+                  for (final a in actions) round(a),
+                  const SizedBox(width: 4),
+                ],
+              ),
+              SliverToBoxAdapter(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: top,
+                ),
+              ),
+              SliverToBoxAdapter(
+                child: SizedBox(
+                  height: (box.maxHeight - bar).clamp(300.0, double.infinity),
+                  child: board,
+                ),
+              ),
+            ],
+          ),
+        );
+      },
     );
     return CallbackShortcuts(
       bindings: {

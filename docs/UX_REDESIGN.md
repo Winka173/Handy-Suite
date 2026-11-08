@@ -2862,3 +2862,18 @@ Chủ chốt 14 mẫu Free (29 Chuyển nhà chuyển sang Free) và 16 Pro.
   có bảng nửa vời.
 - 320–1440 px, chữ ×2, tối/sáng, đọc màn hình (nhãn cho ô mẫu, chip, nút), giảm chuyển động, bàn phím.
 - Từ chối: module riêng theo loại bảng, lịch học/giá/hẹn đăng riêng, 30 màn viết tay, trình tạo form chung, thẻ ví dụ tự thêm.
+
+### Handy Boards · màn thấp và màn ngang (2026-11-08, theo lỗi chủ gặp trên BlueStacks)
+- Lỗi: trên màn ngang mật độ cao (BlueStacks 960×540 pt) phần đầu trang bảng (ảnh bìa, tên, Bảng | Thời gian, dải nhóm)
+  chiếm gần hết chiều cao; cột chỉ còn ~200 pt, tràn 18 px và không cuộn được.
+- Quy tắc: màn cao dưới 720 pt hoặc chữ lớn hơn ×1,3 → trang bảng cuộn: ảnh bìa thu thành thanh nút ghim (quay lại, tìm,
+  nhóm, tuỳ chọn), tên và dải nhóm cuộn đi, bảng luôn cao bằng màn trừ thanh nút. Vuốt trong cột đến đầu/cuối thì phần dư
+  cuộn cả trang, nên phần đầu quay lại bằng cùng một cú vuốt. Màn cao giữ phần đầu cố định; bảng không bao giờ thấp hơn
+  260 pt (bàn phím, thanh chọn giao diện) mà cuộn thay vì tràn. Quyết định theo kích thước màn, không theo chỗ còn lại,
+  nên bàn phím không đổi bố cục.
+- Cột thấp hơn 200 pt (ô xem trước mẫu) cuộn cả cột, kể cả tiêu đề và ô thêm thẻ. Sheet "Bảng mới" cuộn; chip Free/Pro
+  xuống dòng; thanh "Đang làm nổi" đưa nút xuống dưới tên khi chật; tiêu đề "Việc con" co lại.
+- Kiểm tra: `test/layout_sweep_test.dart` mở mọi màn (màn chào, trang chủ, sheet tạo bảng, mẫu, thiết lập, xem trước,
+  bảng, tìm, menu, thẻ, ô thêm thẻ, Thời gian, Cài đặt, Cách dùng, Pro, Tìm, Thùng rác, Thống kê, Xuất) ở 11 kích thước
+  (320×568 → 1440×900, ngang 640×360, BlueStacks 1000×562 và 1280×720, chữ ×2); lỗi tràn, ngoại lệ, bảng thấp hơn 300 pt
+  hoặc vuốt cột không đưa phần đầu về đều làm test hỏng. Đã chạy trên BlueStacks android 11-2 (đặt tạm mật độ 320).

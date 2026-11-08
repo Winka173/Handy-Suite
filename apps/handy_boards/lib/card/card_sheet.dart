@@ -574,9 +574,11 @@ class _CardDetailState extends State<CardDetail> {
             padding: const EdgeInsets.fromLTRB(20, 0, 20, 6),
             child: Row(
               children: [
-                Text(
-                  tr(context, 'Subtasks', 'Việc con'),
-                  style: theme.textTheme.titleMedium,
+                Flexible(
+                  child: Text(
+                    tr(context, 'Subtasks', 'Việc con'),
+                    style: theme.textTheme.titleMedium,
+                  ),
                 ),
                 const SizedBox(width: 10),
                 if (progress.total > 0)

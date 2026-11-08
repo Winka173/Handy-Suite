@@ -533,29 +533,34 @@ class _ColumnViewState extends State<ColumnView> {
             ),
           );
 
+    // Dropped on the empty part of a column: at its end.
+    Widget target(List<Widget> children) => DragTarget<String>(
+      onAcceptWithDetails: (d) =>
+          a.move?.call(d.data, widget.column.id, all.length),
+      builder: (context, candidates, _) => ListView(
+        key: PageStorageKey('column-${widget.column.id}'),
+        padding: EdgeInsets.zero,
+        children: children,
+      ),
+    );
     return Container(
       decoration: BoxDecoration(
         color: widget.color ?? p.raised,
         borderRadius: BorderRadius.circular(BoardsRadii.column),
       ),
       padding: const EdgeInsets.fromLTRB(6, 4, 6, 4),
-      child: Column(
-        children: [
-          header,
-          Expanded(
-            child: DragTarget<String>(
-              // Dropped on the empty part of a column: at its end.
-              onAcceptWithDetails: (d) =>
-                  a.move?.call(d.data, widget.column.id, all.length),
-              builder: (context, candidates, _) => ListView(
-                key: PageStorageKey('column-${widget.column.id}'),
-                padding: EdgeInsets.zero,
-                children: body,
+      child: LayoutBuilder(
+        // A short column (a small preview, the keyboard up) scrolls as a
+        // whole, header and add field included, instead of overflowing.
+        builder: (context, box) => box.maxHeight < 200
+            ? target([header, ...body, footer])
+            : Column(
+                children: [
+                  header,
+                  Expanded(child: target(body)),
+                  footer,
+                ],
               ),
-            ),
-          ),
-          footer,
-        ],
       ),
     );
   }
