@@ -138,12 +138,16 @@ Future<void> _sweep(
   nav().pushNamed('/templates');
   await settle(t);
   await _tapIf(t, 'template-semester');
+  _boardRoom(t, shape, problems, 'template preview');
+  await _previewScroll(t, problems, 'template preview');
   await _tapIf(t, 'template-use');
   at('template setup');
   await _scrollThrough(t);
   await _tapIf(t, 'setup-preview');
   at('plan preview');
   await settle(t);
+  _boardRoom(t, shape, problems, 'plan preview');
+  await _previewScroll(t, problems, 'plan preview');
   nav().popUntil((r) => r.isFirst);
   await settle(t);
 
@@ -221,6 +225,37 @@ Future<void> _sweep(
   await settle(t);
   _boardRoom(t, shape, problems, 'time view');
   await t.pumpWidget(const SizedBox());
+}
+
+/// On a short screen the preview scrolls its header away and a swipe in
+/// a column brings it back.
+Future<void> _previewScroll(
+  WidgetTester t,
+  List<String> problems,
+  String where,
+) async {
+  final scroller = find.byKey(const Key('preview-scroll'));
+  if (scroller.evaluate().isEmpty) return;
+  final pos = t.state<ScrollableState>(
+    find.descendant(of: scroller, matching: find.byType(Scrollable)).first,
+  ).position;
+  await t.drag(scroller, const Offset(0, -600), warnIfMissed: false);
+  await settle(t);
+  if (pos.maxScrollExtent > 0 && pos.pixels == 0) {
+    problems.add('$where: the header does not scroll away');
+  }
+  final column = find.byWidgetPredicate(
+    (w) =>
+        w.key is PageStorageKey &&
+        '${(w.key as PageStorageKey).value}'.startsWith('column-'),
+  );
+  if (column.evaluate().isNotEmpty) {
+    await t.drag(column.first, const Offset(0, 900), warnIfMissed: false);
+    await settle(t);
+    if (pos.pixels > 0) {
+      problems.add('$where: a column swipe does not bring the header back');
+    }
+  }
 }
 
 /// The board under the header must have room for cards: at least 300 pt,

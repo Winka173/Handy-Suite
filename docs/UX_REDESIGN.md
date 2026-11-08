@@ -2877,3 +2877,15 @@ Chủ chốt 14 mẫu Free (29 Chuyển nhà chuyển sang Free) và 16 Pro.
   bảng, tìm, menu, thẻ, ô thêm thẻ, Thời gian, Cài đặt, Cách dùng, Pro, Tìm, Thùng rác, Thống kê, Xuất) ở 11 kích thước
   (320×568 → 1440×900, ngang 640×360, BlueStacks 1000×562 và 1280×720, chữ ×2); lỗi tràn, ngoại lệ, bảng thấp hơn 300 pt
   hoặc vuốt cột không đưa phần đầu về đều làm test hỏng. Đã chạy trên BlueStacks android 11-2 (đặt tạm mật độ 320).
+
+### Handy Boards · mẫu Pro hỏi Pro trước câu hỏi; trang xem trước cuộn được (2026-11-08, chủ yêu cầu)
+- Việc: "Mẫu này có phải bảng tôi cần, và tôi dùng được không?" Câu hỏi đó phải được trả lời trước khi người dùng bỏ công
+  điền thiết lập. Trước đây mẫu Pro cho điền hết rồi mới chặn ở "Tạo với Pro"; giờ nút trên trang xem trước của mẫu Pro
+  là "Mở khoá với Pro" (biểu tượng ổ khoá mở), kèm dòng "Mẫu Pro · xem miễn phí, cần Pro để dùng. Mở khoá trước, rồi mới
+  trả lời câu hỏi." Bấm vào thì mở trang Pro; mua xong đi thẳng vào câu hỏi; quay lại thì không có gì được tạo. Đã có Pro
+  thì nút là "Dùng mẫu này". Xem trước luôn miễn phí. Bước Tạo vẫn kiểm tra Pro lần nữa làm lưới an toàn.
+- Trang xem trước mẫu và trang "bảng của bạn" dùng `PreviewBody`: màn cao giữ đầu trang cố định; màn thấp (< 720 pt) hoặc chữ
+  > ×1,3 cuộn phần đầu đi, bảng xem trước cao ít nhất 580 pt, vuốt trong cột đến đầu/cuối thì cuộn cả trang.
+- Từ chối: chặn Pro ở bước cuối sau khi đã điền; ẩn mẫu Pro khỏi danh sách; khoá cả việc xem trước.
+- Kiểm tra: `kanban_app_test` (mẫu Pro: trang Pro xuất hiện trước câu hỏi, không tạo gì; có Pro: đi thẳng vào câu hỏi rồi
+  tạo), `layout_sweep_test` đo bảng ở hai trang xem trước và việc cuộn ở 11 kích thước. Đã xem trên BlueStacks 11-2 (mật độ 320).

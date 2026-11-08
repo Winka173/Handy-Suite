@@ -270,8 +270,31 @@ void main() {
     expect(c.state!.get('tasks', card.id).str('status'), card.str('status'));
   });
 
-  testWidgets('a Pro template can be previewed and set up; only Create '
-      'asks for Pro, and nothing is made without it', (t) async {
+  testWidgets('a Pro template is previewed free; Pro is asked for before '
+      'any question, and nothing is made without it', (t) async {
+    final c = await boot(t, studyState());
+    await tap(t, find.byKey(const Key('home-new')));
+    await tap(t, find.byKey(const Key('new-template')));
+    await t.enterText(find.byKey(const Key('gallery-search')), 'sprint');
+    await t.pumpAndSettle();
+    await tap(t, find.byKey(const Key('template-sprint')));
+    // The preview is free and says what the button will ask.
+    expect(find.text('Unlock with Pro'), findsOneWidget);
+    expect(find.textContaining('free to look at, Pro to use'), findsOneWidget);
+    await tap(t, find.byKey(const Key('template-use')));
+    // The Pro page comes first: no setup questions behind it.
+    expect(find.text('Pay once. Keep it.'), findsOneWidget);
+    expect(find.byKey(const Key('setup-preview')), findsNothing);
+    await t.binding.handlePopRoute();
+    await settle(t);
+    expect(find.byKey(const Key('setup-preview')), findsNothing);
+    expect(c.state!.rows('boards'), hasLength(1));
+  });
+
+  testWidgets('with Pro, a Pro template goes straight to its questions', (
+    t,
+  ) async {
+    debugProOverride = true;
     final c = await boot(t, studyState());
     await tap(t, find.byKey(const Key('home-new')));
     await tap(t, find.byKey(const Key('new-template')));
@@ -281,10 +304,9 @@ void main() {
     expect(find.text('Use this template'), findsOneWidget);
     await tap(t, find.byKey(const Key('template-use')));
     await tap(t, find.byKey(const Key('setup-preview')));
-    expect(find.text('Create with Pro'), findsOneWidget);
+    expect(find.text('Create board'), findsOneWidget);
     await tap(t, find.byKey(const Key('plan-create')));
-    expect(find.text('Pay once. Keep it.'), findsOneWidget);
-    expect(c.state!.rows('boards'), hasLength(1));
+    expect(c.state!.rows('boards'), hasLength(2));
   });
 
   testWidgets('a free template: answers change the board, Back keeps them, '

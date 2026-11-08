@@ -60,39 +60,37 @@ class TemplatePreviewPage extends StatelessWidget {
       vi,
       now,
     );
+    // A Pro template is previewed free, but Pro is asked for here, before
+    // a single question, never after the person has filled everything in.
+    final locked = t.pro && !hasPro(context);
     return Scaffold(
       appBar: AppBar(title: Text(t.name.of(vi))),
-      body: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Padding(
-            padding: const EdgeInsets.fromLTRB(16, 0, 16, 10),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    Expanded(
-                      child: Text(
-                        t.goal.of(vi),
-                        style: theme.textTheme.titleMedium,
-                      ),
+      body: PreviewBody(
+        header: Padding(
+          padding: const EdgeInsets.fromLTRB(16, 0, 16, 10),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      t.goal.of(vi),
+                      style: theme.textTheme.titleMedium,
                     ),
-                    if (t.pro) const ProBadge(),
-                  ],
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  '${columnsLine(t, vi)}\n${timeLine(context, t.time)}',
-                  style: theme.textTheme.bodySmall?.copyWith(color: p.muted),
-                ),
-              ],
-            ),
+                  ),
+                  if (t.pro) const ProBadge(),
+                ],
+              ),
+              const SizedBox(height: 4),
+              Text(
+                '${columnsLine(t, vi)}\n${timeLine(context, t.time)}',
+                style: theme.textTheme.bodySmall?.copyWith(color: p.muted),
+              ),
+            ],
           ),
-          Expanded(
-            child: BoardPreview(state: s, now: now),
-          ),
-        ],
+        ),
+        board: BoardPreview(state: s, now: now),
       ),
       bottomNavigationBar: SafeArea(
         child: Padding(
@@ -102,27 +100,51 @@ class TemplatePreviewPage extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               Text(
-                tr(
-                  context,
-                  'Preview with example cards · nothing is saved',
-                  'Xem trước kèm thẻ ví dụ · chưa lưu gì',
-                ),
+                locked
+                    ? tr(
+                        context,
+                        'A Pro template · free to look at, Pro to use. '
+                            'Unlock first, then answer its questions.',
+                        'Mẫu Pro · xem miễn phí, cần Pro để dùng. Mở khoá '
+                            'trước, rồi mới trả lời câu hỏi.',
+                      )
+                    : tr(
+                        context,
+                        'Preview with example cards · nothing is saved',
+                        'Xem trước kèm thẻ ví dụ · chưa lưu gì',
+                      ),
+                key: const Key('template-note'),
                 textAlign: TextAlign.center,
                 style: theme.textTheme.bodySmall,
               ),
               const SizedBox(height: 8),
-              FilledButton(
+              FilledButton.icon(
                 key: const Key('template-use'),
                 style: FilledButton.styleFrom(
                   minimumSize: const Size.fromHeight(52),
                 ),
-                onPressed: () => Navigator.push(
-                  context,
-                  MaterialPageRoute<void>(
-                    builder: (_) => SetupPage(scope: scope, template: t),
-                  ),
+                onPressed: () async {
+                  if (locked &&
+                      !await requirePro(context, ProFeature.templates)) {
+                    return;
+                  }
+                  if (!context.mounted) return;
+                  await Navigator.push(
+                    context,
+                    MaterialPageRoute<void>(
+                      builder: (_) => SetupPage(scope: scope, template: t),
+                    ),
+                  );
+                },
+                // The lock says what the tap does before it is tapped.
+                icon: Icon(
+                  locked ? Icons.lock_open_outlined : Icons.arrow_forward,
                 ),
-                child: Text(tr(context, 'Use this template', 'Dùng mẫu này')),
+                label: Text(
+                  locked
+                      ? tr(context, 'Unlock with Pro', 'Mở khoá với Pro')
+                      : tr(context, 'Use this template', 'Dùng mẫu này'),
+                ),
               ),
             ],
           ),
@@ -349,8 +371,9 @@ class _SetupPageState extends State<SetupPage> {
   }
 }
 
-/// Exactly the board the answers make. Create it (Pro asks here for a Pro
-/// template), or go back with the answers kept.
+/// Exactly the board the answers make. Create it, or go back with the
+/// answers kept. Pro was asked for before the questions; Create checks it
+/// once more only as a safety net.
 class PlanPreviewPage extends StatelessWidget {
   final BoardsScope scope;
   final BoardTemplate template;
@@ -371,21 +394,16 @@ class PlanPreviewPage extends StatelessWidget {
     final locked = template.pro && !hasPro(context);
     return Scaffold(
       appBar: AppBar(title: Text(plan.title)),
-      body: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Padding(
-            padding: const EdgeInsets.fromLTRB(16, 0, 16, 10),
-            child: Text(
-              '${plan.columns.map((c) => c.$1).join(' → ')}\n'
-              '${timeLine(context, plan.time)}',
-              style: theme.textTheme.bodySmall?.copyWith(color: p.muted),
-            ),
+      body: PreviewBody(
+        header: Padding(
+          padding: const EdgeInsets.fromLTRB(16, 0, 16, 10),
+          child: Text(
+            '${plan.columns.map((c) => c.$1).join(' → ')}\n'
+            '${timeLine(context, plan.time)}',
+            style: theme.textTheme.bodySmall?.copyWith(color: p.muted),
           ),
-          Expanded(
-            child: BoardPreview(state: s, now: now),
-          ),
-        ],
+        ),
+        board: BoardPreview(state: s, now: now),
       ),
       bottomNavigationBar: SafeArea(
         child: Padding(

@@ -40,8 +40,8 @@ class ProPage extends StatelessWidget {
         tr(context, '16 more templates', 'Thêm 16 mẫu bảng'),
         tr(
           context,
-          'Thesis, sprints, launches, events, 90-day goals, writing, games and more, each with its own covers and look. Open any of them to see the board and answer its questions first; Pro is asked only when you create it.',
-          'Luận văn, sprint, ra mắt sản phẩm, sự kiện, mục tiêu 90 ngày, viết lách, làm game và hơn thế, mỗi mẫu có bìa và giao diện riêng. Mở mẫu nào cũng xem được bảng và trả lời câu hỏi trước; chỉ khi tạo mới hỏi Pro.',
+          'Thesis, sprints, launches, events, 90-day goals, writing, games and more, each with its own covers and look. Open any of them to see its board with example cards for free; Pro unlocks it before its questions, so nothing you type is wasted.',
+          'Luận văn, sprint, ra mắt sản phẩm, sự kiện, mục tiêu 90 ngày, viết lách, làm game và hơn thế, mỗi mẫu có bìa và giao diện riêng. Mở mẫu nào cũng xem miễn phí bảng kèm thẻ ví dụ; Pro mở khoá mẫu trước khi trả lời câu hỏi, nên không phí công điền.',
         ),
       ),
       (

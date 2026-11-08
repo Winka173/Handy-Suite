@@ -287,3 +287,76 @@ class _BoardPreviewState extends State<BoardPreview> {
     );
   }
 }
+
+/// A preview page's body: what the board is above, the board below. A tall
+/// screen keeps the board in the room left under the header. A short one
+/// (a phone on its side, BlueStacks' landscape window, very large text)
+/// scrolls the header away and gives the board the whole height, and a
+/// column at its top or bottom hands the rest of a swipe to the page.
+class PreviewBody extends StatefulWidget {
+  final Widget header;
+  final Widget board;
+  const PreviewBody({super.key, required this.header, required this.board});
+  @override
+  State<PreviewBody> createState() => _PreviewBodyState();
+}
+
+class _PreviewBodyState extends State<PreviewBody> {
+  final page = ScrollController();
+
+  @override
+  void dispose() {
+    page.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final short =
+        MediaQuery.sizeOf(context).height < 720 ||
+        MediaQuery.textScalerOf(context).scale(1) > 1.3;
+    if (!short) {
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          widget.header,
+          Expanded(child: widget.board),
+        ],
+      );
+    }
+    return LayoutBuilder(
+      builder: (context, box) => NotificationListener<OverscrollNotification>(
+        onNotification: (n) {
+          if (n.depth == 0 ||
+              n.metrics.axis != Axis.vertical ||
+              !page.hasClients) {
+            return false;
+          }
+          final p = page.position;
+          final to = (p.pixels + n.overscroll).clamp(
+            p.minScrollExtent,
+            p.maxScrollExtent,
+          );
+          if (to != p.pixels) p.jumpTo(to);
+          return false;
+        },
+        child: SingleChildScrollView(
+          key: const Key('preview-scroll'),
+          controller: page,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              widget.header,
+              SizedBox(
+                // Never less than a readable board (its category strip
+                // and a few cards): on a tiny screen the page scrolls on.
+                height: box.maxHeight.clamp(580.0, double.infinity),
+                child: widget.board,
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
