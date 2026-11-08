@@ -132,6 +132,18 @@ void main() {
     c.dispose();
   });
 
+  testWidgets('Notifications settings: background jobs are off by '
+      'default and turn on', (t) async {
+    final (c, _) = await boot(t, size: const Size(400, 3200));
+    Navigator.of(t.element(find.byType(Scaffold).first)).pushNamed('/settings');
+    await t.pumpAndSettle();
+    final finder = find.byKey(const Key('set-task-notices'));
+    if (finder.evaluate().isEmpty) return; // no notifications on this host
+    expect(c.preferences['taskNotices'], isNot(true));
+    await tapKey(t, 'set-task-notices');
+    expect(c.preferences['taskNotices'], isTrue);
+  });
+
   testWidgets('Remind me: off by default; one tap sets tomorrow; Off clears', (
     t,
   ) async {

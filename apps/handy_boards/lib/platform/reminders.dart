@@ -10,20 +10,25 @@ class BoardsReminders {
   final plugin = FlutterLocalNotificationsPlugin();
   Future<void>? _ready;
   BoardsReminders({this.onTask});
+
+  /// Android and iOS, and Windows toasts (Windows lists what is pending by
+  /// id only, which is all the plan needs: it cancels and schedules by id).
   bool get supported =>
       !kIsWeb &&
       (defaultTargetPlatform == TargetPlatform.android ||
-          defaultTargetPlatform == TargetPlatform.iOS);
+          defaultTargetPlatform == TargetPlatform.iOS ||
+          defaultTargetPlatform == TargetPlatform.windows);
   Future<void> ready() => _ready ??= () async {
     if (!supported) return;
     await plugin.initialize(
-      settings: const InitializationSettings(
-        android: AndroidInitializationSettings('@mipmap/ic_launcher'),
-        iOS: DarwinInitializationSettings(
+      settings: InitializationSettings(
+        android: const AndroidInitializationSettings('@mipmap/ic_launcher'),
+        iOS: const DarwinInitializationSettings(
           requestAlertPermission: false,
           requestBadgePermission: false,
           requestSoundPermission: false,
         ),
+        windows: windowsIdentity('boards'),
       ),
       onDidReceiveNotificationResponse: (r) {
         if (r.payload != null) onTask?.call(r.payload!);
@@ -34,9 +39,13 @@ class BoardsReminders {
         launch?.notificationResponse?.payload != null)
       onTask?.call(launch!.notificationResponse!.payload!);
   }();
+  bool get _windows => defaultTargetPlatform == TargetPlatform.windows;
+
   Future<bool> request() async {
     if (!supported) return false;
     await ready();
+    // Windows has no runtime permission; toasts are turned off in Settings.
+    if (_windows) return true;
     if (defaultTargetPlatform == TargetPlatform.android)
       return await plugin
               .resolvePlatformSpecificImplementation<
@@ -89,7 +98,7 @@ class BoardsReminders {
     await ready();
     final allowed =
         s.preferences['notifications'] == true &&
-        await DeviceNotifications().allowed(false);
+        (_windows || await DeviceNotifications().allowed(false));
     final notes = allowed
         ? planNotifications(s, DateTime.now(), vi: vi, pro: pro)
         : const <PlannedNote>[];
@@ -122,6 +131,7 @@ class BoardsReminders {
                   'Summaries',
                   importance: Importance.low,
                 ),
+          windows: const WindowsNotificationDetails(),
           iOS: const DarwinNotificationDetails(
             presentAlert: true,
             presentSound: false,

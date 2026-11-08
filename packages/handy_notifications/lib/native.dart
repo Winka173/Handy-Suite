@@ -26,6 +26,7 @@ const _windowsIds = {
   'bookmark': ('Handy Bookmark', 'e251877b-f2ba-45df-b7be-9bb83712762d'),
   'spend': ('Handy Spend', 'd6b89aff-1305-4577-82a4-921914b30ac6'),
   'habit': ('Handy Habit', '86a06fbe-6153-41c1-b230-c73b7a0640ef'),
+  'boards': ('Handy Boards', '51a5faa8-13c8-40da-b586-05eb4f7d50a7'),
 };
 
 WindowsInitializationSettings? windowsIdentity(String app) {

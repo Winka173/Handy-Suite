@@ -225,6 +225,27 @@ class NotificationsSection extends StatelessWidget {
                       await _set(context, 'problemNotices', v);
                   },
                 ),
+                SettingsSwitch(
+                  key: const Key('set-task-notices'),
+                  icon: Icons.task_alt_outlined,
+                  title: tr(
+                    context,
+                    'When a background job finishes',
+                    'Báo khi việc chạy nền xong',
+                  ),
+                  subtitle: tr(
+                    context,
+                    'A link check or offline copies that end while the app '
+                        'is closed. Off by default.',
+                    'Kiểm tra link hoặc lưu bản đọc offline xong lúc app '
+                        'đang đóng. Mặc định tắt.',
+                  ),
+                  value: p['taskNotices'] == true,
+                  onChanged: (v) async {
+                    if (v && !allowed) await r.request();
+                    if (context.mounted) await _set(context, 'taskNotices', v);
+                  },
+                ),
                 if (remindersOn && !exact)
                   SettingsRow(
                     key: const Key('set-exact'),

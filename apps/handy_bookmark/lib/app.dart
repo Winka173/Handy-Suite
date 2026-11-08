@@ -138,6 +138,7 @@ class _SaveAppState extends State<SaveApp> with WidgetsBindingObserver {
     c.addListener(_changed);
     c.onShareReminderMoved = reminders.cancelShare;
     scope.autoBackup?.addListener(_checkProblems);
+    tasks.addListener(_taskChanged);
     if (widget.device) {
       _widgetLinks = homeWidgets.links().listen(_openWidgetLink);
     }
@@ -153,6 +154,7 @@ class _SaveAppState extends State<SaveApp> with WidgetsBindingObserver {
     WidgetsBinding.instance.removeObserver(this);
     c.removeListener(_changed);
     scope.autoBackup?.removeListener(_checkProblems);
+    tasks.removeListener(_taskChanged);
     _widgetLinks?.cancel();
     homeWidgets.dispose();
     scope.drive?.removeListener(_checkProblems);
@@ -206,6 +208,30 @@ class _SaveAppState extends State<SaveApp> with WidgetsBindingObserver {
       case 'pro':
         nav.pushNamed('/pro');
     }
+  }
+
+  LinkJobReport? _toldReport;
+
+  /// A link check or offline-copy run that ended while the app was away:
+  /// one notification when the person turned that on (off by default).
+  void _taskChanged() {
+    final r = tasks.last;
+    if (r == null || identical(r, _toldReport)) return;
+    _toldReport = r;
+    if (r.cancelled ||
+        _foreground ||
+        !widget.device ||
+        c.preferences['taskNotices'] != true)
+      return;
+    unawaited(
+      notifyTaskDone(
+        reminders,
+        check: r.job == LinkJob.check,
+        done: r.done,
+        broken: r.broken,
+        vietnamese: prefs.value?.locale == 'vi',
+      ).catchError((Object _) {}),
+    );
   }
 
   /// Whether the app is on screen (then problems show in it, not as a

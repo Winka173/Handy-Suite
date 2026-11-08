@@ -63,6 +63,7 @@ NotificationDetails reminderDetails(bool vietnamese) => NotificationDetails(
     ],
   ),
   iOS: const DarwinNotificationDetails(presentAlert: true, presentSound: false),
+  windows: const WindowsNotificationDetails(),
 );
 
 /// Records a button press and, for "Remind in 1 hour", schedules it again
@@ -141,7 +142,9 @@ takeNotifyActions() async {
 }
 
 class SaveReminders {
-  final DeviceNotifications permissions = DeviceNotifications();
+  final DeviceNotifications permissions = DeviceNotifications(
+    windows: windowsIdentity('bookmark'),
+  );
   Future<void>? _ready;
   bool get supported => supportsLocalReminders;
 
@@ -155,13 +158,14 @@ class SaveReminders {
     _ready ??= () async {
       await permissions.ready();
       await permissions.plugin.initialize(
-        settings: const InitializationSettings(
-          android: AndroidInitializationSettings('@mipmap/ic_launcher'),
-          iOS: DarwinInitializationSettings(
+        settings: InitializationSettings(
+          android: const AndroidInitializationSettings('@mipmap/ic_launcher'),
+          iOS: const DarwinInitializationSettings(
             requestAlertPermission: false,
             requestBadgePermission: false,
             requestSoundPermission: false,
           ),
+          windows: windowsIdentity('bookmark'),
         ),
         onDidReceiveNotificationResponse: (response) async {
           if (response.actionId == readAction ||
@@ -249,10 +253,21 @@ class SaveReminders {
     };
     if (wanted.length != limited.length)
       throw StateError('Reminder identifier collision');
+    // Windows lists pending toasts by id only: there, every id of ours that
+    // is not wanted goes, except the "needs attention" ones.
+    final windows = defaultTargetPlatform == TargetPlatform.windows;
+    final kept = {
+      for (final k in const ['backup', 'sync', 'shares', 'task'])
+        ReminderRequest('problem:$k', tz.TZDateTime.utc(2000)).id,
+    };
     for (final notification in pending) {
       final payload = notification.payload;
-      if (payload == null || payload.startsWith(sharePrefix)) continue;
-      if (problemPayloads.contains(payload)) continue;
+      if (kept.contains(notification.id)) continue;
+      if (payload == null && !windows) continue;
+      if (payload != null &&
+          (payload.startsWith(sharePrefix) ||
+              problemPayloads.contains(payload)))
+        continue;
       if (!wanted.containsKey(notification.id))
         await permissions.plugin.cancel(id: notification.id);
     }

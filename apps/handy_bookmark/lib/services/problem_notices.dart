@@ -83,6 +83,7 @@ class ProblemNotices {
   ProblemNotices(this.reminders);
 
   static const _kinds = ['backup', 'sync', 'shares'];
+  // 'task' (notifyTaskDone) is told once per run and never withdrawn.
   static String _key(String kind) => 'bookmark.problem.$kind';
 
   Future<void> update(
@@ -124,10 +125,56 @@ class ProblemNotices {
             presentAlert: true,
             presentSound: false,
           ),
+          windows: const WindowsNotificationDetails(),
         ),
         payload: 'problem:$kind',
       );
       await prefs.setString(_key(kind), p.signature);
     }
   }
+}
+
+/// "A background job finished" (off by default, Settings › Notifications):
+/// a link check or a reading-copy run that ended while the app was away.
+/// Stopped runs are not told; nothing asks for the permission here.
+Future<void> notifyTaskDone(
+  SaveReminders reminders, {
+  required bool check,
+  required int done,
+  required int broken,
+  required bool vietnamese,
+}) async {
+  if (!reminders.supported || !await reminders.allowedNow()) return;
+  String t(String en, String vi) => vietnamese ? vi : en;
+  await reminders.permissions.plugin.show(
+    id: problemId('task'),
+    title: check
+        ? t('Link check finished', 'Đã kiểm tra xong link')
+        : t('Offline copies finished', 'Đã lưu xong bản đọc offline'),
+    body: check
+        ? t(
+            '$done links checked${broken > 0 ? ', $broken need a look' : ', all fine'}.',
+            'Đã kiểm tra $done link${broken > 0 ? ', $broken link cần xem lại' : ', tất cả đều ổn'}.',
+          )
+        : t(
+            '$done links saved to read offline.',
+            'Đã lưu $done link để đọc offline.',
+          ),
+    notificationDetails: NotificationDetails(
+      android: AndroidNotificationDetails(
+        'handy-save-tasks',
+        vietnamese ? 'Việc chạy nền' : 'Background jobs',
+        channelDescription: vietnamese
+            ? 'Khi kiểm tra link hoặc lưu bản đọc offline xong'
+            : 'When a link check or offline copies finish',
+        importance: Importance.low,
+      ),
+      iOS: const DarwinNotificationDetails(
+        presentAlert: true,
+        presentSound: false,
+      ),
+      windows: const WindowsNotificationDetails(),
+    ),
+    payload: 'problem:shares',
+  );
 }
