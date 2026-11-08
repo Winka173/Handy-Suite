@@ -2,6 +2,7 @@ import 'package:handy_ui/kit.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:handy_bookmark/collections/identity.dart';
 import 'package:handy_bookmark/editors.dart';
+import 'package:handy_bookmark/pro/entitlements.dart';
 import 'package:handy_bookmark_engine/handy_bookmark_engine.dart';
 
 Bookmark _bookmark() {
@@ -161,36 +162,38 @@ void main() {
     expect(find.text('Enter a valid HTTP or HTTPS URL'), findsOneWidget);
   });
 
-  testWidgets('collection descendant parent selection is rejected as a cycle', (
-    tester,
-  ) async {
+  testWidgets('a collection with folders stays at the top: its Folder of '
+      'is locked and says why', (tester) async {
     final parent = SaveCollection(id: 'parent', name: 'Parent', position: 9);
     final child = SaveCollection(
       id: 'child',
       name: 'Child',
       parentId: parent.id,
     );
+    final other = SaveCollection(id: 'other', name: 'Other');
     Object? result;
     await _open(
       tester,
       CollectionEditor(
         initial: parent,
-        library: SaveLibrary(collections: [parent, child]),
+        library: SaveLibrary(collections: [parent, child, other]),
       ),
       (v) => result = v,
     );
-    // Inside sits under More options in the sheet.
+    // Folder of sits under More options in the sheet.
     await tester.tap(find.byKey(const Key('collection-more')));
     await tester.pumpAndSettle();
-    await _choose(tester, 'collection-parent', 'Child');
-    await tester.tap(find.byKey(const Key('editor-save')));
-    await tester.pumpAndSettle();
-    expect(result, isNull);
     expect(
-      find.text('Choose a parent outside this collection'),
+      find.text('It has folders of its own, so it stays at the top'),
       findsOneWidget,
     );
-    await _choose(tester, 'collection-parent', 'None');
+    final field = tester.widget<DropdownButton<String>>(
+      find.descendant(
+        of: find.byKey(const Key('collection-parent')),
+        matching: find.byType(DropdownButton<String>),
+      ),
+    );
+    expect(field.onChanged, isNull);
     await _enter(tester, 'collection-name', 'Renamed');
     await tester.tap(find.byKey(const Key('editor-save')));
     await tester.pumpAndSettle();
@@ -200,20 +203,33 @@ void main() {
     expect(edited.parentId, isNull);
   });
 
-  testWidgets('new collection returns its parent and keeps a default icon', (
-    tester,
-  ) async {
+  testWidgets('new collection returns its parent (Pro) and keeps a default '
+      'icon; only top collections are offered as parents', (tester) async {
+    // ignore: invalid_use_of_visible_for_testing_member
+    debugProOverride = true;
+    // ignore: invalid_use_of_visible_for_testing_member
+    addTearDown(() => debugProOverride = null);
     final parent = SaveCollection(id: 'parent', name: 'Parent');
+    final folder = SaveCollection(
+      id: 'folder',
+      name: 'A folder',
+      parentId: 'parent',
+    );
     Object? result;
     await _open(
       tester,
-      CollectionEditor(library: SaveLibrary(collections: [parent])),
+      CollectionEditor(library: SaveLibrary(collections: [parent, folder])),
       (v) => result = v,
     );
     await _enter(tester, 'collection-name', 'Reading');
     await tester.tap(find.byKey(const Key('collection-more')));
     await tester.pumpAndSettle();
-    await _choose(tester, 'collection-parent', 'Parent');
+    await _reach(tester, find.byKey(const Key('collection-parent')));
+    await tester.tap(find.byKey(const Key('collection-parent')));
+    await tester.pumpAndSettle();
+    expect(find.text('A folder'), findsNothing);
+    await tester.tap(find.text('Parent').last);
+    await tester.pumpAndSettle();
     await tester.tap(find.byKey(const Key('editor-save')));
     await tester.pumpAndSettle();
     final edited = result as SaveCollection;

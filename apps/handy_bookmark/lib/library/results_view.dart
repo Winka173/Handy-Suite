@@ -157,9 +157,9 @@ class ResultsView extends StatelessWidget {
                                     tr(
                                       context,
                                       children.length == 1
-                                          ? '1 collection inside'
-                                          : '${children.length} collections inside',
-                                      '${children.length} bộ con',
+                                          ? '1 folder'
+                                          : '${children.length} folders',
+                                      '${children.length} thư mục',
                                     ),
                                 ].join(' · '),
                           style: theme.textTheme.bodySmall?.copyWith(
@@ -193,7 +193,7 @@ class ResultsView extends StatelessWidget {
               );
             },
           ),
-          // The collections inside this one, to step into.
+          // This collection's folders, to step into.
           if (children.isNotEmpty)
             Padding(
               padding: const EdgeInsets.only(top: HandySpace.s),
@@ -478,12 +478,21 @@ class ResultsView extends StatelessWidget {
                     'Tên, biểu tượng, màu',
                   ),
                 ),
-                row(
-                  const Key('collection-sub'),
-                  Icons.create_new_folder_outlined,
-                  tr(sheet, 'New collection inside', 'Bộ sưu tập con mới'),
-                  (context) => scope.newSubCollection(context, self.id),
-                ),
+                // Folders are one level: a folder has none of its own.
+                if (self.parentId == null)
+                  row(
+                    const Key('collection-sub'),
+                    Icons.create_new_folder_outlined,
+                    tr(sheet, 'New folder', 'Thư mục mới'),
+                    (context) => scope.newSubCollection(context, self.id),
+                    subtitle: hasPro(sheet)
+                        ? null
+                        : tr(
+                            sheet,
+                            'Sort this collection into folders (Pro)',
+                            'Chia bộ này thành các thư mục (Pro)',
+                          ),
+                  ),
                 row(
                   const Key('collection-share'),
                   Icons.ios_share,

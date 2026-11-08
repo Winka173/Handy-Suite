@@ -608,7 +608,7 @@ Implement comprehensive local bookmark organization.
 - Select icon.
 - Select color.
 - Optional collection description.
-- Nested subcollections.
+- Folders inside a collection, one level deep (a folder holds saves, not folders). Making a folder, or moving a collection into another, is Pro; existing folders keep working without it. Older libraries nested deeper are read back as folders of their top collection (2026-11-09).
 - Move bookmarks.
 - Multi-select operations.
 

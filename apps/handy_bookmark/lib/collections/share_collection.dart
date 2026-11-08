@@ -95,8 +95,8 @@ extension ShareCollection on SaveScope {
                   Icons.check,
                   tr(
                     context,
-                    'Titles, links and where they are from, with the collections inside it',
-                    'Tiêu đề, link và nguồn, cùng các bộ sưu tập bên trong',
+                    'Titles, links and where they are from, with its folders',
+                    'Tiêu đề, link và nguồn, cùng các thư mục của nó',
                   ),
                 ),
                 point(

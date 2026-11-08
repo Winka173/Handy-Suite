@@ -1229,6 +1229,30 @@ void main() {
     await t.pumpAndSettle();
     await shot(t, 'phone-62-pro-layouts-end');
   });
+  for (final (size, theme, name) in [
+    (phone, 'light', 'phone'),
+    (const Size(320, 640), 'dark', 'small-dark'),
+  ])
+    testWidgets('folders $name', (t) async {
+      await boot(t, size, theme: theme);
+      Navigator.of(
+        t.element(find.byType(Scaffold).first),
+      ).pushNamed('/collection/trip');
+      await t.pumpAndSettle();
+      await shot(t, '$name-70-folders');
+      await tapKey(t, 'list-more');
+      await shot(t, '$name-71-folders-options');
+      Navigator.of(
+        t.element(find.byType(Scaffold).last),
+        rootNavigator: true,
+      ).pushNamed('/pro', arguments: ProFeature.folders);
+      await t.pump();
+      await t.pump(const Duration(milliseconds: 400));
+      await t.pump(const Duration(milliseconds: 1600));
+      await shot(t, '$name-72-pro-folders-moving', settle: false);
+      await t.pumpAndSettle();
+      await shot(t, '$name-73-pro-folders-end');
+    });
   testWidgets('pro page whole', (t) async {
     await boot(t, const Size(390, 3600));
     Navigator.of(

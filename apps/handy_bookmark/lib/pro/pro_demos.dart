@@ -30,6 +30,7 @@ Widget bookmarkProDemo(BuildContext context, ProFeature f, double t) =>
             ProFeature.deepSearch => _Search(t),
             ProFeature.ocrOffline => _Ocr(t),
             ProFeature.premiumExport => _Export(t),
+            ProFeature.folders => _Folders(t),
           },
         ),
       ),
@@ -91,6 +92,11 @@ String bookmarkProDemoLabel(BuildContext context, ProFeature f) => switch (f) {
     context,
     'A collection becomes a designed PDF.',
     'Một bộ sưu tập thành tệp PDF có thiết kế.',
+  ),
+  ProFeature.folders => tr(
+    context,
+    'A Recipes collection sorted into two folders, Soups and Cakes.',
+    'Bộ Công thức chia thành hai thư mục, Món canh và Bánh.',
   ),
 };
 
@@ -824,6 +830,128 @@ class _AutoOrganize extends StatelessWidget {
                     context,
                     'youtube.com → Watch later · github.com → Code',
                     'youtube.com → Xem sau · github.com → Lập trình',
+                  ),
+                  8.5,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+/// A Recipes collection sorted into two folders: they appear beside it,
+/// three saves slide into them and one stays in the collection. The still
+/// shows the collection with its folders, one level deep.
+class _Folders extends StatelessWidget {
+  final double t;
+  const _Folders(this.t);
+  @override
+  Widget build(BuildContext context) {
+    final p = BookmarkPalette.of(context);
+    final saves = [
+      (tr(context, 'Sour fish soup', 'Canh chua cá lóc'), 'youtube.com', 2),
+      (tr(context, 'Crème caramel', 'Bánh flan'), 'tiktok.com', 1),
+      (tr(context, 'Pumpkin soup', 'Canh bí đỏ'), 'pinterest.com', 3),
+      (tr(context, 'Beef stew', 'Bò kho'), 'facebook.com', 5),
+    ];
+    final folders = _seg(t, .05, .25);
+    // Where each save ends: two soups, one cake; the stew stays.
+    const from = [
+      Offset(10, 26),
+      Offset(10, 58),
+      Offset(10, 90),
+      Offset(10, 122),
+    ];
+    const to = [
+      Offset(170, 26),
+      Offset(170, 118),
+      Offset(170, 58),
+      Offset(10, 26),
+    ];
+    final moves = [
+      _seg(t, .3, .5),
+      _seg(t, .42, .62),
+      _seg(t, .54, .74),
+      _seg(t, .7, .88),
+    ];
+    Widget card(
+      String name,
+      int hue,
+      double top,
+      double height, {
+      bool folder = false,
+    }) => Positioned(
+      left: folder ? 164 : 4,
+      top: top,
+      child: Container(
+        width: 152,
+        height: height,
+        padding: const EdgeInsets.fromLTRB(6, 5, 6, 0),
+        alignment: Alignment.topLeft,
+        decoration: BoxDecoration(
+          color: folder ? p.surface : p.raised,
+          borderRadius: BorderRadius.circular(10),
+        ),
+        child: Row(
+          children: [
+            if (folder)
+              Icon(Icons.folder_outlined, size: 10, color: p.muted)
+            else
+              HandyDot(hue, size: 7),
+            const SizedBox(width: 5),
+            Expanded(child: _line(context, name, 9, bold: true)),
+          ],
+        ),
+      ),
+    );
+    return Stack(
+      children: [
+        card(tr(context, 'Recipes', 'Công thức'), 0, 4, 152),
+        Positioned(
+          left: 0,
+          top: 0,
+          right: 0,
+          bottom: 0,
+          child: _fade(
+            folders,
+            Stack(
+              children: [
+                card(tr(context, 'Soups', 'Món canh'), 0, 4, 86, folder: true),
+                card(tr(context, 'Cakes', 'Bánh'), 0, 96, 60, folder: true),
+              ],
+            ),
+            dx: 12,
+            dy: 0,
+          ),
+        ),
+        for (var k = 0; k < saves.length; k++)
+          Positioned(
+            left: Offset.lerp(from[k], to[k], moves[k])!.dx,
+            top: Offset.lerp(from[k], to[k], moves[k])!.dy,
+            child: _Row(saves[k], width: 140),
+          ),
+        Positioned(
+          left: 10,
+          right: 10,
+          bottom: 4,
+          child: Row(
+            children: [
+              Icon(
+                Icons.create_new_folder_outlined,
+                size: 11,
+                color: p.primary,
+              ),
+              const SizedBox(width: 5),
+              Expanded(
+                child: _line(
+                  context,
+                  tr(
+                    context,
+                    'One level: a folder holds saves, never folders',
+                    'Một cấp: thư mục chứa mục, không chứa thư mục',
                   ),
                   8.5,
                 ),

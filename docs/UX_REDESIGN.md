@@ -3165,3 +3165,28 @@ icon + chữ) và trang Explore Pro của Bookmark (ba khối chữ). Trang này
 - **Lọc nhóm:** chạm để bật hoặc tắt từng nhóm, chọn được nhiều nhóm cùng lúc. Dòng lọc ghi "Đang lọc: chỉ A, B". Thẻ thêm khi
   đang lọc vào nhóm chọn đầu tiên. Bộ lọc đã lưu cũng chọn nhiều nhóm (`categories`).
 - **Từ chối:** khoá việc xem kỳ cũ; tự đổi hạn nộp; đoán ngày khi đổi sang kỳ ngắn hơn.
+
+## Hợp đồng: Handy Bookmark · thư mục trong bộ sưu tập, một cấp, Pro (2026-11-09, chủ yêu cầu)
+
+- **Việc người dùng làm:** một bộ sưu tập lớn (Công thức nấu ăn, 40 mục) cần chia vài ngăn (Món canh, Bánh) mà không thành cây
+  nhiều tầng khó tìm. Dữ liệu: bộ sưu tập (tên, màu, biểu tượng, `parentId`), mục đã lưu (`collectionId`).
+- **Quyết định của chủ:** "bộ sưu tập con" có sẵn trở thành **thư mục** (EN *folder*). Tối đa một cấp: thư mục không chứa thư
+  mục. Tạo thư mục mới, hoặc đưa một bộ vào trong bộ khác, cần Pro. Dữ liệu cũ giữ nguyên và dùng được khi không có Pro (mở,
+  đổi tên, đổi màu, xếp mục vào, xoá, đưa ra ngoài thành bộ thường). Bộ lồng từ hai cấp trở lên được gắn lại thành thư mục của
+  bộ gốc trên cùng; không mục nào đổi chỗ chứa.
+- **Câu hỏi của màn bộ sưu tập:** "trong bộ này có gì, nằm ở ngăn nào?" Dải thư mục (chip có chấm màu) ngay dưới tên bộ, như
+  dải bộ con cũ; đếm ghi "12 mục · 2 thư mục". Mở thư mục là trang bộ sưu tập của nó.
+- **Hành động chính:** menu bộ sưu tập › **Thư mục mới** (chỉ có ở bộ cấp trên cùng; thư mục không có dòng này). Chưa có Pro
+  thì dòng ghi thêm "Pro", chạm mở trang Pro ở phần Thư mục.
+- **Sửa bộ sưu tập:** trường "Nằm trong" thành **"Thư mục của"**, chỉ liệt kê bộ cấp trên cùng (không liệt kê thư mục, không
+  liệt kê chính nó). Bộ đang có thư mục thì không đặt vào bộ khác được: trường bị khoá, ghi "Bộ này đã có thư mục, nên ở cấp
+  trên cùng". Chọn "Không" luôn miễn phí; chọn một bộ cha mới thì hỏi Pro khi bấm Lưu.
+- **Trạng thái:** không có thư mục → không hiện dải; thư mục rỗng → trang thư mục trống như bộ rỗng; chưa Pro → mọi thư mục cũ
+  vẫn đủ chức năng trừ tạo mới / đưa vào.
+- **Trang Pro:** phần "Thư mục trong bộ sưu tập" ở nhóm "Bớt xếp bằng tay", có minh hoạ chạy: bộ Công thức chia ra hai thư mục,
+  các mục trượt vào đúng ngăn, khung cuối là bộ có hai chip thư mục. Bảng Miễn phí / Pro: dòng Bộ sưu tập, cột Pro ghi
+  "+ thư mục, bộ sưu tập thông minh".
+- **Nền tảng:** Android, iOS, Windows, Web như nhau; không có phím tắt riêng. Trình đọc màn hình đọc chip "Thư mục Món canh,
+  5 mục".
+- **Kiểm:** 320 px và chữ ×2 (dải chip cuộn ngang, menu không tràn), sáng và tối.
+- **Từ chối:** cây nhiều cấp; biểu tượng thư mục to màu sắc cho từng bộ; xoá hay làm phẳng dữ liệu cũ khi mất Pro.

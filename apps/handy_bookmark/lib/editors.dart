@@ -5,6 +5,7 @@ import 'package:handy_ui/kit.dart';
 import 'collections/identity.dart';
 import 'design/clipping.dart';
 import 'collections/identity_pickers.dart';
+import 'pro/entitlements.dart';
 import 'ui/collection_picker.dart';
 
 String _newId() => List.generate(
@@ -482,10 +483,23 @@ class _CollectionEditorState extends State<CollectionEditor> {
     return true;
   }
 
-  void _save() {
+  /// It holds folders of its own, so it stays a top collection.
+  bool get _hasFolders =>
+      widget.library.collections.any((c) => c.parentId == _id);
+
+  Future<void> _save() async {
     // Inside is checked even while More options is closed.
     if (!_validParent(_parent)) setState(() => _more = true);
     if (!_form.currentState!.validate() || !_validParent(_parent)) return;
+    // Putting it in a collection makes a folder: Pro. Taking it out, or
+    // keeping the place it already had, never asks.
+    final was = widget.initial?.parentId ?? widget.parentId ?? '';
+    if (_parent.isNotEmpty &&
+        _parent != was &&
+        !await requirePro(context, ProFeature.folders)) {
+      return;
+    }
+    if (!mounted) return;
     try {
       final result = _draft(_name.text.trim());
       _with(result).validate();
@@ -677,32 +691,38 @@ class _CollectionEditorState extends State<CollectionEditor> {
     );
   }
 
+  /// Folders are one level: the choices are the top collections, and a
+  /// collection with folders of its own stays at the top.
   Widget _parentField(BuildContext context) => DropdownButtonFormField<String>(
     key: const Key('collection-parent'),
     initialValue: _parent,
     isExpanded: true,
     decoration: InputDecoration(
-      labelText: tr(context, 'Inside', 'Nằm trong'),
+      labelText: tr(context, 'Folder of', 'Thư mục của'),
       floatingLabelBehavior: FloatingLabelBehavior.always,
-      helperText: tr(
-        context,
-        'Optional: put it inside another collection',
-        'Không bắt buộc: đặt trong một bộ sưu tập khác',
-      ),
+      helperText: _hasFolders
+          ? tr(
+              context,
+              'It has folders of its own, so it stays at the top',
+              'Bộ này đã có thư mục, nên ở cấp trên cùng',
+            )
+          : tr(
+              context,
+              'Optional: make it a folder in another collection (Pro)',
+              'Không bắt buộc: thành thư mục của bộ khác (Pro)',
+            ),
+      helperMaxLines: 3,
     ),
     items: [
       DropdownMenuItem(value: '', child: Text(tr(context, 'None', 'Không có'))),
       for (final (c, depth) in collectionTree(widget.library))
-        if (c.id != _id)
+        if (c.id != _id && depth == 0)
           DropdownMenuItem(
             value: c.id,
-            child: Padding(
-              padding: EdgeInsetsDirectional.only(start: depth * 16.0),
-              child: Text(c.name, overflow: TextOverflow.ellipsis),
-            ),
+            child: Text(c.name, overflow: TextOverflow.ellipsis),
           ),
     ],
-    onChanged: (v) => setState(() => _parent = v ?? ''),
+    onChanged: _hasFolders ? null : (v) => setState(() => _parent = v ?? ''),
     validator: (v) => _validParent(v)
         ? null
         : tr(

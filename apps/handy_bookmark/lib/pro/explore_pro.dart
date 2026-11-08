@@ -87,6 +87,15 @@ List<(String, List<ProPart>)> proGroups(BuildContext context) {
       t('Sort less by hand', 'Bớt xếp bằng tay'),
       [
         ProPart(
+          ProFeature.folders,
+          t('Folders in a collection', 'Thư mục trong bộ sưu tập'),
+          t('Split a big collection, one level', 'Chia bộ lớn, chỉ một cấp'),
+          t(
+            'Recipes into Soups and Cakes, Trips into each place. A folder holds saves, never more folders, so nothing gets lost deep down. Folders you already have keep working without Pro.',
+            'Công thức chia thành Món canh và Bánh, Du lịch chia theo từng nơi. Thư mục chứa mục, không chứa thư mục, nên không gì bị lạc sâu bên dưới. Thư mục bạn đã có vẫn dùng được khi không có Pro.',
+          ),
+        ),
+        ProPart(
           ProFeature.autoOrganize,
           t('Auto organize', 'Tự sắp xếp'),
           t('New saves go where they belong', 'Mục mới tự về đúng chỗ'),
@@ -447,7 +456,7 @@ class _FreeAndPro extends StatelessWidget {
       (
         t('Collections', 'Bộ sưu tập'),
         t('As many as you like', 'Bao nhiêu cũng được'),
-        t('+ smart collections', '+ bộ sưu tập thông minh'),
+        t('+ folders, smart collections', '+ thư mục, bộ sưu tập thông minh'),
       ),
       (
         t('Themes', 'Giao diện'),

@@ -773,11 +773,38 @@ class SaveLibrary {
        trash = _trash(trash, collections),
        tombstones = List.unmodifiable(tombstones),
        bookmarks = List.unmodifiable(bookmarks),
-       collections = List.unmodifiable(collections),
+       collections = List.unmodifiable(_oneLevel(collections)),
        smartCollections = List.unmodifiable(smartCollections),
        savedSearches = List.unmodifiable(savedSearches),
        manualOrder = _order(manualOrder, bookmarks) {
     validate();
+  }
+
+  /// Folders are one level deep: a collection inside a folder becomes a
+  /// folder of the top collection above it. Items stay where they are; a
+  /// broken tree (a cycle, a missing parent) is left for [validate].
+  static List<SaveCollection> _oneLevel(List<SaveCollection> collections) {
+    final byId = {for (final c in collections) c.id: c};
+    String? top(SaveCollection c) {
+      var at = c;
+      for (var i = 0; i <= collections.length; i++) {
+        final parent = at.parentId == null ? null : byId[at.parentId];
+        if (parent == null) return at.parentId == null ? at.id : null;
+        at = parent;
+      }
+      return null;
+    }
+
+    return [
+      for (final c in collections)
+        if (c.parentId != null && byId[c.parentId]?.parentId != null)
+          switch (top(c)) {
+            final root? => c.copyWith(parentId: root),
+            null => c,
+          }
+        else
+          c,
+    ];
   }
 
   /// A deleted item whose collection is gone returns to Not sorted.

@@ -13,9 +13,14 @@ extension CollectionActions on SaveScope {
     SaveCollection? initial,
   ]) => _collectionSheet(context, initial: initial);
 
-  /// A new collection inside [parentId].
-  Future<void> newSubCollection(BuildContext context, String parentId) =>
-      _collectionSheet(context, parentId: parentId);
+  /// A new folder inside [parentId] (a top collection). Folders are Pro;
+  /// the ones already made keep working without it.
+  Future<void> newSubCollection(BuildContext context, String parentId) async {
+    if (!await requirePro(context, ProFeature.folders) || !context.mounted) {
+      return;
+    }
+    await _collectionSheet(context, parentId: parentId);
+  }
 
   Future<void> _collectionSheet(
     BuildContext context, {
