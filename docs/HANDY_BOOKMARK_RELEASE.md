@@ -74,6 +74,12 @@ bundle.
   sync) was uploaded by hand while every API edit for this app answered 500
   for a few hours after the first review; the API worked again for build 5.
   Codes 1–5 are used up.
+- **1.0.0 (6)** rolled out on closed testing on 2026-11-08 by `HANDY_DRIVE_SYNC=true
+  fastlane android publish`: Remind me per item and in the share sheet (off by
+  default, Mark as read / Remind in 1 hour), needs-attention and background-job
+  notifications, five home-screen widgets (two Pro) with styles; the weekly
+  nudge is gone. Listing text updated (`fastlane android metadata`). Codes
+  1–6 are used up.
 
 ## Left for the owner in Play Console (the API cannot do these)
 

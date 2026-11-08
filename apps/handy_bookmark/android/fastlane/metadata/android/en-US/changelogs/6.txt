@@ -1,0 +1,4 @@
+• Remind me: on any item, or right after you share a link, pick tonight, tomorrow, this weekend or your own time. Off by default; the notification has Mark as read and Remind in 1 hour.
+• Home-screen widgets: quick save, reading queue, a favourite collection; reading picks and a gallery with Pro.
+• A notification only when a backup, sync or shared link needs you.
+• The weekly nudge is gone.

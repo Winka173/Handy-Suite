@@ -47,7 +47,7 @@ product id.
 |---|---|---|---|
 | 1.0.0 (1) | closed testing (alpha), **draft** | 2026-11-08 | First upload, by the API (the app accepted edits before any bundle existed). Listing text EN + VI pushed. Replaced by 1.0.0 (2) |
 | 1.0.0 (2) | closed testing (alpha), **draft** | 2026-11-08 | Time Navigator, card history, short-screen fixes, Pro card templates / My Work / carry-over / custom fields. Store graphics uploaded (icon, feature graphic, 6 phone screenshots EN + VI from `tool/store_shots_test.dart`), contact email and website set. Play keeps it a draft until the owner finishes the forms below ("Only releases with status draft may be created on draft app") |
-| 1.0.0 (3) | closed testing (alpha), **draft** | 2026-11-08 | Built with `HANDY_DRIVE_SYNC=true` (Drive sync on). Adds notifications (exact alarms where allowed), five home-screen widgets with styles, automation rules, digest, board history, saved filters, custom repeat, report export. Changelog `changelogs/3.txt` EN + VI |
+| 1.0.0 (3) | closed testing (alpha), **rolled out** (`tool/play.py complete alpha 3`) | 2026-11-08 | Built with `HANDY_DRIVE_SYNC=true` (Drive sync on). Adds notifications (exact alarms where allowed), five home-screen widgets with styles, automation rules, digest, board history, saved filters, custom repeat, report export. Changelog `changelogs/3.txt` EN + VI |
 
 ## Google Drive sync (Android)
 

@@ -1,7 +1,7 @@
 name: handy_bookmark
 description: Handy Bookmark universal bookmark organizer.
 publish_to: none
-version: 1.0.0+5
+version: 1.0.0+6
 resolution: workspace
 environment:
   sdk: ^3.12.0

@@ -1,0 +1,4 @@
+• Nhắc tôi: trên mỗi mục, hoặc ngay sau khi chia sẻ link, chọn tối nay, ngày mai, cuối tuần hoặc giờ tự chọn. Mặc định tắt; thông báo có nút Đã đọc và Nhắc lại sau 1 giờ.
+• Widget màn hình chính: lưu nhanh, hàng chờ đọc, bộ sưu tập yêu thích; gợi ý đọc và thư viện ảnh với Pro.
+• Chỉ báo khi sao lưu, đồng bộ hoặc link chia sẻ cần bạn xử lý.
+• Đã bỏ Nhắc mỗi tuần.
