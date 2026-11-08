@@ -3016,3 +3016,85 @@ Quy tắc chung giống mục trên.
   - `pro_tools_test`;
   - `settings_test` (widget, thông báo);
   - `my_work_test`, `custom_fields_test`, `saved_filters_test`, `repeat_test`, `board_history_test`, `notify_plan_test`.
+
+## Hợp đồng: Handy Bookmark · nhắc đọc sau, thông báo cần xử lý, widget (2026-11-08, chủ yêu cầu)
+Triết lý chủ chốt: **"Save quietly, rediscover naturally"**. Lưu nhanh, không thông báo thúc giục; khám phá lại ở Trang
+chủ và widget khi người dùng muốn. Giữ kiểu Bookmark hiện có (Geist, Newsreader cho tên thư viện, bảng màu và hình khối
+trong `lib/design/theme.dart`), không bốc thăm kiểu mới.
+
+Bỏ:
+- thông báo "Nhắc mỗi tuần" (revisit);
+- mọi tóm tắt đọc định kỳ, thông báo khám phá lại thông minh, nhắc đọc tự động.
+
+Ô "chờ bạn xem lại" ở Trang chủ vẫn giữ, vì nó nằm trong app.
+
+**Quyền thông báo.** Không xin khi mở app lần đầu. Chỉ xin khi người dùng:
+- đặt một lời nhắc, hoặc
+- bật một công tắc thật sự cần quyền.
+
+Bị từ chối thì lời nhắc vẫn lưu và hiện trên mục, kèm một câu chỉ đường vào Cài đặt của máy.
+
+**Nhắc đọc sau** (Free, mặc định tắt).
+- Câu hỏi: "Khi nào tôi muốn đọc lại cái này?"
+- Chỗ đặt nhắc:
+  - khung lưu khi chia sẻ, ngay dưới "Đã lưu vào …";
+  - trang chi tiết mục, dòng "Nhắc tôi".
+- Lựa chọn, mỗi dòng ghi rõ ngày giờ thật:
+  - Không nhắc (mặc định, được chọn sẵn);
+  - Tối nay 20:00 (ẩn sau 19:30);
+  - Ngày mai 09:00;
+  - Cuối tuần, tức thứ Bảy tới 09:00;
+  - Chọn ngày và giờ (`pickHandyDate` rồi chọn giờ, không gõ tay).
+- Một chạm là áp dụng và đóng. Dòng ghi chú: "Chỉ bookmark này được nhắc. Các bookmark khác không bị ảnh hưởng."
+- Không bao giờ tự chọn "Ngày mai" sau khi lưu.
+- Khung chia sẻ tự đóng sau khoảng 2,5 giây như cũ. Chạm vào phần "Nhắc tôi" thì khung giữ lại; chọn xong hiện "Sẽ nhắc
+  lúc …" rồi đóng.
+- Thông báo:
+  - tiêu đề là tên mục; nội dung bị ẩn trên màn hình khoá (`visibility: private`);
+  - chạm vào thì mở mục và xoá lời nhắc;
+  - hai nút "Đã đọc" và "Nhắc lại sau 1 giờ" chạy ngầm, không mở app; app áp kết quả vào thư viện ở lần mở sau, trước
+    khi lên lịch lại;
+  - báo thức chính xác khi máy cho phép, nếu không thì loại không chính xác.
+- Từ chối: hệ thống báo lại nhiều lần, lặp lại, luật thông minh.
+
+**Thông báo cần xử lý** (Free, Cài đặt › Thông báo › "Báo khi cần xử lý", mặc định bật). Chỉ khi:
+- sao lưu tự động lỗi;
+- đồng bộ Drive cần đăng nhập lại, Drive đầy, hoặc lỗi không tự hết;
+- link chia sẻ không lưu được.
+
+Cách báo:
+- mỗi loại một thông báo, được thay thế chứ không chồng lên nhau;
+- tự gỡ khi lỗi đã hết;
+- không báo lại cùng một lỗi ở lần mở sau;
+- chỉ báo khi app không ở màn hình trước (khi đang mở app, lỗi đã hiện ngay trong app);
+- không bao giờ tự xin quyền cho loại này; nếu máy chưa cho phép, dòng cài đặt nói "Cần cho phép thông báo" và chạm vào
+  mới xin;
+- chạm vào thông báo thì mở đúng chỗ sửa (Cài đặt › Sao lưu, Đồng bộ, hoặc Trang chủ với danh sách link lỗi).
+
+Mất mạng tạm thời không báo.
+
+**Widget** (Android; trang Cài đặt › Widget màn hình chính có bản xem trước dựng từ đúng dữ liệu widget nhận).
+- Miễn phí:
+  - Lưu nhanh: một nút mở khung dán link;
+  - Hàng chờ đọc: 3 mục chưa đọc mới nhất;
+  - Bộ sưu tập yêu thích: chọn một bộ, xem số mục và 3 mục mới nhất.
+- Pro:
+  - Gợi ý đọc: 4 dòng có nhãn: mới lưu chưa đọc, lưu lâu chưa mở, một mục yêu thích, một mục từ bộ đã chọn; đổi mỗi ngày,
+    không ngẫu nhiên mỗi lần vẽ;
+  - Thư viện ảnh: 4 ảnh thumbnail thật của các mục gần đây;
+  - Kiểu widget Pro cho mọi widget.
+- Không có widget nào gửi thông báo.
+- Tên mục mặc định hiện, vì đây là app lưu trữ cá nhân. Công tắc "Ẩn tên trên widget" chỉ còn hiện số đếm.
+- Xem trước kiểu Pro không cần mua; chỉ hỏi Pro khi bấm Dùng. Hai widget Pro khi không có Pro hiện "Mở khoá trong app",
+  không có dữ liệu giả.
+
+**Trạng thái và kích thước.**
+- Thư viện trống: widget nói "Chưa có gì để đọc" và nút Lưu nhanh vẫn chạy.
+- Bộ sưu tập yêu thích bị xoá: widget quay về "Chưa xếp".
+- Lỗi vẽ widget không bao giờ làm hỏng app.
+- Trang cài đặt là một cột, đo ở 320–1440 px.
+- iOS, Windows và web: trang nói rõ widget chỉ có trên Android.
+
+**Kiểm tra:**
+- engine/app: test cho các lựa chọn giờ, các nút trên thông báo, thông báo cần xử lý (không lặp, tự gỡ), dữ liệu widget;
+- soát ảnh §2.7 trên BlueStacks.

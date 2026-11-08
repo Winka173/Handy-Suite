@@ -43,7 +43,7 @@ void main() {
       300,
       scrollable: find.byType(Scrollable).first,
     );
-    expect(find.text('Existing reminders'), findsOneWidget);
+    expect(find.text('Reminders set'), findsOneWidget);
 
     await tapKey(t, 'reminder-cancel-$one');
     await settle(t);

@@ -9,6 +9,9 @@ import '../ui/app_mark.dart';
 import '../ui/collection_picker.dart' show collectionHue;
 import '../ui/visual.dart' show ReadingShade, SourceFace;
 import 'sheet_controller.dart';
+import 'package:handy_notifications/native.dart';
+import '../services/reminders.dart';
+import '../bookmark/remind_sheet.dart';
 
 /// Shown over the app someone shares from (Android): what is being saved,
 /// and where it goes. The share is already saved (in Not sorted, or the
@@ -22,7 +25,20 @@ class ShareSheetApp extends StatefulWidget {
 }
 
 class _ShareSheetAppState extends State<ShareSheetApp> {
-  late final c = widget.controller ?? SheetController();
+  late final SheetController c =
+      widget.controller ??
+      SheetController(scheduler: supportsLocalReminders ? _schedule : null);
+
+  Future<bool> _schedule(String id, String title, DateTime at) {
+    final chosen = c.share?.snapshot.locale ?? 'system';
+    final vi =
+        chosen == 'vi' ||
+        (chosen == 'system' &&
+            WidgetsBinding.instance.platformDispatcher.locale.languageCode ==
+                'vi');
+    return scheduleShareReminder(id, title, at, vietnamese: vi);
+  }
+
   final _noAds = ValueNotifier(false);
 
   @override
@@ -493,96 +509,162 @@ class _SavedCard extends StatelessWidget {
     return Padding(
       key: const Key('share-saved'),
       padding: const EdgeInsets.fromLTRB(16, 0, 16, 32),
-      child: Semantics(
-        liveRegion: true,
-        button: true,
-        label: tr(context, 'Saved in $name', 'Đã lưu vào $name'),
-        excludeSemantics: true,
-        child: Material(
-          color: p.surface,
-          elevation: 8,
-          borderRadius: BorderRadius.circular(20),
-          clipBehavior: Clip.antiAlias,
-          child: InkWell(
-            onTap: c.close,
-            child: Padding(
-              padding: const EdgeInsets.all(14),
-              child: Row(
-                children: [
-                  const AppMark(size: 40, radius: 10),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Row(
+      child: Material(
+        color: p.surface,
+        elevation: 8,
+        borderRadius: BorderRadius.circular(20),
+        clipBehavior: Clip.antiAlias,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Semantics(
+              liveRegion: true,
+              button: true,
+              label: tr(context, 'Saved in $name', 'Đã lưu vào $name'),
+              excludeSemantics: true,
+              child: InkWell(
+                onTap: c.close,
+                child: Padding(
+                  padding: const EdgeInsets.all(14),
+                  child: Row(
+                    children: [
+                      const AppMark(size: 40, radius: 10),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          mainAxisSize: MainAxisSize.min,
                           children: [
-                            Icon(
-                              Icons.check_circle,
-                              size: 18,
-                              color: p.primary,
+                            Row(
+                              children: [
+                                Icon(
+                                  Icons.check_circle,
+                                  size: 18,
+                                  color: p.primary,
+                                ),
+                                const SizedBox(width: 6),
+                                Text(
+                                  tr(context, 'Saved', 'Đã lưu'),
+                                  style: theme.textTheme.titleMedium,
+                                ),
+                              ],
                             ),
-                            const SizedBox(width: 6),
-                            Text(
-                              tr(context, 'Saved', 'Đã lưu'),
-                              style: theme.textTheme.titleMedium,
+                            const SizedBox(height: 2),
+                            Row(
+                              children: [
+                                if (hue != null) ...[
+                                  HandyDot(hue, size: 9),
+                                  const SizedBox(width: 6),
+                                ],
+                                Flexible(
+                                  child: Text(
+                                    tr(context, 'in $name', 'vào $name'),
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: theme.textTheme.bodyMedium?.copyWith(
+                                      color: hue == null ? p.muted : p.ink,
+                                      fontWeight: hue == null
+                                          ? null
+                                          : FontWeight.w600,
+                                    ),
+                                  ),
+                                ),
+                              ],
                             ),
                           ],
                         ),
-                        const SizedBox(height: 2),
-                        Row(
-                          children: [
-                            if (hue != null) ...[
-                              HandyDot(hue, size: 9),
-                              const SizedBox(width: 6),
-                            ],
-                            Flexible(
-                              child: Text(
-                                tr(context, 'in $name', 'vào $name'),
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                                style: theme.textTheme.bodyMedium?.copyWith(
-                                  color: hue == null ? p.muted : p.ink,
-                                  fontWeight: hue == null
-                                      ? null
-                                      : FontWeight.w600,
-                                ),
-                              ),
-                            ),
-                          ],
+                      ),
+                      if (picture != null || images.isNotEmpty) ...[
+                        const SizedBox(width: 12),
+                        ClipRRect(
+                          borderRadius: BorderRadius.circular(10),
+                          child: SizedBox.square(
+                            dimension: 48,
+                            child: picture != null
+                                ? Image.memory(
+                                    picture,
+                                    fit: BoxFit.cover,
+                                    excludeFromSemantics: true,
+                                  )
+                                : Image.file(
+                                    File(images.first),
+                                    fit: BoxFit.cover,
+                                    cacheWidth: 150,
+                                    excludeFromSemantics: true,
+                                    errorBuilder: (_, _, _) =>
+                                        const SizedBox.shrink(),
+                                  ),
+                          ),
                         ),
                       ],
-                    ),
+                    ],
                   ),
-                  if (picture != null || images.isNotEmpty) ...[
-                    const SizedBox(width: 12),
-                    ClipRRect(
-                      borderRadius: BorderRadius.circular(10),
-                      child: SizedBox.square(
-                        dimension: 48,
-                        child: picture != null
-                            ? Image.memory(
-                                picture,
-                                fit: BoxFit.cover,
-                                excludeFromSemantics: true,
-                              )
-                            : Image.file(
-                                File(images.first),
-                                fit: BoxFit.cover,
-                                cacheWidth: 150,
-                                excludeFromSemantics: true,
-                                errorBuilder: (_, _, _) =>
-                                    const SizedBox.shrink(),
-                              ),
-                      ),
-                    ),
-                  ],
-                ],
+                ),
               ),
             ),
-          ),
+            if (c.offerRemind) _RemindUnder(c),
+          ],
         ),
+      ),
+    );
+  }
+}
+
+/// "Remind me" under "Saved in …": touching it keeps the card open; one
+/// tap picks; Off (the default) just closes.
+class _RemindUnder extends StatelessWidget {
+  final SheetController c;
+  const _RemindUnder(this.c);
+  @override
+  Widget build(BuildContext context) {
+    final p = BookmarkPalette.of(context);
+    final theme = Theme.of(context);
+    final at = c.remindAt;
+    return Listener(
+      onPointerDown: (_) => c.hold(),
+      child: Container(
+        key: const Key('share-remind'),
+        decoration: BoxDecoration(
+          border: Border(top: BorderSide(color: p.line)),
+        ),
+        padding: const EdgeInsets.fromLTRB(14, 10, 14, 12),
+        child: at != null
+            ? Text(
+                c.remindBlocked
+                    ? tr(
+                        context,
+                        'Kept on the item. Notifications are off for Handy '
+                            'Bookmark, so it will not ring.',
+                        'Đã lưu trên mục. Thông báo của Handy Bookmark đang '
+                            'tắt nên sẽ không kêu.',
+                      )
+                    : tr(
+                        context,
+                        'Reminding you ${RemindChoices.when(context, at, DateTime.now())}',
+                        'Sẽ nhắc ${RemindChoices.when(context, at, DateTime.now())}',
+                      ),
+                key: const Key('share-remind-set'),
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  color: p.ink,
+                  fontWeight: FontWeight.w500,
+                ),
+              )
+            : Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    tr(context, 'Remind me', 'Nhắc tôi'),
+                    style: theme.textTheme.titleSmall,
+                  ),
+                  RemindChoices(
+                    current: null,
+                    now: DateTime.now(),
+                    onPick: c.remind,
+                  ),
+                ],
+              ),
       ),
     );
   }

@@ -42,6 +42,12 @@ class SaveController extends ChangeNotifier {
   Map<String, dynamic> preferences = {};
   String? error, notice, highlighted;
   final invalidShares = <SharedLink>[];
+
+  /// The bookmark each share with a reminder became, for its notification.
+  final sharedInto = <String, String>{};
+
+  /// Withdraws a share sheet's reminder once it is on the bookmark.
+  Future<void> Function(String shareId)? onShareReminderMoved;
   final fetching = <String, CancellationToken>{};
 
   /// Pages turned away by a login page: how often, and the retries waiting.
@@ -369,6 +375,25 @@ class SaveController extends ChangeNotifier {
       collectionId: collection,
       read: picture == null,
     );
+    // The reminder picked in the share sheet goes onto the bookmark (a
+    // link saved before keeps one reminder: this one).
+    final remind = share.remindAt;
+    if (remind != null && saved.isNotEmpty) {
+      final at = remind.toUtc().toIso8601String();
+      final ids = {for (final b in saved) b.id};
+      await update(
+        (l) => l.copyWith(
+          bookmarks: [
+            for (final b in l.bookmarks)
+              ids.contains(b.id) ? b.copyWith(reminderAt: at) : b,
+          ],
+        ),
+        prefs: {...preferences, 'notifications': true},
+      );
+      final key = share.origin ?? share.id;
+      sharedInto[key] = saved.first.id;
+      await onShareReminderMoved?.call(key);
+    }
     if (picture == null) return;
     for (final b in saved) {
       // What it says comes from this read only for a link never read; a

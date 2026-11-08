@@ -142,8 +142,11 @@ void main() {
     ]) {
       expect(find.byKey(Key(key)), findsOneWidget, reason: key);
     }
-    // Copy link waits in the "…"; reminders and pins are no longer made here.
-    for (final key in ['detail-copy', 'detail-remind', 'detail-pin']) {
+    // Read-later reminders are set here ("Remind me", off by default).
+    expect(find.byKey(const Key('detail-remind')), findsOneWidget);
+    expect(find.text('Remind me · Off'), findsOneWidget);
+    // Copy link waits in the "…"; pins are no longer made here.
+    for (final key in ['detail-copy', 'detail-pin']) {
       expect(find.byKey(Key(key)), findsNothing, reason: key);
     }
     expect(find.byKey(const Key('detail-check')), findsNothing);

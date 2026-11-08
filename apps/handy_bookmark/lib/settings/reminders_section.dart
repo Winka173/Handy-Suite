@@ -2,10 +2,10 @@ import 'package:handy_bookmark_engine/handy_bookmark_engine.dart';
 import 'package:handy_ui/kit.dart';
 import '../controller.dart';
 import '../scope.dart';
+import '../services/reminders.dart';
 import 'settings_parts.dart';
 
-/// Items that still carry a reminder set on them, soonest first. Reminders
-/// are no longer set item by item; these stay until they are cancelled.
+/// Items that carry a read-later reminder, soonest first.
 List<Bookmark> itemsWithReminders(SaveLibrary l) =>
     [
       for (final b in l.bookmarks)
@@ -16,7 +16,7 @@ List<Bookmark> itemsWithReminders(SaveLibrary l) =>
       ).compareTo(DateTime.parse(b.reminderAt!)),
     );
 
-/// Settings › Reminders › Existing reminders: shown only while an item
+/// Settings › Notifications › Reminders set: shown only while an item
 /// still has one. Each can be cancelled, or all at once. Cancelling
 /// clears the item's reminder; the app then withdraws its scheduled
 /// notification with the next sync, so nothing is left to fire.
@@ -95,16 +95,10 @@ class _ExistingRemindersState extends State<ExistingReminders> {
   Widget build(BuildContext context) {
     final items = itemsWithReminders(scope.library);
     if (items.isEmpty) return const SizedBox.shrink();
-    final p = scope.c.preferences;
     final shown = all ? items : items.take(_shown).toList();
     return SettingsPanel(
       key: const Key('existing-reminders'),
-      title: tr(context, 'Existing reminders', 'Hẹn nhắc đã đặt'),
-      note: tr(
-        context,
-        'Set on items earlier. They still remind you until cancelled.',
-        'Đặt trên từng mục trước đây. Vẫn nhắc cho đến khi bạn hủy.',
-      ),
+      title: tr(context, 'Reminders set', 'Hẹn nhắc đã đặt'),
       rows: [
         for (final b in shown)
           SettingsRow(
@@ -135,25 +129,6 @@ class _ExistingRemindersState extends State<ExistingReminders> {
                   ),
             onTap: () => setState(() => all = !all),
           ),
-        if (scope.reminders.supported)
-          SettingsSwitch(
-            key: const Key('set-reminders'),
-            icon: Icons.notifications_active_outlined,
-            title: tr(context, 'Notify me when due', 'Báo khi đến hạn'),
-            subtitle: tr(
-              context,
-              'Off: they show only on each item.',
-              'Tắt: chỉ hiện trên từng mục.',
-            ),
-            value: p['notifications'] == true,
-            onChanged: (v) => scope.run(context, () async {
-              final allowed = !v || await scope.reminders.request();
-              await scope.c.update(
-                (l) => l,
-                prefs: {...scope.c.preferences, 'notifications': v && allowed},
-              );
-            }),
-          ),
         SettingsRow(
           key: const Key('reminders-cancel-all'),
           icon: Icons.notifications_off_outlined,
@@ -166,6 +141,115 @@ class _ExistingRemindersState extends State<ExistingReminders> {
           onTap: () => _cancelAll(items.length),
         ),
       ],
+    );
+  }
+}
+
+/// Settings › Notifications: read-later reminders (off until the person
+/// sets one), "needs attention" (on, but it never asks for the permission
+/// by itself), ringing on time, and the reminders set.
+class NotificationsSection extends StatelessWidget {
+  final SaveScope scope;
+  const NotificationsSection({super.key, required this.scope});
+
+  static Future<(bool, bool)> _states(SaveReminders r) async =>
+      (await r.allowedNow(), await r.exactAllowed());
+
+  Future<void> _set(BuildContext context, String key, bool v) => scope.run(
+    context,
+    () => scope.c.update((l) => l, prefs: {...scope.c.preferences, key: v}),
+  );
+
+  @override
+  Widget build(BuildContext context) {
+    final p = scope.c.preferences;
+    final r = scope.reminders;
+    return FutureBuilder<(bool, bool)>(
+      // Asked again on every rebuild, so coming back from the phone's
+      // settings shows the new state.
+      future: _states(r),
+      builder: (context, snap) {
+        final allowed = snap.data?.$1 ?? true;
+        final exact = snap.data?.$2 ?? true;
+        final remindersOn = p['notifications'] == true;
+        final problemsOn = p['problemNotices'] != false;
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            SettingsPanel(
+              gap: false,
+              rows: [
+                SettingsSwitch(
+                  key: const Key('set-reminders'),
+                  icon: Icons.notifications_active_outlined,
+                  title: tr(context, 'Read-later reminders', 'Nhắc đọc sau'),
+                  subtitle: tr(
+                    context,
+                    'Rings at the time you pick in "Remind me" on an item. '
+                        'Nothing else, and never on its own.',
+                    'Kêu đúng giờ bạn chọn ở "Nhắc tôi" trên từng mục. '
+                        'Không gì khác, không tự nhắc.',
+                  ),
+                  value: remindersOn,
+                  onChanged: (v) => scope.run(context, () async {
+                    final ok = !v || await r.request();
+                    await scope.c.update(
+                      (l) => l,
+                      prefs: {...scope.c.preferences, 'notifications': v && ok},
+                    );
+                  }),
+                ),
+                SettingsSwitch(
+                  key: const Key('set-problems'),
+                  icon: Icons.report_gmailerrorred_outlined,
+                  title: tr(context, 'Needs attention', 'Báo khi cần xử lý'),
+                  subtitle: problemsOn && !allowed
+                      ? tr(
+                          context,
+                          'Notifications are not allowed yet. Turn this off '
+                              'and on to allow them.',
+                          'Máy chưa cho phép thông báo. Tắt rồi bật lại để '
+                              'cho phép.',
+                        )
+                      : tr(
+                          context,
+                          'Only when a backup, a sync or shared links fail '
+                              'and need you, while the app is closed.',
+                          'Chỉ khi sao lưu, đồng bộ hoặc link chia sẻ bị lỗi '
+                              'cần bạn xử lý, lúc app đang đóng.',
+                        ),
+                  value: problemsOn,
+                  onChanged: (v) async {
+                    if (v && !allowed) await r.request();
+                    if (context.mounted)
+                      await _set(context, 'problemNotices', v);
+                  },
+                ),
+                if (remindersOn && !exact)
+                  SettingsRow(
+                    key: const Key('set-exact'),
+                    icon: Icons.alarm_outlined,
+                    title: tr(
+                      context,
+                      'Reminders may come late',
+                      'Lời nhắc có thể đến muộn',
+                    ),
+                    subtitle: tr(
+                      context,
+                      'This phone may delay them. To ring on time, allow '
+                          '"Alarms & reminders" for Handy Bookmark.',
+                      'Máy có thể dời lời nhắc. Để kêu đúng giờ, cho phép '
+                          '"Báo thức và lời nhắc" cho Handy Bookmark.',
+                    ),
+                    navigates: true,
+                    onTap: r.askExact,
+                  ),
+              ],
+            ),
+            ExistingReminders(scope: scope),
+          ],
+        );
+      },
     );
   }
 }

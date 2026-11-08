@@ -2,6 +2,7 @@ import 'package:handy_bookmark_engine/handy_bookmark_engine.dart';
 import 'package:handy_ui/kit.dart';
 import '../design/theme.dart';
 import '../scope.dart';
+import 'remind_sheet.dart';
 import '../ui/collection_picker.dart';
 import '../ui/visual.dart';
 import '../ui/words.dart';
@@ -146,7 +147,7 @@ class DetailView extends StatelessWidget {
             ),
           const SizedBox(height: HandySpace.l),
           _Actions(scope: scope, bookmark: b),
-          if (b.reminderAt != null) _ReminderLine(scope: scope, bookmark: b),
+          _ReminderLine(scope: scope, bookmark: b),
           DetailFacts(scope: scope, bookmark: b, onClosed: onClosed),
         ],
       );
@@ -393,7 +394,8 @@ class RoundAction extends StatelessWidget {
   }
 }
 
-/// When the reminder is set for, with a way to cancel it.
+/// "Remind me": Off, or when it will remind, with a way to cancel it. A
+/// tap opens the choices.
 class _ReminderLine extends StatelessWidget {
   final SaveScope scope;
   final Bookmark bookmark;
@@ -401,45 +403,75 @@ class _ReminderLine extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final p = BookmarkPalette.of(context);
-    final at = DateTime.parse(bookmark.reminderAt!).toLocal();
-    final when =
-        '${formatDay(context, at.toIso8601String().substring(0, 10))}, '
-        '${MaterialLocalizations.of(context).formatTimeOfDay(TimeOfDay.fromDateTime(at))}';
+    final theme = Theme.of(context);
+    final at = bookmark.reminderAt == null
+        ? null
+        : DateTime.tryParse(bookmark.reminderAt!)?.toLocal();
+    final now = DateTime.now();
+    final past = at != null && !at.isAfter(now);
+    final label = at == null
+        ? tr(context, 'Remind me · Off', 'Nhắc tôi · Không nhắc')
+        : past
+        ? tr(
+            context,
+            'Was due ${RemindChoices.when(context, at, now)}',
+            'Đã nhắc lúc ${RemindChoices.when(context, at, now)}',
+          )
+        : tr(
+            context,
+            'Reminder: ${RemindChoices.when(context, at, now)}',
+            'Nhắc lúc ${RemindChoices.when(context, at, now)}',
+          );
     return Padding(
       padding: const EdgeInsets.only(top: HandySpace.m),
-      child: Container(
-        padding: const EdgeInsets.only(left: HandySpace.l),
-        decoration: BoxDecoration(
-          color: p.tint,
-          borderRadius: BorderRadius.circular(BookmarkRadii.item),
-        ),
-        child: Row(
-          children: [
-            Icon(
-              Icons.notifications_active_outlined,
-              size: 20,
-              color: Theme.of(context).brightness == Brightness.dark
-                  ? p.ink
-                  : p.pressed,
-            ),
-            const SizedBox(width: HandySpace.m),
-            Expanded(
-              child: Text(
-                tr(context, 'Reminder: $when', 'Nhắc lúc $when'),
-                key: const Key('detail-remind-at'),
-                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  color: p.ink,
-                  fontWeight: FontWeight.w500,
-                ),
+      child: Material(
+        color: at == null ? Colors.transparent : p.tint,
+        borderRadius: BorderRadius.circular(BookmarkRadii.item),
+        clipBehavior: Clip.antiAlias,
+        child: InkWell(
+          key: const Key('detail-remind'),
+          onTap: () => showRemindSheet(context, scope, bookmark),
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(minHeight: 48),
+            child: Padding(
+              padding: const EdgeInsets.only(left: HandySpace.l),
+              child: Row(
+                children: [
+                  Icon(
+                    at == null
+                        ? Icons.notifications_none
+                        : Icons.notifications_active_outlined,
+                    size: 20,
+                    color: at == null
+                        ? p.muted
+                        : theme.brightness == Brightness.dark
+                        ? p.ink
+                        : p.pressed,
+                  ),
+                  const SizedBox(width: HandySpace.m),
+                  Expanded(
+                    child: Text(
+                      label,
+                      key: const Key('detail-remind-at'),
+                      style: theme.textTheme.bodyMedium?.copyWith(
+                        color: at == null ? p.muted : p.ink,
+                        fontWeight: at == null ? null : FontWeight.w500,
+                      ),
+                    ),
+                  ),
+                  if (at != null)
+                    IconButton(
+                      key: const Key('detail-remind-clear'),
+                      tooltip: tr(context, 'Cancel reminder', 'Bỏ hẹn nhắc'),
+                      icon: const Icon(Icons.close),
+                      onPressed: () => scope.remind(context, bookmark, null),
+                    )
+                  else
+                    const SizedBox(width: HandySpace.l),
+                ],
               ),
             ),
-            IconButton(
-              key: const Key('detail-remind-clear'),
-              tooltip: tr(context, 'Cancel reminder', 'Bỏ hẹn nhắc'),
-              icon: const Icon(Icons.close),
-              onPressed: () => scope.remind(context, bookmark, null),
-            ),
-          ],
+          ),
         ),
       ),
     );

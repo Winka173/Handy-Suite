@@ -1089,24 +1089,11 @@ void main() {
   });
 
   // ---- Looking after the library ---------------------------------------------
-  scene('26-weekly-nudge', [KitForm.mobile], (t, k) async {
-    await boot(
-      t,
-      k,
-      before: (c, ids) async {
-        c.preferences['revisit'] = true;
-        c.preferences['revisitDay'] = DateTime.sunday;
-        c.preferences['revisitHour'] = 19;
-      },
-    );
-    await push(t, '/settings');
-    await t.scrollUntilVisible(
-      find.byKey(const Key('set-revisit')),
-      200,
-      scrollable: find.byType(Scrollable).first,
-    );
-    await t.drag(find.byType(Scrollable).first, const Offset(0, 260));
-    await t.pumpAndSettle();
+  scene('26-remind-me', [KitForm.mobile], (t, k) async {
+    final c = await boot(t, k);
+    final id = c.library!.bookmarks[S.bunBo].id;
+    await push(t, '/bookmark/$id');
+    await tapKey(t, 'detail-remind');
     await k.shot(t);
   });
   scene('27-trash', _phones, (t, k) async {

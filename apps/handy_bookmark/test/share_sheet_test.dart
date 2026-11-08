@@ -55,6 +55,13 @@ class FakeBridge extends SheetBridge {
   final SheetShare share;
   Map<String, Object?>? saved;
   bool discarded = false, closed = false;
+  DateTime? reminded;
+  @override
+  Future<bool> remind(DateTime? at) async {
+    reminded = at;
+    return true;
+  }
+
   @override
   Future<SheetShare> start() async => share;
   @override
@@ -112,6 +119,7 @@ Future<(SheetController, FakeBridge)> showSheet(
   String text = video,
   String? collection,
   List<QueuedPlace> queued = const [],
+  Future<bool> Function(String, String, DateTime)? scheduler,
 }) async {
   final bridge = FakeBridge(
     SheetShare(
@@ -128,6 +136,8 @@ Future<(SheetController, FakeBridge)> showSheet(
     retryDelay: Duration.zero,
     confirm: const Duration(milliseconds: 300),
     pictureWait: const Duration(milliseconds: 100),
+    remindWait: const Duration(milliseconds: 600),
+    scheduler: scheduler,
   );
   addTearDown(c.dispose);
   await t.pumpWidget(ShareSheetApp(controller: c));
@@ -196,6 +206,58 @@ void main() {
     expect(bridge.closed, isFalse);
     await t.pump(const Duration(milliseconds: 300));
     expect(bridge.closed, isTrue);
+  });
+
+  testWidgets('Remind me under "Saved": untouched it closes as before; '
+      'touched it stays; a pick is kept with the share and scheduled', (
+    t,
+  ) async {
+    final scheduled = <(String, String, DateTime)>[];
+    Future<bool> schedule(String id, String title, DateTime at) async {
+      scheduled.add((id, title, at));
+      return true;
+    }
+
+    // Untouched: closes by itself, nothing set.
+    var (c, bridge) = await showSheet(t, scheduler: schedule);
+    await t.tap(find.byKey(Key('share-place-${'c' * 32}')));
+    await t.pump(const Duration(milliseconds: 250));
+    expect(find.byKey(const Key('share-remind')), findsOneWidget);
+    expect(find.byKey(const Key('remind-off')), findsOneWidget);
+    await t.pump(const Duration(milliseconds: 700));
+    expect(bridge.closed, isTrue);
+    expect(bridge.reminded, isNull);
+    expect(scheduled, isEmpty);
+
+    // Touched and picked.
+    await t.pumpWidget(const SizedBox());
+    (c, bridge) = await showSheet(t, scheduler: schedule);
+    await t.tap(find.byKey(Key('share-place-${'c' * 32}')));
+    // Let the card finish growing in.
+    await t.pump(const Duration(milliseconds: 250));
+    await t.pump(const Duration(milliseconds: 150));
+    await t.tap(find.byKey(const Key('remind-tomorrow')));
+    await t.pump();
+    expect(c.holding, isTrue);
+    final now = DateTime.now();
+    final tomorrow = DateTime(now.year, now.month, now.day + 1, 9);
+    expect(bridge.reminded, tomorrow);
+    expect(scheduled.single, ('q', 'Me at the zoo', tomorrow));
+    await t.pump(const Duration(milliseconds: 50));
+    expect(find.byKey(const Key('share-remind-set')), findsOneWidget);
+    expect(find.textContaining('Tomorrow, 09:00'), findsOneWidget);
+    expect(bridge.closed, isFalse);
+    await t.pump(const Duration(milliseconds: 400));
+    expect(bridge.closed, isTrue);
+  });
+
+  testWidgets('without notifications on the device, Remind me is not '
+      'offered', (t) async {
+    final (_, _) = await showSheet(t);
+    await t.tap(find.byKey(Key('share-place-${'c' * 32}')));
+    await t.pump(const Duration(milliseconds: 250));
+    expect(find.byKey(const Key('share-remind')), findsNothing);
+    await t.pump(const Duration(milliseconds: 400));
   });
 
   testWidgets('a tap before the picture came waits for it and sends it', (

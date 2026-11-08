@@ -24,7 +24,14 @@ class FakeReminders extends SaveReminders {
   @override
   bool get supported => true;
   @override
-  Future<String?> initialize(ValueChanged<String> onOpen) async => null;
+  Future<String?> initialize(
+    ValueChanged<String> onOpen, {
+    VoidCallback? onButton,
+  }) async => null;
+  @override
+  Future<bool> allowedNow() async => true;
+  @override
+  Future<bool> exactAllowed() async => true;
   @override
   Future<bool> request() async => true;
   @override
@@ -32,7 +39,6 @@ class FakeReminders extends SaveReminders {
     List<Bookmark> bookmarks, {
     required bool enabled,
     required bool vietnamese,
-    ({DateTime at, int count})? revisit,
   }) async {
     syncs++;
     final now = DateTime.now();
@@ -44,7 +50,6 @@ class FakeReminders extends SaveReminders {
             if (b.reminderAt != null &&
                 DateTime.parse(b.reminderAt!).isAfter(now))
               b.id,
-        if (revisit != null) 'revisit',
       ]);
   }
 }
@@ -122,18 +127,15 @@ void main() {
             l.bookmarks.single.copyWith(reminderAt: due.toIso8601String()),
           ],
         ),
-        prefs: {...c.preferences, 'notifications': true, 'revisit': true},
+        prefs: {...c.preferences, 'notifications': true},
       ),
     );
     await passTime(t);
-    expect(reminders.scheduled, {id, 'revisit'});
+    expect(reminders.scheduled, {id});
 
     await drive(
       t,
-      c.update(
-        (l) => l,
-        prefs: {...c.preferences, 'notifications': false, 'revisit': false},
-      ),
+      c.update((l) => l, prefs: {...c.preferences, 'notifications': false}),
     );
     await passTime(t);
     expect(reminders.scheduled, isEmpty, reason: 'nothing left with the OS');

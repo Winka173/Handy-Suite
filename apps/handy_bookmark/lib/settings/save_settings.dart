@@ -61,35 +61,6 @@ Future<String?> _askName(BuildContext context, SaveController c) {
   );
 }
 
-/// "Sundays at 19:00, only when new saves wait unread. A count, no titles."
-String revisitWhen(BuildContext context, int day, int hour) => tr(
-  context,
-  '${weekdayName(context, day)}s at ${hour.toString().padLeft(2, '0')}:00, only when new saves wait unread. A count, never titles.',
-  '${weekdayName(context, day)} lúc ${hour.toString().padLeft(2, '0')}:00, chỉ khi có mục mới lưu chưa xem. Chỉ ghi số lượng, không ghi tiêu đề.',
-);
-
-String weekdayName(BuildContext context, int day) => tr(
-  context,
-  const [
-    'Monday',
-    'Tuesday',
-    'Wednesday',
-    'Thursday',
-    'Friday',
-    'Saturday',
-    'Sunday',
-  ][day - 1],
-  const [
-    'Thứ Hai',
-    'Thứ Ba',
-    'Thứ Tư',
-    'Thứ Năm',
-    'Thứ Sáu',
-    'Thứ Bảy',
-    'Chủ Nhật',
-  ][day - 1],
-);
-
 //// Where sync folders are picked; tests replace it.
 BackupFolders syncFolders = systemBackupFolders();
 
@@ -279,29 +250,17 @@ class _SaveSettingsPageState extends State<SaveSettingsPage> {
                       if (name != null) await set('libraryName', name);
                     },
                   ),
-                  if (scope.reminders.supported) ...[
-                    SettingsSwitch(
-                      key: const Key('set-revisit'),
-                      icon: Icons.event_repeat_outlined,
-                      title: tr(context, 'Weekly nudge', 'Nhắc mỗi tuần'),
-                      subtitle: revisitWhen(
-                        context,
-                        p['revisitDay'] as int? ?? DateTime.sunday,
-                        p['revisitHour'] as int? ?? 19,
-                      ),
-                      value: p['revisit'] == true,
-                      onChanged: (v) async {
-                        final allowed = !v || await scope.reminders.request();
-                        await set('revisit', v && allowed);
-                      },
-                    ),
-                    if (p['revisit'] == true) _RevisitWhen(set: set, p: p),
-                  ],
                 ],
               ),
-              ExistingReminders(scope: scope),
             ],
           ),
+
+          // Notifications.
+          if (scope.reminders.supported)
+            SettingsGroup(
+              title: tr(context, 'Notifications', 'Thông báo'),
+              children: [NotificationsSection(scope: scope)],
+            ),
 
           // Privacy.
           SettingsGroup(
@@ -622,46 +581,4 @@ class _ProCard extends StatelessWidget {
       ),
     );
   }
-}
-
-/// The weekly nudge's day and hour, under its switch.
-class _RevisitWhen extends StatelessWidget {
-  final Future<void> Function(String key, Object value) set;
-  final Map<String, dynamic> p;
-  const _RevisitWhen({required this.set, required this.p});
-  @override
-  Widget build(BuildContext context) => SettingsRow(
-    icon: Icons.schedule,
-    title: tr(context, 'When', 'Lúc nào'),
-    trailing: Wrap(
-      spacing: HandySpace.s,
-      children: [
-        DropdownButton<int>(
-          key: const Key('set-revisit-day'),
-          value: p['revisitDay'] as int? ?? DateTime.sunday,
-          underline: const SizedBox.shrink(),
-          borderRadius: BorderRadius.circular(16),
-          items: [
-            for (var d = 1; d <= 7; d++)
-              DropdownMenuItem(value: d, child: Text(weekdayName(context, d))),
-          ],
-          onChanged: (d) => set('revisitDay', d!),
-        ),
-        DropdownButton<int>(
-          key: const Key('set-revisit-hour'),
-          value: p['revisitHour'] as int? ?? 19,
-          underline: const SizedBox.shrink(),
-          borderRadius: BorderRadius.circular(16),
-          items: [
-            for (var h = 7; h <= 22; h++)
-              DropdownMenuItem(
-                value: h,
-                child: Text('${h.toString().padLeft(2, '0')}:00'),
-              ),
-          ],
-          onChanged: (h) => set('revisitHour', h!),
-        ),
-      ],
-    ),
-  );
 }

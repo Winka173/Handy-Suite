@@ -207,8 +207,9 @@ Every app still uses a `com.example.*` package id, which no store accepts
   backups. Folder sync carries no preferences: views stay on the device where they were set.
 - Previews stored before 2026-11-06 may still carry EXIF on the device; shared pages re-encode
   every picture, so nothing leaves with it.
-- The weekly nudge is rescheduled when the library changes; a library left untouched for
-  weeks gets one nudge, not one a week.
+- Handy Bookmark: a reminder picked in the share sheet rings without its two buttons until the app
+  takes that link in (the bookmark does not exist yet). Mark as read and Remind in 1 hour reach the
+  library the next time the app runs.
 - iOS image sharing is written but has never been compiled.
 - Collections in the share sheet's top row (sharing shortcuts) need Android 10 or later and
   show only after the person has collections; the system decides how many direct targets to

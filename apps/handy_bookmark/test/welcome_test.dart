@@ -143,7 +143,11 @@ void main() {
     expect(find.byType(WelcomePage), findsNothing);
     expect(c.preferences[guideDoneKey], isTrue);
     expect(c.library!.bookmarks, isEmpty, reason: 'practice saves nothing');
-    expect(c.preferences['revisit'], isNot(true), reason: 'nudge stays off');
+    expect(
+      c.preferences['notifications'],
+      isNot(true),
+      reason: 'no notification is turned on for the person',
+    );
   });
 
   testWidgets('Handy Bookmark itself, in the practice, opens its sheet; one '

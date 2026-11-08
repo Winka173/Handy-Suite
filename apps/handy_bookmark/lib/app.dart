@@ -26,8 +26,8 @@ import 'platform/store.dart';
 import 'reader/reader_page.dart';
 import 'scope.dart';
 import 'security/app_lock.dart';
+import 'services/problem_notices.dart';
 import 'services/reminders.dart';
-import 'services/revisit.dart';
 import 'services/share_targets.dart';
 import 'ui/collection_picker.dart';
 import 'library/trash_page.dart';
@@ -133,6 +133,9 @@ class _SaveAppState extends State<SaveApp> with WidgetsBindingObserver {
     _registerPhotoCredits();
     WidgetsBinding.instance.addObserver(this);
     c.addListener(_changed);
+    c.onShareReminderMoved = reminders.cancelShare;
+    scope.autoBackup?.addListener(_checkProblems);
+    scope.drive?.addListener(_checkProblems);
     // What is already there is not new: only later saves meet the rules.
     if (c.library != null) _seen = {for (final b in c.library!.bookmarks) b.id};
     _loadPreferences();
@@ -143,6 +146,8 @@ class _SaveAppState extends State<SaveApp> with WidgetsBindingObserver {
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
     c.removeListener(_changed);
+    scope.autoBackup?.removeListener(_checkProblems);
+    scope.drive?.removeListener(_checkProblems);
     scope.autoBackup?.dispose();
     scope.drive?.dispose();
     _sync?.cancel();
@@ -154,10 +159,45 @@ class _SaveAppState extends State<SaveApp> with WidgetsBindingObserver {
     super.dispose();
   }
 
+  /// Whether the app is on screen (then problems show in it, not as a
+  /// notification).
+  bool _foreground = true;
+  late final problems = ProblemNotices(reminders);
+
+  /// Backup, sync or shares that need the person, as notifications while
+  /// the app is away (Settings › Notifications › Needs attention).
+  void _checkProblems() {
+    if (!widget.device || c.library == null) return;
+    final vi = prefs.value?.locale == 'vi';
+    unawaited(
+      problems
+          .update(
+            currentProblems(
+              vietnamese: vi,
+              backupError: scope.autoBackup?.settings.enabled == true
+                  ? scope.autoBackup?.settings.lastError
+                  : null,
+              syncState: scope.drive?.enabled == true
+                  ? scope.drive?.state.name
+                  : null,
+              failedShares: c.invalidShares.length,
+            ),
+            enabled: c.preferences['problemNotices'] != false,
+            foreground: _foreground,
+            vietnamese: vi,
+          )
+          .catchError((Object _) {}),
+    );
+  }
+
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
+    _foreground = state == AppLifecycleState.resumed;
+    if (state != AppLifecycleState.resumed) _checkProblems();
     if (state == AppLifecycleState.resumed) {
       unawaited(c.drain());
+      // Buttons pressed on a reminder while the app was away.
+      unawaited(_applyNotifyActions());
       scope.drive?.resumed();
     }
     if (state == AppLifecycleState.paused) scope.drive?.paused();
@@ -168,7 +208,11 @@ class _SaveAppState extends State<SaveApp> with WidgetsBindingObserver {
     if (!mounted) return;
     await view.reload();
     try {
-      _pendingOpen = await reminders.initialize(_openFromNotification);
+      _pendingOpen = await reminders.initialize(
+        _openFromNotification,
+        onButton: () => unawaited(_applyNotifyActions()),
+      );
+      await _applyNotifyActions();
     } catch (_) {
       // Reminders are optional; the links work without them.
     }
@@ -183,17 +227,80 @@ class _SaveAppState extends State<SaveApp> with WidgetsBindingObserver {
       );
   }
 
-  void _openFromNotification(String id) {
+  /// A tapped notification: a reminder opens its item (and is done), a
+  /// share sheet reminder opens the item that share became, a "needs
+  /// attention" one opens where it is fixed.
+  void _openFromNotification(String payload) {
     final nav = navigator.currentState;
     if (nav == null || c.library == null) {
-      _pendingOpen = id;
+      _pendingOpen = payload;
       return;
     }
     _pendingOpen = null;
-    if (id == revisitPayload) {
-      nav.pushNamed('/focus');
-    } else if (c.library!.bookmarks.any((b) => b.id == id)) {
-      nav.pushNamed('/bookmark/$id');
+    switch (payload) {
+      case 'problem:backup' || 'problem:sync':
+        nav.pushNamed('/settings');
+        return;
+      case 'problem:shares':
+        nav.popUntil((r) => r.isFirst);
+        return;
+    }
+    if (payload.startsWith(sharePrefix)) {
+      unawaited(() async {
+        final share = payload.substring(sharePrefix.length);
+        if (!c.sharedInto.containsKey(share)) await c.drain();
+        final id = c.sharedInto[share];
+        if (id != null) _openReminded(id);
+      }());
+      return;
+    }
+    _openReminded(readPayload(payload).id);
+  }
+
+  void _openReminded(String id) {
+    final b = c.library?.bookmarks.where((b) => b.id == id).firstOrNull;
+    if (b == null) return;
+    navigator.currentState?.pushNamed('/bookmark/$id');
+    final at = b.reminderAt == null ? null : DateTime.tryParse(b.reminderAt!);
+    if (at != null && !at.isAfter(DateTime.now())) {
+      unawaited(
+        c
+            .put(b.copyWith(reminderAt: null, updatedAt: saveTime()))
+            .catchError((Object _) {}),
+      );
+    }
+  }
+
+  /// "Mark as read" and "Remind in 1 hour" pressed on notifications, put
+  /// into the library before reminders are planned again.
+  Future<void> _applyNotifyActions() async {
+    if (c.library == null || !reminders.supported) return;
+    try {
+      final actions = await takeNotifyActions();
+      if (actions.isEmpty) return;
+      final byId = {for (final a in actions) a.id: a};
+      await c.update(
+        (l) => l.copyWith(
+          bookmarks: [
+            for (final b in l.bookmarks)
+              if (byId[b.id] case final a?)
+                a.action == readAction
+                    ? b.copyWith(
+                        isRead: true,
+                        reminderAt: null,
+                        updatedAt: saveTime(),
+                      )
+                    : b.copyWith(
+                        reminderAt: a.at?.toUtc().toIso8601String(),
+                        updatedAt: saveTime(),
+                      )
+              else
+                b,
+          ],
+        ),
+      );
+    } catch (_) {
+      // Kept for the next start.
     }
   }
 
@@ -267,23 +374,16 @@ class _SaveAppState extends State<SaveApp> with WidgetsBindingObserver {
     _sync = Timer(const Duration(milliseconds: 300), () async {
       final p = c.preferences;
       if (c.library == null) return;
-      final on = p['notifications'] == true || p['revisit'] == true;
+      _checkProblems();
+      final on = p['notifications'] == true;
       // With every reminder off, what was scheduled is cancelled once
       // (sync cancels all of ours when nothing is wanted), then left be.
       if (!on && _remindersCleared) return;
       try {
         await reminders.sync(
           c.library!.bookmarks,
-          enabled: p['notifications'] == true,
+          enabled: on,
           vietnamese: prefs.value?.locale == 'vi',
-          revisit: p['revisit'] == true
-              ? planRevisit(
-                  c.library!.bookmarks,
-                  now: DateTime.now(),
-                  weekday: p['revisitDay'] as int? ?? DateTime.sunday,
-                  hour: p['revisitHour'] as int? ?? 19,
-                )
-              : null,
         );
         _remindersCleared = !on;
       } catch (_) {

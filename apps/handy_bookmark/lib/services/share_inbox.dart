@@ -24,6 +24,14 @@ class SharedLink {
   /// (already checked and re-encoded, in the private queue).
   final MetadataResult? metadata;
   final String? thumbnail;
+
+  /// A read-later reminder picked in the share sheet (already scheduled
+  /// there under `share:<id>`); the app moves it onto the bookmark.
+  final DateTime? remindAt;
+
+  /// The share sheet's own id when the app had already taken the first
+  /// copy in (its reminder is filed under that id).
+  final String? origin;
   const SharedLink(
     this.id,
     this.text,
@@ -32,7 +40,9 @@ class SharedLink {
     this.collection,
   ]) : newCollection = null,
        metadata = null,
-       thumbnail = null;
+       thumbnail = null,
+       remindAt = null,
+       origin = null;
 
   const SharedLink.full(
     this.id,
@@ -43,6 +53,8 @@ class SharedLink {
     this.newCollection,
     this.metadata,
     this.thumbnail,
+    this.remindAt,
+    this.origin,
   });
 }
 
@@ -115,6 +127,8 @@ class SaveShareInbox {
             newCollection: r['newCollection'] as String?,
             metadata: _metadata(r['metadata']),
             thumbnail: r['thumbnail'] as String?,
+            remindAt: DateTime.tryParse(r['remindAt'] as String? ?? ''),
+            origin: r['origin'] as String?,
           ),
       ];
     } on MissingPluginException {

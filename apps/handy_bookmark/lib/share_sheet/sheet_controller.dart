@@ -121,6 +121,13 @@ class SheetBridge {
     'thumbnail': ?thumbnail,
   });
 
+  /// Sets the read-later reminder picked under "Saved in …" (null clears).
+  Future<bool> remind(DateTime? at) async =>
+      await channel.invokeMethod<bool>('remind', {
+        'at': at?.toUtc().toIso8601String(),
+      }) ??
+      false;
+
   /// Takes the share back out of the queue, and closes.
   Future<void> discard() => channel.invokeMethod<void>('discard');
 
@@ -154,8 +161,57 @@ class SheetController extends ChangeNotifier {
     MetadataClient? metadata,
     this.retryDelay = const Duration(milliseconds: 2200),
     this.confirm = const Duration(milliseconds: 1200),
+    this.remindWait = const Duration(milliseconds: 2500),
     this.pictureWait = const Duration(seconds: 4),
+    this.scheduler,
   }) : _metadata = metadata;
+
+  /// How long "Saved in …" stays when "Remind me" is offered under it.
+  final Duration remindWait;
+
+  /// Schedules the reminder's notification under the share's id (asking
+  /// for the permission); false when notifications are not allowed. Null
+  /// where this device has no notifications: "Remind me" is not offered.
+  final Future<bool> Function(String shareId, String title, DateTime at)?
+  scheduler;
+
+  /// The person touched "Remind me": the sheet stays until they pick.
+  bool holding = false;
+
+  /// The reminder picked here, shown as "Reminding …" before closing.
+  DateTime? remindAt;
+
+  /// Notifications could not be allowed: the reminder is kept on the item.
+  bool remindBlocked = false;
+
+  /// "Remind me" is offered for a link (not for pictures alone).
+  bool get offerRemind => scheduler != null && link != null;
+
+  void hold() {
+    if (holding) return;
+    holding = true;
+    notifyListeners();
+  }
+
+  /// Off closes; a time is kept with the share and scheduled now, so it
+  /// rings even before the app takes the link in.
+  Future<void> remind(DateTime? at) async {
+    if (at == null) return close();
+    try {
+      await bridge.remind(at);
+      final id = share?.id;
+      final title = page?.title ?? share?.title ?? link?.sourceDomain ?? '';
+      if (id != null && scheduler != null) {
+        remindBlocked = !await scheduler!(id, title, at);
+      }
+    } catch (_) {
+      remindBlocked = true;
+    }
+    remindAt = at;
+    notifyListeners();
+    await Future<void>.delayed(remindBlocked ? remindWait : confirm);
+    await close();
+  }
 
   final SheetBridge bridge;
   final Duration retryDelay;
@@ -372,7 +428,7 @@ class SheetController extends ChangeNotifier {
     choice = where;
     busy = true;
     notifyListeners();
-    final shown = Future<void>.delayed(confirm);
+    final shown = Future<void>.delayed(offerRemind ? remindWait : confirm);
     final hadPicture = picture != null;
     try {
       await _send();
@@ -395,7 +451,7 @@ class SheetController extends ChangeNotifier {
       }
     }
     await shown;
-    await close();
+    if (!holding) await close();
   }
 
   /// The name of a place, for the sheet's line "Saved in …".

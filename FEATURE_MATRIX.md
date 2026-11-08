@@ -115,7 +115,7 @@ Per-feature status with proof: `docs/bookmark-redesign/FEATURE_QA_MATRIX.md`. In
   All / Links / Pictures; first-run guide with a real first save; Focus swipe deck; per-collection
   view and order; Raindrop import; collection shared as one page; named library and dateline;
   storage use; sync protocol (simulated devices).
-- **Code only:** Android image share (APK builds); weekly nudge notification; folder sync on
+- **Code only:** Android image share (APK builds); read-later reminders with Mark as read / Remind in 1 hour and needs-attention notifications (no weekly nudge, removed 2026-11-08); folder sync on
   computers (host tests with real files).
 - **Blocked:** iOS share extension images (no Mac: not compiled); iCloud Drive and Google Drive
   sync on phones (container, OAuth client, devices).

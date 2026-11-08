@@ -80,6 +80,17 @@ class ShareSheetActivity : FlutterFragmentActivity() {
                             // The sheet shows "Saved in …", then asks to close.
                             result.success(null)
                         }
+                        "remind" -> {
+                            val ok = share?.let { s ->
+                                queue.remind(
+                                    id = s["id"] as String,
+                                    text = s["text"] as? String ?: "",
+                                    title = s["title"] as? String,
+                                    remindAt = call.argument<String>("at"),
+                                )
+                            } ?: false
+                            result.success(ok)
+                        }
                         "discard" -> {
                             (share?.get("id") as? String)?.let { queue.ack(it) }
                             result.success(null)

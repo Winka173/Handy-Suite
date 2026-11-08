@@ -171,6 +171,8 @@ class ShareQueue(private val directory: File) {
             if (json.has("title")) put("title", json.getString("title"))
             json.optString("collection").takeIf { it.isNotEmpty() && it.length <= 512 }?.let { put("collection", it) }
             json.optString("newCollection").takeIf { it.isNotBlank() && it.length <= 200 }?.let { put("newCollection", it) }
+            json.optString("remindAt").takeIf { it.isNotEmpty() && it.length <= 40 }?.let { put("remindAt", it) }
+            json.optString("origin").takeIf { uuid.matches(it) }?.let { put("origin", it) }
             json.optJSONObject("metadata")?.let { meta ->
                 put("metadata", meta.keys().asSequence()
                     .filter { meta.opt(it) is String }
@@ -239,6 +241,34 @@ class ShareQueue(private val directory: File) {
         catch (error: Exception) { atomic.failWrite(stream); throw error }
         return true
     }
+    /**
+     * Sets (or, with null, clears) the read-later reminder picked in the
+     * share sheet. If the app took the share in meanwhile, it is queued
+     * again as a share of the same text that carries the reminder and the
+     * sheet's id (its notification is filed under that id); taking an
+     * address saved before keeps it where it is.
+     */
+    @Synchronized fun remind(id: String, text: String, title: String?, remindAt: String?): Boolean {
+        require(uuid.matches(id)) { "Invalid delivery identifier" }
+        val file = File(directory, "$id.json")
+        val record = if (file.exists()) {
+            JSONObject(AtomicFile(file).openRead().bufferedReader().use { it.readText() })
+        } else {
+            if (text.isBlank() || remindAt == null) return false
+            check(files().size < MAX_PENDING) { "Share queue is full" }
+            JSONObject().put("id", UUID.randomUUID().toString()).put("text", text.take(MAX_CHARS))
+                .put("receivedAt", Instant.now().toString()).put("origin", id)
+                .apply { if (!title.isNullOrBlank()) put("title", title.take(4096)) }
+        }
+        record.remove("remindAt")
+        remindAt?.takeIf { it.length <= 40 }?.let { record.put("remindAt", it) }
+        val atomic = AtomicFile(File(directory, "${record.getString("id")}.json"))
+        val stream = atomic.startWrite()
+        try { stream.write(record.toString().toByteArray(Charsets.UTF_8)); atomic.finishWrite(stream) }
+        catch (error: Exception) { atomic.failWrite(stream); throw error }
+        return true
+    }
+
     @Synchronized fun ack(id: String): Boolean {
         require(uuid.matches(id)) { "Invalid delivery identifier" }
         val file = File(directory, "$id.json")
