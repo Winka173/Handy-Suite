@@ -169,26 +169,37 @@ class _ExportPageState extends State<ExportPage> {
             child: Container(
               color: p.sunk,
               padding: const EdgeInsets.all(16),
-              child: InteractiveViewer(
-                minScale: .5,
-                maxScale: 4,
-                constrained: false,
-                child: RepaintBoundary(
-                  key: boundary,
-                  child: style == PosterStyle.report
-                      ? BoardReport(
-                          state: s,
-                          board: widget.board,
-                          now: widget.scope.clock(),
-                          fields: fields && hasFields,
-                        )
-                      : BoardPoster(
-                          state: s,
-                          board: widget.board,
-                          style: style,
-                          now: widget.scope.clock(),
-                          fields: fields && hasFields,
-                        ),
+              // Fitted to the width at first (the saved file keeps its full
+              // size); pinch to look closer.
+              child: LayoutBuilder(
+                builder: (context, box) => InteractiveViewer(
+                  minScale: 1,
+                  maxScale: 4,
+                  constrained: false,
+                  child: SizedBox(
+                    width: box.maxWidth,
+                    child: FittedBox(
+                      fit: BoxFit.fitWidth,
+                      alignment: Alignment.topCenter,
+                      child: RepaintBoundary(
+                        key: boundary,
+                        child: style == PosterStyle.report
+                            ? BoardReport(
+                                state: s,
+                                board: widget.board,
+                                now: widget.scope.clock(),
+                                fields: fields && hasFields,
+                              )
+                            : BoardPoster(
+                                state: s,
+                                board: widget.board,
+                                style: style,
+                                now: widget.scope.clock(),
+                                fields: fields && hasFields,
+                              ),
+                      ),
+                    ),
+                  ),
                 ),
               ),
             ),

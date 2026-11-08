@@ -32,7 +32,10 @@ class BoardReport extends StatelessWidget {
     final sum = boardSummary(s, board, now: now);
     final weeks = weeklyThroughput(s, board, now);
     final most = weeks.fold(1, (m, w) => w.$2 > m ? w.$2 : m);
-    final cats = categoryProgress(s, board);
+    final cats = [
+      for (final c in categoryProgress(s, board))
+        if (c.total > 0) c,
+    ];
     final shownFields = fields ? fieldsOf(s, board) : const <BoardRecord>[];
     final today = calendarDay(now);
     final open =

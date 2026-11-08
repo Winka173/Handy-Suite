@@ -71,7 +71,7 @@ class RulesPage extends StatelessWidget {
                   key: Key('rule-example-$i'),
                   margin: const EdgeInsets.only(top: 8),
                   child: ListTile(
-                    leading: const Icon(Icons.auto_awesome_outlined),
+                    leading: const Icon(Icons.bolt_outlined),
                     title: Text(ex.str('title')),
                     subtitle: Text(ruleSentence(context, s, ex)),
                     onTap: () => editRule(context, scope, board, start: ex),
@@ -259,7 +259,9 @@ String ruleSentence(BuildContext context, BoardsState s, BoardRecord r) {
           ? tr(context, 'On a card\'s due day', 'Vào ngày đến hạn')
           : tr(
               context,
-              '${r.number('days')} days before a deadline',
+              r.number('days') == 1
+                  ? 'The day before a deadline'
+                  : '${r.number('days')} days before a deadline',
               'Trước hạn ${r.number('days')} ngày',
             ),
     _ => r.str('trigger'),
@@ -357,8 +359,8 @@ List<BoardRecord> _examples(BuildContext context, BoardsState s, String board) {
         'board': board,
         'title': tr(
           context,
-          'A check before ${cols.last.str('title')}',
-          'Kiểm tra trước khi ${cols.last.str('title')}',
+          'A last check in ${cols[cols.length - 2].str('title')}',
+          'Kiểm tra lần cuối ở ${cols[cols.length - 2].str('title')}',
         ),
         'trigger': 'moved',
         'when': {'status': cols[cols.length - 2].id},
@@ -584,13 +586,16 @@ class _RuleEditorState extends State<_RuleEditor> {
       ),
       body: ListView(
         key: const Key('rule-editor'),
-        padding: const EdgeInsets.fromLTRB(16, 0, 16, 24),
+        padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
         children: [
           TextField(
             key: const Key('rule-title'),
             controller: title,
             maxLength: 80,
-            decoration: InputDecoration(labelText: tr(context, 'Name', 'Tên')),
+            decoration: InputDecoration(
+              floatingLabelBehavior: FloatingLabelBehavior.always,
+              labelText: tr(context, 'Name', 'Tên'),
+            ),
             onChanged: (_) => setState(() {}),
           ),
           heading(tr(context, 'When', 'Khi')),
@@ -619,7 +624,11 @@ class _RuleEditorState extends State<_RuleEditor> {
                   child: Text(
                     days == 0
                         ? tr(context, 'On the due day', 'Vào ngày đến hạn')
-                        : tr(context, '$days days before', 'Trước $days ngày'),
+                        : tr(
+                            context,
+                            days == 1 ? 'The day before' : '$days days before',
+                            'Trước $days ngày',
+                          ),
                   ),
                 ),
                 IconButton(
@@ -641,6 +650,7 @@ class _RuleEditorState extends State<_RuleEditor> {
             key: const Key('rule-when-status'),
             initialValue: when['status'] as String?,
             decoration: InputDecoration(
+              floatingLabelBehavior: FloatingLabelBehavior.always,
               labelText: trigger == 'moved'
                   ? tr(context, 'It moves into', 'Chuyển vào cột')
                   : tr(context, 'It is in column', 'Đang ở cột'),
@@ -654,11 +664,13 @@ class _RuleEditorState extends State<_RuleEditor> {
               () => v == null ? when.remove('status') : when['status'] = v,
             ),
           ),
+          const SizedBox(height: 12),
           if (categoriesOf(s, widget.board).isNotEmpty)
             DropdownButtonFormField<String?>(
               key: const Key('rule-when-category'),
               initialValue: when['category'] as String?,
               decoration: InputDecoration(
+                floatingLabelBehavior: FloatingLabelBehavior.always,
                 labelText: tr(context, 'Category', 'Nhóm'),
               ),
               items: [
@@ -671,10 +683,12 @@ class _RuleEditorState extends State<_RuleEditor> {
                     v == null ? when.remove('category') : when['category'] = v,
               ),
             ),
+          const SizedBox(height: 12),
           DropdownButtonFormField<int?>(
             key: const Key('rule-when-priority'),
             initialValue: when['priority'] as int?,
             decoration: InputDecoration(
+              floatingLabelBehavior: FloatingLabelBehavior.always,
               labelText: tr(context, 'Priority at least', 'Ưu tiên từ'),
             ),
             items: [

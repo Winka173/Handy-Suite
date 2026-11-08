@@ -169,13 +169,16 @@ class _NewFilterState extends State<_NewFilter> {
               key: const Key('filter-name'),
               controller: name,
               decoration: InputDecoration(
+                floatingLabelBehavior: FloatingLabelBehavior.always,
                 labelText: tr(context, 'Name', 'Tên'),
               ),
             ),
+            const SizedBox(height: 12),
             DropdownButtonFormField<String?>(
               key: const Key('filter-column'),
               initialValue: column,
               decoration: InputDecoration(
+                floatingLabelBehavior: FloatingLabelBehavior.always,
                 labelText: tr(context, 'Column', 'Cột'),
               ),
               items: [
@@ -185,10 +188,12 @@ class _NewFilterState extends State<_NewFilter> {
               ],
               onChanged: (v) => setState(() => column = v),
             ),
+            const SizedBox(height: 12),
             DropdownButtonFormField<String?>(
               key: const Key('filter-category'),
               initialValue: category,
               decoration: InputDecoration(
+                floatingLabelBehavior: FloatingLabelBehavior.always,
                 labelText: tr(context, 'Category', 'Nhóm'),
               ),
               items: [
@@ -198,10 +203,12 @@ class _NewFilterState extends State<_NewFilter> {
               ],
               onChanged: (v) => setState(() => category = v),
             ),
+            const SizedBox(height: 12),
             DropdownButtonFormField<int?>(
               key: const Key('filter-priority'),
               initialValue: priority,
               decoration: InputDecoration(
+                floatingLabelBehavior: FloatingLabelBehavior.always,
                 labelText: tr(context, 'Priority', 'Ưu tiên'),
               ),
               items: [

@@ -169,7 +169,10 @@ Future<(String, String, List<String>)?> _newField(BuildContext context) {
               DropdownButtonFormField<String>(
                 key: const Key('field-type'),
                 initialValue: type,
-                decoration: InputDecoration(labelText: tr(d, 'Kind', 'Kiểu')),
+                decoration: InputDecoration(
+                  floatingLabelBehavior: FloatingLabelBehavior.always,
+                  labelText: tr(d, 'Kind', 'Kiểu'),
+                ),
                 items: [
                   for (final t in fieldTypes)
                     DropdownMenuItem(
