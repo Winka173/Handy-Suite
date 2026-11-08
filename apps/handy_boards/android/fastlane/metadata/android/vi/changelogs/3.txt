@@ -1,0 +1,5 @@
+• Chế độ Thời gian cho mọi bảng, ngày làm tách khỏi hạn nộp; chuyển việc về hôm nay bằng một chạm, có Hoàn tác.
+• Thông báo: việc hôm nay, sắp đến hạn, còn tồn, giờ yên lặng; kêu đúng giờ.
+• Widget màn hình chính: Hôm nay, Tiến độ bảng, Còn tồn & sắp tới.
+• Đồng bộ Google Drive giữa các máy (tuỳ chọn).
+• Pro: luật tự động, tóm tắt các bảng, Việc của tôi, mẫu thẻ, trường tuỳ chỉnh, bộ lọc đã lưu, lịch sử bảng, xuất báo cáo, kiểu widget.

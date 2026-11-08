@@ -1,0 +1,5 @@
+• Time view on every board, with a planned day apart from the due date; move work to today in one tap, with Undo.
+• Notifications: today's work, due soon, left behind, quiet hours; they ring on time.
+• Home-screen widgets: Today, Board progress, Left behind & coming up.
+• Optional Google Drive sync between your devices.
+• Pro: automation rules, digest of your boards, My Work, card templates, custom fields, saved filters, board history, report export, widget styles.
