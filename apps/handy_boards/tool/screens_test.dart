@@ -53,30 +53,56 @@ Future<void> loadFont(String family, List<String> paths) async {
 
 BoardsState sample({String locale = 'vi', String theme = 'light'}) {
   final vi = locale == 'vi';
-  var s = createKanbanBoard(
+  BoardsState make(
+    BoardsState s,
+    String id,
+    String title, {
+    String? boardId,
+    int daysAgo = 0,
+    Map<String, Object?> answers = const {},
+  }) => createFromTemplate(
+    s,
+    templateById(id)!,
+    vi: vi,
+    examples: true,
+    answers: {'title': title, ...answers},
+    now: clock.subtract(Duration(days: daysAgo)),
+    boardId: boardId,
+  );
+  var s = make(
     BoardsState(
       preferences: {'locale': locale, 'theme': theme, 'welcomed': true},
     ),
-    title: vi ? 'Học kỳ 1' : 'Semester 1',
-    preset: presetById('study'),
-    vi: vi,
-    now: clock,
+    'semester',
+    vi ? 'Học kỳ 1' : 'Semester 1',
     boardId: board,
+    answers: {'end': '2027-01-15'},
   );
-  s = createKanbanBoard(
+  // A few more real-looking cards on the study board.
+  final b = board;
+  final cats = categoriesOf(s, b);
+  final first = columnsOf(s, b).first.id;
+  for (final (i, (en, viTitle, cat, due)) in [
+    ('Group report: chapter 2', 'Báo cáo nhóm: chương 2', 1, 4),
+    ('Speaking practice', 'Luyện nói 15 phút', 2, 1),
+    ('Exercises 3.1 to 3.6', 'Bài tập 3.1 đến 3.6', 3, 2),
+  ].indexed) {
+    final card = newTask(
+      s,
+      b,
+      vi ? viTitle : en,
+      category: cats[cat].id,
+    ).copy({'status': first, 'order': 10 + i});
+    s = saveTask(s, card, now: clock);
+    s = setDueDay(s, card.id, clock.add(Duration(days: due)));
+  }
+  s = make(
     s,
-    title: vi ? 'Việc nhà tháng 11' : 'Home in November',
-    preset: presetById('personal'),
-    vi: vi,
-    now: clock.subtract(const Duration(days: 1)),
+    'personal',
+    vi ? 'Việc nhà tháng 11' : 'Home in November',
+    daysAgo: 1,
   );
-  s = createKanbanBoard(
-    s,
-    title: vi ? 'Ra mắt website' : 'Website launch',
-    preset: presetById('project'),
-    vi: vi,
-    now: clock.subtract(const Duration(days: 3)),
-  );
+  s = make(s, 'project', vi ? 'Ra mắt website' : 'Website launch', daysAgo: 3);
   return s;
 }
 
@@ -134,23 +160,36 @@ void main() {
     ]);
   });
 
-  testWidgets('welcome', (t) async {
+  testWidgets('welcome, study branch', (t) async {
     await boot(t, BoardsState(preferences: {'locale': 'vi'}));
-    await shot(t, '01-welcome-scattered');
+    await shot(t, '01-welcome-purpose');
+    await tap(t, find.byKey(const Key('welcome-purpose-study')));
+    await shot(t, '01a-welcome-purpose-picked');
     await tap(t, find.byKey(const Key('welcome-primary')));
-    await shot(t, '02-welcome-board');
+    await shot(t, '02-welcome-practice-add');
+    await tap(t, find.byKey(const Key('welcome-do-it')));
+    await shot(t, '02a-welcome-practice-drag');
+    await tap(t, find.byKey(const Key('welcome-do-it')));
+    await shot(t, '02b-welcome-practice-focus');
+    await tap(t, find.byKey(const Key('welcome-do-it')));
+    await shot(t, '02c-welcome-practice-tick');
+    await tap(t, find.byKey(const Key('welcome-do-it')));
+    await shot(t, '02d-welcome-done');
     await tap(t, find.byKey(const Key('welcome-primary')));
-    await shot(t, '03-welcome-practice-add');
-    await tap(t, find.byKey(const Key('welcome-do-it')));
-    await shot(t, '03a-welcome-practice-drag');
-    await tap(t, find.byKey(const Key('welcome-do-it')));
-    await tap(t, find.byKey(const Key('welcome-do-it')));
-    await shot(t, '03b-welcome-tick');
-    await tap(t, find.byKey(const Key('welcome-do-it')));
-    await tap(t, find.byKey(const Key('welcome-do-it')));
-    await shot(t, '03c-welcome-done');
+    await shot(t, '03-welcome-start-study');
+  });
+
+  testWidgets('welcome, work branch', (t) async {
+    await boot(t, BoardsState(preferences: {'locale': 'vi'}));
+    await tap(t, find.byKey(const Key('welcome-purpose-work')));
     await tap(t, find.byKey(const Key('welcome-primary')));
-    await shot(t, '03d-welcome-start');
+    await tap(t, find.byKey(const Key('welcome-do-it')));
+    await tap(t, find.byKey(const Key('welcome-do-it')));
+    await tap(t, find.byKey(const Key('welcome-do-it')));
+    await shot(t, '03a-welcome-work-focused');
+    await tap(t, find.byKey(const Key('welcome-do-it')));
+    await tap(t, find.byKey(const Key('welcome-primary')));
+    await shot(t, '03b-welcome-start-work');
   });
 
   testWidgets('welcome wide', (t) async {
@@ -159,7 +198,7 @@ void main() {
       BoardsState(preferences: {'locale': 'vi'}),
       size: const Size(1280, 800),
     );
-    await tap(t, find.byKey(const Key('welcome-primary')));
+    await tap(t, find.byKey(const Key('welcome-purpose-study')));
     await tap(t, find.byKey(const Key('welcome-primary')));
     await shot(t, '03e-welcome-practice-wide');
   });
@@ -169,10 +208,7 @@ void main() {
     await shot(t, '04-home');
     await tap(t, find.byKey(const Key('board-$board')));
     await shot(t, '05-board');
-    final maths = categoriesOf(c.state!, board).first;
-    await tap(t, find.byKey(Key('strip-${maths.id}')));
-    await shot(t, '06-board-filtered');
-    await tap(t, find.byKey(Key('strip-${maths.id}')));
+
     final card = topTasks(
       c.state!,
       board: board,
@@ -190,14 +226,58 @@ void main() {
   });
 
   testWidgets('templates', (t) async {
-    await boot(t, sample());
+    await boot(t, sample(), size: const Size(390, 1800));
     await tap(t, find.byKey(const Key('home-new')));
     await shot(t, '09-new-board');
     await tap(t, find.byKey(const Key('new-template')));
     await shot(t, '10-template-gallery');
-    await tap(t, find.byKey(const Key('shelf-work')));
-    await tap(t, find.byKey(const Key('template-content')));
-    await shot(t, '11-template-preview-pro');
+    await tap(t, find.byKey(const Key('group-study')));
+    await shot(t, '10a-gallery-study');
+  });
+
+  testWidgets('template preview, setup and the board it makes', (t) async {
+    await boot(t, sample());
+    await tap(t, find.byKey(const Key('home-new')));
+    await tap(t, find.byKey(const Key('new-template')));
+    await tap(t, find.byKey(const Key('template-semester')));
+    await shot(t, '11-template-preview');
+    await tap(t, find.byKey(const Key('template-use')));
+    await shot(t, '11a-setup-semester');
+    await tap(t, find.byKey(const Key('setup-preview')));
+    await shot(t, '11b-plan-preview');
+  });
+
+  testWidgets('a Pro template, previewed free', (t) async {
+    await boot(t, sample(), size: const Size(390, 1000));
+    await tap(t, find.byKey(const Key('home-new')));
+    await tap(t, find.byKey(const Key('new-template')));
+    await t.enterText(find.byKey(const Key('gallery-search')), 'chuyển nhà');
+    await settle(t);
+    await shot(t, '11c-gallery-search');
+    await t.enterText(find.byKey(const Key('gallery-search')), 'sự kiện');
+    await settle(t);
+    await tap(t, find.byKey(const Key('template-event')));
+    await shot(t, '11d-preview-pro');
+    await tap(t, find.byKey(const Key('template-use')));
+    await shot(t, '11e-setup-event');
+  });
+
+  testWidgets('blank board', (t) async {
+    await boot(t, sample());
+    await tap(t, find.byKey(const Key('home-new')));
+    await tap(t, find.byKey(const Key('new-blank')));
+    await tap(t, find.byKey(const Key('blank-columns')));
+    await shot(t, '11f-blank');
+  });
+
+  testWidgets('category focus and the explicit filter', (t) async {
+    final c = await boot(t, sample());
+    await tap(t, find.byKey(const Key('board-$board')));
+    final cat = categoriesOf(c.state!, board)[1];
+    await tap(t, find.byKey(Key('strip-${cat.id}')));
+    await shot(t, '06-board-focus');
+    await tap(t, find.byKey(const Key('focus-only')));
+    await shot(t, '06a-board-only');
   });
 
   testWidgets('settings and pro', (t) async {
@@ -217,6 +297,11 @@ void main() {
   testWidgets('how to use', (t) async {
     await boot(t, sample(), size: const Size(390, 1500));
     await tap(t, find.byKey(const Key('home-settings')));
+    await t.scrollUntilVisible(
+      find.byKey(const Key('settings-howto')),
+      300,
+      scrollable: find.byType(Scrollable).first,
+    );
     await tap(t, find.byKey(const Key('settings-howto')));
     await shot(t, '26-howto');
     for (final topic in ['cards', 'categories', 'details', 'time', 'look']) {
@@ -267,7 +352,27 @@ void main() {
     await boot(t, sample());
     await tap(t, find.byKey(const Key('board-$board')));
     await tap(t, find.byKey(const Key('board-more')));
+    await t.scrollUntilVisible(
+      find.byKey(const Key('menu-board-look')),
+      120,
+      scrollable: find
+          .descendant(
+            of: find.byType(BottomSheet),
+            matching: find.byType(Scrollable),
+          )
+          .first,
+    );
     await tap(t, find.byKey(const Key('menu-board-look')));
+    await t.scrollUntilVisible(
+      find.byKey(const Key('look-blueprint')),
+      120,
+      scrollable: find
+          .descendant(
+            of: find.byKey(const Key('look-list')),
+            matching: find.byType(Scrollable),
+          )
+          .first,
+    );
     await tap(t, find.byKey(const Key('look-blueprint')));
     await shot(t, '19-look-picker');
   });
@@ -276,6 +381,16 @@ void main() {
     await boot(t, sample(locale: 'en'), size: const Size(1280, 900));
     await tap(t, find.byKey(const Key('board-$board')));
     await tap(t, find.byKey(const Key('board-more')));
+    await t.scrollUntilVisible(
+      find.byKey(const Key('menu-export')),
+      120,
+      scrollable: find
+          .descendant(
+            of: find.byType(BottomSheet),
+            matching: find.byType(Scrollable),
+          )
+          .first,
+    );
     await tap(t, find.byKey(const Key('menu-export')));
     await shot(t, '20-export-plain');
     await tap(t, find.byKey(const Key('export-style-poster')));

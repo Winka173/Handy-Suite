@@ -3,18 +3,20 @@ import 'dart:ui' as ui;
 import 'package:handy_ui/kit.dart';
 import 'motion.dart';
 
-/// Where the practice is: add a card, move it to Doing, filter by its
-/// category, tick one of its subtasks, finish it, done.
-enum PracticeStep { add, drag, filter, tick, finish, done }
+/// Where the practice is: add a card, move it to Doing, focus its
+/// category (the other cards stay), tick one of its subtasks, done.
+enum PracticeStep { add, drag, focus, tick, done }
 
 /// A small pretend board for the guide, drawn at a phone's real size: three
 /// columns, a few cards with their categories, and the category strip.
 /// Everything is dark except the one thing to do next, in a lit window with
-/// a word beside it. The card really drags; the category really filters.
-/// Nothing is written anywhere.
+/// a word beside it. The card really drags; the category really lights up
+/// its cards without hiding the others. [work] swaps the study examples
+/// (subjects) for work ones (work areas). Nothing is written anywhere.
 class PracticeBoard extends StatefulWidget {
   final ValueChanged<PracticeStep> onStep;
-  const PracticeBoard({super.key, required this.onStep});
+  final bool work;
+  const PracticeBoard({super.key, required this.onStep, this.work = false});
   @override
   State<PracticeBoard> createState() => PracticeBoardState();
 }
@@ -24,7 +26,7 @@ class PracticeBoardState extends State<PracticeBoard> {
 
   /// Column of the practice card: 0 To Do, 1 Doing, 2 Done.
   int column = -1;
-  bool filtered = false;
+  bool focused = false;
   final card = GlobalKey(),
       chip = GlobalKey(),
       doing = GlobalKey(),
@@ -50,12 +52,10 @@ class PracticeBoardState extends State<PracticeBoard> {
         _add();
       case PracticeStep.drag:
         _drop(1);
-      case PracticeStep.filter:
-        _filter();
+      case PracticeStep.focus:
+        _focus();
       case PracticeStep.tick:
         _tick();
-      case PracticeStep.finish:
-        _drop(2);
       case PracticeStep.done:
         break;
     }
@@ -64,31 +64,28 @@ class PracticeBoardState extends State<PracticeBoard> {
   void _drop(int to) {
     if (step == PracticeStep.drag && to == 1) {
       setState(() => column = 1);
-      _to(PracticeStep.filter);
-    } else if (step == PracticeStep.finish && to == 2) {
-      setState(() => column = 2);
-      _to(PracticeStep.done);
+      _to(PracticeStep.focus);
     }
   }
 
-  void _filter() {
-    if (step != PracticeStep.filter) return;
-    setState(() => filtered = true);
+  void _focus() {
+    if (step != PracticeStep.focus) return;
+    setState(() => focused = true);
     _to(PracticeStep.tick);
   }
 
   void _tick() {
     if (step != PracticeStep.tick) return;
     setState(() => ticked = true);
-    _to(PracticeStep.finish);
+    _to(PracticeStep.done);
   }
 
   @override
   Widget build(BuildContext context) {
     final target = switch (step) {
       PracticeStep.add => adder,
-      PracticeStep.drag || PracticeStep.finish => card,
-      PracticeStep.filter => chip,
+      PracticeStep.drag => card,
+      PracticeStep.focus => chip,
       PracticeStep.tick => tick,
       PracticeStep.done => null,
     };
@@ -99,14 +96,15 @@ class PracticeBoardState extends State<PracticeBoard> {
         'Hold, then drag to Doing',
         'Giữ rồi kéo sang Đang làm',
       ),
-      PracticeStep.filter => tr(context, 'Tap Maths', 'Chạm Toán'),
+      PracticeStep.focus =>
+        widget.work
+            ? tr(context, 'Tap Interface', 'Chạm Giao diện')
+            : tr(context, 'Tap Maths', 'Chạm Toán'),
       PracticeStep.tick => tr(context, 'Tick a subtask', 'Tick một việc con'),
-      PracticeStep.finish => tr(context, 'Drag it to Done', 'Kéo sang Xong'),
       PracticeStep.done => null,
     };
     final dragTo = switch (step) {
       PracticeStep.drag => doing,
-      PracticeStep.finish => finished,
       _ => null,
     };
     return Stack(
@@ -285,6 +283,9 @@ class _Board extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final s = state;
+    final w = s.widget.work;
+    String say(String en, String vi, String workEn, String workVi) =>
+        w ? tr(context, workEn, workVi) : tr(context, en, vi);
     final columns = [
       tr(context, 'To Do', 'Cần làm'),
       tr(context, 'Doing', 'Đang làm'),
@@ -294,23 +295,33 @@ class _Board extends StatelessWidget {
     final others = <int, List<(String, (Color, Color), String)>>{
       0: [
         (
-          tr(context, 'Outline the essay', 'Lập dàn ý bài Văn'),
+          say(
+            'Outline the essay',
+            'Lập dàn ý bài Văn',
+            'Sign-in flow',
+            'Luồng đăng nhập',
+          ),
           _lit,
-          tr(context, 'Literature', 'Văn'),
+          say('Literature', 'Văn', 'Features', 'Tính năng'),
         ),
       ],
       1: [
         (
-          tr(context, 'Buy markers', 'Mua bút dạ'),
+          say(
+            'Learn 20 new words',
+            'Học 20 từ mới',
+            'Test on a phone',
+            'Thử trên điện thoại',
+          ),
           _home,
-          tr(context, 'Home', 'Việc nhà'),
+          say('English', 'Tiếng Anh', 'Testing', 'Kiểm thử'),
         ),
       ],
       2: [
         (
-          tr(context, 'Unit 2 test', 'Kiểm tra bài 2'),
+          say('Unit 2 test', 'Kiểm tra bài 2', 'Main colour', 'Màu chủ đạo'),
           _maths,
-          tr(context, 'Maths', 'Toán'),
+          say('Maths', 'Toán', 'Interface', 'Giao diện'),
         ),
       ],
     };
@@ -322,165 +333,169 @@ class _Board extends StatelessWidget {
       bool done = false,
       bool mine = false,
     }) {
-      // Filtered by a category, the others leave the board (as in the
-      // app), rather than staying dimmed.
-      final hidden = s.filtered && hue != _maths;
-      return AnimatedSize(
+      // Focusing a category lights its cards with a ring; the others stay
+      // where they are, quieter (as in the app). Nothing is hidden.
+      final quiet = s.focused && hue != _maths;
+      final lit = s.focused && hue == _maths;
+      return AnimatedOpacity(
         duration: HandyMotion.of(context, HandyMotion.medium),
-        alignment: Alignment.topCenter,
-        child: hidden
-            ? const SizedBox(width: double.infinity)
-            : Container(
-                key: key,
-                margin: const EdgeInsets.only(bottom: 6),
-                padding: const EdgeInsets.fromLTRB(8, 8, 8, 8),
-                decoration: BoxDecoration(
-                  color: GuideColors.card,
-                  borderRadius: BorderRadius.circular(10),
-                  boxShadow: mine
-                      ? const [
-                          BoxShadow(
-                            color: GuideColors.shadow,
-                            blurRadius: 6,
-                            offset: Offset(0, 2),
-                          ),
-                        ]
-                      : null,
+        opacity: quiet ? .4 : 1,
+        child: Container(
+          key: key,
+          margin: const EdgeInsets.only(bottom: 6),
+          padding: const EdgeInsets.fromLTRB(8, 8, 8, 8),
+          decoration: BoxDecoration(
+            color: GuideColors.card,
+            borderRadius: BorderRadius.circular(10),
+            border: lit ? Border.all(color: hue.$1, width: 2.5) : null,
+            boxShadow: mine
+                ? const [
+                    BoxShadow(
+                      color: GuideColors.shadow,
+                      blurRadius: 6,
+                      offset: Offset(0, 2),
+                    ),
+                  ]
+                : null,
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                title,
+                style: TextStyle(
+                  fontSize: 12.5,
+                  height: 1.25,
+                  fontWeight: FontWeight.w600,
+                  color: done ? GuideColors.muted : GuideColors.ink,
+                  decoration: done ? TextDecoration.lineThrough : null,
                 ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+              ),
+              const SizedBox(height: 6),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                decoration: BoxDecoration(
+                  color: hue.$2,
+                  borderRadius: BorderRadius.circular(99),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
                   children: [
-                    Text(
-                      title,
-                      style: TextStyle(
-                        fontSize: 12.5,
-                        height: 1.25,
-                        fontWeight: FontWeight.w600,
-                        color: done ? GuideColors.muted : GuideColors.ink,
-                        decoration: done ? TextDecoration.lineThrough : null,
+                    Container(
+                      width: 6,
+                      height: 6,
+                      decoration: BoxDecoration(
+                        color: hue.$1,
+                        shape: BoxShape.circle,
                       ),
                     ),
-                    const SizedBox(height: 6),
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 6,
-                        vertical: 2,
+                    const SizedBox(width: 4),
+                    Flexible(
+                      child: Text(
+                        cat,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                          fontSize: 11,
+                          color: GuideColors.ink,
+                        ),
                       ),
-                      decoration: BoxDecoration(
-                        color: hue.$2,
-                        borderRadius: BorderRadius.circular(99),
-                      ),
+                    ),
+                  ],
+                ),
+              ),
+              if (mine && s.column < 2) ...[
+                const SizedBox(height: 4),
+                Text(
+                  s.ticked ? '3/5' : '2/5',
+                  style: const TextStyle(
+                    fontSize: 11,
+                    color: GuideColors.muted,
+                  ),
+                ),
+              ],
+              // In Doing, once focused: two of its subtasks, one to tick.
+              if (mine &&
+                  key != null &&
+                  s.column == 1 &&
+                  s.step.index >= PracticeStep.tick.index) ...[
+                const SizedBox(height: 6),
+                for (final (title, done, rowKey) in [
+                  (
+                    say(
+                      'Review the formula',
+                      'Ôn công thức',
+                      'Sketch three layouts',
+                      'Phác ba bố cục',
+                    ),
+                    true,
+                    null,
+                  ),
+                  (
+                    say(
+                      'Five exercises',
+                      'Làm 5 bài tập',
+                      'Pick one',
+                      'Chọn một bố cục',
+                    ),
+                    s.ticked,
+                    s.tick,
+                  ),
+                ])
+                  GestureDetector(
+                    key: rowKey,
+                    onTap: rowKey == null ? null : s._tick,
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 3),
                       child: Row(
-                        mainAxisSize: MainAxisSize.min,
                         children: [
-                          Container(
-                            width: 6,
-                            height: 6,
-                            decoration: BoxDecoration(
-                              color: hue.$1,
-                              shape: BoxShape.circle,
-                            ),
+                          Icon(
+                            done
+                                ? Icons.check_box
+                                : Icons.check_box_outline_blank,
+                            size: 16,
+                            color: done ? GuideColors.teal : GuideColors.muted,
                           ),
                           const SizedBox(width: 4),
                           Flexible(
                             child: Text(
-                              cat,
+                              title,
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
-                              style: const TextStyle(
-                                fontSize: 11,
-                                color: GuideColors.ink,
+                              style: TextStyle(
+                                fontSize: 11.5,
+                                color: done
+                                    ? GuideColors.muted
+                                    : GuideColors.ink,
+                                decoration: done
+                                    ? TextDecoration.lineThrough
+                                    : null,
                               ),
                             ),
                           ),
                         ],
                       ),
                     ),
-                    if (mine && s.column < 2) ...[
-                      const SizedBox(height: 4),
-                      Text(
-                        s.ticked ? '3/5' : '2/5',
-                        style: const TextStyle(
-                          fontSize: 11,
-                          color: GuideColors.muted,
-                        ),
-                      ),
-                    ],
-                    // In Doing, once filtered: two of its subtasks, one to tick.
-                    if (mine &&
-                        key != null &&
-                        s.column == 1 &&
-                        s.step.index >= PracticeStep.tick.index) ...[
-                      const SizedBox(height: 6),
-                      for (final (title, done, rowKey) in [
-                        (
-                          tr(context, 'Review the formula', 'Ôn công thức'),
-                          true,
-                          null,
-                        ),
-                        (
-                          tr(context, 'Five exercises', 'Làm 5 bài tập'),
-                          s.ticked,
-                          s.tick,
-                        ),
-                      ])
-                        GestureDetector(
-                          key: rowKey,
-                          onTap: rowKey == null ? null : s._tick,
-                          child: Padding(
-                            padding: const EdgeInsets.symmetric(vertical: 3),
-                            child: Row(
-                              children: [
-                                Icon(
-                                  done
-                                      ? Icons.check_box
-                                      : Icons.check_box_outline_blank,
-                                  size: 16,
-                                  color: done
-                                      ? GuideColors.teal
-                                      : GuideColors.muted,
-                                ),
-                                const SizedBox(width: 4),
-                                Flexible(
-                                  child: Text(
-                                    title,
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
-                                    style: TextStyle(
-                                      fontSize: 11.5,
-                                      color: done
-                                          ? GuideColors.muted
-                                          : GuideColors.ink,
-                                      decoration: done
-                                          ? TextDecoration.lineThrough
-                                          : null,
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                    ],
-                  ],
-                ),
-              ),
+                  ),
+              ],
+            ],
+          ),
+        ),
       );
     }
 
     // Only the card on the board carries the spotlight's key; its copies
     // (the one being dragged, the ghost left behind) do not.
     Widget mineTile([Key? key]) => tile(
-      tr(context, 'Revise chapter 3', 'Ôn chương 3'),
+      say('Revise chapter 3', 'Ôn chương 3', 'Home screen', 'Màn hình chính'),
       _maths,
-      tr(context, 'Maths', 'Toán'),
+      say('Maths', 'Toán', 'Interface', 'Giao diện'),
       key: key,
       mine: true,
       done: s.column == 2,
     );
     final mine = mineTile(s.card);
-    final canDrag =
-        s.step == PracticeStep.drag || s.step == PracticeStep.finish;
+    final canDrag = s.step == PracticeStep.drag;
     final draggable = !canDrag
         ? mine
         : LayoutBuilder(
@@ -511,7 +526,7 @@ class _Board extends StatelessWidget {
             Padding(
               padding: const EdgeInsets.fromLTRB(4, 0, 4, 10),
               child: Text(
-                tr(context, 'Semester 1', 'Học kỳ 1'),
+                say('Semester 1', 'Học kỳ 1', 'App project', 'Dự án app'),
                 style: const TextStyle(
                   fontSize: 22,
                   fontWeight: FontWeight.w600,
@@ -523,26 +538,38 @@ class _Board extends StatelessWidget {
               runSpacing: 6,
               children: [
                 for (final (name, hue, key) in [
-                  (tr(context, 'Maths', 'Toán'), _maths, s.chip),
-                  (tr(context, 'Literature', 'Văn'), _lit, null),
-                  (tr(context, 'Home', 'Việc nhà'), _home, null),
+                  (
+                    say('Maths', 'Toán', 'Interface', 'Giao diện'),
+                    _maths,
+                    s.chip,
+                  ),
+                  (
+                    say('Literature', 'Văn', 'Features', 'Tính năng'),
+                    _lit,
+                    null,
+                  ),
+                  (
+                    say('English', 'Tiếng Anh', 'Testing', 'Kiểm thử'),
+                    _home,
+                    null,
+                  ),
                 ])
                   Padding(
                     padding: const EdgeInsets.only(right: 6),
                     child: GestureDetector(
                       key: key,
-                      onTap: key == null ? null : s._filter,
+                      onTap: key == null ? null : s._focus,
                       child: Container(
                         padding: const EdgeInsets.symmetric(
                           horizontal: 10,
                           vertical: 7,
                         ),
                         decoration: BoxDecoration(
-                          color: key != null && s.filtered
+                          color: key != null && s.focused
                               ? GuideColors.tint
                               : GuideColors.card,
                           borderRadius: BorderRadius.circular(10),
-                          border: key != null && s.filtered
+                          border: key != null && s.focused
                               ? Border.all(color: GuideColors.teal, width: 1.5)
                               : null,
                         ),

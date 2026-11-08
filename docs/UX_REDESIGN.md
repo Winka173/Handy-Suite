@@ -2780,7 +2780,7 @@ xem trước trước khi mua), không chép nền ngà/teal và không gọi l�
   tràn. Quay lại: nút Back/Esc đóng sheet rồi trang. Web URL `/settings`, `/how-to`.
 - Từ chối: trang trợ giúp dạng FAQ dài, video, ảnh chụp màn hình thật, biểu tượng trong ô màu.
 
-## Hợp đồng: Handy Boards · bốn loại bảng (2026-11-08, theo review + chủ)
+## (Đã thay) Hợp đồng: Handy Boards · bốn loại bảng (2026-11-08) — bị thay bởi "một Kanban, 30 mẫu" bên dưới
 Nguồn: prompt review của chủ (bốn loại bảng, mỗi loại một module riêng) và `review-shots/handy-boards-review.html`
 (baseline 1506528). Vẫn một app Kanban; không thêm view chung, không trường tuỳ biến.
 
@@ -2829,3 +2829,36 @@ Nguồn: prompt review của chủ (bốn loại bảng, mỗi loại một modu
   trường của bảng.
 - Từ chối: trình tạo trường tuỳ biến, công thức, Gantt/lịch tháng lớn, tự đăng mạng xã hội, lấy giá tự động,
   thêm loại bảng mới, thư viện mẫu toàn bảng giống nhau.
+
+## Hợp đồng: Handy Boards · một Kanban, 30 mẫu + Bảng trống, màn chào hai nhánh (2026-11-08, thay hợp đồng bốn loại bảng)
+Nguồn: prompt cuối của chủ (FINAL MASTER IMPLEMENTATION PROMPT). Mọi bảng chạy chung một engine; mẫu chỉ là bản thiết kế ban
+đầu (tên, cột có cột hoàn tất rõ ràng, nhóm, ngày quan trọng, cách mở Thời gian, giao diện, bìa, thẻ ví dụ khi người dùng bật).
+Chủ chốt 14 mẫu Free (29 Chuyển nhà chuyển sang Free) và 16 Pro.
+
+### Việc và câu hỏi của từng màn
+- Thư viện mẫu (`/templates`): "Mẫu nào hợp việc của tôi?" Đầu trang: ô tìm; chip nhóm Tất cả · Học tập · Công việc · Cá nhân ·
+  Sáng tạo · Kế hoạch; chip Free/Pro. Không lọc/tìm: mục "Nổi bật" 6 mẫu Free trước, rồi theo nhóm. Ô mẫu: bìa, tên, một dòng
+  mục đích, dòng cột "A → B → C", huy hiệu Free/Pro. Lưới dựng lười (builder). Bảng trống luôn là ô đầu.
+- Xem trước mẫu: "Bảng này trông thế nào?" Lớn nhất là Kanban thật dựng từ câu trả lời mặc định + thẻ ví dụ (bảng tạm, không lưu,
+  ghi rõ "Xem trước · không lưu"). Trên: bìa, mục đích, cột, nhóm, Thời gian mặc định. Nút chính "Dùng mẫu này" (Pro cũng xem
+  được).
+- Smart Setup: "Bảng của tôi khác mẫu ở đâu?" 2–5 câu, mỗi câu có nhãn, một dòng giải thích nó đổi gì trên bảng, mặc định hợp lý;
+  chip nhập từng dòng (thêm, sửa, kéo sắp, xoá), ngày qua lịch, chọn bằng nút phân đoạn, bật/tắt. Công tắc "Thêm vài thẻ ví dụ"
+  (tắt sẵn). Lỗi hiện ngay dưới câu. Nút "Xem trước" → bảng sinh từ câu trả lời; "Tạo bảng" (Pro hỏi ở đây nếu mẫu Pro), "Sửa"
+  quay lại giữ nguyên câu trả lời. Tạo một lần dù bấm nhiều lần.
+- Bảng trống: tên + (tuỳ chọn) đổi tên ba cột; tạo ngay.
+- Bảng: ngày quan trọng (nếu có) là chip "Kết thúc học kỳ · 15/01 · còn 68 ngày" dưới tên; sửa ở menu "Ngày quan trọng". Công tắc
+  Bảng | Thời gian nằm cạnh tên khi được ghim, nếu không thì ở nút trên thanh đầu; ghim/bỏ ghim trong menu bảng.
+- Nhóm: chạm = làm nổi (thẻ khớp có viền màu + dấu ✓ cạnh tên nhóm, thẻ khác vẫn hiện, nhạt đi); thanh "Đang làm nổi: Toán ·
+  Chỉ hiện nhóm này · Bỏ chọn"; "Chỉ hiện nhóm này" mới ẩn thẻ khác, có nhãn "Đang lọc" và nút bỏ lọc. Nhóm trống vẫn hiện.
+- Màn chào: "Bạn chủ yếu muốn sắp xếp gì?" Học tập / Công việc, kèm "Xem tất cả mẫu" và Bỏ qua. Bài tập trên bảng tạm, chung cơ
+  chế, khác ví dụ (Học tập: môn học; Công việc: mảng việc): 1) nhóm vs cột vs thẻ + thêm thẻ, 2) kéo sang cột khác, 3) chạm nhóm
+  để làm nổi (không ẩn), 4) tích việc con (thẻ không đổi cột), kéo vào cột hoàn tất. Cuối: 3 mẫu gợi ý (Học tập: Kế hoạch học kỳ,
+  Bài tập nhóm, Ôn thi; Công việc: Dự án Kanban, Kế hoạch tuần, Ý tưởng) + Tất cả mẫu + Bảng trống → vào Smart Setup của mẫu đó.
+  Bỏ qua → Trang chủ trống. Người dùng cũ không bị hiện lại; xem lại ở Cài đặt › Trợ giúp.
+
+### Trạng thái, đáp ứng, từ chối
+- Rỗng: tìm không ra → "Không có mẫu nào khớp" + bỏ lọc; bảng không ngày quan trọng → không hiện chip. Lỗi tạo → SnackBar, không
+  có bảng nửa vời.
+- 320–1440 px, chữ ×2, tối/sáng, đọc màn hình (nhãn cho ô mẫu, chip, nút), giảm chuyển động, bàn phím.
+- Từ chối: module riêng theo loại bảng, lịch học/giá/hẹn đăng riêng, 30 màn viết tay, trình tạo form chung, thẻ ví dụ tự thêm.

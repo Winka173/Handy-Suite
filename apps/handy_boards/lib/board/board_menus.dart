@@ -1,6 +1,7 @@
 import 'package:handy_boards_engine/handy_boards_engine.dart';
 import 'package:handy_ui/kit.dart';
 import '../design/theme.dart';
+import 'key_dates.dart';
 import '../pro/pro.dart';
 import '../scope.dart';
 import '../ui/look.dart';
@@ -168,6 +169,38 @@ Future<void> boardMenu(
         Icons.view_column_outlined,
         tr(sheet, 'Add column', 'Thêm cột'),
         () => then(() => addColumnDialog(context, scope, board)),
+      ),
+      _row(
+        sheet,
+        Icons.flag_outlined,
+        tr(sheet, 'Key dates', 'Ngày quan trọng'),
+        () => then(() => editMilestones(context, scope, board)),
+        key: const Key('menu-key-dates'),
+      ),
+      _row(
+        sheet,
+        timePinned(b) ? Icons.date_range : Icons.date_range_outlined,
+        timePinned(b)
+            ? tr(
+                sheet,
+                'Move the Time switch to the top bar',
+                'Đưa nút Thời gian lên thanh trên',
+              )
+            : tr(
+                sheet,
+                'Pin the Board | Time switch',
+                'Ghim nút Bảng | Thời gian cạnh tên',
+              ),
+        () => then(
+          () => scope.run(
+            context,
+            () => scope.controller.change(
+              (s) => setBoardLook(s, board, timePinned: !timePinned(b)),
+              history: false,
+            ),
+          ),
+        ),
+        key: const Key('menu-time-pin'),
       ),
       _row(
         sheet,

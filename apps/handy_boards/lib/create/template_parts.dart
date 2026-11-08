@@ -1,0 +1,289 @@
+import 'package:handy_boards_engine/handy_boards_engine.dart';
+import 'package:handy_ui/kit.dart';
+import '../board/board_menus.dart' show ProBadge;
+import '../board/category_strip.dart';
+import '../board/kanban_view.dart';
+import '../covers/cover_art.dart';
+import '../design/theme.dart';
+import 'new_board.dart' show isVi;
+
+String groupName(BuildContext context, TemplateGroup g) => switch (g) {
+  TemplateGroup.study => tr(context, 'Study', 'Học tập'),
+  TemplateGroup.work => tr(context, 'Work', 'Công việc'),
+  TemplateGroup.personal => tr(context, 'Personal & home', 'Cá nhân & nhà'),
+  TemplateGroup.creative => tr(context, 'Creative', 'Sáng tạo'),
+  TemplateGroup.planning => tr(context, 'Plans & occasions', 'Kế hoạch & dịp'),
+};
+
+/// "Not started → In progress → Completed", with optional columns as they
+/// start (on).
+String columnsLine(BoardTemplate t, bool vi) =>
+    t.columns.map((c) => c.name.of(vi)).join(' → ');
+
+/// Whether [t] matches what the person typed, in either language, without
+/// minding accents.
+bool templateMatches(BoardTemplate t, String query) {
+  final q = foldSearch(query.trim());
+  if (q.isEmpty) return true;
+  final hay = foldSearch(
+    [
+      t.name.en,
+      t.name.vi,
+      t.goal.en,
+      t.goal.vi,
+      t.example.en,
+      t.example.vi,
+      ...t.tags,
+    ].join(' '),
+  );
+  return q.split(RegExp(r'\s+')).every(hay.contains);
+}
+
+/// A template in the gallery: its cover, name, goal, its columns, and Free
+/// or Pro in words (never colour alone).
+class TemplateTile extends StatelessWidget {
+  final BoardTemplate template;
+  final VoidCallback onTap;
+
+  /// Phones: a row (picture left, words in full on the right).
+  final bool row;
+  const TemplateTile({
+    super.key,
+    required this.template,
+    required this.onTap,
+    this.row = false,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final p = BoardsPalette.of(context);
+    final t = template, vi = isVi(context);
+    if (row)
+      return Semantics(
+        button: true,
+        label:
+            '${t.name.of(vi)}, ${t.pro ? 'Pro' : tr(context, 'Free', 'Miễn phí')}. '
+            '${t.goal.of(vi)}',
+        excludeSemantics: true,
+        child: Material(
+          color: p.surface,
+          borderRadius: BorderRadius.circular(BoardsRadii.tile),
+          clipBehavior: Clip.antiAlias,
+          child: InkWell(
+            key: Key('template-${t.id}'),
+            onTap: onTap,
+            child: IntrinsicHeight(
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  SizedBox(width: 92, child: CoverArt(t.cover)),
+                  Expanded(
+                    child: Padding(
+                      padding: const EdgeInsets.fromLTRB(14, 12, 12, 12),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              Expanded(
+                                child: Text(
+                                  t.name.of(vi),
+                                  style: theme.textTheme.titleMedium?.copyWith(
+                                    fontWeight: FontWeight.w700,
+                                  ),
+                                ),
+                              ),
+                              if (t.pro) const ProBadge(),
+                            ],
+                          ),
+                          const SizedBox(height: 2),
+                          Text(
+                            t.goal.of(vi),
+                            style: theme.textTheme.bodyMedium?.copyWith(
+                              color: p.muted,
+                            ),
+                          ),
+                          const SizedBox(height: 6),
+                          Text(
+                            columnsLine(t, vi),
+                            style: theme.textTheme.labelSmall?.copyWith(
+                              color: p.muted,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      );
+    return Semantics(
+      button: true,
+      label:
+          '${t.name.of(vi)}, ${t.pro ? 'Pro' : tr(context, 'Free', 'Miễn phí')}. '
+          '${t.goal.of(vi)}',
+      excludeSemantics: true,
+      child: Material(
+        color: p.surface,
+        borderRadius: BorderRadius.circular(BoardsRadii.tile),
+        clipBehavior: Clip.antiAlias,
+        child: InkWell(
+          key: Key('template-${t.id}'),
+          onTap: onTap,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              SizedBox(
+                height: 112,
+                child: Stack(
+                  fit: StackFit.expand,
+                  children: [
+                    CoverArt(t.cover),
+                    Positioned(
+                      top: 10,
+                      right: 10,
+                      child: t.pro ? const ProBadge() : const _FreeBadge(),
+                    ),
+                  ],
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(14, 10, 14, 0),
+                child: Text(
+                  t.name.of(vi),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: theme.textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(14, 2, 14, 0),
+                child: Text(
+                  t.goal.of(vi),
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: theme.textTheme.bodyMedium?.copyWith(color: p.muted),
+                ),
+              ),
+              const Spacer(),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(14, 0, 14, 12),
+                child: Text(
+                  columnsLine(t, vi),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: theme.textTheme.labelSmall?.copyWith(color: p.muted),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _FreeBadge extends StatelessWidget {
+  const _FreeBadge();
+  @override
+  Widget build(BuildContext context) {
+    final p = BoardsPalette.of(context);
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+      decoration: BoxDecoration(
+        color: p.surface,
+        borderRadius: BorderRadius.circular(BoardsRadii.chip),
+      ),
+      child: Text(
+        tr(context, 'Free', 'Miễn phí'),
+        style: Theme.of(
+          context,
+        ).textTheme.labelSmall?.copyWith(fontWeight: FontWeight.w700),
+      ),
+    );
+  }
+}
+
+/// The id every preview board uses: it only ever lives in a throwaway
+/// state, never in the person's library.
+const previewBoard = '00000000-0000-4000-8000-00000000b0a2';
+
+/// A board drawn by the real Kanban from a throwaway state that is never
+/// saved: what a template, or the answers so far, will make.
+class BoardPreview extends StatefulWidget {
+  final BoardsState state;
+  final DateTime now;
+  const BoardPreview({super.key, required this.state, required this.now});
+  @override
+  State<BoardPreview> createState() => _BoardPreviewState();
+}
+
+class _BoardPreviewState extends State<BoardPreview> {
+  String? focus;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final p = BoardsPalette.of(context);
+    final s = widget.state;
+    final b = s.get('boards', previewBoard);
+    final milestones = milestonesOf(b);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        if (milestones.isNotEmpty)
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+            child: Wrap(
+              spacing: 6,
+              runSpacing: 6,
+              children: [
+                for (final m in milestones)
+                  Chip(
+                    avatar: const Icon(Icons.flag_outlined, size: 16),
+                    label: Text(
+                      '${m.label} · ${MaterialLocalizations.of(context).formatShortDate(m.day)}',
+                    ),
+                  ),
+              ],
+            ),
+          ),
+        if (categoriesOf(s, previewBoard).isNotEmpty) ...[
+          CategoryStrip(
+            state: s,
+            board: previewBoard,
+            selected: focus,
+            onSelect: (v) => setState(() => focus = v),
+          ),
+          const SizedBox(height: 8),
+        ],
+        if (topTasks(s, board: previewBoard).isEmpty)
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+            child: Text(
+              tr(
+                context,
+                'No cards yet: the board starts empty unless you add the examples.',
+                'Chưa có thẻ: bảng bắt đầu trống, trừ khi bạn thêm thẻ ví dụ.',
+              ),
+              style: theme.textTheme.bodySmall?.copyWith(color: p.muted),
+            ),
+          ),
+        Expanded(
+          child: KanbanView(
+            state: s,
+            board: previewBoard,
+            now: widget.now,
+            filter: KanbanFilter(focus: focus),
+          ),
+        ),
+      ],
+    );
+  }
+}

@@ -39,8 +39,8 @@ List<_Topic> _topics(BuildContext context) => [
       _Step(
         tr(
           context,
-          'On Your boards, tap New board. Start blank gives To do, Doing and Done.',
-          'Ở Bảng của bạn, bấm Bảng mới. Bắt đầu bảng trống cho sẵn Cần làm, Đang làm và Xong.',
+          'On Your boards, tap New board: a template, or a blank board with To Do, Doing and Done.',
+          'Ở Bảng của bạn, bấm Bảng mới: chọn một mẫu, hoặc bảng trống với Cần làm, Đang làm, Xong.',
         ),
         picture: MockChips(
           ringed: 0,
@@ -56,8 +56,8 @@ List<_Topic> _topics(BuildContext context) => [
       _Step(
         tr(
           context,
-          'Explore templates shows each one as a real board before you choose. Use this template makes your own copy, with due days counted from today.',
-          'Xem các mẫu cho thấy mỗi mẫu như một bảng thật trước khi chọn. Dùng mẫu này tạo bản của riêng bạn, hạn tính từ hôm nay.',
+          'Each of the 30 templates shows its board first. Use this template asks two or three questions (name, subjects or work areas, a key date), then shows exactly the board you will get. Example cards are off unless you turn them on.',
+          'Mỗi mẫu trong 30 mẫu đều cho xem bảng trước. Dùng mẫu này hỏi hai ba câu (tên, môn học hay mảng việc, một ngày quan trọng), rồi cho xem đúng bảng sẽ tạo. Thẻ ví dụ tắt sẵn, chỉ thêm khi bạn bật.',
         ),
       ),
       _Step(
@@ -147,8 +147,8 @@ List<_Topic> _topics(BuildContext context) => [
       _Step(
         tr(
           context,
-          'Tap a category to show only its cards; the others are hidden. Tap it again to see all.',
-          'Bấm một nhóm để chỉ hiện thẻ của nhóm đó; thẻ khác ẩn đi. Bấm lại để xem hết.',
+          'Tap a category to bring its cards forward: they get a ring, the others stay on the board. Only this one hides the rest; the cross clears it.',
+          'Bấm một nhóm để làm nổi thẻ của nhóm: thẻ có viền, thẻ khác vẫn ở trên bảng. Chỉ hiện nhóm này mới ẩn phần còn lại; dấu X để bỏ chọn.',
         ),
         picture: const MockStrip(ringed: 0),
       ),
@@ -209,8 +209,8 @@ List<_Topic> _topics(BuildContext context) => [
       _Step(
         tr(
           context,
-          'Beside the board’s name, switch Board to Time. Each board remembers its choice.',
-          'Cạnh tên bảng, chuyển Bảng sang Thời gian. Mỗi bảng nhớ lựa chọn của nó.',
+          'Beside the board’s name, switch Board to Time (or use the calendar button on top when the switch is not pinned; … › Pin the switch). Columns stay your progress; Time lays cards out by due date.',
+          'Cạnh tên bảng, chuyển Bảng sang Thời gian (hoặc nút lịch ở thanh trên khi nút chưa được ghim; … › Ghim nút). Cột vẫn là tiến độ; Thời gian xếp thẻ theo ngày hạn.',
         ),
         picture: const MockTime(),
       ),

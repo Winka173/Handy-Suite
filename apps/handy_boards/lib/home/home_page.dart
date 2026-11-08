@@ -1,6 +1,6 @@
 import 'package:handy_boards_engine/handy_boards_engine.dart';
 import 'package:handy_ui/kit.dart';
-import '../create/templates.dart';
+import '../create/new_board.dart';
 import '../design/looks.dart';
 import '../design/theme.dart';
 import '../scope.dart';

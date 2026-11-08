@@ -3,10 +3,10 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:handy_boards_engine/handy_boards_engine.dart';
 
 BoardsState fixture({String title = 'Semester 1'}) {
-  final s = createKanbanBoard(
+  final s = createFromTemplate(
     BoardsState(),
-    title: title,
-    preset: presetById('study'),
+    templateById('semester')!,
+    answers: {'title': title},
     boardId: 'b',
   );
   // These tests supply their own cards; keep the preset's columns/categories.
@@ -35,7 +35,7 @@ void main() {
       final category = s.get('tasks', 't').str('category');
       final doing = s
           .rows('statuses')
-          .firstWhere((r) => r.str('title') == 'Doing');
+          .firstWhere((r) => r.str('title') == 'In progress');
       s = changeStatus(s, 't', doing.id);
       expect(s.get('tasks', 't').str('category'), category);
       expect(changeStatus(s, 't', doing.id), same(s));

@@ -339,6 +339,34 @@ class SettingsPage extends StatelessWidget {
                     navigates: true,
                     onTap: () => Navigator.pushNamed(context, '/how-to'),
                   ),
+                  SettingsChoice<String>(
+                    controlKey: const Key('settings-purpose'),
+                    icon: Icons.recommend_outlined,
+                    title: tr(
+                      context,
+                      'Suggest templates for',
+                      'Gợi ý mẫu cho',
+                    ),
+                    value: prefs['purpose'] as String? ?? 'none',
+                    options: [
+                      ('study', tr(context, 'Study', 'Học tập')),
+                      ('work', tr(context, 'Work', 'Công việc')),
+                      ('none', tr(context, 'Neither', 'Không chọn')),
+                    ],
+                    onChanged: (v) =>
+                        _pref(context, 'purpose', v == 'none' ? null : v),
+                  ),
+                  SettingsRow(
+                    key: const Key('settings-plans'),
+                    icon: Icons.table_chart_outlined,
+                    title: tr(
+                      context,
+                      'What Free and Pro include',
+                      'Free và Pro gồm gì',
+                    ),
+                    navigates: true,
+                    onTap: () => showPlans(context),
+                  ),
                 ],
               ),
             ],
@@ -476,3 +504,132 @@ class _ProCard extends StatelessWidget {
     );
   }
 }
+
+/// Free and Pro side by side, as they really are in this version.
+Future<void> showPlans(BuildContext context) => showModalBottomSheet<void>(
+  context: context,
+  isScrollControlled: true,
+  useSafeArea: true,
+  showDragHandle: true,
+  builder: (sheet) {
+    final theme = Theme.of(sheet);
+    final rows = <(String, String, String)>[
+      (
+        tr(
+          sheet,
+          'Boards, columns, categories, cards, subtasks',
+          'Bảng, cột, nhóm, thẻ, việc con',
+        ),
+        tr(sheet, 'Unlimited', 'Không giới hạn'),
+        tr(sheet, 'Unlimited', 'Không giới hạn'),
+      ),
+      (
+        tr(
+          sheet,
+          'Due dates, reminders, key dates, Time view',
+          'Hạn, nhắc, ngày quan trọng, chế độ Thời gian',
+        ),
+        '✓',
+        '✓',
+      ),
+      (
+        tr(
+          sheet,
+          'Search, category focus and filter',
+          'Tìm, làm nổi và lọc nhóm',
+        ),
+        '✓',
+        '✓',
+      ),
+      (
+        tr(
+          sheet,
+          'Backup, restore, auto backup, Trash, archive',
+          'Sao lưu, khôi phục, tự sao lưu, thùng rác, lưu trữ',
+        ),
+        '✓',
+        '✓',
+      ),
+      (
+        tr(sheet, 'Templates', 'Mẫu bảng'),
+        tr(sheet, '14 + blank', '14 + bảng trống'),
+        '30 + ${tr(sheet, 'blank', 'bảng trống')}',
+      ),
+      (tr(sheet, 'Covers', 'Ảnh bìa'), '30', '60'),
+      (tr(sheet, 'Board looks', 'Giao diện bảng'), '5', '15'),
+      (
+        tr(sheet, 'Export', 'Xuất'),
+        tr(
+          sheet,
+          'Plain picture/PDF, CSV, Markdown, ICS',
+          'Ảnh/PDF thường, CSV, Markdown, ICS',
+        ),
+        tr(sheet, '+ Poster and Printable', '+ Poster và Bản in'),
+      ),
+      (
+        tr(
+          sheet,
+          'Repeating cards, automations, insights',
+          'Thẻ lặp lại, tự động hoá, thống kê',
+        ),
+        '–',
+        '✓',
+      ),
+    ];
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(20, 0, 20, 24),
+      child: SingleChildScrollView(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Text(
+              tr(sheet, 'Free and Pro', 'Free và Pro'),
+              style: theme.textTheme.titleLarge,
+            ),
+            const SizedBox(height: 4),
+            Text(
+              tr(
+                sheet,
+                'Pro is one payment, no subscription, no ads in either. A board you made always stays yours to edit, with or without Pro.',
+                'Pro trả một lần, không thuê bao; cả hai đều không quảng cáo. Bảng đã tạo luôn sửa được, dù có Pro hay không.',
+              ),
+              style: theme.textTheme.bodySmall,
+            ),
+            const SizedBox(height: 12),
+            Table(
+              columnWidths: const {
+                0: FlexColumnWidth(1.6),
+                1: FlexColumnWidth(),
+                2: FlexColumnWidth(),
+              },
+              defaultVerticalAlignment: TableCellVerticalAlignment.middle,
+              children: [
+                TableRow(
+                  children: [
+                    const SizedBox.shrink(),
+                    Text(
+                      tr(sheet, 'Free', 'Miễn phí'),
+                      style: theme.textTheme.titleSmall,
+                    ),
+                    Text('Pro', style: theme.textTheme.titleSmall),
+                  ],
+                ),
+                for (final (what, free, pro) in rows)
+                  TableRow(
+                    children: [
+                      Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 8),
+                        child: Text(what, style: theme.textTheme.bodyMedium),
+                      ),
+                      Text(free, style: theme.textTheme.bodyMedium),
+                      Text(pro, style: theme.textTheme.bodyMedium),
+                    ],
+                  ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  },
+);

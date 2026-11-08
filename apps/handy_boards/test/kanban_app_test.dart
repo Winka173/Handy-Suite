@@ -25,15 +25,54 @@ class TestStore implements BoardsStore {
 final clock = DateTime(2026, 11, 7, 9);
 const board = 'b0000000-0000-4000-8000-000000000001';
 
-BoardsState studyState({bool welcomed = true}) => createKanbanBoard(
-  BoardsState(
-    preferences: {'locale': 'en', 'theme': 'light', 'welcomed': welcomed},
-  ),
-  title: 'Semester 1',
-  preset: presetById('study'),
-  now: clock,
-  boardId: board,
-);
+BoardsState studyState({bool welcomed = true}) {
+  final s = createFromTemplate(
+    BoardsState(
+      preferences: {'locale': 'en', 'theme': 'light', 'welcomed': welcomed},
+    ),
+    templateById('semester')!,
+    answers: {'title': 'Semester 1'},
+    examples: true,
+    now: clock,
+    boardId: board,
+  );
+  // One example due today, so this week's time view has something on it.
+  final first = topTasks(
+    s,
+    board: board,
+  ).firstWhere((x) => x.data['due'] != null);
+  return setDueDay(s, first.id, DateTime(clock.year, clock.month, clock.day));
+}
+
+/// Taps a look in the look picker, scrolling its list to it first.
+Future<void> lookTap(WidgetTester t, String key) async {
+  await t.scrollUntilVisible(
+    find.byKey(Key(key)),
+    120,
+    scrollable: find
+        .descendant(
+          of: find.byKey(const Key('look-list')),
+          matching: find.byType(Scrollable),
+        )
+        .first,
+  );
+  await tap(t, find.byKey(Key(key)));
+}
+
+/// Taps a row of an open menu sheet, scrolling the sheet to it first.
+Future<void> menuTap(WidgetTester t, String key) async {
+  await t.scrollUntilVisible(
+    find.byKey(Key(key)),
+    120,
+    scrollable: find
+        .descendant(
+          of: find.byType(BottomSheet),
+          matching: find.byType(Scrollable),
+        )
+        .first,
+  );
+  await tap(t, find.byKey(Key(key)));
+}
 
 Future<BoardsController> boot(
   WidgetTester t,
@@ -76,40 +115,53 @@ void main() {
         );
   });
 
-  testWidgets('a new install plays the tour (story, practice, start) on a '
-      'board it never saves, then makes the study board', (t) async {
+  testWidgets('the study branch: purpose, a practice that never saves, '
+      'three study suggestions; a suggestion opens its setup', (t) async {
     final c = await boot(t, BoardsState(preferences: {'locale': 'en'}));
     expect(find.byKey(const Key('welcome-skip')), findsOneWidget);
-    await tap(t, find.byKey(const Key('welcome-primary'))); // gather
-    await tap(t, find.byKey(const Key('welcome-primary'))); // show me how
-    // The practice: lit steps, done without dragging here.
+    // Next waits for a choice.
+    await tap(t, find.byKey(const Key('welcome-primary')));
+    expect(find.byKey(const Key('welcome-purpose-study')), findsOneWidget);
+    await tap(t, find.byKey(const Key('welcome-purpose-study')));
+    await tap(t, find.byKey(const Key('welcome-primary')));
     expect(find.text('Tap Add card'), findsOneWidget);
-    expect(find.text('Revise chapter 3'), findsNothing);
     await tap(t, find.byKey(const Key('welcome-do-it')));
     expect(find.text('Revise chapter 3'), findsWidgets);
-    expect(find.text('Hold, then drag to Doing'), findsOneWidget);
     await tap(t, find.byKey(const Key('welcome-do-it')));
     expect(find.text('Tap Maths'), findsOneWidget);
     await tap(t, find.byKey(const Key('welcome-do-it')));
+    // Focus lights Maths up; the other subjects' cards stay on the board.
+    expect(find.text('Outline the essay'), findsOneWidget);
+    expect(find.text('Learn 20 new words'), findsOneWidget);
     expect(find.text('Tick a subtask'), findsOneWidget);
-    expect(find.text('2/5'), findsWidgets);
-    await tap(t, find.byKey(const Key('welcome-do-it')));
-    expect(find.text('3/5'), findsWidgets);
-    expect(find.text('Drag it to Done'), findsOneWidget);
     await tap(t, find.byKey(const Key('welcome-do-it')));
     expect(c.state!.rows('boards'), isEmpty);
     await tap(t, find.byKey(const Key('welcome-primary'))); // next
-    expect(find.byKey(const Key('welcome-choice-study')), findsOneWidget);
-    await tap(t, find.byKey(const Key('welcome-primary'))); // start
-    final b = c.state!.rows('boards').single;
-    expect(b.str('title'), 'Semester 1');
-    expect(categoriesOf(c.state!, b.id).map((x) => x.str('title')), [
-      'Maths',
-      'Literature',
-      'English',
-      'Physics',
-    ]);
+    for (final id in ['semester', 'group-assignment', 'exam-revision'])
+      expect(find.byKey(Key('welcome-start-template:$id')), findsOneWidget);
+    await tap(t, find.byKey(const Key('welcome-start-template:semester')));
+    // Its setup opens; still nothing is made.
+    expect(find.byKey(const Key('setup-preview')), findsOneWidget);
+    expect(c.state!.rows('boards'), isEmpty);
     expect(c.state!.preferences['welcomed'], isTrue);
+    expect(c.state!.preferences['purpose'], 'study');
+  });
+
+  testWidgets('the work branch uses work areas and suggests work templates', (
+    t,
+  ) async {
+    await boot(t, BoardsState(preferences: {'locale': 'en'}));
+    await tap(t, find.byKey(const Key('welcome-purpose-work')));
+    await tap(t, find.byKey(const Key('welcome-primary')));
+    await tap(t, find.byKey(const Key('welcome-do-it')));
+    expect(find.text('Home screen'), findsWidgets);
+    await tap(t, find.byKey(const Key('welcome-do-it')));
+    expect(find.text('Tap Interface'), findsOneWidget);
+    await tap(t, find.byKey(const Key('welcome-do-it')));
+    await tap(t, find.byKey(const Key('welcome-do-it')));
+    await tap(t, find.byKey(const Key('welcome-primary')));
+    for (final id in ['project', 'weekly', 'ideas'])
+      expect(find.byKey(Key('welcome-start-template:$id')), findsOneWidget);
   });
 
   testWidgets('skipping the tour leaves an empty home with both ways in', (
@@ -144,7 +196,20 @@ void main() {
       await tap(t, find.byKey(const Key('board-$board')));
       final maths = categoriesOf(c.state!, board).first;
       await tap(t, find.byKey(Key('strip-${maths.id}')));
-      // Only Maths cards show; a card added now joins Maths.
+      // Focus keeps every card; the explicit filter then hides the rest.
+      expect(find.text('Focus: Web Development'), findsOneWidget);
+      final others = topTasks(c.state!, board: board).where(
+        (x) =>
+            x.str('category') != maths.id &&
+            x.str('status') == columnsOf(c.state!, board).first.id,
+      );
+      for (final o in others)
+        expect(find.byKey(ValueKey('card-${o.id}')), findsOneWidget);
+      await tap(t, find.byKey(const Key('focus-only')));
+      expect(find.text('Only Web Development'), findsOneWidget);
+      for (final o in others)
+        expect(find.byKey(ValueKey('card-${o.id}')), findsNothing);
+      // A card added now joins the category in focus.
       final todo = columnsOf(c.state!, board).first;
       await tap(t, find.byKey(Key('add-card-open-${todo.id}')));
       await t.enterText(
@@ -171,7 +236,7 @@ void main() {
       final moved = c.state!.get('tasks', card.id);
       expect(moved.str('status'), done.id);
       expect(moved.str('category'), maths.id);
-      expect(find.text('Moved to Done'), findsOneWidget);
+      expect(find.text('Moved to Completed'), findsOneWidget);
       // Undo puts it back.
       await tap(t, find.text('Undo'));
       expect(c.state!.get('tasks', card.id).str('status'), todo.id);
@@ -205,43 +270,59 @@ void main() {
     expect(c.state!.get('tasks', card.id).str('status'), card.str('status'));
   });
 
-  testWidgets('a Pro template can be seen whole; using it asks for Pro and '
-      'makes nothing', (t) async {
+  testWidgets('a Pro template can be previewed and set up; only Create '
+      'asks for Pro, and nothing is made without it', (t) async {
     final c = await boot(t, studyState());
     await tap(t, find.byKey(const Key('home-new')));
     await tap(t, find.byKey(const Key('new-template')));
-    await tap(t, find.byKey(const Key('shelf-work')));
-    await tap(t, find.byKey(const Key('template-content')));
-    expect(find.text('Unlock with Pro'), findsOneWidget);
-    final cards = presetById('content')!.cards;
-    expect(
-      find.text(cards.firstWhere((x) => x.column == 0).titleEn),
-      findsWidgets,
-    );
+    await t.enterText(find.byKey(const Key('gallery-search')), 'sprint');
+    await t.pumpAndSettle();
+    await tap(t, find.byKey(const Key('template-sprint')));
+    expect(find.text('Use this template'), findsOneWidget);
     await tap(t, find.byKey(const Key('template-use')));
+    await tap(t, find.byKey(const Key('setup-preview')));
+    expect(find.text('Create with Pro'), findsOneWidget);
+    await tap(t, find.byKey(const Key('plan-create')));
     expect(find.text('Pay once. Keep it.'), findsOneWidget);
     expect(c.state!.rows('boards'), hasLength(1));
   });
 
-  testWidgets('a free template makes a board with fresh ids and opens it', (
-    t,
-  ) async {
+  testWidgets('a free template: answers change the board, Back keeps them, '
+      'Create makes one board with fresh ids and opens it', (t) async {
     final c = await boot(t, studyState());
     await tap(t, find.byKey(const Key('home-new')));
     await tap(t, find.byKey(const Key('new-template')));
-    await tap(t, find.byKey(const Key('shelf-work')));
     await tap(t, find.byKey(const Key('template-project')));
     await tap(t, find.byKey(const Key('template-use')));
-    await tap(t, find.byKey(const Key('ask-text-save')));
+    await t.enterText(find.byKey(const Key('setup-title')), 'Shop app');
+    await tap(t, find.byKey(const Key('setup-review')));
+    await tap(t, find.byKey(const Key('setup-preview')));
+    await tap(t, find.byKey(const Key('plan-edit')));
+    // Back keeps the answers.
+    expect(find.text('Shop app'), findsOneWidget);
+    await tap(t, find.byKey(const Key('setup-preview')));
+    await tap(t, find.byKey(const Key('plan-create')));
     expect(c.state!.rows('boards'), hasLength(2));
     final made = c.state!.rows('boards').firstWhere((b) => b.id != board);
+    expect(made.str('title'), 'Shop app');
     expect(columnsOf(c.state!, made.id).map((x) => x.str('title')), [
       'Backlog',
-      'In Progress',
-      'Review',
+      'In progress',
       'Done',
     ]);
-    expect(find.text(made.str('title')), findsWidgets);
+    expect(topTasks(c.state!, board: made.id), isEmpty);
+    expect(find.text('Shop app'), findsWidgets);
+  });
+
+  testWidgets('a blank board is two taps and a name', (t) async {
+    final c = await boot(t, studyState());
+    await tap(t, find.byKey(const Key('home-new')));
+    await tap(t, find.byKey(const Key('new-blank')));
+    await t.enterText(find.byKey(const Key('blank-title')), 'Errands');
+    await tap(t, find.byKey(const Key('blank-create')));
+    final made = c.state!.rows('boards').firstWhere((b) => b.id != board);
+    expect(made.str('title'), 'Errands');
+    expect(columnsOf(c.state!, made.id), hasLength(3));
   });
 
   testWidgets('choosing a cover and cancelling leaves the card as it was', (
@@ -305,7 +386,7 @@ void main() {
     expect(find.text('Bảng của bạn'), findsOneWidget);
     await tap(t, find.byKey(const Key('board-$board')));
     expect(t.takeException(), isNull);
-    expect(find.text('Maths'), findsWidgets);
+    expect(find.text('Web Development'), findsWidgets);
     expect(find.text('Nhóm'), findsOneWidget);
   });
 
@@ -314,15 +395,15 @@ void main() {
     final c = await boot(t, studyState());
     await tap(t, find.byKey(const Key('board-$board')));
     await tap(t, find.byKey(const Key('board-more')));
-    await tap(t, find.byKey(const Key('menu-board-look')));
-    await tap(t, find.byKey(const Key('look-linen')));
+    await menuTap(t, 'menu-board-look');
+    await lookTap(t, 'look-linen');
     expect(find.text('Apply with Pro'), findsOneWidget);
     expect(c.state!.get('boards', board).data['appearance'], isNull);
     await tap(t, find.byKey(const Key('look-cancel')));
     expect(find.byKey(const Key('look-list')), findsNothing);
     await tap(t, find.byKey(const Key('board-more')));
-    await tap(t, find.byKey(const Key('menu-board-look')));
-    await tap(t, find.byKey(const Key('look-linen')));
+    await menuTap(t, 'menu-board-look');
+    await lookTap(t, 'look-linen');
     await tap(t, find.byKey(const Key('look-apply')));
     expect(find.text('Pay once. Keep it.'), findsOneWidget);
     expect(c.state!.get('boards', board).data['appearance'], isNull);

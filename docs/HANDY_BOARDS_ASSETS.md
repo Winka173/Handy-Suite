@@ -141,29 +141,34 @@ A release binary size comparison and device memory profile were not run.
 
 ## Templates
 
-Exactly ten presets are exported in the requested order. The first five are Free and the
-last five are Pro. Blank has no categories or cards. Each other preset has four unique
-category hue indices, ten cards distributed across every column, five checklists, partial
-checklist progress, matching covers, and relative due dates. Total: **90 cards** and
-**45 checklists**. Every moodboard card has a cover. Free templates reference only Free covers.
+Since 2026-11-08 templates are a typed, versioned registry
+(`packages/handy_boards_engine/lib/src/templates.dart` for the schema and generator,
+`template_catalog.dart` for the 30 entries; the old 10 presets were removed). A template only
+shapes a new board: title, columns with exactly one finished column, categories from the setup
+chips, key dates from date answers, time-view defaults, look and cover, and example cards only
+when the person turns them on. Boards keep `template` + `templateVersion` as provenance; editing
+or removing a template never touches a board made from it.
 
-| ID | Name EN / VI | Access | Cards | Checklists | Card covers | Due dates |
-| --- | --- | --- | ---: | ---: | ---: | ---: |
-| `blank` | Blank Kanban / Bảng trống | Free | 0 | 0 | 0 | 0 |
-| `study` | Semester 1 / Học kỳ 1 | Free | 10 | 5 | 5 | 3 |
-| `personal` | Personal tasks / Việc cá nhân | Free | 10 | 5 | 5 | 3 |
-| `shopping` | Wishlist & shopping / Danh sách mua sắm | Free | 10 | 5 | 6 | 3 |
-| `project` | Project Kanban / Theo dõi dự án | Free | 10 | 5 | 5 | 3 |
-| `content` | Content production / Sản xuất nội dung | Pro | 10 | 5 | 8 | 3 |
-| `goals` | Goal roadmap / Lộ trình mục tiêu | Pro | 10 | 5 | 6 | 3 |
-| `event` | Event planning / Chuẩn bị sự kiện | Pro | 10 | 5 | 7 | 3 |
-| `moodboard` | Creative moodboard / Bảng cảm hứng | Pro | 10 | 5 | 10 | 3 |
-| `renovation` | Home renovation / Sửa sang nhà cửa | Pro | 10 | 5 | 8 | 3 |
+Visual identity per template uses only this repo's original procedural covers (`lib/covers/`,
+licence: own work, no third-party art) and the board looks in
+`apps/handy_boards/lib/design/looks.dart` (colour values only). Every template has its own board
+cover; Free templates use Free covers and Free looks (`default`, `paper`, `mist`, `sage`,
+`clay`); Pro templates may also use `linen`, `blueprint`, `meadow`, `blush`, `sand`, `ink`,
+`terracotta`, `harbor`, `orchard`, `dusk`. No raster or downloaded images are added.
 
-Data lives entirely in `packages/handy_boards_engine/lib/src/presets.dart`.
-It does not create boards, schedule reminders, write storage or gate entitlements.
-The consuming application assigns fresh IDs and resolves dueInDays against the creation day.
-The shopping preset uses ordinary cards and checklists.
+| Group | Free | Pro |
+| --- | --- | --- |
+| Study | semester, group-assignment, exam-revision | course, thesis, language |
+| Work | project, weekly, ideas | sprint, launch, meeting |
+| Personal & home | personal, shopping | home-improvement, event, goals-90, home-organization |
+| Creative | content, inspiration | photography, writing, game-dev, campaign |
+| Plans & occasions | trip, monthly, daily, moving | workshop, holiday |
+
+14 Free (+ the blank board) and 16 Pro; the owner moved `moving` to Free on 2026-11-08 so the
+totals match the brief. Rules every entry passes are in
+`packages/handy_boards_engine/test/templates_test.dart` (bilingual texts, 3–5 columns with one
+finished column, 2–5 questions each with a help line, valid covers per tier, example anchors).
+Template data was drafted by Codex from the owner's per-template brief and reviewed.
 
 ## Contact sheets and visual review
 

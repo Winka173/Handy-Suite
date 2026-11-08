@@ -139,4 +139,56 @@ void main() {
     expect(c.state!.preferences['homeWidget'], isTrue);
     debugDefaultTargetPlatformOverride = null;
   });
+
+  testWidgets('the purpose picked in Settings puts its templates first in '
+      'the gallery; the Free and Pro table opens', (t) async {
+    await boot(t, studyState(), size: tall);
+    await openSettings(t);
+    await tap(t, find.byKey(const Key('settings-plans')));
+    expect(find.text('What Free and Pro include'), findsWidgets);
+    expect(find.text('14 + blank'), findsOneWidget);
+    await t.tapAt(const Offset(10, 10));
+    await t.pumpAndSettle();
+    await tap(t, find.text('Work').last);
+    await t.pageBack();
+    await t.pumpAndSettle();
+    await tap(t, find.byKey(const Key('home-new')));
+    await tap(t, find.byKey(const Key('new-template')));
+    expect(find.text('Suggested for you'), findsOneWidget);
+  });
+
+  testWidgets('a board made from a template that no longer exists opens and '
+      'works; the Time switch can move to the top bar; key dates show', (
+    t,
+  ) async {
+    var s = studyState();
+    s = s.put(
+      'boards',
+      s.get('boards', board).copy({'template': 'goals', 'templateVersion': 1}),
+    );
+    s = setMilestones(s, board, [
+      (label: 'Finals', day: DateTime(2026, 12, 20)),
+    ]);
+    final c = await boot(t, s);
+    await tap(t, find.byKey(const Key('board-$board')));
+    expect(find.byKey(const Key('board-view')), findsOneWidget);
+    expect(find.textContaining('Finals'), findsOneWidget);
+    await tap(t, find.byKey(const Key('board-more')));
+    await t.scrollUntilVisible(
+      find.byKey(const Key('menu-time-pin')),
+      120,
+      scrollable: find
+          .descendant(
+            of: find.byType(BottomSheet),
+            matching: find.byType(Scrollable),
+          )
+          .first,
+    );
+    await tap(t, find.byKey(const Key('menu-time-pin')));
+    expect(timePinned(c.state!.get('boards', board)), isFalse);
+    expect(find.byKey(const Key('board-view')), findsNothing);
+    expect(find.byKey(const Key('board-view-toggle')), findsOneWidget);
+    await tap(t, find.byKey(const Key('board-view-toggle')));
+    expect(c.state!.get('boards', board).str('view'), 'time');
+  });
 }

@@ -37,11 +37,11 @@ class ProPage extends StatelessWidget {
       (
         ProFeature.templates,
         Icons.dashboard_customize_outlined,
-        tr(context, 'Five more templates', 'Thêm năm mẫu bảng'),
+        tr(context, '16 more templates', 'Thêm 16 mẫu bảng'),
         tr(
           context,
-          'Content production, goals, events, a moodboard and a renovation, each with its own covers. Open any of them in the gallery to see the whole board first.',
-          'Sản xuất nội dung, mục tiêu, sự kiện, moodboard và sửa nhà, mỗi mẫu có bộ bìa riêng. Mở trong thư viện mẫu để xem cả bảng trước.',
+          'Thesis, sprints, launches, events, 90-day goals, writing, games and more, each with its own covers and look. Open any of them to see the board and answer its questions first; Pro is asked only when you create it.',
+          'Luận văn, sprint, ra mắt sản phẩm, sự kiện, mục tiêu 90 ngày, viết lách, làm game và hơn thế, mỗi mẫu có bìa và giao diện riêng. Mở mẫu nào cũng xem được bảng và trả lời câu hỏi trước; chỉ khi tạo mới hỏi Pro.',
         ),
       ),
       (
@@ -60,8 +60,8 @@ class ProPage extends StatelessWidget {
         tr(context, 'Board looks', 'Giao diện bảng'),
         tr(
           context,
-          'Five grounds for your boards, light and dark. Try each on your own board first.',
-          'Năm nền cho bảng, sáng và tối. Thử ngay trên bảng của bạn trước.',
+          'Ten more grounds for your boards, light and dark, on any board. Five stay free. Try each on your own board first.',
+          'Thêm 10 nền cho bảng, sáng và tối, dùng cho mọi bảng; 5 nền vẫn miễn phí. Thử ngay trên bảng của bạn trước.',
         ),
       ),
       (

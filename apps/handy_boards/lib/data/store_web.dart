@@ -224,7 +224,7 @@ class BrowserBoardsStore
     transaction.oncomplete = ((web.Event _) {
       try {
         final header = object(values['state']);
-        if (![1, 2, 3].contains(header['schema']))
+        if (![1, 2, 3, 4].contains(header['schema']))
           throw const FormatException('Unsupported Boards schema');
         final revision = header['revision'] as int? ?? 0;
         final state = BoardsState.fromSnapshot(

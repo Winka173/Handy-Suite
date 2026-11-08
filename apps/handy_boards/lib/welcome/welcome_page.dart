@@ -1,28 +1,33 @@
 import 'package:flutter/services.dart';
+import 'package:handy_boards_engine/handy_boards_engine.dart';
 import 'package:handy_ui/kit.dart';
+import '../covers/cover_art.dart';
 import 'motion.dart';
 import 'practice_board.dart';
-import 'story_scene.dart';
 
-/// The guide's three stages: the story (one stage, two beats), the
-/// practice on a pretend board, and how to start.
-enum _Stage { story, practice, start }
+/// The guide's three stages: what the person mainly organises, a practice
+/// on a pretend board, and where to start.
+enum _Stage { purpose, practice, start }
 
-/// The first run, built like Handy Bookmark's and Sticky Wall's guides:
+/// The first run, in two branches with the same mechanics:
 ///
-/// 1. the story: to-dos scattered in notes, chats and scraps, then the same
-///    scraps gathered into one board as cards with their categories;
-/// 2. a practice board at real size: move a card, filter by its category,
-///    finish it (everything dark except the next thing to do, with a word
-///    beside it). Nothing is written;
-/// 3. how to start: a study board, a blank board, or the templates.
+/// 1. "What would you mainly like to organise?" Study or Work (a
+///    suggestion only; everything stays open), or straight to all
+///    templates, or Skip;
+/// 2. a practice board at real size, with the branch's own examples
+///    (subjects or work areas): add a card, move it, focus its category
+///    (the others stay), tick a subtask (the card stays put). Nothing is
+///    written;
+/// 3. three suggested templates for the branch, all templates, or a blank
+///    board. Choosing one opens its own setup; nothing is made before the
+///    person taps Create there.
 ///
 /// Back and Skip on every stage, Android back and Esc step back, Enter
-/// presses the button. With [replay] (from Settings) the last stage offers
-/// no choices and nothing changes.
+/// presses the button. With [replay] (from Settings) nothing changes.
 class WelcomePage extends StatefulWidget {
-  /// Called with 'study', 'blank', 'templates', or null (skipped/replay).
-  final Future<void> Function(String? start) onDone;
+  /// Called with what to open next ('template:<id>', 'gallery', 'blank',
+  /// or null for home) and the purpose picked ('study', 'work' or null).
+  final Future<void> Function(String? next, String? purpose) onDone;
   final bool replay;
   const WelcomePage({super.key, required this.onDone, this.replay = false});
   @override
@@ -32,8 +37,8 @@ class WelcomePage extends StatefulWidget {
 class _WelcomePageState extends State<WelcomePage>
     with SingleTickerProviderStateMixin {
   int at = 0;
-  bool gathered = false, practiced = false, leaving = false;
-  String start = 'study';
+  bool practiced = false, leaving = false;
+  String? purpose;
   PracticeStep practiceStep = PracticeStep.add;
   final practice = GlobalKey<PracticeBoardState>();
   late final AnimationController clock = AnimationController(
@@ -58,7 +63,6 @@ class _WelcomePageState extends State<WelcomePage>
 
   void _go(int next) {
     setState(() {
-      gathered = next < at || gathered;
       at = next;
       if (stage == _Stage.practice) {
         practiced = false;
@@ -68,26 +72,18 @@ class _WelcomePageState extends State<WelcomePage>
     _play();
   }
 
-  void _gather() {
-    setState(() => gathered = true);
-    _play();
-  }
-
-  Future<void> _leave(String? choice) async {
+  Future<void> _leave(String? next) async {
     if (leaving) return;
     setState(() => leaving = true);
     try {
-      await widget.onDone(choice);
+      await widget.onDone(next, purpose);
     } finally {
       if (mounted) setState(() => leaving = false);
     }
   }
 
   void _back() {
-    if (stage == _Stage.story && gathered) {
-      setState(() => gathered = false);
-      _play();
-    } else if (at == 0) {
+    if (at == 0) {
       _leave(null);
     } else {
       _go(at - 1);
@@ -102,43 +98,63 @@ class _WelcomePageState extends State<WelcomePage>
     if (practiced) _play();
   }
 
+  bool get _work => purpose == 'work';
+
   _Page _page(BuildContext context) => switch (stage) {
-    _Stage.story when !gathered => _Page(
+    _Stage.purpose => _Page(
       before: tr(
         context,
-        'Your to-dos are everywhere.\n',
-        'Việc nằm khắp nơi.\n',
+        'What would you mainly like to ',
+        'Bạn chủ yếu muốn ',
       ),
-      words: tr(context, 'Then they slip away.', 'Rồi rơi mất.'),
+      words: tr(context, 'organise', 'sắp xếp gì'),
+      after: '?',
       body: tr(
         context,
-        'A note here, a chat there, a scrap of paper on the desk… and the deadline comes first.',
-        'Một dòng ghi chú, một tin nhắn, một mẩu giấy trên bàn… và hạn nộp đến trước khi kịp nhớ.',
+        'Pick one for examples that fit. You can use both, and every '
+            'template, later.',
+        'Chọn một để ví dụ và gợi ý hợp với bạn. Sau này vẫn dùng được cả '
+            'hai và mọi mẫu.',
       ),
-      primary: tr(context, 'Put them on one board', 'Gom về một bảng'),
-      onPrimary: _gather,
-    ),
-    _Stage.story => _Page(
-      before: tr(context, 'One board for ', 'Một bảng cho '),
-      words: tr(context, 'all of it', 'tất cả'),
-      after: '.',
-      body: tr(
-        context,
-        'Columns say where each thing is. Colours say what it is about. On your device, no account.',
-        'Cột cho biết việc đang ở đâu. Màu cho biết việc thuộc về gì. Ngay trên máy, không tài khoản.',
-      ),
-      primary: tr(context, 'Show me how', 'Chỉ tôi cách dùng'),
+      primary: tr(context, 'Next', 'Tiếp'),
+      enabled: purpose != null,
       onPrimary: () => _go(1),
+      secondary: TextButton(
+        key: const Key('welcome-all-templates'),
+        style: TextButton.styleFrom(foregroundColor: GuideColors.tealDeep),
+        onPressed: () => _leave('gallery'),
+        child: Text(
+          tr(
+            context,
+            'Something else? See all templates',
+            'Việc khác? Xem tất cả mẫu',
+          ),
+        ),
+      ),
     ),
     _Stage.practice when practiced => _Page(
-      before: tr(context, 'Done, and ', 'Xong rồi, mà '),
-      words: tr(context, 'still Maths', 'vẫn thuộc Toán'),
+      before: tr(context, 'Ticked, and ', 'Đã tích, mà thẻ '),
+      words: tr(context, 'it stayed put', 'vẫn ở yên'),
       after: '.',
-      body: tr(
-        context,
-        'A card keeps its category in every column, so each subject always shows how far it has come. This was practice; nothing was saved.',
-        'Thẻ giữ nhóm của nó ở mọi cột, nên môn nào cũng luôn cho thấy đã làm tới đâu. Đây là bản tập, chưa lưu gì.',
-      ),
+      body: _work
+          ? tr(
+              context,
+              'Columns are progress, categories are work areas, dates are '
+                  'separate. When it is done, you drag it to Done yourself. '
+                  'This was practice; nothing was saved.',
+              'Cột là tiến độ, nhóm là mảng việc, ngày hạn là chuyện riêng. '
+                  'Khi xong, bạn tự kéo thẻ sang Xong. Đây là bản tập, chưa '
+                  'lưu gì.',
+            )
+          : tr(
+              context,
+              'Columns are progress, categories are subjects, dates are '
+                  'separate (see them in Time). When it is done, you drag it '
+                  'to Done yourself. This was practice; nothing was saved.',
+              'Cột là tiến độ, nhóm là môn học, ngày hạn là chuyện riêng (xem '
+                  'ở chế độ Thời gian). Khi xong, bạn tự kéo thẻ sang Xong. '
+                  'Đây là bản tập, chưa lưu gì.',
+            ),
       primary: tr(context, 'Next', 'Tiếp'),
       onPrimary: () => _go(2),
       check: true,
@@ -150,28 +166,36 @@ class _WelcomePageState extends State<WelcomePage>
       body: switch (practiceStep) {
         PracticeStep.add => tr(
           context,
-          'Each thing to do is a card. Do what is lit: tap Add card in To Do.',
-          'Mỗi việc là một thẻ. Làm theo chỗ đang sáng: chạm Thêm thẻ ở cột Cần làm.',
+          'A card is one thing to do; a column is how far along it is. Tap '
+              'Add card in To Do.',
+          'Mỗi thẻ là một việc; cột cho biết việc tới đâu. Chạm Thêm thẻ ở '
+              'cột Cần làm.',
         ),
         PracticeStep.drag => tr(
           context,
-          'Hold the new card, then drag it to Doing.',
-          'Giữ thẻ vừa thêm rồi kéo sang Đang làm.',
+          'Started it? Hold the card, then drag it to Doing.',
+          'Bắt đầu làm rồi? Giữ thẻ rồi kéo sang Đang làm.',
         ),
-        PracticeStep.filter => tr(
-          context,
-          'Now tap Maths: the board shows only Maths cards.',
-          'Giờ chạm Toán: bảng chỉ còn thẻ môn Toán.',
-        ),
-        PracticeStep.tick => tr(
-          context,
-          'A card can hold small steps. Tick one: 2/5 becomes 3/5.',
-          'Một thẻ có thể gồm các việc con. Tick một việc: 2/5 thành 3/5.',
-        ),
+        PracticeStep.focus =>
+          _work
+              ? tr(
+                  context,
+                  'Categories are work areas. Tap Interface: its cards light '
+                      'up, the others stay.',
+                  'Nhóm là các mảng việc. Chạm Giao diện: thẻ của nó sáng lên, '
+                      'thẻ khác vẫn ở đó.',
+                )
+              : tr(
+                  context,
+                  'Categories are your subjects. Tap Maths: its cards light up, '
+                      'the others stay.',
+                  'Nhóm là các môn học. Chạm Toán: thẻ môn Toán sáng lên, thẻ '
+                      'khác vẫn ở đó.',
+                ),
         _ => tr(
           context,
-          'Last, drag it to Done.',
-          'Cuối cùng, kéo thẻ sang Xong.',
+          'A card can hold small steps. Tick one.',
+          'Một thẻ có thể gồm các việc con. Tích một việc.',
         ),
       },
       primary: null,
@@ -184,30 +208,235 @@ class _WelcomePageState extends State<WelcomePage>
       ),
     ),
     _Stage.start => _Page(
-      before: widget.replay
-          ? tr(context, 'That is ', 'Chỉ ')
-          : tr(context, 'How do you ', 'Bạn muốn '),
-      words: widget.replay
-          ? tr(context, 'all it takes', 'vậy thôi')
-          : tr(context, 'want to start', 'bắt đầu thế nào'),
-      after: widget.replay ? '.' : '?',
-      body: widget.replay
-          ? tr(
-              context,
-              'Cards, columns and categories. Everything else is in each card.',
-              'Thẻ, cột và nhóm. Mọi thứ khác nằm trong từng thẻ.',
-            )
-          : tr(
-              context,
-              'You can change anything later.',
-              'Đổi được mọi thứ sau này.',
-            ),
-      primary: widget.replay
-          ? tr(context, 'Done', 'Xong')
-          : tr(context, 'Start', 'Bắt đầu'),
-      onPrimary: () => _leave(widget.replay ? null : start),
+      before: tr(context, 'Where do you ', 'Bạn muốn '),
+      words: tr(context, 'want to start', 'bắt đầu từ đâu'),
+      after: '?',
+      body: tr(
+        context,
+        'A template asks a few questions and shows the board before it is '
+            'made. Nothing is created until you tap Create.',
+        'Mẫu hỏi vài câu và cho xem bảng trước khi tạo. Chưa có gì được tạo '
+            'cho tới khi bạn bấm Tạo bảng.',
+      ),
+      primary: widget.replay ? tr(context, 'Done', 'Xong') : null,
+      onPrimary: () => _leave(null),
     ),
   };
+
+  /// The two purposes, as large illustrated choices.
+  Widget _purposes() {
+    final rows = [
+      (
+        'study',
+        'study.open-book',
+        tr(context, 'Study', 'Học tập'),
+        tr(
+          context,
+          'Assignments, subjects, exam prep.',
+          'Bài tập, môn học, ôn thi.',
+        ),
+      ),
+      (
+        'work',
+        'work.sticky-plan',
+        tr(context, 'Work', 'Công việc'),
+        tr(
+          context,
+          'Projects, tasks, priorities.',
+          'Dự án, đầu việc, ưu tiên.',
+        ),
+      ),
+    ];
+    return Reveal(
+      from: .2,
+      to: .6,
+      child: SingleChildScrollView(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            for (final (id, cover, title, hint) in rows)
+              Padding(
+                padding: const EdgeInsets.only(bottom: 12),
+                child: Semantics(
+                  selected: purpose == id,
+                  button: true,
+                  child: Material(
+                    color: purpose == id ? GuideColors.tint : GuideColors.card,
+                    clipBehavior: Clip.antiAlias,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(18),
+                      side: BorderSide(
+                        color: purpose == id
+                            ? GuideColors.teal
+                            : const Color(0xFFE4DCDE),
+                        width: purpose == id ? 2 : 1,
+                      ),
+                    ),
+                    child: InkWell(
+                      key: Key('welcome-purpose-$id'),
+                      onTap: () => setState(() => purpose = id),
+                      child: Row(
+                        children: [
+                          SizedBox(
+                            width: 96,
+                            height: 88,
+                            child: ExcludeSemantics(child: CoverArt(cover)),
+                          ),
+                          const SizedBox(width: 14),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  title,
+                                  style: const TextStyle(
+                                    fontSize: 18,
+                                    fontWeight: FontWeight.w700,
+                                    color: GuideColors.ink,
+                                  ),
+                                ),
+                                const SizedBox(height: 2),
+                                Text(
+                                  hint,
+                                  style: const TextStyle(
+                                    fontSize: 14,
+                                    color: GuideColors.muted,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          Padding(
+                            padding: const EdgeInsets.all(12),
+                            child: Icon(
+                              purpose == id
+                                  ? Icons.check_circle
+                                  : Icons.radio_button_unchecked,
+                              color: purpose == id
+                                  ? GuideColors.teal
+                                  : GuideColors.muted,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  /// Three suggested templates for the branch, then all templates and a
+  /// blank board. Each opens its own setup; nothing is made here.
+  Widget _suggestions() {
+    final vi = Localizations.localeOf(context).languageCode == 'vi';
+    final ids = _work
+        ? const ['project', 'weekly', 'ideas']
+        : const ['semester', 'group-assignment', 'exam-revision'];
+    final rows = [
+      for (final id in ids)
+        if (templateById(id) case final t?)
+          (
+            'template:${t.id}',
+            Icons.dashboard_customize_outlined,
+            t.name.of(vi),
+            t.goal.of(vi),
+            t.cover,
+          ),
+      (
+        'gallery',
+        Icons.grid_view_outlined,
+        tr(context, 'All templates', 'Tất cả mẫu'),
+        tr(
+          context,
+          '30 boards for study, work, home and plans.',
+          '30 mẫu cho học tập, công việc, nhà cửa, kế hoạch.',
+        ),
+        null,
+      ),
+      (
+        'blank',
+        Icons.view_week_outlined,
+        tr(context, 'A blank board', 'Bảng trống'),
+        tr(context, 'To Do, Doing, Done.', 'Cần làm, Đang làm, Xong.'),
+        null,
+      ),
+    ];
+    return Reveal(
+      from: .2,
+      to: .6,
+      child: SingleChildScrollView(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            for (final (next, icon, title, hint, cover) in rows)
+              Padding(
+                padding: const EdgeInsets.only(bottom: 10),
+                child: Material(
+                  color: GuideColors.card,
+                  clipBehavior: Clip.antiAlias,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(18),
+                    side: const BorderSide(color: Color(0xFFE4DCDE)),
+                  ),
+                  child: InkWell(
+                    key: Key('welcome-start-$next'),
+                    onTap: leaving ? null : () => _leave(next),
+                    child: Row(
+                      children: [
+                        SizedBox(
+                          width: 72,
+                          height: 72,
+                          child: cover == null
+                              ? Icon(icon, color: GuideColors.ink)
+                              : ExcludeSemantics(child: CoverArt(cover)),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                title,
+                                style: const TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w700,
+                                  color: GuideColors.ink,
+                                ),
+                              ),
+                              const SizedBox(height: 2),
+                              Text(
+                                hint,
+                                maxLines: 2,
+                                overflow: TextOverflow.ellipsis,
+                                style: const TextStyle(
+                                  fontSize: 13.5,
+                                  color: GuideColors.muted,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        const Padding(
+                          padding: EdgeInsets.all(12),
+                          child: Icon(
+                            Icons.chevron_right,
+                            color: GuideColors.muted,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+          ],
+        ),
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -220,7 +449,7 @@ class _WelcomePageState extends State<WelcomePage>
       child: CallbackShortcuts(
         bindings: {
           const SingleActivator(LogicalKeyboardKey.escape): _back,
-          if (page.primary != null)
+          if (page.primary != null && page.enabled)
             const SingleActivator(LogicalKeyboardKey.enter): page.onPrimary,
         },
         child: Focus(
@@ -243,19 +472,17 @@ class _WelcomePageState extends State<WelcomePage>
     );
   }
 
-  /// The stage's picture: the story, the practice board, or the choices.
+  /// The stage's picture: the purposes, the practice board, or where to
+  /// start.
   Widget _scene({required bool framed}) => switch (stage) {
     _Stage.practice => PhoneFrame(
       interactive: true,
       bare: !framed,
       minHeight: 480,
-      screen: PracticeBoard(key: practice, onStep: _practiceStep),
+      screen: PracticeBoard(key: practice, onStep: _practiceStep, work: _work),
     ),
-    _Stage.start when !widget.replay => _choices(),
-    _ => BoardsStoryScene(
-      key: const ValueKey('story'),
-      gathered: gathered || stage == _Stage.start,
-    ),
+    _Stage.purpose => _purposes(),
+    _Stage.start => _suggestions(),
   };
 
   Widget _bar(BuildContext context) {
@@ -266,7 +493,7 @@ class _WelcomePageState extends State<WelcomePage>
         children: [
           SizedBox(
             width: 48,
-            child: at == 0 && !gathered
+            child: at == 0
                 ? null
                 : IconButton(
                     key: const Key('welcome-back'),
@@ -336,7 +563,7 @@ class _WelcomePageState extends State<WelcomePage>
     );
     return HandySwap(
       child: Column(
-        key: ValueKey('words-$at-$gathered-$practiced-$practiceStep'),
+        key: ValueKey('words-$at-$purpose-$practiced-$practiceStep'),
         crossAxisAlignment: center
             ? CrossAxisAlignment.center
             : CrossAxisAlignment.start,
@@ -411,7 +638,7 @@ class _WelcomePageState extends State<WelcomePage>
                   borderRadius: BorderRadius.circular(14),
                 ),
               ),
-              onPressed: leaving ? null : p.onPrimary,
+              onPressed: leaving || !p.enabled ? null : p.onPrimary,
               child: Text(p.primary!),
             ),
           );
@@ -432,111 +659,6 @@ class _WelcomePageState extends State<WelcomePage>
           );
   }
 
-  /// The three ways to start, as large choices.
-  Widget _choices() {
-    final rows = [
-      (
-        'study',
-        Icons.school_outlined,
-        tr(context, 'A study board', 'Bảng học tập'),
-        tr(
-          context,
-          'Maths, Literature, English, Physics, ready to edit.',
-          'Toán, Văn, Anh, Lý, sửa được ngay.',
-        ),
-      ),
-      (
-        'blank',
-        Icons.view_week_outlined,
-        tr(context, 'A blank board', 'Bảng trống'),
-        tr(context, 'To Do, Doing, Done.', 'Cần làm, Đang làm, Xong.'),
-      ),
-      (
-        'templates',
-        Icons.dashboard_customize_outlined,
-        tr(context, 'Browse templates', 'Xem các mẫu'),
-        tr(
-          context,
-          'Projects, shopping, events and more.',
-          'Dự án, mua sắm, sự kiện và hơn thế.',
-        ),
-      ),
-    ];
-    return Reveal(
-      from: .2,
-      to: .6,
-      child: SingleChildScrollView(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            for (final (id, icon, title, hint) in rows)
-              Padding(
-                padding: const EdgeInsets.only(bottom: 12),
-                child: Semantics(
-                  selected: start == id,
-                  button: true,
-                  child: Material(
-                    color: start == id ? GuideColors.tint : GuideColors.card,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(18),
-                      side: BorderSide(
-                        color: start == id
-                            ? GuideColors.teal
-                            : const Color(0xFFE4DCDE),
-                        width: start == id ? 2 : 1,
-                      ),
-                    ),
-                    child: InkWell(
-                      key: Key('welcome-choice-$id'),
-                      borderRadius: BorderRadius.circular(18),
-                      onTap: () => setState(() => start = id),
-                      child: Padding(
-                        padding: const EdgeInsets.all(16),
-                        child: Row(
-                          children: [
-                            Icon(icon, color: GuideColors.ink),
-                            const SizedBox(width: 14),
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    title,
-                                    style: const TextStyle(
-                                      fontSize: 17,
-                                      fontWeight: FontWeight.w600,
-                                      color: GuideColors.ink,
-                                    ),
-                                  ),
-                                  const SizedBox(height: 2),
-                                  Text(
-                                    hint,
-                                    style: const TextStyle(
-                                      fontSize: 14,
-                                      color: GuideColors.muted,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                            if (start == id)
-                              const Icon(
-                                Icons.check_circle,
-                                color: GuideColors.teal,
-                              ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-          ],
-        ),
-      ),
-    );
-  }
-
   /// Phones: the bar, the words, the picture as large as the screen allows
   /// (the practice at real size), the button at the foot.
   Widget _narrow(BuildContext context, _Page p, BoxConstraints box) {
@@ -545,7 +667,7 @@ class _WelcomePageState extends State<WelcomePage>
         MediaQuery.textScalerOf(context).scale(16) <= 16 * 1.3;
     final words = Padding(
       padding: const EdgeInsets.fromLTRB(20, 8, 20, 0),
-      child: _words(context, p, wide: false, center: stage == _Stage.story),
+      child: _words(context, p, wide: false),
     );
     Widget scene(double? height) => SizedBox(
       height: height,
@@ -622,8 +744,9 @@ class _Page {
   final String? primary;
   final VoidCallback onPrimary;
   final Widget? secondary;
-  final bool check;
+  final bool check, enabled;
   const _Page({
+    this.enabled = true,
     required this.before,
     required this.words,
     this.after = '',

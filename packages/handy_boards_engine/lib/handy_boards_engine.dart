@@ -20,8 +20,8 @@ part 'src/remaining.dart';
 part 'src/snapshot.dart';
 part 'src/kanban.dart';
 part 'src/covers.dart';
-part 'src/presets.dart';
-part 'src/types.dart';
+part 'src/templates.dart';
+part 'src/template_catalog.dart';
 
 typedef Json = Map<String, dynamic>;
 

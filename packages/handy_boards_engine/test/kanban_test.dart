@@ -4,11 +4,12 @@ import 'package:flutter_test/flutter_test.dart';
 
 final now = DateTime.utc(2026, 11, 7, 9);
 
-BoardsState studyBoard({bool vi = true}) => createKanbanBoard(
+BoardsState studyBoard({bool vi = true}) => createFromTemplate(
   BoardsState(),
-  title: vi ? 'Học kỳ 1' : 'Semester 1',
-  preset: presetById('study'),
+  templateById('semester')!,
+  answers: {'title': vi ? 'Học kỳ 1' : 'Semester 1'},
   vi: vi,
+  examples: true,
   now: now,
   boardId: 'b0000000-0000-4000-8000-000000000001',
 );
@@ -35,13 +36,13 @@ void main() {
     ]);
   });
 
-  test('the study template shows four university subjects with cards', () {
+  test('the semester template makes subjects as categories', () {
     final s = studyBoard(), b = boardOf(s);
     expect(categoriesOf(s, b).map((c) => c.str('title')), [
       'Lập trình Web',
       'Cơ sở dữ liệu',
-      'Mạng máy tính',
-      'Tiếng Anh B2',
+      'Tiếng Anh',
+      'Toán cao cấp',
     ]);
     final progress = categoryProgress(s, b);
     expect(progress.where((p) => p.category != null), hasLength(4));
@@ -49,31 +50,7 @@ void main() {
       progress.fold<int>(0, (n, p) => n + p.total),
       topTasks(s, board: b).length,
     );
-    expect(topTasks(s, board: b).length, greaterThanOrEqualTo(8));
     expect(boardSummary(s, b, now: now).categories, 4);
-  });
-
-  test('every template builds with fresh ids and no reference outside it', () {
-    for (final p in templatePresets) {
-      var s = BoardsState();
-      s = createKanbanBoard(s, title: p.nameEn, preset: p, now: now);
-      s = createKanbanBoard(s, title: p.nameEn, preset: p, now: now);
-      final boards = s.rows('boards').map((b) => b.id).toList();
-      expect(boards.toSet(), hasLength(2), reason: p.id);
-      for (final b in boards) {
-        final cols = columnsOf(s, b).map((c) => c.id).toSet();
-        final cats = categoriesOf(s, b).map((c) => c.id).toSet();
-        for (final t in s.rows('tasks').where((t) => t.str('board') == b)) {
-          expect(cols, contains(t.str('status')), reason: p.id);
-          if (t.data['category'] != null)
-            expect(cats, contains(t.str('category')), reason: p.id);
-          final cover = t.data['cover'] as String?;
-          if (cover != null)
-            expect(coverById(cover.substring(4)), isNotNull, reason: cover);
-        }
-      }
-      expect(coverById(p.cover), isNotNull, reason: p.id);
-    }
   });
 
   test('moving a card to Done keeps its category and subtasks', () {

@@ -177,7 +177,7 @@ BoardsState _sqlSnapshot(Database db, String path, {int? atRevision}) {
           .single,
       revision = metadata['revision'] as int,
       header = object(jsonDecode(metadata['payload'] as String));
-  if (![1, 2, 3].contains(header['schema']))
+  if (![1, 2, 3, 4].contains(header['schema']))
     throw const FormatException('Unsupported Boards schema');
   return BoardsState.fromSnapshot(
     revision: revision,

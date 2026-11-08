@@ -12,6 +12,7 @@ import 'board_menus.dart';
 import 'categories_sheet.dart';
 import 'category_strip.dart';
 import 'kanban_view.dart';
+import 'key_dates.dart';
 import 'look_picker.dart';
 import 'time_view.dart';
 
@@ -40,7 +41,10 @@ class BoardPage extends StatefulWidget {
 }
 
 class _BoardPageState extends State<BoardPage> {
-  String? category;
+  /// The category in focus (an id, [CategoryStrip.uncategorisedKey], or
+  /// null). Focus only highlights; [only] is the separate, explicit filter.
+  String? focus;
+  bool only = false;
   bool searching = false, dueSoon = false, showStrip = true;
 
   /// While choosing a look: the one being tried (shown, not saved).
@@ -56,12 +60,13 @@ class _BoardPageState extends State<BoardPage> {
   }
 
   KanbanFilter get filter => KanbanFilter(
-    category: category == null || category == CategoryStrip.uncategorisedKey
+    category: !only || focus == null || focus == CategoryStrip.uncategorisedKey
         ? null
-        : category,
-    uncategorised: category == CategoryStrip.uncategorisedKey,
+        : focus,
+    uncategorised: only && focus == CategoryStrip.uncategorisedKey,
     query: query.text,
     dueSoon: dueSoon,
+    focus: only ? null : focus,
   );
 
   Future<void> _move(String card, String column, int index) async {
@@ -124,7 +129,10 @@ class _BoardPageState extends State<BoardPage> {
   Future<void> _add(String column, String title) => scope.run(
     context,
     () => scope.controller.change((s) {
-      final cat = filter.category;
+      // A card added while a category is in focus belongs to it.
+      final cat = focus == null || focus == CategoryStrip.uncategorisedKey
+          ? null
+          : focus;
       final card = newTask(
         s,
         widget.board,
@@ -178,6 +186,8 @@ class _BoardPageState extends State<BoardPage> {
     final p = BoardsPalette.of(context);
     final ground = boardGround(context, b, look: previewLook);
     final timeView = b.str('view') == 'time';
+    final pinned = timePinned(b);
+    final milestones = milestonesOf(b);
     // A narrow phone or very large text keeps the board's height: the
     // Board | Time switch moves into the buttons on the cover.
     final roomy =
@@ -207,7 +217,25 @@ class _BoardPageState extends State<BoardPage> {
             ),
             style: theme.textTheme.bodyMedium?.copyWith(color: p.muted),
           ),
-          if (roomy) ...[
+          // Key dates need room; a narrow phone with large text keeps the
+          // board's height and finds them in the board menu.
+          if (milestones.isNotEmpty && roomy) ...[
+            const SizedBox(height: 8),
+            Wrap(
+              spacing: 6,
+              runSpacing: 6,
+              children: [
+                for (final m in milestones)
+                  KeyDateChip(
+                    label: m.label,
+                    day: m.day,
+                    now: now,
+                    onTap: () => editMilestones(context, scope, widget.board),
+                  ),
+              ],
+            ),
+          ],
+          if (roomy && pinned) ...[
             const SizedBox(height: 10),
             // Where things are (columns) or when they are due (time).
             SegmentedButton<String>(
@@ -234,7 +262,7 @@ class _BoardPageState extends State<BoardPage> {
       ),
     );
     final actions = <Widget>[
-      if (!roomy)
+      if (!roomy || !pinned)
         IconButton(
           key: const Key('board-view-toggle'),
           tooltip: timeView
@@ -289,17 +317,20 @@ class _BoardPageState extends State<BoardPage> {
     );
     final stripShown = showStrip && hasCategories;
     final chips = <Widget>[
-      if (category != null)
+      if (focus != null)
         InputChip(
           label: Text(
             categoryName(
               context,
-              category == CategoryStrip.uncategorisedKey
+              focus == CategoryStrip.uncategorisedKey
                   ? null
-                  : s.maybe('categories', category),
+                  : s.maybe('categories', focus),
             ),
           ),
-          onDeleted: () => setState(() => category = null),
+          onDeleted: () => setState(() {
+            focus = null;
+            only = false;
+          }),
           deleteButtonTooltipMessage: tr(
             context,
             'Show all categories',
@@ -307,6 +338,14 @@ class _BoardPageState extends State<BoardPage> {
           ),
         ),
     ];
+    final focusName = focus == null
+        ? null
+        : categoryName(
+            context,
+            focus == CategoryStrip.uncategorisedKey
+                ? null
+                : s.maybe('categories', focus),
+          );
     // The board's cover across the top, its buttons on round white
     // backs so they read on any picture.
     Widget round(Widget button) => Padding(
@@ -376,13 +415,26 @@ class _BoardPageState extends State<BoardPage> {
           CategoryStrip(
             state: s,
             board: widget.board,
-            selected: category,
-            onSelect: (v) => setState(() => category = v),
+            selected: focus,
+            onSelect: (v) => setState(() {
+              focus = v;
+              if (v == null) only = false;
+            }),
             onEdit: () => editCategories(context, scope, widget.board),
             trailing: [due],
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: 8),
         ],
+        if (focusName != null)
+          FocusBar(
+            name: focusName,
+            only: only,
+            onOnly: () => setState(() => only = !only),
+            onClear: () => setState(() {
+              focus = null;
+              only = false;
+            }),
+          ),
         if (!stripShown)
           SizedBox(
             height: 48,

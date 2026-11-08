@@ -29,18 +29,32 @@ class KanbanActions {
 }
 
 /// Which cards show: one category (or Uncategorised with [uncategorised]),
-/// and a text search over titles and notes.
+/// and a text search over titles and notes. [focus] only highlights a
+/// category's cards (the rest stay, quieter); it never hides anything.
 class KanbanFilter {
   final String? category;
   final bool uncategorised;
   final String query;
   final bool dueSoon;
+
+  /// A category id, [uncategorisedFocus], or null.
+  final String? focus;
   const KanbanFilter({
     this.category,
     this.uncategorised = false,
     this.query = '',
     this.dueSoon = false,
+    this.focus,
   });
+
+  static const uncategorisedFocus = '';
+
+  /// Whether [card] is one of the focused category's (null: no focus).
+  bool? focused(BoardRecord card) => focus == null
+      ? null
+      : focus == uncategorisedFocus
+      ? card.data['category'] == null
+      : card.data['category'] == focus;
   bool get active =>
       category != null || uncategorised || query.trim().isNotEmpty || dueSoon;
   bool shows(BoardRecord card, DateTime now) {
@@ -324,7 +338,7 @@ class _ColumnViewState extends State<ColumnView> {
     );
 
     Widget tile(BoardRecord card) {
-      final t = CardTile(
+      final plain = CardTile(
         key: ValueKey('card-${card.id}'),
         state: widget.state,
         card: card,
@@ -335,6 +349,7 @@ class _ColumnViewState extends State<ColumnView> {
         onTick: a.tick,
         onMenu: a.cardMenu == null ? null : () => a.cardMenu!(card),
       );
+      final t = _focusMark(context, widget.state, widget.filter, card, plain);
       if (a.readOnly) return t;
       final feedback = Material(
         color: Colors.transparent,
@@ -628,4 +643,34 @@ class _AddColumn extends StatelessWidget {
       ),
     );
   }
+}
+
+/// Category focus: the focused category's cards get a ring in its colour
+/// and say so to screen readers; the others stay in place, quieter. Never
+/// colour alone: the ring is thick and the label is spoken.
+Widget _focusMark(
+  BuildContext context,
+  BoardsState s,
+  KanbanFilter filter,
+  BoardRecord card,
+  Widget tile,
+) {
+  final on = filter.focused(card);
+  if (on == null) return tile;
+  if (!on) return Opacity(opacity: .45, child: tile);
+  final category = s.maybe('categories', card.data['category']);
+  final hue = category == null
+      ? BoardsPalette.of(context).ink
+      : HandyPalette.of(context, category.number('color')).mark;
+  return Semantics(
+    label: tr(context, 'In focus', 'Đang làm nổi'),
+    child: DecoratedBox(
+      position: DecorationPosition.foreground,
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(BoardsRadii.card),
+        border: Border.all(color: hue, width: 3),
+      ),
+      child: tile,
+    ),
+  );
 }
