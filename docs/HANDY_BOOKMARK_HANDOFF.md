@@ -10,7 +10,7 @@ Tạm dừng để làm project khác. Đọc file này trước khi làm tiếp
 
 | Mục | Trạng thái |
 |---|---|
-| Google Play | App `com.apps.winka.handybookmark` đã qua lượt duyệt đầu. Kiểm thử kín (`alpha`): **1.0.0 (5)** đã phát hành (qua fastlane), nhóm tester `testers-community@googlegroups.com`, link tham gia Android/web đã có. Code 1–5 đã dùng; bản sau phải là `+6`. |
+| Google Play | App `com.apps.winka.handybookmark` đã qua lượt duyệt đầu. Kiểm thử kín (`alpha`): **1.0.0 (6)** đã phát hành ngày 08/11 (qua fastlane: Nhắc tôi, thông báo cần xử lý, widget), nhóm tester `testers-community@googlegroups.com`, link tham gia Android/web đã có. Code 1–6 đã dùng; bản sau phải là `+7`. |
 | Trang store | EN (mặc định) + VI: chữ, icon, ảnh bìa, 6 ảnh màn hình mỗi ngôn ngữ, email `apps.winka.studio@gmail.com`, web repo GitHub. Danh mục Năng suất; thẻ Năng suất, Sổ tay, Công cụ. App content đã điền (riêng tư, đăng nhập, IARC, độ tuổi 13+, Data safety "không thu thập", người bán, điều khoản). |
 | Pro | Sản phẩm `handy_bookmark_pro`, mua một lần, **99.000đ** (VN), Play tự quy đổi (US 3,89 USD), đang ACTIVE. App tin kết quả Google Play (không khoá giấy phép; xem commit `b99521b`). |
 | Đồng bộ Google Drive | Code xong (`lib/sync/drive_*.dart`), có từ 1.0.0 (4) (build với `HANDY_DRIVE_SYNC=true`). Client OAuth Android cho debug/upload/Play signing do chủ tài khoản tạo trên Google Cloud, trong **project riêng "Handy Bookmark"** (không dùng `play-publisher-513712`), màn đồng ý đã Publish; các bước ở `docs/HANDY_BOOKMARK_RELEASE.md` › Google Drive sync. **Chưa chạy thật giữa hai máy.** |
