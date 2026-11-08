@@ -28,6 +28,7 @@ part 'src/card_templates.dart';
 part 'src/custom_fields.dart';
 part 'src/notify_plan.dart';
 part 'src/board_history.dart';
+part 'src/rules.dart';
 
 typedef Json = Map<String, dynamic>;
 

@@ -323,6 +323,7 @@ BoardsState deleteColumn(BoardsState s, String column, {String? moveTo}) {
       (e.data['tasks']![t.id] ?? t).copy({'suggestedStatus': null}),
     );
   e.remove('statuses', column);
+  pruneRuleRefs(e, board);
   return e.finish();
 }
 

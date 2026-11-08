@@ -1,6 +1,7 @@
 import 'package:handy_boards_engine/handy_boards_engine.dart';
 import 'package:handy_ui/kit.dart';
 import 'board_history.dart';
+import 'rules_page.dart';
 import '../card/fields_ui.dart';
 import '../card/card_templates_ui.dart';
 import '../design/theme.dart';
@@ -190,6 +191,21 @@ Future<void> boardMenu(
           );
         }),
         key: const Key('menu-board-history'),
+      ),
+      _row(
+        sheet,
+        Icons.bolt_outlined,
+        tr(sheet, 'Automation rules', 'Luật tự động'),
+        () => then(
+          () => Navigator.push(
+            context,
+            MaterialPageRoute<void>(
+              builder: (_) => RulesPage(scope: scope, board: board),
+            ),
+          ),
+        ),
+        key: const Key('menu-rules'),
+        trailing: hasPro(sheet) ? null : const ProBadge(),
       ),
       _row(
         sheet,

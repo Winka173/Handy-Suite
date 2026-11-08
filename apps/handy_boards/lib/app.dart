@@ -81,6 +81,17 @@ class _BoardsAppState extends State<BoardsApp> with WidgetsBindingObserver {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
+    // Automation rules (Pro) run inside the person's change.
+    // A rule that cannot apply never blocks the person's own change.
+    c.afterAction = (before, after) {
+      if (!_pro()) return after;
+      try {
+        return runRules(before, after, now: scope.clock());
+      } catch (e) {
+        c.adapterWarning = e.toString();
+        return after;
+      }
+    };
     if (widget.controller == null)
       c.afterCommit = (s) async {
         await Future.wait<void>([
@@ -131,11 +142,32 @@ class _BoardsAppState extends State<BoardsApp> with WidgetsBindingObserver {
       WidgetsBinding.instance.addPostFrameCallback((_) => _link(uri));
     }
     unawaited(_carryOver());
+    unawaited(_dueSoon());
     if (c.state != null) scope.autoBackup?.attach();
     if (scope.drive case final drive?) {
       c.addListener(drive.changed);
       // Sync left on: the other devices' changes arrive now.
       unawaited(drive.syncNow());
+    }
+  }
+
+  /// 'Due soon' automation rules (Pro), at start and on resume; each card
+  /// is handled once per rule and deadline.
+  Future<void> _dueSoon() async {
+    final s = c.state;
+    if (s == null ||
+        !_pro() ||
+        !s
+            .rows('rules')
+            .any((r) => r.flag('enabled') && r.str('trigger') == 'due soon'))
+      return;
+    try {
+      await c.change(
+        (s) => runDueSoonRules(s, now: scope.clock()),
+        history: false,
+      );
+    } catch (e) {
+      c.adapterWarning = e.toString();
     }
   }
 
@@ -329,6 +361,7 @@ class _BoardsAppState extends State<BoardsApp> with WidgetsBindingObserver {
       }
       _snapshot();
       unawaited(_carryOver());
+      unawaited(_dueSoon());
       scope.drive?.resumed();
     }
     if (state == AppLifecycleState.paused) scope.drive?.paused();

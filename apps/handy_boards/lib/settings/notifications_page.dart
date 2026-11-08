@@ -192,6 +192,15 @@ class NotificationsPage extends StatelessWidget {
               ],
             ),
             const SizedBox(height: 16),
+            _Digest(
+              n: n,
+              on: on,
+              boards: homeBoards(s),
+              set: (changes) => changes.values.any((v) => v != null)
+                  ? _turnOn(context, changes)
+                  : _set(context, changes),
+            ),
+            const SizedBox(height: 16),
             SettingsPanel(
               gap: false,
               rows: [
@@ -270,5 +279,180 @@ class NotificationsPage extends StatelessWidget {
         ),
       );
     },
+  );
+}
+
+/// Pro: the digest across boards: off, every day or one day a week, for
+/// all boards or the ones picked; one line per board with work.
+class _Digest extends StatelessWidget {
+  final Json n;
+  final bool on;
+  final List<BoardRecord> boards;
+  final Future<void> Function(Json changes) set;
+  const _Digest({
+    required this.n,
+    required this.on,
+    required this.boards,
+    required this.set,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final every = on ? n['digest'] as String? ?? 'off' : 'off';
+    final chosen = {
+      for (final b in (n['digestBoards'] as List? ?? const [])) '$b',
+    };
+    final names = [
+      tr(context, 'Monday', 'Thứ Hai'),
+      tr(context, 'Tuesday', 'Thứ Ba'),
+      tr(context, 'Wednesday', 'Thứ Tư'),
+      tr(context, 'Thursday', 'Thứ Năm'),
+      tr(context, 'Friday', 'Thứ Sáu'),
+      tr(context, 'Saturday', 'Thứ Bảy'),
+      tr(context, 'Sunday', 'Chủ Nhật'),
+    ];
+    final day = (n['digestDay'] as int? ?? 1).clamp(1, 7);
+    final covered = chosen.isEmpty
+        ? tr(context, 'Every board', 'Mọi bảng')
+        : boards
+              .where((b) => chosen.contains(b.id))
+              .map((b) => b.str('title'))
+              .join(', ');
+    return SettingsPanel(
+      gap: false,
+      rows: [
+        SettingsChoice<String>(
+          key: const Key('notify-digest'),
+          icon: Icons.dashboard_customize_outlined,
+          title: tr(
+            context,
+            'Digest of your boards · Pro',
+            'Tóm tắt các bảng · Pro',
+          ),
+          value: every,
+          options: [
+            ('off', tr(context, 'Off', 'Tắt')),
+            ('daily', tr(context, 'Daily', 'Hằng ngày')),
+            ('weekly', tr(context, 'Weekly', 'Hằng tuần')),
+          ],
+          onChanged: (v) async {
+            if (v != 'off' &&
+                !await requirePro(context, ProFeature.carryOver)) {
+              return;
+            }
+            await set({'digest': v == 'off' ? null : v});
+          },
+        ),
+        if (every != 'off') ...[
+          SettingsRow(
+            icon: Icons.info_outline,
+            title: tr(
+              context,
+              'One line per board with work',
+              'Mỗi bảng có việc một dòng',
+            ),
+            subtitle: tr(
+              context,
+              '"Study: 2 today, 1 left behind · Work: 1 due soon". Boards with '
+                  'nothing are left out, and nothing rings on a day without work.',
+              '"Học: 2 hôm nay, 1 còn tồn · Công việc: 1 sắp hạn". Bảng không '
+                  'có việc được bỏ qua; ngày không có việc thì không báo.',
+            ),
+          ),
+          if (every == 'weekly')
+            SettingsRow(
+              key: const Key('notify-digest-day'),
+              icon: Icons.calendar_view_week_outlined,
+              title: tr(context, 'Day of the week', 'Ngày trong tuần'),
+              subtitle: names[day - 1],
+              navigates: true,
+              onTap: () async {
+                final v = await showDialog<int>(
+                  context: context,
+                  builder: (dialog) => SimpleDialog(
+                    title: Text(
+                      tr(context, 'Day of the week', 'Ngày trong tuần'),
+                    ),
+                    children: [
+                      for (var i = 1; i <= 7; i++)
+                        SimpleDialogOption(
+                          key: Key('digest-day-$i'),
+                          onPressed: () => Navigator.pop(dialog, i),
+                          child: Text(names[i - 1]),
+                        ),
+                    ],
+                  ),
+                );
+                if (v != null) await set({'digestDay': v});
+              },
+            ),
+          SettingsRow(
+            key: const Key('notify-digest-boards'),
+            icon: Icons.view_week_outlined,
+            title: tr(context, 'Boards in it', 'Bảng được tóm tắt'),
+            subtitle: covered,
+            navigates: true,
+            onTap: () async {
+              final picked = await showDialog<Set<String>>(
+                context: context,
+                builder: (_) => _PickBoards(boards: boards, chosen: chosen),
+              );
+              if (picked == null) return;
+              await set({
+                'digestBoards': picked.length == boards.length || picked.isEmpty
+                    ? null
+                    : picked.toList(),
+              });
+            },
+          ),
+        ],
+      ],
+    );
+  }
+}
+
+class _PickBoards extends StatefulWidget {
+  final List<BoardRecord> boards;
+  final Set<String> chosen;
+  const _PickBoards({required this.boards, required this.chosen});
+  @override
+  State<_PickBoards> createState() => _PickBoardsState();
+}
+
+class _PickBoardsState extends State<_PickBoards> {
+  late final picked = widget.chosen.isEmpty
+      ? {for (final b in widget.boards) b.id}
+      : {...widget.chosen};
+  @override
+  Widget build(BuildContext context) => AlertDialog(
+    title: Text(tr(context, 'Boards in the digest', 'Bảng trong bản tóm tắt')),
+    content: SingleChildScrollView(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          for (final b in widget.boards)
+            CheckboxListTile(
+              key: Key('digest-board-${b.id}'),
+              contentPadding: EdgeInsets.zero,
+              value: picked.contains(b.id),
+              title: Text(b.str('title')),
+              onChanged: (v) => setState(
+                () => v == true ? picked.add(b.id) : picked.remove(b.id),
+              ),
+            ),
+        ],
+      ),
+    ),
+    actions: [
+      TextButton(
+        onPressed: () => Navigator.pop(context),
+        child: Text(tr(context, 'Cancel', 'Huỷ')),
+      ),
+      FilledButton(
+        key: const Key('digest-boards-save'),
+        onPressed: picked.isEmpty ? null : () => Navigator.pop(context, picked),
+        child: Text(tr(context, 'Save', 'Lưu')),
+      ),
+    ],
   );
 }

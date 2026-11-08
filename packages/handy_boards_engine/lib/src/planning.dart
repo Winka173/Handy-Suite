@@ -196,28 +196,36 @@ void validateCustomValues(BoardsState s, BoardRecord t) {
 
 void validateAutomation(BoardsState s, BoardRecord rule) {
   s.get('boards', rule.str('board'));
-  if (![
-    'created',
-    'moved',
-    'completed',
-    'due changed',
-    'opened',
-  ].contains(rule.str('trigger')))
+  if (![...ruleTriggers, 'due changed', 'opened'].contains(rule.str('trigger')))
     throw const FormatException('Unknown trigger');
+  if (rule.data['title'] != null) text(rule.data['title'], max: 80);
+  final days = rule.data['days'];
+  if (days != null && (days is! int || days < 0 || days > 14))
+    throw const FormatException('Rule days 0..14');
+  final when = rule.data['when'];
+  if (when != null) {
+    if (when is! Map) throw const FormatException('Invalid rule conditions');
+    for (final entry in when.entries) {
+      switch (entry.key) {
+        case 'status' || 'category':
+          final kind = entry.key == 'status' ? 'statuses' : 'categories';
+          if (s.get(kind, entry.value as String).str('board') !=
+              rule.str('board'))
+            throw const FormatException('Automation scope mismatch');
+        case 'priority':
+          if (entry.value is! int || entry.value < 0 || entry.value > 3)
+            throw const FormatException('Invalid priority');
+        default:
+          throw const FormatException('Invalid rule conditions');
+      }
+    }
+  }
   final actions = rule.data['actions'];
   if (actions is! List || actions.length > 10)
     throw const FormatException('At most ten automation actions');
   for (final raw in actions) {
     final a = object(raw);
-    if (![
-      'priority',
-      'category',
-      'tag',
-      'checklist',
-      'suggestStatus',
-      'remindMinutes',
-      'generate',
-    ].contains(a['type']))
+    if (![...ruleActions, 'tag', 'generate'].contains(a['type']))
       throw const FormatException('Unsupported action');
     if (a['type'] == 'priority' &&
         (a['value'] is! int || a['value'] < 0 || a['value'] > 3))
@@ -231,7 +239,12 @@ void validateAutomation(BoardsState s, BoardRecord rule) {
       if (s.get(kind, a['value'] as String).str('board') != rule.str('board'))
         throw const FormatException('Automation scope mismatch');
     }
-    if (a['type'] == 'checklist') text(a['value'], empty: false);
+    if (a['type'] == 'checklist') text(a['value'], empty: false, max: 200);
+    if (a['type'] == 'template' && a['value'] is! String)
+      throw const FormatException('Invalid card template');
+    if (a['type'] == 'notify' &&
+        (a['value'] != true || rule.str('trigger') != 'due soon'))
+      throw const FormatException('Notify needs a due-soon rule');
     if (a['type'] == 'remindMinutes' &&
         (a['value'] is! int || a['value'] < 1 || a['value'] > 525600))
       throw const FormatException('Reminder offset 1..525600 minutes');

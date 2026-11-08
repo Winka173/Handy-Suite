@@ -15,6 +15,13 @@ part of '../handy_boards_engine.dart';
 //   private    bool    no card titles in notifications
 //   muted      [board] boards that never notify
 //   weekly     bool    Pro: a Monday review of what was left behind
+//   digest     'daily' | 'weekly' | null  Pro: a summary across boards, one
+//                      line per board with work (today, left behind, due in
+//                      the next 3 days); boards with nothing are left out
+//   digestDay  1..7    the weekday of a weekly digest (1 = Monday)
+//   digestBoards [board] the boards it covers (empty = every board)
+// Pro 'due soon' automation rules with "Notify me" add one notification per
+// card, on the rule's day before the deadline, at [at].
 // The master switch stays `preferences['notifications']`. Reminders set on
 // a card keep their exact time and are not moved by quiet hours.
 
@@ -204,6 +211,135 @@ List<PlannedNote> planNotifications(
     );
   }
 
+  // Pro: notifications from 'due soon' rules.
+  if (pro) {
+    for (final rule in s.rows('rules')) {
+      if (!rule.flag('enabled') ||
+          rule.str('trigger') != 'due soon' ||
+          muted.contains(rule.str('board')) ||
+          !(rule.data['actions'] as List).any(
+            (a) => object(a)['type'] == 'notify',
+          ))
+        continue;
+      for (final c in open) {
+        if (c.str('board') != rule.str('board') || !_ruleWhen(s, rule, c))
+          continue;
+        final due = dueDay(c);
+        if (due == null) continue;
+        final at = morning(addDays(due, -rule.number('days')));
+        if (!at.isAfter(now) || daysBetween(today, at) >= days) continue;
+        final left = daysBetween(calendarDay(at), due);
+        final when = switch (left) {
+          0 => t('today', 'hôm nay'),
+          1 => t('tomorrow', 'ngày mai'),
+          _ => t('in $left days', 'sau $left ngày'),
+        };
+        out.add(
+          PlannedNote(
+            'boards:rule:${rule.id}:${c.id}:${isoDay(due)}',
+            at,
+            rule.str('title').isEmpty
+                ? t('Due $when', 'Đến hạn $when')
+                : rule.str('title'),
+            private
+                ? t('A card is due $when', 'Một thẻ đến hạn $when')
+                : t(
+                    '${c.str('title')} is due $when',
+                    '${c.str('title')} đến hạn $when',
+                  ),
+            'handy-boards://task?id=${c.id}',
+            channel: 'reminders',
+          ),
+        );
+      }
+    }
+  }
+
+  // Pro: the digest across boards.
+  final digest = p['digest'];
+  if (pro && (digest == 'daily' || digest == 'weekly')) {
+    final chosen = {
+      for (final b in (p['digestBoards'] as List? ?? const [])) '$b',
+    };
+    final weekday = (p['digestDay'] as int? ?? 1).clamp(1, 7);
+    for (var i = 0; i < 7; i++) {
+      final day = addDays(today, i), at = morning(day);
+      if (!at.isAfter(now)) continue;
+      if (digest == 'weekly' && day.weekday != weekday) continue;
+      final lines = digestLines(s, day, boards: chosen, skip: muted);
+      if (lines.isEmpty) continue;
+      String part(DigestLine l) => [
+        if (l.today > 0) t('${l.today} today', '${l.today} hôm nay'),
+        if (l.behind > 0) t('${l.behind} left behind', '${l.behind} còn tồn'),
+        if (l.soon > 0) t('${l.soon} due soon', '${l.soon} sắp hạn'),
+      ].join(', ');
+      final body = private
+          ? part(
+              DigestLine(
+                '',
+                '',
+                lines.fold(0, (n, l) => n + l.today),
+                lines.fold(0, (n, l) => n + l.behind),
+                lines.fold(0, (n, l) => n + l.soon),
+              ),
+            )
+          : lines.map((l) => '${l.title}: ${part(l)}').join(' · ');
+      out.add(
+        PlannedNote(
+          'boards:digest:${isoDay(day)}',
+          at,
+          digest == 'daily'
+              ? t('Your boards today', 'Các bảng hôm nay')
+              : t('Your boards this week', 'Các bảng tuần này'),
+          body,
+          'handy-boards://my-work',
+        ),
+      );
+      if (digest == 'weekly') break;
+    }
+  }
+
   out.sort((a, b) => a.at.compareTo(b.at));
   return out.take(notifyCap).toList();
+}
+
+/// One board in a digest: open cards planned (or, unplanned, due) on the
+/// day, left behind before it, and due in the 3 days after it.
+class DigestLine {
+  final String board, title;
+  final int today, behind, soon;
+  const DigestLine(this.board, this.title, this.today, this.behind, this.soon);
+}
+
+/// The digest for [day]: every board in [boards] (all when empty) with any
+/// work, in Home order; nothing for a board that has none.
+List<DigestLine> digestLines(
+  BoardsState s,
+  DateTime day, {
+  Set<String> boards = const {},
+  Set<String> skip = const {},
+}) {
+  final out = <DigestLine>[];
+  for (final b in homeBoards(s)) {
+    if (skip.contains(b.id) || (boards.isNotEmpty && !boards.contains(b.id)))
+      continue;
+    var today = 0, behind = 0, soon = 0;
+    for (final c in topTasks(s, board: b.id)) {
+      if (!isOpenCard(s, c)) continue;
+      final planned = scheduledDay(c), due = dueDay(c);
+      if (planned == day || (planned == null && due == day)) {
+        today++;
+      } else if ((planned != null && planned.isBefore(day)) ||
+          (due != null && due.isBefore(day))) {
+        behind++;
+      } else if (due != null &&
+          daysBetween(day, due) > 0 &&
+          daysBetween(day, due) <= 3) {
+        soon++;
+      }
+    }
+    if (today + behind + soon > 0)
+      out.add(DigestLine(b.id, b.str('title'), today, behind, soon));
+  }
+  return out;
 }

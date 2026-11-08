@@ -13,6 +13,11 @@ class BoardsController extends ChangeNotifier {
   bool get busy => _pending > 0;
   final adsVisible = ValueNotifier(false);
   Future<void> Function(BoardsState)? afterCommit;
+
+  /// Runs on the person's own changes (those that can be undone), before
+  /// they are saved, so its result is part of the same Undo step: the
+  /// automation rules. Never on Undo, Redo, sync or housekeeping.
+  BoardsState Function(BoardsState before, BoardsState after)? afterAction;
   String? adapterWarning;
   Future<void> _queue = Future.value();
   final _undo = <BoardsState>[], _redo = <BoardsState>[];
@@ -50,7 +55,9 @@ class BoardsController extends ChangeNotifier {
     _queue = _queue.then((_) async {
       try {
         final before = state ?? (throw StateError('Boards data unavailable'));
-        final proposed = action(before);
+        var proposed = action(before);
+        if (history && afterAction != null && !identical(proposed, before))
+          proposed = afterAction!(before, proposed);
         if (identical(proposed, before)) {
           done.complete();
           return;

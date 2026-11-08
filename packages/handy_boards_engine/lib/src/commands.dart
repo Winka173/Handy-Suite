@@ -343,19 +343,7 @@ BoardsState deleteCategory(BoardsState s, String id, {String? moveTo}) {
     }).toList();
     e.put('views', v.copy({'conditions': conditions}));
   }
-  for (final r in s.rows('rules')) {
-    final actions = (r.data['actions'] as List).where((raw) {
-      final a = object(raw);
-      return !(a['type'] == 'category' && a['value'] == id);
-    }).toList();
-    e.put(
-      'rules',
-      r.copy({
-        'actions': actions,
-        'enabled': actions.isNotEmpty && r.flag('enabled'),
-      }),
-    );
-  }
+  pruneRuleRefs(e, c.str('board'));
   return e.finish();
 }
 
