@@ -4,6 +4,8 @@ import android.app.PendingIntent
 import android.appwidget.AppWidgetManager
 import android.content.Context
 import android.content.SharedPreferences
+import android.content.res.ColorStateList
+import android.os.Build
 import android.net.Uri
 import android.view.View
 import android.widget.RemoteViews
@@ -46,6 +48,7 @@ abstract class PrefixedWidget(
     if (hasProgress) {
       views.setProgressBar(R.id.progress, 100, (get(data, "progress") ?: "0").toIntOrNull() ?: 0, false)
     }
+    applyWidgetStyle(views, rows, hasProgress) { get(data, it) }
     for ((i, id) in rows.withIndex()) {
       val text = get(data, "row${i}_text")
       if (text == null) {
@@ -74,3 +77,32 @@ class WeekWidget :
     R.layout.handy_widget_week,
     intArrayOf(R.id.row0, R.id.row1, R.id.row2, R.id.row3, R.id.row4, R.id.row5, R.id.row6),
   )
+
+private fun color(v: String?): Int? = v?.toLongOrNull(16)?.toInt()
+
+/**
+ * The widget style the app chose (`style_bg`, `style_ink`, `style_muted`,
+ * `style_accent`, ARGB hex). Without them the theme's own colours stay, light
+ * or dark with the phone.
+ */
+fun applyWidgetStyle(
+  views: RemoteViews,
+  rows: IntArray,
+  hasProgress: Boolean,
+  get: (String) -> String?,
+) {
+  val bg = color(get("style_bg")) ?: return
+  val ink = color(get("style_ink")) ?: return
+  val muted = color(get("style_muted")) ?: ink
+  val accent = color(get("style_accent")) ?: ink
+  views.setInt(R.id.bg, "setColorFilter", bg)
+  views.setInt(R.id.dot, "setColorFilter", accent)
+  views.setTextColor(R.id.title, muted)
+  views.setTextColor(R.id.detail, muted)
+  views.setTextColor(R.id.value, ink)
+  for (id in rows) views.setTextColor(id, ink)
+  if (hasProgress && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+    views.setColorStateList(R.id.progress, "setProgressTintList", ColorStateList.valueOf(accent))
+    views.setColorStateList(R.id.progress, "setProgressBackgroundTintList", ColorStateList.valueOf(muted))
+  }
+}

@@ -46,6 +46,7 @@ class HandyWidget : HomeWidgetProvider() {
       views.setTextViewText(id, text)
       data.getString("row${i}_uri", null)?.let { views.setOnClickPendingIntent(id, open(context, it)) }
     }
+    applyWidgetStyle(views, ROWS, false) { data.getString(it, null) }
     return views
   }
 

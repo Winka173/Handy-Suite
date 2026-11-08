@@ -445,10 +445,7 @@ void main() {
     await tap(t, find.byKey(const Key('menu-export')));
     expect(find.text('Semester 1'), findsWidgets);
     await tap(t, find.byKey(const Key('export-style-poster')));
-    expect(
-      find.text('This style saves with Pro. Plain stays free.'),
-      findsOneWidget,
-    );
+    expect(find.textContaining('Saves with Pro.'), findsOneWidget);
     await tap(t, find.byKey(const Key('export-png')));
     expect(find.text('Pay once. Keep it.'), findsOneWidget);
   });

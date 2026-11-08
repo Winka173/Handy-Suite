@@ -11,9 +11,10 @@ import '../features/portability.dart';
 import '../pro/pro.dart';
 import '../scope.dart';
 import '../ui/look.dart';
+import 'board_report.dart';
 
 /// The three ways a board is drawn for sharing. Plain is free.
-enum PosterStyle { plain, poster, print }
+enum PosterStyle { plain, poster, print, report }
 
 /// Export: the board as it will be saved (a picture or a PDF), in a style;
 /// data formats (CSV, Markdown, ICS, backup) one tap away.
@@ -27,6 +28,9 @@ class ExportPage extends StatefulWidget {
 
 class _ExportPageState extends State<ExportPage> {
   PosterStyle style = PosterStyle.plain;
+
+  /// Custom field values on the cards (Pro), when the board has fields.
+  bool fields = false;
   final boundary = GlobalKey();
   bool busy = false;
 
@@ -40,7 +44,7 @@ class _ExportPageState extends State<ExportPage> {
   }
 
   Future<void> _save({required bool pdf}) async {
-    if (style != PosterStyle.plain &&
+    if ((style != PosterStyle.plain || fields) &&
         !await requirePro(context, ProFeature.export))
       return;
     if (!mounted) return;
@@ -98,8 +102,11 @@ class _ExportPageState extends State<ExportPage> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final p = BoardsPalette.of(context);
-    final locked = style != PosterStyle.plain && !hasPro(context);
     final s = widget.scope.state;
+    final hasFields = fieldsOf(s, widget.board).isNotEmpty;
+    final locked =
+        (style != PosterStyle.plain || (fields && hasFields)) &&
+        !hasPro(context);
     return Scaffold(
       appBar: AppBar(title: Text(tr(context, 'Export board', 'Xuất bảng'))),
       body: Column(
@@ -115,6 +122,7 @@ class _ExportPageState extends State<ExportPage> {
                   (PosterStyle.plain, 'Plain', 'Đơn giản'),
                   (PosterStyle.poster, 'Poster', 'Poster'),
                   (PosterStyle.print, 'Printable', 'Bản in'),
+                  (PosterStyle.report, 'Report', 'Báo cáo'),
                 ])
                   Padding(
                     padding: const EdgeInsets.only(right: 6),
@@ -134,6 +142,26 @@ class _ExportPageState extends State<ExportPage> {
                       ),
                     ),
                   ),
+                if (hasFields)
+                  Padding(
+                    padding: const EdgeInsets.only(left: 6),
+                    child: Center(
+                      child: FilterChip(
+                        key: const Key('export-fields'),
+                        label: Text(
+                          tr(context, 'Custom fields', 'Trường tuỳ chỉnh'),
+                        ),
+                        avatar: hasPro(context)
+                            ? null
+                            : const Icon(
+                                Icons.workspace_premium_outlined,
+                                size: 16,
+                              ),
+                        selected: fields,
+                        onSelected: (v) => setState(() => fields = v),
+                      ),
+                    ),
+                  ),
               ],
             ),
           ),
@@ -147,12 +175,20 @@ class _ExportPageState extends State<ExportPage> {
                 constrained: false,
                 child: RepaintBoundary(
                   key: boundary,
-                  child: BoardPoster(
-                    state: s,
-                    board: widget.board,
-                    style: style,
-                    now: widget.scope.clock(),
-                  ),
+                  child: style == PosterStyle.report
+                      ? BoardReport(
+                          state: s,
+                          board: widget.board,
+                          now: widget.scope.clock(),
+                          fields: fields && hasFields,
+                        )
+                      : BoardPoster(
+                          state: s,
+                          board: widget.board,
+                          style: style,
+                          now: widget.scope.clock(),
+                          fields: fields && hasFields,
+                        ),
                 ),
               ),
             ),
@@ -181,8 +217,10 @@ class _ExportPageState extends State<ExportPage> {
                             child: Text(
                               tr(
                                 context,
-                                'This style saves with Pro. Plain stays free.',
-                                'Kiểu này lưu được khi có Pro. Đơn giản vẫn miễn phí.',
+                                'Saves with Pro. Plain without custom fields '
+                                    'stays free.',
+                                'Lưu được khi có Pro. Đơn giản không kèm trường '
+                                    'tuỳ chỉnh vẫn miễn phí.',
                               ),
                               style: theme.textTheme.bodySmall,
                             ),
@@ -243,12 +281,14 @@ class BoardPoster extends StatelessWidget {
   final String board;
   final PosterStyle style;
   final DateTime now;
+  final bool fields;
   const BoardPoster({
     super.key,
     required this.state,
     required this.board,
     required this.style,
     required this.now,
+    this.fields = false,
   });
 
   @override
@@ -383,6 +423,7 @@ class BoardPoster extends StatelessWidget {
                                   style: style,
                                   done: columns[i].flag('done'),
                                   now: now,
+                                  fields: fields,
                                 ),
                               if (cardsIn(s, columns[i].id).length > 30)
                                 Text(
@@ -425,12 +466,14 @@ class _PosterCard extends StatelessWidget {
   final PosterStyle style;
   final bool done;
   final DateTime now;
+  final bool fields;
   const _PosterCard({
     required this.state,
     required this.card,
     required this.style,
     required this.done,
     required this.now,
+    this.fields = false,
   });
   @override
   Widget build(BuildContext context) {
@@ -511,6 +554,19 @@ class _PosterCard extends StatelessWidget {
                     ],
                   ),
                 ],
+                if (fields)
+                  for (final line in cardFieldLines(
+                    state,
+                    card,
+                    vi: Localizations.localeOf(context).languageCode == 'vi',
+                  ))
+                    Padding(
+                      padding: const EdgeInsets.only(top: 4),
+                      child: Text(
+                        line,
+                        style: const TextStyle(fontSize: 13, color: muted),
+                      ),
+                    ),
                 if (print)
                   for (final c in subtasksOf(state, card.id).take(6))
                     Padding(

@@ -3,6 +3,7 @@ import 'package:handy_home_widget/handy_home_widget.dart';
 import 'package:handy_ui/kit.dart';
 import '../board/board_menus.dart' show ProBadge;
 import '../design/theme.dart';
+import '../design/widget_styles.dart';
 import '../platform/home_surface.dart';
 import '../pro/pro.dart';
 import '../scope.dart';
@@ -11,9 +12,18 @@ import 'settings_parts.dart';
 /// Settings › Home-screen widgets (Android): what each of the five shows,
 /// drawn from the same data the widget gets; the board for Progress; card
 /// names on or off; how to add one (the launcher places it, not the app).
-class WidgetsPage extends StatelessWidget {
+class WidgetsPage extends StatefulWidget {
   final BoardsScope scope;
   const WidgetsPage({super.key, required this.scope});
+  @override
+  State<WidgetsPage> createState() => _WidgetsPageState();
+}
+
+class _WidgetsPageState extends State<WidgetsPage> {
+  BoardsScope get scope => widget.scope;
+
+  /// A Pro style looked at without Pro: shown in the previews only.
+  String? previewing;
 
   Future<void> _pref(BuildContext context, String key, Object? v) => scope.run(
     context,
@@ -38,6 +48,8 @@ class WidgetsPage extends StatelessWidget {
       final views = boardsWidgetViews(s, now, vi: vi, pro: pro);
       final boards = homeBoards(s);
       final chosen = s.preferences['widgetBoard'] as String?;
+      final applied = widgetStyleOf(s, pro: pro);
+      final shown = previewing == null ? applied : widgetStyleById(previewing);
       Widget card(
         String key,
         String name,
@@ -55,7 +67,7 @@ class WidgetsPage extends StatelessWidget {
           child: Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: p.surface,
+              color: shown.bg ?? p.surface,
               borderRadius: BorderRadius.circular(20),
               border: Border.all(color: p.line),
             ),
@@ -65,27 +77,56 @@ class WidgetsPage extends StatelessWidget {
                 Row(
                   children: [
                     Expanded(
-                      child: Text(name, style: theme.textTheme.labelLarge),
+                      child: Text(
+                        name,
+                        style: theme.textTheme.labelLarge?.copyWith(
+                          color: shown.ink,
+                        ),
+                      ),
                     ),
                     if (isPro) const ProBadge(),
                   ],
                 ),
                 const SizedBox(height: 8),
-                Text(
-                  v.title,
-                  style: theme.textTheme.bodySmall?.copyWith(color: p.muted),
+                Row(
+                  children: [
+                    Container(
+                      width: 8,
+                      height: 8,
+                      decoration: BoxDecoration(
+                        color: shown.accent ?? p.primary,
+                        shape: BoxShape.circle,
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        v.title,
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: shown.muted ?? p.muted,
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
-                Text(v.value, style: theme.textTheme.titleLarge),
+                Text(
+                  v.value,
+                  style: theme.textTheme.titleLarge?.copyWith(color: shown.ink),
+                ),
                 if (v.detail.isNotEmpty)
                   Text(
                     v.detail,
-                    style: theme.textTheme.bodySmall?.copyWith(color: p.muted),
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: shown.muted ?? p.muted,
+                    ),
                   ),
                 if (v.progress != null) ...[
                   const SizedBox(height: 8),
                   LinearProgressIndicator(
                     value: v.progress! / 100,
                     minHeight: 6,
+                    color: shown.accent,
+                    backgroundColor: shown.muted?.withValues(alpha: .35),
                   ),
                 ],
                 for (final r in v.rows)
@@ -95,6 +136,7 @@ class WidgetsPage extends StatelessWidget {
                       r.$1,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
+                      style: TextStyle(color: shown.ink),
                     ),
                   ),
               ],
@@ -167,6 +209,83 @@ class WidgetsPage extends StatelessWidget {
                   ),
               ],
             ),
+            const SizedBox(height: 20),
+            Semantics(
+              header: true,
+              child: Text(
+                tr(context, 'Style', 'Kiểu'),
+                style: theme.textTheme.titleSmall,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Wrap(
+              key: const Key('widget-styles'),
+              spacing: 8,
+              runSpacing: 8,
+              children: [
+                for (final w in widgetStyles)
+                  ChoiceChip(
+                    key: Key('widget-style-${w.id}'),
+                    avatar: CircleAvatar(
+                      radius: 9,
+                      backgroundColor: w.bg ?? p.surface,
+                      child: CircleAvatar(
+                        radius: 4,
+                        backgroundColor: w.accent ?? p.primary,
+                      ),
+                    ),
+                    label: Text(
+                      '${tr(context, w.nameEn, w.nameVi)}${w.pro ? ' · Pro' : ''}',
+                    ),
+                    selected: shown.id == w.id,
+                    onSelected: (_) {
+                      if (w.pro && !pro) {
+                        setState(() => previewing = w.id);
+                        return;
+                      }
+                      setState(() => previewing = null);
+                      _pref(
+                        context,
+                        'widgetStyle',
+                        w.id == 'system' ? null : w.id,
+                      );
+                    },
+                  ),
+              ],
+            ),
+            if (previewing != null && !pro) ...[
+              const SizedBox(height: 8),
+              Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      tr(
+                        context,
+                        'Previewing. Your widgets keep their current style.',
+                        'Đang xem trước. Widget của bạn vẫn giữ kiểu hiện tại.',
+                      ),
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: p.muted,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  FilledButton(
+                    key: const Key('widget-style-apply'),
+                    onPressed: () async {
+                      final id = previewing!;
+                      if (!await requirePro(context, ProFeature.looks) ||
+                          !context.mounted) {
+                        return;
+                      }
+                      setState(() => previewing = null);
+                      await _pref(context, 'widgetStyle', id);
+                    },
+                    child: Text(tr(context, 'Apply with Pro', 'Dùng với Pro')),
+                  ),
+                ],
+              ),
+            ],
             card(
               'today',
               tr(context, 'Today', 'Hôm nay'),

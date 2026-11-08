@@ -16,6 +16,10 @@ class HomeWidgetView {
 
   /// A progress bar, 0–100, for layouts that have one.
   final int? progress;
+
+  /// Colours for the native side, ARGB hex: `bg`, `ink`, `muted`, `accent`.
+  /// Null keeps the widget's own light/dark theme.
+  final Map<String, String>? style;
   const HomeWidgetView({
     required this.title,
     required this.value,
@@ -24,7 +28,19 @@ class HomeWidgetView {
     this.rows = const [],
     this.maxRows = 3,
     this.progress,
+    this.style,
   });
+
+  HomeWidgetView styled(Map<String, String>? style) => HomeWidgetView(
+    title: title,
+    value: value,
+    detail: detail,
+    uri: uri,
+    rows: rows,
+    maxRows: maxRows,
+    progress: progress,
+    style: style,
+  );
 
   Map<String, String?> toData() => {
     'title': title,
@@ -32,6 +48,8 @@ class HomeWidgetView {
     'detail': detail,
     'uri': uri,
     if (progress != null) 'progress': '${progress!.clamp(0, 100)}',
+    for (final k in const ['bg', 'ink', 'muted', 'accent'])
+      'style_$k': style?[k],
     for (var i = 0; i < maxRows; i++) ...{
       'row${i}_text': i < rows.length ? rows[i].$1 : null,
       'row${i}_uri': i < rows.length ? rows[i].$2 : null,

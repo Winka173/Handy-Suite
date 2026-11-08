@@ -1,3 +1,4 @@
+import '../design/widget_styles.dart';
 import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
@@ -232,7 +233,8 @@ class BoardsHomeSurface {
     bool pro = false,
   }) async {
     if (!supported) return;
-    final view = boardsHomeView(s, now, vi: vi);
+    final style = widgetStyleOf(s, pro: pro).native;
+    final view = boardsHomeView(s, now, vi: vi).styled(style);
     await feed.publish(view);
     for (final MapEntry(key: prefix, value: v) in boardsWidgetViews(
       s,
@@ -240,7 +242,7 @@ class BoardsHomeSurface {
       vi: vi,
       pro: pro,
     ).entries) {
-      await others[prefix]!.publish(v);
+      await others[prefix]!.publish(v.styled(style));
     }
     try {
       await channel.invokeMethod('publish', {...view.toData(), 'vi': vi});

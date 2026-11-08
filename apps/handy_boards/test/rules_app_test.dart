@@ -127,6 +127,67 @@ void main() {
     });
   });
 
+  testWidgets('widget styles: free ones apply at once, a Pro one previews '
+      'and asks only at Apply', (t) async {
+    final c = await boot(t, studyState(), size: tall);
+    await openSettings(t);
+    await tap(t, find.byKey(const Key('settings-home-widget')));
+    await tap(t, find.byKey(const Key('widget-style-dark')));
+    expect(c.state!.preferences['widgetStyle'], 'dark');
+    await tap(t, find.byKey(const Key('widget-style-harbor')));
+    // Previewed only: the stored style is unchanged.
+    expect(c.state!.preferences['widgetStyle'], 'dark');
+    final box = t.widget<Container>(
+      find
+          .descendant(
+            of: find.byKey(const Key('widget-today')),
+            matching: find.byType(Container),
+          )
+          .first,
+    );
+    expect((box.decoration as BoxDecoration).color, const Color(0xFF0F2A2E));
+    await tap(t, find.byKey(const Key('widget-style-apply')));
+    expect(find.text('Pay once. Keep it.'), findsOneWidget);
+    await t.binding.handlePopRoute();
+    await t.pumpAndSettle();
+    expect(c.state!.preferences['widgetStyle'], 'dark');
+    debugProOverride = true;
+    // A tap rebuilds the page under Pro, then the Pro style applies.
+    await tap(t, find.byKey(const Key('widget-style-light')));
+    await tap(t, find.byKey(const Key('widget-style-harbor')));
+    expect(c.state!.preferences['widgetStyle'], 'harbor');
+    await tap(t, find.byKey(const Key('widget-style-system')));
+    expect(c.state!.preferences['widgetStyle'], isNull);
+  });
+
+  testWidgets('export: the report lists open cards by deadline; custom '
+      'fields are a Pro option on any style', (t) async {
+    var s = studyState();
+    s = addField(s, board, 'Teacher', 'text');
+    final field = fieldsOf(s, board).single.id;
+    final card = topTasks(s, board: board).first;
+    s = setFieldValue(s, card.id, field, 'Ms Lan', now: clock);
+    await boot(t, s, size: const Size(1000, 900));
+    await tap(t, find.byKey(const Key('board-$board')));
+    await tap(t, find.byKey(const Key('board-more')));
+    await tap(t, find.byKey(const Key('menu-export')));
+    // Plain with fields: shown, saving asks for Pro.
+    await tap(t, find.byKey(const Key('export-fields')));
+    expect(find.text('Teacher: Ms Lan'), findsOneWidget);
+    expect(find.textContaining('Saves with Pro.'), findsOneWidget);
+    await tap(t, find.byKey(const Key('export-png')));
+    expect(find.text('Pay once. Keep it.'), findsOneWidget);
+    await t.binding.handlePopRoute();
+    await t.pumpAndSettle();
+    await tap(t, find.byKey(const Key('export-style-report')));
+    expect(find.byKey(const Key('board-report')), findsOneWidget);
+    expect(find.text('Finished per week'), findsOneWidget);
+    expect(find.text('Teacher'), findsOneWidget);
+    expect(find.text('Ms Lan'), findsOneWidget);
+    await tap(t, find.byKey(const Key('export-fields')));
+    expect(find.text('Teacher'), findsNothing);
+  });
+
   testWidgets('digest: Pro picks daily or weekly, the day and the boards', (
     t,
   ) async {
