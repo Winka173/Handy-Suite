@@ -21,6 +21,7 @@ import 'platform/share_inbox.dart';
 import 'pro/pro.dart';
 import 'scope.dart';
 import 'settings/how_to_page.dart';
+import 'sync/drive_sync.dart';
 import 'settings/settings_page.dart';
 import 'welcome/welcome_page.dart';
 
@@ -65,6 +66,9 @@ class _BoardsAppState extends State<BoardsApp> with WidgetsBindingObserver {
             revision: () => c.state?.revision.toString(),
           )
         : null,
+    drive: widget.controller == null && driveSyncOffered
+        ? BoardsDriveSync(c)
+        : null,
   );
   bool replayWelcome = false, tidied = false;
 
@@ -98,6 +102,11 @@ class _BoardsAppState extends State<BoardsApp> with WidgetsBindingObserver {
   void _started() {
     _tidy();
     if (c.state != null) scope.autoBackup?.attach();
+    if (scope.drive case final drive?) {
+      c.addListener(drive.changed);
+      // Sync left on: the other devices' changes arrive now.
+      unawaited(drive.syncNow());
+    }
   }
 
   void _replay() {
@@ -189,7 +198,11 @@ class _BoardsAppState extends State<BoardsApp> with WidgetsBindingObserver {
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
-    if (state == AppLifecycleState.resumed) unawaited(_takeShares());
+    if (state == AppLifecycleState.resumed) {
+      unawaited(_takeShares());
+      scope.drive?.resumed();
+    }
+    if (state == AppLifecycleState.paused) scope.drive?.paused();
   }
 
   @override
@@ -197,6 +210,10 @@ class _BoardsAppState extends State<BoardsApp> with WidgetsBindingObserver {
     WidgetsBinding.instance.removeObserver(this);
     homeSurface.dispose();
     scope.autoBackup?.dispose();
+    if (scope.drive case final drive?) {
+      c.removeListener(drive.changed);
+      drive.dispose();
+    }
     inbox.dispose();
     noAds.dispose();
     if (widget.controller == null) c.dispose();

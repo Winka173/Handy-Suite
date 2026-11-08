@@ -8,6 +8,8 @@ import '../scope.dart';
 import 'data_rows.dart';
 import 'help_links.dart';
 import 'settings_parts.dart';
+import '../sync/drive_section.dart';
+import '../sync/drive_sync.dart';
 
 /// Settings, as Handy Bookmark and Sticky Wall have them: Pro first, then
 /// General (language, light or dark, reminders), Automations, Data (backup
@@ -204,10 +206,32 @@ class SettingsPage extends StatelessWidget {
             title: tr(context, 'Data', 'Dữ liệu'),
             note: tr(
               context,
-              'Kept on this device. It leaves only when you back it up, export or share it.',
-              'Lưu trên máy này. Chỉ rời máy khi bạn sao lưu, xuất hoặc chia sẻ.',
+              'Kept on this device. It leaves only when you back it up, sync, export or share it.',
+              'Lưu trên máy này. Chỉ rời máy khi bạn sao lưu, đồng bộ, xuất hoặc chia sẻ.',
             ),
             children: [
+              if (scope.drive case final drive?)
+                SettingsPanel(
+                  gap: false,
+                  rows: [
+                    ListenableBuilder(
+                      listenable: drive,
+                      builder: (context, _) => SettingsRow(
+                        key: const Key('settings-sync'),
+                        icon: Icons.sync,
+                        title: tr(context, 'Sync', 'Đồng bộ'),
+                        subtitle: _syncLine(context, drive),
+                        navigates: true,
+                        onTap: () => pushSettingsView(
+                          context,
+                          tr(context, 'Sync', 'Đồng bộ'),
+                          listenable: drive,
+                          (context) => [DriveSyncPanel(drive: drive)],
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
               SettingsPanel(
                 gap: false,
                 title: tr(context, 'Backup and restore', 'Sao lưu & khôi phục'),
@@ -633,3 +657,39 @@ Future<void> showPlans(BuildContext context) => showModalBottomSheet<void>(
     );
   },
 );
+
+/// "Google Drive · synced 8 Nov 14:20", or what is in the way.
+String _syncLine(BuildContext context, BoardsDriveSync d) {
+  if (!d.enabled)
+    return tr(
+      context,
+      'Off. Google Drive keeps your devices in step',
+      'Đang tắt. Google Drive giữ các máy khớp nhau',
+    );
+  final at = d.lastSync;
+  return switch (d.state) {
+    DriveSyncState.syncing => tr(context, 'Syncing…', 'Đang đồng bộ…'),
+    DriveSyncState.offline => tr(
+      context,
+      'Google Drive · will sync when online',
+      'Google Drive · sẽ đồng bộ khi có mạng',
+    ),
+    DriveSyncState.authNeeded => tr(
+      context,
+      'Google Drive · allow access again',
+      'Google Drive · cần cho phép lại',
+    ),
+    DriveSyncState.quota => tr(
+      context,
+      'Google Drive is full',
+      'Google Drive đã đầy',
+    ),
+    DriveSyncState.failed => tr(
+      context,
+      'Google Drive · could not sync',
+      'Google Drive · chưa đồng bộ được',
+    ),
+    _ =>
+      'Google Drive · ${at == null ? tr(context, 'not synced yet', 'chưa đồng bộ lần nào') : '${MaterialLocalizations.of(context).formatShortDate(at)} ${TimeOfDay.fromDateTime(at).format(context)}'}',
+  };
+}

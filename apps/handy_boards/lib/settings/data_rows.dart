@@ -278,6 +278,10 @@ Future<void> deleteEverything(BuildContext context, BoardsScope scope) async {
   );
   if (!ok || !context.mounted) return;
   final navigator = Navigator.of(context);
+  // With sync on, an empty device would delete everything on the person's
+  // other devices too. Sync goes off first; this clears this device only.
+  if (scope.drive case final drive? when drive.enabled) await drive.disable();
+  if (!context.mounted) return;
   await scope.run(context, () async {
     final kept = scope.state.preferences;
     await scope.controller.change(

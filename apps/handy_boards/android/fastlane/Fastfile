@@ -91,6 +91,9 @@ platform :android do
       # With the store identifiers, so Pro can be bought.
       args = ["flutter", "build", "appbundle", "--release", "--no-pub", "--obfuscate", "--split-debug-info=build/symbols"]
       args << "--dart-define-from-file=#{DEFINES}" if File.exist?(DEFINES)
+      # Google Drive sync, once its OAuth clients exist in Google Cloud
+      # (docs/HANDY_BOARDS_RELEASE.md): HANDY_DRIVE_SYNC=true fastlane ...
+      args << "--dart-define=HANDY_DRIVE_SYNC=true" if ENV["HANDY_DRIVE_SYNC"] == "true"
       sh(*args)
     end
   end

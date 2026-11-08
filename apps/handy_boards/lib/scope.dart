@@ -2,6 +2,7 @@ import 'package:handy_ui/kit.dart';
 import 'package:handy_files/handy_files.dart';
 import 'package:handy_boards_engine/handy_boards_engine.dart';
 import 'controller.dart';
+import 'sync/drive_sync.dart';
 import 'platform/reminders.dart';
 import 'ui/labels.dart';
 
@@ -13,11 +14,15 @@ class BoardsScope {
 
   /// Daily copies in the app's own storage; none on the web and in tests.
   final HandyAutoBackup? autoBackup;
+
+  /// Google Drive sync, where this build and device offer it.
+  final BoardsDriveSync? drive;
   bool adsAllowed = false;
   BoardsScope(
     this.controller, {
     this.files = const SystemHandyFiles(),
     this.autoBackup,
+    this.drive,
     DateTime Function()? clock,
     BoardsReminders? reminders,
   }) : clock = clock ?? DateTime.now,

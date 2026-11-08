@@ -1,6 +1,6 @@
 # Privacy Policy · Chính sách quyền riêng tư
 
-**Handy Boards** — last updated 8 November 2026 · cập nhật 08/11/2026
+**Handy Boards** — last updated 8 November 2026 (Google Drive sync added) · cập nhật 08/11/2026 (thêm đồng bộ Google Drive)
 
 ---
 
@@ -23,9 +23,25 @@ store, sell or share any personal data.
 
 ### What goes over the internet
 
-Nothing from your boards. The app reads no web pages and sends no data. The
-only network use is Google Play's own purchase screen when you buy or restore
-Pro. Links in your notes open in your browser only when you tap them.
+Nothing from your boards, unless you switch on Google Drive sync (below). The
+app reads no web pages and sends no data anywhere else. Other network use is
+Google Play's own purchase screen when you buy or restore Pro. Links in your notes open in your browser only when you tap them.
+
+### Google Drive sync (optional, Android)
+
+Off unless you switch it on in *Settings › Data › Sync*. Then Google asks you
+to let Handy Boards use its own hidden folder in **your** Google Drive (the
+`drive.appdata` permission): the app cannot see your other Drive files.
+
+- Your boards (columns, cards, subtasks, categories, notes, dates, covers and
+  the photos you added) are copied there, so your other Android devices signed
+  in to the same Google account get the same boards. Theme, language,
+  reminder permission, the widget and the activity log stay on each device.
+- It goes from your device straight to Google; the developer has no server in
+  between and receives nothing. Google stores it under its own terms. It is
+  ordinary Drive data, not end-to-end encrypted.
+- Turning sync off deletes nothing. To delete the Drive copy, open Google
+  Drive › Settings › Manage apps › Handy Boards › Delete hidden app data.
 
 ### Permissions
 
@@ -79,9 +95,26 @@ cáo. Chúng tôi không thu thập, lưu trữ, bán hay chia sẻ dữ liệu 
 
 ### Những gì đi qua internet
 
-Không có gì từ các bảng của bạn. App không đọc trang web nào và không gửi dữ
-liệu. Lần dùng mạng duy nhất là màn mua hàng của Google Play khi bạn mua hoặc
-khôi phục Pro. Link trong ghi chú chỉ mở bằng trình duyệt khi bạn bấm vào.
+Không có gì từ các bảng của bạn, trừ khi bạn bật đồng bộ Google Drive (bên
+dưới). App không đọc trang web nào và không gửi dữ liệu đi đâu khác. Ngoài ra
+chỉ có màn mua hàng của Google Play khi bạn mua hoặc khôi phục Pro. Link trong ghi chú chỉ mở bằng trình duyệt khi bạn bấm vào.
+
+### Đồng bộ Google Drive (tuỳ chọn, Android)
+
+Tắt sẵn, chỉ chạy khi bạn bật trong *Cài đặt › Dữ liệu › Đồng bộ*. Khi đó
+Google sẽ hỏi bạn cho phép Handy Boards dùng thư mục ẩn riêng của nó trong
+Google Drive **của bạn** (quyền `drive.appdata`): app không thấy được các tệp
+Drive khác.
+
+- Các bảng của bạn (cột, thẻ, việc con, nhóm, ghi chú, ngày, ảnh bìa và ảnh
+  bạn thêm) được chép vào đó, để các máy Android khác đăng nhập cùng tài
+  khoản Google có cùng các bảng. Giao diện, ngôn ngữ, quyền nhắc việc, widget
+  và nhật ký hoạt động vẫn ở riêng từng máy.
+- Dữ liệu đi thẳng từ máy bạn tới Google; nhà phát triển không có máy chủ ở
+  giữa và không nhận gì. Google lưu theo điều khoản của Google. Đây là dữ liệu
+  Drive bình thường, không mã hoá đầu-cuối.
+- Tắt đồng bộ không xoá gì. Muốn xoá bản trên Drive: Google Drive › Cài đặt ›
+  Quản lý ứng dụng › Handy Boards › Xoá dữ liệu ẩn của ứng dụng.
 
 ### Quyền
 

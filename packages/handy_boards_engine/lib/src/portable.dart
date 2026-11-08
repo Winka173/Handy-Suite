@@ -196,6 +196,9 @@ BoardsState restoreBackup(
         ...incoming.preferences,
         'notifications': false,
         'homeWidget': false,
+        // A replaced library starts with sync off: turning it on again
+        // joins it with the folder instead of deleting from it.
+        'driveSync': false,
       },
     );
   final ids = {
