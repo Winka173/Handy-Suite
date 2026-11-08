@@ -2,4 +2,5 @@
     <color name="handy_widget_ground">#FF1F2329</color>
     <color name="handy_widget_ink">#FFF5F5F2</color>
     <color name="handy_widget_muted">#FFBFC3CC</color>
+    <color name="handy_widget_hue">#FFE79AD6</color>
 </resources>

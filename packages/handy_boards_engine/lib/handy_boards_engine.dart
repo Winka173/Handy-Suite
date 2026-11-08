@@ -26,6 +26,7 @@ part 'src/sync.dart';
 part 'src/time_nav.dart';
 part 'src/card_templates.dart';
 part 'src/custom_fields.dart';
+part 'src/notify_plan.dart';
 
 typedef Json = Map<String, dynamic>;
 

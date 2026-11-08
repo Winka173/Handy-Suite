@@ -52,62 +52,52 @@ class BoardsReminders {
         false;
   }
 
-  Future<void> sync(BoardsState s) async {
+  /// Schedules what the cards and preferences plan (see the engine's
+  /// `planNotifications`) and cancels anything else this app scheduled. The
+  /// keys are stable, so running it on every change, start and resume never
+  /// duplicates a notification.
+  Future<void> sync(BoardsState s, {bool vi = false, bool pro = false}) async {
     if (!supported) return;
     await ready();
     final allowed =
-            s.preferences['notifications'] == true &&
-            await DeviceNotifications().allowed(false),
-        now = DateTime.now();
-    final desired = allowed
-        ? (s.rows('reminders').where((r) {
-                final t = s.maybe('tasks', r.str('task'));
-                return r.flag('enabled') &&
-                    t != null &&
-                    activeTask(t) &&
-                    !completed(s, t) &&
-                    DateTime.parse(r.str('at')).isAfter(now);
-              }).toList()..sort(
-                (a, b) => DateTime.parse(
-                  a.str('at'),
-                ).compareTo(DateTime.parse(b.str('at'))),
-              ))
-              .take(50)
-              .toList()
-        : <BoardRecord>[];
-    final ids = {
-      for (final r in desired)
-        ReminderRequest(
-          'boards:${r.id}',
-          tz.TZDateTime.from(DateTime.parse(r.str('at')), zone(r.str('zone'))),
-        ).id: r,
+        s.preferences['notifications'] == true &&
+        await DeviceNotifications().allowed(false);
+    final notes = allowed
+        ? planNotifications(s, DateTime.now(), vi: vi, pro: pro)
+        : const <PlannedNote>[];
+    final ids = <int, PlannedNote>{
+      for (final n in notes)
+        ReminderRequest(n.key, tz.TZDateTime.from(n.at, tz.local)).id: n,
     };
-    if (ids.length != desired.length)
+    if (ids.length != notes.length)
       throw StateError('Notification ID collision');
     for (final old in await plugin.pendingNotificationRequests())
       if (!ids.containsKey(old.id)) await plugin.cancel(id: old.id);
-    for (final e in ids.entries)
+    for (final MapEntry(key: id, value: n) in ids.entries)
       await plugin.zonedSchedule(
-        id: e.key,
-        title: 'Handy Boards',
-        body: 'A task reminder is due / Đến giờ nhắc công việc',
-        scheduledDate: tz.TZDateTime.from(
-          DateTime.parse(e.value.str('at')),
-          zone(e.value.str('zone')),
-        ),
-        notificationDetails: const NotificationDetails(
-          android: AndroidNotificationDetails(
-            'handy-boards-reminders',
-            'Task reminders',
-            importance: Importance.defaultImportance,
-          ),
-          iOS: DarwinNotificationDetails(
+        id: id,
+        title: n.title,
+        body: n.body,
+        scheduledDate: tz.TZDateTime.from(n.at, tz.local),
+        notificationDetails: NotificationDetails(
+          android: n.channel == 'reminders'
+              ? const AndroidNotificationDetails(
+                  'handy-boards-reminders',
+                  'Task reminders',
+                  importance: Importance.defaultImportance,
+                )
+              : const AndroidNotificationDetails(
+                  'handy-boards-summary',
+                  'Summaries',
+                  importance: Importance.low,
+                ),
+          iOS: const DarwinNotificationDetails(
             presentAlert: true,
             presentSound: false,
           ),
         ),
         androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
-        payload: e.value.str('task'),
+        payload: n.link,
       );
   }
 }

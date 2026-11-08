@@ -46,11 +46,15 @@ class _BoardsAppState extends State<BoardsApp> with WidgetsBindingObserver {
   final noAds = ValueNotifier(false);
   late final c = widget.controller ?? BoardsController();
   late final BoardsReminders reminderPort = BoardsReminders(
-    onTask: (id) {
-      final ctx = navigator.currentContext;
-      if (mounted && ctx != null && c.state?.maybe('tasks', id) != null)
-        openCard(ctx, scope, id);
-    },
+    // A notification tap: a link (older ones carried just a card id).
+    onTask: (payload) => _link(
+      Uri.tryParse(
+            payload.contains('://')
+                ? payload
+                : 'handy-boards://task?id=${Uri.encodeQueryComponent(payload)}',
+          ) ??
+          Uri(),
+    ),
   );
   late final scope = BoardsScope(
     c,
@@ -80,8 +84,8 @@ class _BoardsAppState extends State<BoardsApp> with WidgetsBindingObserver {
     if (widget.controller == null)
       c.afterCommit = (s) async {
         await Future.wait<void>([
-          reminderPort.sync(s),
-          homeSurface.publish(s, DateTime.now(), vi: _vi(s)),
+          reminderPort.sync(s, vi: _vi(s), pro: _pro()),
+          homeSurface.publish(s, DateTime.now(), vi: _vi(s), pro: _pro()),
         ]);
       };
     if (c.state == null) {
@@ -94,6 +98,11 @@ class _BoardsAppState extends State<BoardsApp> with WidgetsBindingObserver {
     homeSurface.listen(_link);
   }
 
+  bool _pro() {
+    final ctx = navigator.currentContext;
+    return ctx != null && hasPro(ctx);
+  }
+
   bool _vi(BoardsState s) =>
       s.preferences['locale'] == 'vi' ||
       ((s.preferences['locale'] ?? 'system') == 'system' &&
@@ -102,6 +111,15 @@ class _BoardsAppState extends State<BoardsApp> with WidgetsBindingObserver {
 
   void _started() {
     _tidy();
+    // On a device only, like afterCommit (tests pass their own controller).
+    if (widget.controller == null && c.state != null) {
+      final s = c.state!;
+      unawaited(reminderPort.sync(s, vi: _vi(s), pro: _pro()));
+    }
+    if (pendingLink case final uri?) {
+      pendingLink = null;
+      WidgetsBinding.instance.addPostFrameCallback((_) => _link(uri));
+    }
     unawaited(_carryOver());
     if (c.state != null) scope.autoBackup?.attach();
     if (scope.drive case final drive?) {
@@ -246,10 +264,33 @@ class _BoardsAppState extends State<BoardsApp> with WidgetsBindingObserver {
   }
 
   /// Home-screen widget links: open the app, a card, or quick-add.
+  /// A link that arrived before the boards were loaded (a cold start from
+  /// a notification or widget): opened once they are.
+  Uri? pendingLink;
+
   void _link(Uri uri) {
     final ctx = navigator.currentContext;
     final s = c.state;
-    if (ctx == null || s == null || uri.scheme != 'handy-boards') return;
+    if (uri.scheme != 'handy-boards') return;
+    if (ctx == null || s == null) {
+      pendingLink = uri;
+      return;
+    }
+    if (uri.host == 'pro') {
+      navigator.currentState?.pushNamed('/pro');
+      return;
+    }
+    if (uri.host == 'my-work') {
+      navigator.currentState?.pushNamed('/my-work');
+      return;
+    }
+    if (uri.host == 'board') {
+      final id = uri.queryParameters['id'];
+      if (id != null && s.maybe('boards', id) != null) {
+        navigator.currentState?.pushNamed('/board/$id');
+      }
+      return;
+    }
     if (uri.host == 'task') {
       final id = uri.queryParameters['id'];
       if (id != null && s.maybe('tasks', id) != null) openCard(ctx, scope, id);
@@ -267,6 +308,11 @@ class _BoardsAppState extends State<BoardsApp> with WidgetsBindingObserver {
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state == AppLifecycleState.resumed) {
       unawaited(_takeShares());
+      // A new day or a new time zone: plan the notifications again.
+      if (widget.controller == null && c.state != null) {
+        final s = c.state!;
+        unawaited(reminderPort.sync(s, vi: _vi(s), pro: _pro()));
+      }
       unawaited(_carryOver());
       scope.drive?.resumed();
     }

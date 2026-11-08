@@ -1,1 +1,7 @@
-<resources><string name="handy_widget_description">Việc đến hạn từ Handy Boards. Bật tên việc trong Cài đặt ứng dụng.</string></resources>
+<resources>
+    <string name="handy_widget_description">Việc hôm nay từ Handy Boards. Tên việc hiện khi bạn cho phép trong Cài đặt.</string>
+    <string name="handy_widget_progress_description">Một bảng: đã xong trên tổng, có thanh tiến độ.</string>
+    <string name="handy_widget_upcoming_description">Việc còn tồn và việc sắp tới.</string>
+    <string name="handy_widget_work_description">Pro: Việc của tôi trên mọi bảng.</string>
+    <string name="handy_widget_week_description">Pro: bảy ngày tới trong một cái nhìn.</string>
+</resources>

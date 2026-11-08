@@ -9,14 +9,21 @@ class HomeWidgetView {
   /// Opened when the widget is tapped, e.g. `handy-spend://today`.
   final String uri;
 
-  /// Up to three tappable lines below, each with its own link.
+  /// Tappable lines below, each with its own link (three by default; a
+  /// layout with more rows sets [maxRows]).
   final List<(String text, String uri)> rows;
+  final int maxRows;
+
+  /// A progress bar, 0–100, for layouts that have one.
+  final int? progress;
   const HomeWidgetView({
     required this.title,
     required this.value,
     this.detail = '',
     required this.uri,
     this.rows = const [],
+    this.maxRows = 3,
+    this.progress,
   });
 
   Map<String, String?> toData() => {
@@ -24,7 +31,8 @@ class HomeWidgetView {
     'value': value,
     'detail': detail,
     'uri': uri,
-    for (var i = 0; i < 3; i++) ...{
+    if (progress != null) 'progress': '${progress!.clamp(0, 100)}',
+    for (var i = 0; i < maxRows; i++) ...{
       'row${i}_text': i < rows.length ? rows[i].$1 : null,
       'row${i}_uri': i < rows.length ? rows[i].$2 : null,
     },
@@ -45,15 +53,18 @@ bool get homeWidgetsSupported =>
 /// update must not break the app.
 class HomeWidgetFeed {
   final String androidClass;
+
+  /// Prefixed keys let one app feed several widgets (`progress_title`...).
+  final String prefix;
   HomeWidgetView? _last;
-  HomeWidgetFeed(this.androidClass);
+  HomeWidgetFeed(this.androidClass, {this.prefix = ''});
 
   Future<void> publish(HomeWidgetView view) async {
     if (!homeWidgetsSupported || view == _last) return;
     _last = view;
     try {
       for (final e in view.toData().entries) {
-        await HomeWidget.saveWidgetData<String>(e.key, e.value);
+        await HomeWidget.saveWidgetData<String>('$prefix${e.key}', e.value);
       }
       await HomeWidget.updateWidget(qualifiedAndroidName: androidClass);
     } catch (_) {

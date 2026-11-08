@@ -316,19 +316,22 @@ class _CardDetailState extends State<CardDetail> {
     final at = DateTime(d.year, d.month, d.day, time.hour, time.minute);
     final t = _card;
     await _change(
-      (s) => s.put(
-        'reminders',
-        BoardRecord({
-          'id': newId(),
-          'task': t.id,
-          'board': t.str('board'),
-          'at': at.toUtc().toIso8601String(),
-          'zone': s
-              .get('boards', t.str('board'))
-              .str('zone', 'Asia/Ho_Chi_Minh'),
-          'enabled': true,
-        }),
-      ),
+      // Setting a reminder (permission just granted) turns notifications on.
+      (s) => s
+          .copy(preferences: {...s.preferences, 'notifications': true})
+          .put(
+            'reminders',
+            BoardRecord({
+              'id': newId(),
+              'task': t.id,
+              'board': t.str('board'),
+              'at': at.toUtc().toIso8601String(),
+              'zone': s
+                  .get('boards', t.str('board'))
+                  .str('zone', 'Asia/Ho_Chi_Minh'),
+              'enabled': true,
+            }),
+          ),
     );
   }
 

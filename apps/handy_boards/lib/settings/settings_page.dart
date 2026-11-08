@@ -1,5 +1,4 @@
 import 'package:handy_boards_engine/handy_boards_engine.dart';
-import 'package:flutter/foundation.dart';
 import 'package:handy_ui/kit.dart';
 import 'package:handy_monetization/handy_monetization.dart';
 import '../home/my_work_page.dart';
@@ -10,6 +9,8 @@ import '../pro/pro.dart';
 import '../scope.dart';
 import 'data_rows.dart';
 import 'help_links.dart';
+import 'widgets_page.dart';
+import 'notifications_page.dart';
 import 'settings_parts.dart';
 import '../sync/drive_section.dart';
 import '../sync/drive_sync.dart';
@@ -100,7 +101,7 @@ class SettingsPage extends StatelessWidget {
                   SettingsRow(
                     key: const Key('settings-reminders'),
                     icon: Icons.notifications_none,
-                    title: tr(context, 'Reminders', 'Nhắc việc'),
+                    title: tr(context, 'Notifications', 'Thông báo'),
                     subtitle: [
                       reminders.isEmpty
                           ? tr(
@@ -122,34 +123,35 @@ class SettingsPage extends StatelessWidget {
                           'Ở đây nhắc hiện ngay trong app.',
                         ),
                     ].join(' '),
-                    trailing: scope.reminders.supported
-                        ? TextButton(
-                            key: const Key('settings-allow-notifications'),
-                            onPressed: () => scope.reminders.request(),
-                            child: Text(tr(context, 'Allow', 'Cho phép')),
-                          )
-                        : null,
-                  ),
-                  // The Android home-screen widget shows card names only
-                  // when this is on; off, it just opens the app.
-                  if (!kIsWeb &&
-                      defaultTargetPlatform == TargetPlatform.android)
-                    SettingsSwitch(
-                      key: const Key('settings-home-widget'),
-                      icon: Icons.widgets_outlined,
-                      title: tr(
-                        context,
-                        'Home-screen widget',
-                        'Widget màn hình chính',
+                    navigates: true,
+                    onTap: () => Navigator.push(
+                      context,
+                      MaterialPageRoute<void>(
+                        builder: (_) => NotificationsPage(scope: scope),
                       ),
-                      subtitle: tr(
-                        context,
-                        'Shows up to 3 cards due today. Off: it only opens your boards, no card names on the home screen.',
-                        'Hiện tối đa 3 thẻ đến hạn hôm nay. Tắt: widget chỉ mở bảng, không hiện tên thẻ ra màn hình chính.',
-                      ),
-                      value: prefs['homeWidget'] == true,
-                      onChanged: (v) => _pref(context, 'homeWidget', v),
                     ),
+                  ),
+                  SettingsRow(
+                    key: const Key('settings-home-widget'),
+                    icon: Icons.widgets_outlined,
+                    title: tr(
+                      context,
+                      'Home-screen widgets',
+                      'Widget màn hình chính',
+                    ),
+                    subtitle: tr(
+                      context,
+                      'Today, progress, left behind; My Work and Week with Pro.',
+                      'Hôm nay, tiến độ, còn tồn; Việc của tôi và Tuần với Pro.',
+                    ),
+                    navigates: true,
+                    onTap: () => Navigator.push(
+                      context,
+                      MaterialPageRoute<void>(
+                        builder: (_) => WidgetsPage(scope: scope),
+                      ),
+                    ),
+                  ),
                 ],
               ),
             ],

@@ -1,6 +1,11 @@
 <resources>
-    <string name="handy_widget_description">Due tasks from Handy Boards. Enable names in app Settings.</string>
+    <string name="handy_widget_description">Today\'s tasks from Handy Boards. Names show when allowed in Settings.</string>
+    <string name="handy_widget_progress_description">One board: done of all, as a bar.</string>
+    <string name="handy_widget_upcoming_description">Work left behind and coming up.</string>
+    <string name="handy_widget_work_description">Pro: My Work across your boards.</string>
+    <string name="handy_widget_week_description">Pro: the next seven days at a glance.</string>
     <color name="handy_widget_ground">#FFFAF9F6</color>
     <color name="handy_widget_ink">#FF1F2329</color>
     <color name="handy_widget_muted">#FF555B66</color>
+    <color name="handy_widget_hue">#FFA61C8E</color>
 </resources>

@@ -136,8 +136,41 @@ void main() {
     await openSettings(t);
     expect(c.state!.preferences['homeWidget'], isNull);
     await tap(t, find.byKey(const Key('settings-home-widget')));
+    // The widgets page: five previews, names off until switched on.
+    for (final w in ['today', 'progress', 'upcoming', 'work', 'week']) {
+      await t.scrollUntilVisible(
+        find.byKey(Key('widget-$w')),
+        200,
+        scrollable: find.byType(Scrollable).first,
+      );
+    }
+    await t.scrollUntilVisible(
+      find.byKey(const Key('widgets-names')),
+      -200,
+      scrollable: find.byType(Scrollable).first,
+    );
+    await tap(t, find.byKey(const Key('widgets-names')));
     expect(c.state!.preferences['homeWidget'], isTrue);
     debugDefaultTargetPlatformOverride = null;
+  });
+
+  testWidgets('notifications: quiet hours, hidden names and silent boards '
+      'need no permission', (t) async {
+    final c = await boot(t, studyState(), size: tall);
+    await openSettings(t);
+    await tap(t, find.byKey(const Key('settings-reminders')));
+    await tap(t, find.byKey(const Key('notify-quiet')));
+    await tap(t, find.byKey(const Key('notify-private')));
+    final n = c.state!.preferences['notify'] as Map;
+    expect(n['quietFrom'], '22:00');
+    expect(n['private'], isTrue);
+    await t.scrollUntilVisible(
+      find.byKey(Key('notify-board-$board')),
+      200,
+      scrollable: find.byType(Scrollable).first,
+    );
+    await tap(t, find.byKey(Key('notify-board-$board')));
+    expect((c.state!.preferences['notify'] as Map)['muted'], [board]);
   });
 
   testWidgets('the purpose picked in Settings puts its templates first in '
