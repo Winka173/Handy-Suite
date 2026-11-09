@@ -126,6 +126,58 @@ Uint8List friendsFile() {
 }
 
 void receiveTests() {
+  testWidgets('an item on a wide page shows what else is in its collection', (
+    t,
+  ) async {
+    final (c, _) = await boot(t, size: const Size(1280, 800));
+    await c.update(
+      (l) => l.copyWith(
+        collections: [SaveCollection(id: 'food', name: 'Food')],
+        bookmarks: [
+          for (final b in l.bookmarks) b.copyWith(collectionId: 'food'),
+        ],
+      ),
+    );
+    final first = c.library!.bookmarks.first;
+    Navigator.of(
+      t.element(find.byType(Scaffold).first),
+    ).pushNamed('/bookmark/${first.id}');
+    await settle(t);
+    expect(find.byKey(const Key('detail-nearby')), findsOneWidget);
+    expect(find.text('Also in Food'), findsOneWidget);
+    expect(find.byKey(Key('nearby-${first.id}')), findsNothing);
+    expect(
+      find.byWidgetPredicate(
+        (w) =>
+            w.key is ValueKey &&
+            '${(w.key as ValueKey).value}'.startsWith('nearby-'),
+      ),
+      findsNWidgets(2),
+    );
+  });
+
+  testWidgets('holding a collection offers Send, already picked', (t) async {
+    final (c, _) = await boot(t);
+    await c.update(
+      (l) => l.copyWith(
+        collections: [SaveCollection(id: 'food', name: 'Food')],
+        bookmarks: [
+          for (final b in l.bookmarks) b.copyWith(collectionId: 'food'),
+        ],
+      ),
+    );
+    await settle(t);
+    final tile = find.byKey(const Key('collection-food'));
+    await t.ensureVisible(tile);
+    await settle(t);
+    await t.longPress(tile);
+    await settle(t);
+    expect(find.byKey(const Key('collection-quick')), findsOneWidget);
+    await tapKey(t, 'collection-quick-send');
+    expect(find.byKey(const Key('send-sheet')), findsOneWidget);
+    expect(find.text('Send 1 collection · 3 items'), findsOneWidget);
+  });
+
   testWidgets('Send collections: pick several, the button says how much', (
     t,
   ) async {

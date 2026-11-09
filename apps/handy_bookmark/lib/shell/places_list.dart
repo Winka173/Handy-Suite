@@ -3,6 +3,7 @@ import '../design/theme.dart';
 import '../pro/entitlements.dart';
 import 'package:handy_ui/kit.dart';
 import '../collections/collection_actions.dart';
+import '../collections/share_collection.dart';
 import '../links/link_actions.dart';
 import '../home/collection_covers.dart';
 import '../library/place_title.dart';
@@ -283,6 +284,12 @@ class PlacesList extends StatelessWidget {
                     menu: HandyMenuButton(
                       key: Key('collection-menu-${col.id}'),
                       items: [
+                        HandyMenuItem(
+                          Icons.send_rounded,
+                          tr(context, 'Send to friends', 'Gửi cho bạn bè'),
+                          () => scope.shareCollection(context, col.id),
+                          key: const Key('collection-send'),
+                        ),
                         HandyMenuItem(
                           Icons.edit_outlined,
                           tr(context, 'Edit', 'Sửa'),

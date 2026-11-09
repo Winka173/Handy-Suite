@@ -3378,3 +3378,13 @@ Kit sửa chung (`HandyPalette`): ở bản sáng, màu nhận diện được l
   - widget màn hình chính;
   - thẻ ôn Handy Recall;
   - danh sách Pro.
+
+### Handy Bookmark · nhấn giữ bộ sưu tập, chi tiết hai cột, lề màn rộng (2026-11-09, chủ yêu cầu)
+
+- **Nhấn giữ một ô bộ sưu tập** (hoặc bấm chuột phải trên máy tính): mở bảng nhỏ với "Gửi cho bạn bè", trong đó bộ đó đã được chọn sẵn, và "Sửa bộ sưu tập". Menu "⋯" của bộ sưu tập ở thanh bên cũng có thêm "Gửi cho bạn bè".
+- **Gửi bằng link** (dữ liệu nằm sau `#`, trang ở winka.top): chủ quyết định tạm bỏ. Chưa làm.
+- **Trang chi tiết một mục trên màn rộng** (từ 840pt, khung tối đa 1200), hai cột:
+  - trái: ảnh, tiêu đề, nguồn, Mở bản gốc, Đọc;
+  - phải: các nút thao tác, hẹn nhắc, thẻ, ghi chú, chi tiết và công cụ, rồi "Cũng trong <bộ sưu tập>". Nếu mục chưa xếp thì là "Thêm từ <trang>": tối đa 6 mục, bấm để mở thay chỗ.
+  - Khung hẹp hơn và khung chi tiết bên cạnh danh sách vẫn là một cột.
+- **Lề màn rộng:** dải đầu trang, danh sách và khung chi tiết cùng lề 24 ở cả hai bên.

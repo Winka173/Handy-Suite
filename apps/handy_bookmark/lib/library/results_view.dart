@@ -33,7 +33,11 @@ class ResultsView extends StatelessWidget {
 
   /// Shown after the results (Search's matches found inside items).
   final List<Widget> trailing;
+
+  /// The side margin; a wide screen matches the header band above it.
+  final double inset;
   const ResultsView({
+    this.inset = HandySpace.l,
     super.key,
     required this.scope,
     required this.onDetails,
@@ -320,12 +324,7 @@ class ResultsView extends StatelessWidget {
         },
         child: ListView(
           key: const Key('save-results'),
-          padding: const EdgeInsets.fromLTRB(
-            HandySpace.l,
-            HandySpace.l,
-            HandySpace.l,
-            96,
-          ),
+          padding: EdgeInsets.fromLTRB(inset, HandySpace.l, inset, 96),
           children: [
             header,
             HandySwap(

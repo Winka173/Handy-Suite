@@ -183,10 +183,11 @@ class _SaveShellState extends State<SaveShell> {
                         bottom: false,
                         left: false,
                         child: Padding(
+                          // The same side margins as the page below it.
                           padding: const EdgeInsets.fromLTRB(
                             HandySpace.xl,
                             HandySpace.l,
-                            HandySpace.l,
+                            HandySpace.xl,
                             HandySpace.s,
                           ),
                           child: HeaderBand(
@@ -224,6 +225,7 @@ class _SaveShellState extends State<SaveShell> {
                             else
                               Expanded(
                                 child: ResultsView(
+                                  inset: HandySpace.xl,
                                   scope: scope,
                                   current: side ? current : null,
                                   onDetails: (b) => details(b, side),
@@ -248,7 +250,12 @@ class _SaveShellState extends State<SaveShell> {
                               // The open item on its own raised sheet beside the list.
                               Container(
                                 width: 440,
-                                margin: const EdgeInsets.fromLTRB(0, 8, 16, 16),
+                                margin: const EdgeInsets.fromLTRB(
+                                  0,
+                                  8,
+                                  HandySpace.xl,
+                                  16,
+                                ),
                                 clipBehavior: Clip.antiAlias,
                                 decoration: BoxDecoration(
                                   color: BookmarkPalette.of(context).surface,

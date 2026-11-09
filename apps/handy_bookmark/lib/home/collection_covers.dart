@@ -3,6 +3,7 @@ import 'package:handy_bookmark_engine/handy_bookmark_engine.dart';
 import 'package:handy_ui/kit.dart';
 import '../collections/collection_actions.dart';
 import '../collections/identity.dart';
+import '../collections/share_collection.dart';
 import '../controller.dart';
 import '../scope.dart';
 import '../design/theme.dart';
@@ -212,9 +213,13 @@ class CollectionCover extends StatelessWidget {
         child: InkWell(
           key: Key('collection-${collection.id}'),
           onTap: onOpen,
+          // Held down or right-clicked: Send to friends, Edit.
           onLongPress: onOpen == null
               ? null
-              : () => scope.editCollection(context, collection),
+              : () => showCollectionQuick(context, scope, collection),
+          onSecondaryTap: onOpen == null
+              ? null
+              : () => showCollectionQuick(context, scope, collection),
           child: Padding(
             padding: const EdgeInsets.fromLTRB(10, 10, 10, 12),
             child: Column(

@@ -5,6 +5,7 @@ import 'package:handy_ui/kit.dart';
 import 'package:image/image.dart' as img;
 import '../design/theme.dart';
 import '../scope.dart';
+import 'collection_actions.dart';
 import '../ui/collection_picker.dart' show collectionHue;
 
 /// At most this many pictures go into one shared page.
@@ -167,6 +168,66 @@ extension ShareCollection on SaveScope {
     );
   }
 }
+
+/// A collection held down (or right-clicked): its quick actions, Send to
+/// friends first.
+Future<void> showCollectionQuick(
+  BuildContext context,
+  SaveScope scope,
+  SaveCollection collection,
+) => showModalBottomSheet<void>(
+  context: context,
+  showDragHandle: true,
+  useSafeArea: true,
+  constraints: const BoxConstraints(maxWidth: 560),
+  builder: (sheet) => SafeArea(
+    child: Column(
+      key: const Key('collection-quick'),
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Padding(
+          padding: const EdgeInsets.fromLTRB(20, 0, 20, 8),
+          child: Text(
+            collection.name,
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+            style: Theme.of(sheet).textTheme.titleLarge,
+          ),
+        ),
+        ListTile(
+          key: const Key('collection-quick-send'),
+          leading: const Icon(Icons.send_rounded),
+          title: Text(tr(sheet, 'Send to friends', 'Gửi cho bạn bè')),
+          subtitle: Text(
+            tr(
+              sheet,
+              'One file they open, or add to their Handy Bookmark',
+              'Một tệp để mở xem, hoặc thêm vào Handy Bookmark của họ',
+            ),
+          ),
+          onTap: () {
+            Navigator.pop(sheet);
+            scope.shareCollection(context, collection.id);
+          },
+        ),
+        ListTile(
+          key: const Key('collection-quick-edit'),
+          leading: const Icon(Icons.edit_outlined),
+          title: Text(tr(sheet, 'Edit collection', 'Sửa bộ sưu tập')),
+          subtitle: Text(
+            tr(sheet, 'Name, icon, colour', 'Tên, biểu tượng, màu'),
+          ),
+          onTap: () {
+            Navigator.pop(sheet);
+            scope.editCollection(context, collection);
+          },
+        ),
+        const SizedBox(height: HandySpace.s),
+      ],
+    ),
+  ),
+);
 
 /// The send sheet: the collections to pick, what goes and what stays, the
 /// notes switch, and one Send action that says how much will go.

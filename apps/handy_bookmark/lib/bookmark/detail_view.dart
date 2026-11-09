@@ -20,11 +20,16 @@ class DetailView extends StatelessWidget {
   final SaveScope scope;
   final String id;
   final VoidCallback onClosed;
+
+  /// May lay out in two columns when there is room (its own page; not the
+  /// side pane beside a list).
+  final bool wide;
   const DetailView({
     super.key,
     required this.scope,
     required this.id,
     required this.onClosed,
+    this.wide = false,
   });
 
   @override
@@ -46,112 +51,149 @@ class DetailView extends StatelessWidget {
           ? tr(context, 'Picture', 'Ảnh')
           : b.sourceDomain;
       final web = b.hasUrl && !b.isImage && _isWeb(b.originalUrl);
-      return Column(
-        key: const Key('detail'),
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          // The "…" sits on the picture's corner, so the title keeps
-          // the whole width.
-          if (b.isImage)
-            PictureHeader(
-              controller: scope.c,
-              item: b,
-              corner: _More(scope: scope, bookmark: b),
-            )
-          else
-            _LinkHero(
-              scope: scope,
-              bookmark: b,
-              corner: _More(scope: scope, bookmark: b),
+      final lead = <Widget>[
+        // The "…" sits on the picture's corner, so the title keeps
+        // the whole width.
+        if (b.isImage)
+          PictureHeader(
+            controller: scope.c,
+            item: b,
+            corner: _More(scope: scope, bookmark: b),
+          )
+        else
+          _LinkHero(
+            scope: scope,
+            bookmark: b,
+            corner: _More(scope: scope, bookmark: b),
+          ),
+        const SizedBox(height: 20),
+        Semantics(
+          header: true,
+          child: SelectableText(
+            title,
+            key: const Key('detail-title'),
+            style: bookmarkSerif(context, 28),
+          ),
+        ),
+        const SizedBox(height: HandySpace.s),
+        Text.rich(
+          TextSpan(
+            children: [
+              if (home != null) collectionSpan(context, home),
+              TextSpan(
+                text: [
+                  if (!b.isImage) sourceLine(b),
+                  b.isImage
+                      ? tr(context, 'Picture', 'Ảnh')
+                      : kindName(context, b.contentType),
+                  ago(context, b.savedAt),
+                ].where((s) => s.isNotEmpty).join(' · '),
+              ),
+            ],
+          ),
+          style: theme.textTheme.bodyMedium?.copyWith(color: p.muted),
+        ),
+        const SizedBox(height: 20),
+        if (b.isImage)
+          FilledButton.icon(
+            key: const Key('detail-view-picture'),
+            style: FilledButton.styleFrom(
+              minimumSize: const Size.fromHeight(52),
             ),
-          const SizedBox(height: 20),
-          Semantics(
-            header: true,
-            child: SelectableText(
-              title,
-              key: const Key('detail-title'),
-              style: bookmarkSerif(context, 28),
+            onPressed: () => PictureView.open(context, scope.c, b),
+            icon: const Icon(Icons.fullscreen),
+            label: Text(tr(context, 'View picture', 'Xem ảnh')),
+          )
+        else if (b.hasUrl)
+          FilledButton.icon(
+            key: const Key('save-open-original'),
+            style: FilledButton.styleFrom(
+              minimumSize: const Size.fromHeight(52),
+              // Room for the label at large text on a 320 pt screen.
+              padding: const EdgeInsets.symmetric(horizontal: 12),
+            ),
+            onPressed: () => scope.open(context, b),
+            icon: const Icon(Icons.open_in_new),
+            label: Text(tr(context, 'Open original', 'Mở bản gốc')),
+          ),
+        if (web)
+          Padding(
+            padding: const EdgeInsets.only(top: HandySpace.s),
+            child: FilledButton.icon(
+              key: const Key('detail-reader'),
+              style: detailToolStyle(context).copyWith(
+                minimumSize: const WidgetStatePropertyAll(Size.fromHeight(48)),
+                shape: WidgetStatePropertyAll(
+                  RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(BookmarkRadii.button),
+                  ),
+                ),
+              ),
+              onPressed: () => Navigator.pushNamed(context, '/read/${b.id}'),
+              icon: const Icon(Icons.chrome_reader_mode_outlined, size: 20),
+              label: Text(tr(context, 'Read', 'Đọc')),
             ),
           ),
-          const SizedBox(height: HandySpace.s),
-          Text.rich(
-            TextSpan(
+        if (b.isImage && b.hasUrl)
+          Padding(
+            padding: const EdgeInsets.only(top: HandySpace.xs),
+            child: Center(
+              child: TextButton.icon(
+                key: const Key('save-open-original'),
+                style: TextButton.styleFrom(minimumSize: const Size(48, 48)),
+                onPressed: () => scope.open(context, b),
+                icon: const Icon(Icons.open_in_new, size: 18),
+                label: Text(tr(context, 'Open its source', 'Mở nguồn')),
+              ),
+            ),
+          ),
+      ];
+      final side = <Widget>[
+        _Actions(scope: scope, bookmark: b),
+        _ReminderLine(scope: scope, bookmark: b),
+        DetailFacts(scope: scope, bookmark: b, onClosed: onClosed),
+      ];
+      return LayoutBuilder(
+        builder: (context, box) {
+          // A tablet or a computer: the item on the left, what you do with
+          // it and what sits beside it in its collection on the right, so
+          // the width carries content instead of empty ground.
+          if (wide && box.maxWidth >= 840) {
+            return Row(
+              key: const Key('detail'),
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                if (home != null) collectionSpan(context, home),
-                TextSpan(
-                  text: [
-                    if (!b.isImage) sourceLine(b),
-                    b.isImage
-                        ? tr(context, 'Picture', 'Ảnh')
-                        : kindName(context, b.contentType),
-                    ago(context, b.savedAt),
-                  ].where((s) => s.isNotEmpty).join(' · '),
+                Expanded(
+                  flex: 11,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: lead,
+                  ),
+                ),
+                const SizedBox(width: HandySpace.xl + HandySpace.s),
+                Expanded(
+                  flex: 9,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      ...side,
+                      DetailNearby(scope: scope, bookmark: b),
+                    ],
+                  ),
                 ),
               ],
-            ),
-            style: theme.textTheme.bodyMedium?.copyWith(color: p.muted),
-          ),
-          const SizedBox(height: 20),
-          if (b.isImage)
-            FilledButton.icon(
-              key: const Key('detail-view-picture'),
-              style: FilledButton.styleFrom(
-                minimumSize: const Size.fromHeight(52),
-              ),
-              onPressed: () => PictureView.open(context, scope.c, b),
-              icon: const Icon(Icons.fullscreen),
-              label: Text(tr(context, 'View picture', 'Xem ảnh')),
-            )
-          else if (b.hasUrl)
-            FilledButton.icon(
-              key: const Key('save-open-original'),
-              style: FilledButton.styleFrom(
-                minimumSize: const Size.fromHeight(52),
-                // Room for the label at large text on a 320 pt screen.
-                padding: const EdgeInsets.symmetric(horizontal: 12),
-              ),
-              onPressed: () => scope.open(context, b),
-              icon: const Icon(Icons.open_in_new),
-              label: Text(tr(context, 'Open original', 'Mở bản gốc')),
-            ),
-          if (web)
-            Padding(
-              padding: const EdgeInsets.only(top: HandySpace.s),
-              child: FilledButton.icon(
-                key: const Key('detail-reader'),
-                style: detailToolStyle(context).copyWith(
-                  minimumSize: const WidgetStatePropertyAll(
-                    Size.fromHeight(48),
-                  ),
-                  shape: WidgetStatePropertyAll(
-                    RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(BookmarkRadii.button),
-                    ),
-                  ),
-                ),
-                onPressed: () => Navigator.pushNamed(context, '/read/${b.id}'),
-                icon: const Icon(Icons.chrome_reader_mode_outlined, size: 20),
-                label: Text(tr(context, 'Read', 'Đọc')),
-              ),
-            ),
-          if (b.isImage && b.hasUrl)
-            Padding(
-              padding: const EdgeInsets.only(top: HandySpace.xs),
-              child: Center(
-                child: TextButton.icon(
-                  key: const Key('save-open-original'),
-                  style: TextButton.styleFrom(minimumSize: const Size(48, 48)),
-                  onPressed: () => scope.open(context, b),
-                  icon: const Icon(Icons.open_in_new, size: 18),
-                  label: Text(tr(context, 'Open its source', 'Mở nguồn')),
-                ),
-              ),
-            ),
-          const SizedBox(height: HandySpace.l),
-          _Actions(scope: scope, bookmark: b),
-          _ReminderLine(scope: scope, bookmark: b),
-          DetailFacts(scope: scope, bookmark: b, onClosed: onClosed),
-        ],
+            );
+          }
+          return Column(
+            key: const Key('detail'),
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              ...lead,
+              const SizedBox(height: HandySpace.l),
+              ...side,
+            ],
+          );
+        },
       );
     },
   );
@@ -475,6 +517,116 @@ class _ReminderLine extends StatelessWidget {
             ),
           ),
         ),
+      ),
+    );
+  }
+}
+
+/// Beside an item on a wide page: up to six others from its collection (or,
+/// not sorted, from the same site), each opening in its place. Nothing
+/// when there are none.
+class DetailNearby extends StatelessWidget {
+  final SaveScope scope;
+  final Bookmark bookmark;
+  const DetailNearby({super.key, required this.scope, required this.bookmark});
+
+  @override
+  Widget build(BuildContext context) {
+    final b = bookmark;
+    final theme = Theme.of(context);
+    final p = BookmarkPalette.of(context);
+    final home = collectionOf(scope.library, b.collectionId);
+    final others = [
+      for (final x in scope.library.bookmarks)
+        if (x.id != b.id &&
+            !x.isArchived &&
+            (b.collectionId != null
+                ? x.collectionId == b.collectionId
+                : x.collectionId == null &&
+                      b.sourceDomain.isNotEmpty &&
+                      x.sourceDomain == b.sourceDomain))
+          x,
+    ]..sort((a, c) => c.savedAt.compareTo(a.savedAt));
+    if (others.isEmpty) return const SizedBox.shrink();
+    final site = b.sourceDomain.replaceFirst(RegExp(r'^www\.'), '');
+    final heading = home != null
+        ? tr(context, 'Also in ${home.$1.name}', 'Cũng trong ${home.$1.name}')
+        : tr(context, 'More from $site', 'Thêm từ $site');
+    return Padding(
+      key: const Key('detail-nearby'),
+      padding: const EdgeInsets.only(top: HandySpace.xl),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Semantics(
+            header: true,
+            child: Text(
+              heading,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: theme.textTheme.titleLarge,
+            ),
+          ),
+          const SizedBox(height: HandySpace.s),
+          for (final x in others.take(6))
+            Padding(
+              padding: const EdgeInsets.only(bottom: HandySpace.s),
+              child: Material(
+                color: p.surface,
+                borderRadius: BorderRadius.circular(BookmarkRadii.item),
+                clipBehavior: Clip.antiAlias,
+                child: InkWell(
+                  key: Key('nearby-${x.id}'),
+                  onTap: () => Navigator.pushReplacementNamed(
+                    context,
+                    '/bookmark/${x.id}',
+                  ),
+                  child: Padding(
+                    padding: const EdgeInsets.all(8),
+                    child: Row(
+                      children: [
+                        SizedBox(
+                          width: 64,
+                          height: 64,
+                          child: ItemPicture(scope.c, x, compact: true),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                x.title.isNotEmpty
+                                    ? x.title
+                                    : x.isImage
+                                    ? tr(context, 'Picture', 'Ảnh')
+                                    : x.sourceDomain,
+                                maxLines: 2,
+                                overflow: TextOverflow.ellipsis,
+                                style: theme.textTheme.titleSmall?.copyWith(
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                              const SizedBox(height: 2),
+                              Text(
+                                [
+                                  if (!x.isImage) sourceLine(x),
+                                  ago(context, x.savedAt),
+                                ].where((t) => t.isNotEmpty).join(' · '),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: theme.textTheme.bodySmall,
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ),
+        ],
       ),
     );
   }
