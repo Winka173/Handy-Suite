@@ -27,8 +27,9 @@ import '../ui/words.dart';
         );
 }
 
-/// One white panel on the home ground: its heading with a count and one
-/// action, then its content.
+/// One Home section, straight on the ground (no box around it): its
+/// heading with a count and one action, then its items, each its own
+/// card or row.
 class HomePanel extends StatelessWidget {
   final String title;
   final int? count;
@@ -41,18 +42,14 @@ class HomePanel extends StatelessWidget {
     required this.child,
     this.count,
     this.action,
-    this.padding = const EdgeInsets.fromLTRB(20, 8, 12, 20),
+    this.padding = const EdgeInsets.only(top: 20),
   });
   @override
   Widget build(BuildContext context) {
     final p = BookmarkPalette.of(context);
     final theme = Theme.of(context);
-    return Container(
+    return Padding(
       padding: padding,
-      decoration: BoxDecoration(
-        color: p.surface,
-        borderRadius: BorderRadius.circular(BookmarkRadii.panel),
-      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
@@ -91,10 +88,8 @@ class HomePanel extends StatelessWidget {
               ],
             ),
           ),
-          Padding(
-            padding: const EdgeInsetsDirectional.only(end: 8),
-            child: child,
-          ),
+          const SizedBox(height: 4),
+          child,
         ],
       ),
     );
@@ -153,10 +148,11 @@ class ReadLaterShelf extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          for (final (b, due) in items.take(shown)) ...[
+          for (final (k, (b, due)) in items.take(shown).indexed) ...[
             if (readLaterDay(context, due, at) != lastDay)
               Padding(
-                padding: const EdgeInsets.fromLTRB(2, 4, 2, 8),
+                // A day's name opens its group, with air above the last.
+                padding: EdgeInsets.fromLTRB(2, k == 0 ? 4 : 16, 2, 8),
                 child: Text.rich(
                   TextSpan(
                     children: [
@@ -255,7 +251,7 @@ class _SaveRow extends StatelessWidget {
     final home = collectionOf(scope.library, b.collectionId);
     final size = filled ? 56.0 : 52.0;
     return Material(
-      color: filled ? p.canvas : Colors.transparent,
+      color: filled ? p.surface : Colors.transparent,
       borderRadius: BorderRadius.circular(BookmarkRadii.item),
       clipBehavior: Clip.antiAlias,
       child: InkWell(

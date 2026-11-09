@@ -85,7 +85,8 @@ void main() {
     await boot(t, urls: const []);
     expect(find.byKey(const Key('bookmark-inline-url')), findsOneWidget);
     expect(find.byKey(const Key('save-new')), findsOneWidget);
-    expect(find.byType(FilledButton), findsNothing);
+    // The one filled button on Home is Save itself.
+    expect(find.byType(FilledButton), findsOneWidget);
     expect(find.byKey(const Key('recent')), findsNothing);
     expect(find.byKey(const Key('place-focus')), findsNothing);
   });

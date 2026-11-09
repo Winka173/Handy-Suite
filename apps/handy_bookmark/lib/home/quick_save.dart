@@ -251,24 +251,18 @@ class _QuickSaveBarState extends State<QuickSaveBar> {
         ),
       ),
     );
+    // Always "Save": with the field empty it opens the ways to save (a
+    // picture, several links, from other apps).
     final button = empty
-        ? IconButton.filled(
+        ? FilledButton(
             key: const Key('save-new'),
-            tooltip: tr(
-              context,
-              'Save a picture, several links…',
-              'Lưu ảnh, nhiều link…',
-            ),
-            // The theme draws plain icon buttons in ink; a filled one takes
-            // the same colours as the Save button it turns into.
-            style: IconButton.styleFrom(
-              fixedSize: const Size(52, 52),
-              backgroundColor: p.primary,
-              foregroundColor: p.onPrimary,
+            style: FilledButton.styleFrom(
+              minimumSize: const Size(76, 52),
+              padding: const EdgeInsets.symmetric(horizontal: 18),
               shape: RoundedRectangleBorder(borderRadius: radius),
             ),
             onPressed: busy ? null : widget.onMore,
-            icon: const Icon(Icons.add_rounded, size: 26),
+            child: Text(tr(context, 'Save', 'Lưu')),
           )
         : FilledButton(
             key: const Key('bookmark-inline-save'),

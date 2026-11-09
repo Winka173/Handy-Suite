@@ -13,7 +13,15 @@ import 'pastel_blocks.dart';
 class HomeQueues extends StatelessWidget {
   final SaveScope scope;
   final VoidCallback onFocus;
-  const HomeQueues({super.key, required this.scope, required this.onFocus});
+
+  /// Off on Home, where Not sorted is a section of its own.
+  final bool withUnsorted;
+  const HomeQueues({
+    super.key,
+    required this.scope,
+    required this.onFocus,
+    this.withUnsorted = true,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -23,7 +31,9 @@ class HomeQueues extends StatelessWidget {
       for (final b in scope.library.bookmarks)
         if (!b.isArchived && keep(b)) b,
     ]..sort((a, b) => b.savedAt.compareTo(a.savedAt));
-    final unsorted = newest((b) => b.collectionId == null);
+    final unsorted = withUnsorted
+        ? newest((b) => b.collectionId == null)
+        : const <Bookmark>[];
     final waiting = newest((b) => !b.isRead);
     final calm = Semantics(
       button: true,
@@ -200,6 +210,109 @@ class _QueueRow extends StatelessWidget {
             ],
           ),
         ),
+      ),
+    );
+  }
+}
+
+/// Home's Not sorted section: the newest saves outside any collection,
+/// each a row of its own with the two usual collections as one-tap chips;
+/// "Sort one by one" opens Sort quickly. Hidden when all is sorted.
+class NotSortedSection extends StatelessWidget {
+  final SaveScope scope;
+  final ValueChanged<Bookmark> onOpen;
+  static const shown = 4;
+  const NotSortedSection({
+    super.key,
+    required this.scope,
+    required this.onOpen,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final l = scope.library;
+    final items = [
+      for (final b in l.bookmarks)
+        if (!b.isArchived && b.collectionId == null) b,
+    ]..sort((a, b) => b.savedAt.compareTo(a.savedAt));
+    if (items.isEmpty) return const SizedBox.shrink();
+    final theme = Theme.of(context);
+    final p = BookmarkPalette.of(context);
+    final usual = usualCollections(l, take: 2);
+    return HomePanel(
+      key: const Key('not-sorted'),
+      title: tr(context, 'Not sorted', 'Chưa xếp'),
+      count: items.length,
+      action: TextButton(
+        key: const Key('not-sorted-one-by-one'),
+        onPressed: () => showQuickSort(context, scope),
+        child: Text(
+          tr(context, 'Sort one by one', 'Xếp từng mục'),
+          overflow: TextOverflow.ellipsis,
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          for (final (i, b) in items.take(shown).indexed) ...[
+            if (i > 0) const SizedBox(height: 8),
+            Material(
+              key: Key('unsorted-${b.id}'),
+              color: p.surface,
+              borderRadius: BorderRadius.circular(BookmarkRadii.item),
+              clipBehavior: Clip.antiAlias,
+              child: InkWell(
+                onTap: () => onOpen(b),
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(10, 10, 10, 4),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      SizedBox.square(
+                        dimension: 52,
+                        child: ItemPicture(scope.c, b, compact: true),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              b.title.isEmpty ? b.sourceDomain : b.title,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: theme.textTheme.titleSmall?.copyWith(
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                            Wrap(
+                              spacing: 6,
+                              children: [
+                                for (final c in usual)
+                                  FileChip(
+                                    key: Key('file-${b.id}-${c.id}'),
+                                    collection: c,
+                                    hue: collectionHue(l, c.id),
+                                    onTap: () async {
+                                      try {
+                                        await scope.file(b, c.id);
+                                      } catch (_) {
+                                        // Nothing moved; the row stays.
+                                      }
+                                    },
+                                  ),
+                              ],
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ],
       ),
     );
   }

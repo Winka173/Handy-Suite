@@ -119,7 +119,7 @@ class CollectionCovers extends StatelessWidget {
     );
     // Home's shelf sits in a panel like Home's other blocks.
     return Padding(
-      padding: const EdgeInsets.only(top: HandySpace.l),
+      padding: EdgeInsets.zero,
       child: HomePanel(
         title: tr(context, 'Collections', 'Bộ sưu tập'),
         action: action,

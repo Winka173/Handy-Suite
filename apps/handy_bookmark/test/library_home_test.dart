@@ -53,7 +53,11 @@ void main() {
     final (c, _) = await boot(t);
     await tapKey(t, 'collection-new');
     expect(find.byType(BottomSheet), findsOneWidget);
-    expect(find.text('My library'), findsOneWidget, reason: 'Home stays');
+    expect(
+      find.byKey(const Key('save-home'), skipOffstage: false),
+      findsOneWidget,
+      reason: 'Home stays',
+    );
     await tapKey(t, 'template-book-3');
     await tapKey(t, 'editor-save');
     await settle(t);

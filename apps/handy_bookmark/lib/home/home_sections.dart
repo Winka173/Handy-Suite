@@ -31,7 +31,7 @@ class RecentlySaved extends StatelessWidget {
     ]..sort((a, b) => b.savedAt.compareTo(a.savedAt));
     if (recent.isEmpty) return const SizedBox.shrink();
     return Padding(
-      padding: const EdgeInsets.only(top: HandySpace.l),
+      padding: EdgeInsets.zero,
       child: HomePanel(
         key: const Key('recent'),
         title: tr(context, 'Recently saved', 'Mới lưu'),
@@ -90,9 +90,10 @@ class _RecentCard extends StatelessWidget {
     final b = bookmark;
     final home = collectionOf(scope.library, b.collectionId);
     final later = readLaterAt(b, DateTime.now());
+    // A card of its own on the ground: the picture across its top.
     return Material(
-      color: Colors.transparent,
-      borderRadius: BorderRadius.circular(BookmarkRadii.thumb),
+      color: p.surface,
+      borderRadius: BorderRadius.circular(BookmarkRadii.item),
       clipBehavior: Clip.antiAlias,
       child: InkWell(
         key: Key('recent-${b.id}'),
@@ -105,14 +106,14 @@ class _RecentCard extends StatelessWidget {
               child: Stack(
                 fit: StackFit.expand,
                 children: [
-                  ItemPicture(scope.c, b, radius: BookmarkRadii.thumb),
+                  ItemPicture(scope.c, b, radius: 0),
                   if (later != null)
                     Positioned(top: 0, left: 10, child: ReadLaterRibbon(later)),
                 ],
               ),
             ),
             Padding(
-              padding: const EdgeInsets.fromLTRB(2, 8, 2, 2),
+              padding: const EdgeInsets.fromLTRB(12, 10, 12, 2),
               child: Text(
                 b.title.isEmpty ? b.sourceDomain : b.title,
                 maxLines: 2,
@@ -123,7 +124,7 @@ class _RecentCard extends StatelessWidget {
               ),
             ),
             Padding(
-              padding: const EdgeInsets.fromLTRB(2, 0, 2, 4),
+              padding: const EdgeInsets.fromLTRB(12, 0, 12, 12),
               child: Text.rich(
                 TextSpan(
                   children: [

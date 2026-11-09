@@ -3216,3 +3216,27 @@ Chạy `design-taste-frontend` (app screens) với bản phác HTML dùng chung 
 - Boards: cột trên điện thoại nằm đúng lề 16 của trang, cột kề lộ mép ở phần 11pt ngoài lề; "Sửa" lên cùng hàng với "Nhóm" ở bên phải, nút lọc nhanh xuống hàng riêng từ lề 16 (cuộn ngang); mũi tên tuần thẳng lề 16; trên màn rộng tiêu đề Nhóm thẳng lề 24 với các ô.
 
 **Loại bỏ**: khối neo đậm, Nunito ấm mềm, lời chào serif làm tiêu đề, khung viền, mảng màu loang, linh vật, thanh chuyển app, thẻ chuỗi ngày.
+
+## Hợp đồng: dựng lại Bookmark và Boards đúng bản phác pastel (2026-11-09, chủ yêu cầu)
+
+Lần trước chỉ áp màu và vài chi tiết lên màn cũ nên khác bản phác (chủ đã so và chỉ ra). Lần này dựng lại bố cục theo bản phác đã chọn (`pastel` biến thể 1 sáng, 4 tối), kiểm tra bằng ảnh BlueStacks đặt cạnh bản phác, từng màn một.
+
+**Bookmark (điện thoại)**
+- Thanh trên: ô logo + "Handy Bookmark", Tìm, Cài đặt. Tiêu đề "Thư viện" (h1) + dòng "**87** mục · **4** chưa xếp · **3** hẹn đọc".
+- Ô dán link + nút chữ "Lưu" (ô trống: Lưu mở khung thêm: ảnh, nhiều link, cách lưu từ app khác).
+- **Không khung bao khối** (chủ chốt thêm): mỗi khối là tiêu đề trên nền (lề 16) + các mục, mỗi mục một thẻ/dòng nền trắng riêng.
+- Hẹn đọc: nhóm Tối nay / Ngày mai / Cuối tuần (giờ bên cạnh), mỗi mục một dòng trắng với ảnh 56 có ruy băng vàng; "Xem lịch" mở danh sách hẹn nhắc.
+- Chưa xếp: tối đa 4 dòng, mỗi dòng ảnh 52 + tên + 2 chip bộ sưu tập hay dùng trên một hàng; "Xếp từng mục" mở Xếp nhanh.
+- Bộ sưu tập: ô pastel 2 cột (ảnh hoặc tên mục), "Bộ mới". Mới lưu: thẻ ảnh 2 cột, mỗi thẻ nền trắng riêng, ruy băng khi có hẹn.
+- Tập trung (không có trong bản phác, giữ tính năng): một dòng nhỏ dưới Chưa xếp.
+
+**Boards (điện thoại, màn bảng)**
+- Thanh trên: ←, Tìm, Lọc (mở khung: chế độ thời gian, bộ lọc đã lưu, hạn trong 3 ngày, ẩn/hiện nhóm, sửa nhóm), Tuỳ chọn. Không còn dải ảnh bìa trên màn bảng (bìa vẫn ở Trang chủ).
+- Tiêu đề bảng (h1) + dòng "**7** việc đang mở · **1** trễ · kết thúc học kỳ 15/1, còn 67 ngày" (ngày quan trọng gần nhất, chạm để sửa).
+- Ô nhóm 2×2: tên trên (mực đậm cùng tông), số "1/3 xong" lớn, thanh tiến độ; không chấm màu, không tiêu đề "Nhóm". Ô đang chọn: nền đậm hơn + dấu tick, ô khác mờ.
+- Hàng tuần một dòng: ‹ "9/11 – 15/11 Tuần này" ›, nút về tuần này ngay sau. Đổi tuần: các cột trượt theo hướng.
+- Chip cột cao 36, cách cột 12; cột kề lộ khoảng 22pt hai bên làm chỗ thả.
+- Nền: bảng mặc định dùng nền trung tính của bản phác; bảng đã chọn "giao diện bảng" (Pro) giữ màu của giao diện đó.
+
+**Desktop (cả hai app)**: thanh bên như ảnh chủ gửi (logo + tên app; mục chính có số đếm; nhóm "Bộ sưu tập"/"Bảng" có chấm/ô màu và số; chân: Thùng rác, Cài đặt); Bookmark "Thư viện" mở trang tổng quan theo lưới bản phác; Boards màn bảng 4 cột đều nhau, "Lọc" + "Thẻ mới" bên phải tiêu đề.
+

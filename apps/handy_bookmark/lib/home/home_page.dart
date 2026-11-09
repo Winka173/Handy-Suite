@@ -11,6 +11,7 @@ import 'save_sheet.dart';
 import '../design/theme.dart';
 import 'empty_library.dart';
 import 'home_sections.dart';
+import '../ui/read_later_ribbon.dart';
 import 'home_queues.dart';
 import 'pastel_blocks.dart';
 import 'quick_save.dart';
@@ -58,28 +59,56 @@ class SaveHomePage extends StatelessWidget {
           live++;
           if (b.collectionId == null) unsorted++;
         }
-        final n = formatFigure(context, '$live');
-        final subtitle = [
-          tr(context, live == 1 ? '1 item' : '$n items', '$n mục'),
-          if (unsorted > 0)
-            tr(
-              context,
-              '${formatFigure(context, '$unsorted')} not sorted',
-              '${formatFigure(context, '$unsorted')} chưa xếp',
-            ),
-        ].join(' · ');
+        final now = DateTime.now();
+        final later = l.bookmarks
+            .where((b) => !b.isArchived && readLaterAt(b, now) != null)
+            .length;
+        // "87 items · 4 not sorted · 3 to read later", figures in ink.
+        InlineSpan figure(int v) => TextSpan(
+          text: formatFigure(context, '$v'),
+          style: TextStyle(color: p.ink, fontWeight: FontWeight.w700),
+        );
+        final subtitle = <InlineSpan>[
+          figure(live),
+          TextSpan(text: tr(context, live == 1 ? ' item' : ' items', ' mục')),
+          if (unsorted > 0) ...[
+            const TextSpan(text: ' · '),
+            figure(unsorted),
+            TextSpan(text: tr(context, ' not sorted', ' chưa xếp')),
+          ],
+          if (later > 0) ...[
+            const TextSpan(text: ' · '),
+            figure(later),
+            TextSpan(text: tr(context, ' to read later', ' hẹn đọc')),
+          ],
+        ];
         return Scaffold(
           appBar: AppBar(
             automaticallyImplyLeading: false,
             toolbarHeight: 64,
             titleSpacing: HandySpace.l,
-            title: Semantics(
-              header: true,
-              child: Text(
-                libraryName(scope.c, context),
-                overflow: TextOverflow.ellipsis,
-                style: bookmarkSerif(context, 28),
-              ),
+            title: Row(
+              children: [
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(8),
+                  child: Image.asset(
+                    'assets/icon.png',
+                    width: 28,
+                    height: 28,
+                    excludeFromSemantics: true,
+                  ),
+                ),
+                const SizedBox(width: 10),
+                Flexible(
+                  child: Text(
+                    'Handy Bookmark',
+                    overflow: TextOverflow.ellipsis,
+                    style: theme.textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+              ],
             ),
             actions: [
               if (!empty)
@@ -110,15 +139,24 @@ class SaveHomePage extends StatelessWidget {
               HandySpace.xxl,
             ),
             children: [
+              Semantics(
+                header: true,
+                child: Text(
+                  libraryName(scope.c, context),
+                  overflow: TextOverflow.ellipsis,
+                  style: bookmarkSerif(context, 26),
+                ),
+              ),
               if (!empty)
                 Padding(
-                  padding: const EdgeInsets.only(bottom: HandySpace.m),
-                  child: Text(
-                    subtitle,
+                  padding: const EdgeInsets.only(top: 4),
+                  child: Text.rich(
+                    TextSpan(children: subtitle),
                     key: const Key('home-subtitle'),
                     style: theme.textTheme.bodyMedium?.copyWith(color: p.muted),
                   ),
                 ),
+              const SizedBox(height: HandySpace.m),
               QuickSaveBar(
                 scope: scope,
                 onMore: () => showSaveSheet(context, scope, onAdd: onAddFrom),
@@ -135,12 +173,14 @@ class SaveHomePage extends StatelessWidget {
                 EmptyLibrary(onPicture: () => scope.addPhoto(context))
               else ...[
                 Padding(
-                  padding: const EdgeInsets.only(top: HandySpace.l),
+                  padding: EdgeInsets.zero,
                   child: ReadLaterShelf(scope: scope, onOpen: open),
                 ),
+                NotSortedSection(scope: scope, onOpen: open),
                 const SizedBox(height: HandySpace.l),
                 HomeQueues(
                   scope: scope,
+                  withUnsorted: false,
                   onFocus: () => Navigator.pushNamed(context, '/focus'),
                 ),
               ],

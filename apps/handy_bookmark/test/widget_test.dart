@@ -135,17 +135,15 @@ void main() {
     final c = await start(tester, store: store, seed: recipes);
     final id = c.library!.bookmarks.single.id;
     store.fail = true;
-    // Home's queue card opens Sort quickly, one save at a time.
-    await tapKey(tester, 'home-quick-sort');
+    // Home's Not sorted rows offer the usual collections as chips.
     await tapKey(tester, 'file-$id-recipes');
     expect(c.library!.bookmarks.single.collectionId, isNull);
-    expect(find.byKey(Key('quick-sort-item-$id')), findsOneWidget);
+    expect(find.byKey(Key('unsorted-$id')), findsOneWidget);
     store.fail = false;
     await tapKey(tester, 'file-$id-recipes');
     expect(c.library!.bookmarks.single.collectionId, 'recipes');
-    // Filed, and it was the last one: the sheet closes, the row goes.
-    expect(find.byKey(const Key('quick-sort')), findsNothing);
-    expect(find.byKey(const Key('home-quick-sort')), findsNothing);
+    // Filed: it leaves Not sorted.
+    expect(find.byKey(Key('unsorted-$id')), findsNothing);
   });
 
   testWidgets('a card whose page is being read shows it, then stops', (
