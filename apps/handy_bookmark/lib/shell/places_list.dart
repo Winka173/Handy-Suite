@@ -26,6 +26,13 @@ class PlacesList extends StatelessWidget {
 
   /// Marks the current place (sidebar); the phone list has none.
   final bool marking;
+
+  /// The wide screen's sidebar: rows straight on the ground, compact, no
+  /// boxes; Trash lives at the sidebar's foot instead.
+  final bool flat;
+
+  /// The overview is showing: no place is marked.
+  final bool overview;
   const PlacesList({
     super.key,
     required this.scope,
@@ -33,6 +40,8 @@ class PlacesList extends StatelessWidget {
     required this.onSearch,
     this.onFocus,
     this.marking = true,
+    this.flat = false,
+    this.overview = false,
   });
 
   @override
@@ -73,7 +82,12 @@ class PlacesList extends StatelessWidget {
       VoidCallback? onTap,
       int? hue,
     }) {
-      final on = marking && place != null && v.place == place && v.id == id;
+      final on =
+          marking &&
+          !overview &&
+          place != null &&
+          v.place == place &&
+          v.id == id;
       // The chosen place is a rounded pill inset in its row, so the
       // group's hairlines run in the gap and never cross it.
       return Padding(
@@ -81,6 +95,7 @@ class PlacesList extends StatelessWidget {
         child: ListTile(
           key: key,
           selected: on,
+          dense: flat,
           selectedTileColor: c.select,
           selectedColor: theme.colorScheme.onSurface,
           shape: RoundedRectangleBorder(
@@ -98,7 +113,16 @@ class PlacesList extends StatelessWidget {
                   width: 20,
                   child: Center(child: HandyDot(hue, size: 10)),
                 ),
-          title: Text(title, maxLines: 1, overflow: TextOverflow.ellipsis),
+          title: Text(
+            title,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: flat
+                ? theme.textTheme.bodyMedium?.copyWith(
+                    fontWeight: on ? FontWeight.w600 : null,
+                  )
+                : null,
+          ),
           trailing: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
@@ -118,15 +142,40 @@ class PlacesList extends StatelessWidget {
       );
     }
 
-    Widget heading(String text, {Widget? trailing}) => Padding(
-      padding: const EdgeInsets.only(left: HandySpace.xs),
-      child: HandyLabel(text, trailing: trailing),
-    );
+    // The sidebar names its groups in a small grey label, as in the mock.
+    Widget heading(String text, {Widget? trailing}) => flat
+        ? Padding(
+            padding: const EdgeInsets.fromLTRB(16, 16, 4, 0),
+            child: Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    text,
+                    style: theme.textTheme.labelMedium?.copyWith(
+                      color: c.muted,
+                    ),
+                  ),
+                ),
+                ?trailing,
+              ],
+            ),
+          )
+        : Padding(
+            padding: const EdgeInsets.only(left: HandySpace.xs),
+            child: HandyLabel(text, trailing: trailing),
+          );
 
+    // The phone's Library keeps its grouped boxes; the sidebar is flat.
+    Widget group({required List<Widget> children}) => flat
+        ? Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: children,
+          )
+        : HandyGroup(children: children);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        HandyGroup(
+        group(
           children: [
             for (final p in [
               Place.inbox,
@@ -151,8 +200,9 @@ class PlacesList extends StatelessWidget {
                 tr(context, 'Focus', 'Tập trung'),
                 onTap: onFocus,
               ),
-            // Only while something is waiting there.
-            if (l.trash.isNotEmpty)
+            // Only while something is waiting there (the sidebar has it at
+            // its foot).
+            if (l.trash.isNotEmpty && !flat)
               row(
                 const Key('place-trash'),
                 Icons.delete_outline,
@@ -181,7 +231,7 @@ class PlacesList extends StatelessWidget {
             style: theme.textTheme.bodyMedium?.copyWith(color: c.muted),
           )
         else
-          HandyGroup(
+          group(
             children: [
               for (final (col, depth) in collectionTree(l))
                 row(
@@ -251,7 +301,7 @@ class PlacesList extends StatelessWidget {
             open: marking && v.place == Place.smart,
             children: [
               if (l.smartCollections.isNotEmpty || l.savedSearches.isNotEmpty)
-                HandyGroup(
+                group(
                   children: [
                     for (final s in l.smartCollections)
                       row(

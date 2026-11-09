@@ -13,7 +13,8 @@ import '../library/batch_bar.dart';
 import '../library/results_view.dart';
 import '../scope.dart';
 import '../view/library_view.dart';
-import 'places_list.dart';
+import 'sidebar.dart';
+import '../ui/read_later_ribbon.dart';
 import 'search_box.dart';
 import 'share_issues.dart';
 
@@ -30,6 +31,9 @@ class SaveShell extends StatefulWidget {
 class _SaveShellState extends State<SaveShell> {
   final searchFocus = FocusNode();
   String? current;
+
+  /// The Library overview fills the middle (the sidebar's first row).
+  bool overview = true;
   SaveScope get scope => widget.scope;
 
   @override
@@ -53,6 +57,35 @@ class _SaveShellState extends State<SaveShell> {
     final width = MediaQuery.sizeOf(context).width;
     final side = width >= 1100;
     final v = scope.view;
+    String counts() {
+      final l = scope.library;
+      final now = DateTime.now();
+      var live = 0, unsorted = 0, later = 0;
+      for (final b in l.bookmarks) {
+        if (b.isArchived) continue;
+        live++;
+        if (b.collectionId == null) unsorted++;
+        if (readLaterAt(b, now) != null) later++;
+      }
+      String n(int x) => formatFigure(context, '$x');
+      return [
+        tr(
+          context,
+          live == 1 ? '1 item' : '${n(live)} items',
+          '${n(live)} mục',
+        ),
+        if (unsorted > 0)
+          tr(context, '${n(unsorted)} not sorted', '${n(unsorted)} chưa xếp'),
+        if (later > 0)
+          tr(context, '${n(later)} to read later', '${n(later)} hẹn đọc'),
+      ].join(' · ');
+    }
+
+    void pick(Place p, [String? id]) => setState(() {
+      current = null;
+      overview = false;
+      v.show(p, id);
+    });
     final keys = <ShortcutActivator, VoidCallback>{
       for (final meta in [false, true]) ...{
         SingleActivator(
@@ -106,26 +139,6 @@ class _SaveShellState extends State<SaveShell> {
         child: ListenableBuilder(
           listenable: v,
           builder: (context, _) => Scaffold(
-            appBar: AppBar(
-              automaticallyImplyLeading: false,
-              toolbarHeight: 68,
-              titleSpacing: HandySpace.xl,
-              title: Text(
-                libraryName(scope.c, context),
-                overflow: TextOverflow.ellipsis,
-                style: bookmarkSerif(context, 28),
-              ),
-              actions: [
-                ...addButtons,
-                IconButton(
-                  key: const Key('open-settings'),
-                  tooltip: tr(context, 'Settings', 'Cài đặt'),
-                  icon: const Icon(Icons.settings_outlined),
-                  onPressed: () => Navigator.pushNamed(context, '/settings'),
-                ),
-                const SizedBox(width: HandySpace.m),
-              ],
-            ),
             bottomNavigationBar: HandySwap(
               child: v.selecting
                   ? BatchBar(
@@ -139,89 +152,157 @@ class _SaveShellState extends State<SaveShell> {
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 SizedBox(
-                  width: 280,
-                  child: ListView(
-                    padding: const EdgeInsets.fromLTRB(
-                      HandySpace.l,
-                      HandySpace.l,
-                      HandySpace.s,
-                      HandySpace.xxl,
-                    ),
-                    children: [
-                      PlacesList(
-                        scope: scope,
-                        onPick: (p, [id]) => setState(() {
-                          current = null;
-                          v.show(p, id);
-                        }),
-                        onFocus: () => Navigator.pushNamed(context, '/focus'),
-                        onSearch: (s) => setState(() {
-                          current = null;
-                          v.applySaved(s);
-                        }),
-                      ),
-                    ],
+                  width: 260,
+                  child: BookmarkSidebar(
+                    scope: scope,
+                    overview: overview,
+                    onOverview: () => setState(() {
+                      current = null;
+                      overview = true;
+                    }),
+                    onPick: pick,
+                    onSearch: (s) => setState(() {
+                      current = null;
+                      overview = false;
+                      v.applySaved(s);
+                    }),
                   ),
                 ),
                 Expanded(
-                  child: ResultsView(
-                    scope: scope,
-                    current: side ? current : null,
-                    onDetails: (b) => details(b, side),
-                    onAdd: add,
-                    leading: [
-                      SearchBox(view: v, focus: searchFocus),
-                      ShareIssues(controller: scope.c),
-                      if (v.place == Place.all &&
-                          v.text.isEmpty &&
-                          !v.filters.any)
-                        TriageStrip(
-                          controller: scope.c,
-                          onFile: scope.file,
-                          onOpen: (b) => details(b, side),
-                          onAll: () => v.show(Place.inbox),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      // The page's title and counts, the link field at the
+                      // right, as in the mock.
+                      SafeArea(
+                        bottom: false,
+                        left: false,
+                        child: Padding(
+                          padding: const EdgeInsets.fromLTRB(
+                            HandySpace.xl,
+                            HandySpace.l,
+                            HandySpace.l,
+                            HandySpace.s,
+                          ),
+                          child: Row(
+                            children: [
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Semantics(
+                                      header: true,
+                                      child: Text(
+                                        libraryName(scope.c, context),
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                        style: bookmarkSerif(context, 28),
+                                      ),
+                                    ),
+                                    const SizedBox(height: 2),
+                                    Text(
+                                      counts(),
+                                      key: const Key('wide-counts'),
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                      style: Theme.of(context)
+                                          .textTheme
+                                          .bodyMedium
+                                          ?.copyWith(
+                                            color: BookmarkPalette.of(
+                                              context,
+                                            ).muted,
+                                          ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              ...addButtons,
+                            ],
+                          ),
                         ),
-                      const SizedBox(height: HandySpace.l),
+                      ),
+                      Expanded(
+                        child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            if (overview)
+                              Expanded(
+                                child: LibraryOverview(
+                                  scope: scope,
+                                  onOpen: (b) => details(b, false),
+                                  onPick: pick,
+                                ),
+                              )
+                            else
+                              Expanded(
+                                child: ResultsView(
+                                  scope: scope,
+                                  current: side ? current : null,
+                                  onDetails: (b) => details(b, side),
+                                  onAdd: add,
+                                  leading: [
+                                    SearchBox(view: v, focus: searchFocus),
+                                    ShareIssues(controller: scope.c),
+                                    if (v.place == Place.all &&
+                                        v.text.isEmpty &&
+                                        !v.filters.any)
+                                      TriageStrip(
+                                        controller: scope.c,
+                                        onFile: scope.file,
+                                        onOpen: (b) => details(b, side),
+                                        onAll: () => v.show(Place.inbox),
+                                      ),
+                                    const SizedBox(height: HandySpace.l),
+                                  ],
+                                ),
+                              ),
+                            if (side && !overview) ...[
+                              // The open item on its own raised sheet beside the list.
+                              Container(
+                                width: 440,
+                                margin: const EdgeInsets.fromLTRB(0, 8, 16, 16),
+                                clipBehavior: Clip.antiAlias,
+                                decoration: BoxDecoration(
+                                  color: BookmarkPalette.of(context).surface,
+                                  borderRadius: BorderRadius.circular(
+                                    BookmarkRadii.collection,
+                                  ),
+                                ),
+                                child: HandySwap(
+                                  child: current == null
+                                      ? HandyEmpty(
+                                          key: const ValueKey('none'),
+                                          title: tr(
+                                            context,
+                                            'Pick something to see it here',
+                                            'Chọn một mục để xem ở đây',
+                                          ),
+                                        )
+                                      : ListView(
+                                          key: ValueKey(current),
+                                          padding: const EdgeInsets.all(
+                                            HandySpace.xl,
+                                          ),
+                                          children: [
+                                            DetailView(
+                                              scope: scope,
+                                              id: current!,
+                                              onClosed: () => setState(
+                                                () => current = null,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                ),
+                              ),
+                            ],
+                          ],
+                        ),
+                      ),
                     ],
                   ),
                 ),
-                if (side) ...[
-                  // The open item on its own raised sheet beside the list.
-                  Container(
-                    width: 440,
-                    margin: const EdgeInsets.fromLTRB(0, 8, 16, 16),
-                    clipBehavior: Clip.antiAlias,
-                    decoration: BoxDecoration(
-                      color: BookmarkPalette.of(context).surface,
-                      borderRadius: BorderRadius.circular(
-                        BookmarkRadii.collection,
-                      ),
-                    ),
-                    child: HandySwap(
-                      child: current == null
-                          ? HandyEmpty(
-                              key: const ValueKey('none'),
-                              title: tr(
-                                context,
-                                'Pick something to see it here',
-                                'Chọn một mục để xem ở đây',
-                              ),
-                            )
-                          : ListView(
-                              key: ValueKey(current),
-                              padding: const EdgeInsets.all(HandySpace.xl),
-                              children: [
-                                DetailView(
-                                  scope: scope,
-                                  id: current!,
-                                  onClosed: () =>
-                                      setState(() => current = null),
-                                ),
-                              ],
-                            ),
-                    ),
-                  ),
-                ],
               ],
             ),
           ),

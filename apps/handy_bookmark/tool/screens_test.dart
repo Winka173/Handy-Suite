@@ -419,11 +419,14 @@ void main() {
   ]) {
     testWidgets('$label home', (t) async {
       final c = await boot(t, size);
+      // Wide: the Library overview first, then the list with a save open.
+      await shot(t, '$label-1-home');
       if (size.width >= 1100) {
+        await tapKey(t, 'place-all');
         await tapKey(t, 'details-${c.library!.bookmarks.first.id}');
         await tapKey(t, 'item-details');
+        await shot(t, '$label-1b-list');
       }
-      await shot(t, '$label-1-home');
       if (label == 'phone') {
         // The rest of Home: the collections as tiles and the recent saves.
         await t.drag(find.byKey(const Key('save-home')), const Offset(0, -900));

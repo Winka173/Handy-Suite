@@ -227,6 +227,9 @@ void main() {
     final c = await start(tester, size: const Size(1440, 900), seed: recipes);
     final id = c.library!.bookmarks.single.id;
     expect(find.byKey(const Key('place-inbox')), findsOneWidget);
+    // It opens on the Library overview; the list is a tap away.
+    expect(find.byKey(const Key('library-overview')), findsOneWidget);
+    await tapKey(tester, 'place-all');
     expect(find.byKey(const Key('collection-recipes')), findsOneWidget);
     await tapKey(tester, 'details-$id');
     await tapKey(tester, 'item-details');

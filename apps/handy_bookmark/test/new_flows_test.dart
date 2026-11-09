@@ -229,6 +229,8 @@ void main() {
       final (c, net) = await boot(t, size: const Size(1440, 900));
       net.probes['https://b.org/two'] = [const LinkProbe(status: 404)];
       net.probes['https://c.net/three'] = [const LinkProbe(error: 'timeout')];
+      // From the Library overview to the list it checks.
+      await tapKey(t, 'place-all');
       await tapKey(t, 'list-more');
       await tapKey(t, 'check-here');
       await settle(t, 600);

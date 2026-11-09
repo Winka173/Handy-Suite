@@ -79,6 +79,8 @@ void main() {
   testWidgets('wide layout meets guidelines', (tester) async {
     final handle = tester.ensureSemantics();
     final c = await start(tester, seed: library, size: const Size(1440, 900));
+    // The wide screen opens on the Library overview; the list is a tap away.
+    await tapKey(tester, 'place-all');
     await tapKey(tester, 'details-${c.library!.bookmarks.first.id}');
     await tapKey(tester, 'item-details');
     await meetsAll(tester, 'wide');
