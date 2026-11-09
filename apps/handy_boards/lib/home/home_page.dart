@@ -4,6 +4,7 @@ import '../create/new_board.dart';
 import '../design/looks.dart';
 import '../design/theme.dart';
 import '../scope.dart';
+import '../shell/boards_frame.dart';
 import '../ui/look.dart';
 
 /// My boards: which board needs me today? A line from the data says what
@@ -22,25 +23,33 @@ class HomePage extends StatelessWidget {
       final theme = Theme.of(context);
       final width = MediaQuery.sizeOf(context).width;
       final phone = width < 600;
+      // Beside the sidebar the app's name is already there.
+      final framed = BoardsFrame.wide(context);
       final bar = AppBar(
         titleSpacing: 16,
-        title: Row(
-          children: [
-            ClipRRect(
-              borderRadius: BorderRadius.circular(8),
-              child: Image.asset('assets/icon.png', width: 28, height: 28),
-            ),
-            const SizedBox(width: 10),
-            Flexible(
-              child: Text(
-                'Handy Boards',
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: theme.textTheme.titleMedium,
+        title: framed
+            ? null
+            : Row(
+                children: [
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(8),
+                    child: Image.asset(
+                      'assets/icon.png',
+                      width: 28,
+                      height: 28,
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  Flexible(
+                    child: Text(
+                      'Handy Boards',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: theme.textTheme.titleMedium,
+                    ),
+                  ),
+                ],
               ),
-            ),
-          ],
-        ),
         actions: [
           if (s != null && s.rows('boards').isNotEmpty)
             IconButton(

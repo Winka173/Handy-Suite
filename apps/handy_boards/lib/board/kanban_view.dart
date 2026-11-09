@@ -311,6 +311,34 @@ class KanbanViewState extends State<KanbanView> {
             ],
           );
         }
+        // Wide: the columns share the width evenly when each keeps 240 pt
+        // (a narrow lane to add one at the end); more scroll sideways.
+        const addWidth = 200.0, gap = 12.0;
+        final room = box.maxWidth - 48;
+        final shared =
+            (room -
+                (addColumn == null ? 0 : addWidth + gap) -
+                gap * (columns.length - 1)) /
+            math.max(1, columns.length);
+        if (columns.isNotEmpty && shared >= 240) {
+          return Padding(
+            key: const Key('kanban-wide'),
+            padding: const EdgeInsets.fromLTRB(24, 0, 24, 8),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                for (var i = 0; i < columns.length; i++) ...[
+                  if (i > 0) const SizedBox(width: gap),
+                  Expanded(child: column(i)),
+                ],
+                if (addColumn != null) ...[
+                  const SizedBox(width: gap),
+                  SizedBox(width: addWidth, child: _AddColumn(addColumn)),
+                ],
+              ],
+            ),
+          );
+        }
         return Scrollbar(
           controller: _wide,
           child: ListView(

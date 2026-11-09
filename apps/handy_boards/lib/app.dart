@@ -21,6 +21,7 @@ import 'platform/reminders.dart';
 import 'platform/share_inbox.dart';
 import 'pro/pro.dart';
 import 'scope.dart';
+import 'shell/boards_frame.dart';
 import 'settings/how_to_page.dart';
 import 'sync/drive_sync.dart';
 import 'settings/settings_page.dart';
@@ -449,7 +450,13 @@ class _BoardsAppState extends State<BoardsApp> with WidgetsBindingObserver {
       };
     }
     if (page == null) return null;
-    final shown = page;
+    // The main places sit beside the sidebar on a wide screen.
+    final framed =
+        name.startsWith('/board/') ||
+        const {'/my-work', '/trash', '/settings', '/search'}.contains(name);
+    final shown = framed
+        ? BoardsFrame(scope: scope, place: name, child: page)
+        : page;
     return MaterialPageRoute<void>(
       settings: settings,
       builder: (_) => c.state == null ? const HandyLoading() : shown,
@@ -482,7 +489,11 @@ class _BoardsAppState extends State<BoardsApp> with WidgetsBindingObserver {
                 onDone: _welcomed,
                 replay: replayWelcome && s.preferences['welcomed'] == true,
               )
-            : HomePage(scope: scope),
+            : BoardsFrame(
+                scope: scope,
+                place: '/',
+                child: HomePage(scope: scope),
+              ),
       );
     },
   );
