@@ -92,6 +92,28 @@ void main() {
     expect(c.state!.get('tasks', card.id).flag('archived'), isFalse);
   });
 
+  testWidgets('an archived board has its own page with what it held', (
+    t,
+  ) async {
+    var s = studyState();
+    s = s.put(
+      'boards',
+      s.get('boards', board).copy({
+        'archived': true,
+        'archivedAt': '2026-11-05T09:00:00Z',
+      }),
+    );
+    final c = await boot(t, s, size: tall);
+    await openSettings(t);
+    await tap(t, find.byKey(const Key('settings-archived')));
+    expect(find.byKey(const Key('archived-boards')), findsOneWidget);
+    expect(find.textContaining('cards ·'), findsOneWidget);
+    expect(find.textContaining('Nov 5'), findsOneWidget);
+    expect(find.textContaining('Groups:'), findsOneWidget);
+    await tap(t, find.byKey(const Key('restore-$board')));
+    expect(c.state!.get('boards', board).flag('archived'), isFalse);
+  });
+
   testWidgets('Delete all data asks first, keeps language and theme, and '
       'starts over with the welcome', (t) async {
     final c = await boot(t, studyState(), size: tall);

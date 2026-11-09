@@ -9,6 +9,7 @@ import '../features/portability.dart';
 import '../pro/pro.dart';
 import '../scope.dart';
 import 'data_rows.dart';
+import '../pages/archived_boards_page.dart';
 import 'help_links.dart';
 import 'widgets_page.dart';
 import 'notifications_page.dart';
@@ -350,7 +351,12 @@ class SettingsPage extends StatelessWidget {
                     navigates: archivedBoards > 0,
                     onTap: archivedBoards == 0
                         ? null
-                        : () => showArchived(context, scope, boards: true),
+                        : () => Navigator.push(
+                            context,
+                            MaterialPageRoute<void>(
+                              builder: (_) => ArchivedBoardsPage(scope: scope),
+                            ),
+                          ),
                   ),
                   SettingsRow(
                     key: const Key('settings-archived-cards'),

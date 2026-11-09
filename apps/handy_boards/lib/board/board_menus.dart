@@ -371,7 +371,10 @@ Future<void> boardMenu(
             () => scope.controller.change(
               (s) => s.put(
                 'boards',
-                s.get('boards', board).copy({'archived': true}),
+                s.get('boards', board).copy({
+                  'archived': true,
+                  'archivedAt': scope.clock().toUtc().toIso8601String(),
+                }),
               ),
             ),
           );
