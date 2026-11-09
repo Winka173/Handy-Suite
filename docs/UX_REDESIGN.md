@@ -3211,4 +3211,8 @@ Chạy `design-taste-frontend` (app screens) với bản phác HTML dùng chung 
 - Token sáng: nền `#F2F2F0`, cột `#E9E8E6`, thẻ trắng, hành động magenta `#A61C8E`, Plus Jakarta Sans. Tối: nền than `#141516`, cột `#1B1D1F`, thẻ `#25282A`, ô nhóm sậm, hành động hồng sáng `#E07CCB`, chữ trễ hạn `#FF9B8C`.
 - Điện thoại: một cột một lần, hai cột kề lộ 28px hai bên làm chỗ thả khi kéo thẻ, hàng chip tên cột (chạm để nhảy cột).
 
+**Sửa sau rà soát (2026-11-09, chủ báo lệch lề và khung Chưa xếp quá to)**
+- Bookmark: khung Chưa xếp bỏ; Chưa xếp gộp vào thẻ hàng chờ cùng Tập trung ("N mục chưa xếp · Xếp nhanh, từng mục một" và "N mục chờ bạn xem lại"). Xếp nhanh mở khung dưới: một mục một lần, chip 4 bộ sưu tập hay dùng + "Khác…", "Bỏ qua"; xếp xong mục cuối thì tự đóng; ghi lỗi thì mục vẫn nằm đó. Bộ sưu tập vào khung trắng như các khối khác, nên mọi tiêu đề khối cùng một mép; tên bộ sưu tập tối đa 2 dòng. Nút "Xem tất cả" luôn sát mép phải (chỉ co khi thiếu chỗ).
+- Boards: cột trên điện thoại nằm đúng lề 16 của trang, cột kề lộ mép ở phần 11pt ngoài lề; "Sửa" lên cùng hàng với "Nhóm" ở bên phải, nút lọc nhanh xuống hàng riêng từ lề 16 (cuộn ngang); mũi tên tuần thẳng lề 16; trên màn rộng tiêu đề Nhóm thẳng lề 24 với các ô.
+
 **Loại bỏ**: khối neo đậm, Nunito ấm mềm, lời chào serif làm tiêu đề, khung viền, mảng màu loang, linh vật, thanh chuyển app, thẻ chuỗi ngày.

@@ -8,7 +8,6 @@ import '../scope.dart';
 import '../design/theme.dart';
 import '../ui/collection_picker.dart';
 import 'pastel_blocks.dart';
-import '../ui/visual.dart';
 import '../view/library_view.dart';
 
 /// The library as a shelf: every collection with a cover made from what is
@@ -42,32 +41,34 @@ class CollectionCovers extends StatelessWidget {
       list.sort((a, b) => b.savedAt.compareTo(a.savedAt));
     }
     final names = {for (final c in l.collections) c.id: c.name};
-    return Column(
+    final action = Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        if (onAll != null)
+          Flexible(
+            child: TextButton(
+              key: const Key('home-library'),
+              onPressed: onAll,
+              child: Text(
+                tr(context, 'See all', 'Xem tất cả'),
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+          ),
+        // Plain, like Search and Settings above: the one filled
+        // button on Home is Save.
+        IconButton(
+          key: const Key('collection-new'),
+          tooltip: tr(context, 'New collection', 'Bộ sưu tập mới'),
+          // A folder, not a plus: the one + on Home is Save.
+          icon: const Icon(Icons.create_new_folder_outlined),
+          onPressed: () => scope.editCollection(context),
+        ),
+      ],
+    );
+    final grid = Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        SectionHead(
-          tr(context, 'Collections', 'Bộ sưu tập'),
-          action: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              if (onAll != null)
-                TextButton(
-                  key: const Key('home-library'),
-                  onPressed: onAll,
-                  child: Text(tr(context, 'See all', 'Xem tất cả')),
-                ),
-              // Plain, like Search and Settings above: the one filled
-              // button on Home is Save.
-              IconButton(
-                key: const Key('collection-new'),
-                tooltip: tr(context, 'New collection', 'Bộ sưu tập mới'),
-                // A folder, not a plus: the one + on Home is Save.
-                icon: const Icon(Icons.create_new_folder_outlined),
-                onPressed: () => scope.editCollection(context),
-              ),
-            ],
-          ),
-        ),
         if (l.collections.isEmpty)
           Text(
             tr(
@@ -115,6 +116,15 @@ class CollectionCovers extends StatelessWidget {
             },
           ),
       ],
+    );
+    // Home's shelf sits in a panel like Home's other blocks.
+    return Padding(
+      padding: const EdgeInsets.only(top: HandySpace.l),
+      child: HomePanel(
+        title: tr(context, 'Collections', 'Bộ sưu tập'),
+        action: action,
+        child: Padding(padding: const EdgeInsets.only(top: 4), child: grid),
+      ),
     );
   }
 }
@@ -232,7 +242,7 @@ class CollectionCover extends StatelessWidget {
                           Expanded(
                             child: Text(
                               collection.name,
-                              maxLines: 1,
+                              maxLines: 2,
                               overflow: TextOverflow.ellipsis,
                               style: theme.textTheme.titleSmall?.copyWith(
                                 fontSize: 15,

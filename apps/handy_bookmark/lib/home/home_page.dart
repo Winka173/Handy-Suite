@@ -11,6 +11,7 @@ import 'save_sheet.dart';
 import '../design/theme.dart';
 import 'empty_library.dart';
 import 'home_sections.dart';
+import 'home_queues.dart';
 import 'pastel_blocks.dart';
 import 'quick_save.dart';
 
@@ -133,22 +134,14 @@ class SaveHomePage extends StatelessWidget {
               if (empty)
                 EmptyLibrary(onPicture: () => scope.addPhoto(context))
               else ...[
-                for (final block in [
-                  ReadLaterShelf(scope: scope, onOpen: open),
-                  NotSortedPanel(
-                    scope: scope,
-                    onOpen: open,
-                    onAll: () => openPlace(context, Place.inbox),
-                  ),
-                ])
-                  Padding(
-                    padding: const EdgeInsets.only(top: HandySpace.l),
-                    child: block,
-                  ),
+                Padding(
+                  padding: const EdgeInsets.only(top: HandySpace.l),
+                  child: ReadLaterShelf(scope: scope, onOpen: open),
+                ),
                 const SizedBox(height: HandySpace.l),
-                FocusNudge(
+                HomeQueues(
                   scope: scope,
-                  onOpen: () => Navigator.pushNamed(context, '/focus'),
+                  onFocus: () => Navigator.pushNamed(context, '/focus'),
                 ),
               ],
               if (!empty || l.collections.isNotEmpty)

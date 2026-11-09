@@ -80,7 +80,14 @@ class HomePanel extends StatelessWidget {
                     ),
                   ),
                 ),
-                if (action != null) Flexible(child: action!),
+                if (action != null)
+                  ConstrainedBox(
+                    // At the right edge; it shrinks only when space is short.
+                    constraints: BoxConstraints(
+                      maxWidth: MediaQuery.sizeOf(context).width * .45,
+                    ),
+                    child: action!,
+                  ),
               ],
             ),
           ),
@@ -187,90 +194,13 @@ class ReadLaterShelf extends StatelessWidget {
   }
 }
 
-/// Home's "not sorted" panel: the newest saves outside any collection,
-/// each with the person's usual collections as one-tap chips and "Other…"
-/// for the full list.
-class NotSortedPanel extends StatelessWidget {
-  final SaveScope scope;
-  final ValueChanged<Bookmark> onOpen;
-  final VoidCallback onAll;
-  static const shown = 4;
-  const NotSortedPanel({
-    super.key,
-    required this.scope,
-    required this.onOpen,
-    required this.onAll,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final l = scope.library;
-    final items = [
-      for (final b in l.bookmarks)
-        if (!b.isArchived && b.collectionId == null) b,
-    ]..sort((a, b) => b.savedAt.compareTo(a.savedAt));
-    if (items.isEmpty) return const SizedBox.shrink();
-    final usual = usualCollections(l, take: 2);
-    return HomePanel(
-      key: const Key('not-sorted'),
-      title: tr(context, 'Not sorted', 'Chưa xếp'),
-      count: items.length,
-      action: TextButton(
-        key: const Key('not-sorted-all'),
-        onPressed: onAll,
-        child: Text(tr(context, 'See all', 'Xem tất cả')),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          for (final (i, b) in items.take(shown).indexed) ...[
-            if (i > 0)
-              Divider(height: 1, color: BookmarkPalette.of(context).line),
-            _SaveRow(
-              key: Key('unsorted-${b.id}'),
-              scope: scope,
-              bookmark: b,
-              onTap: () => onOpen(b),
-              saysUnsorted: false,
-              below: Wrap(
-                spacing: 6,
-                children: [
-                  for (final c in usual)
-                    _FileChip(
-                      key: Key('file-${b.id}-${c.id}'),
-                      collection: c,
-                      hue: collectionHue(l, c.id),
-                      onTap: () => _file(scope, b, c.id),
-                    ),
-                  _FileChip(
-                    key: Key('file-${b.id}-other'),
-                    onTap: () => scope.move(context, b),
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ],
-      ),
-    );
-  }
-
-  static Future<void> _file(SaveScope scope, Bookmark b, String id) async {
-    try {
-      await scope.file(b, id);
-    } catch (_) {
-      // The write failed and nothing moved; the row stays as it was.
-    }
-  }
-}
-
 /// A collection to file into, in its own pale field and ink; without a
 /// collection it is the neutral "Other…".
-class _FileChip extends StatelessWidget {
+class FileChip extends StatelessWidget {
   final SaveCollection? collection;
   final int hue;
   final VoidCallback onTap;
-  const _FileChip({
+  const FileChip({
     super.key,
     this.collection,
     this.hue = 0,
@@ -309,7 +239,6 @@ class _SaveRow extends StatelessWidget {
   final VoidCallback onTap;
   final bool filled;
   final DateTime? ribbon;
-  final Widget? below;
   const _SaveRow({
     super.key,
     required this.scope,
@@ -317,12 +246,7 @@ class _SaveRow extends StatelessWidget {
     required this.onTap,
     this.filled = false,
     this.ribbon,
-    this.below,
-    this.saysUnsorted = true,
   });
-
-  /// Off inside the Not sorted panel, where every row is.
-  final bool saysUnsorted;
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -341,9 +265,7 @@ class _SaveRow extends StatelessWidget {
             filled ? 8 : 0,
           ).add(EdgeInsets.symmetric(vertical: filled ? 0 : 10)),
           child: Row(
-            crossAxisAlignment: below == null
-                ? CrossAxisAlignment.center
-                : CrossAxisAlignment.start,
+            crossAxisAlignment: CrossAxisAlignment.center,
             children: [
               SizedBox.square(
                 dimension: size,
@@ -381,8 +303,7 @@ class _SaveRow extends StatelessWidget {
                           TextSpan(
                             text: home == null
                                 ? [
-                                    if (saysUnsorted)
-                                      tr(context, 'Not sorted', 'Chưa xếp'),
+                                    tr(context, 'Not sorted', 'Chưa xếp'),
                                     if (!b.isImage) sourceLine(b),
                                   ].join(' · ')
                                 : (b.isImage
@@ -397,7 +318,6 @@ class _SaveRow extends StatelessWidget {
                         color: p.muted,
                       ),
                     ),
-                    if (below != null) ...[const SizedBox(height: 8), below!],
                   ],
                 ),
               ),

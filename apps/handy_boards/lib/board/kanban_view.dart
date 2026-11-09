@@ -91,8 +91,8 @@ class KanbanFilter {
 }
 
 /// The board's columns side by side. Phones see one column at a time,
-/// centred, with both neighbours showing 28 pt at the sides (places to drop
-/// a dragged card) and a row of column chips above to jump between them;
+/// on the page's margins, with both neighbours showing their edge at the
+/// sides (a drag near a side turns to them) and a row of column chips above to jump between them;
 /// wider screens show 300 px columns that scroll sideways
 /// inside their own area, never the page.
 class KanbanView extends StatefulWidget {
@@ -165,7 +165,7 @@ class KanbanViewState extends State<KanbanView> {
     final box = context.findRenderObject() as RenderBox?;
     if (box == null) return;
     final x = box.globalToLocal(global).dx;
-    // The 28 pt peeks and a little more: a thumb near the side turns.
+    // The neighbour edges and the margin: a thumb near the side turns.
     final dir = x < 44 ? -1 : (x > width - 44 ? 1 : 0);
     if (dir == 0) {
       _edge?.cancel();
@@ -221,7 +221,9 @@ class KanbanViewState extends State<KanbanView> {
         );
         final addColumn = widget.actions.addColumn;
         if (phone) {
-          final fraction = ((box.maxWidth - 56) / box.maxWidth).clamp(.7, 1.0);
+          // The column on the page's 16 pt margins; each neighbour shows
+          // its edge in the 11 pt beyond them.
+          final fraction = ((box.maxWidth - 22) / box.maxWidth).clamp(.7, 1.0);
           if (_pages == null || _fraction != fraction) {
             final page = _pages?.hasClients == true
                 ? (_pages!.page ?? 0).round()
