@@ -135,6 +135,47 @@ class HandySidePanel extends StatelessWidget {
   }
 }
 
+/// The narrow strip a folded sidebar leaves: it slides in as the panel
+/// folds, holding [child] (the button that brings the panel back) at its
+/// top, where the panel's own fold button was. Same in every app.
+class HandySideRail extends StatelessWidget {
+  final bool open;
+  final Widget child;
+  final double width;
+  const HandySideRail({
+    super.key,
+    required this.open,
+    required this.child,
+    this.width = 64,
+  });
+  @override
+  Widget build(BuildContext context) => TweenAnimationBuilder<double>(
+    tween: Tween(end: open ? 1 : 0),
+    duration: HandyMotion.of(context, HandyMotion.long),
+    curve: HandyMotion.curve,
+    builder: (context, t, child) => SizedBox(
+      width: width * t,
+      child: t == 0
+          ? null
+          : ClipRect(
+              child: OverflowBox(
+                alignment: AlignmentDirectional.topStart,
+                minWidth: width,
+                maxWidth: width,
+                child: Opacity(opacity: t, child: child),
+              ),
+            ),
+    ),
+    child: SafeArea(
+      right: false,
+      child: Padding(
+        padding: const EdgeInsets.only(top: 12),
+        child: Align(alignment: Alignment.topCenter, child: child),
+      ),
+    ),
+  );
+}
+
 /// A short demonstration that plays itself: [builder] gets `t` from 0 to 1
 /// over [period], holds the last frame for [hold], and plays [times] times
 /// before resting on its last frame (a replay button brings it back). With

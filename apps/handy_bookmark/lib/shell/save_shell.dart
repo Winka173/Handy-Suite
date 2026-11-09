@@ -167,6 +167,10 @@ class _SaveShellState extends State<SaveShell> {
             body: Row(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
+                HandySideRail(
+                  open: !sideOpen,
+                  child: SideReopen(onTap: () => setSide(true)),
+                ),
                 HandySidePanel(
                   width: 260,
                   open: sideOpen,
@@ -207,20 +211,6 @@ class _SaveShellState extends State<SaveShell> {
                           ),
                           child: Row(
                             children: [
-                              // The way back to a folded sidebar.
-                              HandyReveal(
-                                child: sideOpen
-                                    ? const SizedBox(height: 48)
-                                    : Padding(
-                                        padding:
-                                            const EdgeInsetsDirectional.only(
-                                              end: HandySpace.m,
-                                            ),
-                                        child: SideReopen(
-                                          onTap: () => setSide(true),
-                                        ),
-                                      ),
-                              ),
                               Expanded(
                                 child: HeaderBand(
                                   across: true,

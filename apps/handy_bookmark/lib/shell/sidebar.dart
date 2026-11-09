@@ -307,15 +307,10 @@ class SideReopen extends StatelessWidget {
   final VoidCallback onTap;
   const SideReopen({super.key, required this.onTap});
   @override
-  Widget build(BuildContext context) => Material(
-    color: Theme.of(context).colorScheme.surface,
-    elevation: 2,
-    shape: const CircleBorder(),
-    child: IconButton(
-      key: const Key('side-open'),
-      tooltip: tr(context, 'Show the sidebar', 'Hiện thanh bên'),
-      icon: const Icon(Icons.keyboard_double_arrow_right),
-      onPressed: onTap,
-    ),
+  Widget build(BuildContext context) => IconButton(
+    key: const Key('side-open'),
+    tooltip: tr(context, 'Show the sidebar', 'Hiện thanh bên'),
+    icon: const Icon(Icons.keyboard_double_arrow_right),
+    onPressed: onTap,
   );
 }
