@@ -1,5 +1,6 @@
 import 'package:handy_bookmark_engine/handy_bookmark_engine.dart';
 import 'package:handy_ui/kit.dart';
+import '../ui/item_marks.dart';
 import '../bookmark/item_menu.dart';
 import '../controller.dart';
 import '../design/theme.dart';
@@ -65,26 +66,8 @@ class LinkCard extends StatelessWidget {
                         ),
                       ),
                     ),
-                  if (b.isFavorite && !selecting)
-                    Positioned(
-                      top: 8,
-                      right: 8,
-                      child: badge(
-                        Padding(
-                          padding: const EdgeInsets.all(5),
-                          child: Icon(
-                            Icons.star_rounded,
-                            size: 16,
-                            color: p.warm,
-                            semanticLabel: tr(
-                              context,
-                              'Favourite',
-                              'Yêu thích',
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
+                  if (!selecting)
+                    Positioned(top: 8, right: 8, child: ItemCornerMarks(b)),
                 ],
               ),
             ),
@@ -111,6 +94,7 @@ class LinkCard extends StatelessWidget {
                           Text.rich(
                             TextSpan(
                               children: [
+                                ...itemMarkSpans(context, b),
                                 if (home != null) collectionSpan(context, home),
                                 TextSpan(
                                   text: b.isImage

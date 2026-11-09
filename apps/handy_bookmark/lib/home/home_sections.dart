@@ -1,5 +1,6 @@
 import 'package:handy_bookmark_engine/handy_bookmark_engine.dart';
 import 'package:handy_ui/kit.dart';
+import '../ui/item_marks.dart';
 import '../ui/read_later_ribbon.dart';
 import 'pastel_blocks.dart';
 import '../design/theme.dart';
@@ -119,6 +120,7 @@ class _RecentCard extends StatelessWidget {
                   ItemPicture(scope.c, b, radius: 0),
                   if (later != null)
                     Positioned(top: 0, left: 10, child: ReadLaterRibbon(later)),
+                  Positioned(top: 8, right: 8, child: ItemCornerMarks(b)),
                 ],
               ),
             ),
@@ -143,6 +145,7 @@ class _RecentCard extends StatelessWidget {
               child: Text.rich(
                 TextSpan(
                   children: [
+                    ...itemMarkSpans(context, b),
                     if (home != null) collectionSpan(context, home),
                     TextSpan(
                       text: [
