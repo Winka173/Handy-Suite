@@ -159,7 +159,14 @@ String boardCoverId(BoardRecord board) {
 }
 
 /// The board's cover art.
-Widget boardCover(BoardRecord board) => CoverArt(boardCoverId(board));
+/// A board's cover: the person's own photo when the board has one (and
+/// [state] is given to read it), else its drawn cover.
+Widget boardCover(BoardRecord board, [BoardsState? state]) {
+  final photo = board.data['coverPreview'] as String?;
+  if (state != null && photo != null && state.files.containsKey(photo))
+    return StoredPhoto(state, photo);
+  return CoverArt(boardCoverId(board));
+}
 
 /// A photo kept in the app's own storage, read once and kept while shown.
 class StoredPhoto extends StatefulWidget {

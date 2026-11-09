@@ -281,6 +281,11 @@ BoardsState changeStatus(
     }),
   );
   final was = s.get('statuses', t.str('status'));
+  // Finished: every subtask inside is finished too.
+  if (st.flag('done') && !was.flag('done'))
+    for (final r in s.rows('checklist'))
+      if (r.str('task') == task && !r.flag('done'))
+        e.put('checklist', r.copy({'done': true}));
   e.event(
     task,
     st.flag('done')
@@ -432,9 +437,15 @@ BoardsState permanentlyDelete(
     if (!e.data['tasks']!.containsKey(r.str('task')) ||
         !e.data['recurrence']!.containsKey(r.str('rule')))
       e.remove('occurrences', r.id);
-  final retained = e.data['attachments']!.values
-      .expand((r) => [r.str('path'), r.str('preview')])
-      .toSet();
+  final retained = {
+    ...e.data['attachments']!.values.expand(
+      (r) => [r.str('path'), r.str('preview')],
+    ),
+    // A board's own photo as its cover.
+    ...e.data['boards']!.values.expand(
+      (b) => [b.str('coverPhoto'), b.str('coverPreview')],
+    ),
+  };
   for (final path in e.files.keys.toList())
     if (!retained.contains(path)) e.removeFile(path);
   return e.finish();

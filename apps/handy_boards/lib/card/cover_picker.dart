@@ -34,6 +34,10 @@ Future<CoverPick?> pickCover(
   required String? current,
   required Widget Function(Widget? cover) preview,
   bool artOnly = false,
+
+  /// Offer "Your photo" even when [artOnly] (a board: drawn covers or a
+  /// photo, no plain colours).
+  bool photo = false,
   List<String> suggested = const [],
 }) => showModalBottomSheet<CoverPick>(
   context: context,
@@ -43,6 +47,7 @@ Future<CoverPick?> pickCover(
     current: current,
     preview: preview,
     artOnly: artOnly,
+    photo: photo || !artOnly,
     suggested: suggested,
   ),
 );
@@ -50,12 +55,13 @@ Future<CoverPick?> pickCover(
 class _Picker extends StatefulWidget {
   final String? current;
   final Widget Function(Widget? cover) preview;
-  final bool artOnly;
+  final bool artOnly, photo;
   final List<String> suggested;
   const _Picker({
     required this.current,
     required this.preview,
     required this.artOnly,
+    required this.photo,
     required this.suggested,
   });
   @override
@@ -185,7 +191,7 @@ class _PickerState extends State<_Picker> {
                         ),
                     itemCount:
                         covers.length +
-                        (widget.artOnly || tab != 'suggested' ? 0 : 1),
+                        (!widget.photo || tab != 'suggested' ? 0 : 1),
                     itemBuilder: (context, i) {
                       if (i == covers.length) {
                         return _Swatch(

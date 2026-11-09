@@ -1,5 +1,6 @@
 import 'package:handy_boards_engine/handy_boards_engine.dart';
 import 'package:handy_ui/kit.dart';
+import '../board/board_menus.dart' show boardMenu;
 import '../create/new_board.dart';
 import '../design/looks.dart';
 import '../design/theme.dart';
@@ -219,8 +220,10 @@ class HomePage extends StatelessWidget {
                     delegate: SliverChildBuilderDelegate(
                       (context, i) => BoardTile(
                         board: boards[i],
+                        state: s,
                         summary: sums[boards[i].id]!,
                         now: now,
+                        onMenu: () => boardMenu(context, scope, boards[i].id),
                         onTap: () => Navigator.pushNamed(
                           context,
                           '/board/${boards[i].id}',
@@ -242,15 +245,21 @@ class HomePage extends StatelessWidget {
 /// A board on the home: its cover, name and real figures.
 class BoardTile extends StatelessWidget {
   final BoardRecord board;
+  final BoardsState? state;
   final BoardSummary summary;
   final DateTime now;
   final VoidCallback onTap;
+
+  /// The board's options (…), in the cover's top corner.
+  final VoidCallback? onMenu;
   const BoardTile({
     super.key,
     required this.board,
+    this.state,
     required this.summary,
     required this.now,
     required this.onTap,
+    this.onMenu,
   });
   @override
   Widget build(BuildContext context) {
@@ -290,11 +299,30 @@ class BoardTile extends StatelessWidget {
                 child: Stack(
                   fit: StackFit.expand,
                   children: [
-                    boardCover(board),
+                    boardCover(board, state),
+                    if (onMenu != null)
+                      Positioned(
+                        top: 6,
+                        right: 6,
+                        child: Material(
+                          color: p.surface.withValues(alpha: .92),
+                          shape: const CircleBorder(),
+                          child: IconButton(
+                            key: Key('board-menu-${board.id}'),
+                            tooltip: tr(
+                              context,
+                              'Board options',
+                              'Tuỳ chọn bảng',
+                            ),
+                            icon: Icon(Icons.more_horiz, color: p.ink),
+                            onPressed: onMenu,
+                          ),
+                        ),
+                      ),
                     if (board.flag('pinned'))
                       Positioned(
                         top: 10,
-                        right: 10,
+                        left: 10,
                         child: Container(
                           padding: const EdgeInsets.all(6),
                           decoration: BoxDecoration(

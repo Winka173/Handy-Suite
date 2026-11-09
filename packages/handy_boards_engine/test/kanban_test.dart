@@ -53,7 +53,7 @@ void main() {
     expect(boardSummary(s, b, now: now).categories, 4);
   });
 
-  test('moving a card to Done keeps its category and subtasks', () {
+  test('moving a card to Done keeps its category and ticks its subtasks', () {
     var s = studyBoard();
     final b = boardOf(s), done = columnsOf(s, b).last.id;
     final card = topTasks(
@@ -65,7 +65,9 @@ void main() {
     final moved = s.get('tasks', card.id);
     expect(moved.str('status'), done);
     expect(moved.str('category'), card.str('category'));
-    expect(subtaskProgress(s, card.id), before);
+    // Finished means every step finished (owner, 2026-11-10).
+    expect(subtaskProgress(s, card.id).done, before.total);
+    expect(subtaskProgress(s, card.id).total, before.total);
     expect(cardsIn(s, done).first.id, card.id);
     expect(moved.data['completedAt'], isNotNull);
   });

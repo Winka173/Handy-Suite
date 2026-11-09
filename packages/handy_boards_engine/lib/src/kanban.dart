@@ -327,6 +327,42 @@ BoardsState deleteColumn(BoardsState s, String column, {String? moveTo}) {
   return e.finish();
 }
 
+/// A board's own photo as its cover, kept with a small preview (JPEG).
+/// Replacing it or choosing a drawn cover removes the old files; [bytes]
+/// null takes the photo off.
+BoardsState setBoardPhoto(
+  BoardsState s,
+  String board, {
+  Uint8List? bytes,
+  Uint8List? preview,
+  String ext = 'jpg',
+  DateTime? now,
+}) {
+  final b = s.get('boards', board);
+  if ((bytes == null) != (preview == null))
+    throw const FormatException('A photo needs its preview');
+  if (!{'jpg', 'png', 'webp'}.contains(ext))
+    throw const FormatException('Unsupported photo');
+  final e = BoardsEdit(s);
+  for (final k in ['coverPhoto', 'coverPreview']) {
+    final old = b.data[k];
+    if (old is String && e.files.containsKey(old)) e.removeFile(old);
+  }
+  String? path, small;
+  if (bytes != null) {
+    final id = newId();
+    path = 'assets/board-$id.$ext';
+    small = 'assets/board-${id}_preview.jpg';
+    e.files[path] = bytes;
+    e.files[small] = preview!;
+  }
+  e.put(
+    'boards',
+    b.copy({'coverPhoto': path, 'coverPreview': small, 'updated': _now(now)}),
+  );
+  return e.finish();
+}
+
 /// Sets a card's cover: an art id, a colour (0–7), a photo attachment of
 /// the card, or none. A previous photo stays attached until the person
 /// removes it; it is no longer the cover.
@@ -433,9 +469,15 @@ BoardsState deleteBoard(
     if (!e.data['tasks']!.containsKey(r.str('task')) ||
         !e.data['recurrence']!.containsKey(r.str('rule')))
       e.remove('occurrences', r.id);
-  final retained = e.data['attachments']!.values
-      .expand((r) => [r.str('path'), r.str('preview')])
-      .toSet();
+  final retained = {
+    ...e.data['attachments']!.values.expand(
+      (r) => [r.str('path'), r.str('preview')],
+    ),
+    // A board's own photo as its cover.
+    ...e.data['boards']!.values.expand(
+      (b) => [b.str('coverPhoto'), b.str('coverPreview')],
+    ),
+  };
   for (final path in e.files.keys.toList())
     if (!retained.contains(path)) e.removeFile(path);
   return e.finish();

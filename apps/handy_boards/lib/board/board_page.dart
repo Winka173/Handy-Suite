@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart' show compute;
 import 'package:flutter/services.dart';
 import 'package:handy_boards_engine/handy_boards_engine.dart';
 import 'package:handy_ui/kit.dart';
@@ -1039,9 +1040,36 @@ Future<void> pickBoardCover(
     scope,
     current: b.data['cover'] as String?,
     artOnly: true,
-    preview: (cover) => SizedBox(height: 120, child: cover ?? boardCover(b)),
+    photo: true,
+    preview: (cover) =>
+        SizedBox(height: 120, child: cover ?? boardCover(b, scope.state)),
   );
   if (picked == null || !context.mounted) return;
+  if (picked.photo) {
+    // The person's own picture, with a small preview for the tiles.
+    final file = await scope.files.importBytes(
+      extensions: const ['jpg', 'jpeg', 'png', 'webp'],
+      maxBytes: 12000000,
+    );
+    if (file == null || !context.mounted) return;
+    final ext = file.name.split('.').last.toLowerCase();
+    final preview = await compute(attachmentPreview, file.bytes);
+    if (!context.mounted) return;
+    await scope.run(
+      context,
+      () => scope.controller.change(
+        (s) => setBoardPhoto(
+          s,
+          board,
+          bytes: file.bytes,
+          preview: preview,
+          ext: ext == 'jpeg' ? 'jpg' : ext,
+          now: scope.clock(),
+        ),
+      ),
+    );
+    return;
+  }
   if (picked.art != null &&
       coverById(picked.art)?.pro == true &&
       !await requirePro(context, ProFeature.covers))
@@ -1049,8 +1077,13 @@ Future<void> pickBoardCover(
   if (!context.mounted) return;
   await scope.run(
     context,
+    // A drawn cover takes the photo's place.
     () => scope.controller.change(
-      (s) => setBoardLook(s, board, cover: picked.art),
+      (s) => setBoardLook(
+        setBoardPhoto(s, board, now: scope.clock()),
+        board,
+        cover: picked.art,
+      ),
     ),
   );
 }
