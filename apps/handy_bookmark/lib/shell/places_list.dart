@@ -8,6 +8,7 @@ import '../links/link_actions.dart';
 import '../home/collection_covers.dart';
 import '../library/place_title.dart';
 import '../scope.dart';
+import '../ui/capped.dart';
 import '../ui/collection_picker.dart';
 import '../view/library_view.dart';
 
@@ -71,6 +72,7 @@ class PlacesList extends StatelessWidget {
         l.bookmarks.where((b) => b.linkCheck?.broken ?? false).length,
       _ => 0,
     };
+    final tree = collectionTree(l);
     final inCollection = <String, int>{};
     for (final b in live) {
       if (b.collectionId != null)
@@ -247,6 +249,7 @@ class PlacesList extends StatelessWidget {
         if (tiles)
           CollectionCovers(
             scope: scope,
+            cap: 6,
             onOpen: (col) => onPick(Place.collection, col.id),
           )
         else ...[
@@ -269,69 +272,92 @@ class PlacesList extends StatelessWidget {
               style: theme.textTheme.bodyMedium?.copyWith(color: c.muted),
             )
           else
-            group(
-              children: [
-                for (final (col, depth) in collectionTree(l))
-                  row(
-                    Key('collection-${col.id}'),
-                    Icons.folder,
-                    col.name,
-                    hue: collectionHue(l, col.id),
-                    n: inCollection[col.id] ?? 0,
-                    id: col.id,
-                    place: Place.collection,
-                    indent: depth * 20.0,
-                    menu: HandyMenuButton(
-                      key: Key('collection-menu-${col.id}'),
-                      items: [
-                        HandyMenuItem(
-                          Icons.send_rounded,
-                          tr(context, 'Send to friends', 'Gửi cho bạn bè'),
-                          () => scope.shareCollection(context, col.id),
-                          key: const Key('collection-send'),
-                        ),
-                        HandyMenuItem(
-                          Icons.edit_outlined,
-                          tr(context, 'Edit', 'Sửa'),
-                          () => scope.editCollection(context, col),
-                          key: const Key('collection-edit'),
-                        ),
-                        HandyMenuItem(
-                          Icons.delete_outline,
-                          tr(context, 'Delete', 'Xóa'),
-                          () async {
-                            if (await scope.deleteCollection(context, col) &&
-                                v.place == Place.collection &&
-                                v.id == col.id)
-                              onPick(Place.all);
-                          },
-                          key: const Key('collection-delete'),
-                          destructive: true,
-                        ),
-                      ],
+            Capped(
+              name: 'collections',
+              count: tree.length,
+              max: 8,
+              // The open collection is never folded away.
+              open:
+                  marking &&
+                  v.place == Place.collection &&
+                  tree.indexWhere((e) => e.$1.id == v.id) >= 8,
+              builder: (context, shown) => group(
+                children: [
+                  for (final (col, depth) in tree.take(shown))
+                    row(
+                      Key('collection-${col.id}'),
+                      Icons.folder,
+                      col.name,
+                      hue: collectionHue(l, col.id),
+                      n: inCollection[col.id] ?? 0,
+                      id: col.id,
+                      place: Place.collection,
+                      indent: depth * 20.0,
+                      menu: HandyMenuButton(
+                        key: Key('collection-menu-${col.id}'),
+                        items: [
+                          HandyMenuItem(
+                            Icons.send_rounded,
+                            tr(context, 'Send to friends', 'Gửi cho bạn bè'),
+                            () => scope.shareCollection(context, col.id),
+                            key: const Key('collection-send'),
+                          ),
+                          HandyMenuItem(
+                            Icons.edit_outlined,
+                            tr(context, 'Edit', 'Sửa'),
+                            () => scope.editCollection(context, col),
+                            key: const Key('collection-edit'),
+                          ),
+                          HandyMenuItem(
+                            Icons.delete_outline,
+                            tr(context, 'Delete', 'Xóa'),
+                            () async {
+                              if (await scope.deleteCollection(context, col) &&
+                                  v.place == Place.collection &&
+                                  v.id == col.id)
+                                onPick(Place.all);
+                            },
+                            key: const Key('collection-delete'),
+                            destructive: true,
+                          ),
+                        ],
+                      ),
                     ),
-                  ),
-              ],
+                ],
+              ),
             ),
         ],
         if (l.tags.isNotEmpty) ...[
           heading(tr(context, 'Tags', 'Thẻ')),
-          Wrap(
-            spacing: HandySpace.s,
-            runSpacing: HandySpace.s,
-            children: [
-              for (final t in l.tags)
-                InputChip(
-                  key: Key('tagplace-$t'),
-                  label: Text('#$t'),
-                  selected: marking && v.place == Place.tag && v.id == t,
-                  showCheckmark: false,
-                  onPressed: () => onPick(Place.tag, t),
-                  deleteIcon: const Icon(Icons.edit_outlined, size: 16),
-                  deleteButtonTooltipMessage: tr(context, 'Rename', 'Đổi tên'),
-                  onDeleted: () => scope.renameTag(context, t),
-                ),
-            ],
+          Capped(
+            name: 'tags',
+            count: l.tags.length,
+            max: 12,
+            open:
+                marking &&
+                v.place == Place.tag &&
+                l.tags.indexOf(v.id ?? '') >= 12,
+            builder: (context, shown) => Wrap(
+              spacing: HandySpace.s,
+              runSpacing: HandySpace.s,
+              children: [
+                for (final t in l.tags.take(shown))
+                  InputChip(
+                    key: Key('tagplace-$t'),
+                    label: Text('#$t'),
+                    selected: marking && v.place == Place.tag && v.id == t,
+                    showCheckmark: false,
+                    onPressed: () => onPick(Place.tag, t),
+                    deleteIcon: const Icon(Icons.edit_outlined, size: 16),
+                    deleteButtonTooltipMessage: tr(
+                      context,
+                      'Rename',
+                      'Đổi tên',
+                    ),
+                    onDeleted: () => scope.renameTag(context, t),
+                  ),
+              ],
+            ),
           ),
         ],
         // Smart collections and saved searches are no longer offered to

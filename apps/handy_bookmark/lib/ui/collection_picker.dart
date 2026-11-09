@@ -1,5 +1,6 @@
 import 'package:handy_bookmark_engine/handy_bookmark_engine.dart';
 import 'package:handy_ui/kit.dart';
+import 'capped.dart';
 import '../collections/identity.dart';
 
 /// Collections in tree order with their depth.
@@ -101,17 +102,30 @@ Future<String?> pickCollection(
               title: Text(tr(context, 'Not sorted', 'Chưa xếp')),
               onTap: () => Navigator.pop(context, ''),
             ),
-          for (final (c, depth) in collectionTree(l))
-            ListTile(
-              key: Key('pick-${c.id}'),
-              contentPadding: EdgeInsets.only(
-                left: HandySpace.l + depth * 24.0,
-                right: HandySpace.l,
-              ),
-              leading: const Icon(Icons.folder_outlined),
-              title: Text(c.name, maxLines: 1, overflow: TextOverflow.ellipsis),
-              onTap: () => Navigator.pop(context, c.id),
+          Capped(
+            name: 'pick',
+            count: collectionTree(l).length,
+            max: 8,
+            builder: (context, shown) => Column(
+              children: [
+                for (final (c, depth) in collectionTree(l).take(shown))
+                  ListTile(
+                    key: Key('pick-${c.id}'),
+                    contentPadding: EdgeInsets.only(
+                      left: HandySpace.l + depth * 24.0,
+                      right: HandySpace.l,
+                    ),
+                    leading: const Icon(Icons.folder_outlined),
+                    title: Text(
+                      c.name,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    onTap: () => Navigator.pop(context, c.id),
+                  ),
+              ],
             ),
+          ),
         ],
       ),
     ),

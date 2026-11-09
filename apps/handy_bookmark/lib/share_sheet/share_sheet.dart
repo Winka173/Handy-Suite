@@ -2,6 +2,7 @@ import 'dart:io';
 import 'package:flutter/services.dart';
 import 'package:handy_bookmark_engine/handy_bookmark_engine.dart';
 import 'package:handy_ui/kit.dart';
+import '../ui/capped.dart';
 import '../collections/identity.dart';
 import '../design/identity.dart';
 import '../design/theme.dart';
@@ -774,21 +775,24 @@ class _Places extends StatelessWidget {
                 ? tr(context, 'New', 'Mới')
                 : [?s.parent, links(s.count)].join(' · '),
           ),
-      // In a collection already (its share shortcut): it can come out.
-      if (from != null)
-        place(
-          const NotSorted(),
-          key: const Key('share-place-inbox'),
-          leading: Container(
-            width: 36,
-            height: 36,
-            decoration: BoxDecoration(color: p.sunk, shape: BoxShape.circle),
-            child: Icon(Icons.inbox_outlined, size: 20, color: p.ink),
-          ),
-          title: tr(context, 'Not sorted', 'Chưa xếp'),
-          note: tr(context, 'Take it out of $from', 'Bỏ ra khỏi $from'),
-        ),
     ];
+
+    // In a collection already (its share shortcut): it can come out. It
+    // comes first, never below a long list.
+    final takeOut = from == null
+        ? null
+        : place(
+            const NotSorted(),
+            key: const Key('share-place-inbox'),
+            leading: Container(
+              width: 36,
+              height: 36,
+              decoration: BoxDecoration(color: p.sunk, shape: BoxShape.circle),
+              child: Icon(Icons.inbox_outlined, size: 20, color: p.ink),
+            ),
+            title: tr(context, 'Not sorted', 'Chưa xếp'),
+            note: tr(context, 'Take it out of $from', 'Bỏ ra khỏi $from'),
+          );
 
     return ListView(
       key: const Key('share-sheet-places'),
@@ -796,8 +800,18 @@ class _Places extends StatelessWidget {
       padding: const EdgeInsets.only(bottom: 8),
       children: [
         ?naming,
-        ...rows,
-        if (rows.isEmpty && naming == null)
+        ?takeOut,
+        // The six that last got something; the rest one tap away.
+        Capped(
+          name: 'share-sheet',
+          count: rows.length,
+          max: 6,
+          builder: (context, shown) => Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: rows.take(shown).toList(),
+          ),
+        ),
+        if (rows.isEmpty && takeOut == null && naming == null)
           Padding(
             key: const Key('share-sheet-no-collections'),
             padding: const EdgeInsets.fromLTRB(20, 8, 20, 16),

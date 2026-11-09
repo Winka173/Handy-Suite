@@ -7,6 +7,7 @@ import '../collections/share_collection.dart';
 import '../controller.dart';
 import '../scope.dart';
 import '../design/theme.dart';
+import '../ui/capped.dart';
 import '../ui/collection_picker.dart';
 import 'pastel_blocks.dart';
 import '../view/library_view.dart';
@@ -22,12 +23,17 @@ class CollectionCovers extends StatelessWidget {
   /// in the person's own order, and a See all).
   final VoidCallback? onAll;
   final int? limit;
+
+  /// The whole tree, but only its first [cap] tiles until "Show all" is
+  /// pressed (the phone's Library, so its tags stay near).
+  final int? cap;
   const CollectionCovers({
     super.key,
     required this.scope,
     required this.onOpen,
     this.onAll,
     this.limit,
+    this.cap,
   });
 
   @override
@@ -42,6 +48,10 @@ class CollectionCovers extends StatelessWidget {
       list.sort((a, b) => b.savedAt.compareTo(a.savedAt));
     }
     final names = {for (final c in l.collections) c.id: c.name};
+    final shelf = [
+      for (final e in collectionTree(l))
+        if (limit == null || e.$1.parentId == null) e,
+    ].take(limit ?? 1 << 20).toList();
     // See all at the right of the heading; making one is a tile of its
     // own at the end of the grid, its words written out.
     final action = onAll == null
@@ -82,48 +92,50 @@ class CollectionCovers extends StatelessWidget {
             ),
           )
         else
-          LayoutBuilder(
-            builder: (context, box) {
-              final columns = (box.maxWidth / 170).floor().clamp(
-                box.maxWidth < 300 ? 1 : 2,
-                limit == null ? 5 : 6,
-              );
-              const gap = HandySpace.m;
-              final width = (box.maxWidth - gap * (columns - 1)) / columns;
-              return Wrap(
-                spacing: gap,
-                runSpacing: HandySpace.l,
-                children: [
-                  for (final (col, _) in [
-                    for (final e in collectionTree(l))
-                      if (limit == null || e.$1.parentId == null) e,
-                  ].take(limit ?? 1 << 20))
-                    SizedBox(
-                      key: ValueKey('in-${col.id}'),
-                      width: width,
-                      child: HandyAppear(
-                        child: CollectionCover(
-                          scope: scope,
-                          collection: col,
-                          parent: col.parentId == null
-                              ? null
-                              : names[col.parentId],
-                          hue: collectionHue(l, col.id),
-                          items: byCollection[col.id] ?? const [],
-                          cover: scope.view.chosenCover(col.id),
-                          onOpen: () => onOpen(col),
+          Capped(
+            name: 'covers',
+            count: shelf.length,
+            max: cap ?? shelf.length,
+            builder: (context, shown) => LayoutBuilder(
+              builder: (context, box) {
+                final columns = (box.maxWidth / 170).floor().clamp(
+                  box.maxWidth < 300 ? 1 : 2,
+                  limit == null ? 5 : 6,
+                );
+                const gap = HandySpace.m;
+                final width = (box.maxWidth - gap * (columns - 1)) / columns;
+                return Wrap(
+                  spacing: gap,
+                  runSpacing: HandySpace.l,
+                  children: [
+                    for (final (col, _) in shelf.take(shown))
+                      SizedBox(
+                        key: ValueKey('in-${col.id}'),
+                        width: width,
+                        child: HandyAppear(
+                          child: CollectionCover(
+                            scope: scope,
+                            collection: col,
+                            parent: col.parentId == null
+                                ? null
+                                : names[col.parentId],
+                            hue: collectionHue(l, col.id),
+                            items: byCollection[col.id] ?? const [],
+                            cover: scope.view.chosenCover(col.id),
+                            onOpen: () => onOpen(col),
+                          ),
                         ),
                       ),
+                    SizedBox(
+                      width: width,
+                      child: _NewCollectionTile(
+                        onTap: () => scope.editCollection(context),
+                      ),
                     ),
-                  SizedBox(
-                    width: width,
-                    child: _NewCollectionTile(
-                      onTap: () => scope.editCollection(context),
-                    ),
-                  ),
-                ],
-              );
-            },
+                  ],
+                );
+              },
+            ),
           ),
       ],
     );

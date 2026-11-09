@@ -267,12 +267,9 @@ class AllCollections extends StatelessWidget {
       HandySpace.xxl,
     ),
     children: [
-      CollectionCovers(
-        scope: scope,
-        onOpen: (c) => onPick(Place.collection, c.id),
-      ),
-      const SizedBox(height: HandySpace.l),
-      // Sharing with friends: send some collections, add ones sent here.
+      // Sharing with friends, above the tiles so a long shelf never pushes
+      // it down: send some collections, add ones sent here.
+      const SizedBox(height: HandySpace.s),
       Wrap(
         spacing: HandySpace.s,
         runSpacing: HandySpace.s,
@@ -297,6 +294,11 @@ class AllCollections extends StatelessWidget {
             ),
           ),
         ],
+      ),
+      const SizedBox(height: HandySpace.l),
+      CollectionCovers(
+        scope: scope,
+        onOpen: (c) => onPick(Place.collection, c.id),
       ),
     ],
   );
