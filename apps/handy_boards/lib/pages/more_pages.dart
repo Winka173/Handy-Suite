@@ -173,8 +173,8 @@ class TrashPage extends StatelessWidget {
                       child: Text(
                         tr(
                           context,
-                          'Deleted cards wait here until you delete them for good. Put back returns a card to the column it was in.',
-                          'Thẻ đã xoá nằm ở đây cho tới khi bạn xoá vĩnh viễn. Khôi phục đưa thẻ về đúng cột cũ.',
+                          'Each card is deleted for good 30 days after you deleted it. Put back returns it to the column it was in.',
+                          'Mỗi thẻ bị xoá vĩnh viễn 30 ngày sau khi bạn xoá. Khôi phục đưa thẻ về đúng cột cũ.',
                         ),
                         style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                           color: BoardsPalette.of(context).muted,
@@ -205,12 +205,30 @@ class TrashPage extends StatelessWidget {
                           'deleted $days days ago',
                           'xoá $days ngày trước',
                         );
+                  // How long it stays: the same rule as the app empties by.
+                  final end = trashExpiry(t)?.toLocal();
+                  final left = end == null
+                      ? null
+                      : daysBetween(
+                          calendarDay(scope.clock()),
+                          calendarDay(end),
+                        ).clamp(0, 9999);
+                  final stays = left == null
+                      ? null
+                      : left <= 1
+                      ? tr(
+                          context,
+                          'goes for good tomorrow',
+                          'mai sẽ bị xoá vĩnh viễn',
+                        )
+                      : tr(context, '$left days left', 'còn $left ngày');
                   final where = [
                     b?.str('title') ?? '',
                     if (column != null) column.str('title'),
                   ].where((x) => x.isNotEmpty).join(' › ');
                   final extra = [
                     ?when,
+                    ?stays,
                     if (subtasks > 0)
                       tr(
                         context,

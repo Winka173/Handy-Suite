@@ -132,6 +132,7 @@ class _BoardsAppState extends State<BoardsApp> with WidgetsBindingObserver {
 
   void _started() {
     _tidy();
+    unawaited(_emptyOldTrash());
     // On a device only, like afterCommit (tests pass their own controller).
     if (widget.controller == null && c.state != null) {
       final s = c.state!;
@@ -248,6 +249,19 @@ class _BoardsAppState extends State<BoardsApp> with WidgetsBindingObserver {
 
   /// Once per start: older data becomes one-level Kanban (nothing lost),
   /// and the archive preset runs if it is on.
+  /// Cards trashed more than 30 days ago go for good, as the trash says.
+  Future<void> _emptyOldTrash() async {
+    final s = c.state;
+    if (s == null) return;
+    final old = expiredTrash(s, scope.clock());
+    if (old.isEmpty) return;
+    try {
+      await c.change((s) => permanentlyDelete(s, old, confirmed: true));
+    } catch (_) {
+      /* Tried again next time the app opens; nothing is lost. */
+    }
+  }
+
   Future<void> _tidy() async {
     if (tidied || c.state == null) return;
     tidied = true;

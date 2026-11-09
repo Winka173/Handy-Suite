@@ -389,6 +389,24 @@ BoardsState trashTasks(
   return e.finish();
 }
 
+/// How long a card waits in the trash before it is deleted for good.
+const trashRetention = Duration(days: 30);
+
+/// When a trashed card goes for good: [trashRetention] after it was
+/// trashed. Null for a card not in the trash (or without a time).
+DateTime? trashExpiry(BoardRecord t) {
+  if (!t.flag('trashed')) return null;
+  final at = DateTime.tryParse(t.str('trashedAt'));
+  return at?.add(trashRetention);
+}
+
+/// Cards whose time in the trash is over at [now], ready for
+/// [permanentlyDelete].
+Set<String> expiredTrash(BoardsState s, DateTime now) => {
+  for (final t in s.rows('tasks'))
+    if (trashExpiry(t) case final end? when !end.isAfter(now.toUtc())) t.id,
+};
+
 BoardsState permanentlyDelete(
   BoardsState s,
   Set<String> ids, {
