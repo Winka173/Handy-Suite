@@ -226,25 +226,43 @@ Future<void> boardMenu(
         tr(sheet, 'Show and set up', 'Hiển thị và cấu trúc'),
         key: const Key('menu-sec-setup'),
       ),
-      _row(
-        sheet,
-        detailed ? Icons.view_agenda_outlined : Icons.view_stream_outlined,
-        detailed
-            ? tr(sheet, 'Show compact cards', 'Hiện thẻ gọn')
-            : tr(sheet, 'Show subtasks on cards', 'Hiện việc con trên thẻ'),
-        () => then(
+      // One switch that always says the same thing (it was a row whose
+      // words flipped between two opposite actions).
+      SwitchListTile(
+        key: const Key('menu-presentation'),
+        secondary: Icon(
+          Icons.checklist_rounded,
+          color: BoardsPalette.of(sheet).muted,
+        ),
+        title: Text(
+          tr(sheet, 'Show subtasks on cards', 'Hiện việc con trên thẻ'),
+        ),
+        subtitle: Text(
+          detailed
+              ? tr(
+                  sheet,
+                  'Each card lists its subtasks to tick',
+                  'Mỗi thẻ liệt kê việc con để tích',
+                )
+              : tr(
+                  sheet,
+                  'Cards show only their count, like 1/3',
+                  'Thẻ chỉ hiện số đếm, như 1/3',
+                ),
+        ),
+        value: detailed,
+        onChanged: (on) => then(
           () => scope.run(
             context,
             () => scope.controller.change(
               (s) => setBoardLook(
                 s,
                 board,
-                presentation: detailed ? 'compact' : 'detailed',
+                presentation: on ? 'detailed' : 'compact',
               ),
             ),
           ),
         ),
-        key: const Key('menu-presentation'),
       ),
       _row(
         sheet,
