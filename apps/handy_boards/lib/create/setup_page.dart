@@ -1,5 +1,6 @@
 import 'package:handy_boards_engine/handy_boards_engine.dart';
 import 'package:handy_ui/kit.dart';
+import 'field_effect.dart';
 import '../board/board_menus.dart' show ProBadge;
 import '../design/theme.dart';
 import '../pro/pro.dart';
@@ -375,11 +376,50 @@ class _SetupPageState extends State<SetupPage> {
         onChanged: (v) => _set(f.id, v),
       ),
     };
+    // What this answer puts on the board, with the answer as it stands.
+    final effect = Container(
+      key: Key('setup-effect-${f.id}'),
+      margin: const EdgeInsets.only(top: 10),
+      padding: const EdgeInsets.fromLTRB(12, 10, 12, 10),
+      decoration: BoxDecoration(
+        color: p.tint,
+        borderRadius: BorderRadius.circular(BoardsRadii.control),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(Icons.view_kanban_outlined, size: 18, color: p.pressed),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Text.rich(
+              TextSpan(
+                children: [
+                  TextSpan(
+                    text: tr(context, 'On the board: ', 'Trên bảng: '),
+                    style: const TextStyle(fontWeight: FontWeight.w700),
+                  ),
+                  TextSpan(
+                    text: fieldEffect(
+                      context,
+                      widget.template,
+                      f,
+                      value,
+                      widget.scope.clock(),
+                    ),
+                  ),
+                ],
+              ),
+              style: theme.textTheme.bodySmall?.copyWith(color: p.ink),
+            ),
+          ),
+        ],
+      ),
+    );
     return Padding(
       padding: const EdgeInsets.only(bottom: 24),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [head, body],
+        children: [head, body, effect],
       ),
     );
   }
