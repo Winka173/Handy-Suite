@@ -504,6 +504,13 @@ class ResultsView extends StatelessWidget {
                   tr(sheet, 'Design an export', 'Thiết kế bản xuất'),
                   (context) =>
                       Navigator.pushNamed(context, '/export/${self.id}'),
+                  subtitle: hasPro(sheet)
+                      ? null
+                      : tr(
+                          sheet,
+                          'A designed PDF or web page (Pro)',
+                          'PDF hoặc trang web có thiết kế (Pro)',
+                        ),
                 ),
                 if (pictured)
                   row(

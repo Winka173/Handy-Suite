@@ -3,6 +3,7 @@ import 'package:flutter/rendering.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:handy_bookmark_engine/handy_bookmark_engine.dart';
 import 'package:handy_ui/kit.dart';
+import '../pro/entitlements.dart';
 import '../design/theme.dart';
 import '../services/metadata_types.dart' show readingMaxHtmlBytes;
 import 'find_in_text.dart';
@@ -623,7 +624,9 @@ class ArticleViewState extends State<ArticleView> {
                 ...state.contextMenuButtonItems,
                 if (widget.onHighlight != null && _selected.trim().isNotEmpty)
                   ContextMenuButtonItem(
-                    label: tr(context, 'Highlight', 'Đánh dấu'),
+                    label: hasPro(context)
+                        ? tr(context, 'Highlight', 'Đánh dấu')
+                        : tr(context, 'Highlight (Pro)', 'Đánh dấu (Pro)'),
                     onPressed: () {
                       final text = _selected;
                       ContextMenuController.removeAny();

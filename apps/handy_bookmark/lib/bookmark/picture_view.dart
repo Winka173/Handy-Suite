@@ -3,6 +3,7 @@ import '../pro/picture_text.dart';
 import 'package:flutter/services.dart';
 import 'package:handy_bookmark_engine/handy_bookmark_engine.dart';
 import 'package:handy_ui/kit.dart';
+import '../pro/entitlements.dart';
 import '../controller.dart';
 import '../design/theme.dart';
 import 'detail_facts.dart' show fileSize;
@@ -95,7 +96,13 @@ class _PictureViewState extends State<PictureView> {
             actions: [
               IconButton(
                 key: const Key('picture-read-text'),
-                tooltip: tr(context, 'Copy text', 'Chép chữ trong ảnh'),
+                tooltip: hasPro(context)
+                    ? tr(context, 'Copy text', 'Chép chữ trong ảnh')
+                    : tr(
+                        context,
+                        'Copy text (Pro)',
+                        'Chép chữ trong ảnh (Pro)',
+                      ),
                 icon: const Icon(Icons.document_scanner_outlined),
                 onPressed: () =>
                     showPictureText(context, widget.controller, widget.item),

@@ -3,6 +3,7 @@ import 'package:handy_ui/kit.dart';
 import 'package:handy_monetization/handy_monetization.dart';
 import '../home/my_work_page.dart';
 import '../card/card_templates_ui.dart';
+import '../board/board_menus.dart' show ProBadge;
 import '../design/theme.dart';
 import '../features/portability.dart';
 import '../pro/pro.dart';
@@ -169,6 +170,14 @@ class SettingsPage extends StatelessWidget {
               SettingsPanel(
                 gap: false,
                 rows: [
+                  if (!pro)
+                    const Padding(
+                      padding: EdgeInsets.fromLTRB(16, 12, 16, 0),
+                      child: Align(
+                        alignment: Alignment.centerLeft,
+                        child: ProBadge(),
+                      ),
+                    ),
                   SettingsSwitch(
                     key: const Key('auto-subtasks-done'),
                     icon: Icons.task_alt,
@@ -227,6 +236,7 @@ class SettingsPage extends StatelessWidget {
                     key: const Key('settings-card-templates'),
                     icon: Icons.content_copy_outlined,
                     title: tr(context, 'My card templates', 'Mẫu thẻ của tôi'),
+                    trailing: pro ? null : const ProBadge(),
                     navigates: true,
                     onTap: () async {
                       if (!await requirePro(

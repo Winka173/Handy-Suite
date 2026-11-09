@@ -239,6 +239,18 @@ class _BoardPageState extends State<BoardPage> {
     );
   }
 
+  /// A chip's words, with the Pro tag when this person has no Pro.
+  Widget _proLabel(String text) => hasPro(context)
+      ? Text(text)
+      : Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Flexible(child: Text(text, overflow: TextOverflow.ellipsis)),
+            const SizedBox(width: 6),
+            const ProBadge(),
+          ],
+        );
+
   /// The band's New card: a name, then the card lands at the end of the
   /// board's first column (in the picked category, as an inline add does).
   Future<void> _newCard() async {
@@ -375,7 +387,8 @@ class _BoardPageState extends State<BoardPage> {
                             : Icons.filter_alt,
                         size: 18,
                       ),
-                      label: Text(
+                      // Saved filters are Pro: said on the chip itself.
+                      label: _proLabel(
                         saved?.str('title') ?? tr(context, 'Filters', 'Bộ lọc'),
                       ),
                       onPressed: () {
@@ -622,7 +635,7 @@ class _BoardPageState extends State<BoardPage> {
         saved == null ? Icons.filter_alt_outlined : Icons.filter_alt,
         size: 18,
       ),
-      label: Text(saved?.str('title') ?? tr(context, 'Filters', 'Bộ lọc')),
+      label: _proLabel(saved?.str('title') ?? tr(context, 'Filters', 'Bộ lọc')),
       onPressed: _filters,
     );
     final due = FilterChip(
