@@ -3258,10 +3258,7 @@ Lần trước chỉ áp màu và vài chi tiết lên màn cũ nên khác bản
 - Chữ trên dải: tên màu trắng 700. Dòng phụ dùng `bandSub` (`#CFE5E6` / `#F3DDEE`). Số in đậm màu trắng.
 - Màn rộng: nút lọc chuyển từ thanh trên xuống dải, nên thanh trên chỉ còn Tìm và Thêm.
 - Mục đang chọn ở thanh bên: nền màu dải, chữ trắng, số đếm `bandSub`.
-- Bookmark, thẻ hàng chờ:
-  - **Chưa xếp**: nền màu dải, mũi tên vàng.
-  - **Chờ xem lại**: bản sáng dùng tint xanh nhạt như mock. Bản tối dùng nền đất nung (`surface` pha 20% `warm`) và mũi tên `warm`, vì tint xanh tối quá gần màu dải (chủ góp ý).
-  - Điện thoại: hai thẻ tách rời, cách 8pt, nằm ngay dưới dải, rồi mới tới Hẹn đọc (đúng mock).
+- Bookmark, thẻ hàng chờ: **Chưa xếp** và **Chờ xem lại** cùng nền tint xanh nhạt, mũi tên màu link (chủ chọn, thay bản thẻ Chưa xếp màu dải và nền đất nung ở bản tối). Điện thoại: hai thẻ tách rời, cách 8pt, ngay dưới dải, rồi mới tới Hẹn đọc (đúng mock).
 - Pro looks của Bookmark: dải lấy chính màu của look, làm đậm tới mức chữ trắng đọc được.
 
 **Màu nền và chữ**

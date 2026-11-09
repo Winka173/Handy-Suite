@@ -70,7 +70,6 @@ class HomeQueues extends StatelessWidget {
         _QueueRow(
           key: const Key('home-quick-sort'),
           scope: scope,
-          strong: true,
           faces: unsorted,
           title: tr(
             context,
@@ -108,10 +107,9 @@ class HomeQueues extends StatelessWidget {
           onTap: onFocus,
         ),
     ];
-    // Not sorted is the job to do, so it sits on the deep band colour;
-    // the revisit queue stays on the pale tint.
+    // Both queues on the same pale tint (owner's choice, 2026-11-09).
     Widget card(Widget child) => Material(
-      color: _queueField(context, child is _QueueRow && child.strong),
+      color: p.tint,
       borderRadius: BorderRadius.circular(BookmarkRadii.item),
       clipBehavior: Clip.antiAlias,
       child: child,
@@ -142,29 +140,13 @@ class HomeQueues extends StatelessWidget {
   }
 }
 
-/// A queue card's field. Not sorted sits on the deep band colour. On a
-/// light ground the revisit queue is the pale teal tint; on a dark one
-/// that tint is too close to the band, so it takes a warm terracotta
-/// field instead and the two read as different jobs.
-Color _queueField(BuildContext context, bool strong) {
-  final p = BookmarkPalette.of(context);
-  if (strong) return p.band;
-  return Theme.of(context).brightness == Brightness.dark
-      ? Color.lerp(p.surface, p.warm, .2)!
-      : p.tint;
-}
-
 class _QueueRow extends StatelessWidget {
   final SaveScope scope;
   final List<Bookmark> faces;
   final String title, subtitle;
   final VoidCallback onTap;
-
-  /// On the deep band colour: white words and a gold arrow.
-  final bool strong;
   const _QueueRow({
     super.key,
-    this.strong = false,
     required this.scope,
     required this.faces,
     required this.title,
@@ -205,7 +187,7 @@ class _QueueRow extends StatelessWidget {
                           height: 44,
                           padding: const EdgeInsets.all(2),
                           decoration: BoxDecoration(
-                            color: _queueField(context, strong),
+                            color: p.tint,
                             borderRadius: BorderRadius.circular(12),
                           ),
                           child: ItemPicture(
@@ -228,14 +210,14 @@ class _QueueRow extends StatelessWidget {
                       title,
                       style: theme.textTheme.titleSmall?.copyWith(
                         fontWeight: FontWeight.w700,
-                        color: strong ? p.bandInk : p.ink,
+                        color: p.ink,
                       ),
                     ),
                     const SizedBox(height: 2),
                     Text(
                       subtitle,
                       style: theme.textTheme.bodySmall?.copyWith(
-                        color: strong ? p.bandSub : p.muted,
+                        color: p.muted,
                       ),
                     ),
                   ],
@@ -244,10 +226,8 @@ class _QueueRow extends StatelessWidget {
               const SizedBox(width: 8),
               Icon(
                 Icons.arrow_forward_rounded,
-                color: strong
-                    ? p.gold
-                    : Theme.of(context).brightness == Brightness.dark
-                    ? p.warm
+                color: Theme.of(context).brightness == Brightness.dark
+                    ? p.primary
                     : p.pressed,
               ),
             ],
