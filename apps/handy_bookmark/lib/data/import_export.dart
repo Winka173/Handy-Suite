@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:handy_bookmark_engine/handy_bookmark_engine.dart';
 import 'package:handy_ui/kit.dart';
+import '../collections/receive_collections.dart';
 import '../controller.dart';
 import '../scope.dart';
 
@@ -384,6 +385,11 @@ extension ImportExport on SaveScope {
   ) async {
     final file = (name: fileName, bytes: raw);
     // A password-locked automatic backup opens to the same ZIP.
+    // Collections a friend sent: their own preview, never a restore.
+    if (isSharedCollections(file.bytes)) {
+      await receiveCollections(context, file.bytes);
+      return;
+    }
     final bytes = await openSealedBackup(context, file.bytes);
     if (bytes == null || !context.mounted) return;
     final name = file.name.toLowerCase().endsWith('.hseal')

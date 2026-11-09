@@ -1,4 +1,6 @@
 import 'package:handy_ui/kit.dart';
+import '../collections/share_collection.dart';
+import '../data/import_export.dart';
 import '../design/theme.dart';
 import '../scope.dart';
 import '../shell/places_list.dart';
@@ -17,6 +19,26 @@ class LibraryPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) => Scaffold(
     appBar: AppBar(
+      actions: [
+        if (scope.library.collections.isNotEmpty)
+          IconButton(
+            key: const Key('collections-send'),
+            tooltip: tr(context, 'Send collections', 'Gửi bộ sưu tập'),
+            onPressed: () => scope.sendCollections(context),
+            icon: const Icon(Icons.send_rounded),
+          ),
+        IconButton(
+          key: const Key('collections-receive'),
+          tooltip: tr(
+            context,
+            'Add collections sent to you',
+            'Thêm bộ sưu tập được gửi cho bạn',
+          ),
+          onPressed: () => scope.importLinks(context),
+          icon: const Icon(Icons.move_to_inbox_outlined),
+        ),
+        const SizedBox(width: HandySpace.s),
+      ],
       title: Semantics(
         header: true,
         child: Text(

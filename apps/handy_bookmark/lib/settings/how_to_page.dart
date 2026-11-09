@@ -211,8 +211,8 @@ List<_Topic> _topics(BuildContext context) => [
       _Step(
         tr(
           context,
-          'New saves wait in Not sorted on Home. Tap one of the collections under a save to put it there, or Other… for the rest.',
-          'Mục mới chờ ở khung Chưa xếp trên Trang chủ. Bấm một bộ sưu tập dưới mục để cho vào đó, hoặc Khác… để chọn chỗ khác.',
+          'New saves wait in Not sorted. Tap "saves not sorted" on Home to sort quickly: one tap puts each in a collection (Other… for the rest), and Undo takes back a slip.',
+          'Mục mới chờ ở Chưa xếp. Bấm thẻ "mục chưa xếp" trên Trang chủ để Xếp nhanh: một chạm cho từng mục vào bộ sưu tập (Khác… để chọn chỗ khác), lỡ tay thì Hoàn tác.',
         ),
         picture: const MockPutIn(),
       ),
@@ -249,8 +249,8 @@ List<_Topic> _topics(BuildContext context) => [
       _Step(
         tr(
           context,
-          'In a collection, tap … › New collection inside to keep smaller groups in it.',
-          'Trong một bộ sưu tập, bấm … › Bộ sưu tập con mới để chia nhỏ bên trong.',
+          'Pro: in a collection, tap … › New folder to keep smaller groups in it (one level).',
+          'Pro: trong một bộ sưu tập, bấm … › Thư mục mới để chia nhỏ bên trong (một cấp).',
         ),
         picture: MockRows(
           rows: [
@@ -260,7 +260,7 @@ List<_Topic> _topics(BuildContext context) => [
             ),
             (
               Icons.create_new_folder_outlined,
-              tr(context, 'New collection inside', 'Bộ sưu tập con mới'),
+              tr(context, 'New folder', 'Thư mục mới'),
             ),
           ],
           ringed: 1,
@@ -387,6 +387,13 @@ List<_Topic> _topics(BuildContext context) => [
           'Cài đặt › Chung › Nhắc mỗi tuần báo khi có mục mới chưa xem. Chỉ ghi số lượng, không ghi tiêu đề.',
         ),
       ),
+      _Step(
+        tr(
+          context,
+          'On Android, home-screen widgets keep a quick Save, your reading queue or a collection one tap away: Settings › General › Home-screen widgets. Pro adds picks and a picture gallery.',
+          'Trên Android, widget màn hình chính đặt nút Lưu nhanh, hàng chờ đọc hoặc một bộ sưu tập cách bạn một chạm: Cài đặt › Chung › Widget màn hình chính. Pro thêm gợi ý và thư viện ảnh.',
+        ),
+      ),
     ],
   ),
   _Topic(
@@ -395,8 +402,8 @@ List<_Topic> _topics(BuildContext context) => [
     tr(context, 'Share with others', 'Chia sẻ cho người khác'),
     tr(
       context,
-      'One item, or a whole collection as a page.',
-      'Một mục, hoặc cả bộ sưu tập thành một trang.',
+      'One item, or collections a friend can add to their own Handy Bookmark.',
+      'Một mục, hoặc các bộ sưu tập để bạn bè thêm vào Handy Bookmark của họ.',
     ),
     [
       _Step(
@@ -409,21 +416,55 @@ List<_Topic> _topics(BuildContext context) => [
       _Step(
         tr(
           context,
-          'In a collection, tap … › Share as a page. Pro: Design an export makes a PDF or a web page in a chosen design.',
-          'Trong một bộ sưu tập, bấm … › Chia sẻ thành trang. Pro: Thiết kế bản xuất tạo PDF hoặc trang web theo mẫu bạn chọn.',
+          'Send collections: Collections › See all › Send, pick one or several, and share the one file it makes (or … › Send to friends in a collection). Anyone can open it in a browser.',
+          'Gửi bộ sưu tập: Bộ sưu tập › Xem tất cả › Gửi, chọn một hay nhiều bộ, rồi chia sẻ tệp vừa tạo (hoặc … › Gửi cho bạn bè trong một bộ). Ai cũng mở được bằng trình duyệt.',
         ),
         picture: MockRows(
           ringed: 0,
           rows: [
             (
-              Icons.ios_share,
-              tr(context, 'Share as a page', 'Chia sẻ thành trang'),
+              Icons.send_rounded,
+              tr(context, 'Send to friends', 'Gửi cho bạn bè'),
             ),
             (
               Icons.auto_awesome_outlined,
               tr(context, 'Design an export', 'Thiết kế bản xuất'),
             ),
           ],
+        ),
+      ),
+      _Step(
+        tr(
+          context,
+          'Got one from a friend? Save the file, then Collections › See all › Add collections sent to you. You see what it holds first; links you already have are not added twice, and a name you already use gets "(shared)".',
+          'Được bạn bè gửi? Lưu tệp, rồi Bộ sưu tập › Xem tất cả › Thêm bộ sưu tập được gửi cho bạn. Bạn xem trước tệp có gì; link đã có không bị thêm lần nữa, bộ trùng tên được thêm chữ "(từ bạn)".',
+        ),
+        picture: MockRows(
+          ringed: 0,
+          rows: [
+            (
+              Icons.move_to_inbox_outlined,
+              tr(
+                context,
+                'Add collections sent to you',
+                'Thêm bộ sưu tập được gửi cho bạn',
+              ),
+            ),
+          ],
+        ),
+      ),
+      _Step(
+        tr(
+          context,
+          'Folders inside them stay folders with Pro. Without Pro they go into their collection, and each folder name becomes a tag, so nothing is lost.',
+          'Thư mục bên trong được giữ nguyên với Pro. Không có Pro thì chúng gộp vào bộ sưu tập, và tên thư mục thành thẻ, nên không mất gì.',
+        ),
+      ),
+      _Step(
+        tr(
+          context,
+          'Open an item › Make a study card in Handy Recall, when Handy Recall is on this device. Pro: Design an export makes a PDF or a web page in a chosen design.',
+          'Mở một mục › Tạo thẻ ôn trong Handy Recall, khi máy có Handy Recall. Pro: Thiết kế bản xuất tạo PDF hoặc trang web theo mẫu bạn chọn.',
         ),
       ),
     ],
@@ -544,8 +585,8 @@ List<_Topic> _topics(BuildContext context) => [
       _Step(
         tr(
           context,
-          'Copy text from pictures, Auto organize, smart collections, and designed exports.',
-          'Chép chữ trong ảnh, Tự sắp xếp, bộ sưu tập thông minh, và bản xuất có thiết kế.',
+          'Copy text from pictures, Auto organize, smart collections, folders inside collections, batch tools, more widgets, and designed exports.',
+          'Chép chữ trong ảnh, Tự sắp xếp, bộ sưu tập thông minh, thư mục trong bộ sưu tập, công cụ hàng loạt, thêm widget, và bản xuất có thiết kế.',
         ),
       ),
       _Step(

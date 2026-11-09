@@ -495,8 +495,8 @@ class ResultsView extends StatelessWidget {
                   ),
                 row(
                   const Key('collection-share'),
-                  Icons.ios_share,
-                  tr(sheet, 'Share as a page', 'Chia sẻ thành trang'),
+                  Icons.send_rounded,
+                  tr(sheet, 'Send to friends', 'Gửi cho bạn bè'),
                   (context) => scope.shareCollection(context, self.id),
                 ),
                 row(

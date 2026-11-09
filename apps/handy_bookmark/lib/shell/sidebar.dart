@@ -1,6 +1,8 @@
 import 'package:handy_bookmark_engine/handy_bookmark_engine.dart';
 import 'package:handy_ui/kit.dart';
 import '../design/theme.dart';
+import '../collections/share_collection.dart';
+import '../data/import_export.dart';
 import '../home/collection_covers.dart';
 import '../home/home_queues.dart';
 import '../home/home_sections.dart';
@@ -253,6 +255,33 @@ class AllCollections extends StatelessWidget {
       CollectionCovers(
         scope: scope,
         onOpen: (c) => onPick(Place.collection, c.id),
+      ),
+      const SizedBox(height: HandySpace.l),
+      // Sharing with friends: send some collections, add ones sent here.
+      Wrap(
+        spacing: HandySpace.s,
+        runSpacing: HandySpace.s,
+        children: [
+          if (scope.library.collections.isNotEmpty)
+            OutlinedButton.icon(
+              key: const Key('collections-send'),
+              onPressed: () => scope.sendCollections(context),
+              icon: const Icon(Icons.send_rounded, size: 20),
+              label: Text(tr(context, 'Send collections', 'Gửi bộ sưu tập')),
+            ),
+          OutlinedButton.icon(
+            key: const Key('collections-receive'),
+            onPressed: () => scope.importLinks(context),
+            icon: const Icon(Icons.move_to_inbox_outlined, size: 20),
+            label: Text(
+              tr(
+                context,
+                'Add collections sent to you',
+                'Thêm bộ sưu tập được gửi cho bạn',
+              ),
+            ),
+          ),
+        ],
       ),
     ],
   );

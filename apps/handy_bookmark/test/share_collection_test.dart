@@ -1,6 +1,9 @@
+import 'dart:convert';
 import 'dart:typed_data';
+import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:handy_bookmark/collections/share_collection.dart';
+import 'package:handy_bookmark/pro/entitlements.dart';
 import 'package:handy_bookmark/services/media_import.dart';
 import 'package:handy_bookmark_engine/handy_bookmark_engine.dart';
 import 'package:image/image.dart' as img;
@@ -78,11 +81,125 @@ void main() {
       reminders: SaveReminders(),
       tasks: LinkTasks(c),
     );
-    final page = (await t.runAsync(() => scope.sharedPage('food')))!;
+    final page = (await t.runAsync(() => scope.sharedPage(['food'])))!;
     expect(page, contains('<title>Món ngon</title>'));
     expect(page, contains('a.com/one'));
     expect(page, isNot(contains('b.org/two')));
     expect(page, contains('data:image/jpeg;base64,'));
     expect(page, isNot(contains('PhoneMaker')));
   });
+  receiveTests();
+}
+
+/// A file a friend with Pro sent: "Trips" with a folder "Đà Nẵng".
+Uint8List friendsFile() {
+  Bookmark link(String id, String url, String collection) {
+    final u = UrlTools.normalize(url);
+    return Bookmark(
+      id: id,
+      originalUrl: u.originalUrl,
+      normalizedUrl: u.normalizedUrl,
+      sourceDomain: u.sourceDomain,
+      title: 'Friend $id',
+      collectionId: collection,
+      savedAt: '2026-11-01T00:00:00Z',
+      updatedAt: '2026-11-01T00:00:00Z',
+    );
+  }
+
+  final theirs = SaveLibrary(
+    collections: [
+      SaveCollection(id: 'trips', name: 'Trips'),
+      SaveCollection(id: 'dn', name: 'Đà Nẵng', parentId: 'trips'),
+    ],
+    bookmarks: [
+      link('t1', 'https://trip.example/hue', 'trips'),
+      link('t2', 'https://trip.example/my-khe', 'dn'),
+      link('t3', 'https://a.com/one', 'dn'),
+    ],
+  );
+  return Uint8List.fromList(
+    utf8.encode(
+      sharedCollectionsPage(theirs, ['trips'], now: DateTime(2026, 11, 9)),
+    ),
+  );
+}
+
+void receiveTests() {
+  testWidgets('Send collections: pick several, the button says how much', (
+    t,
+  ) async {
+    final (c, _) = await boot(t);
+    await c.update(
+      (l) => l.copyWith(
+        collections: [
+          SaveCollection(id: 'food', name: 'Food'),
+          SaveCollection(id: 'trips', name: 'Trips', position: 1),
+        ],
+        bookmarks: [
+          for (final (i, b) in l.bookmarks.indexed)
+            b.copyWith(collectionId: i == 0 ? 'food' : 'trips'),
+        ],
+      ),
+    );
+    Navigator.of(
+      t.element(find.byKey(const Key('save-home'))),
+    ).pushNamed('/library');
+    await settle(t);
+    await tapKey(t, 'collections-send');
+    expect(find.byKey(const Key('send-sheet')), findsOneWidget);
+    expect(find.text('Pick a collection'), findsOneWidget);
+    await tapKey(t, 'send-pick-food');
+    expect(find.text('Send 1 collection · 1 item'), findsOneWidget);
+    await tapKey(t, 'send-all');
+    expect(find.text('Send 2 collections · 3 items'), findsOneWidget);
+  });
+
+  for (final pro in [false, true]) {
+    testWidgets(
+      'collections a friend sent arrive from Library (${pro ? 'Pro keeps folders' : 'free spreads folders'})',
+      (t) async {
+        debugProOverride = pro;
+        addTearDown(() => debugProOverride = null);
+        final files = OneFile()
+          ..next = ImportedBytes('Trips.html', friendsFile());
+        final (c, _) = await boot(t, files: files);
+        Navigator.of(
+          t.element(find.byKey(const Key('save-home'))),
+        ).pushNamed('/library');
+        await settle(t);
+        await tapKey(t, 'collections-receive');
+        await t.runAsync(
+          () => Future<void>.delayed(const Duration(milliseconds: 200)),
+        );
+        await settle(t);
+        expect(find.byKey(const Key('receive-sheet')), findsOneWidget);
+        expect(find.text('Trips'), findsWidgets);
+        // a.com/one is already saved here: two are new.
+        expect(find.text('Add 2 items'), findsOneWidget);
+        expect(
+          find.byKey(const Key('receive-flattened')),
+          pro ? findsNothing : findsOneWidget,
+        );
+        await tapKey(t, 'receive-add');
+        await settle(t);
+        final l = c.library!;
+        final trips = l.collections.singleWhere((x) => x.name == 'Trips');
+        final folder = l.collections.where((x) => x.name == 'Đà Nẵng');
+        final myKhe = l.bookmarks.singleWhere((b) => b.title == 'Friend t2');
+        if (pro) {
+          expect(folder.single.parentId, trips.id);
+          expect(myKhe.collectionId, folder.single.id);
+        } else {
+          expect(folder, isEmpty);
+          expect(myKhe.collectionId, trips.id);
+          expect(myKhe.tags, ['Đà Nẵng']);
+        }
+        expect(
+          l.bookmarks.where((b) => b.originalUrl == 'https://a.com/one'),
+          hasLength(1),
+        );
+      },
+    );
+  }
 }

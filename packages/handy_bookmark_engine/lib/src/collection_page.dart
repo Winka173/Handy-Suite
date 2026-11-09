@@ -18,10 +18,36 @@ String collectionPage(
   bool notes = false,
   bool vietnamese = false,
   required DateTime now,
+}) => collectionsPage(
+  library,
+  [collectionId],
+  pictures: pictures,
+  notes: notes,
+  vietnamese: vietnamese,
+  now: now,
+);
+
+/// Several collections on one page: with one, as [collectionPage]; with
+/// more, a page titled by how many there are and each collection under its
+/// own heading. [importHint] adds a closing line on adding them to Handy
+/// Bookmark (a page made to be imported).
+String collectionsPage(
+  SaveLibrary library,
+  List<String> collectionIds, {
+  Map<String, Uint8List> pictures = const {},
+  bool notes = false,
+  bool vietnamese = false,
+  required DateTime now,
+  bool importHint = false,
 }) {
   final byId = {for (final c in library.collections) c.id: c};
-  final root = byId[collectionId];
-  if (root == null) throw const FormatException('No such collection');
+  final roots = [
+    for (final id in collectionIds)
+      if (byId[id] case final c?) c,
+  ];
+  if (roots.isEmpty) throw const FormatException('No such collection');
+  final many = roots.length > 1;
+  final root = roots.first;
   String esc(String s) => const HtmlEscape(HtmlEscapeMode.element).convert(s);
   String attr(String s) =>
       const HtmlEscape(HtmlEscapeMode.attribute).convert(s);
@@ -38,7 +64,9 @@ String collectionPage(
     }
   }
 
-  walk(root, 0);
+  for (final r in roots) {
+    walk(r, many ? 1 : 0);
+  }
   final items = {
     for (final (c, _) in sections)
       c.id: [
@@ -47,6 +75,11 @@ String collectionPage(
       ]..sort((a, b) => b.savedAt.compareTo(a.savedAt)),
   };
   final total = items.values.fold(0, (n, l) => n + l.length);
+  final heading = !many
+      ? root.name
+      : vietnamese
+      ? '${roots.length} bộ sưu tập'
+      : '${roots.length} collections';
   final date =
       '${now.year}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}';
   final out = StringBuffer()
@@ -57,21 +90,25 @@ String collectionPage(
       '<meta name="viewport" content="width=device-width, initial-scale=1">',
     )
     ..writeln('<meta name="referrer" content="no-referrer">')
-    ..writeln('<title>${esc(root.name)}</title>')
+    ..writeln('<title>${esc(heading)}</title>')
     ..writeln('<style>$_style</style>')
     ..writeln('</head><body><main>')
-    ..writeln('<header><h1>${esc(root.name)}</h1>')
+    ..writeln('<header><h1>${esc(heading)}</h1>')
     ..writeln(
       '<p class="meta">${vietnamese ? '$total mục · chia sẻ ngày $date từ Handy Bookmark' : '$total ${total == 1 ? 'item' : 'items'} · shared $date from Handy Bookmark'}</p>',
     );
-  if (root.description.trim().isNotEmpty)
+  if (!many && root.description.trim().isNotEmpty)
     out.writeln('<p>${esc(root.description)}</p>');
   out.writeln('</header>');
   for (final (c, depth) in sections) {
     final list = items[c.id]!;
     if (depth > 0) {
-      if (list.isEmpty) continue;
-      out.writeln('<h2>${esc(c.name)}</h2>');
+      // With several collections each is an h2 and its folders h3; one
+      // collection's folders are h2 under its h1.
+      final top = many && depth == 1;
+      if (list.isEmpty && !top) continue;
+      final h = many && depth > 1 ? 'h3' : 'h2';
+      out.writeln('<$h>${esc(c.name)}</$h>');
     }
     out.writeln('<ul>');
     for (final b in list) {
@@ -82,7 +119,7 @@ String collectionPage(
       out.write('<li>');
       if (picture != null)
         out.write(
-          '<img alt="" loading="lazy" src="data:image/jpeg;base64,${base64Encode(picture)}">',
+          '<img alt="" loading="lazy" data-item="${attr(b.id)}" src="data:image/jpeg;base64,${base64Encode(picture)}">',
         );
       out.write('<div>');
       out.write(
@@ -102,6 +139,12 @@ String collectionPage(
     }
     out.writeln('</ul>');
   }
+  if (importHint)
+    out.writeln(
+      vietnamese
+          ? '<footer><p>Có Handy Bookmark? Lưu tệp này, rồi trong app mở <strong>Bộ sưu tập › Xem tất cả › Thêm bộ sưu tập được gửi cho bạn</strong> (hoặc Cài đặt › Dữ liệu › Khôi phục) và chọn tệp.</p></footer>'
+          : '<footer><p>Have Handy Bookmark? Save this file, then in the app open <strong>Collections › See all › Add collections sent to you</strong> (or Settings › Data › Restore) and pick it.</p></footer>',
+    );
   out.writeln('</main></body></html>');
   return out.toString();
 }
@@ -114,6 +157,8 @@ main{max-width:760px;margin:0 auto;padding:32px 16px 64px}
 h1,h2{font-family:Newsreader,Georgia,"Times New Roman",serif;font-weight:500;margin:0}
 h1{font-size:36px;line-height:1.15;border-bottom:2px solid var(--rule);padding-bottom:8px}
 h2{font-size:22px;margin-top:32px;border-bottom:1px solid var(--rule);padding-bottom:4px}
+h3{font-family:Newsreader,Georgia,serif;font-weight:500;font-size:19px;margin:24px 0 0}
+footer{margin-top:40px;color:var(--muted);font-size:15px}
 .meta{color:var(--muted);font-size:14px;display:block}
 ul{list-style:none;margin:16px 0 0;padding:0}
 li{display:flex;gap:12px;padding:12px 0;border-bottom:1px solid var(--line)}

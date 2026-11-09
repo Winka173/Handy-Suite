@@ -3312,3 +3312,69 @@ Kit sửa chung (`HandyPalette`): ở bản sáng, màu nhận diện được l
   - Nguồn: `apps/handy_boards/assets/icon.svg`.
   - `tool/icon/render.py` giờ hỗ trợ path even-odd, để icon đơn sắc của Android vẫn giữ lỗ khung, và đọc màu nền icon từ SVG.
   - `tooling/app-icons.py` tạo icon cho mọi nền tảng.
+
+## Hợp đồng: Handy Bookmark · gửi và nhận bộ sưu tập (2026-11-09, chủ yêu cầu)
+
+**Việc của màn.** Gửi một hoặc nhiều bộ sưu tập cho bạn bè thành **một tệp**. Bạn bè mở tệp bằng trình duyệt như một trang đọc được, hoặc thêm vào Handy Bookmark của họ. Gửi và nhận đều miễn phí. Ảnh luôn đi kèm, đã thu nhỏ và bỏ dữ liệu máy ảnh.
+
+**Màn gửi** (sheet, rộng tối đa 560)
+- Lối vào:
+  - điện thoại: Thư viện (Bộ sưu tập › Xem tất cả) › nút Gửi trên thanh trên;
+  - màn rộng: "Tất cả bộ sưu tập" › "Gửi bộ sưu tập";
+  - menu "…" của một bộ sưu tập › "Gửi cho bạn bè" (mở sẵn với bộ đó; một thư mục thì chọn bộ cha của nó).
+- Nội dung:
+  - tiêu đề "Gửi bộ sưu tập", một câu nói rõ tệp dùng để làm gì;
+  - "Đã chọn n/N" kèm nút Chọn tất cả / Bỏ chọn;
+  - danh sách bộ sưu tập cấp trên: ô chọn, chấm màu, tên, "12 mục · 2 thư mục";
+  - hai dòng: thứ đi kèm (✓) và thứ ở lại máy (–);
+  - công tắc "Kèm ghi chú của tôi", mặc định tắt;
+  - nhắc "Ai nhận được tệp đều thấy mọi link…".
+- Hành động chính: nút dưới cùng "Gửi 2 bộ sưu tập · 37 mục". Nút tắt và đổi thành "Chọn một bộ sưu tập" khi chưa chọn gì.
+- Trạng thái: không có bộ sưu tập thì không hiện nút Gửi; lỗi khi tạo tệp đi qua `run` như mọi thao tác khác.
+
+**Tệp gửi đi**
+- Một trang HTML tự chứa. Nếu nhiều bộ: h1 là "N bộ sưu tập", mỗi bộ là h2, thư mục là h3.
+- Dữ liệu cho app nằm trong một comment `HANDY_BOOKMARK_SHARE_V1`. Ảnh chỉ nằm một lần trong trang, đánh dấu bằng `data-item`.
+- Cuối trang có dòng chỉ cách thêm vào app.
+
+**Màn nhận** (sheet)
+- Lối vào:
+  - Thư viện / Tất cả bộ sưu tập › "Thêm bộ sưu tập được gửi cho bạn";
+  - Cài đặt › Dữ liệu › Khôi phục. App tự nhận ra tệp được gửi và **không bao giờ** coi nó là bản sao lưu.
+- Nội dung:
+  - "Thêm N bộ sưu tập được gửi";
+  - "42 mục · 5 đã có sẵn";
+  - mỗi bộ với tên khi đến nơi và số mục;
+  - lời nhắc khi thư mục bị gộp: "…tên thư mục thành thẻ. Cần Pro để giữ nguyên thư mục";
+  - lời nhắc khi trùng tên ("(từ bạn)").
+- Nút: Hủy và "Thêm n mục". Nút tắt và đổi thành "Đã có hết" khi không còn gì mới.
+- Sau khi thêm hiện thông báo kèm Hoàn tác.
+
+**Thư mục**
+- Người gửi có Pro, người nhận có Pro: nhận đủ thư mục.
+- Người nhận không có Pro: mục trong thư mục vào bộ cha, tên thư mục thành thẻ.
+- Người gửi không có Pro thì vốn không có thư mục.
+
+**Dữ liệu**
+- Kiểm tra cả tệp trước khi ghi.
+- Ảnh được ghi trước mục.
+- Mục đến nơi ở trạng thái chưa đọc, giờ lưu là lúc nhận.
+- Không bao giờ gửi đi: thẻ, hẹn nhắc, trạng thái đã đọc hay yêu thích, kết quả kiểm tra link, các bộ sưu tập khác.
+
+**Nền tảng**
+- Android/iOS: chia sẻ qua bảng chia sẻ của máy.
+- Windows/web: tải tệp xuống.
+- Chưa nhận được tệp qua nút "chia sẻ vào app" trên Android: phải lưu tệp rồi chọn trong app.
+
+**Bác bỏ**
+- Tách hai nút "trang để đọc" và "tệp để nhập": một tệp làm cả hai.
+- Hỏi trước về ảnh: ảnh luôn đi kèm.
+
+**Cách dùng**
+- Chủ đề "Chia sẻ" có thêm các bước gửi, nhận và giữ/gộp thư mục.
+- Rà lại các phần lỗi thời:
+  - Xếp nhanh;
+  - "Thư mục mới" (Pro), thay cho "Bộ sưu tập con mới";
+  - widget màn hình chính;
+  - thẻ ôn Handy Recall;
+  - danh sách Pro.

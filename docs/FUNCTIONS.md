@@ -846,3 +846,11 @@ production seed data. Exact test/device coverage stays in the Boards matrix.
   without metadata; notes only when asked; no external resources.
 - Sync (`handy-bookmark/library.json` plus `media/<sha256>`): up to 3 attempts when another
   device writes in between; pictures are checked against their hash on arrival.
+- Send collections (2026-11-09): one or several collections, with their folders, as one HTML file
+  that a browser shows and Handy Bookmark adds back (a base64 JSON payload in a comment; pictures
+  read from the page). Never sent: tags, reminders, read/favourite state, link checks, other
+  collections. Receiving checks the whole file first (30 MB, 2,000 collections, 50,000 items), adds
+  items unread, skips links already saved, renames a top collection whose name is taken
+  ("(từ bạn)" / "(shared)"), keeps folders with Pro and otherwise folds them into their collection
+  with the folder name as a tag. Opened from Collections › See all › Add collections sent to you or
+  Settings › Data › Restore; the Android share sheet does not take the file yet.

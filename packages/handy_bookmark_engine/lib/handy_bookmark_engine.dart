@@ -9,6 +9,7 @@ export 'src/links.dart';
 export 'src/duplicates.dart';
 export 'src/trash.dart';
 export 'src/collection_page.dart';
+export 'src/shared_collections.dart';
 export 'src/collections.dart';
 export 'src/sync.dart';
 export 'src/organize.dart';
