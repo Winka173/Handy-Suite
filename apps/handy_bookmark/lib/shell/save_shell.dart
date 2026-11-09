@@ -36,6 +36,19 @@ class _SaveShellState extends State<SaveShell> {
   /// The Library overview fills the middle (the sidebar's first row).
   bool overview = true;
 
+  /// The sidebar is shown (a computer or a tablet); remembered.
+  late bool sideOpen = scope.c.preferences['sidebarCollapsed'] != true;
+
+  void setSide(bool open) {
+    setState(() => sideOpen = open);
+    scope.c
+        .update(
+          (l) => l,
+          prefs: {...scope.c.preferences, 'sidebarCollapsed': !open},
+        )
+        .catchError((_) {});
+  }
+
   /// Every collection fills the middle (Collections › See all).
   bool collections = false;
   SaveScope get scope => widget.scope;
@@ -154,9 +167,11 @@ class _SaveShellState extends State<SaveShell> {
             body: Row(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                SizedBox(
+                HandySidePanel(
                   width: 260,
+                  open: sideOpen,
                   child: BookmarkSidebar(
+                    onCollapse: () => setSide(false),
                     scope: scope,
                     overview: overview,
                     onOverview: () => setState(() {
@@ -190,11 +205,31 @@ class _SaveShellState extends State<SaveShell> {
                             HandySpace.xl,
                             HandySpace.s,
                           ),
-                          child: HeaderBand(
-                            across: true,
-                            title: libraryName(scope.c, context),
-                            counts: [TextSpan(text: counts())],
-                            action: saveRow,
+                          child: Row(
+                            children: [
+                              // The way back to a folded sidebar.
+                              HandyReveal(
+                                child: sideOpen
+                                    ? const SizedBox(height: 48)
+                                    : Padding(
+                                        padding:
+                                            const EdgeInsetsDirectional.only(
+                                              end: HandySpace.m,
+                                            ),
+                                        child: SideReopen(
+                                          onTap: () => setSide(true),
+                                        ),
+                                      ),
+                              ),
+                              Expanded(
+                                child: HeaderBand(
+                                  across: true,
+                                  title: libraryName(scope.c, context),
+                                  counts: [TextSpan(text: counts())],
+                                  action: saveRow,
+                                ),
+                              ),
+                            ],
                           ),
                         ),
                       ),

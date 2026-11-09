@@ -20,8 +20,12 @@ class BookmarkSidebar extends StatelessWidget {
   final VoidCallback onOverview;
   final void Function(Place, [String?]) onPick;
   final ValueChanged<SavedSearch> onSearch;
+
+  /// Folds the sidebar away.
+  final VoidCallback? onCollapse;
   const BookmarkSidebar({
     super.key,
+    this.onCollapse,
     required this.scope,
     required this.overview,
     required this.onOverview,
@@ -80,7 +84,7 @@ class BookmarkSidebar extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(width: 10),
-                Flexible(
+                Expanded(
                   child: Text(
                     'Handy Bookmark',
                     maxLines: 1,
@@ -90,6 +94,17 @@ class BookmarkSidebar extends StatelessWidget {
                     ),
                   ),
                 ),
+                if (onCollapse != null)
+                  IconButton(
+                    key: const Key('side-collapse'),
+                    tooltip: tr(
+                      context,
+                      'Hide the sidebar',
+                      'Thu gọn thanh bên',
+                    ),
+                    icon: const Icon(Icons.keyboard_double_arrow_left),
+                    onPressed: onCollapse,
+                  ),
               ],
             ),
           ),
@@ -284,5 +299,23 @@ class AllCollections extends StatelessWidget {
         ],
       ),
     ],
+  );
+}
+
+/// Shown while the sidebar is folded away: brings it back.
+class SideReopen extends StatelessWidget {
+  final VoidCallback onTap;
+  const SideReopen({super.key, required this.onTap});
+  @override
+  Widget build(BuildContext context) => Material(
+    color: Theme.of(context).colorScheme.surface,
+    elevation: 2,
+    shape: const CircleBorder(),
+    child: IconButton(
+      key: const Key('side-open'),
+      tooltip: tr(context, 'Show the sidebar', 'Hiện thanh bên'),
+      icon: const Icon(Icons.keyboard_double_arrow_right),
+      onPressed: onTap,
+    ),
   );
 }

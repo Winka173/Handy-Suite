@@ -96,6 +96,45 @@ class HandyAppear extends StatelessWidget {
   }
 }
 
+/// A side panel that folds away: its width eases to nothing and its
+/// content fades, so the page beside it widens smoothly. The content keeps
+/// its full width while it folds (it is clipped, never squeezed). Snaps
+/// when the OS asks for less motion.
+class HandySidePanel extends StatelessWidget {
+  final double width;
+  final bool open;
+  final Widget child;
+  const HandySidePanel({
+    super.key,
+    required this.width,
+    required this.open,
+    required this.child,
+  });
+  @override
+  Widget build(BuildContext context) {
+    final d = HandyMotion.of(context, HandyMotion.long);
+    return TweenAnimationBuilder<double>(
+      tween: Tween(end: open ? 1 : 0),
+      duration: d,
+      curve: HandyMotion.curve,
+      builder: (context, t, child) => SizedBox(
+        width: width * t,
+        child: t == 0
+            ? null
+            : ClipRect(
+                child: OverflowBox(
+                  alignment: AlignmentDirectional.centerEnd,
+                  minWidth: width,
+                  maxWidth: width,
+                  child: Opacity(opacity: t, child: child),
+                ),
+              ),
+      ),
+      child: child,
+    );
+  }
+}
+
 /// A short demonstration that plays itself: [builder] gets `t` from 0 to 1
 /// over [period], holds the last frame for [hold], and plays [times] times
 /// before resting on its last frame (a replay button brings it back). With

@@ -29,18 +29,58 @@ class BoardsFrame extends StatelessWidget {
   Widget build(BuildContext context) {
     if (!wide(context)) return child;
     final p = BoardsPalette.of(context);
-    return ColoredBox(
-      color: p.canvas,
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          SizedBox(
-            width: 248,
-            child: _Sidebar(scope: scope, place: place),
+    return ListenableBuilder(
+      listenable: scope.controller,
+      builder: (context, _) {
+        // Folded away or shown; remembered in the app's preferences.
+        final open = scope.state.preferences['sidebarCollapsed'] != true;
+        void set(bool open) => scope.controller
+            .change(
+              (s) => s.copy(
+                preferences: {...s.preferences, 'sidebarCollapsed': !open},
+              ),
+              history: false,
+            )
+            .catchError((_) {});
+        return ColoredBox(
+          color: p.canvas,
+          child: Stack(
+            children: [
+              Positioned.fill(
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    HandySidePanel(
+                      width: 248,
+                      open: open,
+                      child: _Sidebar(
+                        scope: scope,
+                        place: place,
+                        onCollapse: () => set(false),
+                      ),
+                    ),
+                    Expanded(child: child),
+                  ],
+                ),
+              ),
+              // The way back, low on the left edge, clear of every page's
+              // own buttons.
+              PositionedDirectional(
+                start: 12,
+                bottom: 16,
+                child: HandySwap(
+                  child: open
+                      ? const SizedBox.shrink(key: ValueKey('open'))
+                      : SideReopen(
+                          key: const ValueKey('folded'),
+                          onTap: () => set(true),
+                        ),
+                ),
+              ),
+            ],
           ),
-          Expanded(child: child),
-        ],
-      ),
+        );
+      },
     );
   }
 }
@@ -48,7 +88,8 @@ class BoardsFrame extends StatelessWidget {
 class _Sidebar extends StatelessWidget {
   final BoardsScope scope;
   final String place;
-  const _Sidebar({required this.scope, required this.place});
+  final VoidCallback? onCollapse;
+  const _Sidebar({required this.scope, required this.place, this.onCollapse});
 
   void _go(BuildContext context, String to) {
     if (to == place) return;
@@ -160,7 +201,7 @@ class _Sidebar extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(width: 10),
-                  Flexible(
+                  Expanded(
                     child: Text(
                       'Handy Boards',
                       maxLines: 1,
@@ -170,6 +211,17 @@ class _Sidebar extends StatelessWidget {
                       ),
                     ),
                   ),
+                  if (onCollapse != null)
+                    IconButton(
+                      key: const Key('side-collapse'),
+                      tooltip: tr(
+                        context,
+                        'Hide the sidebar',
+                        'Thu gọn thanh bên',
+                      ),
+                      icon: const Icon(Icons.keyboard_double_arrow_left),
+                      onPressed: onCollapse,
+                    ),
                 ],
               ),
             ),
@@ -252,5 +304,23 @@ class _Sidebar extends StatelessWidget {
         ),
       );
     },
+  );
+}
+
+/// Shown while the sidebar is folded away: brings it back.
+class SideReopen extends StatelessWidget {
+  final VoidCallback onTap;
+  const SideReopen({super.key, required this.onTap});
+  @override
+  Widget build(BuildContext context) => Material(
+    color: Theme.of(context).colorScheme.surface,
+    elevation: 2,
+    shape: const CircleBorder(),
+    child: IconButton(
+      key: const Key('side-open'),
+      tooltip: tr(context, 'Show the sidebar', 'Hiện thanh bên'),
+      icon: const Icon(Icons.keyboard_double_arrow_right),
+      onPressed: onTap,
+    ),
   );
 }
