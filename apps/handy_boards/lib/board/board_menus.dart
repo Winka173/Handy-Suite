@@ -791,6 +791,14 @@ Future<void> columnMenu(
         title: Text(
           tr(sheet, 'Cards here are finished', 'Thẻ ở đây là đã xong'),
         ),
+        // What the switch changes, so it reads without explaining.
+        subtitle: Text(
+          tr(
+            sheet,
+            'They count as done, are never late, and show a tick on the column',
+            'Được tính là xong, không bị báo trễ hạn, và cột có dấu ✓',
+          ),
+        ),
         value: c.flag('done'),
         onChanged: (v) => then(
           () => scope.run(
