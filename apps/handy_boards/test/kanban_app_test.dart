@@ -351,10 +351,23 @@ void main() {
     await tap(t, find.byKey(const Key('template-project')));
     await tap(t, find.byKey(const Key('template-use')));
     await t.enterText(find.byKey(const Key('setup-title')), 'Shop app');
+    // Each field now explains itself, so the page is longer: scroll to it.
+    await t.dragUntilVisible(
+      find.byKey(const Key('setup-review')),
+      find.byType(ListView).first,
+      const Offset(0, -200),
+    );
+    await t.pumpAndSettle();
     await tap(t, find.byKey(const Key('setup-review')));
     await tap(t, find.byKey(const Key('setup-preview')));
     await tap(t, find.byKey(const Key('plan-edit')));
-    // Back keeps the answers.
+    // Back keeps the answers (the name field is at the top of the page).
+    await t.dragUntilVisible(
+      find.byKey(const Key('setup-title')),
+      find.byType(ListView).first,
+      const Offset(0, 200),
+    );
+    await t.pumpAndSettle();
     expect(find.text('Shop app'), findsOneWidget);
     await tap(t, find.byKey(const Key('setup-preview')));
     await tap(t, find.byKey(const Key('plan-create')));
