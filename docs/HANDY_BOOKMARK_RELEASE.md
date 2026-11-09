@@ -81,6 +81,7 @@ bundle.
   notifications, five home-screen widgets (two Pro) with styles; the weekly
   nudge is gone. Listing text updated (`fastlane android metadata`). Codes
   1–6 are used up.
+- **1.0.0 (7)** rolled out on closed testing on 2026-11-09 by `HANDY_DRIVE_SYNC=true fastlane android publish`: folders in a collection (one level, Pro to make), Pro page with live demos, privacy and terms on winka.top. Changelog `changelogs/7.txt` EN + VI.
 
 ## Left for the owner in Play Console (the API cannot do these)
 
