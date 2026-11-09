@@ -210,86 +210,100 @@ class _KeyDatesSheetState extends State<_KeyDatesSheet> {
           ).textTheme.bodySmall?.copyWith(color: BoardsPalette.of(sheet).muted),
         ),
         const SizedBox(height: 8),
+        // Each key date on two lines: its name (and Remove), then its day
+        // and its optional time, so a phone never runs out of width.
         for (final (i, m) in list.indexed)
-          Row(
+          Padding(
             key: ObjectKey(m.label),
-            children: [
-              Expanded(
-                child: TextField(
-                  key: Key('key-date-name-$i'),
-                  controller: m.label,
-                  maxLength: 80,
-                  decoration: InputDecoration(
-                    counterText: '',
-                    labelText: tr(sheet, 'Name', 'Tên'),
-                  ),
-                ),
-              ),
-              TextButton(
-                onPressed: () async {
-                  final v = await pickHandyDate(sheet, isoDay(m.day));
-                  if (v != null && mounted)
-                    setState(
-                      () => list[i] = (
-                        label: m.label,
-                        day: localDate(v),
-                        minute: m.minute,
-                      ),
-                    );
-                },
-                child: Text(
-                  MaterialLocalizations.of(sheet).formatShortDate(m.day),
-                ),
-              ),
-              // A time is optional: the line then counts down the hours.
-              TextButton(
-                key: Key('key-date-time-$i'),
-                onPressed: () async {
-                  final t = await showTimePicker(
-                    context: sheet,
-                    initialTime: m.minute == null
-                        ? const TimeOfDay(hour: 9, minute: 0)
-                        : TimeOfDay(
-                            hour: m.minute! ~/ 60,
-                            minute: m.minute! % 60,
-                          ),
-                  );
-                  if (t != null && mounted)
-                    setState(
-                      () => list[i] = (
-                        label: m.label,
-                        day: m.day,
-                        minute: t.hour * 60 + t.minute,
-                      ),
-                    );
-                },
-                onLongPress: m.minute == null
-                    ? null
-                    : () => setState(
-                        () => list[i] = (
-                          label: m.label,
-                          day: m.day,
-                          minute: null,
+            padding: const EdgeInsets.only(bottom: 8),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Expanded(
+                      child: TextField(
+                        key: Key('key-date-name-$i'),
+                        controller: m.label,
+                        maxLength: 80,
+                        decoration: InputDecoration(
+                          counterText: '',
+                          labelText: tr(sheet, 'Name', 'Tên'),
                         ),
                       ),
-                child: Text(
-                  m.minute == null
-                      ? tr(sheet, '+ Time', '+ Giờ')
-                      : MaterialLocalizations.of(sheet).formatTimeOfDay(
-                          TimeOfDay(
-                            hour: m.minute! ~/ 60,
-                            minute: m.minute! % 60,
-                          ),
-                          alwaysUse24HourFormat: true,
-                        ),
+                    ),
+                    IconButton(
+                      tooltip: tr(sheet, 'Remove', 'Xoá'),
+                      onPressed: () => setState(() => list.removeAt(i)),
+                      icon: const Icon(Icons.close),
+                    ),
+                  ],
                 ),
-              ),
-              IconButton(
-                tooltip: tr(sheet, 'Remove', 'Xoá'),
-                onPressed: () => setState(() => list.removeAt(i)),
-                icon: const Icon(Icons.close),
-              ),
-            ],
+                Wrap(
+                  children: [
+                    TextButton(
+                      onPressed: () async {
+                        final v = await pickHandyDate(sheet, isoDay(m.day));
+                        if (v != null && mounted)
+                          setState(
+                            () => list[i] = (
+                              label: m.label,
+                              day: localDate(v),
+                              minute: m.minute,
+                            ),
+                          );
+                      },
+                      child: Text(
+                        MaterialLocalizations.of(sheet).formatShortDate(m.day),
+                      ),
+                    ),
+                    // A time is optional: the line then counts down the hours.
+                    TextButton(
+                      key: Key('key-date-time-$i'),
+                      onPressed: () async {
+                        final t = await showTimePicker(
+                          context: sheet,
+                          initialTime: m.minute == null
+                              ? const TimeOfDay(hour: 9, minute: 0)
+                              : TimeOfDay(
+                                  hour: m.minute! ~/ 60,
+                                  minute: m.minute! % 60,
+                                ),
+                        );
+                        if (t != null && mounted)
+                          setState(
+                            () => list[i] = (
+                              label: m.label,
+                              day: m.day,
+                              minute: t.hour * 60 + t.minute,
+                            ),
+                          );
+                      },
+                      onLongPress: m.minute == null
+                          ? null
+                          : () => setState(
+                              () => list[i] = (
+                                label: m.label,
+                                day: m.day,
+                                minute: null,
+                              ),
+                            ),
+                      child: Text(
+                        m.minute == null
+                            ? tr(sheet, '+ Time', '+ Giờ')
+                            : MaterialLocalizations.of(sheet).formatTimeOfDay(
+                                TimeOfDay(
+                                  hour: m.minute! ~/ 60,
+                                  minute: m.minute! % 60,
+                                ),
+                                alwaysUse24HourFormat: true,
+                              ),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
           ),
         if (list.length < 8)
           Align(
