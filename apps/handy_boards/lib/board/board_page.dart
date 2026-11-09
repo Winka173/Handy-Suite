@@ -676,6 +676,34 @@ class _BoardPageState extends State<BoardPage> {
     // The bar on the board's ground: back, then the board's buttons. (The
     // cover is the board's face on Home, not a band here.)
     Widget round(Widget button) => button;
+    // Search sits in the top bar, beside its button, so nothing under it
+    // moves when it opens or closes.
+    final searchField = HandySwap(
+      alignment: AlignmentDirectional.centerEnd,
+      child: !searching
+          ? const SizedBox.shrink(key: ValueKey('no-search'))
+          : SizedBox(
+              key: const ValueKey('search'),
+              height: 44,
+              child: TextField(
+                key: const Key('board-search-field'),
+                controller: query,
+                autofocus: true,
+                textInputAction: TextInputAction.search,
+                onChanged: (_) => setState(() {}),
+                decoration: InputDecoration(
+                  isDense: true,
+                  contentPadding: const EdgeInsets.symmetric(vertical: 10),
+                  prefixIcon: const Icon(Icons.search, size: 20),
+                  hintText: tr(
+                    context,
+                    'Search this board',
+                    'Tìm trong bảng này',
+                  ),
+                ),
+              ),
+            ),
+    );
     final band = SizedBox(
       height: 56 + MediaQuery.paddingOf(context).top,
       child: Stack(
@@ -698,7 +726,14 @@ class _BoardPageState extends State<BoardPage> {
                       icon: const Icon(Icons.arrow_back),
                     ),
                   ),
-                  const Spacer(),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Padding(
+                      padding: const EdgeInsets.only(top: 2),
+                      child: searchField,
+                    ),
+                  ),
+                  const SizedBox(width: 8),
                   for (final a in actions) round(a),
                 ],
               ),
@@ -741,20 +776,6 @@ class _BoardPageState extends State<BoardPage> {
                   onDeleted: () => setState(() => dueSoon = false),
                 ),
             ],
-          ),
-        ),
-      if (searching)
-        Padding(
-          padding: const EdgeInsets.fromLTRB(16, 4, 16, 8),
-          child: TextField(
-            key: const Key('board-search-field'),
-            controller: query,
-            autofocus: true,
-            onChanged: (_) => setState(() {}),
-            decoration: InputDecoration(
-              prefixIcon: const Icon(Icons.search),
-              hintText: tr(context, 'Search this board', 'Tìm trong bảng này'),
-            ),
           ),
         ),
       if (showStrip) ...[
@@ -960,6 +981,8 @@ class _BoardPageState extends State<BoardPage> {
                     ),
                   ),
                 ),
+                titleSpacing: 0,
+                title: searchField,
                 actions: [
                   for (final a in actions) round(a),
                   const SizedBox(width: 4),
