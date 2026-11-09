@@ -91,8 +91,9 @@ class KanbanFilter {
 }
 
 /// The board's columns side by side. Phones see one column at a time,
-/// almost full width, with the next column's edge showing and snapping
-/// between them; wider screens show 300 px columns that scroll sideways
+/// centred, with both neighbours showing 28 pt at the sides (places to drop
+/// a dragged card) and a row of column chips above to jump between them;
+/// wider screens show 300 px columns that scroll sideways
 /// inside their own area, never the page.
 class KanbanView extends StatefulWidget {
   final BoardsState state;
@@ -113,7 +114,11 @@ class KanbanView extends StatefulWidget {
     this.actions = const KanbanActions(),
     this.detailed = false,
     this.columnColor,
+    this.columnChips = true,
   });
+
+  /// The phone's row of column chips (off in small previews).
+  final bool columnChips;
   @override
   State<KanbanView> createState() => KanbanViewState();
 }
@@ -125,11 +130,15 @@ class KanbanViewState extends State<KanbanView> {
   bool dragging = false;
   Timer? _edge;
 
+  /// The column a phone shows, for the chips.
+  final _page = ValueNotifier<int>(0);
+
   @override
   void dispose() {
     _pages?.dispose();
     _wide.dispose();
     _edge?.cancel();
+    _page.dispose();
     super.dispose();
   }
 
@@ -156,13 +165,14 @@ class KanbanViewState extends State<KanbanView> {
     final box = context.findRenderObject() as RenderBox?;
     if (box == null) return;
     final x = box.globalToLocal(global).dx;
-    final dir = x < 28 ? -1 : (x > width - 28 ? 1 : 0);
+    // The 28 pt peeks and a little more: a thumb near the side turns.
+    final dir = x < 44 ? -1 : (x > width - 44 ? 1 : 0);
     if (dir == 0) {
       _edge?.cancel();
       _edge = null;
       return;
     }
-    _edge ??= Timer.periodic(const Duration(milliseconds: 650), (_) {
+    _edge ??= Timer.periodic(const Duration(milliseconds: 600), (_) {
       final pages = _pages;
       if (pages != null && pages.hasClients) {
         final page = (pages.page ?? 0).round() + dir;
@@ -211,7 +221,7 @@ class KanbanViewState extends State<KanbanView> {
         );
         final addColumn = widget.actions.addColumn;
         if (phone) {
-          final fraction = ((box.maxWidth - 40) / box.maxWidth).clamp(.7, 1.0);
+          final fraction = ((box.maxWidth - 56) / box.maxWidth).clamp(.7, 1.0);
           if (_pages == null || _fraction != fraction) {
             final page = _pages?.hasClients == true
                 ? (_pages!.page ?? 0).round()
@@ -223,15 +233,43 @@ class KanbanViewState extends State<KanbanView> {
             );
             _fraction = fraction;
           }
-          return PageView.builder(
+          final pages = PageView.builder(
             key: const Key('kanban-pages'),
             controller: _pages,
-            padEnds: false,
+            onPageChanged: (i) => _page.value = i,
             itemCount: columns.length + (addColumn == null ? 0 : 1),
             itemBuilder: (context, i) => Padding(
-              padding: EdgeInsets.only(left: i == 0 ? 16 : 6, right: 6),
+              padding: const EdgeInsets.symmetric(horizontal: 5),
               child: i == columns.length ? _AddColumn(addColumn!) : column(i),
             ),
+          );
+          if (!widget.columnChips || columns.length < 2) return pages;
+          return Column(
+            children: [
+              ValueListenableBuilder<int>(
+                valueListenable: _page,
+                builder: (context, at, _) => _ColumnChips(
+                  names: [
+                    for (final c in columns)
+                      (
+                        c.str('title'),
+                        cardsIn(widget.state, c.id)
+                            .where(
+                              (x) => widget.filter.shows(
+                                x,
+                                widget.now,
+                                widget.state,
+                              ),
+                            )
+                            .length,
+                      ),
+                  ],
+                  at: at,
+                  onTap: reveal,
+                ),
+              ),
+              Expanded(child: pages),
+            ],
           );
         }
         return Scrollbar(
@@ -687,6 +725,69 @@ class _AddColumn extends StatelessWidget {
             ),
           ),
         ),
+      ),
+    );
+  }
+}
+
+/// The phone's column chips: each column's name and its card count, the
+/// shown one filled in ink; a tap turns to it. Scrolls inside its own row.
+class _ColumnChips extends StatelessWidget {
+  final List<(String, int)> names;
+  final int at;
+  final ValueChanged<int> onTap;
+  const _ColumnChips({
+    required this.names,
+    required this.at,
+    required this.onTap,
+  });
+  @override
+  Widget build(BuildContext context) {
+    final p = BoardsPalette.of(context);
+    final theme = Theme.of(context);
+    return SizedBox(
+      height: 48,
+      child: ListView(
+        key: const Key('column-chips'),
+        scrollDirection: Axis.horizontal,
+        padding: const EdgeInsets.symmetric(horizontal: 16),
+        children: [
+          for (final (i, (name, n)) in names.indexed)
+            Padding(
+              padding: const EdgeInsets.only(right: 6),
+              child: Center(
+                child: Semantics(
+                  selected: i == at,
+                  button: true,
+                  child: Material(
+                    color: i == at ? p.ink : p.raised,
+                    shape: const StadiumBorder(),
+                    clipBehavior: Clip.antiAlias,
+                    child: InkWell(
+                      key: Key('column-chip-$i'),
+                      onTap: () => onTap(i),
+                      child: ConstrainedBox(
+                        constraints: const BoxConstraints(minHeight: 36),
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 14),
+                          child: Center(
+                            widthFactor: 1,
+                            child: Text(
+                              '$name  $n',
+                              style: theme.textTheme.labelLarge?.copyWith(
+                                color: i == at ? p.canvas : p.ink,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+        ],
       ),
     );
   }

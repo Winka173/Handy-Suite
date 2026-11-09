@@ -114,7 +114,7 @@ class CategoryStrip extends StatelessWidget {
                 ),
               )
             : SizedBox(
-                height: 84 * scale.clamp(1.0, 2.0),
+                height: 58 * scale.clamp(1.0, 2.0),
                 child: ListView(
                   scrollDirection: Axis.horizontal,
                   padding: EdgeInsets.symmetric(horizontal: phone ? 16 : 24),
@@ -164,7 +164,9 @@ class _Block extends StatelessWidget {
       excludeSemantics: true,
       child: Material(
         key: Key('strip-${progress.category?.id ?? 'none'}'),
-        color: selected ? p.tint : p.surface,
+        // The category's own pale field, so the strip reads as the board's
+        // colours at a glance; the picked one carries the board's line.
+        color: progress.category == null ? p.surface : hue.tint,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(BoardsRadii.card),
           side: selected
@@ -175,7 +177,7 @@ class _Block extends StatelessWidget {
           borderRadius: BorderRadius.circular(BoardsRadii.card),
           onTap: onTap,
           child: Padding(
-            padding: const EdgeInsets.fromLTRB(12, 10, 12, 12),
+            padding: const EdgeInsets.fromLTRB(12, 10, 12, 10),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               mainAxisSize: MainAxisSize.min,
@@ -196,33 +198,37 @@ class _Block extends StatelessWidget {
                         name,
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
-                        style: theme.textTheme.titleSmall,
-                      ),
-                    ),
-                    if (selected)
-                      Icon(Icons.filter_alt, size: 16, color: p.primary),
-                  ],
-                ),
-                const SizedBox(height: 6),
-                Text.rich(
-                  TextSpan(
-                    children: [
-                      TextSpan(
-                        text: '${progress.done}',
-                        style: theme.textTheme.titleMedium?.copyWith(
-                          fontWeight: FontWeight.w500,
+                        style: theme.textTheme.titleSmall?.copyWith(
+                          color: categoryInk(context, progress.category),
+                          fontWeight: FontWeight.w600,
                         ),
                       ),
+                    ),
+                    const SizedBox(width: 8),
+                    Text.rich(
                       TextSpan(
-                        text:
-                            '/${progress.total} ${tr(context, 'done', 'xong')}',
-                        style: theme.textTheme.bodySmall,
+                        children: [
+                          TextSpan(
+                            text: '${progress.done}',
+                            style: theme.textTheme.titleMedium?.copyWith(
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                          TextSpan(
+                            text: '/${progress.total}',
+                            style: theme.textTheme.bodySmall,
+                          ),
+                        ],
                       ),
+                      style: const TextStyle(
+                        fontFeatures: [FontFeature.tabularFigures()],
+                      ),
+                    ),
+                    if (selected) ...[
+                      const SizedBox(width: 4),
+                      Icon(Icons.filter_alt, size: 16, color: p.primary),
                     ],
-                  ),
-                  style: const TextStyle(
-                    fontFeatures: [FontFeature.tabularFigures()],
-                  ),
+                  ],
                 ),
                 const SizedBox(height: 8),
                 ClipRRect(
@@ -232,7 +238,7 @@ class _Block extends StatelessWidget {
                     child: Stack(
                       fit: StackFit.expand,
                       children: [
-                        ColoredBox(color: hue.tint),
+                        ColoredBox(color: p.surface.withValues(alpha: .75)),
                         FractionallySizedBox(
                           alignment: Alignment.centerLeft,
                           widthFactor: ratio,
