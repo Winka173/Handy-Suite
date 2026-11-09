@@ -91,6 +91,8 @@ void main() {
       find.byKey(const Key('bookmark-inline-url')),
       'https://example.com/a',
     );
+    // The Save button comes with the next frame.
+    await t.pump();
     await tapKey(t, 'bookmark-inline-save');
     expect(find.text('Already saved'), findsOneWidget);
     expect(find.text('Phở Hà Nội'), findsWidgets);

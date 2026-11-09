@@ -23,6 +23,8 @@ void main() {
       expect(t.widget<TextField>(input).controller!.text, isEmpty);
       final id = store.rows.keys.single;
       await t.enterText(input, 'https://example.org/article');
+      // The Save button comes with the next frame.
+      await t.pump();
       await tapKey(t, 'bookmark-inline-save');
       expect(find.text('Already saved'), findsOneWidget);
       await t.tap(find.text('Cancel').last);

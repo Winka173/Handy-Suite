@@ -42,31 +42,18 @@ class CollectionCovers extends StatelessWidget {
       list.sort((a, b) => b.savedAt.compareTo(a.savedAt));
     }
     final names = {for (final c in l.collections) c.id: c.name};
-    final action = Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        if (onAll != null)
-          Flexible(
-            child: TextButton(
-              key: const Key('home-library'),
-              onPressed: onAll,
-              child: Text(
-                tr(context, 'See all', 'Xem tất cả'),
-                overflow: TextOverflow.ellipsis,
-              ),
+    // See all at the right of the heading; making one is a tile of its
+    // own at the end of the grid, its words written out.
+    final action = onAll == null
+        ? null
+        : TextButton(
+            key: const Key('home-library'),
+            onPressed: onAll,
+            child: Text(
+              tr(context, 'See all', 'Xem tất cả'),
+              overflow: TextOverflow.ellipsis,
             ),
-          ),
-        // Plain, like Search and Settings above: the one filled
-        // button on Home is Save.
-        IconButton(
-          key: const Key('collection-new'),
-          tooltip: tr(context, 'New collection', 'Bộ sưu tập mới'),
-          // A folder, not a plus: the one + on Home is Save.
-          icon: const Icon(Icons.create_new_folder_outlined),
-          onPressed: () => scope.editCollection(context),
-        ),
-      ],
-    );
+          );
     final grid = Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
@@ -79,6 +66,19 @@ class CollectionCovers extends StatelessWidget {
             ),
             style: Theme.of(context).textTheme.bodyMedium?.copyWith(
               color: HandyColors.of(context).muted,
+            ),
+          ),
+        if (l.collections.isEmpty)
+          Padding(
+            padding: const EdgeInsets.only(top: HandySpace.m),
+            child: Align(
+              alignment: AlignmentDirectional.centerStart,
+              child: SizedBox(
+                width: 180,
+                child: _NewCollectionTile(
+                  onTap: () => scope.editCollection(context),
+                ),
+              ),
             ),
           )
         else
@@ -115,6 +115,12 @@ class CollectionCovers extends StatelessWidget {
                         ),
                       ),
                     ),
+                  SizedBox(
+                    width: width,
+                    child: _NewCollectionTile(
+                      onTap: () => scope.editCollection(context),
+                    ),
+                  ),
                 ],
               );
             },
@@ -421,6 +427,77 @@ class _New extends StatelessWidget {
         style: Theme.of(context).textTheme.labelSmall?.copyWith(
           color: dark ? p.ink : p.pressed,
           fontWeight: FontWeight.w700,
+        ),
+      ),
+    );
+  }
+}
+
+/// The last tile of the grid: make a collection, said in full.
+class _NewCollectionTile extends StatelessWidget {
+  final VoidCallback onTap;
+  const _NewCollectionTile({required this.onTap});
+  @override
+  Widget build(BuildContext context) {
+    final p = BookmarkPalette.of(context);
+    final theme = Theme.of(context);
+    return Material(
+      color: Colors.transparent,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(BookmarkRadii.collection),
+        side: BorderSide(color: p.control, width: 1.5),
+      ),
+      clipBehavior: Clip.antiAlias,
+      child: InkWell(
+        key: const Key('collection-new'),
+        onTap: onTap,
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(10, 10, 10, 12),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              AspectRatio(
+                aspectRatio: 1.55,
+                child: Center(
+                  child: Icon(
+                    Icons.create_new_folder_outlined,
+                    size: 34,
+                    color: theme.brightness == Brightness.dark
+                        ? p.primary
+                        : p.pressed,
+                  ),
+                ),
+              ),
+              const SizedBox(height: 10),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 4),
+                child: Text(
+                  tr(context, 'New collection', 'Bộ sưu tập mới'),
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: theme.textTheme.titleSmall?.copyWith(
+                    fontWeight: FontWeight.w700,
+                    color: theme.brightness == Brightness.dark
+                        ? p.primary
+                        : p.pressed,
+                  ),
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 4),
+                child: Text(
+                  tr(
+                    context,
+                    'A name, an icon, a colour',
+                    'Tên, biểu tượng, màu',
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: theme.textTheme.bodySmall,
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
