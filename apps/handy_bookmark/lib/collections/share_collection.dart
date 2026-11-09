@@ -265,11 +265,19 @@ class _SendSheet extends StatelessWidget {
                   controlAffinity: ListTileControlAffinity.leading,
                   value: picked.contains(c.id),
                   onChanged: (v) => onPick(c.id, v == true),
-                  secondary: HandyDot(hue(c.id), size: 12),
-                  title: Text(
-                    c.name,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
+                  // The collection's colour as a dot beside its name.
+                  title: Row(
+                    children: [
+                      HandyDot(hue(c.id), size: 10),
+                      const SizedBox(width: 10),
+                      Flexible(
+                        child: Text(
+                          c.name,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                    ],
                   ),
                   subtitle: Text(
                     [
