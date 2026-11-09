@@ -87,7 +87,8 @@ class _Sidebar extends StatelessWidget {
         return Padding(
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 1),
           child: Material(
-            color: on ? p.tint : Colors.transparent,
+            // The open place on the plum band, white words.
+            color: on ? p.band : Colors.transparent,
             borderRadius: BorderRadius.circular(10),
             child: InkWell(
               key: key,
@@ -99,7 +100,17 @@ class _Sidebar extends StatelessWidget {
                   padding: const EdgeInsets.symmetric(horizontal: 10),
                   child: Row(
                     children: [
-                      SizedBox(width: 20, child: Center(child: lead)),
+                      SizedBox(
+                        width: 20,
+                        child: Center(
+                          child: IconTheme.merge(
+                            data: IconThemeData(
+                              color: on ? p.bandInk : p.muted,
+                            ),
+                            child: lead,
+                          ),
+                        ),
+                      ),
                       const SizedBox(width: 12),
                       Expanded(
                         child: Text(
@@ -107,7 +118,7 @@ class _Sidebar extends StatelessWidget {
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                           style: theme.textTheme.bodyMedium?.copyWith(
-                            color: ink ?? (on ? p.pressed : p.ink),
+                            color: on ? p.bandInk : ink ?? p.ink,
                             fontWeight: on ? FontWeight.w600 : null,
                           ),
                         ),
@@ -116,7 +127,7 @@ class _Sidebar extends StatelessWidget {
                         Text(
                           '$count',
                           style: theme.textTheme.labelMedium?.copyWith(
-                            color: p.muted,
+                            color: on ? p.bandSub : p.muted,
                             fontFeatures: const [FontFeature.tabularFigures()],
                           ),
                         ),
@@ -129,7 +140,7 @@ class _Sidebar extends StatelessWidget {
         );
       }
 
-      Icon icon(IconData i) => Icon(i, size: 18, color: p.muted);
+      Icon icon(IconData i) => Icon(i, size: 18);
       return SafeArea(
         right: false,
         child: Column(

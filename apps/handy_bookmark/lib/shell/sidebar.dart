@@ -99,26 +99,28 @@ class BookmarkSidebar extends StatelessWidget {
                   key: const Key('side-overview'),
                   dense: true,
                   selected: overview,
-                  selectedTileColor: p.tint,
-                  selectedColor: p.pressed,
+                  selectedTileColor: p.band,
+                  selectedColor: p.bandInk,
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(BookmarkRadii.item),
                   ),
                   leading: Icon(
                     Icons.collections_bookmark_outlined,
                     size: 20,
-                    color: overview ? p.pressed : p.muted,
+                    color: overview ? p.bandInk : p.muted,
                   ),
                   title: Text(
                     tr(context, 'Library', 'Thư viện'),
                     style: theme.textTheme.bodyMedium?.copyWith(
-                      fontWeight: overview ? FontWeight.w600 : null,
-                      color: overview ? p.pressed : null,
+                      fontWeight: overview ? FontWeight.w700 : null,
+                      color: overview ? p.bandInk : null,
                     ),
                   ),
                   trailing: Text(
                     formatFigure(context, '$live'),
-                    style: theme.textTheme.bodyMedium?.copyWith(color: p.muted),
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                      color: overview ? p.bandSub : p.muted,
+                    ),
                   ),
                   onTap: onOverview,
                 ),

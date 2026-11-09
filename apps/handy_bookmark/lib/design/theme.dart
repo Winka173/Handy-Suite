@@ -16,6 +16,10 @@ class BookmarkPalette extends ThemeExtension<BookmarkPalette> {
   final Color sage, sageTint, warm;
   final Color danger, dangerTint, warning, warningTint;
 
+  /// The strong-contrast header band (3a, 2026-11-09): a deep teal field
+  /// with white words, its figures in [bandSub], and the gold action.
+  final Color band, bandInk, bandSub, gold, onGold;
+
   /// The face of the editorial moments (library and collection names,
   /// an item's title); a theme may set a sans or a display face instead.
   final String display;
@@ -45,21 +49,26 @@ class BookmarkPalette extends ThemeExtension<BookmarkPalette> {
     required this.dangerTint,
     required this.warning,
     required this.warningTint,
+    this.band = const Color(0xFF0F4B54),
+    this.bandInk = const Color(0xFFFFFFFF),
+    this.bandSub = const Color(0xFFCFE5E6),
+    this.gold = const Color(0xFFE0A93B),
+    this.onGold = const Color(0xFF241A05),
   });
 
   static const light = BookmarkPalette(
-    canvas: Color(0xFFF3F5F7),
+    canvas: Color(0xFFEEF3F3),
     surface: Color(0xFFFFFFFF),
-    raised: Color(0xFFEEF1F4),
-    sunk: Color(0xFFE7EBEE),
+    raised: Color(0xFFE6EDED),
+    sunk: Color(0xFFDDE6E6),
     primary: Color(0xFF0E7490),
-    pressed: Color(0xFF0B5A70),
-    tint: Color(0xFFD9EEF2),
+    pressed: Color(0xFF0F4B54),
+    tint: Color(0xFFD4EBEE),
     onPrimary: Color(0xFFFFFFFF),
-    ink: Color(0xFF1B1D1F),
-    muted: Color(0xFF5C6064),
-    line: Color(0xFFE6E6E6),
-    control: Color(0xFFD6D9DD),
+    ink: Color(0xFF0B1213),
+    muted: Color(0xFF38423F),
+    line: Color(0xFFDCE3E3),
+    control: Color(0xFFC9D2D3),
     sage: Color(0xFF557A66),
     sageTint: Color(0xFFE3EDE4),
     warm: Color(0xFFC97A5B),
@@ -70,16 +79,16 @@ class BookmarkPalette extends ThemeExtension<BookmarkPalette> {
   );
 
   static const dark = BookmarkPalette(
-    canvas: Color(0xFF141516),
-    surface: Color(0xFF1E2022),
-    raised: Color(0xFF26292B),
-    sunk: Color(0xFF101112),
+    canvas: Color(0xFF121415),
+    surface: Color(0xFF1E2123),
+    raised: Color(0xFF282C2E),
+    sunk: Color(0xFF0E0F10),
     primary: Color(0xFF7CC8D8),
     pressed: Color(0xFF9AD6E3),
     tint: Color(0xFF1F3A40),
     onPrimary: Color(0xFF0B2A31),
-    ink: Color(0xFFF2F2F2),
-    muted: Color(0xFFA9ADB1),
+    ink: Color(0xFFF5F5F5),
+    muted: Color(0xFFBCC1C4),
     line: Color(0xFF2C2F31),
     control: Color(0xFF3A3D40),
     sage: Color(0xFF9CC2AC),
@@ -89,6 +98,10 @@ class BookmarkPalette extends ThemeExtension<BookmarkPalette> {
     dangerTint: Color(0xFF3F2624),
     warning: Color(0xFFE8C07A),
     warningTint: Color(0xFF3A2F1C),
+    band: Color(0xFF145A64),
+    bandSub: Color(0xFFD3EAEC),
+    gold: Color(0xFFE6B44F),
+    onGold: Color(0xFF241A05),
   );
 
   /// The palette of the theme in force (a chosen look, or the default).
@@ -182,20 +195,31 @@ ThemeData bookmarkTheme(ThemeData base, [BookmarkPalette? palette]) {
     shadow: Colors.black,
   );
   final text = base.textTheme.apply(bodyColor: p.ink, displayColor: p.ink);
+  // Larger type for tired eyes (2026-11-09): reading text 15–16,
+  // secondary never under 13.5, section titles 21 bold.
   final textTheme = text.copyWith(
     headlineSmall: text.headlineSmall?.copyWith(
-      fontSize: 26,
-      fontWeight: FontWeight.w600,
+      fontSize: 28,
+      fontWeight: FontWeight.w700,
       letterSpacing: -.4,
       height: 1.2,
     ),
     titleLarge: text.titleLarge?.copyWith(
-      fontSize: 19,
-      fontWeight: FontWeight.w600,
+      fontSize: 21,
+      fontWeight: FontWeight.w700,
       letterSpacing: -.2,
     ),
-    titleMedium: text.titleMedium?.copyWith(fontWeight: FontWeight.w600),
-    bodySmall: text.bodySmall?.copyWith(color: p.muted, fontSize: 12.5),
+    titleMedium: text.titleMedium?.copyWith(
+      fontSize: 17,
+      fontWeight: FontWeight.w600,
+    ),
+    titleSmall: text.titleSmall?.copyWith(fontSize: 16),
+    bodyLarge: text.bodyLarge?.copyWith(fontSize: 16.5),
+    bodyMedium: text.bodyMedium?.copyWith(fontSize: 15.5),
+    bodySmall: text.bodySmall?.copyWith(color: p.muted, fontSize: 13.5),
+    labelLarge: text.labelLarge?.copyWith(fontSize: 15),
+    labelMedium: text.labelMedium?.copyWith(fontSize: 13.5),
+    labelSmall: text.labelSmall?.copyWith(fontSize: 12.5),
   );
   RoundedRectangleBorder round(double r, [BorderSide side = BorderSide.none]) =>
       RoundedRectangleBorder(
@@ -210,7 +234,7 @@ ThemeData bookmarkTheme(ThemeData base, [BookmarkPalette? palette]) {
             : BorderSide(color: color, width: width),
       );
   final button = textTheme.labelLarge?.copyWith(
-    fontSize: 15,
+    fontSize: 16,
     fontWeight: FontWeight.w600,
   );
   return base.copyWith(

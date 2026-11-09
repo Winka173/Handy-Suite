@@ -219,8 +219,9 @@ class _Block extends StatelessWidget {
     final field = progress.category == null
         ? (selected ? p.sunk : p.surface)
         : selected
-        ? Color.lerp(hue.tint, hue.mark, .3)!
-        : hue.tint;
+        ? Color.lerp(hue.tint, hue.mark, .34)!
+        // Strong contrast: a fuller field than the plain tint.
+        : Color.lerp(hue.tint, hue.mark, .1)!;
     return Semantics(
       button: true,
       selected: selected,

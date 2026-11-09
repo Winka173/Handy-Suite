@@ -20,11 +20,15 @@ class QuickSaveBar extends StatefulWidget {
 
   /// Where a save goes when the person is inside a collection.
   final String? collectionId;
+
+  /// Sits on the deep header band: a white field and the gold Save.
+  final bool onBand;
   const QuickSaveBar({
     super.key,
     required this.scope,
     required this.onMore,
     this.collectionId,
+    this.onBand = false,
   });
   @override
   State<QuickSaveBar> createState() => _QuickSaveBarState();
@@ -201,6 +205,20 @@ class _QuickSaveBarState extends State<QuickSaveBar> {
       ),
     };
     final radius = BorderRadius.circular(BookmarkRadii.field);
+    final band = widget.onBand;
+    // On the band a problem reads in a pale coral, the band's own red.
+    final danger = band ? const Color(0xFFFFC2B8) : p.danger;
+    final buttonStyle = FilledButton.styleFrom(
+      minimumSize: const Size(76, 52),
+      padding: const EdgeInsets.symmetric(horizontal: 18),
+      shape: RoundedRectangleBorder(borderRadius: radius),
+      backgroundColor: band ? p.gold : null,
+      foregroundColor: band ? p.onGold : null,
+      textStyle: theme.textTheme.labelLarge?.copyWith(
+        fontSize: 16,
+        fontWeight: FontWeight.w700,
+      ),
+    );
     final field = TextField(
       key: const Key('bookmark-inline-url'),
       controller: text,
@@ -218,7 +236,11 @@ class _QuickSaveBarState extends State<QuickSaveBar> {
         counterText: '',
         isDense: true,
         filled: true,
-        fillColor: theme.brightness == Brightness.dark ? p.raised : p.surface,
+        fillColor: band
+            ? p.surface
+            : theme.brightness == Brightness.dark
+            ? p.raised
+            : p.surface,
         prefixIcon: const Icon(Icons.link_rounded),
         suffixIcon: empty
             ? IconButton(
@@ -243,12 +265,14 @@ class _QuickSaveBarState extends State<QuickSaveBar> {
           borderRadius: radius,
           borderSide: problem == _Problem.none
               ? BorderSide.none
-              : BorderSide(color: p.danger, width: 1.5),
+              : BorderSide(color: danger, width: 1.5),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: radius,
           borderSide: BorderSide(
-            color: problem == _Problem.none ? p.primary : p.danger,
+            color: problem == _Problem.none
+                ? (band ? p.gold : p.primary)
+                : danger,
             width: 1.5,
           ),
         ),
@@ -259,21 +283,13 @@ class _QuickSaveBarState extends State<QuickSaveBar> {
     final button = empty
         ? FilledButton(
             key: const Key('save-new'),
-            style: FilledButton.styleFrom(
-              minimumSize: const Size(76, 52),
-              padding: const EdgeInsets.symmetric(horizontal: 18),
-              shape: RoundedRectangleBorder(borderRadius: radius),
-            ),
+            style: buttonStyle,
             onPressed: busy ? null : widget.onMore,
             child: Text(tr(context, 'Save', 'Lưu')),
           )
         : FilledButton(
             key: const Key('bookmark-inline-save'),
-            style: FilledButton.styleFrom(
-              minimumSize: const Size(76, 52),
-              padding: const EdgeInsets.symmetric(horizontal: 18),
-              shape: RoundedRectangleBorder(borderRadius: radius),
-            ),
+            style: buttonStyle,
             onPressed: busy ? null : save,
             // Words, not a spinner: the wait may be a question (already
             // saved?) rather than work.
@@ -309,7 +325,7 @@ class _QuickSaveBarState extends State<QuickSaveBar> {
                           child: Icon(
                             Icons.error_outline,
                             size: 16,
-                            color: p.danger,
+                            color: danger,
                           ),
                         ),
                         const SizedBox(width: 6),
@@ -318,7 +334,7 @@ class _QuickSaveBarState extends State<QuickSaveBar> {
                             line,
                             key: const Key('quick-problem'),
                             style: theme.textTheme.bodySmall?.copyWith(
-                              color: p.danger,
+                              color: band ? p.bandInk : p.danger,
                             ),
                           ),
                         ),

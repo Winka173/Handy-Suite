@@ -61,7 +61,19 @@ abstract final class HandyPalette {
             Color.lerp(mark, Colors.white, .18)!,
             Color.lerp(ground, mark, .22)!,
           )
-        : HandyHue(mark, Color.lerp(Colors.white, mark, .14)!);
+        : HandyHue(_legible(mark), Color.lerp(Colors.white, mark, .14)!);
+  }
+
+  /// A light theme's mark, taken just deep enough to stand 3:1 against a
+  /// white or tinted pale ground (WCAG non-text contrast): amber and olive
+  /// darken a little, the others are already there.
+  static Color _legible(Color mark) {
+    double ratio(Color c) => 1.05 / (c.computeLuminance() + .05);
+    var c = mark;
+    for (var t = .05; ratio(c) < 3.45 && t < .6; t += .05) {
+      c = Color.lerp(mark, Colors.black, t)!;
+    }
+    return c;
   }
 
   /// A stable index for something with no order of its own.

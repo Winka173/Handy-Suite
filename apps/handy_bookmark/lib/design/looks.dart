@@ -91,7 +91,20 @@ BookmarkPalette _p({
   warningTint: Color(warningTint),
   display: display,
   edges: edges,
+  band: _band(primary),
+  bandSub: Color.lerp(_band(primary), const Color(0xFFFFFFFF), .8)!,
 );
+
+/// A look's header band: its own hue taken deep enough for white words
+/// (a pale hue of a dark look goes further toward black).
+Color _band(int primary) {
+  final hue = Color(primary);
+  return Color.lerp(
+    hue,
+    const Color(0xFF000000),
+    hue.computeLuminance() > .3 ? .62 : .42,
+  )!;
+}
 
 final premiumLooks = <BookmarkLook>[
   BookmarkLook(

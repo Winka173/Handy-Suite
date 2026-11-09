@@ -120,6 +120,9 @@ void main() {
       final id = store.rows.keys.single;
       expect(find.byKey(ValueKey('recent-$id')), findsOneWidget);
       expect(find.text('1 item · 1 not sorted'), findsOneWidget);
+      // The header band is taller now: scroll the card into view.
+      await tester.ensureVisible(find.byKey(ValueKey('recent-$id')));
+      await tester.pumpAndSettle();
       await tester.tap(find.byKey(ValueKey('recent-$id')));
       await tester.pumpAndSettle();
       expect(find.byKey(const Key('save-open-original')), findsOneWidget);

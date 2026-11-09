@@ -261,7 +261,7 @@ class CollectionCover extends StatelessWidget {
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
                               style: theme.textTheme.bodySmall?.copyWith(
-                                color: f.ink.withValues(alpha: .82),
+                                color: f.ink.withValues(alpha: .9),
                               ),
                             ),
                           ),

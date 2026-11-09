@@ -281,7 +281,7 @@ class ResultsView extends StatelessWidget {
                 crossAxisCount: columns,
                 mainAxisSpacing: gap,
                 crossAxisSpacing: gap,
-                mainAxisExtent: width / 1.28 + 74 * scale.clamp(1.0, 2.2),
+                mainAxisExtent: width / 1.28 + 82 * scale.clamp(1.0, 2.2),
               ),
               itemCount: rows.length,
               itemBuilder: (context, i) => LinkCard(

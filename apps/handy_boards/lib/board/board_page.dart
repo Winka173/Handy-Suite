@@ -239,6 +239,21 @@ class _BoardPageState extends State<BoardPage> {
     );
   }
 
+  /// The band's New card: a name, then the card lands at the end of the
+  /// board's first column (in the picked category, as an inline add does).
+  Future<void> _newCard() async {
+    final columns = columnsOf(scope.state, widget.board);
+    if (columns.isEmpty) return;
+    final name = await askText(
+      context,
+      title: tr(context, 'New card', 'Thẻ mới'),
+      hint: tr(context, 'What needs doing?', 'Việc cần làm là gì?'),
+      action: tr(context, 'Add', 'Thêm'),
+    );
+    if (!mounted || name == null || name.trim().isEmpty) return;
+    await _add(columns.first.id, name.trim());
+  }
+
   Future<void> _add(String column, String title) => scope.run(
     context,
     () => scope.controller.change((s) {
@@ -443,59 +458,119 @@ class _BoardPageState extends State<BoardPage> {
     final open = sum.cards - sum.done;
     InlineSpan figure(int v) => TextSpan(
       text: '$v',
-      style: TextStyle(color: p.ink, fontWeight: FontWeight.w700),
+      style: TextStyle(color: p.bandInk, fontWeight: FontWeight.w700),
     );
-    final title = Padding(
-      padding: EdgeInsets.fromLTRB(wide ? 24 : 16, 4, 16, 12),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Semantics(
-            header: true,
-            child: Text(
-              b.str('title'),
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
-              style: theme.textTheme.headlineSmall?.copyWith(
-                fontSize: wide ? 28 : 24,
-                fontWeight: FontWeight.w600,
-              ),
+    // The board's head on the plum band (strong contrast, 3a): the name in
+    // white, the counts and the next key date in the band's pale line, and
+    // on a wide screen Filter and the gold New card beside them.
+    final sub = theme.textTheme.bodyMedium?.copyWith(color: p.bandSub);
+    final head = Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Semantics(
+          header: true,
+          child: Text(
+            b.str('title'),
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+            style: theme.textTheme.headlineSmall?.copyWith(
+              fontSize: wide ? 32 : 28,
+              fontWeight: FontWeight.w700,
+              color: p.bandInk,
             ),
           ),
-          const SizedBox(height: 4),
-          // "7 open · 1 late · semester ends 15/1, in 67 days": the counts
-          // in ink; the next key date opens its editor.
-          Wrap(
-            crossAxisAlignment: WrapCrossAlignment.center,
-            children: [
-              Text.rich(
-                TextSpan(
-                  children: [
-                    figure(open),
-                    TextSpan(text: tr(context, ' open', ' việc đang mở')),
-                    if (sum.overdue > 0) ...[
-                      const TextSpan(text: ' · '),
-                      figure(sum.overdue),
-                      TextSpan(text: tr(context, ' late', ' trễ')),
-                    ],
-                    if (next.isNotEmpty && roomy) const TextSpan(text: ' · '),
+        ),
+        const SizedBox(height: 4),
+        // "7 open · 1 late · semester ends 15/1, in 67 days": the counts
+        // in ink; the next key date opens its editor.
+        _stackOrWrap(
+          wide: wide,
+          children: [
+            Text.rich(
+              TextSpan(
+                children: [
+                  figure(open),
+                  TextSpan(text: tr(context, ' open', ' việc đang mở')),
+                  if (sum.overdue > 0) ...[
+                    const TextSpan(text: ' · '),
+                    figure(sum.overdue),
+                    TextSpan(text: tr(context, ' late', ' trễ')),
                   ],
-                ),
-                style: theme.textTheme.bodyMedium?.copyWith(color: p.muted),
+                  // A phone puts the key date on its own line, so no dot
+                  // is left hanging at a line's end.
+                  if (next.isNotEmpty && roomy && wide)
+                    const TextSpan(text: ' · '),
+                ],
               ),
-              if (next.isNotEmpty && roomy)
-                InkWell(
-                  key: Key('key-date-${next.first.label}'),
-                  borderRadius: BorderRadius.circular(6),
-                  onTap: () => editMilestones(context, scope, widget.board),
-                  child: Text(
-                    keyDateLine(context, next.first.label, next.first.day, now),
-                    style: theme.textTheme.bodyMedium?.copyWith(color: p.muted),
-                  ),
+              style: sub,
+            ),
+            if (next.isNotEmpty && roomy)
+              InkWell(
+                key: Key('key-date-${next.first.label}'),
+                borderRadius: BorderRadius.circular(6),
+                onTap: () => editMilestones(context, scope, widget.board),
+                child: Text(
+                  keyDateLine(context, next.first.label, next.first.day, now),
+                  style: sub,
                 ),
-            ],
+              ),
+          ],
+        ),
+      ],
+    );
+    final filterOn = dueSoon || savedFilter != null || !showStrip;
+    final bandButtons = [
+      TextButton.icon(
+        key: const Key('board-filter-sheet'),
+        style: TextButton.styleFrom(
+          foregroundColor: p.bandInk,
+          backgroundColor: p.bandInk.withValues(alpha: .14),
+          minimumSize: const Size(48, 48),
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+        ),
+        onPressed: () => _viewSheet(hasCategories),
+        icon: Badge(
+          isLabelVisible: filterOn,
+          smallSize: 8,
+          backgroundColor: p.gold,
+          child: const Icon(Icons.filter_list, size: 20),
+        ),
+        label: Text(tr(context, 'Filter', 'Lọc')),
+      ),
+      if (!past) ...[
+        const SizedBox(width: 10),
+        FilledButton.icon(
+          key: const Key('board-new-card'),
+          style: FilledButton.styleFrom(
+            backgroundColor: p.gold,
+            foregroundColor: p.onGold,
+            minimumSize: const Size(48, 48),
+            padding: const EdgeInsets.symmetric(horizontal: 18),
           ),
-        ],
+          onPressed: _newCard,
+          icon: const Icon(Icons.add, size: 20),
+          label: Text(tr(context, 'New card', 'Thẻ mới')),
+        ),
+      ],
+    ];
+    final title = Padding(
+      padding: EdgeInsets.fromLTRB(wide ? 24 : 16, 4, wide ? 24 : 16, 12),
+      child: Material(
+        key: const Key('board-band'),
+        color: p.band,
+        borderRadius: BorderRadius.circular(22),
+        child: Padding(
+          padding: EdgeInsets.fromLTRB(wide ? 24 : 18, 16, wide ? 18 : 18, 16),
+          child: wide
+              ? Row(
+                  children: [
+                    Expanded(child: head),
+                    const SizedBox(width: 16),
+                    ...bandButtons,
+                  ],
+                )
+              : head,
+        ),
       ),
     );
     final actions = <Widget>[
@@ -508,18 +583,20 @@ class _BoardPageState extends State<BoardPage> {
         }),
         icon: Icon(searching ? Icons.search_off : Icons.search),
       ),
-      IconButton(
-        key: const Key('board-filter-sheet'),
-        tooltip: tr(context, 'Filter and view', 'Lọc và hiển thị'),
-        isSelected: dueSoon || savedFilter != null || !showStrip,
-        onPressed: () => _viewSheet(hasCategories),
-        icon: const Icon(Icons.filter_list),
-        selectedIcon: Badge(
-          smallSize: 8,
-          backgroundColor: p.primary,
-          child: const Icon(Icons.filter_list),
+      // On a wide screen Filter sits on the band instead.
+      if (!wide)
+        IconButton(
+          key: const Key('board-filter-sheet'),
+          tooltip: tr(context, 'Filter and view', 'Lọc và hiển thị'),
+          isSelected: filterOn,
+          onPressed: () => _viewSheet(hasCategories),
+          icon: const Icon(Icons.filter_list),
+          selectedIcon: Badge(
+            smallSize: 8,
+            backgroundColor: p.primary,
+            child: const Icon(Icons.filter_list),
+          ),
         ),
-      ),
       IconButton(
         key: const Key('board-more'),
         tooltip: tr(context, 'Board options', 'Tuỳ chọn bảng'),
@@ -946,3 +1023,14 @@ Future<void> pickBoardCover(
     ),
   );
 }
+
+/// Wide, the pieces flow on one line and wrap; on a phone each is its own
+/// line.
+Widget _stackOrWrap({required bool wide, required List<Widget> children}) =>
+    wide
+    ? Wrap(crossAxisAlignment: WrapCrossAlignment.center, children: children)
+    : Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
+        children: children,
+      );

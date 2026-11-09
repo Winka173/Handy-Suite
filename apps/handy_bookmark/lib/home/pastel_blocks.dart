@@ -16,13 +16,14 @@ import '../ui/words.dart';
   final dark = Theme.of(context).brightness == Brightness.dark;
   return dark
       ? (
-          field: Color.lerp(p.surface, h.mark, .26)!,
-          ink: Color.lerp(h.mark, Colors.white, .62)!,
+          field: Color.lerp(p.surface, h.mark, .32)!,
+          ink: Color.lerp(h.mark, Colors.white, .7)!,
           mark: h.mark,
         )
       : (
-          field: Color.lerp(Colors.white, h.mark, .14)!,
-          ink: Color.lerp(h.mark, Colors.black, .5)!,
+          // Strong contrast: a fuller field and a deeper ink.
+          field: Color.lerp(Colors.white, h.mark, .22)!,
+          ink: Color.lerp(h.mark, Colors.black, .6)!,
           mark: h.mark,
         );
 }

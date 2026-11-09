@@ -70,6 +70,7 @@ class HomeQueues extends StatelessWidget {
         _QueueRow(
           key: const Key('home-quick-sort'),
           scope: scope,
+          strong: true,
           faces: unsorted,
           title: tr(
             context,
@@ -107,8 +108,10 @@ class HomeQueues extends StatelessWidget {
           onTap: onFocus,
         ),
     ];
+    // Not sorted is the job to do, so it sits on the deep band colour;
+    // the revisit queue stays on the pale tint.
     Widget card(Widget child) => Material(
-      color: p.tint,
+      color: _queueField(context, child is _QueueRow && child.strong),
       borderRadius: BorderRadius.circular(BookmarkRadii.item),
       clipBehavior: Clip.antiAlias,
       child: child,
@@ -127,26 +130,28 @@ class HomeQueues extends StatelessWidget {
         ),
       );
     }
-    return Material(
-      color: p.tint,
-      borderRadius: BorderRadius.circular(BookmarkRadii.item),
-      clipBehavior: Clip.antiAlias,
-      child: Column(
-        children: [
-          for (final (k, w) in rows.indexed) ...[
-            if (k > 0)
-              Divider(
-                height: 1,
-                indent: 12,
-                endIndent: 12,
-                color: p.primary.withValues(alpha: .16),
-              ),
-            w,
-          ],
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        for (final (k, w) in rows.indexed) ...[
+          if (k > 0) const SizedBox(height: HandySpace.s),
+          w is _QueueRow ? card(w) : w,
         ],
-      ),
+      ],
     );
   }
+}
+
+/// A queue card's field. Not sorted sits on the deep band colour. On a
+/// light ground the revisit queue is the pale teal tint; on a dark one
+/// that tint is too close to the band, so it takes a warm terracotta
+/// field instead and the two read as different jobs.
+Color _queueField(BuildContext context, bool strong) {
+  final p = BookmarkPalette.of(context);
+  if (strong) return p.band;
+  return Theme.of(context).brightness == Brightness.dark
+      ? Color.lerp(p.surface, p.warm, .2)!
+      : p.tint;
 }
 
 class _QueueRow extends StatelessWidget {
@@ -154,8 +159,12 @@ class _QueueRow extends StatelessWidget {
   final List<Bookmark> faces;
   final String title, subtitle;
   final VoidCallback onTap;
+
+  /// On the deep band colour: white words and a gold arrow.
+  final bool strong;
   const _QueueRow({
     super.key,
+    this.strong = false,
     required this.scope,
     required this.faces,
     required this.title,
@@ -196,7 +205,7 @@ class _QueueRow extends StatelessWidget {
                           height: 44,
                           padding: const EdgeInsets.all(2),
                           decoration: BoxDecoration(
-                            color: p.tint,
+                            color: _queueField(context, strong),
                             borderRadius: BorderRadius.circular(12),
                           ),
                           child: ItemPicture(
@@ -218,21 +227,29 @@ class _QueueRow extends StatelessWidget {
                     Text(
                       title,
                       style: theme.textTheme.titleSmall?.copyWith(
-                        fontWeight: FontWeight.w600,
+                        fontWeight: FontWeight.w700,
+                        color: strong ? p.bandInk : p.ink,
                       ),
                     ),
                     const SizedBox(height: 2),
                     Text(
                       subtitle,
                       style: theme.textTheme.bodySmall?.copyWith(
-                        color: p.muted,
+                        color: strong ? p.bandSub : p.muted,
                       ),
                     ),
                   ],
                 ),
               ),
               const SizedBox(width: 8),
-              Icon(Icons.arrow_forward_rounded, color: p.primary),
+              Icon(
+                Icons.arrow_forward_rounded,
+                color: strong
+                    ? p.gold
+                    : Theme.of(context).brightness == Brightness.dark
+                    ? p.warm
+                    : p.pressed,
+              ),
             ],
           ),
         ),

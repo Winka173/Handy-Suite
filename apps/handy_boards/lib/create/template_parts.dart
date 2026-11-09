@@ -396,7 +396,11 @@ class _PreviewBodyState extends State<PreviewBody> {
               SizedBox(
                 // Never less than a readable board (its category strip
                 // and a few cards): on a tiny screen the page scrolls on.
-                height: box.maxHeight.clamp(720.0, double.infinity),
+                // A narrow phone wraps the strip's names, so a little more.
+                height: box.maxHeight.clamp(
+                  MediaQuery.sizeOf(context).width < 360 ? 744.0 : 720.0,
+                  double.infinity,
+                ),
                 child: widget.board,
               ),
             ],

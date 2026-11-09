@@ -95,15 +95,18 @@ class PlacesList extends StatelessWidget {
           v.place == place &&
           v.id == id;
       // The chosen place is a rounded pill inset in its row, so the
-      // group's hairlines run in the gap and never cross it.
+      // group's hairlines run in the gap and never cross it. In the
+      // sidebar it is the deep band colour with white words.
+      final band = flat && on;
+      final bp = BookmarkPalette.of(context);
       return Padding(
         padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
         child: ListTile(
           key: key,
           selected: on,
           dense: flat,
-          selectedTileColor: c.select,
-          selectedColor: theme.colorScheme.onSurface,
+          selectedTileColor: flat ? bp.band : c.select,
+          selectedColor: flat ? bp.bandInk : theme.colorScheme.onSurface,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(BookmarkRadii.item),
           ),
@@ -114,7 +117,15 @@ class PlacesList extends StatelessWidget {
           // A collection shows its colour as a dot where the icon would be;
           // the fixed places keep their grey icons.
           leading: hue == null
-              ? Icon(icon, size: 20, color: on ? c.selectInk : c.muted)
+              ? Icon(
+                  icon,
+                  size: 20,
+                  color: band
+                      ? bp.bandInk
+                      : on
+                      ? c.selectInk
+                      : c.muted,
+                )
               : SizedBox(
                   width: 20,
                   child: Center(child: HandyDot(hue, size: 10)),
@@ -136,7 +147,7 @@ class PlacesList extends StatelessWidget {
                 Text(
                   '$n',
                   style: theme.textTheme.bodyMedium?.copyWith(
-                    color: c.muted,
+                    color: band ? bp.bandSub : c.muted,
                     fontFeatures: tabular,
                   ),
                 ),

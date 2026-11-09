@@ -14,7 +14,17 @@ class BoardsPalette extends ThemeExtension<BoardsPalette> {
   final Color primary, pressed, tint, onPrimary;
   final Color ink, muted, line, control;
   final Color danger, dangerTint, warning, warningTint, positive;
+
+  /// The strong-contrast header band (3a, 2026-11-09): a plum between the
+  /// deep plum and the magenta, white words, its line in [bandSub], and
+  /// the gold action.
+  final Color band, bandInk, bandSub, gold, onGold;
   const BoardsPalette({
+    this.band = const Color(0xFF7A1A69),
+    this.bandInk = const Color(0xFFFFFFFF),
+    this.bandSub = const Color(0xFFF3DDEE),
+    this.gold = const Color(0xFFE0A93B),
+    this.onGold = const Color(0xFF241A05),
     required this.canvas,
     required this.surface,
     required this.raised,
@@ -35,18 +45,18 @@ class BoardsPalette extends ThemeExtension<BoardsPalette> {
   });
 
   static const light = BoardsPalette(
-    canvas: Color(0xFFF2F2F0),
+    canvas: Color(0xFFF3EFF2),
     surface: Color(0xFFFFFFFF),
-    raised: Color(0xFFE9E8E6),
-    sunk: Color(0xFFE3E1DE),
+    raised: Color(0xFFE9E4E7),
+    sunk: Color(0xFFE1DADF),
     primary: Color(0xFFA61C8E),
-    pressed: Color(0xFF82136F),
+    pressed: Color(0xFF7A1A69),
     tint: Color(0xFFF7E1F1),
     onPrimary: Color(0xFFFFFFFF),
-    ink: Color(0xFF1D1B1A),
-    muted: Color(0xFF5F5B57),
-    line: Color(0xFFE6E3DE),
-    control: Color(0xFFCFCBC6),
+    ink: Color(0xFF0F0B0E),
+    muted: Color(0xFF3B3439),
+    line: Color(0xFFE4DEE2),
+    control: Color(0xFFCAC1C7),
     danger: Color(0xFFB3261E),
     dangerTint: Color(0xFFF9E3E0),
     warning: Color(0xFF8A5A0F),
@@ -55,16 +65,16 @@ class BoardsPalette extends ThemeExtension<BoardsPalette> {
   );
 
   static const dark = BoardsPalette(
-    canvas: Color(0xFF141516),
-    surface: Color(0xFF25282A),
+    canvas: Color(0xFF121314),
+    surface: Color(0xFF26292B),
     raised: Color(0xFF1B1D1F),
-    sunk: Color(0xFF101112),
+    sunk: Color(0xFF0E0F10),
     primary: Color(0xFFE07CCB),
     pressed: Color(0xFFEBA0DA),
     tint: Color(0xFF3A1F35),
     onPrimary: Color(0xFF2A0623),
-    ink: Color(0xFFF2F2F2),
-    muted: Color(0xFFA9ADB1),
+    ink: Color(0xFFF5F5F5),
+    muted: Color(0xFFBCC1C4),
     line: Color(0xFF2C2F31),
     control: Color(0xFF3A3D40),
     danger: Color(0xFFFF9B8C),
@@ -72,6 +82,8 @@ class BoardsPalette extends ThemeExtension<BoardsPalette> {
     warning: Color(0xFFE9C27F),
     warningTint: Color(0xFF3A2F1C),
     positive: Color(0xFF8FD3A8),
+    band: Color(0xFF6E1F61),
+    gold: Color(0xFFE6B44F),
   );
 
   static BoardsPalette of(BuildContext context) {
@@ -151,36 +163,42 @@ ThemeData boardsTheme(ThemeData base, [BoardsPalette? palette]) {
   );
   final text = base.textTheme.apply(bodyColor: p.ink, displayColor: p.ink);
   final textTheme = text.copyWith(
+    // Larger type for tired eyes (2026-11-09): reading text 15–16,
+    // secondary never under 13.5, section titles 21 bold.
     headlineMedium: text.headlineMedium?.copyWith(
-      fontSize: 28,
-      fontWeight: FontWeight.w600,
+      fontSize: 30,
+      fontWeight: FontWeight.w700,
       letterSpacing: -.6,
       height: 1.15,
     ),
     headlineSmall: text.headlineSmall?.copyWith(
-      fontSize: 24,
-      fontWeight: FontWeight.w600,
+      fontSize: 26,
+      fontWeight: FontWeight.w700,
       letterSpacing: -.4,
       height: 1.2,
     ),
     titleLarge: text.titleLarge?.copyWith(
-      fontSize: 19,
-      fontWeight: FontWeight.w600,
+      fontSize: 21,
+      fontWeight: FontWeight.w700,
       letterSpacing: -.2,
     ),
     titleMedium: text.titleMedium?.copyWith(
-      fontSize: 16,
+      fontSize: 17,
       fontWeight: FontWeight.w600,
     ),
     titleSmall: text.titleSmall?.copyWith(
-      fontSize: 14,
+      fontSize: 15.5,
       fontWeight: FontWeight.w600,
     ),
-    bodySmall: text.bodySmall?.copyWith(color: p.muted, fontSize: 12.5),
+    bodyLarge: text.bodyLarge?.copyWith(fontSize: 16.5),
+    bodyMedium: text.bodyMedium?.copyWith(fontSize: 15.5),
+    bodySmall: text.bodySmall?.copyWith(color: p.muted, fontSize: 13.5),
+    labelLarge: text.labelLarge?.copyWith(fontSize: 15),
     labelMedium: text.labelMedium?.copyWith(
-      fontSize: 12.5,
+      fontSize: 13.5,
       fontWeight: FontWeight.w500,
     ),
+    labelSmall: text.labelSmall?.copyWith(fontSize: 12.5),
   );
   RoundedRectangleBorder round(double r, [BorderSide side = BorderSide.none]) =>
       RoundedRectangleBorder(
@@ -195,7 +213,7 @@ ThemeData boardsTheme(ThemeData base, [BoardsPalette? palette]) {
             : BorderSide(color: color, width: width),
       );
   final button = textTheme.labelLarge?.copyWith(
-    fontSize: 15,
+    fontSize: 16,
     fontWeight: FontWeight.w600,
   );
   return base.copyWith(

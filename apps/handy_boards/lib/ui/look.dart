@@ -20,8 +20,8 @@ Color categoryInk(BuildContext context, BoardRecord? category) {
   if (category == null) return BoardsPalette.of(context).ink;
   final mark = categoryHue(context, category).mark;
   return Theme.of(context).brightness == Brightness.dark
-      ? Color.lerp(mark, Colors.white, .62)!
-      : Color.lerp(mark, Colors.black, .5)!;
+      ? Color.lerp(mark, Colors.white, .7)!
+      : Color.lerp(mark, Colors.black, .6)!;
 }
 
 String categoryName(BuildContext context, BoardRecord? category) =>

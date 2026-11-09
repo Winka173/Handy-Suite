@@ -292,6 +292,9 @@ void main() {
       c.state!,
       card.id,
     ).firstWhere((x) => !x.flag('done'));
+    // Larger type pushes the subtasks lower in the sheet: bring it up.
+    await t.ensureVisible(find.text(first.str('title')).last);
+    await t.pumpAndSettle();
     await tap(t, find.text(first.str('title')).hitTestable());
     // Tapping the words edits; the box ticks.
     await t.tap(find.text('Cancel'));

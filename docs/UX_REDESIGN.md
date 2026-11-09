@@ -3240,3 +3240,65 @@ Lần trước chỉ áp màu và vài chi tiết lên màn cũ nên khác bản
 
 **Desktop (cả hai app)**: thanh bên như ảnh chủ gửi (logo + tên app; mục chính có số đếm; nhóm "Bộ sưu tập"/"Bảng" có chấm/ô màu và số; chân: Thùng rác, Cài đặt); Bookmark "Thư viện" mở trang tổng quan theo lưới bản phác; Boards màn bảng 4 cột đều nhau, "Lọc" + "Thẻ mới" bên phải tiêu đề.
 
+
+## Hợp đồng: Bookmark và Boards · tương phản mạnh 3a, chữ to (2026-11-09, chủ chọn)
+
+**Vì sao.** Người dùng góp ý: app ít màu và chữ nhỏ, khó đọc với người mắt yếu. Chủ xem 5 hướng tương phản mạnh (3a–3e) và chọn **3a cho cả hai app**. Riêng Boards, màu hồng phải sáng hơn mận đậm nhưng chưa rực bằng 3c.
+
+**Việc của màn.** Không đổi. Chỉ đổi màu và cỡ chữ để mắt tìm ra ngay tên trang và việc chính.
+
+**Dải đầu trang** (một mảng đậm duy nhất trên trang)
+
+| | Bookmark | Boards |
+|---|---|---|
+| Nền dải sáng / tối | xanh mực `#0F4B54` / `#145A64` | mận `#7A1A69` / `#6E1F61` |
+| Trên dải, điện thoại | tên thư viện, dòng số, ô dán link + nút **Lưu** vàng `#E0A93B` | tên bảng, dòng số; ngày quan trọng xuống dòng riêng, không để dấu "·" lửng cuối dòng |
+| Trên dải, màn rộng | như điện thoại, nằm ngang | thêm nút **Lọc** (trong suốt, có chấm khi đang lọc) và nút vàng **Thẻ mới**, đặt thẻ vào cuối cột đầu; ẩn khi xem kỳ đã qua |
+
+- Chữ trên dải: tên màu trắng 700. Dòng phụ dùng `bandSub` (`#CFE5E6` / `#F3DDEE`). Số in đậm màu trắng.
+- Màn rộng: nút lọc chuyển từ thanh trên xuống dải, nên thanh trên chỉ còn Tìm và Thêm.
+- Mục đang chọn ở thanh bên: nền màu dải, chữ trắng, số đếm `bandSub`.
+- Bookmark, thẻ hàng chờ:
+  - **Chưa xếp**: nền màu dải, mũi tên vàng.
+  - **Chờ xem lại**: bản sáng dùng tint xanh nhạt như mock. Bản tối dùng nền đất nung (`surface` pha 20% `warm`) và mũi tên `warm`, vì tint xanh tối quá gần màu dải (chủ góp ý).
+  - Điện thoại: hai thẻ tách rời, cách 8pt, nằm ngay dưới dải, rồi mới tới Hẹn đọc (đúng mock).
+- Pro looks của Bookmark: dải lấy chính màu của look, làm đậm tới mức chữ trắng đọc được.
+
+**Màu nền và chữ**
+- Bookmark sáng: nền `#EEF3F3`, chữ `#0B1213`, chữ phụ `#38423F`, link `#0F4B54`.
+- Boards sáng: nền `#F3EFF2`, cột `#E9E4E7`, chữ `#0F0B0E`, chữ phụ `#3B3439`.
+- Bản tối: chữ phụ nâng lên `#BCC1C4`.
+- Ô bộ sưu tập và ô nhóm đậm hơn:
+  - Bookmark: nền ô pha 22% màu, chữ pha 60% đen.
+  - Boards: ô nhóm pha thêm 10% màu, chữ pha 60% đen (bản tối 70% trắng).
+
+**Cỡ chữ** (cả hai app)
+
+| Vai trò | Cỡ |
+|---|---|
+| Chữ đọc (bodyMedium / bodyLarge) | 15.5 / 16.5 |
+| Chữ phụ (bodySmall, labelMedium) | 13.5, không nhỏ hơn |
+| Tiêu đề mục (titleLarge) | 21, 700 |
+| Tên trang trên dải | Bookmark 30, Boards 28 (điện thoại) / 32 (rộng) |
+| Nút | 16 |
+
+**Tương phản.** Đo lại sau khi đổi:
+- Chữ trên dải: 9.6–10:1.
+- Chữ phụ trên dải: 7.4–8:1.
+- Nút vàng so với dải: 4.55:1.
+- Chữ trên ô màu: ít nhất 9.4:1 (bản tối 6.7:1).
+- Chấm màu và thanh tiến độ: ít nhất 3.1:1.
+
+Kit sửa chung (`HandyPalette`): ở bản sáng, màu nhận diện được làm đậm tới 3.45:1 so với nền trắng (WCAG 1.4.11). Chỉ hổ phách và ô liu đổi. Ba lỗi trước đây hết:
+- chấm hổ phách 2.36:1;
+- chấm ô liu 2.87:1;
+- thanh tiến độ hổ phách 2.49:1.
+
+**Bố cục chịu chữ to**
+- Thẻ link trong lưới Bookmark dành 82pt cho chữ (trước là 74).
+- Bảng xem trước của Boards trên điện thoại hẹp (dưới 360pt) cao tối thiểu 744pt.
+
+**Bác bỏ**
+- Dải đậm ở nhiều chỗ.
+- Thanh bên đậm (3d/3e không được chọn).
+- Đổi màu hành động chính ở các màn khác: nút vàng chỉ nằm trên dải.

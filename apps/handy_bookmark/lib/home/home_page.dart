@@ -8,9 +8,9 @@ import '../links/task_strip.dart';
 import 'collection_covers.dart';
 import 'dateline.dart';
 import 'save_sheet.dart';
-import '../design/theme.dart';
 import 'empty_library.dart';
 import 'home_sections.dart';
+import '../ui/header_band.dart';
 import '../ui/read_later_ribbon.dart';
 import 'home_queues.dart';
 import 'pastel_blocks.dart';
@@ -50,7 +50,6 @@ class SaveHomePage extends StatelessWidget {
       listenable: Listenable.merge([v, scope.c]),
       builder: (context, _) {
         final theme = Theme.of(context);
-        final p = BookmarkPalette.of(context);
         final l = scope.library;
         final empty = l.bookmarks.isEmpty && l.trash.isEmpty;
         var live = 0, unsorted = 0;
@@ -63,11 +62,8 @@ class SaveHomePage extends StatelessWidget {
         final later = l.bookmarks
             .where((b) => !b.isArchived && readLaterAt(b, now) != null)
             .length;
-        // "87 items · 4 not sorted · 3 to read later", figures in ink.
-        InlineSpan figure(int v) => TextSpan(
-          text: formatFigure(context, '$v'),
-          style: TextStyle(color: p.ink, fontWeight: FontWeight.w700),
-        );
+        // "87 items · 4 not sorted · 3 to read later", figures in white.
+        InlineSpan figure(int v) => bandFigure(context, v);
         final subtitle = <InlineSpan>[
           figure(live),
           TextSpan(text: tr(context, live == 1 ? ' item' : ' items', ' mục')),
@@ -139,28 +135,16 @@ class SaveHomePage extends StatelessWidget {
               HandySpace.xxl,
             ),
             children: [
-              Semantics(
-                header: true,
-                child: Text(
-                  libraryName(scope.c, context),
-                  overflow: TextOverflow.ellipsis,
-                  style: bookmarkSerif(context, 26),
+              HeaderBand(
+                title: libraryName(scope.c, context),
+                counts: empty ? const [] : subtitle,
+                action: QuickSaveBar(
+                  scope: scope,
+                  onBand: true,
+                  onMore: () => showSaveSheet(context, scope, onAdd: onAddFrom),
                 ),
               ),
-              if (!empty)
-                Padding(
-                  padding: const EdgeInsets.only(top: 4),
-                  child: Text.rich(
-                    TextSpan(children: subtitle),
-                    key: const Key('home-subtitle'),
-                    style: theme.textTheme.bodyMedium?.copyWith(color: p.muted),
-                  ),
-                ),
               const SizedBox(height: HandySpace.m),
-              QuickSaveBar(
-                scope: scope,
-                onMore: () => showSaveSheet(context, scope, onAdd: onAddFrom),
-              ),
               ShareIssues(controller: scope.c),
               TaskStrip(
                 tasks: scope.tasks,
@@ -172,15 +156,13 @@ class SaveHomePage extends StatelessWidget {
               if (empty)
                 EmptyLibrary(onPicture: () => scope.addPhoto(context))
               else ...[
-                Padding(
-                  padding: EdgeInsets.zero,
-                  child: ReadLaterShelf(scope: scope, onOpen: open),
-                ),
-                const SizedBox(height: HandySpace.l),
+                // As in the mock: the two queues right under the band,
+                // then what is set to read later.
                 HomeQueues(
                   scope: scope,
                   onFocus: () => Navigator.pushNamed(context, '/focus'),
                 ),
+                ReadLaterShelf(scope: scope, onOpen: open),
               ],
               if (!empty || l.collections.isNotEmpty)
                 CollectionCovers(

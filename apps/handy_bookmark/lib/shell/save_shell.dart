@@ -14,6 +14,7 @@ import '../library/results_view.dart';
 import '../scope.dart';
 import '../view/library_view.dart';
 import 'sidebar.dart';
+import '../ui/header_band.dart';
 import '../ui/read_later_ribbon.dart';
 import 'search_box.dart';
 import 'share_issues.dart';
@@ -111,17 +112,15 @@ class _SaveShellState extends State<SaveShell> {
       const SingleActivator(LogicalKeyboardKey.escape): () =>
           v.selecting ? v.clearSelection() : setState(() => current = null),
     };
-    // The same Quick Save row as the phone's Home, in the header.
-    final addButtons = [
-      SizedBox(
-        width: (width * .4).clamp(320, 520),
-        child: QuickSaveBar(
-          scope: scope,
-          onMore: () => showSaveSheet(context, scope, onAdd: add),
-        ),
+    // The same Quick Save row as the phone's Home, on the header band.
+    final saveRow = SizedBox(
+      width: (width * .4).clamp(320, 520),
+      child: QuickSaveBar(
+        scope: scope,
+        onBand: true,
+        onMore: () => showSaveSheet(context, scope, onAdd: add),
       ),
-      const SizedBox(width: HandySpace.s),
-    ];
+    );
     if (width < 700) {
       return CallbackShortcuts(
         bindings: keys,
@@ -178,8 +177,8 @@ class _SaveShellState extends State<SaveShell> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
-                      // The page's title and counts, the link field at the
-                      // right, as in the mock.
+                      // The page's head on the deep band: title, counts,
+                      // and the link field with the gold Save at the right.
                       SafeArea(
                         bottom: false,
                         left: false,
@@ -190,41 +189,11 @@ class _SaveShellState extends State<SaveShell> {
                             HandySpace.l,
                             HandySpace.s,
                           ),
-                          child: Row(
-                            children: [
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Semantics(
-                                      header: true,
-                                      child: Text(
-                                        libraryName(scope.c, context),
-                                        maxLines: 1,
-                                        overflow: TextOverflow.ellipsis,
-                                        style: bookmarkSerif(context, 28),
-                                      ),
-                                    ),
-                                    const SizedBox(height: 2),
-                                    Text(
-                                      counts(),
-                                      key: const Key('wide-counts'),
-                                      maxLines: 1,
-                                      overflow: TextOverflow.ellipsis,
-                                      style: Theme.of(context)
-                                          .textTheme
-                                          .bodyMedium
-                                          ?.copyWith(
-                                            color: BookmarkPalette.of(
-                                              context,
-                                            ).muted,
-                                          ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                              ...addButtons,
-                            ],
+                          child: HeaderBand(
+                            across: true,
+                            title: libraryName(scope.c, context),
+                            counts: [TextSpan(text: counts())],
+                            action: saveRow,
                           ),
                         ),
                       ),
