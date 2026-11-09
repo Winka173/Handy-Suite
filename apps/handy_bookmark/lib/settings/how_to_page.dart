@@ -368,8 +368,8 @@ List<_Topic> _topics(BuildContext context) => [
       _Step(
         tr(
           context,
-          'Open an article and tap Read for clean text. Save offline keeps a copy for when there is no internet.',
-          'Mở một bài viết và bấm Đọc để xem chữ gọn gàng. Lưu offline giữ một bản cho lúc không có mạng.',
+          'Open an article and tap Read for clean text. Save offline keeps a copy, with up to 20 of its pictures, for when there is no internet.',
+          'Mở một bài và bấm Đọc để đọc chữ gọn gàng. Lưu offline giữ một bản, kèm tối đa 20 ảnh của bài, để đọc khi không có mạng.',
         ),
       ),
       _Step(
@@ -416,8 +416,8 @@ List<_Topic> _topics(BuildContext context) => [
       _Step(
         tr(
           context,
-          'Send collections: Collections › See all › Send, pick one or several, and share the one file it makes (or … › Send to friends in a collection). Anyone can open it in a browser.',
-          'Gửi bộ sưu tập: Bộ sưu tập › Xem tất cả › Gửi, chọn một hay nhiều bộ, rồi chia sẻ tệp vừa tạo (hoặc … › Gửi cho bạn bè trong một bộ). Ai cũng mở được bằng trình duyệt.',
+          'Send collections: Collections › See all › Send, pick one or several, and share the one file it makes. Or press and hold a collection › Send to friends. Anyone can open it in a browser.',
+          'Gửi bộ sưu tập: Bộ sưu tập › Xem tất cả › Gửi, chọn một hay nhiều bộ, rồi chia sẻ tệp vừa tạo. Hoặc nhấn giữ một bộ sưu tập › Gửi cho bạn bè. Ai cũng mở được bằng trình duyệt.',
         ),
         picture: MockRows(
           ringed: 0,

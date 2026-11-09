@@ -56,8 +56,8 @@ List<_Topic> _topics(BuildContext context) => [
       _Step(
         tr(
           context,
-          'Each of the 30 templates shows its board first. Use this template asks two or three questions (name, subjects or work areas, a key date), then shows exactly the board you will get. Example cards are off unless you turn them on.',
-          'Mỗi mẫu trong 30 mẫu đều cho xem bảng trước. Dùng mẫu này hỏi hai ba câu (tên, môn học hay mảng việc, một ngày quan trọng), rồi cho xem đúng bảng sẽ tạo. Thẻ ví dụ tắt sẵn, chỉ thêm khi bạn bật.',
+          'Each of the 30 templates shows its board first. Use this template asks two or three questions (name, subjects or work areas, a key date); under each, On the board says what your answer becomes. Then you see exactly the board you will get.',
+          'Mỗi mẫu trong 30 mẫu cho xem bảng trước. Dùng mẫu này hỏi hai ba câu (tên, môn học hay mảng việc, một ngày quan trọng); dưới mỗi câu, Trên bảng cho biết câu trả lời sẽ thành gì. Rồi bạn thấy đúng cái bảng sẽ có.',
         ),
       ),
       _Step(
@@ -91,8 +91,8 @@ List<_Topic> _topics(BuildContext context) => [
       _Step(
         tr(
           context,
-          'Press and hold a card, then drag it to another column or place. On a phone the next columns show at both sides: drop it there, or hold it near the side to turn. With a mouse, just drag. Undo in the message takes it back.',
-          'Nhấn giữ một thẻ rồi kéo sang cột hoặc chỗ khác. Trên điện thoại, cột kề lộ ra hai bên: thả vào đó, hoặc giữ gần mép để sang cột. Dùng chuột thì kéo luôn. Bấm Hoàn tác trong thông báo để trả lại.',
+          'Press and hold a card, then drag it to another column or place: the column it will land in lights up. On a phone the next columns show at both sides: drop it there, or hold it near the side to turn.',
+          'Nhấn giữ một thẻ rồi kéo sang cột hay chỗ khác: cột sẽ nhận thẻ sáng lên. Trên điện thoại các cột kế bên ló ra hai bên: thả vào đó, hoặc giữ gần mép để sang cột.',
         ),
         picture: const MockColumns(drag: true),
       ),
@@ -120,8 +120,8 @@ List<_Topic> _topics(BuildContext context) => [
       _Step(
         tr(
           context,
-          'Columns are yours: … on a column renames it, marks it as the finished one, or deletes it. Add column sits after the last one.',
-          'Cột là của bạn: … trên cột để đổi tên, đánh dấu là cột "đã xong", hoặc xoá. Thêm cột nằm sau cột cuối.',
+          'Columns are yours: hold a column\'s name and drag it to move the whole column. … on a column renames it, marks it as finished (its cards count as done and are never late), or deletes it. Add column sits after the last one.',
+          'Cột là của bạn: nhấn giữ tên cột rồi kéo để dời cả cột. … trên cột để đổi tên, đánh dấu là cột xong (thẻ ở đó được tính là xong, không bị trễ hạn), hoặc xoá. Thêm cột nằm sau cột cuối.',
         ),
       ),
     ],
@@ -174,8 +174,8 @@ List<_Topic> _topics(BuildContext context) => [
       _Step(
         tr(
           context,
-          'Tap a card to open it. Under Subtasks, Add a subtask; tick each one as you go. Ticking never moves the card.',
-          'Bấm một thẻ để mở. Ở Việc con, bấm Thêm việc con; làm xong bước nào tích bước đó. Tích không làm thẻ đổi cột.',
+          'Tap a card to open it and tap Subtasks at the top, or … on a card › Add a subtask: type and press Enter for each step, then tick them as you go. Ticking never moves the card. Board … › Show subtasks on cards lists them on the board.',
+          'Mở một thẻ rồi bấm Việc con ở trên cùng, hoặc … trên thẻ › Thêm việc con: gõ và nhấn Enter cho từng bước, rồi tích dần. Tích không làm thẻ đổi cột. Menu bảng › Hiện việc con trên thẻ để thấy chúng ngay trên bảng.',
         ),
         picture: const MockCardDetail(),
       ),
@@ -216,8 +216,8 @@ List<_Topic> _topics(BuildContext context) => [
       _Step(
         tr(
           context,
-          '‹ and › move a period back or on. A card added in a later week is planned for that week. Weeks gone by are kept to look back on: unfinished cards there are marked, with a button to bring them to this week.',
-          '‹ và › lùi hay tới một kỳ. Thẻ thêm ở tuần sau được xếp cho tuần đó. Tuần đã qua giữ lại để xem: việc chưa xong ở đó có dấu, kèm nút đem qua tuần này.',
+          '‹ and › move a period back or on. A card added in a later week is planned for that week. Board … › Key dates: a name, a day and, if you like, a time; the next one shows under the board name with the days left (the hours on the day).',
+          '‹ và › lùi hay tiến một kỳ. Thẻ thêm vào tuần sau được xếp cho tuần đó. Menu bảng › Ngày quan trọng: tên, ngày và giờ nếu muốn; mốc gần nhất hiện dưới tên bảng kèm số ngày còn lại (đến ngày đó thì đếm giờ).',
         ),
       ),
       _Step(
@@ -414,8 +414,8 @@ List<_Topic> _topics(BuildContext context) => [
       _Step(
         tr(
           context,
-          'Deleted a card? Undo in the message, or find it in Trash. Archived boards and cards wait in Settings › Data.',
-          'Lỡ xoá thẻ? Bấm Hoàn tác trong thông báo, hoặc tìm trong Thùng rác. Bảng và thẻ đã lưu trữ nằm ở Cài đặt › Dữ liệu.',
+          'Deleted a card? Undo in the message, or find it in Trash for 30 days (each card says how many are left). Archived boards have their own page in Settings › Data, with what each held, Restore and Delete for good.',
+          'Lỡ xoá thẻ? Bấm Hoàn tác trong thông báo, hoặc tìm trong Thùng rác trong 30 ngày (mỗi thẻ ghi còn bao nhiêu ngày). Bảng đã lưu trữ có trang riêng trong Cài đặt › Dữ liệu, ghi rõ bảng có gì, kèm Khôi phục và Xoá vĩnh viễn.',
         ),
       ),
     ],
@@ -471,8 +471,8 @@ List<_Topic> _topics(BuildContext context) => [
       _Step(
         tr(
           context,
-          'Repeating cards, automations, Poster and Printable exports, and Insights for each board.',
-          'Thẻ lặp lại, tự động hoá, bản xuất Poster và Bản in, và Thống kê cho từng bảng.',
+          'Repeating cards, automations, saved filters, custom fields, card templates, Poster and Printable exports, and Insights for each board. Each of these says Pro before you tap it.',
+          'Thẻ lặp lại, tự động hoá, bộ lọc đã lưu, trường tuỳ chỉnh, mẫu thẻ, bản xuất Poster và Printable, và Thống kê cho từng bảng. Mỗi thứ đều ghi Pro trước khi bạn bấm.',
         ),
       ),
       _Step(

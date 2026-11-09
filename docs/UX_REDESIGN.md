@@ -3395,3 +3395,19 @@ Kit sửa chung (`HandyPalette`): ở bản sáng, màu nhận diện được l
 - **Trình đọc:** hiện ảnh đúng chỗ trong bài, bo góc như thẻ, có mô tả cho trình đọc màn hình. Khi đọc trực tuyến thì không hiện ảnh.
 - **Dòng chữ** ở phần Bản đọc offline đổi thành "Giữ chữ và ảnh của bài (tối đa 20 ảnh)…".
 - **Ảnh nằm trong bản đọc:** xoá bài thì bản đọc vào Thùng rác cùng bài, và bị xoá hẳn cùng bài, ảnh đi theo. Không có tệp ảnh nào sót lại.
+
+### Handy Boards · đợt sửa theo danh sách của chủ (2026-11-10)
+
+- **Việc con:** menu "⋯" của thẻ có "Thêm việc con", mở thẻ ở đúng ô và bật sẵn bàn phím. Chi tiết thẻ có nút "Việc con n/m" cạnh Hạn, Lặp lại, Ảnh bìa. Chủ chọn giữ việc con, không làm thẻ con lồng nhau.
+- **Kéo thẻ:** cột sẽ nhận thẻ có nền pha 14% màu cam đất và viền 2pt, có chuyển động. Cột của chính thẻ đó không sáng.
+- **Kéo cả cột:** nhấn giữ đầu cột, cột đích sáng lên giống khi kéo thẻ, thả xuống là dời cột tới chỗ đó. Gần mép màn thì bảng tự cuộn.
+- **Thùng rác:** tự xoá sau 30 ngày như Bookmark. Mỗi thẻ ghi "còn N ngày"; mở app là dọn thẻ đã hết hạn.
+- **Công tắc "Thẻ ở đây là đã xong":** giữ lại (chủ chọn), có thêm dòng giải thích bên dưới.
+- **Nhãn Pro** trước khi bấm, chỉ hiện với người chưa có Pro:
+  - Boards: Bộ lọc, Mẫu thẻ của tôi, nhóm Tự động hoá;
+  - Bookmark: Thiết kế bản xuất, Chép chữ trong ảnh, Đánh dấu.
+- **Ngày quan trọng có giờ** (không bắt buộc, lưu dạng `HH:MM`). Dòng dưới tên bảng ghi "Thi 3/12 lúc 8:30, còn 3 ngày"; đúng ngày thì đếm giờ. Trong bảng sửa, mỗi mốc nằm trên 2 dòng (tên rồi đến ngày và giờ).
+- **Bảng đã lưu trữ có trang riêng:** ảnh bìa, số thẻ xong và đang mở, các nhóm, mốc gần nhất, ngày lưu trữ (từ nay app ghi lại) và lần sửa cuối, kèm Khôi phục và Xoá vĩnh viễn (hỏi lại trước khi xoá).
+- **Thiết lập mẫu:** mọi ô của 30 mẫu có khung "Trên bảng: …" với câu trả lời hiện tại. Câu này sinh theo vai trò của ô: tên, nhóm, ngày quan trọng, cột tuỳ chọn, bộ cột, cách hiện thẻ, khoảng thời gian, thẻ ví dụ.
+- **Lỗi:** lưu ngày quan trọng không còn ra màn đỏ (bảng tự quản lý các ô của nó).
+- **Cách dùng** của cả hai app cập nhật theo các mục trên. Màn chào giữ nguyên, vì phần luyện kéo thẻ đã có hiệu ứng sáng cột.
