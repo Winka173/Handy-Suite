@@ -52,12 +52,48 @@ class HandyReveal extends StatelessWidget {
   final Widget child;
   const HandyReveal({super.key, required this.child});
   @override
-  Widget build(BuildContext context) => AnimatedSize(
-    duration: HandyMotion.of(context),
-    curve: HandyMotion.curve,
-    alignment: AlignmentDirectional.topStart,
-    child: child,
-  );
+  Widget build(BuildContext context) {
+    final d = HandyMotion.of(context);
+    // With less motion, no size animation at all (a zero-length one
+    // re-lays itself out during layout).
+    if (d == Duration.zero) return child;
+    return AnimatedSize(
+      duration: d,
+      curve: HandyMotion.curve,
+      alignment: AlignmentDirectional.topStart,
+      child: child,
+    );
+  }
+}
+
+/// Plays once when it first appears: a fade and a slight grow, so a thing
+/// that arrives (a card moved here, a save added, a tile made) is seen
+/// arriving instead of popping in. Give it the thing's id as key so it
+/// plays for new things only, not on every rebuild. Still when the OS asks
+/// for less motion.
+class HandyAppear extends StatelessWidget {
+  final Widget child;
+  final Duration duration;
+  const HandyAppear({
+    super.key,
+    required this.child,
+    this.duration = HandyMotion.medium,
+  });
+  @override
+  Widget build(BuildContext context) {
+    final d = HandyMotion.of(context, duration);
+    if (d == Duration.zero) return child;
+    return TweenAnimationBuilder<double>(
+      tween: Tween(begin: 0, end: 1),
+      duration: d,
+      curve: HandyMotion.curve,
+      builder: (context, t, child) => Opacity(
+        opacity: t,
+        child: Transform.scale(scale: .96 + .04 * t, child: child),
+      ),
+      child: child,
+    );
+  }
 }
 
 /// A short demonstration that plays itself: [builder] gets `t` from 0 to 1

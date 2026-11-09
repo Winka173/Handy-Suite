@@ -99,17 +99,20 @@ class CollectionCovers extends StatelessWidget {
                       if (limit == null || e.$1.parentId == null) e,
                   ].take(limit ?? 1 << 20))
                     SizedBox(
+                      key: ValueKey('in-${col.id}'),
                       width: width,
-                      child: CollectionCover(
-                        scope: scope,
-                        collection: col,
-                        parent: col.parentId == null
-                            ? null
-                            : names[col.parentId],
-                        hue: collectionHue(l, col.id),
-                        items: byCollection[col.id] ?? const [],
-                        cover: scope.view.chosenCover(col.id),
-                        onOpen: () => onOpen(col),
+                      child: HandyAppear(
+                        child: CollectionCover(
+                          scope: scope,
+                          collection: col,
+                          parent: col.parentId == null
+                              ? null
+                              : names[col.parentId],
+                          hue: collectionHue(l, col.id),
+                          items: byCollection[col.id] ?? const [],
+                          cover: scope.view.chosenCover(col.id),
+                          onOpen: () => onOpen(col),
+                        ),
                       ),
                     ),
                 ],

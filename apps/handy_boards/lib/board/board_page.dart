@@ -496,44 +496,46 @@ class _BoardPageState extends State<BoardPage> {
         const SizedBox(height: 4),
         // "7 open · 1 late · semester ends 15/1, in 67 days": the counts
         // in ink; the next key date opens its editor.
-        _stackOrWrap(
-          wide: wide,
-          children: [
-            Text.rich(
-              TextSpan(
-                children: [
-                  figure(open),
-                  TextSpan(text: tr(context, ' open', ' việc đang mở')),
-                  if (sum.overdue > 0) ...[
-                    const TextSpan(text: ' · '),
-                    figure(sum.overdue),
-                    TextSpan(text: tr(context, ' late', ' trễ')),
+        HandyReveal(
+          child: _stackOrWrap(
+            wide: wide,
+            children: [
+              Text.rich(
+                TextSpan(
+                  children: [
+                    figure(open),
+                    TextSpan(text: tr(context, ' open', ' việc đang mở')),
+                    if (sum.overdue > 0) ...[
+                      const TextSpan(text: ' · '),
+                      figure(sum.overdue),
+                      TextSpan(text: tr(context, ' late', ' trễ')),
+                    ],
+                    // A phone puts the key date on its own line, so no dot
+                    // is left hanging at a line's end.
+                    if (next.isNotEmpty && roomy && wide)
+                      const TextSpan(text: ' · '),
                   ],
-                  // A phone puts the key date on its own line, so no dot
-                  // is left hanging at a line's end.
-                  if (next.isNotEmpty && roomy && wide)
-                    const TextSpan(text: ' · '),
-                ],
-              ),
-              style: sub,
-            ),
-            if (next.isNotEmpty && roomy)
-              InkWell(
-                key: Key('key-date-${next.first.label}'),
-                borderRadius: BorderRadius.circular(6),
-                onTap: () => editMilestones(context, scope, widget.board),
-                child: Text(
-                  keyDateLine(
-                    context,
-                    next.first.label,
-                    next.first.day,
-                    now,
-                    minute: next.first.minute,
-                  ),
-                  style: sub,
                 ),
+                style: sub,
               ),
-          ],
+              if (next.isNotEmpty && roomy)
+                InkWell(
+                  key: Key('key-date-${next.first.label}'),
+                  borderRadius: BorderRadius.circular(6),
+                  onTap: () => editMilestones(context, scope, widget.board),
+                  child: Text(
+                    keyDateLine(
+                      context,
+                      next.first.label,
+                      next.first.day,
+                      now,
+                      minute: next.first.minute,
+                    ),
+                    style: sub,
+                  ),
+                ),
+            ],
+          ),
         ),
       ],
     );

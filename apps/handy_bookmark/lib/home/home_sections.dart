@@ -60,11 +60,14 @@ class RecentlySaved extends StatelessWidget {
               children: [
                 for (final b in recent.take(columns * 2))
                   SizedBox(
+                    key: ValueKey('in-${b.id}'),
                     width: width,
-                    child: _RecentCard(
-                      scope: scope,
-                      bookmark: b,
-                      onOpen: () => onOpen(b),
+                    child: HandyAppear(
+                      child: _RecentCard(
+                        scope: scope,
+                        bookmark: b,
+                        onOpen: () => onOpen(b),
+                      ),
                     ),
                   ),
               ],

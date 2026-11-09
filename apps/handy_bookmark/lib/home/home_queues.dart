@@ -63,7 +63,10 @@ class HomeQueues extends StatelessWidget {
         ),
       ),
     );
-    if (unsorted.isEmpty && waiting.isEmpty) return calm;
+    if (unsorted.isEmpty && waiting.isEmpty)
+      return HandySwap(
+        child: KeyedSubtree(key: const ValueKey('calm'), child: calm),
+      );
     String n(int v) => formatFigure(context, '$v');
     final rows = <Widget>[
       if (unsorted.isNotEmpty)
@@ -128,14 +131,16 @@ class HomeQueues extends StatelessWidget {
         ),
       );
     }
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        for (final (k, w) in rows.indexed) ...[
-          if (k > 0) const SizedBox(height: HandySpace.s),
-          w is _QueueRow ? card(w) : w,
+    return HandyReveal(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          for (final (k, w) in rows.indexed) ...[
+            if (k > 0) const SizedBox(height: HandySpace.s),
+            w is _QueueRow ? card(w) : w,
+          ],
         ],
-      ],
+      ),
     );
   }
 }

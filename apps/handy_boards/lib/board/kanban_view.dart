@@ -669,7 +669,9 @@ class _ColumnViewState extends State<ColumnView> {
     final body = <Widget>[
       if (!a.readOnly) slot(0),
       for (var i = 0; i < cards.length; i++) ...[
-        tile(cards[i]),
+        // A card that arrives here fades in; one already here does not
+        // replay (its key is stable).
+        HandyAppear(key: ValueKey('in-${cards[i].id}'), child: tile(cards[i])),
         if (!a.readOnly) slot(i + 1) else const SizedBox(height: 8),
       ],
       if (cards.isEmpty)

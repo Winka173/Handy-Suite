@@ -288,14 +288,17 @@ class ResultsView extends StatelessWidget {
                 mainAxisExtent: width / 1.28 + 82 * scale.clamp(1.0, 2.2),
               ),
               itemCount: rows.length,
-              itemBuilder: (context, i) => LinkCard(
-                controller: controller,
-                bookmark: rows[i],
-                selected: v.selected.contains(rows[i].id),
-                selecting: v.selecting,
-                onOpen: () => onDetails(rows[i]),
-                onDetails: () => onDetails(rows[i]),
-                onToggle: () => v.toggle(rows[i].id),
+              itemBuilder: (context, i) => HandyAppear(
+                key: ValueKey('in-${rows[i].id}'),
+                child: LinkCard(
+                  controller: controller,
+                  bookmark: rows[i],
+                  selected: v.selected.contains(rows[i].id),
+                  selecting: v.selecting,
+                  onOpen: () => onDetails(rows[i]),
+                  onDetails: () => onDetails(rows[i]),
+                  onToggle: () => v.toggle(rows[i].id),
+                ),
               ),
             );
           },
