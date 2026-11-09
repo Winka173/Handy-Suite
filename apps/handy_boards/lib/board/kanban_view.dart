@@ -28,6 +28,10 @@ class KanbanActions {
 
   /// A template preview: every card is an example, labelled so.
   final bool examples;
+
+  /// Puts a whole column at [index] (held by its header and dropped on
+  /// another column).
+  final Future<void> Function(String column, int index)? moveColumn;
   const KanbanActions({
     this.open,
     this.move,
@@ -40,6 +44,7 @@ class KanbanActions {
     this.carry,
     this.carryLabel,
     this.examples = false,
+    this.moveColumn,
   });
   bool get readOnly => move == null;
 }
@@ -404,6 +409,9 @@ class _ColumnViewState extends State<ColumnView> {
   /// the person sees where the card will land.
   bool landing = false;
 
+  /// Another column is held over this one (to take its place).
+  bool columnLanding = false;
+
   /// Whether [card] comes from another column.
   bool _foreign(String card) =>
       widget.state.maybe('tasks', card)?.str('status') != widget.column.id;
@@ -568,7 +576,7 @@ class _ColumnViewState extends State<ColumnView> {
       );
     }
 
-    final header = Padding(
+    final heading = Padding(
       padding: const EdgeInsets.fromLTRB(14, 2, 2, 0),
       child: Row(
         children: [
@@ -618,6 +626,45 @@ class _ColumnViewState extends State<ColumnView> {
         ],
       ),
     );
+    // Held down, the header carries the whole column to a new place.
+    final header = a.moveColumn == null
+        ? heading
+        : LongPressDraggable<ColumnMove>(
+            data: ColumnMove(widget.column.id),
+            onDragStarted: widget.onDragStart,
+            onDragUpdate: (d) => widget.onDragMove(d.globalPosition),
+            onDragEnd: (_) => widget.onDragEnd(),
+            childWhenDragging: Opacity(opacity: .4, child: heading),
+            feedback: Material(
+              color: Colors.transparent,
+              child: Container(
+                width: 220,
+                padding: const EdgeInsets.fromLTRB(16, 14, 16, 14),
+                decoration: BoxDecoration(
+                  color: widget.color ?? p.raised,
+                  borderRadius: BorderRadius.circular(BoardsRadii.column),
+                  border: Border.all(color: p.primary, width: 2),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: .18),
+                      blurRadius: 16,
+                      offset: const Offset(0, 6),
+                    ),
+                  ],
+                ),
+                child: Text(
+                  '${widget.column.str('title')} · ${all.length}',
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: theme.textTheme.titleSmall?.copyWith(
+                    fontWeight: FontWeight.w600,
+                    color: p.ink,
+                  ),
+                ),
+              ),
+            ),
+            child: heading,
+          );
 
     final body = <Widget>[
       if (!a.readOnly) slot(0),
@@ -718,33 +765,46 @@ class _ColumnViewState extends State<ColumnView> {
       ),
     );
     final ground = widget.color ?? p.raised;
-    return AnimatedContainer(
-      duration: HandyMotion.of(context),
-      curve: Curves.easeOut,
-      decoration: BoxDecoration(
-        color: landing ? Color.lerp(ground, p.primary, .14) : ground,
-        borderRadius: BorderRadius.circular(BoardsRadii.column),
-      ),
-      foregroundDecoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(BoardsRadii.column),
-        border: Border.all(
-          color: landing ? p.primary : Colors.transparent,
-          width: 2,
+    final lit = landing || columnLanding;
+    return DragTarget<ColumnMove>(
+      onWillAcceptWithDetails: (d) {
+        final other = d.data.column != widget.column.id;
+        if (other != columnLanding) setState(() => columnLanding = other);
+        return other;
+      },
+      onLeave: (_) => setState(() => columnLanding = false),
+      onAcceptWithDetails: (d) {
+        setState(() => columnLanding = false);
+        a.moveColumn?.call(d.data.column, widget.index);
+      },
+      builder: (context, _, _) => AnimatedContainer(
+        duration: HandyMotion.of(context),
+        curve: Curves.easeOut,
+        decoration: BoxDecoration(
+          color: lit ? Color.lerp(ground, p.primary, .14) : ground,
+          borderRadius: BorderRadius.circular(BoardsRadii.column),
         ),
-      ),
-      padding: const EdgeInsets.fromLTRB(6, 4, 6, 4),
-      child: LayoutBuilder(
-        // A short column (a small preview, the keyboard up) scrolls as a
-        // whole, header and add field included, instead of overflowing.
-        builder: (context, box) => box.maxHeight < 200
-            ? target([header, ...body, footer])
-            : Column(
-                children: [
-                  header,
-                  Expanded(child: target(body)),
-                  footer,
-                ],
-              ),
+        foregroundDecoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(BoardsRadii.column),
+          border: Border.all(
+            color: lit ? p.primary : Colors.transparent,
+            width: 2,
+          ),
+        ),
+        padding: const EdgeInsets.fromLTRB(6, 4, 6, 4),
+        child: LayoutBuilder(
+          // A short column (a small preview, the keyboard up) scrolls as a
+          // whole, header and add field included, instead of overflowing.
+          builder: (context, box) => box.maxHeight < 200
+              ? target([header, ...body, footer])
+              : Column(
+                  children: [
+                    header,
+                    Expanded(child: target(body)),
+                    footer,
+                  ],
+                ),
+        ),
       ),
     );
   }
@@ -950,4 +1010,10 @@ class _LaneSnap extends ScrollPhysics {
 
   @override
   bool get allowImplicitScrolling => false;
+}
+
+/// What a column carries while it is dragged by its header.
+class ColumnMove {
+  final String column;
+  const ColumnMove(this.column);
 }

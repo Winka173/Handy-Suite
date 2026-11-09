@@ -851,6 +851,16 @@ class _BoardPageState extends State<BoardPage> {
                   columnMenu: (column) => columnMenu(context, scope, column.id),
                   addColumn: () =>
                       addColumnDialog(context, scope, widget.board),
+                  moveColumn: (column, index) => scope.run(
+                    context,
+                    () => scope.controller.change((s) {
+                      final ids = [
+                        for (final c in columnsOf(s, widget.board))
+                          if (c.id != column) c.id,
+                      ]..insert(index, column);
+                      return reorder(s, 'statuses', ids);
+                    }),
+                  ),
                   fromTemplate: (column) =>
                       addFromCardTemplate(context, scope, column),
                 ),
