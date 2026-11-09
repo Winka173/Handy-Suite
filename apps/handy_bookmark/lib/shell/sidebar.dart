@@ -58,99 +58,106 @@ class BookmarkSidebar extends StatelessWidget {
         onTap: onTap,
       ),
     );
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        Padding(
-          padding: const EdgeInsets.fromLTRB(20, 18, 16, 16),
-          child: Row(
-            children: [
-              ClipRRect(
-                borderRadius: BorderRadius.circular(8),
-                child: Image.asset(
-                  'assets/icon.png',
-                  width: 28,
-                  height: 28,
-                  excludeFromSemantics: true,
-                ),
-              ),
-              const SizedBox(width: 10),
-              Flexible(
-                child: Text(
-                  'Handy Bookmark',
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: theme.textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.w600,
+    // Below the status bar on a tablet or a phone held sideways.
+    return SafeArea(
+      right: false,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Padding(
+            padding: const EdgeInsets.fromLTRB(20, 18, 16, 16),
+            child: Row(
+              children: [
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(8),
+                  child: Image.asset(
+                    'assets/icon.png',
+                    width: 28,
+                    height: 28,
+                    excludeFromSemantics: true,
                   ),
                 ),
-              ),
-            ],
-          ),
-        ),
-        Expanded(
-          child: ListView(
-            key: const Key('bookmark-sidebar'),
-            padding: const EdgeInsets.fromLTRB(4, 0, 4, 16),
-            children: [
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
-                child: ListTile(
-                  key: const Key('side-overview'),
-                  dense: true,
-                  selected: overview,
-                  selectedTileColor: p.band,
-                  selectedColor: p.bandInk,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(BookmarkRadii.item),
-                  ),
-                  leading: Icon(
-                    Icons.collections_bookmark_outlined,
-                    size: 20,
-                    color: overview ? p.bandInk : p.muted,
-                  ),
-                  title: Text(
-                    tr(context, 'Library', 'Thư viện'),
-                    style: theme.textTheme.bodyMedium?.copyWith(
-                      fontWeight: overview ? FontWeight.w700 : null,
-                      color: overview ? p.bandInk : null,
+                const SizedBox(width: 10),
+                Flexible(
+                  child: Text(
+                    'Handy Bookmark',
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: theme.textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.w600,
                     ),
                   ),
-                  trailing: Text(
-                    formatFigure(context, '$live'),
-                    style: theme.textTheme.bodyMedium?.copyWith(
-                      color: overview ? p.bandSub : p.muted,
-                    ),
-                  ),
-                  onTap: onOverview,
                 ),
-              ),
-              PlacesList(
-                scope: scope,
-                flat: true,
-                overview: overview,
-                onPick: onPick,
-                onFocus: () => Navigator.pushNamed(context, '/focus'),
-                onSearch: onSearch,
-              ),
-            ],
+              ],
+            ),
           ),
-        ),
-        foot(
-          const Key('side-trash'),
-          Icons.delete_outline,
-          tr(context, 'Recently Deleted', 'Thùng rác'),
-          () => Navigator.of(context).pushNamed('/trash'),
-          n: l.trash.isEmpty ? null : l.trash.length,
-        ),
-        foot(
-          const Key('open-settings'),
-          Icons.settings_outlined,
-          tr(context, 'Settings', 'Cài đặt'),
-          () => Navigator.pushNamed(context, '/settings'),
-        ),
-        const SizedBox(height: 12),
-      ],
+          Expanded(
+            child: ListView(
+              key: const Key('bookmark-sidebar'),
+              padding: const EdgeInsets.fromLTRB(4, 0, 4, 16),
+              children: [
+                Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 6,
+                    vertical: 1,
+                  ),
+                  child: ListTile(
+                    key: const Key('side-overview'),
+                    dense: true,
+                    selected: overview,
+                    selectedTileColor: p.band,
+                    selectedColor: p.bandInk,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(BookmarkRadii.item),
+                    ),
+                    leading: Icon(
+                      Icons.collections_bookmark_outlined,
+                      size: 20,
+                      color: overview ? p.bandInk : p.muted,
+                    ),
+                    title: Text(
+                      tr(context, 'Library', 'Thư viện'),
+                      style: theme.textTheme.bodyMedium?.copyWith(
+                        fontWeight: overview ? FontWeight.w700 : null,
+                        color: overview ? p.bandInk : null,
+                      ),
+                    ),
+                    trailing: Text(
+                      formatFigure(context, '$live'),
+                      style: theme.textTheme.bodyMedium?.copyWith(
+                        color: overview ? p.bandSub : p.muted,
+                      ),
+                    ),
+                    onTap: onOverview,
+                  ),
+                ),
+                PlacesList(
+                  scope: scope,
+                  flat: true,
+                  overview: overview,
+                  onPick: onPick,
+                  onFocus: () => Navigator.pushNamed(context, '/focus'),
+                  onSearch: onSearch,
+                ),
+              ],
+            ),
+          ),
+          foot(
+            const Key('side-trash'),
+            Icons.delete_outline,
+            tr(context, 'Recently Deleted', 'Thùng rác'),
+            () => Navigator.of(context).pushNamed('/trash'),
+            n: l.trash.isEmpty ? null : l.trash.length,
+          ),
+          foot(
+            const Key('open-settings'),
+            Icons.settings_outlined,
+            tr(context, 'Settings', 'Cài đặt'),
+            () => Navigator.pushNamed(context, '/settings'),
+          ),
+          const SizedBox(height: 12),
+        ],
+      ),
     );
   }
 }
