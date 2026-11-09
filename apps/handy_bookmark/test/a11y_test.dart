@@ -81,6 +81,17 @@ void main() {
     final c = await start(tester, seed: library, size: const Size(1440, 900));
     // The wide screen opens on the Library overview; the list is a tap away.
     await tapKey(tester, 'place-all');
+    // The picked row is the band colour: its name must turn white with
+    // its icon and count, never stay in the page's ink.
+    final name = tester.widget<RichText>(
+      find.descendant(
+        of: find.byKey(const Key('place-all')),
+        matching: find.byWidgetPredicate(
+          (w) => w is RichText && w.text.toPlainText() == 'Everything',
+        ),
+      ),
+    );
+    expect(name.text.style?.color, const Color(0xFFFFFFFF));
     await tapKey(tester, 'details-${c.library!.bookmarks.first.id}');
     await tapKey(tester, 'item-details');
     await meetsAll(tester, 'wide');

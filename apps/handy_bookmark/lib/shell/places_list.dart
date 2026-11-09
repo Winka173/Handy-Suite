@@ -134,9 +134,12 @@ class PlacesList extends StatelessWidget {
             title,
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
+            // An explicit style sets its own colour, so the picked row's
+            // white has to be named here too (selectedColor never reaches it).
             style: flat
                 ? theme.textTheme.bodyMedium?.copyWith(
-                    fontWeight: on ? FontWeight.w600 : null,
+                    fontWeight: on ? FontWeight.w700 : null,
+                    color: band ? bp.bandInk : null,
                   )
                 : null,
           ),
@@ -151,7 +154,18 @@ class PlacesList extends StatelessWidget {
                     fontFeatures: tabular,
                   ),
                 ),
-              ?menu,
+              if (menu != null)
+                band
+                    // The row's ⋯ in white on the band.
+                    ? Theme(
+                        data: theme.copyWith(
+                          popupMenuTheme: theme.popupMenuTheme.copyWith(
+                            iconColor: bp.bandInk,
+                          ),
+                        ),
+                        child: menu,
+                      )
+                    : menu,
             ],
           ),
           onTap: onTap ?? () => onPick(place!, id),
