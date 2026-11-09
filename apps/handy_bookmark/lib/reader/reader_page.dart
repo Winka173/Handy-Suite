@@ -105,6 +105,9 @@ class _ReaderPageState extends State<ReaderPage> {
       ?..hideCurrentSnackBar()
       ..showSnackBar(
         SnackBar(
+          // Shown long enough to act on, then it goes (with an action
+          // Flutter would keep it until dismissed).
+          persist: false,
           content: Text(tr(context, 'Highlighted.', 'Đã đánh dấu.')),
           action: SnackBarAction(
             key: const Key('highlight-add-note'),

@@ -52,6 +52,9 @@ Future<void> sendFeedback(BuildContext context) async {
     ?..hideCurrentSnackBar()
     ..showSnackBar(
       SnackBar(
+        // Shown long enough to act on, then it goes (with an action
+        // Flutter would keep it until dismissed).
+        persist: false,
         key: const Key('feedback-no-mail'),
         content: Text(
           tr(

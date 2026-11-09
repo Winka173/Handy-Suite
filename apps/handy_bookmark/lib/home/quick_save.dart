@@ -132,6 +132,9 @@ class _QuickSaveBarState extends State<QuickSaveBar> {
       ..hideCurrentSnackBar()
       ..showSnackBar(
         SnackBar(
+          // Shown long enough to act on, then it goes (with an action
+          // Flutter would keep it until dismissed).
+          persist: false,
           key: const Key('quick-saved'),
           content: Row(
             children: [

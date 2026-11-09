@@ -77,13 +77,21 @@ class _ExportPageState extends State<ExportPage> {
         mimeType: pdf ? 'application/pdf' : 'image/png',
       );
       if (mounted && path != null)
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text(tr(context, 'Saved', 'Đã lưu'))));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            // Shown long enough to act on, then it goes (with an action
+            // Flutter would keep it until dismissed).
+            persist: false,
+            content: Text(tr(context, 'Saved', 'Đã lưu')),
+          ),
+        );
     } catch (e) {
       if (mounted)
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
+            // Shown long enough to act on, then it goes (with an action
+            // Flutter would keep it until dismissed).
+            persist: false,
             content: Text(
               tr(
                 context,

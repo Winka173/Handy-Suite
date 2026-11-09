@@ -310,6 +310,9 @@ class _CardDetailState extends State<CardDetail> {
     if (!scope.reminders.supported) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
+          // Shown long enough to act on, then it goes (with an action
+          // Flutter would keep it until dismissed).
+          persist: false,
           content: Text(
             tr(
               context,
@@ -323,6 +326,9 @@ class _CardDetailState extends State<CardDetail> {
       if (mounted)
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
+            // Shown long enough to act on, then it goes (with an action
+            // Flutter would keep it until dismissed).
+            persist: false,
             content: Text(
               tr(
                 context,

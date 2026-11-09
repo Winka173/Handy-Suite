@@ -330,6 +330,9 @@ extension ShareItem on SaveScope {
       ?..hideCurrentSnackBar()
       ..showSnackBar(
         SnackBar(
+          // Shown long enough to act on, then it goes (with an action
+          // Flutter would keep it until dismissed).
+          persist: false,
           content: Text(text),
           action: b.hasUrl && !b.isImage
               ? SnackBarAction(

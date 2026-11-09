@@ -38,6 +38,9 @@ class NotificationsPage extends StatelessWidget {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
+            // Shown long enough to act on, then it goes (with an action
+            // Flutter would keep it until dismissed).
+            persist: false,
             content: Text(
               tr(
                 context,

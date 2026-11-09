@@ -769,7 +769,14 @@ Future<bool> confirmHandy(
 void showHandyMessage(BuildContext context, String message) {
   ScaffoldMessenger.maybeOf(context)
     ?..hideCurrentSnackBar()
-    ..showSnackBar(SnackBar(content: Text(message)));
+    ..showSnackBar(
+      SnackBar(
+        // Shown long enough to act on, then it goes (with an action
+        // Flutter would keep it until dismissed).
+        persist: false,
+        content: Text(message),
+      ),
+    );
 }
 
 Future<void> copyToClipboard(BuildContext context, String text) async {

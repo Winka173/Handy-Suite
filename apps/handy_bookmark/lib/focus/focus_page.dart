@@ -130,6 +130,9 @@ class _FocusPageState extends State<FocusPage>
     final messenger = ScaffoldMessenger.of(context)..hideCurrentSnackBar();
     messenger.showSnackBar(
       SnackBar(
+        // Shown long enough to act on, then it goes (with an action
+        // Flutter would keep it until dismissed).
+        persist: false,
         content: Text(switch (move) {
           _Move.read => tr(context, 'Marked as read.', 'Đã đánh dấu đã đọc.'),
           _Move.later => tr(context, 'Kept for later.', 'Để sau.'),

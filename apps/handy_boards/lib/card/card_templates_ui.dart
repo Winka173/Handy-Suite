@@ -31,6 +31,9 @@ Future<void> saveAsCardTemplate(
   if (context.mounted) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
+        // Shown long enough to act on, then it goes (with an action
+        // Flutter would keep it until dismissed).
+        persist: false,
         content: Text(
           tr(
             context,
@@ -75,6 +78,9 @@ Future<void> addFromCardTemplate(
   final skipped = result.skippedFields;
   ScaffoldMessenger.of(context).showSnackBar(
     SnackBar(
+      // Shown long enough to act on, then it goes (with an action
+      // Flutter would keep it until dismissed).
+      persist: false,
       content: Text(
         skipped.isEmpty
             ? tr(context, 'Card added from your template', 'Đã thêm thẻ từ mẫu')
