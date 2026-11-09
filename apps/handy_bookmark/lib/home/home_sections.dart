@@ -94,6 +94,9 @@ class _RecentCard extends StatelessWidget {
     final b = bookmark;
     final home = collectionOf(scope.library, b.collectionId);
     final later = readLaterAt(b, DateTime.now());
+    final title = theme.textTheme.titleSmall!.copyWith(
+      fontWeight: FontWeight.w600,
+    );
     // A card of its own on the ground: the picture across its top.
     return Material(
       color: p.surface,
@@ -118,12 +121,17 @@ class _RecentCard extends StatelessWidget {
             ),
             Padding(
               padding: const EdgeInsets.fromLTRB(12, 10, 12, 2),
-              child: Text(
-                b.title.isEmpty ? b.sourceDomain : b.title,
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
-                style: theme.textTheme.titleSmall?.copyWith(
-                  fontWeight: FontWeight.w600,
+              // Room for two lines on every card, so a row of cards ends
+              // level whether a title takes one line or two.
+              child: SizedBox(
+                height: MediaQuery.textScalerOf(
+                  context,
+                ).scale(2 * title.fontSize! * (title.height ?? 1.4)),
+                child: Text(
+                  b.title.isEmpty ? b.sourceDomain : b.title,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: title,
                 ),
               ),
             ),

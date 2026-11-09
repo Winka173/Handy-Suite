@@ -7,6 +7,7 @@ import '../scope.dart';
 import '../ui/collection_picker.dart';
 import '../ui/visual.dart';
 import '../ui/words.dart';
+import '../view/library_view.dart';
 import 'pastel_blocks.dart';
 
 /// Home's one small card of what waits: the saves not sorted yet (Sort
@@ -106,42 +107,44 @@ class HomeQueues extends StatelessWidget {
           onTap: onFocus,
         ),
     ];
+    Widget card(Widget child) => Material(
+      color: p.tint,
+      borderRadius: BorderRadius.circular(BookmarkRadii.item),
+      clipBehavior: Clip.antiAlias,
+      child: child,
+    );
+    // Wide: each queue its own card, side by side with air between.
+    if (across) {
+      return IntrinsicHeight(
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            for (final (k, w) in rows.indexed) ...[
+              if (k > 0) const SizedBox(width: HandySpace.m),
+              Expanded(child: card(w)),
+            ],
+          ],
+        ),
+      );
+    }
     return Material(
       color: p.tint,
       borderRadius: BorderRadius.circular(BookmarkRadii.item),
       clipBehavior: Clip.antiAlias,
-      child: across
-          ? IntrinsicHeight(
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  for (final (k, w) in rows.indexed) ...[
-                    if (k > 0)
-                      VerticalDivider(
-                        width: 1,
-                        indent: 12,
-                        endIndent: 12,
-                        color: p.primary.withValues(alpha: .16),
-                      ),
-                    Expanded(child: w),
-                  ],
-                ],
+      child: Column(
+        children: [
+          for (final (k, w) in rows.indexed) ...[
+            if (k > 0)
+              Divider(
+                height: 1,
+                indent: 12,
+                endIndent: 12,
+                color: p.primary.withValues(alpha: .16),
               ),
-            )
-          : Column(
-              children: [
-                for (final (k, w) in rows.indexed) ...[
-                  if (k > 0)
-                    Divider(
-                      height: 1,
-                      indent: 12,
-                      endIndent: 12,
-                      color: p.primary.withValues(alpha: .16),
-                    ),
-                  w,
-                ],
-              ],
-            ),
+            w,
+          ],
+        ],
+      ),
     );
   }
 }
@@ -164,9 +167,12 @@ class _QueueRow extends StatelessWidget {
     final theme = Theme.of(context);
     final p = BookmarkPalette.of(context);
     // Fewer faces on narrow screens, so the words keep their room.
-    final shown = faces
-        .take(MediaQuery.sizeOf(context).width < 360 ? 1 : 3)
-        .toList();
+    // Pictures first (a source's icon cut by the next face reads as a
+    // stray mark), fewer on narrow screens so the words keep their room.
+    final shown = [
+      ...faces.where(hasPicture),
+      ...faces.where((b) => !hasPicture(b)),
+    ].take(MediaQuery.sizeOf(context).width < 360 ? 1 : 3).toList();
     return Semantics(
       button: true,
       label: '$title. $subtitle',
@@ -174,17 +180,17 @@ class _QueueRow extends StatelessWidget {
       child: InkWell(
         onTap: onTap,
         child: Padding(
-          padding: const EdgeInsets.fromLTRB(12, 12, 14, 12),
+          padding: const EdgeInsets.fromLTRB(14, 14, 16, 14),
           child: Row(
             children: [
               SizedBox(
-                width: 44.0 + 20 * (shown.length - 1),
+                width: 44.0 + 26 * (shown.length - 1),
                 height: 44,
                 child: Stack(
                   children: [
                     for (final (i, b) in shown.indexed.toList().reversed)
                       Positioned(
-                        left: 20.0 * i,
+                        left: 26.0 * i,
                         child: Container(
                           width: 44,
                           height: 44,
