@@ -104,120 +104,144 @@ Future<void> editMilestones(
   BoardsScope scope,
   String board,
 ) async {
-  final list = [
-    for (final m in milestonesOf(scope.state.get('boards', board)))
-      (label: TextEditingController(text: m.label), day: m.day),
-  ];
-  final saved = await showModalBottomSheet<bool>(
-    context: context,
-    isScrollControlled: true,
-    useSafeArea: true,
-    showDragHandle: true,
-    builder: (sheet) => StatefulBuilder(
-      builder: (sheet, setSheet) => Padding(
-        padding: EdgeInsets.fromLTRB(
-          20,
-          0,
-          20,
-          16 + MediaQuery.viewInsetsOf(sheet).bottom,
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Text(
-              tr(sheet, 'Key dates', 'Ngày quan trọng'),
-              style: Theme.of(sheet).textTheme.titleLarge,
-            ),
-            const SizedBox(height: 4),
-            Text(
-              tr(
-                sheet,
-                'Shown under the board name with the days left. They never '
-                    'move cards or set due dates.',
-                'Hiện dưới tên bảng kèm số ngày còn lại. Không đổi cột hay '
-                    'hạn của thẻ nào.',
-              ),
-              style: Theme.of(sheet).textTheme.bodySmall?.copyWith(
-                color: BoardsPalette.of(sheet).muted,
-              ),
-            ),
-            const SizedBox(height: 8),
-            for (final (i, m) in list.indexed)
-              Row(
-                children: [
-                  Expanded(
-                    child: TextField(
-                      key: Key('key-date-name-$i'),
-                      controller: m.label,
-                      maxLength: 80,
-                      decoration: InputDecoration(
-                        counterText: '',
-                        labelText: tr(sheet, 'Name', 'Tên'),
-                      ),
-                    ),
-                  ),
-                  TextButton(
-                    onPressed: () async {
-                      final v = await pickHandyDate(sheet, isoDay(m.day));
-                      if (v != null)
-                        setSheet(
-                          () => list[i] = (label: m.label, day: localDate(v)),
-                        );
-                    },
-                    child: Text(
-                      MaterialLocalizations.of(sheet).formatShortDate(m.day),
-                    ),
-                  ),
-                  IconButton(
-                    tooltip: tr(sheet, 'Remove', 'Xoá'),
-                    onPressed: () => setSheet(() => list.removeAt(i)),
-                    icon: const Icon(Icons.close),
-                  ),
-                ],
-              ),
-            if (list.length < 8)
-              Align(
-                alignment: Alignment.centerLeft,
-                child: TextButton.icon(
-                  key: const Key('key-date-add'),
-                  onPressed: () async {
-                    final v = await pickHandyDate(sheet, '');
-                    if (v == null) return;
-                    setSheet(
-                      () => list.add((
-                        label: TextEditingController(
-                          text: tr(sheet, 'Key date', 'Mốc'),
-                        ),
-                        day: localDate(v),
-                      )),
-                    );
-                  },
-                  icon: const Icon(Icons.add),
-                  label: Text(tr(sheet, 'Add a key date', 'Thêm ngày')),
-                ),
-              ),
-            const SizedBox(height: 12),
-            FilledButton(
-              key: const Key('key-date-save'),
-              onPressed: () => Navigator.pop(sheet, true),
-              child: Text(tr(sheet, 'Save', 'Lưu')),
-            ),
-          ],
-        ),
-      ),
-    ),
-  );
-  if (saved == true && context.mounted)
+  final saved =
+      await showModalBottomSheet<List<({String label, DateTime day})>>(
+        context: context,
+        isScrollControlled: true,
+        useSafeArea: true,
+        showDragHandle: true,
+        builder: (sheet) =>
+            _KeyDatesSheet(milestonesOf(scope.state.get('boards', board))),
+      );
+  if (saved != null && context.mounted)
     await scope.run(
       context,
       () => scope.controller.change(
-        (s) => setMilestones(s, board, [
-          for (final m in list)
-            if (m.label.text.trim().isNotEmpty)
-              (label: m.label.text.trim(), day: m.day),
-        ], now: scope.clock()),
+        (s) => setMilestones(s, board, saved, now: scope.clock()),
       ),
     );
-  for (final m in list) m.label.dispose();
+}
+
+/// The sheet owns its fields: they live until the sheet has gone, so a
+/// field rebuilt while the sheet slides away (the keyboard closing) never
+/// reads a disposed controller.
+class _KeyDatesSheet extends StatefulWidget {
+  final List<({String label, DateTime day})> initial;
+  const _KeyDatesSheet(this.initial);
+  @override
+  State<_KeyDatesSheet> createState() => _KeyDatesSheetState();
+}
+
+class _KeyDatesSheetState extends State<_KeyDatesSheet> {
+  late final list = [
+    for (final m in widget.initial)
+      (label: TextEditingController(text: m.label), day: m.day),
+  ];
+
+  /// Every field ever made, removed ones too, disposed with the sheet.
+  late final made = [for (final m in list) m.label];
+
+  @override
+  void dispose() {
+    for (final c in made) {
+      c.dispose();
+    }
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext sheet) => Padding(
+    padding: EdgeInsets.fromLTRB(
+      20,
+      0,
+      20,
+      16 + MediaQuery.viewInsetsOf(sheet).bottom,
+    ),
+    child: Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Text(
+          tr(sheet, 'Key dates', 'Ngày quan trọng'),
+          style: Theme.of(sheet).textTheme.titleLarge,
+        ),
+        const SizedBox(height: 4),
+        Text(
+          tr(
+            sheet,
+            'Shown under the board name with the days left. They never '
+                'move cards or set due dates.',
+            'Hiện dưới tên bảng kèm số ngày còn lại. Không đổi cột hay '
+                'hạn của thẻ nào.',
+          ),
+          style: Theme.of(
+            sheet,
+          ).textTheme.bodySmall?.copyWith(color: BoardsPalette.of(sheet).muted),
+        ),
+        const SizedBox(height: 8),
+        for (final (i, m) in list.indexed)
+          Row(
+            key: ObjectKey(m.label),
+            children: [
+              Expanded(
+                child: TextField(
+                  key: Key('key-date-name-$i'),
+                  controller: m.label,
+                  maxLength: 80,
+                  decoration: InputDecoration(
+                    counterText: '',
+                    labelText: tr(sheet, 'Name', 'Tên'),
+                  ),
+                ),
+              ),
+              TextButton(
+                onPressed: () async {
+                  final v = await pickHandyDate(sheet, isoDay(m.day));
+                  if (v != null && mounted)
+                    setState(
+                      () => list[i] = (label: m.label, day: localDate(v)),
+                    );
+                },
+                child: Text(
+                  MaterialLocalizations.of(sheet).formatShortDate(m.day),
+                ),
+              ),
+              IconButton(
+                tooltip: tr(sheet, 'Remove', 'Xoá'),
+                onPressed: () => setState(() => list.removeAt(i)),
+                icon: const Icon(Icons.close),
+              ),
+            ],
+          ),
+        if (list.length < 8)
+          Align(
+            alignment: Alignment.centerLeft,
+            child: TextButton.icon(
+              key: const Key('key-date-add'),
+              onPressed: () async {
+                final v = await pickHandyDate(sheet, '');
+                if (v == null || !mounted) return;
+                final c = TextEditingController(
+                  text: tr(context, 'Key date', 'Mốc'),
+                );
+                made.add(c);
+                setState(() => list.add((label: c, day: localDate(v))));
+              },
+              icon: const Icon(Icons.add),
+              label: Text(tr(sheet, 'Add a key date', 'Thêm ngày')),
+            ),
+          ),
+        const SizedBox(height: 12),
+        FilledButton(
+          key: const Key('key-date-save'),
+          onPressed: () => Navigator.pop(sheet, [
+            for (final m in list)
+              if (m.label.text.trim().isNotEmpty)
+                (label: m.label.text.trim(), day: m.day),
+          ]),
+          child: Text(tr(sheet, 'Save', 'Lưu')),
+        ),
+      ],
+    ),
+  );
 }
