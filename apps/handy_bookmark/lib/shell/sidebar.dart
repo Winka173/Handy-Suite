@@ -160,11 +160,15 @@ class LibraryOverview extends StatelessWidget {
   final SaveScope scope;
   final ValueChanged<Bookmark> onOpen;
   final void Function(Place, [String?]) onPick;
+
+  /// Collections › See all: every collection, not every save.
+  final VoidCallback onAllCollections;
   const LibraryOverview({
     super.key,
     required this.scope,
     required this.onOpen,
     required this.onPick,
+    required this.onAllCollections,
   });
 
   @override
@@ -191,7 +195,7 @@ class LibraryOverview extends StatelessWidget {
       CollectionCovers(
         scope: scope,
         limit: 6,
-        onAll: () => onPick(Place.all),
+        onAll: onAllCollections,
         onOpen: (c) => onPick(Place.collection, c.id),
       ),
       RecentlySaved(
@@ -199,6 +203,31 @@ class LibraryOverview extends StatelessWidget {
         onOpen: onOpen,
         onAll: () => onPick(Place.all),
         maxColumns: 6,
+      ),
+    ],
+  );
+}
+
+/// Every collection as tiles, in the person's own order (Collections ›
+/// See all on a wide screen); a tile opens its saves.
+class AllCollections extends StatelessWidget {
+  final SaveScope scope;
+  final void Function(Place, [String?]) onPick;
+  const AllCollections({super.key, required this.scope, required this.onPick});
+
+  @override
+  Widget build(BuildContext context) => ListView(
+    key: const Key('all-collections'),
+    padding: const EdgeInsets.fromLTRB(
+      HandySpace.xl,
+      0,
+      HandySpace.xl,
+      HandySpace.xxl,
+    ),
+    children: [
+      CollectionCovers(
+        scope: scope,
+        onOpen: (c) => onPick(Place.collection, c.id),
       ),
     ],
   );

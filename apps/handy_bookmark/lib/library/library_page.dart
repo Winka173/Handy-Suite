@@ -43,6 +43,7 @@ class LibraryPage extends StatelessWidget {
               PlacesList(
                 scope: scope,
                 marking: false,
+                tiles: true,
                 onPick: (p, [id]) => Navigator.pushNamed(context, switch (p) {
                   Place.collection => '/collection/$id',
                   Place.smart => '/smart/$id',

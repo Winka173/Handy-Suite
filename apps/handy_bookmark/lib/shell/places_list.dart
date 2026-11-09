@@ -4,6 +4,7 @@ import '../pro/entitlements.dart';
 import 'package:handy_ui/kit.dart';
 import '../collections/collection_actions.dart';
 import '../links/link_actions.dart';
+import '../home/collection_covers.dart';
 import '../library/place_title.dart';
 import '../scope.dart';
 import '../ui/collection_picker.dart';
@@ -33,6 +34,10 @@ class PlacesList extends StatelessWidget {
 
   /// The overview is showing: no place is marked.
   final bool overview;
+
+  /// The phone's Library page: the collections as picture tiles, as on
+  /// Home, instead of a list.
+  final bool tiles;
   const PlacesList({
     super.key,
     required this.scope,
@@ -42,6 +47,7 @@ class PlacesList extends StatelessWidget {
     this.marking = true,
     this.flat = false,
     this.overview = false,
+    this.tiles = false,
   });
 
   @override
@@ -212,63 +218,70 @@ class PlacesList extends StatelessWidget {
               ),
           ],
         ),
-        heading(
-          tr(context, 'Collections', 'Bộ sưu tập'),
-          trailing: IconButton(
-            key: const Key('collection-new'),
-            tooltip: tr(context, 'New collection', 'Bộ sưu tập mới'),
-            icon: const Icon(Icons.add),
-            onPressed: () => scope.editCollection(context),
-          ),
-        ),
-        if (l.collections.isEmpty)
-          Text(
-            tr(
-              context,
-              'Group links by topic: Recipes, Trips, To buy…',
-              'Gom link theo chủ đề: Công thức, Du lịch, Cần mua…',
-            ),
-            style: theme.textTheme.bodyMedium?.copyWith(color: c.muted),
+        if (tiles)
+          CollectionCovers(
+            scope: scope,
+            onOpen: (col) => onPick(Place.collection, col.id),
           )
-        else
-          group(
-            children: [
-              for (final (col, depth) in collectionTree(l))
-                row(
-                  Key('collection-${col.id}'),
-                  Icons.folder,
-                  col.name,
-                  hue: collectionHue(l, col.id),
-                  n: inCollection[col.id] ?? 0,
-                  id: col.id,
-                  place: Place.collection,
-                  indent: depth * 20.0,
-                  menu: HandyMenuButton(
-                    key: Key('collection-menu-${col.id}'),
-                    items: [
-                      HandyMenuItem(
-                        Icons.edit_outlined,
-                        tr(context, 'Edit', 'Sửa'),
-                        () => scope.editCollection(context, col),
-                        key: const Key('collection-edit'),
-                      ),
-                      HandyMenuItem(
-                        Icons.delete_outline,
-                        tr(context, 'Delete', 'Xóa'),
-                        () async {
-                          if (await scope.deleteCollection(context, col) &&
-                              v.place == Place.collection &&
-                              v.id == col.id)
-                            onPick(Place.all);
-                        },
-                        key: const Key('collection-delete'),
-                        destructive: true,
-                      ),
-                    ],
-                  ),
-                ),
-            ],
+        else ...[
+          heading(
+            tr(context, 'Collections', 'Bộ sưu tập'),
+            trailing: IconButton(
+              key: const Key('collection-new'),
+              tooltip: tr(context, 'New collection', 'Bộ sưu tập mới'),
+              icon: const Icon(Icons.add),
+              onPressed: () => scope.editCollection(context),
+            ),
           ),
+          if (l.collections.isEmpty)
+            Text(
+              tr(
+                context,
+                'Group links by topic: Recipes, Trips, To buy…',
+                'Gom link theo chủ đề: Công thức, Du lịch, Cần mua…',
+              ),
+              style: theme.textTheme.bodyMedium?.copyWith(color: c.muted),
+            )
+          else
+            group(
+              children: [
+                for (final (col, depth) in collectionTree(l))
+                  row(
+                    Key('collection-${col.id}'),
+                    Icons.folder,
+                    col.name,
+                    hue: collectionHue(l, col.id),
+                    n: inCollection[col.id] ?? 0,
+                    id: col.id,
+                    place: Place.collection,
+                    indent: depth * 20.0,
+                    menu: HandyMenuButton(
+                      key: Key('collection-menu-${col.id}'),
+                      items: [
+                        HandyMenuItem(
+                          Icons.edit_outlined,
+                          tr(context, 'Edit', 'Sửa'),
+                          () => scope.editCollection(context, col),
+                          key: const Key('collection-edit'),
+                        ),
+                        HandyMenuItem(
+                          Icons.delete_outline,
+                          tr(context, 'Delete', 'Xóa'),
+                          () async {
+                            if (await scope.deleteCollection(context, col) &&
+                                v.place == Place.collection &&
+                                v.id == col.id)
+                              onPick(Place.all);
+                          },
+                          key: const Key('collection-delete'),
+                          destructive: true,
+                        ),
+                      ],
+                    ),
+                  ),
+              ],
+            ),
+        ],
         if (l.tags.isNotEmpty) ...[
           heading(tr(context, 'Tags', 'Thẻ')),
           Wrap(

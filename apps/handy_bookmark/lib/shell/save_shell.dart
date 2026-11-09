@@ -34,6 +34,9 @@ class _SaveShellState extends State<SaveShell> {
 
   /// The Library overview fills the middle (the sidebar's first row).
   bool overview = true;
+
+  /// Every collection fills the middle (Collections › See all).
+  bool collections = false;
   SaveScope get scope => widget.scope;
 
   @override
@@ -84,6 +87,7 @@ class _SaveShellState extends State<SaveShell> {
     void pick(Place p, [String? id]) => setState(() {
       current = null;
       overview = false;
+      collections = false;
       v.show(p, id);
     });
     final keys = <ShortcutActivator, VoidCallback>{
@@ -158,12 +162,14 @@ class _SaveShellState extends State<SaveShell> {
                     overview: overview,
                     onOverview: () => setState(() {
                       current = null;
+                      collections = false;
                       overview = true;
                     }),
                     onPick: pick,
                     onSearch: (s) => setState(() {
                       current = null;
                       overview = false;
+                      collections = false;
                       v.applySaved(s);
                     }),
                   ),
@@ -226,12 +232,24 @@ class _SaveShellState extends State<SaveShell> {
                         child: Row(
                           crossAxisAlignment: CrossAxisAlignment.stretch,
                           children: [
-                            if (overview)
+                            if (collections)
+                              Expanded(
+                                child: AllCollections(
+                                  scope: scope,
+                                  onPick: pick,
+                                ),
+                              )
+                            else if (overview)
                               Expanded(
                                 child: LibraryOverview(
                                   scope: scope,
                                   onOpen: (b) => details(b, false),
                                   onPick: pick,
+                                  onAllCollections: () => setState(() {
+                                    current = null;
+                                    overview = false;
+                                    collections = true;
+                                  }),
                                 ),
                               )
                             else
@@ -257,7 +275,7 @@ class _SaveShellState extends State<SaveShell> {
                                   ],
                                 ),
                               ),
-                            if (side && !overview) ...[
+                            if (side && !overview && !collections) ...[
                               // The open item on its own raised sheet beside the list.
                               Container(
                                 width: 440,
