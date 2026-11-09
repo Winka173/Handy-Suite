@@ -92,54 +92,64 @@ class BookmarkSidebar extends StatelessWidget {
             ),
           ),
           Expanded(
-            child: ListView(
-              key: const Key('bookmark-sidebar'),
-              padding: const EdgeInsets.fromLTRB(4, 0, 4, 16),
-              children: [
-                Padding(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 6,
-                    vertical: 1,
-                  ),
-                  child: ListTile(
-                    key: const Key('side-overview'),
-                    dense: true,
-                    selected: overview,
-                    selectedTileColor: p.band,
-                    selectedColor: p.bandInk,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(BookmarkRadii.item),
-                    ),
-                    leading: Icon(
-                      Icons.collections_bookmark_outlined,
-                      size: 20,
-                      color: overview ? p.bandInk : p.muted,
-                    ),
-                    title: Text(
-                      tr(context, 'Library', 'Thư viện'),
-                      style: theme.textTheme.bodyMedium?.copyWith(
-                        fontWeight: overview ? FontWeight.w700 : null,
-                        color: overview ? p.bandInk : null,
+            // The rows' fills and ripples are painted on this Material,
+            // clipped to the list, so a picked row scrolled up never
+            // slides over the brand or the status bar.
+            child: ClipRect(
+              child: Material(
+                type: MaterialType.transparency,
+                child: ListView(
+                  key: const Key('bookmark-sidebar'),
+                  padding: const EdgeInsets.fromLTRB(4, 0, 4, 16),
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 6,
+                        vertical: 1,
+                      ),
+                      child: ListTile(
+                        key: const Key('side-overview'),
+                        dense: true,
+                        selected: overview,
+                        selectedTileColor: p.band,
+                        selectedColor: p.bandInk,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(
+                            BookmarkRadii.item,
+                          ),
+                        ),
+                        leading: Icon(
+                          Icons.collections_bookmark_outlined,
+                          size: 20,
+                          color: overview ? p.bandInk : p.muted,
+                        ),
+                        title: Text(
+                          tr(context, 'Library', 'Thư viện'),
+                          style: theme.textTheme.bodyMedium?.copyWith(
+                            fontWeight: overview ? FontWeight.w700 : null,
+                            color: overview ? p.bandInk : null,
+                          ),
+                        ),
+                        trailing: Text(
+                          formatFigure(context, '$live'),
+                          style: theme.textTheme.bodyMedium?.copyWith(
+                            color: overview ? p.bandSub : p.muted,
+                          ),
+                        ),
+                        onTap: onOverview,
                       ),
                     ),
-                    trailing: Text(
-                      formatFigure(context, '$live'),
-                      style: theme.textTheme.bodyMedium?.copyWith(
-                        color: overview ? p.bandSub : p.muted,
-                      ),
+                    PlacesList(
+                      scope: scope,
+                      flat: true,
+                      overview: overview,
+                      onPick: onPick,
+                      onFocus: () => Navigator.pushNamed(context, '/focus'),
+                      onSearch: onSearch,
                     ),
-                    onTap: onOverview,
-                  ),
+                  ],
                 ),
-                PlacesList(
-                  scope: scope,
-                  flat: true,
-                  overview: overview,
-                  onPick: onPick,
-                  onFocus: () => Navigator.pushNamed(context, '/focus'),
-                  onSearch: onSearch,
-                ),
-              ],
+              ),
             ),
           ),
           foot(

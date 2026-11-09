@@ -31,29 +31,36 @@ class LibraryPage extends StatelessWidget {
         alignment: AlignmentDirectional.topCenter,
         child: ConstrainedBox(
           constraints: const BoxConstraints(maxWidth: 640),
-          child: ListView(
-            key: const Key('library-page'),
-            padding: const EdgeInsets.fromLTRB(
-              HandySpace.l,
-              HandySpace.s,
-              HandySpace.l,
-              HandySpace.xxl,
-            ),
-            children: [
-              PlacesList(
-                scope: scope,
-                marking: false,
-                tiles: true,
-                onPick: (p, [id]) => Navigator.pushNamed(context, switch (p) {
-                  Place.collection => '/collection/$id',
-                  Place.smart => '/smart/$id',
-                  Place.tag => '/tag/${Uri.encodeComponent(id!)}',
-                  _ => '/place/${p.name}',
-                }),
-                onSearch: (s) =>
-                    Navigator.pushNamed(context, '/search/${s.id}'),
+          // Row fills and ripples clipped to the list (see the sidebar).
+          child: ClipRect(
+            child: Material(
+              type: MaterialType.transparency,
+              child: ListView(
+                key: const Key('library-page'),
+                padding: const EdgeInsets.fromLTRB(
+                  HandySpace.l,
+                  HandySpace.s,
+                  HandySpace.l,
+                  HandySpace.xxl,
+                ),
+                children: [
+                  PlacesList(
+                    scope: scope,
+                    marking: false,
+                    tiles: true,
+                    onPick: (p, [id]) =>
+                        Navigator.pushNamed(context, switch (p) {
+                          Place.collection => '/collection/$id',
+                          Place.smart => '/smart/$id',
+                          Place.tag => '/tag/${Uri.encodeComponent(id!)}',
+                          _ => '/place/${p.name}',
+                        }),
+                    onSearch: (s) =>
+                        Navigator.pushNamed(context, '/search/${s.id}'),
+                  ),
+                ],
               ),
-            ],
+            ),
           ),
         ),
       ),
