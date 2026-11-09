@@ -214,9 +214,9 @@ class _Library extends StatelessWidget {
             Text(
               'Handy Bookmark',
               style: TextStyle(
-                fontFamily: handyFontFamily('Newsreader'),
+                fontFamily: handyFontFamily('Manrope'),
                 fontSize: 22,
-                fontWeight: FontWeight.w500,
+                fontWeight: FontWeight.w600,
                 color: GuideColors.ink,
               ),
             ),

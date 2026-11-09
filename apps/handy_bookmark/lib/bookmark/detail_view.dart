@@ -107,6 +107,8 @@ class DetailView extends StatelessWidget {
               key: const Key('save-open-original'),
               style: FilledButton.styleFrom(
                 minimumSize: const Size.fromHeight(52),
+                // Room for the label at large text on a 320 pt screen.
+                padding: const EdgeInsets.symmetric(horizontal: 12),
               ),
               onPressed: () => scope.open(context, b),
               icon: const Icon(Icons.open_in_new),

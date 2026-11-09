@@ -3190,3 +3190,25 @@ icon + chữ) và trang Explore Pro của Bookmark (ba khối chữ). Trang này
   5 mục".
 - **Kiểm:** 320 px và chữ ×2 (dải chip cuộn ngang, menu không tràn), sáng và tối.
 - **Từ chối:** cây nhiều cấp; biểu tượng thư mục to màu sắc cho từng bộ; xoá hay làm phẳng dữ liệu cũ khi mất Pro.
+
+## Hợp đồng: Bookmark và Boards · pastel sáng + pastel tối (2026-11-09, thay bản thử cùng ngày)
+
+Chạy `design-taste-frontend` (app screens) với bản phác HTML dùng chung dữ liệu: Bookmark rút `pastel-consumer`, `editorial-greeting`, `achromatic-ledger`; Boards rút `pastel-consumer`, `framed-sheet`, `editorial-greeting`. Chủ chọn **pastel** cho cả hai; trong bốn biến thể pastel (sáng, khối neo đậm, ấm mềm Nunito, nền tối) chủ lấy **sáng làm giao diện sáng** và **nền tối làm giao diện tối**. Quy tắc mới của chủ: mỗi app độc lập, bảng màu riêng đầy đủ.
+
+**Handy Bookmark**
+- Câu hỏi của Trang chủ: "Có gì đang chờ mình, và thứ mình lưu nằm đâu?" Phát hiện đọc đầu tiên: dòng dưới tiêu đề "N mục · N chưa xếp".
+- Mặt (face): màu của từng bộ sưu tập thành ô nhạt với chữ là màu đậm của chính hue đó (`hueField`); ảnh của mục lưu là vật thật trên màn.
+- Dấu ấn: dải ruy băng vàng (`ReadLaterRibbon`) trên ảnh của mục có hẹn đọc còn phía trước.
+- Token sáng: nền `#F3F5F7`, khung trắng, raised `#EEF1F4`, chữ `#1B1D1F`/`#5C6064`, hành động teal `#0E7490`. Tối: nền `#141516`, khung `#1E2022`, raised `#26292B`, chữ `#F2F2F2`/`#A9ADB1`, hành động `#7CC8D8`; ô hue = hue trộn 26% vào khung, chữ = hue trộn 62% về trắng. Font Manrope (400–700, cắt tĩnh từ Google Fonts, đủ tiếng Việt, OFL đi kèm); Newsreader chỉ còn ở màn chào và vài giao diện Pro. Bo: khung 20, ô bộ sưu tập 20, bên trong 10–14, nút/ô nhập 12.
+- Trang chủ điện thoại, theo thứ tự: tiêu đề + dòng đếm; ô dán link + nút; **Hẹn đọc** (khung trắng, nhóm theo Tối nay/Hôm nay, Ngày mai, Cuối tuần, ngày; tối đa 3 mục, ẩn khi không có); **Chưa xếp** (4 mục mới nhất, mỗi mục có 2 bộ sưu tập hay dùng làm chip một chạm + "Khác…", "Xem tất cả" mở Chưa xếp); thẻ Tập trung; **Bộ sưu tập** dạng ô pastel (2 ảnh, hoặc tên mục trên giấy mờ, hoặc dấu + "Chưa có gì"); **Mới lưu** trong khung trắng, 2 cột × 2 hàng, ảnh bo 10.
+- Trạng thái: thư viện trống giữ màn trống cũ; ghi lỗi khi xếp thì mục nằm lại (chip không đổi); chip 32pt trong vùng chạm 48pt; 320px với chữ 200% không tràn (tiêu đề khung co, nút "Xem tất cả" co).
+- Máy tính bảng/desktop: giữ khung thanh bên hiện có (lượt sau đưa trang tổng quan vào khung rộng); token và ô bộ sưu tập áp dụng chung.
+
+**Handy Boards**
+- Câu hỏi của màn bảng: "Tuần này còn gì phải làm và đang ở cột nào?"
+- Mặt: ô nhóm ở dải nhóm là màu nhạt của chính nhóm, chữ màu đậm của nhóm, thanh tiến độ màu nhóm trên nền trắng mờ.
+- Dấu ấn: nhóm của thẻ là miếng băng keo màu nhóm, lệch nhẹ, hai đầu xé răng cưa (`CategoryTape`), đè lên ảnh bìa khi có.
+- Token sáng: nền `#F2F2F0`, cột `#E9E8E6`, thẻ trắng, hành động magenta `#A61C8E`, Plus Jakarta Sans. Tối: nền than `#141516`, cột `#1B1D1F`, thẻ `#25282A`, ô nhóm sậm, hành động hồng sáng `#E07CCB`, chữ trễ hạn `#FF9B8C`.
+- Điện thoại: một cột một lần, hai cột kề lộ 28px hai bên làm chỗ thả khi kéo thẻ, hàng chip tên cột (chạm để nhảy cột).
+
+**Loại bỏ**: khối neo đậm, Nunito ấm mềm, lời chào serif làm tiêu đề, khung viền, mảng màu loang, linh vật, thanh chuyển app, thẻ chuỗi ngày.

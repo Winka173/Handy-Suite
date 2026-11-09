@@ -135,17 +135,15 @@ void main() {
     final c = await start(tester, store: store, seed: recipes);
     final id = c.library!.bookmarks.single.id;
     store.fail = true;
-    // One "Put in…" button opens the usual collections.
-    await tapKey(tester, 'file-$id');
+    // Home's Not sorted row offers the usual collections as chips.
     await tapKey(tester, 'file-$id-recipes');
     expect(c.library!.bookmarks.single.collectionId, isNull);
-    expect(find.byKey(Key('file-$id')), findsOneWidget);
+    expect(find.byKey(Key('unsorted-$id')), findsOneWidget);
     store.fail = false;
-    await tapKey(tester, 'file-$id');
     await tapKey(tester, 'file-$id-recipes');
     expect(c.library!.bookmarks.single.collectionId, 'recipes');
-    // Filed: the row names its collection and the button goes.
-    expect(find.byKey(Key('file-$id')), findsNothing);
+    // Filed: it leaves Not sorted.
+    expect(find.byKey(Key('unsorted-$id')), findsNothing);
   });
 
   testWidgets('a card whose page is being read shows it, then stops', (

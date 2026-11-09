@@ -1,11 +1,12 @@
 import 'package:handy_bookmark_engine/handy_bookmark_engine.dart';
 import 'package:handy_ui/kit.dart';
+import '../ui/read_later_ribbon.dart';
+import 'pastel_blocks.dart';
 import '../design/theme.dart';
 import '../scope.dart';
 import '../ui/collection_picker.dart';
 import '../ui/visual.dart';
 import '../ui/words.dart';
-import 'triage_strip.dart';
 
 /// How many saves wait to be opened, from the real read state, as one
 /// compact card into Focus. With nothing waiting it is one calm line.
@@ -163,24 +164,22 @@ class RecentlySaved extends StatelessWidget {
         if (!b.isArchived) b,
     ]..sort((a, b) => b.savedAt.compareTo(a.savedAt));
     if (recent.isEmpty) return const SizedBox.shrink();
-    return Column(
-      key: const Key('recent'),
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        SectionHead(
-          tr(context, 'Recently saved', 'Mới lưu'),
-          action: TextButton(
-            key: const Key('recent-all'),
-            onPressed: onAll,
-            child: Text(tr(context, 'See all', 'Xem tất cả')),
-          ),
+    return Padding(
+      padding: const EdgeInsets.only(top: HandySpace.l),
+      child: HomePanel(
+        key: const Key('recent'),
+        title: tr(context, 'Recently saved', 'Mới lưu'),
+        action: TextButton(
+          key: const Key('recent-all'),
+          onPressed: onAll,
+          child: Text(tr(context, 'See all', 'Xem tất cả')),
         ),
         // Cards, as everywhere else: two across on a phone, more on a
         // wider screen, two rows.
-        LayoutBuilder(
+        child: LayoutBuilder(
           builder: (context, box) {
             final scale = MediaQuery.textScalerOf(context).scale(14) / 14;
-            final columns = (box.maxWidth / (165 * scale.clamp(1.0, 2.0)))
+            final columns = (box.maxWidth / (140 * scale.clamp(1.0, 2.0)))
                 .floor()
                 .clamp(1, 4);
             const gap = HandySpace.m;
@@ -202,7 +201,7 @@ class RecentlySaved extends StatelessWidget {
             );
           },
         ),
-      ],
+      ),
     );
   }
 }
@@ -224,9 +223,10 @@ class _RecentCard extends StatelessWidget {
     final p = BookmarkPalette.of(context);
     final b = bookmark;
     final home = collectionOf(scope.library, b.collectionId);
+    final later = readLaterAt(b, DateTime.now());
     return Material(
-      color: p.surface,
-      borderRadius: BorderRadius.circular(BookmarkRadii.item),
+      color: Colors.transparent,
+      borderRadius: BorderRadius.circular(BookmarkRadii.thumb),
       clipBehavior: Clip.antiAlias,
       child: InkWell(
         key: Key('recent-${b.id}'),
@@ -234,9 +234,19 @@ class _RecentCard extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            AspectRatio(aspectRatio: 4 / 3, child: ItemPicture(scope.c, b)),
+            AspectRatio(
+              aspectRatio: 4 / 3,
+              child: Stack(
+                fit: StackFit.expand,
+                children: [
+                  ItemPicture(scope.c, b, radius: BookmarkRadii.thumb),
+                  if (later != null)
+                    Positioned(top: 0, left: 10, child: ReadLaterRibbon(later)),
+                ],
+              ),
+            ),
             Padding(
-              padding: const EdgeInsets.fromLTRB(12, 10, 12, 4),
+              padding: const EdgeInsets.fromLTRB(2, 8, 2, 2),
               child: Text(
                 b.title.isEmpty ? b.sourceDomain : b.title,
                 maxLines: 2,
@@ -247,7 +257,7 @@ class _RecentCard extends StatelessWidget {
               ),
             ),
             Padding(
-              padding: const EdgeInsets.fromLTRB(12, 0, 12, 10),
+              padding: const EdgeInsets.fromLTRB(2, 0, 2, 4),
               child: Text.rich(
                 TextSpan(
                   children: [
@@ -265,16 +275,6 @@ class _RecentCard extends StatelessWidget {
                 style: theme.textTheme.bodySmall?.copyWith(color: p.muted),
               ),
             ),
-            if (b.collectionId == null)
-              Padding(
-                padding: const EdgeInsets.fromLTRB(8, 0, 8, 8),
-                child: PutIn(
-                  controller: scope.c,
-                  bookmark: b,
-                  onFile: scope.file,
-                  compact: true,
-                ),
-              ),
           ],
         ),
       ),
