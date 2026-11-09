@@ -127,7 +127,13 @@ class _SaveAppState extends State<SaveApp> with WidgetsBindingObserver {
   );
   final navigator = GlobalKey<NavigatorState>();
   final prefs = ValueNotifier<HandyPreferences?>(null);
-  Timer? _sync;
+  Timer? _sync, _daily;
+
+  void _dailyCheck() {
+    if (!_foreground || c.library == null) return;
+    unawaited(tasks.dailyCheck().catchError((Object _) => null));
+  }
+
   String? _pendingOpen;
 
   @override
@@ -161,6 +167,7 @@ class _SaveAppState extends State<SaveApp> with WidgetsBindingObserver {
     scope.autoBackup?.dispose();
     scope.drive?.dispose();
     _sync?.cancel();
+    _daily?.cancel();
     tasks.cancel();
     tasks.dispose();
     view.dispose();
@@ -219,6 +226,7 @@ class _SaveAppState extends State<SaveApp> with WidgetsBindingObserver {
     if (r == null || identical(r, _toldReport)) return;
     _toldReport = r;
     if (r.cancelled ||
+        r.quiet ||
         _foreground ||
         !widget.device ||
         c.preferences['taskNotices'] != true)
@@ -274,6 +282,7 @@ class _SaveAppState extends State<SaveApp> with WidgetsBindingObserver {
       // Buttons pressed on a reminder while the app was away.
       unawaited(_applyNotifyActions());
       scope.drive?.resumed();
+      if (_daily != null) _dailyCheck();
     }
     if (state == AppLifecycleState.paused) scope.drive?.paused();
   }
@@ -293,6 +302,14 @@ class _SaveAppState extends State<SaveApp> with WidgetsBindingObserver {
     }
     if (_pendingOpen != null) _openFromNotification(_pendingOpen!);
     scope.autoBackup?.attach();
+    // The day's link check: a little after opening (never in the way of
+    // the first screen), then looked at every hour; it runs once a day.
+    if (widget.device) {
+      _daily = Timer(const Duration(seconds: 20), () {
+        _dailyCheck();
+        _daily = Timer.periodic(const Duration(hours: 1), (_) => _dailyCheck());
+      });
+    }
     // Sync left on: the other devices' changes arrive now.
     unawaited(scope.drive?.syncNow());
     if (mounted) setState(() {});

@@ -3411,3 +3411,22 @@ Kit sửa chung (`HandyPalette`): ở bản sáng, màu nhận diện được l
 - **Thiết lập mẫu:** mọi ô của 30 mẫu có khung "Trên bảng: …" với câu trả lời hiện tại. Câu này sinh theo vai trò của ô: tên, nhóm, ngày quan trọng, cột tuỳ chọn, bộ cột, cách hiện thẻ, khoảng thời gian, thẻ ví dụ.
 - **Lỗi:** lưu ngày quan trọng không còn ra màn đỏ (bảng tự quản lý các ô của nó).
 - **Cách dùng** của cả hai app cập nhật theo các mục trên. Màn chào giữ nguyên, vì phần luyện kéo thẻ đã có hiệu ứng sáng cột.
+
+### Handy Bookmark · danh sách dài có giới hạn, kiểm tra link mỗi ngày (2026-11-10, chủ yêu cầu)
+
+**Việc của màn.** Khi có rất nhiều bộ sưu tập hay thẻ, những thứ nằm sau danh sách (Thẻ, Nâng cao, nút Bộ sưu tập mới, nút Gửi) vẫn phải ở gần. Link không còn mở được phải nhìn ra ngay mà không bị xoá.
+
+- **Giới hạn hiển thị**, phần còn lại mở tại chỗ bằng "Xem tất cả N" (và "Thu gọn"), có chuyển động co giãn:
+  - thanh bên: 8 bộ sưu tập, 12 thẻ. Bộ hay thẻ đang mở nằm sâu hơn thì danh sách tự mở hết;
+  - trang Thư viện trên điện thoại: 6 ô bộ sưu tập, ô "Bộ sưu tập mới" ngay sau;
+  - bảng chia sẻ vào app: 6 bộ vừa nhận đồ gần nhất; hàng "Chưa xếp" (bỏ ra khỏi bộ) lên đầu;
+  - hộp "Chuyển vào": 8 bộ;
+  - danh sách dài hơn giới hạn đúng 1 mục thì hiện hết, không có nút "xem thêm 1".
+  - "Tất cả bộ sưu tập" trên màn rộng: Gửi và Nhận nằm trên lưới.
+- **Kiểm tra link mỗi ngày:** chạy ngầm 1 lần/ngày, 20 giây sau khi mở app, rồi xem lại mỗi giờ. Mỗi lần tối đa 60 link: link chưa từng kiểm tra trước, rồi link kiểm tra lâu nhất; bỏ qua link đã kiểm tra trong 7 ngày. Không có thanh tiến độ. Chỉ báo khi tìm ra link hỏng ("Xem link hỏng"). Người dùng tự bắt đầu một việc khác thì lượt ngầm nhường ngay.
+  - **Mất mạng:** chưa trang nào trả lời thì không ghi "không mở được"; 5 lần liền không ai trả lời thì dừng, giờ sau thử lại.
+  - **Công tắc** ở Cài đặt › Công cụ thư viện nâng cao. Mặc định theo "Đọc trang sau khi lưu" (tắt cái đó là không liên hệ website nào); không có trên web.
+- **Kiểu riêng của link hỏng**, không bao giờ tự xoá:
+  - ảnh xám, mờ 50% ở mọi nơi hiện ảnh (thẻ, hàng, bố cục Pro);
+  - góc ảnh có nhãn chữ kèm biểu tượng: "Không còn" (biểu tượng màu cảnh báo), "Không mở được", "Đã chuyển" (trang chuyển chỗ vẫn mở được nên không bị xám);
+  - dòng danh sách vẫn ghi trạng thái ở đầu dòng như trước.

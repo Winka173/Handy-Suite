@@ -1,6 +1,7 @@
 import 'package:handy_bookmark_engine/handy_bookmark_engine.dart';
 import 'package:handy_ui/kit.dart';
 import '../design/theme.dart';
+import 'words.dart';
 
 /// Opened this many times or more: "seen often", with its count.
 const seenOften = 3;
@@ -37,8 +38,8 @@ List<InlineSpan> itemMarkSpans(BuildContext context, Bookmark b) {
   ];
 }
 
-/// Marks on a card's picture, at its top right: New, and the favourite
-/// star.
+/// Marks on a card's picture, at its top right: a broken link (in words,
+/// with an icon), New, and the favourite star.
 class ItemCornerMarks extends StatelessWidget {
   final Bookmark bookmark;
   const ItemCornerMarks(this.bookmark, {super.key});
@@ -47,10 +48,51 @@ class ItemCornerMarks extends StatelessWidget {
     final b = bookmark;
     final p = BookmarkPalette.of(context);
     final fresh = isNewSave(b, DateTime.now());
-    if (!fresh && !b.isFavorite) return const SizedBox.shrink();
+    final check = b.linkCheck;
+    final broken = check != null && check.broken;
+    if (!fresh && !b.isFavorite && !broken) return const SizedBox.shrink();
+    final theme = Theme.of(context);
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
+        if (broken)
+          Flexible(
+            child: Container(
+              key: Key('mark-broken-${b.id}'),
+              padding: const EdgeInsets.fromLTRB(6, 3, 8, 3),
+              decoration: BoxDecoration(
+                color: p.surface,
+                borderRadius: BorderRadius.circular(BookmarkRadii.chip),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(
+                    check.status == 'moved' ? Icons.turn_right : Icons.link_off,
+                    size: 15,
+                    color: check.status == 'gone'
+                        ? HandyColors.of(context).negative
+                        : p.ink,
+                  ),
+                  const SizedBox(width: 4),
+                  Flexible(
+                    child: Text(
+                      check.status == 'unreachable'
+                          ? tr(context, 'Not reachable', 'Không mở được')
+                          : linkStatusWords(context, check),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: theme.textTheme.labelMedium?.copyWith(
+                        color: p.ink,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        if (broken && (fresh || b.isFavorite)) const SizedBox(width: 6),
         if (fresh)
           Container(
             key: Key('mark-new-${b.id}'),

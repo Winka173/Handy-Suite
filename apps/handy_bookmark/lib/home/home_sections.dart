@@ -120,7 +120,16 @@ class _RecentCard extends StatelessWidget {
                   ItemPicture(scope.c, b, radius: 0),
                   if (later != null)
                     Positioned(top: 0, left: 10, child: ReadLaterRibbon(later)),
-                  Positioned(top: 8, right: 8, child: ItemCornerMarks(b)),
+                  Positioned(
+                    top: 8,
+                    left: 8,
+                    right: 8,
+                    // Bounded, so a long broken-link mark shortens.
+                    child: Align(
+                      alignment: AlignmentDirectional.topEnd,
+                      child: ItemCornerMarks(b),
+                    ),
+                  ),
                 ],
               ),
             ),

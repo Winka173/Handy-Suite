@@ -3,6 +3,7 @@ import 'data_section.dart';
 import 'package:handy_ui/kit.dart';
 import '../collections/collection_actions.dart';
 import '../links/link_actions.dart';
+import '../links/link_tasks.dart';
 import '../scope.dart';
 import 'settings_parts.dart';
 
@@ -141,6 +142,23 @@ List<Widget> libraryTools(BuildContext context, SaveScope scope) {
               if (b.hasUrl) b.id,
           ]),
         ),
+        if (c.networkAvailable)
+          SettingsSwitch(
+            key: const Key('set-daily-check'),
+            icon: Icons.event_repeat,
+            title: tr(
+              context,
+              'Check links once a day',
+              'Kiểm tra link mỗi ngày',
+            ),
+            subtitle: tr(
+              context,
+              'A few at a time, quietly. A broken link is only marked, never deleted.',
+              'Mỗi lần vài link, chạy ngầm. Link hỏng chỉ được đánh dấu, không bao giờ bị xóa.',
+            ),
+            value: LinkTasks.dailyAllowed(p),
+            onChanged: (v) => set({'dailyLinkCheck': v}),
+          ),
         SettingsRow(
           key: const Key('save-broken'),
           icon: Icons.link_off,

@@ -84,7 +84,9 @@ class TaskStrip extends StatelessWidget {
       final theme = Theme.of(context);
       final last = tasks.last;
       Widget? body;
-      if (tasks.running) {
+      if (tasks.running && tasks.quiet) {
+        body = null;
+      } else if (tasks.running) {
         final what = tasks.job == LinkJob.check
             ? tr(context, 'Checking links', 'Đang kiểm tra link')
             : tr(context, 'Saving offline copies', 'Đang lưu bản đọc offline');

@@ -97,6 +97,20 @@ class SourceFace extends StatelessWidget {
 /// A save's picture: the stored preview of a picture, the page's small
 /// thumbnail for a link, or its [SourceFace]. Only previews are decoded
 /// here, never an original.
+/// The last check found the page gone, or no site answered: shown greyed,
+/// never removed. A moved page still opens, so it is not greyed.
+bool linkDead(Bookmark b) {
+  final s = b.linkCheck?.status;
+  return s == 'gone' || s == 'unreachable';
+}
+
+const _grey = ColorFilter.matrix([
+  0.2126, 0.7152, 0.0722, 0, 0, //
+  0.2126, 0.7152, 0.0722, 0, 0, //
+  0.2126, 0.7152, 0.0722, 0, 0, //
+  0, 0, 0, 1, 0,
+]);
+
 class ItemPicture extends StatelessWidget {
   final SaveController controller;
   final Bookmark bookmark;
@@ -114,9 +128,18 @@ class ItemPicture extends StatelessWidget {
     final face = SourceFace(bookmark, compact: compact);
     // Saved already; its page is being read for a title and picture.
     final reading = controller.fetching.containsKey(bookmark.id);
+    final picture = reading
+        ? ReadingShade(child: _picture(face))
+        : _picture(face);
     return ClipRRect(
       borderRadius: BorderRadius.circular(radius),
-      child: reading ? ReadingShade(child: _picture(face)) : _picture(face),
+      // A link that no longer opens keeps its place, greyed and faded.
+      child: linkDead(bookmark)
+          ? Opacity(
+              opacity: .5,
+              child: ColorFiltered(colorFilter: _grey, child: picture),
+            )
+          : picture,
     );
   }
 

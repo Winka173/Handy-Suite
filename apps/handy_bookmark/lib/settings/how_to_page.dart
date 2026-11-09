@@ -482,8 +482,8 @@ List<_Topic> _topics(BuildContext context) => [
       _Step(
         tr(
           context,
-          'Settings › Data › Library tools finds duplicates to merge, and checks every link for ones that stopped working.',
-          'Cài đặt › Dữ liệu › Công cụ thư viện tìm mục trùng để gộp, và kiểm tra mọi link xem cái nào không còn mở được.',
+          'Settings › Data › Library tools finds duplicates to merge, and checks every link for ones that stopped working. Once a day the app also checks a few links by itself: a broken one is greyed with a mark on its card and listed in Broken links, never deleted.',
+          'Cài đặt › Dữ liệu › Công cụ thư viện tìm mục trùng để gộp, và kiểm tra mọi link xem cái nào không còn mở được. Mỗi ngày app cũng tự kiểm tra vài link: link hỏng có ảnh xám và nhãn trên thẻ, nằm trong mục Link hỏng, không bao giờ bị xoá.',
         ),
         picture: MockRows(
           title: tr(context, 'Data', 'Dữ liệu'),

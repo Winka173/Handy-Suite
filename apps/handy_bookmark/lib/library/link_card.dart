@@ -67,7 +67,16 @@ class LinkCard extends StatelessWidget {
                       ),
                     ),
                   if (!selecting)
-                    Positioned(top: 8, right: 8, child: ItemCornerMarks(b)),
+                    Positioned(
+                      top: 8,
+                      left: 8,
+                      right: 8,
+                      // Bounded, so a long broken-link mark shortens.
+                      child: Align(
+                        alignment: AlignmentDirectional.topEnd,
+                        child: ItemCornerMarks(b),
+                      ),
+                    ),
                 ],
               ),
             ),

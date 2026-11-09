@@ -129,6 +129,7 @@ Mọi lối vào tính năng Pro đều ghi "Pro" **trước khi** người dùn
 | **Bản đọc offline có ảnh** | Tối đa 20 ảnh trong thân bài, mỗi ảnh ≤ 1280 px (JPEG đã bỏ dữ liệu ẩn), tổng ≤ 10 MB, tải trong ≤ 45 giây qua bộ tải an toàn. Ảnh nằm bên trong bản đọc (định dạng 2), nên xoá bài là ảnh mất theo.                                                                                                                                        | `d026e518` |
 | **Xếp nhanh**              | Sau mỗi lần xếp hiện "Đã cho vào X" kèm Hoàn tác; có trạng thái "Đã xếp xong".                                                                                                                                                                                                                                                              | `e6539771` |
 | **Hẹn đọc**                | Dải ruy băng vàng trên mục được hẹn; nhóm theo Tối nay, Ngày mai, Cuối tuần.                                                                                                                                                                                                                                                                | `a670361e` |
+| **Kiểm tra link mỗi ngày** | Chạy ngầm 1 lần/ngày, tối đa 60 link (chưa kiểm tra trước, rồi cũ nhất; bỏ link đã kiểm tra trong 7 ngày). Mất mạng thì không ghi gì. Link hỏng không bị xoá: ảnh xám mờ, nhãn chữ trên thẻ, vào mục Link hỏng. Công tắc trong Công cụ thư viện nâng cao, mặc định theo "Đọc trang sau khi lưu".                                            | (10/11)    |
 
 ### 3.3 Lỗi và góp ý đã sửa
 
@@ -153,6 +154,8 @@ Mọi lối vào tính năng Pro đều ghi "Pro" **trước khi** người dùn
 | "Xem tất cả" và nút bộ sưu tập mới nhìn kỳ                                              | Nút chỉ có biểu tượng, đứng cạnh chữ                                                | "Xem tất cả" nằm bên phải tiêu đề; "Bộ sưu tập mới" thành ô cuối của lưới, ghi đủ chữ, có cả khi chưa có bộ nào (`5f49da15`)                                                          | ✅  |
 | Thẻ không cho biết mục yêu thích, mới, xem nhiều, có ghi chú                            | Không có dấu hiệu                                                                   | Trên ảnh: nhãn "Mới" (lưu trong 2 ngày, chưa mở) và ngôi sao vàng. Trước dòng nguồn: biểu tượng ghi chú, con mắt kèm số lần mở (từ 3 lần). Có chữ cho trình đọc màn hình (`7347777b`) | ✅  |
 | Thanh bên màn rộng cần thu gọn được, có animation (cả 2 app)                            | Không có                                                                            | Nút « thu gọn: thanh bên co bề rộng và mờ dần (`HandySidePanel` trong kit). Nút » mở lại. App nhớ trạng thái (`529253af`)                                                             | ✅  |
+| Nút mở lại thanh bên nên ở trên, 2 app giống nhau                                       | Bookmark đặt cạnh dải đầu trang, Boards đặt góc dưới trái                           | Thanh bên thu lại để lại một dải hẹp 64pt, nút » nằm trên cùng, đúng chỗ nút «, giống nhau ở cả 2 app (`HandySideRail` trong kit, `0b3f295c`)                                         | ✅  |
+| Nhiều bộ sưu tập thì nút và mục phía sau bị đẩy quá sâu                                 | Danh sách hiện hết, không giới hạn                                                  | Giới hạn: thanh bên 8 bộ và 12 thẻ, Thư viện 6 ô, bảng chia sẻ 6 bộ, "Chuyển vào" 8 bộ; phần còn lại mở bằng "Xem tất cả N". Gửi/Nhận lên trên lưới.                                  | ✅  |
 
 ### 3.4 Đã bàn nhưng không làm
 
@@ -223,6 +226,8 @@ Mọi lối vào tính năng Pro đều ghi "Pro" **trước khi** người dùn
 ---
 
 ## 5. Thay đổi trong kit dùng chung (`packages/handy_ui`)
+
+- **`HandySidePanel` và `HandySideRail`:** thanh bên co lại có chuyển động; dải hẹp giữ nút mở lại ở trên cùng.
 
 - **`HandyPalette`:** ở bản sáng, màu nhận diện được làm đậm tới mức đọc được (hổ phách, ô liu).
 - **`motion.dart`:** thêm `HandyAppear`; `HandyReveal` an toàn khi bật giảm chuyển động.

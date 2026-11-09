@@ -18,6 +18,9 @@ class LinkJobReport {
 
   /// check: ok / moved / gone / unreachable. reading: saved / noText / failed.
   final Map<String, int> counts;
+
+  /// The day's own check, which nobody started.
+  final bool quiet;
   const LinkJobReport({
     required this.job,
     required this.asked,
@@ -25,6 +28,7 @@ class LinkJobReport {
     required this.overCap,
     required this.cancelled,
     required this.counts,
+    this.quiet = false,
   });
   int count(String key) => counts[key] ?? 0;
   int get broken => count('moved') + count('gone') + count('unreachable');
@@ -38,8 +42,9 @@ ReadingCopy? _extract((String, String, String, String) v) =>
 /// Runs one link check or reading-copy job at a time over chosen links:
 /// at most [maxChecks] / [maxCopies] per run, one request at a time, each
 /// host asked at most every [hostSpacing], stoppable at any point. Results
-/// already found are kept when the person stops. Nothing here runs unless
-/// a person starts it.
+/// already found are kept when the person stops. Besides what a person
+/// starts, [dailyCheck] asks about a few links once a day, quietly, when
+/// Settings allows it (on while pages are read after saving).
 class LinkTasks extends ChangeNotifier {
   LinkTasks(
     this.c, {
@@ -59,6 +64,96 @@ class LinkTasks extends ChangeNotifier {
 
   /// The single link being worked on, for the detail view's own button.
   String? currentId;
+
+  /// The day's own check is running: no strip, and a report only when it
+  /// found a broken link.
+  bool quiet = false;
+  Future<LinkJobReport>? _quietRun;
+
+  /// How many links the day's check asks about.
+  static const dailyCount = 60;
+
+  /// Stops the day's check (a person wants a job of their own) and waits
+  /// for it to end; what it found so far is kept.
+  Future<void> stopQuiet() async {
+    if (!quiet) return;
+    cancel();
+    try {
+      await _quietRun;
+    } catch (_) {}
+  }
+
+  /// The day's check is allowed: Settings > Advanced library tools. It
+  /// follows "Read pages after saving" until set on its own.
+  static bool dailyAllowed(Map<String, dynamic> prefs) =>
+      prefs['dailyLinkCheck'] as bool? ?? prefs['automaticMetadata'] != false;
+
+  /// The links the day's check asks about: never checked first, then the
+  /// ones checked longest ago; none checked in the last week.
+  static List<String> dailyPick(
+    SaveLibrary l,
+    DateTime now, {
+    int count = dailyCount,
+  }) {
+    final cutoff = now.toUtc().subtract(const Duration(days: 7));
+    final list = [
+      for (final b in l.bookmarks)
+        if (b.hasUrl)
+          (
+            b.id,
+            b.linkCheck == null
+                ? null
+                : DateTime.tryParse(b.linkCheck!.checkedAt),
+          ),
+    ]..removeWhere((e) => e.$2 != null && e.$2!.isAfter(cutoff));
+    list.sort(
+      (a, b) => a.$2 == null
+          ? (b.$2 == null ? 0 : -1)
+          : b.$2 == null
+          ? 1
+          : a.$2!.compareTo(b.$2!),
+    );
+    return [for (final e in list.take(count)) e.$1];
+  }
+
+  /// Once a day: checks a few links without a strip or a question. A link
+  /// found broken is only marked (Broken links, and its card is greyed),
+  /// never deleted or changed. Offline (nothing answers), it stops at once
+  /// and tries again later the same day.
+  Future<LinkJobReport?> dailyCheck({DateTime? now}) async {
+    final at = now ?? DateTime.now();
+    final day = at.toIso8601String().substring(0, 10);
+    final l = c.library;
+    if (running ||
+        l == null ||
+        !c.networkAvailable ||
+        !dailyAllowed(c.preferences) ||
+        c.preferences['linkCheckDay'] == day)
+      return null;
+    Future<void> markDay() =>
+        c.update((l) => l, prefs: {...c.preferences, 'linkCheckDay': day});
+    final ids = dailyPick(l, at);
+    if (ids.isEmpty) {
+      await markDay();
+      return null;
+    }
+    quiet = true;
+    final LinkJobReport r;
+    try {
+      r = await (_quietRun = checkLinks(ids, limit: ids.length, quiet: true));
+    } finally {
+      quiet = false;
+      _quietRun = null;
+    }
+    final reached = r.done > 0 && r.count('unreachable') < r.done;
+    if (reached) await markDay();
+    // Nothing to tell: no strip, no report.
+    if (!reached || r.broken == 0) {
+      last = null;
+      notifyListeners();
+    }
+    return r;
+  }
 
   void cancel() => _token?.cancel();
 
@@ -167,6 +262,7 @@ class LinkTasks extends ChangeNotifier {
         overCap: all.length - total,
         cancelled: cancelled,
         counts: Map.of(_counts),
+        quiet: quiet,
       );
       notifyListeners();
     }
@@ -177,13 +273,19 @@ class LinkTasks extends ChangeNotifier {
 
   /// Checks each link (HEAD, then GET) and records ok / moved / gone /
   /// unreachable with the date. Never changes an address by itself.
+  ///
+  /// [quiet] (the day's check): no "unreachable" is kept until some site
+  /// has answered, so a phone that is offline marks nothing; five in a row
+  /// that nothing answers end the run.
   Future<LinkJobReport> checkLinks(
     Iterable<String> ids, {
     int limit = maxChecks,
+    bool quiet = false,
   }) {
     if (limit < 1 || limit > maxChecks)
       throw RangeError.range(limit, 1, maxChecks);
     final found = <String, (String, LinkCheck)>{};
+    var reached = false, silent = 0;
     Future<void> save() async {
       if (found.isEmpty) return;
       final batch = Map.of(found);
@@ -214,6 +316,13 @@ class LinkTasks extends ChangeNotifier {
       token.check();
       final check = classifyLinkProbe(b.originalUrl, probe, saveTime());
       _tally(check.status);
+      if (quiet && !reached) {
+        if (check.status == 'unreachable') {
+          if (++silent >= 5) token.cancel();
+          return;
+        }
+        reached = true;
+      }
       found[b.id] = (b.originalUrl, check);
       if (found.length >= 10) await save();
     }, flush: save);

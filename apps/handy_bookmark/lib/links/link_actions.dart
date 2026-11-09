@@ -37,6 +37,9 @@ extension LinkActions on SaveScope {
       await showNotInBrowser(context);
       return false;
     }
+    // The day's own check gives way to anything a person starts.
+    if (tasks.quiet) await tasks.stopQuiet();
+    if (!context.mounted) return false;
     if (tasks.running) {
       showHandyMessage(
         context,
