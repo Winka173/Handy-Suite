@@ -26,6 +26,15 @@ class PlatformMetadataClient implements MetadataClient {
         : 'browserNetworkPolicy',
   );
   @override
+  Future<ThumbnailResult> fetchArticlePicture(
+    String url, {
+    CancellationToken? cancellation,
+  }) async => ThumbnailResult(
+    errorCode: cancellation?.isCancelled == true
+        ? 'cancelled'
+        : 'browserNetworkPolicy',
+  );
+  @override
   bool get available => false;
   @override
   Future<PageResult> fetchPage(

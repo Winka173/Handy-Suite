@@ -3,6 +3,7 @@ import 'package:flutter/foundation.dart';
 import 'package:handy_core/handy_core.dart';
 import 'package:handy_bookmark_engine/handy_bookmark_engine.dart';
 import '../controller.dart';
+import '../reader/keep_pictures.dart';
 
 /// The two network jobs a person can start on purpose.
 enum LinkJob { check, reading }
@@ -241,8 +242,10 @@ class LinkTasks extends ChangeNotifier {
       ));
       token.check();
       if (copy == null) return _tally('noText');
+      final kept = await withArticlePictures(c.metadata, copy, token);
+      token.check();
       try {
-        await c.putReadingCopies({b.id: copy});
+        await c.putReadingCopies({b.id: kept});
         _tally('saved');
       } catch (_) {
         // Deleted meanwhile, or storage refused: nothing half-written.

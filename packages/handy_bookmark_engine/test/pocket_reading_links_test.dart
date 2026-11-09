@@ -357,7 +357,11 @@ void main() {
       expect(c.byline, 'Lan Nguyễn');
       expect(c.siteName, 'Example Blog');
       final kinds = c.blocks.map((b) => b.kind).toList();
-      expect(kinds, ['p', 'h', 'p', 'li', 'li', 'quote', 'pre']);
+      // The article's own picture keeps its place (its caption with it);
+      // a tracking pixel never does.
+      expect(kinds, ['p', 'img', 'p', 'h', 'p', 'li', 'li', 'quote', 'pre']);
+      expect(c.blocks[1].url, 'https://blog.example.net/a.jpg');
+      expect(c.blocks[1].picture, isNull, reason: 'fetched only when kept');
       final all = c.blocks.map((b) => b.text).join('\n');
       for (final gone in [
         'SECRET_SCRIPT',
@@ -368,7 +372,6 @@ void main() {
         '©',
         'HIDDEN_TEXT',
         'pixel',
-        'A photo caption',
       ]) {
         expect(all.contains(gone), isFalse, reason: gone);
       }

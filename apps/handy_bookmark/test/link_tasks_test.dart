@@ -1,8 +1,10 @@
+import 'dart:typed_data';
 import 'dart:async';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:handy_core/handy_core.dart';
 import 'package:handy_bookmark/controller.dart';
 import 'package:handy_bookmark/links/link_tasks.dart';
+import 'package:handy_bookmark/reader/keep_pictures.dart';
 import 'package:handy_bookmark/services/metadata_client.dart';
 import 'package:handy_bookmark/view/library_view.dart';
 import 'package:handy_bookmark_engine/handy_bookmark_engine.dart';
@@ -53,6 +55,22 @@ class FakeNet implements MetadataClient {
     String url, {
     CancellationToken? cancellation,
   }) async => const ThumbnailResult();
+
+  /// Pictures for kept copies, by address (none unless a test sets them).
+  final articlePictures = <String, Uint8List>{};
+  final pictureAsks = <String>[];
+  @override
+  Future<ThumbnailResult> fetchArticlePicture(
+    String url, {
+    CancellationToken? cancellation,
+  }) async {
+    pictureAsks.add(url);
+    final bytes = articlePictures[url];
+    return bytes == null
+        ? const ThumbnailResult(errorCode: 'httpStatus')
+        : ThumbnailResult(bytes: bytes, contentType: 'image/jpeg');
+  }
+
   @override
   void dispose() {}
 }
@@ -284,5 +302,60 @@ void main() {
     expect((v.place, v.id), (Place.all, null));
     v.dispose();
     c.dispose();
+  });
+
+  test(
+    'a kept copy carries its article pictures; a failed one is left out',
+    () async {
+      final (c, net, _) = await boot();
+      final ok = idOf(c, 'https://a.com/ok');
+      const words =
+          'Broth, noodles, herbs and lime, slowly, the way it is made at home in Hà Nội every morning. ';
+      net.pages['https://a.com/ok'] = PageResult(
+        html:
+            '<html><head><title>Phở</title></head><body><article>'
+            '<p>${words * 2}</p><img src="/bowl.jpg" alt="Bowl">'
+            '<p>${words * 2}</p><img src="https://cdn.a.com/gone.jpg">'
+            '<p>$words</p></article></body></html>',
+        uri: Uri.parse('https://a.com/ok'),
+      );
+      final jpeg = Uint8List.fromList([0xFF, 0xD8, 0xFF, 1, 2, 3]);
+      net.articlePictures['https://a.com/bowl.jpg'] = jpeg;
+      final report = await LinkTasks(
+        c,
+        hostSpacing: Duration.zero,
+      ).saveCopies([ok]);
+      expect(report.counts, {'saved': 1});
+      expect(net.pictureAsks, [
+        'https://a.com/bowl.jpg',
+        'https://cdn.a.com/gone.jpg',
+      ]);
+      final copy = (await c.readingCopy(ok))!;
+      final pics = copy.blocks.where((b) => b.isPicture).toList();
+      expect(pics, hasLength(2));
+      expect(pics.first.picture, jpeg);
+      expect(pics.first.text, 'Bowl');
+      expect(pics.last.picture, isNull, reason: 'the text is kept anyway');
+    },
+  );
+
+  test('no pictures are asked for where the network is off', () async {
+    final (c, net, _) = await boot(available: false);
+    final copy = ReadingCopy(
+      url: 'https://a.com/x',
+      title: 'x',
+      savedAt: '2026-11-09T00:00:00Z',
+      blocks: [
+        ReadingBlock('p', 'Some words to read.'),
+        ReadingBlock('img', '', url: 'https://a.com/p.jpg'),
+      ],
+    );
+    final kept = await withArticlePictures(
+      c.metadata,
+      copy,
+      CancellationToken(),
+    );
+    expect(identical(kept, copy), isTrue);
+    expect(net.pictureAsks, isEmpty);
   });
 }

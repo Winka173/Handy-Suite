@@ -854,3 +854,11 @@ production seed data. Exact test/device coverage stays in the Boards matrix.
   ("(từ bạn)" / "(shared)"), keeps folders with Pro and otherwise folds them into their collection
   with the folder name as a tag. Opened from Collections › See all › Add collections sent to you or
   Settings › Data › Restore; the Android share sheet does not take the file yet.
+- Offline copies with pictures (2026-11-09): when a copy is kept, up to 20 pictures from the article
+  body are fetched through the same guarded client (public addresses only), each at most 4 MB
+  fetched, still PNG/JPEG/WebP, re-encoded as JPEG of at most 1280 px without metadata (1.5 MB
+  each), 10 MB per copy, 45 s in all; a picture that fails is left out and the text is kept. They
+  live inside the copy (`ReadingCopy` format 2), so they go with it to Recently Deleted and are
+  deleted with it. Reading online shows no pictures; older copies read as before.
+- Sync (`handy-bookmark/library.json` plus `media/<sha256>`): up to 3 attempts when another
+  device writes in between; pictures are checked against their hash on arrival.

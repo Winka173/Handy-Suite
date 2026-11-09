@@ -64,13 +64,13 @@ class DetailLinks extends StatelessWidget {
             copiedAt == null
                 ? tr(
                     context,
-                    'Keep the page\'s text to read without a connection. Pictures are left out.',
-                    'Giữ phần chữ của trang để đọc khi không có mạng. Không giữ ảnh.',
+                    'Keep the page\'s text and its pictures (up to 20) to read without a connection.',
+                    'Giữ chữ và ảnh của bài (tối đa 20 ảnh) để đọc khi không có mạng.',
                   )
                 : tr(
                     context,
-                    'Saved ${day(copiedAt)}. Text only.',
-                    'Đã lưu ${day(copiedAt)}. Chỉ phần chữ.',
+                    'Saved ${day(copiedAt)}.',
+                    'Đã lưu ${day(copiedAt)}.',
                   ),
             style: muted,
           ),

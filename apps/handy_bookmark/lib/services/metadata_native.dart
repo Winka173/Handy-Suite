@@ -2,11 +2,12 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 import 'dart:typed_data';
-import 'package:flutter/foundation.dart' show visibleForTesting;
+import 'package:flutter/foundation.dart' show compute, visibleForTesting;
 import 'package:handy_core/handy_core.dart';
 import 'package:handy_bookmark_engine/handy_bookmark_engine.dart'
     show LinkProbe;
 import 'metadata_client.dart';
+import 'metadata_thumbnail.dart' show sanitizeArticlePicture;
 import 'metadata_parser.dart';
 import 'metadata_policy.dart';
 
@@ -106,6 +107,29 @@ class PlatformMetadataClient implements MetadataClient {
         contentType: response.mime,
         cancellation: cancellation,
       );
+    } catch (error) {
+      return ThumbnailResult(errorCode: _errorCode(error));
+    }
+  }
+
+  @override
+  Future<ThumbnailResult> fetchArticlePicture(
+    String url, {
+    CancellationToken? cancellation,
+  }) async {
+    try {
+      final response = await _exchange(
+        url,
+        accept: 'image/png,image/jpeg,image/webp',
+        maxBytes: articlePictureMaxBytes,
+        mimes: const {'image/png', 'image/jpeg', 'image/webp'},
+        cancellation: cancellation,
+      );
+      cancellation?.check();
+      return await compute(sanitizeArticlePicture, (
+        response.bytes,
+        response.mime,
+      ));
     } catch (error) {
       return ThumbnailResult(errorCode: _errorCode(error));
     }

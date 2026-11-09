@@ -3388,3 +3388,10 @@ Kit sửa chung (`HandyPalette`): ở bản sáng, màu nhận diện được l
   - phải: các nút thao tác, hẹn nhắc, thẻ, ghi chú, chi tiết và công cụ, rồi "Cũng trong <bộ sưu tập>". Nếu mục chưa xếp thì là "Thêm từ <trang>": tối đa 6 mục, bấm để mở thay chỗ.
   - Khung hẹp hơn và khung chi tiết bên cạnh danh sách vẫn là một cột.
 - **Lề màn rộng:** dải đầu trang, danh sách và khung chi tiết cùng lề 24 ở cả hai bên.
+
+### Handy Bookmark · bản đọc offline giữ ảnh của bài (2026-11-09, chủ đồng ý)
+
+- **Khi bấm "Lưu bản offline"**, cả từ trình đọc lẫn từ việc lưu nhiều bài một lượt: app tải tối đa 20 ảnh trong thân bài, mỗi ảnh thu nhỏ còn tối đa 1280 px, tổng 10 MB, trong tối đa 45 giây. Ảnh lỗi thì bỏ qua, chữ vẫn được lưu.
+- **Trình đọc:** hiện ảnh đúng chỗ trong bài, bo góc như thẻ, có mô tả cho trình đọc màn hình. Khi đọc trực tuyến thì không hiện ảnh.
+- **Dòng chữ** ở phần Bản đọc offline đổi thành "Giữ chữ và ảnh của bài (tối đa 20 ảnh)…".
+- **Ảnh nằm trong bản đọc:** xoá bài thì bản đọc vào Thùng rác cùng bài, và bị xoá hẳn cùng bài, ảnh đi theo. Không có tệp ảnh nào sót lại.

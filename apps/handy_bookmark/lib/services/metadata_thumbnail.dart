@@ -14,10 +14,13 @@ ThumbnailResult sanitizeThumbnail(
   Uint8List bytes, {
   String? contentType,
   CancellationToken? cancellation,
+  int maxEdge = 512,
+  int maxInput = metadataMaxThumbnailBytes,
+  int maxOutput = metadataMaxThumbnailBytes,
 }) {
   try {
     cancellation?.check();
-    if (bytes.length > metadataMaxThumbnailBytes) {
+    if (bytes.length > maxInput) {
       throw const _ThumbnailFailure('responseTooLarge');
     }
     // Only these bounded static raster formats are accepted. SVG is active
@@ -70,15 +73,15 @@ ThumbnailResult sanitizeThumbnail(
     if (decoded == null) throw const _ThumbnailFailure('invalidImage');
     cancellation?.check();
     // Re-encode verified pixels, stripping untrusted ancillary metadata.
-    final thumbnail = decoded.width <= 512 && decoded.height <= 512
+    final thumbnail = decoded.width <= maxEdge && decoded.height <= maxEdge
         ? decoded
         : image.copyResize(
             decoded,
-            width: decoded.width >= decoded.height ? 512 : null,
-            height: decoded.height > decoded.width ? 512 : null,
+            width: decoded.width >= decoded.height ? maxEdge : null,
+            height: decoded.height > decoded.width ? maxEdge : null,
           );
     final encoded = Uint8List.fromList(image.encodeJpg(thumbnail, quality: 80));
-    if (encoded.length > metadataMaxThumbnailBytes) {
+    if (encoded.length > maxOutput) {
       throw const _ThumbnailFailure('responseTooLarge');
     }
     return ThumbnailResult(bytes: encoded, contentType: 'image/jpeg');
@@ -92,3 +95,13 @@ ThumbnailResult sanitizeThumbnail(
     );
   }
 }
+
+/// An article picture made safe to keep: [sanitizeThumbnail] at 1280 px.
+ThumbnailResult sanitizeArticlePicture((Uint8List, String?) v) =>
+    sanitizeThumbnail(
+      v.$1,
+      contentType: v.$2,
+      maxEdge: articlePictureMaxEdge,
+      maxInput: articlePictureMaxBytes,
+      maxOutput: 1536 * 1024,
+    );

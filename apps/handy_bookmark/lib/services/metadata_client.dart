@@ -21,6 +21,14 @@ abstract class MetadataClient {
   /// reading copies and link checks are then unavailable.
   bool get available;
 
+  /// One picture of an article kept with its offline copy: at most 4 MB
+  /// fetched, a still PNG, JPEG or WebP, returned as a clean JPEG of at
+  /// most 1280 px. Asked only when the person keeps a copy.
+  Future<ThumbnailResult> fetchArticlePicture(
+    String url, {
+    CancellationToken? cancellation,
+  });
+
   /// The page as text, for an offline reading copy (HTML only, 3 MB).
   Future<PageResult> fetchPage(String url, {CancellationToken? cancellation});
 

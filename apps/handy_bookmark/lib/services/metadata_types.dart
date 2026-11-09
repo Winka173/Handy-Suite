@@ -12,6 +12,11 @@ const metadataMaxImagePixels = 4000000;
 const metadataMaxRedirects = 3;
 const metadataTimeout = Duration(seconds: 8);
 
+/// An article picture kept with an offline copy: fetched up to this, kept
+/// at most this wide or tall.
+const articlePictureMaxBytes = 4 * 1024 * 1024;
+const articlePictureMaxEdge = 1280;
+
 /// Reading copies read a whole page, so they allow more bytes and time.
 const readingMaxHtmlBytes = 3 * 1024 * 1024;
 const readingTimeout = Duration(seconds: 20);

@@ -24,6 +24,11 @@ class ScriptedNet implements MetadataClient {
     CancellationToken? cancellation,
   }) async => const ThumbnailResult();
   @override
+  Future<ThumbnailResult> fetchArticlePicture(
+    String url, {
+    CancellationToken? cancellation,
+  }) async => const ThumbnailResult(errorCode: 'httpStatus');
+  @override
   Future<PageResult> fetchPage(
     String url, {
     CancellationToken? cancellation,

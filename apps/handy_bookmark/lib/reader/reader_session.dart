@@ -4,6 +4,7 @@ import 'package:handy_core/handy_core.dart';
 import 'package:handy_bookmark_engine/handy_bookmark_engine.dart';
 import '../controller.dart';
 import '../services/metadata_types.dart' show PageResult;
+import 'keep_pictures.dart';
 
 /// Where the reader is with one item's text.
 enum ReaderState {
@@ -191,15 +192,24 @@ class ReaderSession extends ChangeNotifier {
     if (r == null || !online || saving) return false;
     _set(() => saving = true);
     try {
-      final kept = ReadingCopy(
-        url: r.url,
-        title: r.title,
-        savedAt: saveTime(),
-        byline: r.byline,
-        siteName: r.siteName,
-        blocks: r.blocks,
-        truncated: r.truncated,
+      final token = CancellationToken();
+      _keeping = token;
+      // The article's pictures go with it (fetched now, kept inside the
+      // copy, so deleting the copy deletes them).
+      final kept = await withArticlePictures(
+        c.metadata,
+        ReadingCopy(
+          url: r.url,
+          title: r.title,
+          savedAt: saveTime(),
+          byline: r.byline,
+          siteName: r.siteName,
+          blocks: r.blocks,
+          truncated: r.truncated,
+        ),
+        token,
       );
+      if (_disposed) return false;
       await c.putReadingCopies({id: kept});
       _set(() {
         copy = kept;
@@ -214,8 +224,11 @@ class ReaderSession extends ChangeNotifier {
     }
   }
 
+  CancellationToken? _keeping;
+
   @override
   void dispose() {
+    _keeping?.cancel();
     _token?.cancel();
     _token = null;
     _disposed = true;

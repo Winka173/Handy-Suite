@@ -319,6 +319,28 @@ class ArticleViewState extends State<ArticleView> {
     final p = BookmarkPalette.of(context);
     final theme = Theme.of(context);
     final k = _copy.blocks[i];
+    if (k.isPicture) {
+      // A kept picture of the article, in its place; reading online shows
+      // none (pictures are fetched only when the copy is kept).
+      final bytes = k.picture;
+      if (bytes == null) return const SizedBox.shrink();
+      return Semantics(
+        image: true,
+        label: k.text.isEmpty ? tr(context, 'Picture', 'Ảnh') : k.text,
+        child: ClipRRect(
+          key: Key('reader-picture-$i'),
+          borderRadius: BorderRadius.circular(BookmarkRadii.item),
+          child: Image.memory(
+            bytes,
+            width: double.infinity,
+            fit: BoxFit.fitWidth,
+            gaplessPlayback: true,
+            excludeFromSemantics: true,
+            errorBuilder: (_, _, _) => const SizedBox.shrink(),
+          ),
+        ),
+      );
+    }
     return switch (k.kind) {
       'h' => Padding(
         padding: EdgeInsets.only(top: size * .9),
@@ -504,8 +526,8 @@ class ArticleViewState extends State<ArticleView> {
           Text(
             tr(
               context,
-              'Text only: pictures, videos, forms and page layout are left out. Pages over ${readingMaxHtmlBytes ~/ (1024 * 1024)} MB are not read.',
-              'Chỉ giữ chữ: ảnh, video, biểu mẫu và bố cục trang được bỏ qua. Trang trên ${readingMaxHtmlBytes ~/ (1024 * 1024)} MB không được đọc.',
+              'Kept copies hold the text and up to 20 pictures; videos, forms and page layout are left out. Pages over ${readingMaxHtmlBytes ~/ (1024 * 1024)} MB are not read.',
+              'Bản đã lưu giữ chữ và tối đa 20 ảnh; video, biểu mẫu và bố cục trang được bỏ qua. Trang trên ${readingMaxHtmlBytes ~/ (1024 * 1024)} MB không được đọc.',
             ),
             style: note,
           ),

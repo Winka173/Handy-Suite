@@ -1,3 +1,5 @@
+import 'dart:convert';
+import 'dart:typed_data';
 import 'package:html/dom.dart';
 import 'package:html/parser.dart' as html;
 
@@ -9,18 +11,66 @@ String _text(Map<String, dynamic> j, String k, {bool optional = false}) {
 }
 
 /// One piece of a reading copy: a heading, a paragraph, a quote, a list
-/// item or preformatted text. Plain text only; never markup or images.
+/// item, preformatted text, or a picture of the article. Text is plain,
+/// never markup.
+///
+/// A picture (`img`) keeps where it came from ([url]) and its description
+/// as [text] (may be empty). Its [picture] is a cleaned JPEG, present only
+/// once the copy was saved with its pictures; it lives inside the copy, so
+/// deleting the copy deletes the picture too.
 class ReadingBlock {
-  static const kinds = {'h', 'p', 'quote', 'li', 'pre'};
-  final String kind, text;
-  ReadingBlock(this.kind, this.text) {
+  static const kinds = {'h', 'p', 'quote', 'li', 'pre', 'img'};
+
+  /// The most one picture may weigh once cleaned.
+  static const maxPictureBytes = 1536 * 1024;
+  final String kind, text, url;
+  final Uint8List? picture;
+  ReadingBlock(this.kind, this.text, {this.url = '', this.picture}) {
     if (!kinds.contains(kind))
       throw const FormatException('Unknown reading block');
-    if (text.isEmpty) throw const FormatException('Empty reading block');
+    if (kind == 'img') {
+      final u = Uri.tryParse(url);
+      if (u == null ||
+          !{'http', 'https'}.contains(u.scheme) ||
+          url.length > 8192 ||
+          text.length > 512)
+        throw const FormatException('Invalid reading picture');
+      final b = picture;
+      if (b != null &&
+          (b.length < 3 ||
+              b.length > maxPictureBytes ||
+              b[0] != 0xFF ||
+              b[1] != 0xD8 ||
+              b[2] != 0xFF))
+        throw const FormatException('Reading pictures are JPEG');
+    } else {
+      if (text.isEmpty) throw const FormatException('Empty reading block');
+      if (url.isNotEmpty || picture != null)
+        throw const FormatException('Only pictures carry an address');
+    }
   }
-  factory ReadingBlock.fromJson(Map<String, dynamic> j) =>
-      ReadingBlock(_text(j, 'k'), _text(j, 't'));
-  Map<String, dynamic> toJson() => {'k': kind, 't': text};
+  bool get isPicture => kind == 'img';
+  ReadingBlock withPicture(Uint8List? bytes) =>
+      ReadingBlock(kind, text, url: url, picture: bytes);
+  factory ReadingBlock.fromJson(Map<String, dynamic> j) {
+    final kind = _text(j, 'k');
+    if (kind != 'img') return ReadingBlock(kind, _text(j, 't'));
+    final data = j['d'];
+    if (data != null && data is! String)
+      throw const FormatException('Picture data must be text');
+    return ReadingBlock(
+      kind,
+      _text(j, 't', optional: true),
+      url: _text(j, 'u'),
+      picture: data == null ? null : base64Decode(data as String),
+    );
+  }
+  Map<String, dynamic> toJson() => {
+    'k': kind,
+    't': text,
+    if (isPicture) 'u': url,
+    if (picture != null) 'd': base64Encode(picture!),
+  };
 }
 
 /// A calm, offline text copy of a page, saved only on request.
@@ -29,6 +79,13 @@ class ReadingCopy {
   /// marked [truncated].
   static const maxChars = 200000;
   static const maxBlocks = 5000;
+
+  /// Pictures one copy keeps: at most this many, this much in all.
+  static const maxPictures = 20;
+  static const maxPictureBytes = 10 * 1024 * 1024;
+
+  /// Format of the stored copy: 2 added pictures.
+  static const version = 2;
   final String url, title, savedAt;
   final String byline, siteName;
   final List<ReadingBlock> blocks;
@@ -50,7 +107,37 @@ class ReadingCopy {
     if (blocks.isEmpty) throw const FormatException('Reading copy is empty');
     if (blocks.length > maxBlocks || chars > maxChars)
       throw const FormatException('Reading copy exceeds its size budget');
+    final pictures = blocks.where((b) => b.isPicture);
+    if (pictures.length > maxPictures || pictureBytes > maxPictureBytes)
+      throw const FormatException('Reading copy has too many pictures');
+    if (blocks.every((b) => b.isPicture))
+      throw const FormatException('Reading copy is empty');
   }
+
+  /// What the kept pictures weigh.
+  int get pictureBytes =>
+      blocks.fold(0, (n, b) => n + (b.picture?.length ?? 0));
+
+  /// The pictures' places, in order, for fetching them.
+  List<int> get pictureSlots => [
+    for (final (i, b) in blocks.indexed)
+      if (b.isPicture) i,
+  ];
+
+  /// This copy with [pictures] (by block index) filled in. Pictures not
+  /// given stay as they were; a null clears one.
+  ReadingCopy withPictures(Map<int, Uint8List?> pictures) => ReadingCopy(
+    url: url,
+    title: title,
+    savedAt: savedAt,
+    byline: byline,
+    siteName: siteName,
+    truncated: truncated,
+    blocks: [
+      for (final (i, b) in blocks.indexed)
+        pictures.containsKey(i) ? b.withPicture(pictures[i]) : b,
+    ],
+  );
 
   static String _date(String value) {
     final parsed = DateTime.tryParse(value);
@@ -59,13 +146,15 @@ class ReadingCopy {
     return parsed.toUtc().toIso8601String();
   }
 
-  int get chars => blocks.fold(0, (n, b) => n + b.text.length);
+  int get chars =>
+      blocks.fold(0, (n, b) => b.isPicture ? n : n + b.text.length);
 
   /// Rough reading length: words separated by white space.
   int get words => blocks.fold(
     0,
-    (n, b) =>
-        n + b.text.split(RegExp(r'\s+')).where((w) => w.isNotEmpty).length,
+    (n, b) => b.isPicture
+        ? n
+        : n + b.text.split(RegExp(r'\s+')).where((w) => w.isNotEmpty).length,
   );
 
   factory ReadingCopy.fromJson(Map<String, dynamic> j) {
@@ -95,6 +184,7 @@ class ReadingCopy {
     if (byline.isNotEmpty) 'byline': byline,
     if (siteName.isNotEmpty) 'siteName': siteName,
     if (truncated) 'truncated': true,
+    if (blocks.any((b) => b.isPicture)) 'v': version,
     'blocks': blocks.map((b) => b.toJson()).toList(),
   };
 }
@@ -102,7 +192,7 @@ class ReadingCopy {
 const _drop = {
   'script', 'style', 'noscript', 'template', 'iframe', 'object', 'embed', //
   'svg', 'canvas', 'math', 'form', 'button', 'input', 'select', 'textarea',
-  'nav', 'header', 'footer', 'aside', 'figure', 'img', 'picture', 'video',
+  'nav', 'header', 'footer', 'aside', 'video',
   'audio', 'source', 'track', 'map', 'link', 'meta', 'dialog', 'menu',
 };
 const _inline = {
@@ -127,9 +217,10 @@ String _clean(String s) => s
     .trim();
 
 /// Reads the main text of an HTML page: title, byline, and the paragraphs
-/// of the part that looks like the article. Scripts, styles, navigation,
-/// forms and every image are left out. Returns null when the page has too
-/// little readable text to be worth keeping.
+/// of the part that looks like the article, and where its pictures stand
+/// (their addresses only; the bytes are fetched when the copy is kept).
+/// Scripts, styles, navigation, forms, icons and tiny images are left out.
+/// Returns null when the page has too little readable text to keep.
 ReadingCopy? extractReadingCopy(
   String source, {
   required String url,
@@ -216,8 +307,25 @@ ReadingCopy? extractReadingCopy(
     blocks.add(ReadingBlock(kind, text));
   }
 
-  _flatten(root, 'p', add);
+  final seen = <String>{};
+  void image(Element e) {
+    if (truncated ||
+        seen.length >= ReadingCopy.maxPictures ||
+        blocks.length >= ReadingCopy.maxBlocks)
+      return;
+    final source = _pictureSource(e, url);
+    if (source == null || !seen.add(source)) return;
+    var alt = _clean(e.attributes['alt'] ?? '');
+    if (alt.length > 512) alt = alt.substring(0, 512);
+    blocks.add(ReadingBlock('img', alt, url: source));
+  }
+
+  _flatten(root, 'p', add, image);
   if (chars < 140) return null;
+  // Pictures after the last words are page furniture, not the article.
+  while (blocks.isNotEmpty && blocks.last.isPicture) {
+    blocks.removeLast();
+  }
   return ReadingCopy(
     url: url,
     title: title,
@@ -303,6 +411,7 @@ void _flatten(
   Element e,
   String kind,
   void Function(String kind, String text) add,
+  void Function(Element img) image,
 ) {
   final buffer = StringBuffer();
   void flush() {
@@ -317,7 +426,10 @@ void _flatten(
     }
     if (n is! Element) return;
     final tag = n.localName ?? '';
-    if (tag == 'br') {
+    if (tag == 'img') {
+      flush();
+      image(n);
+    } else if (tag == 'br') {
       buffer.write(' ');
     } else if (_inline.contains(tag)) {
       n.nodes.forEach(walk);
@@ -340,7 +452,7 @@ void _flatten(
       // A short paragraph that is mostly links is navigation, not prose.
       if (own == 'p' && _clean(n.text).length < 120 && _linkDensity(n) > .8)
         return;
-      _flatten(n, own, add);
+      _flatten(n, own, add, image);
     } else {
       flush();
       n.nodes.forEach(walk);
@@ -350,4 +462,52 @@ void _flatten(
 
   e.nodes.forEach(walk);
   flush();
+}
+
+/// Where an article picture comes from: the largest of its sources that is
+/// an ordinary web address (lazy-loading pages keep it in data-src), never
+/// an inline or tiny image. Null when there is none worth keeping.
+String? _pictureSource(Element e, String page) {
+  int? size(String key) => int.tryParse(
+    (e.attributes[key] ?? '').replaceAll(RegExp(r'px$'), '').trim(),
+  );
+  final w = size('width'), h = size('height');
+  if ((w != null && w < 120) || (h != null && h < 120)) return null;
+  String? largest(String? set) {
+    if (set == null || set.trim().isEmpty) return null;
+    String? best;
+    var top = -1.0;
+    for (final part in set.split(',')) {
+      final bits = part.trim().split(RegExp(r'\s+'));
+      if (bits.isEmpty || bits.first.isEmpty) continue;
+      final d = bits.length > 1 ? bits[1] : '1x';
+      final n = double.tryParse(d.substring(0, d.length - 1)) ?? 1;
+      if (n > top) {
+        top = n;
+        best = bits.first;
+      }
+    }
+    return best;
+  }
+
+  final candidates = [
+    e.attributes['data-src'],
+    e.attributes['data-lazy-src'],
+    e.attributes['data-original'],
+    largest(e.attributes['data-srcset'] ?? e.attributes['srcset']),
+    e.attributes['src'],
+  ];
+  final base = Uri.tryParse(page);
+  for (final c in candidates) {
+    final raw = c?.trim() ?? '';
+    if (raw.isEmpty || raw.startsWith('data:')) continue;
+    final u = base?.resolve(raw) ?? Uri.tryParse(raw);
+    if (u == null || !{'http', 'https'}.contains(u.scheme)) continue;
+    final path = u.path.toLowerCase();
+    if (path.endsWith('.svg') || path.endsWith('.gif')) continue;
+    final s = u.toString();
+    if (s.length > 8192) continue;
+    return s;
+  }
+  return null;
 }
