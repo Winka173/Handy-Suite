@@ -140,15 +140,28 @@ void main() {
         );
   });
 
-  testWidgets('the study branch: purpose, a practice that never saves, '
-      'three study suggestions; a suggestion opens its setup', (t) async {
+  testWidgets('the guide opens on the story (scattered, then gathered), '
+      'asks nothing first, practises without saving, and suggests '
+      'templates; a suggestion opens its setup', (t) async {
     final c = await boot(t, BoardsState(preferences: {'locale': 'en'}));
     expect(find.byKey(const Key('welcome-skip')), findsOneWidget);
-    // Next waits for a choice.
-    await tap(t, find.byKey(const Key('welcome-primary')));
-    expect(find.byKey(const Key('welcome-purpose-study')), findsOneWidget);
-    await tap(t, find.byKey(const Key('welcome-purpose-study')));
-    await tap(t, find.byKey(const Key('welcome-primary')));
+    expect(find.byKey(const Key('welcome-purpose-study')), findsNothing);
+    expect(find.textContaining('Then they slip away'), findsOneWidget);
+    await tap(t, find.byKey(const Key('welcome-primary'))); // gather
+    expect(find.textContaining('all of it'), findsOneWidget);
+    // Back first undoes the gathering, on the same page.
+    await tap(t, find.byKey(const Key('welcome-back')));
+    expect(find.textContaining('Then they slip away'), findsOneWidget);
+    await tap(t, find.byKey(const Key('welcome-skip')));
+    expect(c.state!.preferences['welcomed'], isTrue);
+    expect(c.state!.preferences['purpose'], isNull);
+  });
+
+  testWidgets('through the guide: practice, then a mix of suggestions that '
+      'Study or Work narrows', (t) async {
+    final c = await boot(t, BoardsState(preferences: {'locale': 'en'}));
+    await tap(t, find.byKey(const Key('welcome-primary'))); // gather
+    await tap(t, find.byKey(const Key('welcome-primary'))); // show me how
     expect(find.text('Tap Add card'), findsOneWidget);
     await tap(t, find.byKey(const Key('welcome-do-it')));
     expect(find.text('Revise chapter 3'), findsWidgets);
@@ -162,6 +175,12 @@ void main() {
     await tap(t, find.byKey(const Key('welcome-do-it')));
     expect(c.state!.rows('boards'), isEmpty);
     await tap(t, find.byKey(const Key('welcome-primary'))); // next
+    for (final id in ['semester', 'project', 'weekly'])
+      expect(find.byKey(Key('welcome-start-template:$id')), findsOneWidget);
+    await tap(t, find.byKey(const Key('welcome-purpose-work')));
+    for (final id in ['project', 'weekly', 'ideas'])
+      expect(find.byKey(Key('welcome-start-template:$id')), findsOneWidget);
+    await tap(t, find.byKey(const Key('welcome-purpose-study')));
     for (final id in ['semester', 'group-assignment', 'exam-revision'])
       expect(find.byKey(Key('welcome-start-template:$id')), findsOneWidget);
     await tap(t, find.byKey(const Key('welcome-start-template:semester')));
@@ -170,23 +189,6 @@ void main() {
     expect(c.state!.rows('boards'), isEmpty);
     expect(c.state!.preferences['welcomed'], isTrue);
     expect(c.state!.preferences['purpose'], 'study');
-  });
-
-  testWidgets('the work branch uses work areas and suggests work templates', (
-    t,
-  ) async {
-    await boot(t, BoardsState(preferences: {'locale': 'en'}));
-    await tap(t, find.byKey(const Key('welcome-purpose-work')));
-    await tap(t, find.byKey(const Key('welcome-primary')));
-    await tap(t, find.byKey(const Key('welcome-do-it')));
-    expect(find.text('Home screen'), findsWidgets);
-    await tap(t, find.byKey(const Key('welcome-do-it')));
-    expect(find.text('Tap Interface'), findsOneWidget);
-    await tap(t, find.byKey(const Key('welcome-do-it')));
-    await tap(t, find.byKey(const Key('welcome-do-it')));
-    await tap(t, find.byKey(const Key('welcome-primary')));
-    for (final id in ['project', 'weekly', 'ideas'])
-      expect(find.byKey(Key('welcome-start-template:$id')), findsOneWidget);
   });
 
   testWidgets('skipping the tour leaves an empty home with both ways in', (

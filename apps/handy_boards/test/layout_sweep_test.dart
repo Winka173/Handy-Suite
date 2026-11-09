@@ -84,9 +84,10 @@ Future<void> _sweep(
   await t.runAsync(fresh.load);
   await t.pumpWidget(BoardsApp(controller: fresh, clock: () => clock));
   await settle(t);
-  for (final key in ['welcome-primary', 'welcome-purpose-work']) {
-    await _tapIf(t, key);
-  }
+  // The story, scattered then gathered, then the practice.
+  await _tapIf(t, 'welcome-primary');
+  at('welcome gathered');
+  await settle(t);
   await _tapIf(t, 'welcome-primary');
   at('welcome practice');
   await settle(t);

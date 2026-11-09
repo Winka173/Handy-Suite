@@ -161,11 +161,11 @@ void main() {
     ]);
   });
 
-  testWidgets('welcome, study branch', (t) async {
+  testWidgets('welcome', (t) async {
     await boot(t, BoardsState(preferences: {'locale': 'vi'}));
-    await shot(t, '01-welcome-purpose');
-    await tap(t, find.byKey(const Key('welcome-purpose-study')));
-    await shot(t, '01a-welcome-purpose-picked');
+    await shot(t, '01-welcome-scattered');
+    await tap(t, find.byKey(const Key('welcome-primary')));
+    await shot(t, '01a-welcome-gathered');
     await tap(t, find.byKey(const Key('welcome-primary')));
     await shot(t, '02-welcome-practice-add');
     await tap(t, find.byKey(const Key('welcome-do-it')));
@@ -177,19 +177,8 @@ void main() {
     await tap(t, find.byKey(const Key('welcome-do-it')));
     await shot(t, '02d-welcome-done');
     await tap(t, find.byKey(const Key('welcome-primary')));
-    await shot(t, '03-welcome-start-study');
-  });
-
-  testWidgets('welcome, work branch', (t) async {
-    await boot(t, BoardsState(preferences: {'locale': 'vi'}));
+    await shot(t, '03-welcome-start');
     await tap(t, find.byKey(const Key('welcome-purpose-work')));
-    await tap(t, find.byKey(const Key('welcome-primary')));
-    await tap(t, find.byKey(const Key('welcome-do-it')));
-    await tap(t, find.byKey(const Key('welcome-do-it')));
-    await tap(t, find.byKey(const Key('welcome-do-it')));
-    await shot(t, '03a-welcome-work-focused');
-    await tap(t, find.byKey(const Key('welcome-do-it')));
-    await tap(t, find.byKey(const Key('welcome-primary')));
     await shot(t, '03b-welcome-start-work');
   });
 
@@ -199,9 +188,9 @@ void main() {
       BoardsState(preferences: {'locale': 'vi'}),
       size: const Size(1280, 800),
     );
-    await tap(t, find.byKey(const Key('welcome-purpose-study')));
+    await shot(t, '03d-welcome-scattered-wide');
     await tap(t, find.byKey(const Key('welcome-primary')));
-    await shot(t, '03e-welcome-practice-wide');
+    await shot(t, '03e-welcome-gathered-wide');
   });
 
   testWidgets('phone journey', (t) async {

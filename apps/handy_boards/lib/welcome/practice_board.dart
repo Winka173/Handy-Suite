@@ -11,12 +11,10 @@ enum PracticeStep { add, drag, focus, tick, done }
 /// columns, a few cards with their categories, and the category strip.
 /// Everything is dark except the one thing to do next, in a lit window with
 /// a word beside it. The card really drags; the category really lights up
-/// its cards without hiding the others. [work] swaps the study examples
-/// (subjects) for work ones (work areas). Nothing is written anywhere.
+/// its cards without hiding the others. Nothing is written anywhere.
 class PracticeBoard extends StatefulWidget {
   final ValueChanged<PracticeStep> onStep;
-  final bool work;
-  const PracticeBoard({super.key, required this.onStep, this.work = false});
+  const PracticeBoard({super.key, required this.onStep});
   @override
   State<PracticeBoard> createState() => PracticeBoardState();
 }
@@ -96,10 +94,7 @@ class PracticeBoardState extends State<PracticeBoard> {
         'Hold, then drag to Doing',
         'Giữ rồi kéo sang Đang làm',
       ),
-      PracticeStep.focus =>
-        widget.work
-            ? tr(context, 'Tap Interface', 'Chạm Giao diện')
-            : tr(context, 'Tap Maths', 'Chạm Toán'),
+      PracticeStep.focus => tr(context, 'Tap Maths', 'Chạm Toán'),
       PracticeStep.tick => tr(context, 'Tick a subtask', 'Tick một việc con'),
       PracticeStep.done => null,
     };
@@ -283,9 +278,6 @@ class _Board extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final s = state;
-    final w = s.widget.work;
-    String say(String en, String vi, String workEn, String workVi) =>
-        w ? tr(context, workEn, workVi) : tr(context, en, vi);
     final columns = [
       tr(context, 'To Do', 'Cần làm'),
       tr(context, 'Doing', 'Đang làm'),
@@ -295,33 +287,23 @@ class _Board extends StatelessWidget {
     final others = <int, List<(String, (Color, Color), String)>>{
       0: [
         (
-          say(
-            'Outline the essay',
-            'Lập dàn ý bài Văn',
-            'Sign-in flow',
-            'Luồng đăng nhập',
-          ),
+          tr(context, 'Outline the essay', 'Lập dàn ý bài Văn'),
           _lit,
-          say('Literature', 'Văn', 'Features', 'Tính năng'),
+          tr(context, 'Literature', 'Văn'),
         ),
       ],
       1: [
         (
-          say(
-            'Learn 20 new words',
-            'Học 20 từ mới',
-            'Test on a phone',
-            'Thử trên điện thoại',
-          ),
+          tr(context, 'Learn 20 new words', 'Học 20 từ mới'),
           _home,
-          say('English', 'Tiếng Anh', 'Testing', 'Kiểm thử'),
+          tr(context, 'English', 'Tiếng Anh'),
         ),
       ],
       2: [
         (
-          say('Unit 2 test', 'Kiểm tra bài 2', 'Main colour', 'Màu chủ đạo'),
+          tr(context, 'Unit 2 test', 'Kiểm tra bài 2'),
           _maths,
-          say('Maths', 'Toán', 'Interface', 'Giao diện'),
+          tr(context, 'Maths', 'Toán'),
         ),
       ],
     };
@@ -422,22 +404,12 @@ class _Board extends StatelessWidget {
                 const SizedBox(height: 6),
                 for (final (title, done, rowKey) in [
                   (
-                    say(
-                      'Review the formula',
-                      'Ôn công thức',
-                      'Sketch three layouts',
-                      'Phác ba bố cục',
-                    ),
+                    tr(context, 'Review the formula', 'Ôn công thức'),
                     true,
                     null,
                   ),
                   (
-                    say(
-                      'Five exercises',
-                      'Làm 5 bài tập',
-                      'Pick one',
-                      'Chọn một bố cục',
-                    ),
+                    tr(context, 'Five exercises', 'Làm 5 bài tập'),
                     s.ticked,
                     s.tick,
                   ),
@@ -487,9 +459,9 @@ class _Board extends StatelessWidget {
     // Only the card on the board carries the spotlight's key; its copies
     // (the one being dragged, the ghost left behind) do not.
     Widget mineTile([Key? key]) => tile(
-      say('Revise chapter 3', 'Ôn chương 3', 'Home screen', 'Màn hình chính'),
+      tr(context, 'Revise chapter 3', 'Ôn chương 3'),
       _maths,
-      say('Maths', 'Toán', 'Interface', 'Giao diện'),
+      tr(context, 'Maths', 'Toán'),
       key: key,
       mine: true,
       done: s.column == 2,
@@ -526,7 +498,7 @@ class _Board extends StatelessWidget {
             Padding(
               padding: const EdgeInsets.fromLTRB(4, 0, 4, 10),
               child: Text(
-                say('Semester 1', 'Học kỳ 1', 'App project', 'Dự án app'),
+                tr(context, 'Semester 1', 'Học kỳ 1'),
                 style: const TextStyle(
                   fontSize: 22,
                   fontWeight: FontWeight.w600,
@@ -538,21 +510,9 @@ class _Board extends StatelessWidget {
               runSpacing: 6,
               children: [
                 for (final (name, hue, key) in [
-                  (
-                    say('Maths', 'Toán', 'Interface', 'Giao diện'),
-                    _maths,
-                    s.chip,
-                  ),
-                  (
-                    say('Literature', 'Văn', 'Features', 'Tính năng'),
-                    _lit,
-                    null,
-                  ),
-                  (
-                    say('English', 'Tiếng Anh', 'Testing', 'Kiểm thử'),
-                    _home,
-                    null,
-                  ),
+                  (tr(context, 'Maths', 'Toán'), _maths, s.chip),
+                  (tr(context, 'Literature', 'Văn'), _lit, null),
+                  (tr(context, 'English', 'Tiếng Anh'), _home, null),
                 ])
                   Padding(
                     padding: const EdgeInsets.only(right: 6),
