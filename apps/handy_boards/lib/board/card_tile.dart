@@ -23,6 +23,9 @@ class CardTile extends StatelessWidget {
   /// one; [carryLabel] names the button ("Bring to this week").
   final VoidCallback? onCarry;
   final String? carryLabel;
+
+  /// An example card in a template preview: labelled "Example".
+  final bool example;
   const CardTile({
     super.key,
     required this.state,
@@ -35,6 +38,7 @@ class CardTile extends StatelessWidget {
     this.onMenu,
     this.onCarry,
     this.carryLabel,
+    this.example = false,
   });
 
   @override
@@ -224,6 +228,27 @@ class CardTile extends StatelessWidget {
                         ],
                       ),
                     ),
+                    if (example && onMenu == null)
+                      Padding(
+                        padding: const EdgeInsets.fromLTRB(8, 2, 6, 0),
+                        child: Container(
+                          key: Key('card-example-${card.id}'),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 8,
+                            vertical: 2,
+                          ),
+                          decoration: BoxDecoration(
+                            border: Border.all(color: p.control),
+                            borderRadius: BorderRadius.circular(99),
+                          ),
+                          child: Text(
+                            tr(context, 'Example', 'Ví dụ'),
+                            style: theme.textTheme.labelSmall?.copyWith(
+                              color: p.muted,
+                            ),
+                          ),
+                        ),
+                      ),
                     if (onMenu != null)
                       // A full 48 pt target, the icon kept small.
                       SizedBox(

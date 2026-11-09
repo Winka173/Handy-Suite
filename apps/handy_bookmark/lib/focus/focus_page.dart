@@ -383,6 +383,8 @@ class _FocusPageState extends State<FocusPage>
 
   Widget _buttons(BuildContext context, Bookmark b) {
     final p = BookmarkPalette.of(context);
+    // How far the card leans: right to Read, left to Later.
+    final lean = (dx / (width * .35)).clamp(-1.0, 1.0);
     final dark = Theme.of(context).brightness == Brightness.dark;
     return SafeArea(
       top: false,
@@ -400,12 +402,18 @@ class _FocusPageState extends State<FocusPage>
             children: [
               // With large text the buttons' own words are enough.
               if (MediaQuery.textScalerOf(context).scale(14) < 20) ...[
+                // While a swipe is under way it says where the card is going.
                 Text(
-                  tr(
-                    context,
-                    'Swipe right when done, left for later.',
-                    'Vuốt phải khi xong, vuốt trái để sau.',
-                  ),
+                  lean > .1
+                      ? tr(context, 'Let go: Read', 'Thả ra: Đã đọc')
+                      : lean < -.1
+                      ? tr(context, 'Let go: Later', 'Thả ra: Để sau')
+                      : tr(
+                          context,
+                          'Swipe right when done, left for later.',
+                          'Vuốt phải khi xong, vuốt trái để sau.',
+                        ),
+                  key: const Key('focus-hint'),
                   textAlign: TextAlign.center,
                   style: Theme.of(context).textTheme.bodySmall,
                 ),
@@ -419,6 +427,8 @@ class _FocusPageState extends State<FocusPage>
                     icon: Icons.schedule_rounded,
                     label: tr(context, 'Later', 'Để sau'),
                     size: 60,
+                    emphasis: math.max(0, -lean),
+                    dimmed: lean > .1,
                     background: Theme.of(context).colorScheme.inverseSurface,
                     foreground: Theme.of(context).colorScheme.onInverseSurface,
                     onPressed: () => _go(b, _Move.later),
@@ -428,6 +438,7 @@ class _FocusPageState extends State<FocusPage>
                     icon: Icons.archive_outlined,
                     label: tr(context, 'Archive', 'Lưu trữ'),
                     size: 48,
+                    dimmed: lean.abs() > .1,
                     background: dark ? p.raised : p.sunk,
                     foreground: p.ink,
                     onPressed: () => _go(b, _Move.archive),
@@ -437,6 +448,8 @@ class _FocusPageState extends State<FocusPage>
                     icon: Icons.check_rounded,
                     label: tr(context, 'Read', 'Đã đọc'),
                     size: 60,
+                    emphasis: math.max(0, lean),
+                    dimmed: lean < -.1,
                     background: p.primary,
                     foreground: p.onPrimary,
                     onPressed: () => _go(b, _Move.read),
@@ -550,6 +563,12 @@ class _DeckButton extends StatelessWidget {
   final double size;
   final Color background, foreground;
   final VoidCallback onPressed;
+
+  /// How far a swipe leans this way (0–1): the button grows with it.
+  final double emphasis;
+
+  /// A swipe leans the other way: this one steps back.
+  final bool dimmed;
   const _DeckButton({
     super.key,
     required this.icon,
@@ -558,6 +577,8 @@ class _DeckButton extends StatelessWidget {
     required this.background,
     required this.foreground,
     required this.onPressed,
+    this.emphasis = 0,
+    this.dimmed = false,
   });
   @override
   Widget build(BuildContext context) {
@@ -578,14 +599,25 @@ class _DeckButton extends StatelessWidget {
                 SizedBox(
                   height: 60,
                   child: Center(
-                    child: Container(
-                      width: size,
-                      height: size,
-                      decoration: BoxDecoration(
-                        color: background,
-                        shape: BoxShape.circle,
+                    child: AnimatedOpacity(
+                      opacity: dimmed ? .4 : 1,
+                      duration: const Duration(milliseconds: 120),
+                      child: Transform.scale(
+                        scale: 1 + .2 * emphasis.clamp(0.0, 1.0),
+                        child: Container(
+                          width: size,
+                          height: size,
+                          decoration: BoxDecoration(
+                            color: background,
+                            shape: BoxShape.circle,
+                          ),
+                          child: Icon(
+                            icon,
+                            color: foreground,
+                            size: size * .45,
+                          ),
+                        ),
                       ),
-                      child: Icon(icon, color: foreground, size: size * .45),
                     ),
                   ),
                 ),

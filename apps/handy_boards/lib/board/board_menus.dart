@@ -611,46 +611,91 @@ Future<void> moveCardSheet(
       'Move “${t.str('title')}” to',
       'Chuyển “${t.str('title')}” tới',
     ),
-    (sheet) => [
-      for (final c in columns)
-        ListTile(
-          key: Key('move-to-${c.id}'),
-          leading: Icon(
-            c.id == t.str('status')
-                ? Icons.radio_button_checked
-                : Icons.radio_button_unchecked,
-            color: BoardsPalette.of(sheet).muted,
+    (sheet) {
+      final p = BoardsPalette.of(sheet);
+      final theme = Theme.of(sheet);
+      void move(String column, int index) {
+        Navigator.pop(sheet);
+        onMoved(card, column, index);
+      }
+
+      return [
+        for (final c in columns)
+          Builder(
+            builder: (_) {
+              final here = c.id == t.str('status');
+              final n = cardsIn(s, c.id).length;
+              final count = tr(sheet, n == 1 ? '1 card' : '$n cards', '$n thẻ');
+              // A row per column: the card's own column tinted and named
+              // as where it is; a tap on another moves it to the end.
+              return Padding(
+                padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+                child: Material(
+                  key: Key('move-to-${c.id}'),
+                  color: here ? p.tint : p.raised,
+                  borderRadius: BorderRadius.circular(BoardsRadii.card),
+                  clipBehavior: Clip.antiAlias,
+                  child: InkWell(
+                    onTap: here ? null : () => move(c.id, n),
+                    child: ConstrainedBox(
+                      constraints: const BoxConstraints(minHeight: 60),
+                      child: Padding(
+                        padding: const EdgeInsets.fromLTRB(16, 8, 6, 8),
+                        child: Row(
+                          children: [
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Text(
+                                    c.str('title'),
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: theme.textTheme.titleSmall?.copyWith(
+                                      fontWeight: FontWeight.w600,
+                                      color: here ? p.pressed : p.ink,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 2),
+                                  Text(
+                                    here
+                                        ? tr(
+                                            sheet,
+                                            'Here now · $count',
+                                            'Đang ở đây · $count',
+                                          )
+                                        : count,
+                                    key: here ? const Key('move-here') : null,
+                                    style: theme.textTheme.bodySmall?.copyWith(
+                                      color: here ? p.pressed : p.muted,
+                                      fontWeight: here ? FontWeight.w600 : null,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            TextButton(
+                              key: Key('move-to-top-${c.id}'),
+                              onPressed: () => move(c.id, 0),
+                              child: Text(tr(sheet, 'Top', 'Đầu')),
+                            ),
+                            TextButton(
+                              key: Key('move-to-end-${c.id}'),
+                              onPressed: () => move(c.id, n),
+                              child: Text(tr(sheet, 'End', 'Cuối')),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              );
+            },
           ),
-          title: Text(c.str('title')),
-          subtitle: Text(
-            tr(
-              sheet,
-              '${cardsIn(s, c.id).length} cards',
-              '${cardsIn(s, c.id).length} thẻ',
-            ),
-          ),
-          trailing: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              TextButton(
-                onPressed: () {
-                  Navigator.pop(sheet);
-                  onMoved(card, c.id, 0);
-                },
-                child: Text(tr(sheet, 'Top', 'Đầu')),
-              ),
-              TextButton(
-                key: Key('move-to-end-${c.id}'),
-                onPressed: () {
-                  Navigator.pop(sheet);
-                  onMoved(card, c.id, cardsIn(s, c.id).length);
-                },
-                child: Text(tr(sheet, 'End', 'Cuối')),
-              ),
-            ],
-          ),
-        ),
-    ],
+      ];
+    },
   );
 }
 

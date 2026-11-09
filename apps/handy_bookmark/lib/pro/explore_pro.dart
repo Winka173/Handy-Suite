@@ -526,7 +526,10 @@ class _FreeAndPro extends StatelessWidget {
     Widget head(String s) => Expanded(
       child: Text(
         s,
-        style: theme.textTheme.labelLarge?.copyWith(color: p.muted),
+        style: theme.textTheme.labelLarge?.copyWith(
+          color: s == 'Pro' ? p.primary : p.muted,
+          fontWeight: s == 'Pro' ? FontWeight.w600 : null,
+        ),
       ),
     );
     Widget cell(String label, String value, {bool pro = false}) => Expanded(
@@ -534,8 +537,10 @@ class _FreeAndPro extends StatelessWidget {
         label: label,
         child: Text(
           value,
+          // What Pro adds, in the app's own colour.
           style: theme.textTheme.bodyMedium?.copyWith(
             fontWeight: pro ? FontWeight.w600 : null,
+            color: pro ? p.primary : null,
           ),
         ),
       ),

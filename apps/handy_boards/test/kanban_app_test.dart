@@ -261,7 +261,10 @@ void main() {
         of: find.byKey(ValueKey('card-${card.id}')),
         matching: find.byTooltip('Card options'),
       );
-      await tap(t, menu);
+      // The card is in the first column, on screen: tapped where it is
+      // (scrolling it to the edge would let the row stop on the next one).
+      await t.tap(menu.first);
+      await t.pumpAndSettle();
       await tap(t, find.byKey(const Key('menu-move-card')));
       await tap(t, find.byKey(Key('move-to-end-${done.id}')));
       final moved = c.state!.get('tasks', card.id);

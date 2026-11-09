@@ -221,7 +221,16 @@ const previewBoard = '00000000-0000-4000-8000-00000000b0a2';
 class BoardPreview extends StatefulWidget {
   final BoardsState state;
   final DateTime now;
-  const BoardPreview({super.key, required this.state, required this.now});
+
+  /// Whether the made board keeps the example cards (null: no examples
+  /// shown). Every card shown here is an example, labelled so.
+  final bool? keepsExamples;
+  const BoardPreview({
+    super.key,
+    required this.state,
+    required this.now,
+    this.keepsExamples,
+  });
   @override
   State<BoardPreview> createState() => _BoardPreviewState();
 }
@@ -271,15 +280,30 @@ class _BoardPreviewState extends State<BoardPreview> {
           ),
           const SizedBox(height: 8),
         ],
-        if (topTasks(s, board: previewBoard).isEmpty)
+        // What the cards here are: examples, kept on the made board or not.
+        if (topTasks(s, board: previewBoard).isEmpty ||
+            widget.keepsExamples != null)
           Padding(
+            key: const Key('preview-examples-note'),
             padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
             child: Text(
-              tr(
-                context,
-                'No cards yet: the board starts empty unless you add the examples.',
-                'Chưa có thẻ: bảng bắt đầu trống, trừ khi bạn thêm thẻ ví dụ.',
-              ),
+              topTasks(s, board: previewBoard).isEmpty
+                  ? tr(
+                      context,
+                      'No cards yet: the board starts empty unless you add the examples.',
+                      'Chưa có thẻ: bảng bắt đầu trống, trừ khi bạn thêm thẻ ví dụ.',
+                    )
+                  : widget.keepsExamples!
+                  ? tr(
+                      context,
+                      'Cards marked Example come with the board; delete them any time.',
+                      'Thẻ có nhãn Ví dụ sẽ có sẵn trong bảng; xoá lúc nào cũng được.',
+                    )
+                  : tr(
+                      context,
+                      'Cards marked Example are only a preview: the board starts empty, as Add example cards is off.',
+                      'Thẻ có nhãn Ví dụ chỉ để xem trước: bảng tạo ra sẽ trống vì bạn đã tắt Thêm thẻ ví dụ.',
+                    ),
               style: theme.textTheme.bodySmall?.copyWith(color: p.muted),
             ),
           ),
@@ -292,11 +316,10 @@ class _BoardPreviewState extends State<BoardPreview> {
           ),
         Expanded(
           child: KanbanView(
-            // A short phone keeps the preview's board tall enough to read.
-            columnChips: MediaQuery.sizeOf(context).height >= 720,
             state: s,
             board: previewBoard,
             now: widget.now,
+            actions: KanbanActions(examples: widget.keepsExamples != null),
             filter: KanbanFilter(
               categories: focus,
               window: unit == null ? null : window,
@@ -332,8 +355,11 @@ class _PreviewBodyState extends State<PreviewBody> {
 
   @override
   Widget build(BuildContext context) {
+    // A preview holds the template's words, the tiles, the week and the
+    // column chips: below 960 pt the words scroll away so the board keeps
+    // room for its cards.
     final short =
-        MediaQuery.sizeOf(context).height < 720 ||
+        MediaQuery.sizeOf(context).height < 960 ||
         MediaQuery.textScalerOf(context).scale(1) > 1.3;
     if (!short) {
       return Column(
@@ -370,7 +396,7 @@ class _PreviewBodyState extends State<PreviewBody> {
               SizedBox(
                 // Never less than a readable board (its category strip
                 // and a few cards): on a tiny screen the page scrolls on.
-                height: box.maxHeight.clamp(640.0, double.infinity),
+                height: box.maxHeight.clamp(720.0, double.infinity),
                 child: widget.board,
               ),
             ],

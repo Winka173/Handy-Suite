@@ -490,12 +490,12 @@ class _FreeAndPro extends StatelessWidget {
       (
         t('Planning', 'Lên kế hoạch'),
         t(
-          'Week bar, move to today by hand',
-          'Thanh tuần, tự tay chuyển về hôm nay',
+          'Week bar, My Work to read, move to today by hand',
+          'Thanh tuần, xem Việc của tôi, tự tay chuyển về hôm nay',
         ),
         t(
-          'My Work, carry-over, repeating cards',
-          'Việc của tôi, tự chuyển việc tồn, thẻ lặp lại',
+          'Moving from My Work, carry-over, repeating cards',
+          'Dời việc từ Việc của tôi, tự chuyển việc tồn, thẻ lặp lại',
         ),
       ),
       (
@@ -522,8 +522,10 @@ class _FreeAndPro extends StatelessWidget {
         label: label,
         child: Text(
           value,
+          // What Pro adds, in the app's own colour.
           style: theme.textTheme.bodyMedium?.copyWith(
             fontWeight: pro ? FontWeight.w600 : null,
+            color: pro ? p.primary : null,
           ),
         ),
       ),
@@ -531,7 +533,10 @@ class _FreeAndPro extends StatelessWidget {
     Widget head(String s) => Expanded(
       child: Text(
         s,
-        style: theme.textTheme.labelLarge?.copyWith(color: p.muted),
+        style: theme.textTheme.labelLarge?.copyWith(
+          color: s == 'Pro' ? p.primary : p.muted,
+          fontWeight: s == 'Pro' ? FontWeight.w600 : null,
+        ),
       ),
     );
     return Column(

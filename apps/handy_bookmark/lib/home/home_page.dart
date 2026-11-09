@@ -176,11 +176,9 @@ class SaveHomePage extends StatelessWidget {
                   padding: EdgeInsets.zero,
                   child: ReadLaterShelf(scope: scope, onOpen: open),
                 ),
-                NotSortedSection(scope: scope, onOpen: open),
                 const SizedBox(height: HandySpace.l),
                 HomeQueues(
                   scope: scope,
-                  withUnsorted: false,
                   onFocus: () => Navigator.pushNamed(context, '/focus'),
                 ),
               ],

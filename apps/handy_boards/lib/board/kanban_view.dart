@@ -1,3 +1,4 @@
+import 'dart:math' as math;
 import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
@@ -24,6 +25,9 @@ class KanbanActions {
   /// shown on the card with [carryLabel].
   final void Function(BoardRecord card)? carry;
   final String? carryLabel;
+
+  /// A template preview: every card is an example, labelled so.
+  final bool examples;
   const KanbanActions({
     this.open,
     this.move,
@@ -35,6 +39,7 @@ class KanbanActions {
     this.fromTemplate,
     this.carry,
     this.carryLabel,
+    this.examples = false,
   });
   bool get readOnly => move == null;
 }
@@ -124,33 +129,64 @@ class KanbanView extends StatefulWidget {
 }
 
 class KanbanViewState extends State<KanbanView> {
-  PageController? _pages;
+  /// The phone's columns, side by side, stopping at [_snaps].
+  final _lanes = ScrollController();
   final _wide = ScrollController();
-  double _fraction = 1;
   bool dragging = false;
   Timer? _edge;
+
+  /// Where the phone's row stops for each column: the first at the left
+  /// margin, the last at the right one, the others centred with both
+  /// neighbours showing.
+  List<double> _snaps = const [];
 
   /// The column a phone shows, for the chips.
   final _page = ValueNotifier<int>(0);
 
   @override
+  void initState() {
+    super.initState();
+    _lanes.addListener(() {
+      final at = _at;
+      if (_page.value != at) _page.value = at;
+    });
+  }
+
+  @override
   void dispose() {
-    _pages?.dispose();
+    _lanes.dispose();
     _wide.dispose();
     _edge?.cancel();
     _page.dispose();
     super.dispose();
   }
 
+  /// The column nearest to where the phone's row stands.
+  int get _at {
+    if (!_lanes.hasClients || _snaps.isEmpty) return 0;
+    final x = _lanes.offset;
+    var best = 0;
+    for (var i = 1; i < _snaps.length; i++) {
+      if ((_snaps[i] - x).abs() < (_snaps[best] - x).abs()) best = i;
+    }
+    return best;
+  }
+
+  void _goTo(int column, [Duration? duration]) {
+    if (!_lanes.hasClients || _snaps.isEmpty) return;
+    final to = _snaps[column.clamp(0, _snaps.length - 1)];
+    final d = duration ?? HandyMotion.of(context);
+    if (d == Duration.zero) {
+      _lanes.jumpTo(to);
+    } else {
+      _lanes.animateTo(to, duration: d, curve: Curves.easeOutCubic);
+    }
+  }
+
   /// Shows [column] (after a move from the menu, or a filter).
   void reveal(int column) {
-    final pages = _pages;
-    if (pages != null && pages.hasClients) {
-      pages.animateToPage(
-        column,
-        duration: HandyMotion.of(context),
-        curve: Curves.easeOutCubic,
-      );
+    if (_lanes.hasClients) {
+      _goTo(column);
     } else if (_wide.hasClients) {
       _wide.animateTo(
         (column * 312.0).clamp(0, _wide.position.maxScrollExtent),
@@ -173,15 +209,8 @@ class KanbanViewState extends State<KanbanView> {
       return;
     }
     _edge ??= Timer.periodic(const Duration(milliseconds: 600), (_) {
-      final pages = _pages;
-      if (pages != null && pages.hasClients) {
-        final page = (pages.page ?? 0).round() + dir;
-        if (page >= 0)
-          pages.animateToPage(
-            page,
-            duration: const Duration(milliseconds: 260),
-            curve: Curves.easeOut,
-          );
+      if (_lanes.hasClients) {
+        _goTo(_at + dir, const Duration(milliseconds: 260));
       } else if (_wide.hasClients) {
         _wide.animateTo(
           (_wide.offset + dir * 280).clamp(0, _wide.position.maxScrollExtent),
@@ -221,27 +250,33 @@ class KanbanViewState extends State<KanbanView> {
         );
         final addColumn = widget.actions.addColumn;
         if (phone) {
-          // Each neighbour shows a 22 pt strip at its side: a place to drop
-          // a dragged card, and a sign there is more.
-          final fraction = ((box.maxWidth - 56) / box.maxWidth).clamp(.7, 1.0);
-          if (_pages == null || _fraction != fraction) {
-            final page = _pages?.hasClients == true
-                ? (_pages!.page ?? 0).round()
-                : 0;
-            _pages?.dispose();
-            _pages = PageController(
-              viewportFraction: fraction,
-              initialPage: page,
-            );
-            _fraction = fraction;
-          }
-          final pages = PageView.builder(
+          // The first column on the left margin, the last on the right one
+          // (each with 40 pt of its neighbour showing); the ones between
+          // centred with 24 pt of both neighbours: places to drop a dragged
+          // card, and a sign there is more.
+          const margin = 16.0, gap = 8.0, inset = 32.0;
+          final w = box.maxWidth;
+          final lane = w - 2 * inset;
+          final n = columns.length + (addColumn == null ? 0 : 1);
+          final end = math.max(0.0, 2 * margin + n * lane + (n - 1) * gap - w);
+          _snaps = [
+            for (var k = 0; k < n; k++)
+              k == 0
+                  ? 0.0
+                  : k == n - 1
+                  ? end
+                  : (margin + k * (lane + gap) - inset).clamp(0.0, end),
+          ];
+          final pages = ListView.separated(
             key: const Key('kanban-pages'),
-            controller: _pages,
-            onPageChanged: (i) => _page.value = i,
-            itemCount: columns.length + (addColumn == null ? 0 : 1),
-            itemBuilder: (context, i) => Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 6),
+            controller: _lanes,
+            scrollDirection: Axis.horizontal,
+            physics: _LaneSnap(() => _snaps),
+            padding: const EdgeInsets.symmetric(horizontal: margin),
+            itemCount: n,
+            separatorBuilder: (_, _) => const SizedBox(width: gap),
+            itemBuilder: (context, i) => SizedBox(
+              width: lane,
               child: i == columns.length ? _AddColumn(addColumn!) : column(i),
             ),
           );
@@ -412,6 +447,7 @@ class _ColumnViewState extends State<ColumnView> {
         onMenu: a.cardMenu == null ? null : () => a.cardMenu!(card),
         onCarry: a.carry == null ? null : () => a.carry!(card),
         carryLabel: a.carryLabel,
+        example: a.examples,
       );
       final t = plain;
       if (a.readOnly) return t;
@@ -800,4 +836,56 @@ class _ColumnChips extends StatelessWidget {
       ),
     );
   }
+}
+
+/// Stops the phone's row of columns at a column after a fling or a drag:
+/// the next one along the fling, else the nearest.
+class _LaneSnap extends ScrollPhysics {
+  final List<double> Function() snaps;
+  const _LaneSnap(this.snaps, {super.parent});
+
+  @override
+  _LaneSnap applyTo(ScrollPhysics? ancestor) =>
+      _LaneSnap(snaps, parent: buildParent(ancestor));
+
+  double _target(ScrollMetrics position, double velocity) {
+    final s = snaps();
+    final x = position.pixels;
+    if (s.isEmpty) return x;
+    var best = s.first;
+    for (final v in s) {
+      if ((v - x).abs() < (best - x).abs()) best = v;
+    }
+    final speed = toleranceFor(position).velocity;
+    if (velocity > speed) {
+      return s.firstWhere((v) => v > x + 1, orElse: () => s.last);
+    }
+    if (velocity < -speed) {
+      return s.lastWhere((v) => v < x - 1, orElse: () => s.first);
+    }
+    return best;
+  }
+
+  @override
+  Simulation? createBallisticSimulation(
+    ScrollMetrics position,
+    double velocity,
+  ) {
+    if ((velocity <= 0 && position.pixels <= position.minScrollExtent) ||
+        (velocity >= 0 && position.pixels >= position.maxScrollExtent)) {
+      return super.createBallisticSimulation(position, velocity);
+    }
+    final to = _target(position, velocity);
+    if ((to - position.pixels).abs() < .5) return null;
+    return ScrollSpringSimulation(
+      spring,
+      position.pixels,
+      to,
+      velocity,
+      tolerance: toleranceFor(position),
+    );
+  }
+
+  @override
+  bool get allowImplicitScrolling => false;
 }

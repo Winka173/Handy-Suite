@@ -21,6 +21,9 @@ dev_dependencies:
 flutter:
   assets:
     - assets/fonts/
+    # The faces' licences, read into the app's Licences page.
+    - fonts/Geist-OFL.txt
+    - fonts/Bricolage-OFL.txt
   # Geist (fonts/Geist-OFL.txt) for text, Bricolage Grotesque (fonts/Bricolage-OFL.txt;
   # static opsz 16/32 instances of the variable font) for titles and figures.
   # Both SIL OFL 1.1 with full Vietnamese coverage and tabular figures.

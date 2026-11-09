@@ -135,15 +135,21 @@ void main() {
     final c = await start(tester, store: store, seed: recipes);
     final id = c.library!.bookmarks.single.id;
     store.fail = true;
-    // Home's Not sorted rows offer the usual collections as chips.
+    // Home's queue card opens Sort quickly, one save at a time.
+    await tapKey(tester, 'home-quick-sort');
     await tapKey(tester, 'file-$id-recipes');
     expect(c.library!.bookmarks.single.collectionId, isNull);
-    expect(find.byKey(Key('unsorted-$id')), findsOneWidget);
+    expect(find.byKey(Key('quick-sort-item-$id')), findsOneWidget);
+    expect(find.byKey(const Key('quick-sort-done')), findsNothing);
     store.fail = false;
     await tapKey(tester, 'file-$id-recipes');
     expect(c.library!.bookmarks.single.collectionId, 'recipes');
-    // Filed: it leaves Not sorted.
-    expect(find.byKey(Key('unsorted-$id')), findsNothing);
+    // It says where it went, with Undo; nothing left, it says so.
+    expect(find.text('Put in Recipes'), findsOneWidget);
+    expect(find.byKey(const Key('quick-sort-all-done')), findsOneWidget);
+    await tapKey(tester, 'quick-sort-undo');
+    expect(c.library!.bookmarks.single.collectionId, isNull);
+    expect(find.byKey(Key('quick-sort-item-$id')), findsOneWidget);
   });
 
   testWidgets('a card whose page is being read shows it, then stops', (

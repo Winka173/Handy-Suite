@@ -281,7 +281,8 @@ class SettingsPage extends StatelessWidget {
                   ],
                 ),
               SettingsPanel(
-                gap: false,
+                // Air above when the Sync panel sits right before it.
+                gap: scope.drive != null,
                 title: tr(context, 'Backup and restore', 'Sao lưu & khôi phục'),
                 rows: [
                   Padding(

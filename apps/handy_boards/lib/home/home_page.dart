@@ -3,7 +3,6 @@ import 'package:handy_ui/kit.dart';
 import '../create/new_board.dart';
 import '../design/looks.dart';
 import '../design/theme.dart';
-import '../pro/pro.dart';
 import '../scope.dart';
 import '../ui/look.dart';
 
@@ -53,14 +52,10 @@ class HomePage extends StatelessWidget {
           if (s != null && s.rows('boards').isNotEmpty)
             IconButton(
               key: const Key('home-my-work'),
-              tooltip: tr(context, 'My Work (Pro)', 'Việc của tôi (Pro)'),
-              // Pro: the Pro page first, never the page it unlocks.
-              onPressed: () async {
-                if (await requirePro(context, ProFeature.myWork) &&
-                    context.mounted) {
-                  await Navigator.pushNamed(context, '/my-work');
-                }
-              },
+              tooltip: tr(context, 'My Work', 'Việc của tôi'),
+              // Free to open and read across every board; moving work from
+              // there is Pro (asked on the page, at the action).
+              onPressed: () => Navigator.pushNamed(context, '/my-work'),
               icon: const Icon(Icons.dashboard_outlined),
             ),
           IconButton(

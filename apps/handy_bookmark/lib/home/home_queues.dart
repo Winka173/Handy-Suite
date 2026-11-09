@@ -1,3 +1,5 @@
+import 'package:flutter/foundation.dart';
+import 'package:flutter/services.dart';
 import 'package:handy_bookmark_engine/handy_bookmark_engine.dart';
 import 'package:handy_ui/kit.dart';
 import '../design/theme.dart';
@@ -13,15 +15,7 @@ import 'pastel_blocks.dart';
 class HomeQueues extends StatelessWidget {
   final SaveScope scope;
   final VoidCallback onFocus;
-
-  /// Off on Home, where Not sorted is a section of its own.
-  final bool withUnsorted;
-  const HomeQueues({
-    super.key,
-    required this.scope,
-    required this.onFocus,
-    this.withUnsorted = true,
-  });
+  const HomeQueues({super.key, required this.scope, required this.onFocus});
 
   @override
   Widget build(BuildContext context) {
@@ -31,9 +25,7 @@ class HomeQueues extends StatelessWidget {
       for (final b in scope.library.bookmarks)
         if (!b.isArchived && keep(b)) b,
     ]..sort((a, b) => b.savedAt.compareTo(a.savedAt));
-    final unsorted = withUnsorted
-        ? newest((b) => b.collectionId == null)
-        : const <Bookmark>[];
+    final unsorted = newest((b) => b.collectionId == null);
     final waiting = newest((b) => !b.isRead);
     final calm = Semantics(
       button: true,
@@ -215,109 +207,6 @@ class _QueueRow extends StatelessWidget {
   }
 }
 
-/// Home's Not sorted section: the newest saves outside any collection,
-/// each a row of its own with the two usual collections as one-tap chips;
-/// "Sort one by one" opens Sort quickly. Hidden when all is sorted.
-class NotSortedSection extends StatelessWidget {
-  final SaveScope scope;
-  final ValueChanged<Bookmark> onOpen;
-  static const shown = 4;
-  const NotSortedSection({
-    super.key,
-    required this.scope,
-    required this.onOpen,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final l = scope.library;
-    final items = [
-      for (final b in l.bookmarks)
-        if (!b.isArchived && b.collectionId == null) b,
-    ]..sort((a, b) => b.savedAt.compareTo(a.savedAt));
-    if (items.isEmpty) return const SizedBox.shrink();
-    final theme = Theme.of(context);
-    final p = BookmarkPalette.of(context);
-    final usual = usualCollections(l, take: 2);
-    return HomePanel(
-      key: const Key('not-sorted'),
-      title: tr(context, 'Not sorted', 'Chưa xếp'),
-      count: items.length,
-      action: TextButton(
-        key: const Key('not-sorted-one-by-one'),
-        onPressed: () => showQuickSort(context, scope),
-        child: Text(
-          tr(context, 'Sort one by one', 'Xếp từng mục'),
-          overflow: TextOverflow.ellipsis,
-        ),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          for (final (i, b) in items.take(shown).indexed) ...[
-            if (i > 0) const SizedBox(height: 8),
-            Material(
-              key: Key('unsorted-${b.id}'),
-              color: p.surface,
-              borderRadius: BorderRadius.circular(BookmarkRadii.item),
-              clipBehavior: Clip.antiAlias,
-              child: InkWell(
-                onTap: () => onOpen(b),
-                child: Padding(
-                  padding: const EdgeInsets.fromLTRB(10, 10, 10, 4),
-                  child: Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      SizedBox.square(
-                        dimension: 52,
-                        child: ItemPicture(scope.c, b, compact: true),
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              b.title.isEmpty ? b.sourceDomain : b.title,
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              style: theme.textTheme.titleSmall?.copyWith(
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                            Wrap(
-                              spacing: 6,
-                              children: [
-                                for (final c in usual)
-                                  FileChip(
-                                    key: Key('file-${b.id}-${c.id}'),
-                                    collection: c,
-                                    hue: collectionHue(l, c.id),
-                                    onTap: () async {
-                                      try {
-                                        await scope.file(b, c.id);
-                                      } catch (_) {
-                                        // Nothing moved; the row stays.
-                                      }
-                                    },
-                                  ),
-                              ],
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ),
-          ],
-        ],
-      ),
-    );
-  }
-}
-
 /// Sort quickly: the saves not sorted yet, one at a time, newest first.
 /// One tap on a collection files it and the next one comes; Skip leaves it
 /// for later. A failed write keeps the save where it was, on screen.
@@ -341,29 +230,51 @@ class _QuickSortState extends State<_QuickSort> {
   int sorted = 0;
   bool busy = false;
 
+  /// The save just filed and where it went, for the line with Undo.
+  ({Bookmark before, String into})? last;
+
   List<Bookmark> get left => [
     for (final b in widget.scope.library.bookmarks)
       if (!b.isArchived && b.collectionId == null && !skipped.contains(b.id)) b,
   ]..sort((a, b) => b.savedAt.compareTo(a.savedAt));
 
-  Future<void> _file(Bookmark b, String id) async {
+  Future<void> _file(Bookmark b, String id, String name) async {
     if (busy) return;
     setState(() => busy = true);
     try {
       await widget.scope.file(b, id);
       sorted++;
+      last = (before: b, into: name);
+      if (!kIsWeb &&
+          (defaultTargetPlatform == TargetPlatform.android ||
+              defaultTargetPlatform == TargetPlatform.iOS)) {
+        HapticFeedback.selectionClick();
+      }
     } catch (_) {
       // Nothing moved; the save stays on screen.
     }
-    if (!mounted) return;
-    setState(() => busy = false);
-    if (left.isEmpty) Navigator.of(context).pop();
+    if (mounted) setState(() => busy = false);
   }
 
-  void _skip(Bookmark b) {
-    setState(() => skipped.add(b.id));
-    if (left.isEmpty) Navigator.of(context).pop();
+  /// Puts the last save back where it was (not sorted).
+  Future<void> _undo() async {
+    final l = last;
+    if (l == null || busy) return;
+    setState(() => busy = true);
+    try {
+      await widget.scope.put(l.before);
+      sorted--;
+      last = null;
+    } catch (_) {
+      // It stays filed; the line still offers Undo.
+    }
+    if (mounted) setState(() => busy = false);
   }
+
+  void _skip(Bookmark b) => setState(() {
+    skipped.add(b.id);
+    last = null;
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -375,7 +286,70 @@ class _QuickSortState extends State<_QuickSort> {
         final p = BookmarkPalette.of(context);
         final l = scope.library;
         final rest = left;
-        if (rest.isEmpty) return const SizedBox(height: 120);
+        final done = last == null
+            ? null
+            : Padding(
+                key: const Key('quick-sort-done'),
+                padding: const EdgeInsets.only(bottom: 12),
+                child: Material(
+                  color: p.tint,
+                  borderRadius: BorderRadius.circular(BookmarkRadii.item),
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(12, 4, 4, 4),
+                    child: Row(
+                      children: [
+                        Icon(Icons.check_circle, size: 20, color: p.primary),
+                        const SizedBox(width: 10),
+                        Expanded(
+                          child: Text(
+                            tr(
+                              context,
+                              'Put in ${last!.into}',
+                              'Đã cho vào ${last!.into}',
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: theme.textTheme.bodyMedium?.copyWith(
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ),
+                        TextButton(
+                          key: const Key('quick-sort-undo'),
+                          onPressed: busy ? null : _undo,
+                          child: Text(tr(context, 'Undo', 'Hoàn tác')),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              );
+        if (rest.isEmpty) {
+          return SafeArea(
+            child: Padding(
+              key: const Key('quick-sort'),
+              padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  ?done,
+                  Text(
+                    tr(context, 'All sorted.', 'Đã xếp xong.'),
+                    key: const Key('quick-sort-all-done'),
+                    style: theme.textTheme.titleLarge,
+                  ),
+                  const SizedBox(height: 12),
+                  FilledButton(
+                    key: const Key('quick-sort-close'),
+                    onPressed: () => Navigator.of(context).pop(),
+                    child: Text(tr(context, 'Done', 'Xong')),
+                  ),
+                ],
+              ),
+            ),
+          );
+        }
         final b = rest.first;
         final total = rest.length + sorted + skipped.length;
         return SafeArea(
@@ -404,42 +378,46 @@ class _QuickSortState extends State<_QuickSort> {
                   ],
                 ),
                 const SizedBox(height: 14),
-                KeyedSubtree(
-                  key: Key('quick-sort-item-${b.id}'),
-                  child: Row(
-                    children: [
-                      SizedBox.square(
-                        dimension: 72,
-                        child: ItemPicture(scope.c, b, compact: true),
-                      ),
-                      const SizedBox(width: 14),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              b.title.isEmpty ? b.sourceDomain : b.title,
-                              maxLines: 2,
-                              overflow: TextOverflow.ellipsis,
-                              style: theme.textTheme.titleSmall?.copyWith(
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                            const SizedBox(height: 2),
-                            Text(
-                              b.isImage
-                                  ? tr(context, 'Picture', 'Ảnh')
-                                  : sourceLine(b),
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              style: theme.textTheme.bodySmall?.copyWith(
-                                color: p.muted,
-                              ),
-                            ),
-                          ],
+                ?done,
+                // The next save slides in as the last one goes.
+                HandySwap(
+                  child: KeyedSubtree(
+                    key: Key('quick-sort-item-${b.id}'),
+                    child: Row(
+                      children: [
+                        SizedBox.square(
+                          dimension: 72,
+                          child: ItemPicture(scope.c, b, compact: true),
                         ),
-                      ),
-                    ],
+                        const SizedBox(width: 14),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                b.title.isEmpty ? b.sourceDomain : b.title,
+                                maxLines: 2,
+                                overflow: TextOverflow.ellipsis,
+                                style: theme.textTheme.titleSmall?.copyWith(
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                              const SizedBox(height: 2),
+                              Text(
+                                b.isImage
+                                    ? tr(context, 'Picture', 'Ảnh')
+                                    : sourceLine(b),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: theme.textTheme.bodySmall?.copyWith(
+                                  color: p.muted,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
                 const SizedBox(height: 14),
@@ -456,15 +434,13 @@ class _QuickSortState extends State<_QuickSort> {
                         key: Key('file-${b.id}-${c.id}'),
                         collection: c,
                         hue: collectionHue(l, c.id),
-                        onTap: () => _file(b, c.id),
+                        onTap: () => _file(b, c.id, c.name),
                       ),
                     FileChip(
                       key: Key('file-${b.id}-other'),
                       onTap: () async {
                         await scope.move(context, b);
-                        if (mounted && left.isEmpty) {
-                          Navigator.of(this.context).pop();
-                        }
+                        if (mounted) setState(() => last = null);
                       },
                     ),
                   ],

@@ -90,15 +90,21 @@ void main() {
       'Left from Monday',
     ).copy({'scheduled': isoDay(addDays(today, -5))});
     s = saveTask(s, old, now: clock);
-    // Without Pro: the Pro page opens instead.
+    // Without Pro: My Work opens and reads freely; moving from it asks
+    // for Pro and changes nothing.
     final c = await boot(t, s);
     await tap(t, find.byKey(const Key('home-my-work')));
+    expect(find.text('Left from Monday'), findsOneWidget);
+    await t.ensureVisible(find.byKey(Key('work-move-${old.id}')));
+    await tap(t, find.byKey(Key('work-move-${old.id}')));
     expect(find.byKey(const Key('pro-page')), findsOneWidget);
+    expect(
+      c.state!.get('tasks', old.id).str('scheduled'),
+      isoDay(addDays(today, -5)),
+    );
     await t.binding.handlePopRoute();
     await t.pumpAndSettle();
     debugProOverride = true;
-    await tap(t, find.byKey(const Key('home-my-work')));
-    expect(find.text('Left from Monday'), findsOneWidget);
     await t.ensureVisible(find.byKey(Key('work-move-${old.id}')));
     await tap(t, find.byKey(Key('work-move-${old.id}')));
     expect(c.state!.get('tasks', old.id).str('scheduled'), isoDay(today));

@@ -92,7 +92,7 @@ class TemplatePreviewPage extends StatelessWidget {
             ],
           ),
         ),
-        board: BoardPreview(state: s, now: now),
+        board: BoardPreview(state: s, now: now, keepsExamples: true),
       ),
       bottomNavigationBar: SafeArea(
         child: Padding(
@@ -193,11 +193,18 @@ class _SetupPageState extends State<SetupPage> {
     if (found.isNotEmpty) return;
     final vi = isVi(context), now = widget.scope.clock();
     final plan = planBoard(t, answers!, vi: vi, now: now);
+    final samples = answers![examplesKey] == true
+        ? null
+        : planBoard(t, {...answers!, examplesKey: true}, vi: vi, now: now);
     Navigator.push(
       context,
       MaterialPageRoute<void>(
-        builder: (_) =>
-            PlanPreviewPage(scope: widget.scope, template: t, plan: plan),
+        builder: (_) => PlanPreviewPage(
+          scope: widget.scope,
+          template: t,
+          plan: plan,
+          samples: samples,
+        ),
       ),
     );
   }
@@ -438,11 +445,16 @@ class PlanPreviewPage extends StatelessWidget {
   final BoardsScope scope;
   final BoardTemplate template;
   final BoardPlan plan;
+
+  /// The same board with the template's example cards, for the preview
+  /// only, when the person turned the examples off.
+  final BoardPlan? samples;
   const PlanPreviewPage({
     super.key,
     required this.scope,
     required this.template,
     required this.plan,
+    this.samples,
   });
 
   @override
@@ -450,7 +462,14 @@ class PlanPreviewPage extends StatelessWidget {
     final theme = Theme.of(context);
     final p = BoardsPalette.of(context);
     final now = scope.clock();
-    final s = buildBoard(BoardsState(), plan, now: now, boardId: previewBoard);
+    // With Add example cards off, the preview still shows the template's
+    // examples (labelled), so the board can be seen with something on it.
+    final s = buildBoard(
+      BoardsState(),
+      samples ?? plan,
+      now: now,
+      boardId: previewBoard,
+    );
     final locked = template.pro && !hasPro(context);
     return Scaffold(
       appBar: AppBar(title: Text(plan.title)),
@@ -464,7 +483,7 @@ class PlanPreviewPage extends StatelessWidget {
             style: theme.textTheme.bodySmall?.copyWith(color: p.muted),
           ),
         ),
-        board: BoardPreview(state: s, now: now),
+        board: BoardPreview(state: s, now: now, keepsExamples: samples == null),
       ),
       bottomNavigationBar: SafeArea(
         child: Padding(
