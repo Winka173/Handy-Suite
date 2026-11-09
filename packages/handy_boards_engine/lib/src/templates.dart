@@ -713,28 +713,50 @@ BoardsState createFromTemplate(
 
 // ─── Board-level settings every board has ───────────────────────────────
 
+/// A key date: its name, its day, and (when set) its time as minutes
+/// after midnight.
+typedef KeyDate = ({String label, DateTime day, int? minute});
+
 /// The board's key dates (a semester end, a launch, a moving day), in
 /// order. Any board can have them; templates only suggest the first ones.
-List<({String label, DateTime day})> milestonesOf(BoardRecord board) {
+List<KeyDate> milestonesOf(BoardRecord board) {
   final raw = board.data['milestones'];
   if (raw is! List) return const [];
+  int? minute(Object? v) {
+    if (v is! String) return null;
+    final m = RegExp(r'^([01]\d|2[0-3]):([0-5]\d)$').firstMatch(v);
+    return m == null
+        ? null
+        : int.parse(m.group(1)!) * 60 + int.parse(m.group(2)!);
+  }
+
   return [
     for (final m in raw)
       (
         label: (m as Map)['label'] as String,
         day: localDate(m['day'] as String),
+        minute: minute(m['time']),
       ),
-  ]..sort((a, b) => a.day.compareTo(b.day));
+  ]..sort(
+    (a, b) => a.day == b.day
+        ? (a.minute ?? -1).compareTo(b.minute ?? -1)
+        : a.day.compareTo(b.day),
+  );
 }
 
 BoardsState setMilestones(
   BoardsState s,
   String board,
-  List<({String label, DateTime day})> list, {
+  List<KeyDate> list, {
   DateTime? now,
 }) {
   if (list.length > 8) throw const FormatException('At most 8 key dates');
-  for (final m in list) text(m.label, empty: false, max: 80);
+  for (final m in list) {
+    text(m.label, empty: false, max: 80);
+    final t = m.minute;
+    if (t != null && (t < 0 || t >= 24 * 60))
+      throw const FormatException('A key date time is within the day');
+  }
   final b = s.get('boards', board);
   return s.put(
     'boards',
@@ -743,7 +765,11 @@ BoardsState setMilestones(
           ? null
           : [
               for (final m in list)
-                {'label': m.label.trim(), 'day': isoDay(m.day)},
+                {
+                  'label': m.label.trim(),
+                  'day': isoDay(m.day),
+                  if (m.minute != null) 'time': clock(m.minute!),
+                },
             ],
       'updated': _now(now),
     }),

@@ -261,7 +261,13 @@ class _BoardPreviewState extends State<BoardPreview> {
             child: Text(
               [
                 for (final m in milestones)
-                  keyDateLine(context, m.label, m.day, widget.now),
+                  keyDateLine(
+                    context,
+                    m.label,
+                    m.day,
+                    widget.now,
+                    minute: m.minute,
+                  ),
               ].join(' · '),
               style: theme.textTheme.bodyMedium?.copyWith(color: p.muted),
             ),

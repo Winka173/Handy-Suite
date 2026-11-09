@@ -9,8 +9,8 @@ void main() {
     (t) async {
       var s = studyState();
       s = setMilestones(s, board, [
-        (label: 'Key date', day: DateTime(2026, 11, 9)),
-        (label: 'Key date', day: DateTime(2026, 11, 28)),
+        (label: 'Key date', day: DateTime(2026, 11, 9), minute: null),
+        (label: 'Key date', day: DateTime(2026, 11, 28), minute: null),
       ]);
       await boot(t, s);
       await tap(t, find.text('Semester 1').first);

@@ -11,14 +11,41 @@ String keyDateLine(
   BuildContext context,
   String label,
   DateTime day,
-  DateTime now,
-) {
+  DateTime now, {
+  int? minute,
+}) {
   final today = DateTime(now.year, now.month, now.day);
   final days = DateTime(day.year, day.month, day.day).difference(today).inDays;
-  final when = days == 0
-      ? tr(context, 'today', 'hôm nay')
-      : tr(context, 'in $days days', 'còn $days ngày');
-  return '$label ${day.day}/${day.month}, $when';
+  final at = minute == null
+      ? ''
+      : tr(
+          context,
+          ' at ${minute ~/ 60}:${(minute % 60).toString().padLeft(2, '0')}',
+          ' lúc ${minute ~/ 60}:${(minute % 60).toString().padLeft(2, '0')}',
+        );
+  String when;
+  if (days == 0 && minute != null) {
+    // On the day, with a time: the hours (or minutes) left.
+    final left = DateTime(
+      day.year,
+      day.month,
+      day.day,
+    ).add(Duration(minutes: minute)).difference(now);
+    when = left.isNegative
+        ? tr(context, 'today', 'hôm nay')
+        : left.inHours >= 1
+        ? tr(context, 'in ${left.inHours} h', 'còn ${left.inHours} giờ')
+        : tr(
+            context,
+            'in ${left.inMinutes.clamp(1, 59)} min',
+            'còn ${left.inMinutes.clamp(1, 59)} phút',
+          );
+  } else {
+    when = days == 0
+        ? tr(context, 'today', 'hôm nay')
+        : tr(context, 'in $days days', 'còn $days ngày');
+  }
+  return '$label ${day.day}/${day.month}$at, $when';
 }
 
 class KeyDateChip extends StatelessWidget {
@@ -104,15 +131,14 @@ Future<void> editMilestones(
   BoardsScope scope,
   String board,
 ) async {
-  final saved =
-      await showModalBottomSheet<List<({String label, DateTime day})>>(
-        context: context,
-        isScrollControlled: true,
-        useSafeArea: true,
-        showDragHandle: true,
-        builder: (sheet) =>
-            _KeyDatesSheet(milestonesOf(scope.state.get('boards', board))),
-      );
+  final saved = await showModalBottomSheet<List<KeyDate>>(
+    context: context,
+    isScrollControlled: true,
+    useSafeArea: true,
+    showDragHandle: true,
+    builder: (sheet) =>
+        _KeyDatesSheet(milestonesOf(scope.state.get('boards', board))),
+  );
   if (saved != null && context.mounted)
     await scope.run(
       context,
@@ -126,7 +152,7 @@ Future<void> editMilestones(
 /// field rebuilt while the sheet slides away (the keyboard closing) never
 /// reads a disposed controller.
 class _KeyDatesSheet extends StatefulWidget {
-  final List<({String label, DateTime day})> initial;
+  final List<KeyDate> initial;
   const _KeyDatesSheet(this.initial);
   @override
   State<_KeyDatesSheet> createState() => _KeyDatesSheetState();
@@ -135,7 +161,11 @@ class _KeyDatesSheet extends StatefulWidget {
 class _KeyDatesSheetState extends State<_KeyDatesSheet> {
   late final list = [
     for (final m in widget.initial)
-      (label: TextEditingController(text: m.label), day: m.day),
+      (
+        label: TextEditingController(text: m.label),
+        day: m.day,
+        minute: m.minute,
+      ),
   ];
 
   /// Every field ever made, removed ones too, disposed with the sheet.
@@ -169,10 +199,11 @@ class _KeyDatesSheetState extends State<_KeyDatesSheet> {
         Text(
           tr(
             sheet,
-            'Shown under the board name with the days left. They never '
-                'move cards or set due dates.',
-            'Hiện dưới tên bảng kèm số ngày còn lại. Không đổi cột hay '
-                'hạn của thẻ nào.',
+            'Shown under the board name with the days left (the hours on '
+                'the day, when a time is set). They never move cards or '
+                'set due dates.',
+            'Hiện dưới tên bảng kèm số ngày còn lại (đến ngày đó thì đếm '
+                'giờ, nếu có đặt giờ). Không đổi cột hay hạn của thẻ nào.',
           ),
           style: Theme.of(
             sheet,
@@ -199,11 +230,58 @@ class _KeyDatesSheetState extends State<_KeyDatesSheet> {
                   final v = await pickHandyDate(sheet, isoDay(m.day));
                   if (v != null && mounted)
                     setState(
-                      () => list[i] = (label: m.label, day: localDate(v)),
+                      () => list[i] = (
+                        label: m.label,
+                        day: localDate(v),
+                        minute: m.minute,
+                      ),
                     );
                 },
                 child: Text(
                   MaterialLocalizations.of(sheet).formatShortDate(m.day),
+                ),
+              ),
+              // A time is optional: the line then counts down the hours.
+              TextButton(
+                key: Key('key-date-time-$i'),
+                onPressed: () async {
+                  final t = await showTimePicker(
+                    context: sheet,
+                    initialTime: m.minute == null
+                        ? const TimeOfDay(hour: 9, minute: 0)
+                        : TimeOfDay(
+                            hour: m.minute! ~/ 60,
+                            minute: m.minute! % 60,
+                          ),
+                  );
+                  if (t != null && mounted)
+                    setState(
+                      () => list[i] = (
+                        label: m.label,
+                        day: m.day,
+                        minute: t.hour * 60 + t.minute,
+                      ),
+                    );
+                },
+                onLongPress: m.minute == null
+                    ? null
+                    : () => setState(
+                        () => list[i] = (
+                          label: m.label,
+                          day: m.day,
+                          minute: null,
+                        ),
+                      ),
+                child: Text(
+                  m.minute == null
+                      ? tr(sheet, '+ Time', '+ Giờ')
+                      : MaterialLocalizations.of(sheet).formatTimeOfDay(
+                          TimeOfDay(
+                            hour: m.minute! ~/ 60,
+                            minute: m.minute! % 60,
+                          ),
+                          alwaysUse24HourFormat: true,
+                        ),
                 ),
               ),
               IconButton(
@@ -225,7 +303,9 @@ class _KeyDatesSheetState extends State<_KeyDatesSheet> {
                   text: tr(context, 'Key date', 'Mốc'),
                 );
                 made.add(c);
-                setState(() => list.add((label: c, day: localDate(v))));
+                setState(
+                  () => list.add((label: c, day: localDate(v), minute: null)),
+                );
               },
               icon: const Icon(Icons.add),
               label: Text(tr(sheet, 'Add a key date', 'Thêm ngày')),
@@ -237,7 +317,7 @@ class _KeyDatesSheetState extends State<_KeyDatesSheet> {
           onPressed: () => Navigator.pop(sheet, [
             for (final m in list)
               if (m.label.text.trim().isNotEmpty)
-                (label: m.label.text.trim(), day: m.day),
+                (label: m.label.text.trim(), day: m.day, minute: m.minute),
           ]),
           child: Text(tr(sheet, 'Save', 'Lưu')),
         ),

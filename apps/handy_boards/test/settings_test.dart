@@ -202,7 +202,7 @@ void main() {
       s.get('boards', board).copy({'template': 'goals', 'templateVersion': 1}),
     );
     s = setMilestones(s, board, [
-      (label: 'Finals', day: DateTime(2026, 12, 20)),
+      (label: 'Finals', day: DateTime(2026, 12, 20), minute: null),
     ]);
     final c = await boot(t, s);
     await tap(t, find.byKey(const Key('board-$board')));

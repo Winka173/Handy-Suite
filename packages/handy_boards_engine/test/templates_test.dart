@@ -287,8 +287,8 @@ void main() {
       var s = createKanbanBoard(BoardsState(), title: 'X', now: now);
       final b = boardOf(s);
       s = setMilestones(s, b, [
-        (label: 'Demo', day: DateTime(2026, 12, 1)),
-        (label: 'Kickoff', day: DateTime(2026, 11, 10)),
+        (label: 'Demo', day: DateTime(2026, 12, 1), minute: null),
+        (label: 'Kickoff', day: DateTime(2026, 11, 10), minute: null),
       ]);
       s.validate();
       expect(milestonesOf(s.get('boards', b)).map((m) => m.label), [

@@ -523,7 +523,13 @@ class _BoardPageState extends State<BoardPage> {
                 borderRadius: BorderRadius.circular(6),
                 onTap: () => editMilestones(context, scope, widget.board),
                 child: Text(
-                  keyDateLine(context, next.first.label, next.first.day, now),
+                  keyDateLine(
+                    context,
+                    next.first.label,
+                    next.first.day,
+                    now,
+                    minute: next.first.minute,
+                  ),
                   style: sub,
                 ),
               ),
