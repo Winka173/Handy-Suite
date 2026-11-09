@@ -44,13 +44,14 @@ Mã commit (ví dụ `15584c53`) nằm trên nhánh `ui-rebuild`.
 
 ### 2.2 Hướng 3a: dải đầu trang đậm và nút vàng
 
-- Đầu trang là **một dải màu đậm duy nhất**: tên trang màu trắng đậm, dòng số liệu nhạt, nút chính màu vàng `#E0A93B` (chữ `#241A05`).
+- Đầu trang là **một dải màu đậm duy nhất**: tên trang màu trắng đậm, dòng số liệu nhạt, nút chính màu vàng `#E0A93B` (bản tối `#E6B44F`; chữ `#241A05`).
 - Mục đang chọn ở thanh bên dùng màu dải, chữ trắng.
 - **Bác bỏ:** dải đậm ở nhiều chỗ, thanh bên đậm (3d/3e), nút vàng ở các màn khác.
 
 |                   | Handy Bookmark             | Handy Boards                               |
 | ----------------- | -------------------------- | ------------------------------------------ |
 | Dải (sáng / tối)  | `#0F4B54` / `#145A64`      | `#7C2D12` / `#6E2A12`                      |
+| Nút vàng (sáng / tối) | `#E0A93B` / `#E6B44F`  | `#E0A93B` / `#E6B44F`                      |
 | Màu nhấn          | `#0E7490` (link `#0F4B54`) | `#B53C0A` (tối `#F0936A`)                  |
 | Nền / bề mặt nâng | `#EEF3F3` / `#E6EDED`      | `#F5F1EE` / cột `#ECE6E1`                  |
 | Chữ / chữ phụ     | `#0B1213` / `#38423F`      | `#17110D` / `#3D332D`                      |
@@ -74,10 +75,11 @@ Mã commit (ví dụ `15584c53`) nằm trên nhánh `ui-rebuild`.
   - chấm ô liu của Bookmark: 2,87:1;
   - thanh tiến độ hổ phách của Boards: 2,49:1.
 - **Cách sửa:** `HandyPalette` (kit) làm đậm màu nhận diện ở bản sáng tới 3,45:1 so với nền trắng. Chỉ hổ phách và ô liu thay đổi. Việc này ảnh hưởng nhẹ tới mọi app.
-- **Kết quả sau sửa:**
-  - chữ trên dải: 9,4–10,5:1;
-  - chữ phụ trên dải: 7,2–8:1;
-  - nút vàng so với dải: ≥ 4,4:1 (yêu cầu cho phần tử không phải chữ là 3:1);
+- **Kết quả sau sửa** (tính lại từ màu trong `design/theme.dart` ngày 10/11):
+  - chữ trên dải: 9,4–10,5:1; riêng bản tối Bookmark (dải `#145A64`) là 7,9:1;
+  - chữ phụ trên dải: 7,2–8,1:1; riêng bản tối Bookmark là 6,3:1;
+  - nút vàng so với dải: ≥ 4,4:1; riêng bản tối Bookmark là 4,1:1 (yêu cầu cho phần tử không phải chữ là 3:1);
+  - chữ trên nút vàng: ≥ 8:1;
   - chữ trên ô màu: ≥ 9,4:1 (bản tối ≥ 6,7:1);
   - màu nhấn Boards trên cột: 4,69:1.
 
@@ -88,7 +90,7 @@ Mã commit (ví dụ `15584c53`) nằm trên nhánh `ui-rebuild`.
   - `HandySwap`: chuyển mềm giữa hai trạng thái.
   - `HandyReveal`: co giãn theo nội dung. Khi giảm chuyển động thì không co giãn, vì một hiệu ứng co giãn dài 0 làm Flutter báo lỗi bố cục.
   - `HandyAppear` (10/11): thứ mới tới thì mờ dần vào kèm phóng nhẹ, chơi đúng một lần cho mỗi thứ.
-- **Thông báo có nút Hoàn tác:** đặt `persist: false` để tự tắt (Flutter mặc định giữ mãi khi có nút).
+- **Thông báo có nút Hoàn tác:** đặt `persist: false` để tự tắt (Flutter mặc định giữ mãi khi có nút) (`0a001235`).
 
 ### 2.6 Nhãn Pro
 
@@ -135,7 +137,7 @@ Mọi lối vào tính năng Pro đều ghi "Pro" **trước khi** người dùn
 | Chữ "See all" lệch hoặc đè                                                              | Nút ở đầu mục chiếm hết chỗ trống                                                   | Giới hạn nút rộng tối đa 45%, để tiêu đề co lại                              | ✅  |
 | Mục Chưa xếp quá to                                                                     | Thẻ gợi ý xếp ngay trên Trang chủ                                                   | Gộp thành một thẻ hàng chờ, bấm vào là Xếp nhanh                             | ✅  |
 | Xếp nhanh chuyển mục mà không báo                                                       | Không có xác nhận                                                                   | Hiện "Đã cho vào X" kèm Hoàn tác                                             | ✅  |
-| Thông báo Hoàn tác không tự tắt                                                         | Flutter giữ snackbar có nút cho tới khi người dùng đóng                             | Đặt `persist: false` ở cả hai app và trong kit                               | ✅  |
+| Thông báo Hoàn tác không tự tắt                                                         | Flutter giữ snackbar có nút cho tới khi người dùng đóng                             | Đặt `persist: false` ở cả hai app và trong kit (`0a001235`)                  | ✅  |
 | Trang Giấy phép báo lỗi                                                                 | Font Geist và Bricolage thiếu tệp giấy phép OFL trong assets                        | Khai báo tệp OFL trong `handy_ui`                                            | ✅  |
 | Xem tất cả bộ sưu tập mở sai chỗ; trên điện thoại không ra ô                            | Trỏ nhầm trang                                                                      | Trang Thư viện hiện bộ sưu tập dạng ô; màn rộng có trang "Tất cả bộ sưu tập" | ✅  |
 | Trang tổng quan màn rộng lệch về một phía, hàng chờ sát nhau, thẻ Mới lưu cao không đều | Bố cục cũ                                                                           | Sắp lại cả màn, hai thẻ hàng chờ tách rời, chừa sẵn chỗ cho 2 dòng tiêu đề   | ✅  |
@@ -207,7 +209,7 @@ Mọi lối vào tính năng Pro đều ghi "Pro" **trước khi** người dùn
 | Lưu trữ bảng nên là trang riêng, nhiều thông tin hơn          | Chỉ là một bảng nhỏ                                                                                                                                  | Trang riêng (xem 4.2)                                                          | ✅  |
 | Thùng rác cần ghi rõ thời gian                                | Chỉ ghi "xoá N ngày trước"                                                                                                                           | Tự xoá sau 30 ngày, mỗi thẻ ghi còn bao nhiêu ngày (chủ chọn 7a)               | ✅  |
 | Mục cần Pro phải có nhãn Pro                                  | Thiếu ở vài lối vào                                                                                                                                  | Bộ lọc, Mẫu thẻ, nhóm Tự động hoá                                              | ✅  |
-| Nên đổi màu khác hồng và đổi icon                             | Chủ muốn                                                                                                                                             | Cam đất và icon C                                                              | ✅  |
+| Nên đổi màu khác hồng và đổi icon                             | Chủ muốn                                                                                                                                             | Cam đất và icon khung 3 cột (`182c5cdc`)                                       | ✅  |
 
 ---
 
@@ -222,7 +224,7 @@ Mọi lối vào tính năng Pro đều ghi "Pro" **trước khi** người dùn
 
 - **Test tự động (10/11):**
   - Bookmark: 307 test;
-  - engine Bookmark: 153+ test;
+  - engine Bookmark: 153 test;
   - Boards: 96 test;
   - engine Boards: 168 test;
   - `handy_ui`: 10 test.
