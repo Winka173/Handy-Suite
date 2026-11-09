@@ -1,6 +1,7 @@
 import 'dart:ui' show AccessibilityFeatures;
 import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:handy_bookmark/welcome/rehearsal.dart' show SwipeHint;
 import 'package:handy_bookmark/app.dart';
 import 'package:handy_bookmark/controller.dart';
 import 'package:handy_bookmark/welcome/welcome_page.dart';
@@ -85,6 +86,26 @@ void main() {
     final again = await open(t, store: store);
     expect(again.preferences[guideDoneKey], isTrue);
     expect(find.byType(WelcomePage), findsNothing);
+  });
+
+  testWidgets('the app row shows a finger sweeping and an arrow; the arrow '
+      'moves the row too (a mouse cannot swipe)', (t) async {
+    await open(t);
+    await tapKey(t, 'welcome-next-0');
+    await tapKey(t, 'welcome-next-1');
+    await tapKey(t, 'practice-share');
+    await tapKey(t, 'practice-more');
+    expect(find.byType(SwipeHint), findsOneWidget);
+    for (
+      var i = 0;
+      i < 4 && find.text('Tap Handy Bookmark').evaluate().isEmpty;
+      i++
+    ) {
+      await tapKey(t, 'practice-apps-more');
+      await t.pumpAndSettle();
+    }
+    expect(find.text('Tap Handy Bookmark'), findsOneWidget);
+    expect(find.byType(SwipeHint), findsNothing);
   });
 
   testWidgets('someone who already has links never sees it unasked', (t) async {

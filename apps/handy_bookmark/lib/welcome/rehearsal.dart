@@ -556,9 +556,33 @@ class _ShareSheetState extends State<_ShareSheet> {
     );
   }
 
+  /// The row can still move further along (the arrow at its end shows).
+  bool more = true;
+
+  /// One step along the row, for the arrow (a mouse cannot swipe).
+  void _step() {
+    if (!row.hasClients) return;
+    final p = row.position;
+    final to = (p.pixels + 180).clamp(0.0, p.maxScrollExtent);
+    if (moves(context)) {
+      row.animateTo(
+        to,
+        duration: const Duration(milliseconds: 420),
+        curve: Curves.easeOutCubic,
+      );
+    } else {
+      row.jumpTo(to);
+    }
+  }
+
   /// Whether Handy Bookmark is wholly inside the row's view.
   void _check() {
     widget.onScroll();
+    if (row.hasClients) {
+      final p = row.position;
+      final left = p.pixels < p.maxScrollExtent - 1;
+      if (left != more) setState(() => more = left);
+    }
     final tile = widget.oursKey.currentContext?.findRenderObject();
     final view = widget.rowKey.currentContext?.findRenderObject();
     if (tile is! RenderBox || view is! RenderBox) return;
@@ -707,19 +731,69 @@ class _ShareSheetState extends State<_ShareSheet> {
               _check();
               return false;
             },
-            child: SingleChildScrollView(
-              key: widget.rowKey,
-              controller: row,
-              scrollDirection: Axis.horizontal,
-              child: Row(
-                key: const Key('practice-apps'),
-                children: [
-                  for (final (i, a) in apps.indexed) ...[
-                    if (i > 0) const SizedBox(width: 18),
-                    a,
-                  ],
-                ],
-              ),
+            child: Stack(
+              children: [
+                SingleChildScrollView(
+                  key: widget.rowKey,
+                  controller: row,
+                  scrollDirection: Axis.horizontal,
+                  child: Row(
+                    key: const Key('practice-apps'),
+                    children: [
+                      for (final (i, a) in apps.indexed) ...[
+                        if (i > 0) const SizedBox(width: 18),
+                        a,
+                      ],
+                    ],
+                  ),
+                ),
+                // A finger sweeping right to left: "swipe this row".
+                if (widget.hint)
+                  const Positioned.fill(
+                    child: IgnorePointer(child: SwipeHint()),
+                  ),
+                // The row goes on past the edge: a fade and an arrow that
+                // also moves it (a mouse cannot swipe).
+                Positioned(
+                  top: 0,
+                  bottom: 0,
+                  right: 0,
+                  child: AnimatedOpacity(
+                    opacity: more ? 1 : 0,
+                    duration: const Duration(milliseconds: 200),
+                    child: IgnorePointer(
+                      ignoring: !more,
+                      child: Container(
+                        width: 64,
+                        alignment: Alignment.centerRight,
+                        decoration: const BoxDecoration(
+                          gradient: LinearGradient(
+                            colors: [Color(0x00FFFFFF), Colors.white],
+                            stops: [0, .55],
+                          ),
+                        ),
+                        child: Material(
+                          color: GuideColors.ink,
+                          shape: const CircleBorder(),
+                          child: IconButton(
+                            key: const Key('practice-apps-more'),
+                            tooltip: tr(context, 'More apps', 'Thêm app'),
+                            iconSize: 22,
+                            color: Colors.white,
+                            constraints: const BoxConstraints.tightFor(
+                              width: 40,
+                              height: 40,
+                            ),
+                            padding: EdgeInsets.zero,
+                            onPressed: _step,
+                            icon: const Icon(Icons.chevron_right),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
             ),
           ),
           const SizedBox(height: 8),
@@ -1175,4 +1249,116 @@ class _SavedState extends State<_Saved> with SingleTickerProviderStateMixin {
       ),
     ),
   );
+}
+
+/// A fingertip that sweeps right to left over a row, leaving a short
+/// trail and an arrow ahead of it: "swipe this way". It sweeps four times
+/// and rests; with reduced motion it stands still halfway, arrow and all.
+class SwipeHint extends StatefulWidget {
+  const SwipeHint({super.key});
+  @override
+  State<SwipeHint> createState() => _SwipeHintState();
+}
+
+class _SwipeHintState extends State<SwipeHint>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController sweep = AnimationController(
+    vsync: this,
+    duration: const Duration(milliseconds: 1700),
+  );
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (moves(context)) {
+      // A few sweeps, then it rests (the arrow at the row's end stays).
+      if (!sweep.isAnimating && sweep.value == 0) sweep.repeat(count: 4);
+    } else {
+      sweep
+        ..stop()
+        ..value = .5;
+    }
+  }
+
+  @override
+  void dispose() {
+    sweep.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) => AnimatedBuilder(
+    animation: sweep,
+    builder: (context, _) =>
+        CustomPaint(painter: _SwipePainter(sweep.value, moves(context))),
+  );
+}
+
+class _SwipePainter extends CustomPainter {
+  final double t;
+  final bool moving;
+  _SwipePainter(this.t, this.moving);
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    // Touch down, sweep, lift: 0-.15 appear, .15-.7 travel, .7-.85 fade.
+    double between(double a, double b) => ((t - a) / (b - a)).clamp(0.0, 1.0);
+    final travel = Curves.easeInOutCubic.transform(between(.15, .7));
+    final alpha = moving ? (between(0, .15) * (1 - between(.7, .85))) : 1.0;
+    if (alpha <= 0) return;
+    final y = size.height * .42;
+    final start = size.width - 70, end = size.width - 70 - 130;
+    final x = start + (end - start) * travel;
+    // The trail behind the finger.
+    final trail = Paint()
+      ..shader = LinearGradient(
+        colors: [
+          GuideColors.teal.withValues(alpha: .55 * alpha),
+          GuideColors.teal.withValues(alpha: 0),
+        ],
+      ).createShader(Rect.fromLTRB(x, y - 4, start + 1, y + 4))
+      ..strokeWidth = 8
+      ..strokeCap = StrokeCap.round;
+    if (start - x > 2) canvas.drawLine(Offset(x, y), Offset(start, y), trail);
+    // The arrow ahead of it.
+    final arrow = Paint()
+      ..color = GuideColors.teal.withValues(alpha: alpha)
+      ..strokeWidth = 3.5
+      ..style = PaintingStyle.stroke
+      ..strokeCap = StrokeCap.round
+      ..strokeJoin = StrokeJoin.round;
+    final tip = Offset(x - 30, y);
+    canvas.drawPath(
+      Path()
+        ..moveTo(tip.dx + 10, tip.dy - 10)
+        ..lineTo(tip.dx, tip.dy)
+        ..lineTo(tip.dx + 10, tip.dy + 10),
+      arrow,
+    );
+    // The fingertip: a white disc with a teal ring and a soft shadow.
+    final c = Offset(x, y);
+    canvas.drawCircle(
+      c.translate(0, 2),
+      17,
+      Paint()
+        ..color = Colors.black.withValues(alpha: .18 * alpha)
+        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 4),
+    );
+    canvas.drawCircle(
+      c,
+      16,
+      Paint()..color = Colors.white.withValues(alpha: .92 * alpha),
+    );
+    canvas.drawCircle(
+      c,
+      16,
+      Paint()
+        ..color = GuideColors.teal.withValues(alpha: alpha)
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 3,
+    );
+  }
+
+  @override
+  bool shouldRepaint(_SwipePainter old) => old.t != t || old.moving != moving;
 }

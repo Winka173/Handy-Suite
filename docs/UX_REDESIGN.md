@@ -3430,3 +3430,12 @@ Kit sửa chung (`HandyPalette`): ở bản sáng, màu nhận diện được l
   - ảnh xám, mờ 50% ở mọi nơi hiện ảnh (thẻ, hàng, bố cục Pro);
   - góc ảnh có nhãn chữ kèm biểu tượng: "Không còn" (biểu tượng màu cảnh báo), "Không mở được", "Đã chuyển" (trang chuyển chỗ vẫn mở được nên không bị xám);
   - dòng danh sách vẫn ghi trạng thái ở đầu dòng như trước.
+
+### Handy Boards và Handy Bookmark · onboarding (2026-11-10, chủ yêu cầu)
+
+- **Boards, trang đầu là câu chuyện** (khôi phục cảnh cũ đã bị bỏ khi làm hai nhánh Học tập/Công việc), không hỏi gì:
+  - nhịp 1 "Việc nằm khắp nơi. Rồi rơi mất.": ghi chú, tin nhắn nhóm lớp, giấy nhớ, lịch nằm lung tung; nút "Gom về một bảng";
+  - nhịp 2 "Một bảng cho tất cả.": các mẩu bay về một bảng thành thẻ có nhóm; nút "Chỉ tôi cách dùng". Nút Quay lại (và phím back/Esc) đưa về nhịp 1 trên cùng trang.
+- **Bỏ trang chọn Học tập/Công việc.** Bảng luyện tập luôn dùng ví dụ môn học; câu chữ nói nhóm là "thẻ thuộc về gì (một môn, một mảng việc)".
+- **Trang cuối** gợi ý 3 mẫu trộn (Kế hoạch học kỳ, Dự án Kanban, Kế hoạch tuần). Dòng chip tuỳ chọn "Chủ yếu cho: Học tập | Công việc" thu hẹp gợi ý và được nhớ làm mục đích (như trong Cài đặt). Không chọn thì mục đích để trống.
+- **Bookmark, bước tìm app trong bảng chia sẻ của máy:** trên hàng app có ngón tay vuốt từ phải sang trái kèm vệt và mũi tên ‹ (4 lần rồi nghỉ; giảm chuyển động thì đứng yên giữa đường). Cuối hàng có vùng mờ dần và nút › màu mực: bấm để dời hàng (chuột không vuốt được), tự ẩn khi đã tới cuối.
