@@ -400,6 +400,14 @@ class _ColumnViewState extends State<ColumnView> {
   final focus = FocusNode();
   int? hover;
 
+  /// A card from another column is held over this one: it lights up, so
+  /// the person sees where the card will land.
+  bool landing = false;
+
+  /// Whether [card] comes from another column.
+  bool _foreign(String card) =>
+      widget.state.maybe('tasks', card)?.str('status') != widget.column.id;
+
   @override
   void dispose() {
     text.dispose();
@@ -430,13 +438,22 @@ class _ColumnViewState extends State<ColumnView> {
     final a = widget.actions;
 
     Widget slot(int index) => DragTarget<String>(
-      onWillAcceptWithDetails: (_) {
-        setState(() => hover = index);
+      onWillAcceptWithDetails: (d) {
+        setState(() {
+          hover = index;
+          landing = _foreign(d.data);
+        });
         return true;
       },
-      onLeave: (_) => setState(() => hover = null),
+      onLeave: (_) => setState(() {
+        hover = null;
+        landing = false;
+      }),
       onAcceptWithDetails: (d) {
-        setState(() => hover = null);
+        setState(() {
+          hover = null;
+          landing = false;
+        });
         // Index among every card of the column, filtered or not.
         final target = index < cards.length
             ? all.indexWhere((c) => c.id == cards[index].id)
@@ -685,18 +702,35 @@ class _ColumnViewState extends State<ColumnView> {
 
     // Dropped on the empty part of a column: at its end.
     Widget target(List<Widget> children) => DragTarget<String>(
-      onAcceptWithDetails: (d) =>
-          a.move?.call(d.data, widget.column.id, all.length),
+      onWillAcceptWithDetails: (d) {
+        setState(() => landing = _foreign(d.data));
+        return true;
+      },
+      onLeave: (_) => setState(() => landing = false),
+      onAcceptWithDetails: (d) {
+        setState(() => landing = false);
+        a.move?.call(d.data, widget.column.id, all.length);
+      },
       builder: (context, candidates, _) => ListView(
         key: PageStorageKey('column-${widget.column.id}'),
         padding: EdgeInsets.zero,
         children: children,
       ),
     );
-    return Container(
+    final ground = widget.color ?? p.raised;
+    return AnimatedContainer(
+      duration: HandyMotion.of(context),
+      curve: Curves.easeOut,
       decoration: BoxDecoration(
-        color: widget.color ?? p.raised,
+        color: landing ? Color.lerp(ground, p.primary, .14) : ground,
         borderRadius: BorderRadius.circular(BoardsRadii.column),
+      ),
+      foregroundDecoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(BoardsRadii.column),
+        border: Border.all(
+          color: landing ? p.primary : Colors.transparent,
+          width: 2,
+        ),
       ),
       padding: const EdgeInsets.fromLTRB(6, 4, 6, 4),
       child: LayoutBuilder(
