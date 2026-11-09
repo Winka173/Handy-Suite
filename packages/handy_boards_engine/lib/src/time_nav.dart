@@ -612,6 +612,38 @@ bool timelineAllowed(BoardRecord b, String unit) {
 TimeWindow timelineWindow(String unit, DateTime day) =>
     currentWindow(TimeRange(unit), day);
 
+/// How many units one of the board's periods spans: 1, or a custom span
+/// such as 2 weeks or 10 days.
+int timelineCount(BoardRecord b) {
+  final v = b.data['timelineCount'];
+  return v is int && v > 1 ? v.clamp(2, 31) : 1;
+}
+
+/// The board's periods as a range (unit and count), for stepping.
+TimeRange boardRange(BoardRecord b) =>
+    TimeRange(boardTimeline(b) ?? 'week', timelineCount(b));
+
+/// The board's period that holds [day]. A span of more than one unit is
+/// counted from the day it was set (weeks from that Monday, months from
+/// that month), so the periods stay put as days go by.
+TimeWindow boardWindow(BoardRecord b, DateTime day) {
+  final unit = boardTimeline(b) ?? 'week', n = timelineCount(b);
+  if (n == 1) return timelineWindow(unit, day);
+  final start = DateTime.tryParse(b.str('timelineStart'));
+  final anchor = calendarDay(start ?? DateTime(2026, 1, 5));
+  final d = calendarDay(day);
+  if (unit == 'month') {
+    final base = DateTime(anchor.year, anchor.month);
+    final k = _floorDiv(monthsBetween(base, d), n);
+    final first = DateTime(base.year, base.month + k * n);
+    return TimeWindow(first, DateTime(first.year, first.month + n));
+  }
+  final base = unit == 'week' ? mondayOf(anchor) : anchor;
+  final len = (unit == 'week' ? 7 : 1) * n;
+  final first = addDays(base, _floorDiv(daysBetween(base, d), len) * len);
+  return TimeWindow(first, addDays(first, len));
+}
+
 /// The day that places [card] on a timeline: its plan, else the day it
 /// was made (local), else [fallback].
 DateTime cardDay(BoardRecord card, {DateTime? fallback}) {
@@ -661,8 +693,7 @@ List<BoardRecord> openIn(
   String board,
   DateTime today,
 ) {
-  final unit = boardTimeline(s.get('boards', board)) ?? 'week';
-  final w = timelineWindow(unit, today);
+  final w = boardWindow(s.get('boards', board), today);
   var done = 0, open = 0, later = 0;
   for (final t in topTasks(s, board: board)) {
     if (!activeTask(t)) continue;
@@ -692,13 +723,15 @@ BoardsState setTimeline(
   String? unit, {
   DateTime? now,
   bool archiveDone = false,
+  int count = 1,
 }) {
   final at = now ?? DateTime.now(), today = calendarDay(at);
   final b = s.get('boards', board);
+  if (count < 1 || count > 31) throw RangeError.range(count, 1, 31, 'count');
   if (unit == null) {
     final old = boardTimeline(b);
     if (old == null) return s;
-    final first = timelineWindow(old, today).first;
+    final first = boardWindow(b, today).first;
     final e = BoardsEdit(s);
     e.put('boards', b.copy({'timeline': null, 'updated': _now(now)}));
     if (archiveDone) {
@@ -718,14 +751,22 @@ BoardsState setTimeline(
           timelineUnits.indexOf(floor) > timelineUnits.indexOf(unit)
       ? floor
       : unit;
+  final sameSpan = boardTimeline(b) == unit && timelineCount(b) == count;
   var next = s.put(
     'boards',
-    b.copy({'timeline': unit, 'timelineFloor': longest, 'updated': _now(now)}),
+    b.copy({
+      'timeline': unit,
+      'timelineFloor': longest,
+      // A custom span counts its periods from the day it was set.
+      'timelineCount': count > 1 ? count : null,
+      'timelineStart': count > 1
+          ? (sameSpan ? b.data['timelineStart'] : isoDay(today))
+          : null,
+      'updated': _now(now),
+    }),
   );
-  final behind = [
-    for (final t in openBefore(next, board, timelineWindow(unit, today).first))
-      t.id,
-  ];
+  final window = boardWindow(next.get('boards', board), today);
+  final behind = [for (final t in openBefore(next, board, window.first)) t.id];
   if (behind.isNotEmpty)
     next = scheduleCards(next, behind, today, reason: 'move to now', now: at);
   return next;

@@ -140,9 +140,9 @@ class _BoardPageState extends State<BoardPage> {
       tr(
         context,
         ids.length == 1
-            ? 'Brought ${toThisPeriod(context, unit)}'
-            : '${ids.length} brought ${toThisPeriod(context, unit)}',
-        'Đã đem ${ids.length} việc ${toThisPeriod(context, unit)}',
+            ? 'Brought ${toThisPeriod(context, unit, timelineCount(scope.state.get('boards', widget.board)))}'
+            : '${ids.length} brought ${toThisPeriod(context, unit, timelineCount(scope.state.get('boards', widget.board)))}',
+        'Đã đem ${ids.length} việc ${toThisPeriod(context, unit, timelineCount(scope.state.get('boards', widget.board)))}',
       ),
     );
   }
@@ -199,8 +199,8 @@ class _BoardPageState extends State<BoardPage> {
                     child: Text(
                       tr(
                         sheet,
-                        'Bring ${toThisPeriod(sheet, unit)}',
-                        'Đem ${toThisPeriod(sheet, unit)}',
+                        'Bring ${toThisPeriod(sheet, unit, timelineCount(scope.state.get('boards', widget.board)))}',
+                        'Đem ${toThisPeriod(sheet, unit, timelineCount(scope.state.get('boards', widget.board)))}',
                       ),
                     ),
                   ),
@@ -449,13 +449,18 @@ class _BoardPageState extends State<BoardPage> {
         ? boardGround(context, b, look: previewLook)
         : BoardGround(p.canvas, p.raised, p.raised);
     final unit = boardTimeline(b);
-    if (unit != windowUnit) {
-      windowUnit = unit;
-      window = unit == null ? null : timelineWindow(unit, now);
+    final span = timelineCount(b);
+    // The window follows the board's span (a custom one counts from the
+    // day it was set).
+    final spanKey = '$unit/$span/${b.str('timelineStart')}';
+    final thisSpan = unit == null ? null : boardWindow(b, now);
+    if (spanKey != windowUnit) {
+      windowUnit = spanKey;
+      window = thisSpan;
     }
     final kind = unit == null || window == null
         ? null
-        : periodKind(unit, window!, now);
+        : periodKind(unit, window!, now, current: thisSpan);
     final past = kind == PeriodKind.past;
     final milestones = milestonesOf(b);
     // A narrow phone or very large text keeps the board's height: the
@@ -793,6 +798,9 @@ class _BoardPageState extends State<BoardPage> {
       if (unit != null && window != null) ...[
         TimelineBar(
           unit: unit,
+          count: span,
+          current: thisSpan,
+          onSetup: () => pickTimeline(context, scope, widget.board),
           window: window!,
           now: now,
           onWindow: (w) => setState(() {
@@ -880,8 +888,8 @@ class _BoardPageState extends State<BoardPage> {
                   carry: (card) => _carry([card.id], unit),
                   carryLabel: tr(
                     context,
-                    'Bring ${toThisPeriod(context, unit!)}',
-                    'Đem ${toThisPeriod(context, unit)}',
+                    'Bring ${toThisPeriod(context, unit!, timelineCount(scope.state.get('boards', widget.board)))}',
+                    'Đem ${toThisPeriod(context, unit, timelineCount(scope.state.get('boards', widget.board)))}',
                   ),
                 )
               : KanbanActions(

@@ -5,12 +5,19 @@ import '../scope.dart';
 import 'board_page.dart' show showUndo;
 import 'week_bar.dart';
 
-String timelineName(BuildContext context, String? unit) => switch (unit) {
-  'day' => tr(context, 'By day', 'Theo ngày'),
-  'week' => tr(context, 'By week', 'Theo tuần'),
-  'month' => tr(context, 'By month', 'Theo tháng'),
-  _ => tr(context, 'Off', 'Tắt'),
-};
+String timelineName(BuildContext context, String? unit, [int count = 1]) =>
+    count > 1 && unit != null
+    ? switch (unit) {
+        'day' => tr(context, 'Every $count days', 'Mỗi $count ngày'),
+        'month' => tr(context, 'Every $count months', 'Mỗi $count tháng'),
+        _ => tr(context, 'Every $count weeks', 'Mỗi $count tuần'),
+      }
+    : switch (unit) {
+        'day' => tr(context, 'By day', 'Theo ngày'),
+        'week' => tr(context, 'By week', 'Theo tuần'),
+        'month' => tr(context, 'By month', 'Theo tháng'),
+        _ => tr(context, 'Off', 'Tắt'),
+      };
 
 /// The one place a board's timeline is set: a chip beside the board's
 /// filters. It names the current choice ("By week") or, while off, offers
@@ -31,7 +38,11 @@ class TimelineChip extends StatelessWidget {
       label: Text(
         unit == null
             ? tr(context, 'Time', 'Thời gian')
-            : timelineName(context, unit),
+            : timelineName(
+                context,
+                unit,
+                timelineCount(scope.state.get('boards', board)),
+              ),
       ),
       tooltip: tr(
         context,
@@ -55,6 +66,7 @@ Future<void> pickTimeline(
 ) async {
   final b = scope.state.get('boards', board);
   final current = boardTimeline(b);
+  final count = timelineCount(b);
   final floor = timelineFloor(b);
   final picked = await showModalBottomSheet<String>(
     context: context,
@@ -65,7 +77,7 @@ Future<void> pickTimeline(
       final p = BoardsPalette.of(sheet);
       Widget option(String? unit, String help) {
         final allowed = unit == null || timelineAllowed(b, unit);
-        final selected = unit == current;
+        final selected = unit == current && (unit == null || count == 1);
         return ListTile(
           key: Key('timeline-${unit ?? 'off'}'),
           enabled: allowed,
@@ -143,6 +155,29 @@ Future<void> pickTimeline(
                   'Kế hoạch dài, lịch nội dung',
                 ),
               ),
+              ListTile(
+                key: const Key('timeline-custom'),
+                selected: current != null && count > 1,
+                leading: Icon(
+                  current != null && count > 1
+                      ? Icons.radio_button_checked
+                      : Icons.radio_button_off,
+                  color: current != null && count > 1 ? p.primary : null,
+                ),
+                title: Text(
+                  current != null && count > 1
+                      ? '${tr(sheet, 'Custom', 'Tuỳ chỉnh')}: ${timelineName(sheet, current, count)}'
+                      : tr(sheet, 'Custom…', 'Tuỳ chỉnh…'),
+                ),
+                subtitle: Text(
+                  tr(
+                    sheet,
+                    'A span of your own: 10 days, 2-week sprints, 3 months…',
+                    'Khoảng của riêng bạn: 10 ngày, sprint 2 tuần, 3 tháng…',
+                  ),
+                ),
+                onTap: () => Navigator.pop(sheet, 'custom'),
+              ),
               option(
                 null,
                 tr(
@@ -158,8 +193,17 @@ Future<void> pickTimeline(
     },
   );
   if (picked == null || !context.mounted) return;
-  final unit = picked == 'off' ? null : picked;
-  if (unit == current) return;
+  var span = 1;
+  String? unit;
+  if (picked == 'custom') {
+    final chosen = await _customSpan(context, b, current ?? 'week', count);
+    if (chosen == null || !context.mounted) return;
+    unit = chosen.$1;
+    span = chosen.$2;
+  } else {
+    unit = picked == 'off' ? null : picked;
+  }
+  if (unit == current && span == count) return;
   final now = scope.clock();
   if (unit == null) {
     final sum = timelineOffSummary(scope.state, board, now);
@@ -179,14 +223,16 @@ Future<void> pickTimeline(
       );
     return;
   }
-  final first = timelineWindow(unit, now).first;
+  final first = span > 1 ? now : timelineWindow(unit, now).first;
   final moving = openBefore(scope.state, board, first).length;
   await scope.run(
     context,
-    () => scope.controller.change((s) => setTimeline(s, board, unit, now: now)),
+    () => scope.controller.change(
+      (s) => setTimeline(s, board, unit, now: now, count: span),
+    ),
   );
   if (!context.mounted) return;
-  final name = timelineName(context, unit);
+  final name = timelineName(context, unit, span);
   showUndo(
     context,
     scope,
@@ -194,8 +240,8 @@ Future<void> pickTimeline(
         ? name
         : tr(
             context,
-            '$name · $moving brought ${toThisPeriod(context, unit)}',
-            '$name · đã đem $moving việc ${toThisPeriod(context, unit)}',
+            '$name · $moving brought ${toThisPeriod(context, unit, span)}',
+            '$name · đã đem $moving việc ${toThisPeriod(context, unit, span)}',
           ),
   );
 }
@@ -260,6 +306,105 @@ Future<bool?> _confirmOff(
           ),
         ],
       ),
+    ),
+  );
+}
+
+/// A span of one's own: how many days, weeks or months one period holds.
+/// Units shorter than the board has used are not offered.
+Future<(String, int)?> _customSpan(
+  BuildContext context,
+  BoardRecord b,
+  String unit,
+  int count,
+) {
+  const limits = {'day': (2, 31), 'week': (2, 12), 'month': (2, 12)};
+  var u = timelineAllowed(b, unit) ? unit : 'week';
+  var n = count > 1 ? count : 2;
+  return showDialog<(String, int)>(
+    context: context,
+    builder: (dialog) => StatefulBuilder(
+      builder: (dialog, set) {
+        final (low, high) = limits[u]!;
+        n = n.clamp(low, high);
+        String unitName(String x) => switch (x) {
+          'day' => tr(dialog, 'days', 'ngày'),
+          'month' => tr(dialog, 'months', 'tháng'),
+          _ => tr(dialog, 'weeks', 'tuần'),
+        };
+        return AlertDialog(
+          title: Text(tr(dialog, 'A span of your own', 'Khoảng tuỳ chỉnh')),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Wrap(
+                spacing: 8,
+                children: [
+                  for (final x in const ['day', 'week', 'month'])
+                    ChoiceChip(
+                      key: Key('span-unit-$x'),
+                      label: Text(unitName(x)),
+                      selected: u == x,
+                      onSelected: timelineAllowed(b, x)
+                          ? (_) => set(() => u = x)
+                          : null,
+                    ),
+                ],
+              ),
+              const SizedBox(height: 16),
+              Row(
+                children: [
+                  IconButton.outlined(
+                    key: const Key('span-less'),
+                    tooltip: tr(dialog, 'Fewer', 'Bớt'),
+                    onPressed: n > low ? () => set(() => n--) : null,
+                    icon: const Icon(Icons.remove),
+                  ),
+                  Expanded(
+                    child: Text(
+                      tr(
+                        dialog,
+                        'Every $n ${unitName(u)}',
+                        'Mỗi $n ${unitName(u)}',
+                      ),
+                      key: const Key('span-value'),
+                      textAlign: TextAlign.center,
+                      style: Theme.of(dialog).textTheme.titleMedium,
+                    ),
+                  ),
+                  IconButton.outlined(
+                    key: const Key('span-more'),
+                    tooltip: tr(dialog, 'More', 'Thêm'),
+                    onPressed: n < high ? () => set(() => n++) : null,
+                    icon: const Icon(Icons.add),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 8),
+              Text(
+                tr(
+                  dialog,
+                  'Periods count from today, so the first one starts now.',
+                  'Các kỳ tính từ hôm nay, nên kỳ đầu bắt đầu ngay.',
+                ),
+                style: Theme.of(dialog).textTheme.bodySmall,
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(dialog),
+              child: Text(tr(dialog, 'Cancel', 'Huỷ')),
+            ),
+            FilledButton(
+              key: const Key('span-apply'),
+              onPressed: () => Navigator.pop(dialog, (u, n)),
+              child: Text(tr(dialog, 'Use it', 'Dùng')),
+            ),
+          ],
+        );
+      },
     ),
   );
 }

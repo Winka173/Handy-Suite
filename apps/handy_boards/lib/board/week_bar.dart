@@ -33,24 +33,35 @@ String windowLabel(BuildContext context, TimeWindow w, DateTime now) {
 }
 
 /// "This week", "Today" or "This month" for a timeline unit.
-String thisPeriod(BuildContext context, String unit) => switch (unit) {
-  'day' => tr(context, 'Today', 'Hôm nay'),
-  'month' => tr(context, 'This month', 'Tháng này'),
-  _ => tr(context, 'This week', 'Tuần này'),
-};
+String thisPeriod(BuildContext context, String unit, [int count = 1]) =>
+    count > 1
+    ? tr(context, 'This span', 'Kỳ này')
+    : switch (unit) {
+        'day' => tr(context, 'Today', 'Hôm nay'),
+        'month' => tr(context, 'This month', 'Tháng này'),
+        _ => tr(context, 'This week', 'Tuần này'),
+      };
 
 /// "to this week", "to today", "to this month".
-String toThisPeriod(BuildContext context, String unit) => switch (unit) {
-  'day' => tr(context, 'to today', 'về hôm nay'),
-  'month' => tr(context, 'to this month', 'qua tháng này'),
-  _ => tr(context, 'to this week', 'qua tuần này'),
-};
+String toThisPeriod(BuildContext context, String unit, [int count = 1]) =>
+    count > 1
+    ? tr(context, 'to this span', 'qua kỳ này')
+    : switch (unit) {
+        'day' => tr(context, 'to today', 'về hôm nay'),
+        'month' => tr(context, 'to this month', 'qua tháng này'),
+        _ => tr(context, 'to this week', 'qua tuần này'),
+      };
 
 /// Where a period stands against today.
 enum PeriodKind { past, current, future }
 
-PeriodKind periodKind(String unit, TimeWindow w, DateTime now) {
-  final current = timelineWindow(unit, now);
+PeriodKind periodKind(
+  String unit,
+  TimeWindow w,
+  DateTime now, {
+  TimeWindow? current,
+}) {
+  current ??= timelineWindow(unit, now);
   if (!w.end.isAfter(current.first)) return PeriodKind.past;
   if (!w.first.isBefore(current.end)) return PeriodKind.future;
   return PeriodKind.current;
@@ -64,22 +75,33 @@ class TimelineBar extends StatelessWidget {
   final TimeWindow window;
   final DateTime now;
   final ValueChanged<TimeWindow> onWindow;
+
+  /// Units per period (a custom span), and the period holding today.
+  final int count;
+  final TimeWindow? current;
+
+  /// Tapping the dates opens the board's time settings.
+  final VoidCallback? onSetup;
   const TimelineBar({
     super.key,
     required this.unit,
     required this.window,
     required this.now,
     required this.onWindow,
+    this.count = 1,
+    this.current,
+    this.onSetup,
   });
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final p = BoardsPalette.of(context);
-    final range = TimeRange(unit);
-    final kind = periodKind(unit, window, now);
+    final range = TimeRange(unit, count);
+    final today = current ?? timelineWindow(unit, now);
+    final kind = periodKind(unit, window, now, current: today);
     final note = switch (kind) {
-      PeriodKind.current => thisPeriod(context, unit),
+      PeriodKind.current => thisPeriod(context, unit, count),
       PeriodKind.past => tr(context, 'Gone by · read only', 'Đã qua · chỉ xem'),
       PeriodKind.future => tr(context, 'Ahead', 'Sắp tới'),
     };
@@ -97,38 +119,50 @@ class TimelineBar extends StatelessWidget {
           ),
           // One line: the dates in ink, then where they stand.
           Flexible(
-            child: Semantics(
-              liveRegion: true,
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.baseline,
-                textBaseline: TextBaseline.alphabetic,
-                children: [
-                  Flexible(
-                    flex: 3,
-                    child: Text(
-                      windowLabel(context, window, now),
-                      key: const Key('week-label'),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: theme.textTheme.titleSmall?.copyWith(
-                        fontWeight: FontWeight.w600,
+            child: InkWell(
+              key: const Key('week-setup'),
+              borderRadius: BorderRadius.circular(8),
+              onTap: onSetup,
+              child: Semantics(
+                liveRegion: true,
+                hint: onSetup == null
+                    ? null
+                    : tr(
+                        context,
+                        'Change the time span',
+                        'Đổi khoảng thời gian',
+                      ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.baseline,
+                  textBaseline: TextBaseline.alphabetic,
+                  children: [
+                    Flexible(
+                      flex: 3,
+                      child: Text(
+                        windowLabel(context, window, now),
+                        key: const Key('week-label'),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: theme.textTheme.titleSmall?.copyWith(
+                          fontWeight: FontWeight.w600,
+                        ),
                       ),
                     ),
-                  ),
-                  const SizedBox(width: 8),
-                  Flexible(
-                    child: Text(
-                      note,
-                      key: const Key('week-kind'),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: theme.textTheme.bodyMedium?.copyWith(
-                        color: kind == PeriodKind.current ? p.ink : p.muted,
+                    const SizedBox(width: 8),
+                    Flexible(
+                      child: Text(
+                        note,
+                        key: const Key('week-kind'),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: theme.textTheme.bodyMedium?.copyWith(
+                          color: kind == PeriodKind.current ? p.ink : p.muted,
+                        ),
                       ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ),
           ),
@@ -147,14 +181,14 @@ class TimelineBar extends StatelessWidget {
                     MediaQuery.textScalerOf(context).scale(1) > 1.3
                 ? IconButton(
                     key: const Key('week-current'),
-                    tooltip: thisPeriod(context, unit),
-                    onPressed: () => onWindow(timelineWindow(unit, now)),
+                    tooltip: thisPeriod(context, unit, count),
+                    onPressed: () => onWindow(today),
                     icon: const Icon(Icons.today_outlined),
                   )
                 : TextButton(
                     key: const Key('week-current'),
-                    onPressed: () => onWindow(timelineWindow(unit, now)),
-                    child: Text(thisPeriod(context, unit)),
+                    onPressed: () => onWindow(today),
+                    child: Text(thisPeriod(context, unit, count)),
                   ),
         ],
       ),
