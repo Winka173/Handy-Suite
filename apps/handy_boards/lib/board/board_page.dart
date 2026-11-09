@@ -14,6 +14,7 @@ import 'board_menus.dart';
 import 'categories_sheet.dart';
 import 'category_strip.dart';
 import 'kanban_view.dart';
+import 'period_slide.dart';
 import 'key_dates.dart';
 import 'look_picker.dart';
 import 'timeline_sheet.dart';
@@ -54,6 +55,9 @@ class _BoardPageState extends State<BoardPage> {
   /// On a timeline, the period shown; it opens on the current one, and
   /// again whenever the board's unit changes.
   TimeWindow? window;
+
+  /// Which way the last change of period went: 1 later, -1 earlier.
+  int _slide = 0;
   String? windowUnit;
 
   /// While choosing a look: the one being tried (shown, not saved).
@@ -290,6 +294,118 @@ class _BoardPageState extends State<BoardPage> {
     },
   );
 
+  /// Filter and view: the time mode, saved filters, due soon, and whether
+  /// the categories show (with their editor). The board's bar opens it.
+  Future<void> _viewSheet(bool hasCategories) => showModalBottomSheet<void>(
+    context: context,
+    showDragHandle: true,
+    builder: (sheet) => StatefulBuilder(
+      builder: (sheet, setSheet) {
+        void change(VoidCallback f) {
+          setState(f);
+          setSheet(() {});
+        }
+
+        final saved = savedFilter == null
+            ? null
+            : scope.state.maybe('views', savedFilter!);
+        return SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Text(
+                  tr(context, 'Filter and view', 'Lọc và hiển thị'),
+                  style: Theme.of(sheet).textTheme.titleLarge,
+                ),
+                const SizedBox(height: 12),
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
+                  children: [
+                    // The time choice opens over the board, this sheet
+                    // closed, so nothing is left behind it.
+                    Builder(
+                      builder: (_) {
+                        final unit = boardTimeline(
+                          scope.state.get('boards', widget.board),
+                        );
+                        return ActionChip(
+                          key: const Key('board-timeline'),
+                          avatar: Icon(
+                            unit == null
+                                ? Icons.schedule_outlined
+                                : Icons.schedule,
+                            size: 18,
+                          ),
+                          label: Text(
+                            unit == null
+                                ? tr(context, 'Time', 'Thời gian')
+                                : timelineName(context, unit),
+                          ),
+                          onPressed: () {
+                            Navigator.of(sheet).pop();
+                            pickTimeline(context, scope, widget.board);
+                          },
+                        );
+                      },
+                    ),
+                    ActionChip(
+                      key: const Key('board-filters'),
+                      avatar: Icon(
+                        saved == null
+                            ? Icons.filter_alt_outlined
+                            : Icons.filter_alt,
+                        size: 18,
+                      ),
+                      label: Text(
+                        saved?.str('title') ?? tr(context, 'Filters', 'Bộ lọc'),
+                      ),
+                      onPressed: () {
+                        Navigator.of(sheet).pop();
+                        _filters();
+                      },
+                    ),
+                    FilterChip(
+                      key: const Key('filter-due-soon'),
+                      selected: dueSoon,
+                      label: Text(
+                        tr(context, 'Due in 3 days', 'Hạn trong 3 ngày'),
+                      ),
+                      onSelected: (v) => change(() => dueSoon = v),
+                    ),
+                  ],
+                ),
+                if (hasCategories) ...[
+                  const SizedBox(height: 8),
+                  SwitchListTile(
+                    key: const Key('board-categories'),
+                    contentPadding: EdgeInsets.zero,
+                    title: Text(tr(context, 'Show categories', 'Hiện nhóm')),
+                    value: showStrip,
+                    onChanged: (v) => change(() => showStrip = v),
+                  ),
+                ],
+                ListTile(
+                  key: const Key('strip-edit'),
+                  contentPadding: EdgeInsets.zero,
+                  leading: const Icon(Icons.edit_outlined),
+                  title: Text(tr(context, 'Edit categories', 'Sửa nhóm')),
+                  onTap: () {
+                    Navigator.of(sheet).pop();
+                    editCategories(context, scope, widget.board);
+                  },
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    ),
+  );
+
   Widget _page(BuildContext context, BoardsState s, BoardRecord b) {
     final theme = Theme.of(context);
     final now = scope.clock();
@@ -297,7 +413,12 @@ class _BoardPageState extends State<BoardPage> {
     final detailed = b.str('presentation') == 'detailed';
     final hasCategories = categoryProgress(s, widget.board).isNotEmpty;
     final p = BoardsPalette.of(context);
-    final ground = boardGround(context, b, look: previewLook);
+    final looked =
+        lookById(previewLook ?? b.data['appearance'] as String?).id !=
+        'default';
+    final ground = looked
+        ? boardGround(context, b, look: previewLook)
+        : BoardGround(p.canvas, p.raised, p.raised);
     final unit = boardTimeline(b);
     if (unit != windowUnit) {
       windowUnit = unit;
@@ -314,8 +435,18 @@ class _BoardPageState extends State<BoardPage> {
         MediaQuery.sizeOf(context).width >= 360 &&
         MediaQuery.textScalerOf(context).scale(1) <= 1.3;
     final wide = MediaQuery.sizeOf(context).width >= 600;
+    final today = DateTime(now.year, now.month, now.day);
+    final next = [
+      for (final m in milestones)
+        if (!m.day.isBefore(today)) m,
+    ]..sort((a, b) => a.day.compareTo(b.day));
+    final open = sum.cards - sum.done;
+    InlineSpan figure(int v) => TextSpan(
+      text: '$v',
+      style: TextStyle(color: p.ink, fontWeight: FontWeight.w700),
+    );
     final title = Padding(
-      padding: EdgeInsets.fromLTRB(wide ? 24 : 16, 12, 16, 8),
+      padding: EdgeInsets.fromLTRB(wide ? 24 : 16, 4, 16, 12),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -325,36 +456,45 @@ class _BoardPageState extends State<BoardPage> {
               b.str('title'),
               maxLines: 2,
               overflow: TextOverflow.ellipsis,
-              style: theme.textTheme.headlineMedium,
+              style: theme.textTheme.headlineSmall?.copyWith(
+                fontSize: wide ? 28 : 24,
+                fontWeight: FontWeight.w600,
+              ),
             ),
           ),
-          const SizedBox(height: 2),
-          Text(
-            tr(
-              context,
-              '${sum.cards} ${sum.cards == 1 ? 'card' : 'cards'} · ${sum.done} done',
-              '${sum.cards} thẻ · ${sum.done} xong',
-            ),
-            style: theme.textTheme.bodyMedium?.copyWith(color: p.muted),
-          ),
-          // Key dates need room; a narrow phone with large text keeps the
-          // board's height and finds them in the board menu.
-          if (milestones.isNotEmpty && roomy) ...[
-            const SizedBox(height: 8),
-            Wrap(
-              spacing: 6,
-              runSpacing: 6,
-              children: [
-                for (final m in milestones)
-                  KeyDateChip(
-                    label: m.label,
-                    day: m.day,
-                    now: now,
-                    onTap: () => editMilestones(context, scope, widget.board),
+          const SizedBox(height: 4),
+          // "7 open · 1 late · semester ends 15/1, in 67 days": the counts
+          // in ink; the next key date opens its editor.
+          Wrap(
+            crossAxisAlignment: WrapCrossAlignment.center,
+            children: [
+              Text.rich(
+                TextSpan(
+                  children: [
+                    figure(open),
+                    TextSpan(text: tr(context, ' open', ' việc đang mở')),
+                    if (sum.overdue > 0) ...[
+                      const TextSpan(text: ' · '),
+                      figure(sum.overdue),
+                      TextSpan(text: tr(context, ' late', ' trễ')),
+                    ],
+                    if (next.isNotEmpty && roomy) const TextSpan(text: ' · '),
+                  ],
+                ),
+                style: theme.textTheme.bodyMedium?.copyWith(color: p.muted),
+              ),
+              if (next.isNotEmpty && roomy)
+                InkWell(
+                  key: Key('key-date-${next.first.label}'),
+                  borderRadius: BorderRadius.circular(6),
+                  onTap: () => editMilestones(context, scope, widget.board),
+                  child: Text(
+                    keyDateLine(context, next.first.label, next.first.day, now),
+                    style: theme.textTheme.bodyMedium?.copyWith(color: p.muted),
                   ),
-              ],
-            ),
-          ],
+                ),
+            ],
+          ),
         ],
       ),
     );
@@ -368,18 +508,18 @@ class _BoardPageState extends State<BoardPage> {
         }),
         icon: Icon(searching ? Icons.search_off : Icons.search),
       ),
-      // A narrow phone keeps the title room; the strip stays on.
-      if (hasCategories && MediaQuery.sizeOf(context).width >= 360)
-        IconButton(
-          key: const Key('board-categories'),
-          tooltip: showStrip
-              ? tr(context, 'Hide categories', 'Ẩn nhóm')
-              : tr(context, 'Show categories', 'Hiện nhóm'),
-          isSelected: showStrip,
-          onPressed: () => setState(() => showStrip = !showStrip),
-          icon: const Icon(Icons.space_dashboard_outlined),
-          selectedIcon: const Icon(Icons.space_dashboard),
+      IconButton(
+        key: const Key('board-filter-sheet'),
+        tooltip: tr(context, 'Filter and view', 'Lọc và hiển thị'),
+        isSelected: dueSoon || savedFilter != null || !showStrip,
+        onPressed: () => _viewSheet(hasCategories),
+        icon: const Icon(Icons.filter_list),
+        selectedIcon: Badge(
+          smallSize: 8,
+          backgroundColor: p.primary,
+          child: const Icon(Icons.filter_list),
         ),
+      ),
       IconButton(
         key: const Key('board-more'),
         tooltip: tr(context, 'Board options', 'Tuỳ chọn bảng'),
@@ -434,22 +574,14 @@ class _BoardPageState extends State<BoardPage> {
     ];
     final focusName = focus.isEmpty ? null : focus.map(nameOf).join(', ');
     final time = TimelineChip(scope: scope, board: widget.board);
-    // The board's cover across the top, its buttons on round white
-    // backs so they read on any picture.
-    Widget round(Widget button) => Padding(
-      padding: const EdgeInsets.all(4),
-      child: Material(
-        color: p.surface.withValues(alpha: .92),
-        shape: const CircleBorder(),
-        child: button,
-      ),
-    );
+    // The bar on the board's ground: back, then the board's buttons. (The
+    // cover is the board's face on Home, not a band here.)
+    Widget round(Widget button) => button;
     final band = SizedBox(
-      height: (wide ? 140 : 96) + MediaQuery.paddingOf(context).top,
+      height: 56 + MediaQuery.paddingOf(context).top,
       child: Stack(
         fit: StackFit.expand,
         children: [
-          boardCover(b),
           SafeArea(
             bottom: false,
             child: Padding(
@@ -487,6 +619,31 @@ class _BoardPageState extends State<BoardPage> {
     // What sits above the board: its name, search, categories, focus.
     final top = <Widget>[
       title,
+      // What narrows the board right now, each with a way out.
+      if (saved != null || dueSoon)
+        Padding(
+          padding: EdgeInsets.fromLTRB(wide ? 24 : 16, 0, 16, 8),
+          child: Wrap(
+            spacing: 6,
+            runSpacing: 6,
+            children: [
+              if (saved != null)
+                InputChip(
+                  key: const Key('active-saved-filter'),
+                  avatar: const Icon(Icons.filter_alt, size: 18),
+                  label: Text(saved.str('title')),
+                  onPressed: _filters,
+                  onDeleted: () => setState(() => savedFilter = null),
+                ),
+              if (dueSoon)
+                InputChip(
+                  key: const Key('active-due-soon'),
+                  label: Text(tr(context, 'Due in 3 days', 'Hạn trong 3 ngày')),
+                  onDeleted: () => setState(() => dueSoon = false),
+                ),
+            ],
+          ),
+        ),
       if (searching)
         Padding(
           padding: const EdgeInsets.fromLTRB(16, 4, 16, 8),
@@ -507,19 +664,21 @@ class _BoardPageState extends State<BoardPage> {
           board: widget.board,
           selected: focus,
           onSelect: _toggle,
-          onEdit: () => editCategories(context, scope, widget.board),
-          trailing: [time, filters, due],
+          showHeader: false,
         ),
         const SizedBox(height: 8),
       ],
-      if (focusName != null)
+      if (focusName != null && !stripShown)
         FocusBar(name: focusName, onClear: () => setState(() => focus = {})),
       if (unit != null && window != null) ...[
         TimelineBar(
           unit: unit,
           window: window!,
           now: now,
-          onWindow: (w) => setState(() => window = w),
+          onWindow: (w) => setState(() {
+            _slide = w.first.isAfter(window!.first) ? 1 : -1;
+            window = w;
+          }),
         ),
         if (past)
           Builder(
@@ -581,39 +740,44 @@ class _BoardPageState extends State<BoardPage> {
     ];
     final board = Padding(
       padding: const EdgeInsets.only(bottom: 8),
-      child: KanbanView(
-        key: short ? kanbanShort : kanban,
-        state: s,
-        board: widget.board,
-        now: now,
-        detailed: detailed,
-        columnColor: ground.column,
-        filter: filter,
-        // A period gone by is read-only: cards open to read, subtasks may
-        // still be ticked, and unfinished ones can be brought forward.
-        actions: past
-            ? KanbanActions(
-                open: (card) => _openPast(card, unit),
-                tick: _tick,
-                carry: (card) => _carry([card.id], unit),
-                carryLabel: tr(
-                  context,
-                  'Bring ${toThisPeriod(context, unit!)}',
-                  'Đem ${toThisPeriod(context, unit)}',
+      child: PeriodSlide(
+        period: window?.first,
+        direction: _slide,
+        child: KanbanView(
+          key: short ? kanbanShort : kanban,
+          state: s,
+          board: widget.board,
+          now: now,
+          detailed: detailed,
+          columnColor: ground.column,
+          filter: filter,
+          // A period gone by is read-only: cards open to read, subtasks may
+          // still be ticked, and unfinished ones can be brought forward.
+          actions: past
+              ? KanbanActions(
+                  open: (card) => _openPast(card, unit),
+                  tick: _tick,
+                  carry: (card) => _carry([card.id], unit),
+                  carryLabel: tr(
+                    context,
+                    'Bring ${toThisPeriod(context, unit!)}',
+                    'Đem ${toThisPeriod(context, unit)}',
+                  ),
+                )
+              : KanbanActions(
+                  open: (card) => openCard(context, scope, card.id),
+                  move: _move,
+                  add: _add,
+                  tick: _tick,
+                  cardMenu: (card) =>
+                      cardMenu(context, scope, card.id, onMoved: _move),
+                  columnMenu: (column) => columnMenu(context, scope, column.id),
+                  addColumn: () =>
+                      addColumnDialog(context, scope, widget.board),
+                  fromTemplate: (column) =>
+                      addFromCardTemplate(context, scope, column),
                 ),
-              )
-            : KanbanActions(
-                open: (card) => openCard(context, scope, card.id),
-                move: _move,
-                add: _add,
-                tick: _tick,
-                cardMenu: (card) =>
-                    cardMenu(context, scope, card.id, onMoved: _move),
-                columnMenu: (column) => columnMenu(context, scope, column.id),
-                addColumn: () => addColumnDialog(context, scope, widget.board),
-                fromTemplate: (column) =>
-                    addFromCardTemplate(context, scope, column),
-              ),
+        ),
       ),
     );
     final body = LayoutBuilder(
@@ -669,12 +833,10 @@ class _BoardPageState extends State<BoardPage> {
                 pinned: true,
                 automaticallyImplyLeading: false,
                 toolbarHeight: kToolbarHeight,
-                expandedHeight: wide ? 140 : 96,
                 backgroundColor: ground.page,
                 surfaceTintColor: Colors.transparent,
                 scrolledUnderElevation: 0,
                 elevation: 0,
-                flexibleSpace: FlexibleSpaceBar(background: boardCover(b)),
                 leadingWidth: 64,
                 leading: Padding(
                   padding: const EdgeInsets.only(left: 8),

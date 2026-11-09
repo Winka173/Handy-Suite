@@ -91,8 +91,8 @@ class KanbanFilter {
 }
 
 /// The board's columns side by side. Phones see one column at a time,
-/// on the page's margins, with both neighbours showing their edge at the
-/// sides (a drag near a side turns to them) and a row of column chips above to jump between them;
+/// centred, with both neighbours showing a 22 pt strip at the sides
+/// (places to drop a dragged card; a drag near a side turns to them) and a row of column chips above to jump between them;
 /// wider screens show 300 px columns that scroll sideways
 /// inside their own area, never the page.
 class KanbanView extends StatefulWidget {
@@ -165,7 +165,7 @@ class KanbanViewState extends State<KanbanView> {
     final box = context.findRenderObject() as RenderBox?;
     if (box == null) return;
     final x = box.globalToLocal(global).dx;
-    // The neighbour edges and the margin: a thumb near the side turns.
+    // The neighbours' strips and a little more: a thumb near a side turns.
     final dir = x < 44 ? -1 : (x > width - 44 ? 1 : 0);
     if (dir == 0) {
       _edge?.cancel();
@@ -221,9 +221,9 @@ class KanbanViewState extends State<KanbanView> {
         );
         final addColumn = widget.actions.addColumn;
         if (phone) {
-          // The column on the page's 16 pt margins; each neighbour shows
-          // its edge in the 11 pt beyond them.
-          final fraction = ((box.maxWidth - 22) / box.maxWidth).clamp(.7, 1.0);
+          // Each neighbour shows a 22 pt strip at its side: a place to drop
+          // a dragged card, and a sign there is more.
+          final fraction = ((box.maxWidth - 56) / box.maxWidth).clamp(.7, 1.0);
           if (_pages == null || _fraction != fraction) {
             final page = _pages?.hasClients == true
                 ? (_pages!.page ?? 0).round()
@@ -241,7 +241,7 @@ class KanbanViewState extends State<KanbanView> {
             onPageChanged: (i) => _page.value = i,
             itemCount: columns.length + (addColumn == null ? 0 : 1),
             itemBuilder: (context, i) => Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 5),
+              padding: const EdgeInsets.symmetric(horizontal: 6),
               child: i == columns.length ? _AddColumn(addColumn!) : column(i),
             ),
           );
@@ -270,6 +270,8 @@ class KanbanViewState extends State<KanbanView> {
                   onTap: reveal,
                 ),
               ),
+              // Air between the chips and the column.
+              const SizedBox(height: 12),
               Expanded(child: pages),
             ],
           );
@@ -486,7 +488,7 @@ class _ColumnViewState extends State<ColumnView> {
     }
 
     final header = Padding(
-      padding: const EdgeInsets.fromLTRB(14, 6, 2, 4),
+      padding: const EdgeInsets.fromLTRB(14, 2, 2, 0),
       child: Row(
         children: [
           if (done) ...[
@@ -504,7 +506,9 @@ class _ColumnViewState extends State<ColumnView> {
                       widget.column.str('title'),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      style: theme.textTheme.titleSmall,
+                      style: theme.textTheme.titleSmall?.copyWith(
+                        fontWeight: FontWeight.w600,
+                      ),
                     ),
                   ),
                 ),
@@ -748,7 +752,7 @@ class _ColumnChips extends StatelessWidget {
     final p = BoardsPalette.of(context);
     final theme = Theme.of(context);
     return SizedBox(
-      height: 48,
+      height: 40,
       child: ListView(
         key: const Key('column-chips'),
         scrollDirection: Axis.horizontal,
@@ -771,12 +775,15 @@ class _ColumnChips extends StatelessWidget {
                       child: ConstrainedBox(
                         constraints: const BoxConstraints(minHeight: 36),
                         child: Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 14),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 14,
+                            vertical: 8,
+                          ),
                           child: Center(
                             widthFactor: 1,
                             child: Text(
                               '$name  $n',
-                              style: theme.textTheme.labelLarge?.copyWith(
+                              style: theme.textTheme.labelMedium?.copyWith(
                                 color: i == at ? p.canvas : p.ink,
                                 fontWeight: FontWeight.w600,
                               ),

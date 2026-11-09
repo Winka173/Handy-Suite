@@ -86,7 +86,7 @@ class TimelineBar extends StatelessWidget {
     return Padding(
       key: const Key('week-bar'),
       // The chevron's glyph on the page's 16 pt margin.
-      padding: const EdgeInsets.fromLTRB(0, 0, 12, 4),
+      padding: const EdgeInsets.fromLTRB(0, 0, 12, 8),
       child: Row(
         children: [
           IconButton(
@@ -95,27 +95,37 @@ class TimelineBar extends StatelessWidget {
             onPressed: () => onWindow(shiftWindow(range, window, -1)),
             icon: const Icon(Icons.chevron_left),
           ),
+          // One line: the dates in ink, then where they stand.
           Flexible(
             child: Semantics(
               liveRegion: true,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+              child: Row(
                 mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.baseline,
+                textBaseline: TextBaseline.alphabetic,
                 children: [
-                  Text(
-                    windowLabel(context, window, now),
-                    key: const Key('week-label'),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: theme.textTheme.titleSmall,
+                  Flexible(
+                    flex: 3,
+                    child: Text(
+                      windowLabel(context, window, now),
+                      key: const Key('week-label'),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: theme.textTheme.titleSmall?.copyWith(
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
                   ),
-                  Text(
-                    note,
-                    key: const Key('week-kind'),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: theme.textTheme.bodySmall?.copyWith(
-                      color: kind == PeriodKind.current ? p.ink : p.muted,
+                  const SizedBox(width: 8),
+                  Flexible(
+                    child: Text(
+                      note,
+                      key: const Key('week-kind'),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: theme.textTheme.bodyMedium?.copyWith(
+                        color: kind == PeriodKind.current ? p.ink : p.muted,
+                      ),
                     ),
                   ),
                 ],
@@ -128,9 +138,10 @@ class TimelineBar extends StatelessWidget {
             onPressed: () => onWindow(shiftWindow(range, window, 1)),
             icon: const Icon(Icons.chevron_right),
           ),
-          const Spacer(),
-          // A narrow phone or large text keeps one row: the way back is an
-          // icon whose tooltip says it.
+          const SizedBox(width: 4),
+          // Beside the chevrons, never adrift mid-row. A narrow phone or
+          // large text keeps one row: the way back is an icon whose tooltip
+          // says it.
           if (kind != PeriodKind.current)
             MediaQuery.sizeOf(context).width < 560 ||
                     MediaQuery.textScalerOf(context).scale(1) > 1.3

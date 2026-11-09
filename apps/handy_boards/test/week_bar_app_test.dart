@@ -3,7 +3,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:handy_boards/pro/pro.dart';
 import 'package:handy_boards_engine/handy_boards_engine.dart' hide clock;
 import 'package:handy_ui/kit.dart';
-import 'kanban_app_test.dart' show boot, tap, studyState, board, clock;
+import 'kanban_app_test.dart' show boot, tap, tapTime, studyState, board, clock;
 
 // The test clock is Saturday 7 November 2026, 09:00.
 final today = DateTime(clock.year, clock.month, clock.day);
@@ -148,13 +148,14 @@ void main() {
     final c = await boot(t, s, size: const Size(1280, 900));
     await openBoard(t);
     expect(find.byKey(const Key('week-bar')), findsNothing);
-    await tap(t, find.byKey(const Key('board-timeline')));
+    await tapTime(t);
     await tap(t, find.byKey(const Key('timeline-month')));
     expect(boardTimeline(c.state!.get('boards', board)), 'month');
     expect(c.state!.get('tasks', id).str('scheduled'), isoDay(today));
     expect(find.byKey(const Key('week-bar')), findsOneWidget);
-    expect(find.text('By month'), findsOneWidget);
-    await tap(t, find.byKey(const Key('board-timeline')));
+    // The bar says the board now runs by month.
+    expect(find.text('This month'), findsOneWidget);
+    await tapTime(t);
     final week = t.widget<ListTile>(find.byKey(const Key('timeline-week')));
     expect(week.enabled, isFalse);
     // Off asks first, and may archive what was finished earlier.

@@ -3,6 +3,8 @@ import 'package:handy_ui/kit.dart';
 import '../board/board_menus.dart' show ProBadge;
 import '../board/category_strip.dart';
 import '../board/kanban_view.dart';
+import '../board/key_dates.dart' show keyDateLine;
+import '../board/week_bar.dart';
 import '../covers/cover_art.dart';
 import '../design/theme.dart';
 import 'new_board.dart' show isVi;
@@ -227,6 +229,10 @@ class BoardPreview extends StatefulWidget {
 class _BoardPreviewState extends State<BoardPreview> {
   Set<String> focus = const {};
 
+  /// The period shown when the template lays the board out by time, as
+  /// the made board will open on.
+  TimeWindow? window;
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -234,24 +240,21 @@ class _BoardPreviewState extends State<BoardPreview> {
     final s = widget.state;
     final b = s.get('boards', previewBoard);
     final milestones = milestonesOf(b);
+    final unit = boardTimeline(b);
+    if (unit == null) window = null;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
+        // The key dates as the board says them, under its title.
         if (milestones.isNotEmpty)
           Padding(
-            padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
-            child: Wrap(
-              spacing: 6,
-              runSpacing: 6,
-              children: [
+            padding: const EdgeInsets.fromLTRB(16, 0, 16, 10),
+            child: Text(
+              [
                 for (final m in milestones)
-                  Chip(
-                    avatar: const Icon(Icons.flag_outlined, size: 16),
-                    label: Text(
-                      '${m.label} · ${MaterialLocalizations.of(context).formatShortDate(m.day)}',
-                    ),
-                  ),
-              ],
+                  keyDateLine(context, m.label, m.day, widget.now),
+              ].join(' · '),
+              style: theme.textTheme.bodyMedium?.copyWith(color: p.muted),
             ),
           ),
         if (categoriesOf(s, previewBoard).isNotEmpty) ...[
@@ -264,6 +267,7 @@ class _BoardPreviewState extends State<BoardPreview> {
                   ? ({...focus}..remove(v))
                   : {...focus, v},
             ),
+            showHeader: false,
           ),
           const SizedBox(height: 8),
         ],
@@ -279,13 +283,24 @@ class _BoardPreviewState extends State<BoardPreview> {
               style: theme.textTheme.bodySmall?.copyWith(color: p.muted),
             ),
           ),
+        if (unit != null)
+          TimelineBar(
+            unit: unit,
+            window: window ??= timelineWindow(unit, widget.now),
+            now: widget.now,
+            onWindow: (w) => setState(() => window = w),
+          ),
         Expanded(
           child: KanbanView(
-            columnChips: false,
+            // A short phone keeps the preview's board tall enough to read.
+            columnChips: MediaQuery.sizeOf(context).height >= 720,
             state: s,
             board: previewBoard,
             now: widget.now,
-            filter: KanbanFilter(categories: focus),
+            filter: KanbanFilter(
+              categories: focus,
+              window: unit == null ? null : window,
+            ),
           ),
         ),
       ],
@@ -355,7 +370,7 @@ class _PreviewBodyState extends State<PreviewBody> {
               SizedBox(
                 // Never less than a readable board (its category strip
                 // and a few cards): on a tiny screen the page scrolls on.
-                height: box.maxHeight.clamp(580.0, double.infinity),
+                height: box.maxHeight.clamp(640.0, double.infinity),
                 child: widget.board,
               ),
             ],

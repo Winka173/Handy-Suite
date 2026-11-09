@@ -216,6 +216,7 @@ void main() {
     ]);
     final c = await boot(t, s);
     await tap(t, find.byKey(const Key('board-$board')));
+    await tap(t, find.byKey(const Key('board-filter-sheet')));
     await tap(t, find.byKey(const Key('board-filters')));
     final f = savedFilters(c.state!, board).single;
     await tap(t, find.byKey(Key('filter-${f.id}')));

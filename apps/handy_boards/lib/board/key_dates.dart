@@ -5,6 +5,22 @@ import '../scope.dart';
 
 /// One key date under a board's title: its name, the day, and how far off
 /// it is ("in 12 days", "today", "3 days ago").
+/// A key date in words for the board's subtitle: "Semester ends 15/1, in
+/// 67 days" (its label as written, the day, how far).
+String keyDateLine(
+  BuildContext context,
+  String label,
+  DateTime day,
+  DateTime now,
+) {
+  final today = DateTime(now.year, now.month, now.day);
+  final days = DateTime(day.year, day.month, day.day).difference(today).inDays;
+  final when = days == 0
+      ? tr(context, 'today', 'hôm nay')
+      : tr(context, 'in $days days', 'còn $days ngày');
+  return '$label ${day.day}/${day.month}, $when';
+}
+
 class KeyDateChip extends StatelessWidget {
   final String label;
   final DateTime day, now;

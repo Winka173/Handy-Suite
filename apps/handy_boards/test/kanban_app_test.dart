@@ -104,7 +104,7 @@ Future<void> settle(WidgetTester t) async {
 /// moves, so the test sees every card).
 Future<void> showAll(WidgetTester t) async {
   if (find.byKey(const Key('week-bar')).evaluate().isEmpty) return;
-  await tap(t, find.byKey(const Key('board-timeline')));
+  await tapTime(t);
   await tap(t, find.byKey(const Key('timeline-off')));
   await tap(t, find.byKey(const Key('timeline-off-confirm')));
   // The Undo message would sit over the columns' Add card buttons.
@@ -112,6 +112,15 @@ Future<void> showAll(WidgetTester t) async {
     t.element(find.byType(Scaffold).last),
   ).hideCurrentSnackBar();
   await t.pumpAndSettle();
+}
+
+/// The board's time choice: in the Filter and view sheet, or beside the
+/// filters while the categories are hidden.
+Future<void> tapTime(WidgetTester t) async {
+  if (find.byKey(const Key('board-timeline')).evaluate().isEmpty) {
+    await tap(t, find.byKey(const Key('board-filter-sheet')));
+  }
+  await tap(t, find.byKey(const Key('board-timeline')));
 }
 
 Future<void> tap(WidgetTester t, Finder f) async {
@@ -221,7 +230,14 @@ void main() {
         expect(find.byKey(ValueKey('card-${o.id}')), findsOneWidget);
       // Picking a category shows only its cards, at once.
       await tap(t, find.byKey(Key('strip-${maths.id}')));
-      expect(find.text('Showing only Web Development'), findsOneWidget);
+      // The picked tile says so with its tick.
+      expect(
+        find.descendant(
+          of: find.byKey(Key('strip-${maths.id}')),
+          matching: find.byIcon(Icons.check_circle),
+        ),
+        findsOneWidget,
+      );
       for (final o in others)
         expect(find.byKey(ValueKey('card-${o.id}')), findsNothing);
       // A card added now joins the category in focus.
@@ -392,6 +408,7 @@ void main() {
       board: board,
     ).where((x) => x.str('category') == maths.id).length;
     final before = topTasks(c.state!, board: board).length;
+    await tap(t, find.byKey(const Key('board-filter-sheet')));
     await tap(t, find.byKey(const Key('strip-edit')));
     await tap(
       t,
@@ -422,7 +439,7 @@ void main() {
     await tap(t, find.byKey(const Key('board-$board')));
     expect(t.takeException(), isNull);
     expect(find.text('Web Development'), findsWidgets);
-    expect(find.text('Nhóm'), findsOneWidget);
+    expect(find.byKey(const Key('board-filter-sheet')), findsOneWidget);
   });
 
   testWidgets('a board look is tried on the board itself; Cancel keeps the '
