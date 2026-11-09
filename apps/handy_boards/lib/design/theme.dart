@@ -3,11 +3,12 @@ import 'package:handy_ui/kit.dart';
 /// Pinboard: Handy Boards' own palette, shapes and type over the kit theme
 /// (the kit keeps behaviour, spacing, motion and accessibility).
 ///
-/// Light is a warm stone ground with a breath of rose, the colour of a pin
-/// board; cards are white and part from it by tone. Dark is a warm
-/// near-black made on its own, not an inversion. The one hue is the app's
-/// magenta, kept to the primary action, selection and focus: the colour on
-/// a board belongs to its categories and covers.
+/// Light is a warm stone ground, the colour of a pin board's cork; cards are
+/// white and part from it by tone. Dark is a warm near-black made on its
+/// own, not an inversion. The app's hue is terracotta (chosen 2026-11-09,
+/// replacing the magenta), kept to the primary action, selection, focus
+/// and the header band: the colour on a board belongs to its categories
+/// and covers.
 @immutable
 class BoardsPalette extends ThemeExtension<BoardsPalette> {
   final Color canvas, surface, raised, sunk;
@@ -15,14 +16,13 @@ class BoardsPalette extends ThemeExtension<BoardsPalette> {
   final Color ink, muted, line, control;
   final Color danger, dangerTint, warning, warningTint, positive;
 
-  /// The strong-contrast header band (3a, 2026-11-09): a plum between the
-  /// deep plum and the magenta, white words, its line in [bandSub], and
-  /// the gold action.
+  /// The strong-contrast header band (3a, 2026-11-09): deep terracotta,
+  /// white words, its line in [bandSub], and the gold action.
   final Color band, bandInk, bandSub, gold, onGold;
   const BoardsPalette({
-    this.band = const Color(0xFF7A1A69),
+    this.band = const Color(0xFF7C2D12),
     this.bandInk = const Color(0xFFFFFFFF),
-    this.bandSub = const Color(0xFFF3DDEE),
+    this.bandSub = const Color(0xFFFCDCC8),
     this.gold = const Color(0xFFE0A93B),
     this.onGold = const Color(0xFF241A05),
     required this.canvas,
@@ -45,18 +45,18 @@ class BoardsPalette extends ThemeExtension<BoardsPalette> {
   });
 
   static const light = BoardsPalette(
-    canvas: Color(0xFFF3EFF2),
+    canvas: Color(0xFFF5F1EE),
     surface: Color(0xFFFFFFFF),
-    raised: Color(0xFFE9E4E7),
-    sunk: Color(0xFFE1DADF),
-    primary: Color(0xFFA61C8E),
-    pressed: Color(0xFF7A1A69),
-    tint: Color(0xFFF7E1F1),
+    raised: Color(0xFFECE6E1),
+    sunk: Color(0xFFE3DBD5),
+    primary: Color(0xFFB53C0A),
+    pressed: Color(0xFF7C2D12),
+    tint: Color(0xFFFBE5D8),
     onPrimary: Color(0xFFFFFFFF),
-    ink: Color(0xFF0F0B0E),
-    muted: Color(0xFF3B3439),
-    line: Color(0xFFE4DEE2),
-    control: Color(0xFFCAC1C7),
+    ink: Color(0xFF17110D),
+    muted: Color(0xFF3D332D),
+    line: Color(0xFFE6DDD6),
+    control: Color(0xFFCBBFB6),
     danger: Color(0xFFB3261E),
     dangerTint: Color(0xFFF9E3E0),
     warning: Color(0xFF8A5A0F),
@@ -69,10 +69,10 @@ class BoardsPalette extends ThemeExtension<BoardsPalette> {
     surface: Color(0xFF26292B),
     raised: Color(0xFF1B1D1F),
     sunk: Color(0xFF0E0F10),
-    primary: Color(0xFFE07CCB),
-    pressed: Color(0xFFEBA0DA),
-    tint: Color(0xFF3A1F35),
-    onPrimary: Color(0xFF2A0623),
+    primary: Color(0xFFF0936A),
+    pressed: Color(0xFFF6B08F),
+    tint: Color(0xFF3D2318),
+    onPrimary: Color(0xFF2B0F04),
     ink: Color(0xFFF5F5F5),
     muted: Color(0xFFBCC1C4),
     line: Color(0xFF2C2F31),
@@ -82,7 +82,7 @@ class BoardsPalette extends ThemeExtension<BoardsPalette> {
     warning: Color(0xFFE9C27F),
     warningTint: Color(0xFF3A2F1C),
     positive: Color(0xFF8FD3A8),
-    band: Color(0xFF6E1F61),
+    band: Color(0xFF6E2A12),
     gold: Color(0xFFE6B44F),
   );
 

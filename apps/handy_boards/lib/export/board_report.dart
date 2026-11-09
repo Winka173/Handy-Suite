@@ -4,7 +4,7 @@ import '../design/theme.dart';
 import '../ui/look.dart';
 
 const _ink = Color(0xFF231A21), _muted = Color(0xFF62575F);
-const _rule = Color(0xFFD9D1D3), _bar = Color(0xFFA61C8E);
+const _rule = Color(0xFFD9D1D3), _bar = Color(0xFFB53C0A);
 
 /// Export › Report (Pro): one page that answers "where does this board
 /// stand?": four figures, finished per week for 8 weeks (real completion

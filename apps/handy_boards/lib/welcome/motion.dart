@@ -7,17 +7,17 @@ import 'package:handy_ui/kit.dart';
 bool moves(BuildContext context) =>
     MediaQuery.maybeDisableAnimationsOf(context) != true;
 
-/// The guide's colours: the app's magenta used boldly, a pale tint of it
+/// The guide's colours: the app's terracotta used boldly, a pale tint of it
 /// for highlights, and the stone ground of the app.
 abstract final class GuideColors {
-  static const teal = Color(0xFFA61C8E);
-  static const tealDeep = Color(0xFF82136F);
-  static const tint = Color(0xFFF6D9EE);
+  static const teal = Color(0xFFB53C0A);
+  static const tealDeep = Color(0xFF7C2D12);
+  static const tint = Color(0xFFFBE5D8);
   static const paper = Color(0xFFF7F3F1);
-  static const ink = Color(0xFF231A21);
-  static const muted = Color(0xFF62575F);
+  static const ink = Color(0xFF1F1611);
+  static const muted = Color(0xFF5E5049);
   static const card = Color(0xFFFFFFFF);
-  static const shadow = Color(0x1F3A0E30);
+  static const shadow = Color(0x1F3A1A0E);
 }
 
 /// One step's timeline: 0 → 1 over [length] from the moment it is built.
@@ -613,7 +613,7 @@ class _SpotPainter extends CustomPainter {
     required this.still,
   });
 
-  static const _light = Color(0xFFF7A8E2);
+  static const _light = Color(0xFFF6B08F);
 
   @override
   void paint(Canvas canvas, Size size) {

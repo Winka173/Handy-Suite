@@ -44,7 +44,7 @@ const widgetStyles = <WidgetStyle>[
     bg: Color(0xFFFFFFFF),
     ink: Color(0xFF1F2329),
     muted: Color(0xFF555B66),
-    accent: Color(0xFFA61C8E),
+    accent: Color(0xFFB53C0A),
   ),
   WidgetStyle(
     'dark',

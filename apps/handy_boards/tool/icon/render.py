@@ -1,4 +1,4 @@
-"""Render Board in Colour and mirror its cards into Android vectors.
+"""Render the board icon and mirror its shapes into Android vectors.
 
 Requires Pillow and Playwright with Chromium installed. From the repo root:
     python apps/handy_boards/tool/icon/render.py
@@ -49,6 +49,15 @@ def vector_element(source, monochrome=False):
         return ET.Element('path', android_attributes(
             fillColor='#FF000000' if monochrome else '#FF' + source.attrib['fill'][1:],
             pathData=d))
+    if source.tag == f'{{{SVG}}}path':
+        # A cut-out shape (the board's frame): even-odd, so its hole stays
+        # open in the monochrome icon too.
+        attributes = android_attributes(
+            fillColor='#FF000000' if monochrome else '#FF' + source.attrib['fill'][1:],
+            pathData=source.attrib['d'])
+        if source.get('fill-rule') == 'evenodd':
+            attributes.update(android_attributes(fillType='evenOdd'))
+        return ET.Element('path', attributes)
     if source.tag != f'{{{SVG}}}g':
         raise ValueError(f'Unsupported mark element: {source.tag}')
     result = ET.Element('group')
@@ -83,9 +92,10 @@ def write_android(source):
     <monochrome android:drawable="@drawable/ic_launcher_monochrome" />
 </adaptive-icon>
 ''', encoding='utf-8')
-    (res / 'values/ic_launcher_background.xml').write_text('''<?xml version="1.0" encoding="utf-8"?>
+    field = source.find(f'{{{SVG}}}rect').attrib['fill']
+    (res / 'values/ic_launcher_background.xml').write_text(f'''<?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="ic_launcher_background">#A61C8E</color>
+    <color name="ic_launcher_background">{field}</color>
 </resources>
 ''', encoding='utf-8')
 

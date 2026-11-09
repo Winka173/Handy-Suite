@@ -213,7 +213,7 @@ class _Arrow extends CustomPainter {
   final Offset a, b;
   final double t;
   _Arrow(this.a, this.b, this.t);
-  static const _ink = Color(0xFFF7A8E2);
+  static const _ink = Color(0xFFF6B08F);
 
   @override
   void paint(Canvas canvas, Size size) {

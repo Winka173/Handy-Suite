@@ -780,7 +780,7 @@ class _Export extends StatelessWidget {
                                     margin: const EdgeInsets.only(right: 3),
                                     width: 9,
                                     height: h,
-                                    color: const Color(0xFFA61C8E),
+                                    color: const Color(0xFFB53C0A),
                                   ),
                               ],
                             ),

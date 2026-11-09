@@ -3299,3 +3299,16 @@ Kit sửa chung (`HandyPalette`): ở bản sáng, màu nhận diện được l
 - Dải đậm ở nhiều chỗ.
 - Thanh bên đậm (3d/3e không được chọn).
 - Đổi màu hành động chính ở các màn khác: nút vàng chỉ nằm trên dải.
+
+### Handy Boards · màu cam đất và icon khung bảng (2026-11-09, chủ chọn)
+
+- **Màu chủ đạo:** đổi từ hồng magenta sang **cam đất** (chủ chọn phương án A trong 4 phương án).
+  - Bản sáng: màu nhấn `#B53C0A` (4.7:1 trên cột), dải đầu trang `#7C2D12`, chữ dải phụ `#FCDCC8`, nền `#F5F1EE`, cột `#ECE6E1`, tint `#FBE5D8`.
+  - Bản tối: màu nhấn `#F0936A`, dải `#6E2A12`.
+  - Nút vàng trên dải giữ nguyên.
+  - Màn chào, widget, báo cáo và theme web đổi theo.
+- **Hệ quả cho màu nhóm:** `HandyPalette` bỏ các màu nhóm gần màu chủ đạo (cà chua, hổ phách) và dùng lại hồng. Màu nhóm trên bảng cũ vì vậy đổi theo vị trí; tên nhóm và dữ liệu không đổi.
+- **Icon:** khung bảng màu kem chia ba cột, có một thẻ vàng, trên nền cam đất (chủ chọn phương án C).
+  - Nguồn: `apps/handy_boards/assets/icon.svg`.
+  - `tool/icon/render.py` giờ hỗ trợ path even-odd, để icon đơn sắc của Android vẫn giữ lỗ khung, và đọc màu nền icon từ SVG.
+  - `tooling/app-icons.py` tạo icon cho mọi nền tảng.

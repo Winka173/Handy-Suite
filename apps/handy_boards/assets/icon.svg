@@ -1,15 +1,14 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 108 108" role="img" aria-labelledby="title desc">
-  <title id="title">Handy Boards — A: Board in Colour</title>
-  <desc id="desc">Original flat adaptive icon study. Full-bleed magenta field. Essential geometry is inside the centred 66 percent safe circle. No launcher assets are installed.</desc>
-  <rect id="background" width="108" height="108" fill="#A61C8E"/>
+  <title id="title">Handy Boards — C: Board in three columns</title>
+  <desc id="desc">Flat adaptive icon. Full-bleed terracotta field; a cream board frame split into three columns, one gold card on its way across. Essential geometry is inside the centred 66 percent safe circle.</desc>
+  <rect id="background" width="108" height="108" fill="#B53C0A"/>
   <g id="mark" transform="translate(54 54) scale(.97) translate(-54 -54)">
-
-      <rect x="25" y="32" width="17" height="21" rx="4" fill="#D9930B"/>
-      <rect x="25" y="58" width="17" height="18" rx="4" fill="#D9930B"/>
-      <rect x="45.5" y="32" width="17" height="29" rx="4" fill="#FFF6EC"/>
-      <rect x="45.5" y="66" width="17" height="10" rx="3.5" fill="#FFF6EC"/>
-      <rect x="66" y="32" width="17" height="13" rx="4" fill="#1F9E8F"/>
-      <rect x="66" y="50" width="17" height="26" rx="4" fill="#1F9E8F"/>
-
+      <path d="M35 29H73A9 9 0 0 1 82 38V70A9 9 0 0 1 73 79H35A9 9 0 0 1 26 70V38A9 9 0 0 1 35 29ZM35.5 33.5H72.5A5 5 0 0 1 77.5 38.5V69.5A5 5 0 0 1 72.5 74.5H35.5A5 5 0 0 1 30.5 69.5V38.5A5 5 0 0 1 35.5 33.5Z" fill="#FFF6EC" fill-rule="evenodd"/>
+      <rect x="45.5" y="33.5" width="2.5" height="41" rx="1.25" fill="#E1AC92"/>
+      <rect x="60.5" y="33.5" width="2.5" height="41" rx="1.25" fill="#E1AC92"/>
+      <rect x="33.5" y="37" width="9" height="8.5" rx="2" fill="#FFF6EC"/>
+      <rect x="33.5" y="49" width="9" height="8.5" rx="2" fill="#FFF6EC"/>
+      <rect x="49.25" y="37" width="7.5" height="15" rx="2" fill="#E0A93B"/>
+      <rect x="66" y="37" width="9" height="8.5" rx="2" fill="#FFF6EC"/>
   </g>
 </svg>
