@@ -8,15 +8,14 @@ import 'package:handy_ui/kit.dart';
 /// sans-serif for the work, and the serif kept for a few editorial moments
 /// (see `design/theme.dart`, which finishes the kit theme).
 const bookmarkIdentity = HandyBrand(
-  text: 'Manrope',
-  card: 20,
-  control: 12,
+  card: 16,
+  control: 14,
   title: 26,
   tileMark: false,
   edgeless: true,
-  ground: Color(0xFFF3F5F7),
-  groundDark: Color(0xFF141516),
-  surfaceDark: Color(0xFF1E2022),
+  ground: Color(0xFFF6F4EE),
+  groundDark: Color(0xFF171D1C),
+  surfaceDark: Color(0xFF222A29),
   heading: HandyHeading.large,
   rows: HandyRows.card,
 );

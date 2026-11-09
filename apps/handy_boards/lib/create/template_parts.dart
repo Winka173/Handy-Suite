@@ -281,7 +281,6 @@ class _BoardPreviewState extends State<BoardPreview> {
           ),
         Expanded(
           child: KanbanView(
-            columnChips: false,
             state: s,
             board: previewBoard,
             now: widget.now,

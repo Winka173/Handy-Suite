@@ -1,7 +1,5 @@
 import 'package:handy_ui/kit.dart';
 import '../design/theme.dart';
-import '../home/pastel_blocks.dart';
-import '../ui/read_later_ribbon.dart';
 import '../ui/app_mark.dart';
 
 /// The pictures of How to use: small pieces of a screen drawn in the
@@ -328,34 +326,15 @@ class MockQuickSave extends StatelessWidget {
   }
 }
 
-/// A row of Not sorted with its collections as chips; the first ringed.
+/// A row of Recently saved with its "Put in" button.
 class MockPutIn extends StatelessWidget {
   const MockPutIn({super.key});
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final p = BookmarkPalette.of(context);
-    Widget chip(String name, int hue) {
-      final f = hueField(context, hue);
-      return Container(
-        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-        decoration: BoxDecoration(
-          color: f.field,
-          borderRadius: BorderRadius.circular(999),
-        ),
-        child: Text(
-          name,
-          style: theme.textTheme.labelMedium?.copyWith(
-            color: f.ink,
-            fontWeight: FontWeight.w600,
-          ),
-        ),
-      );
-    }
-
     return MockCard(
       child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Container(
             width: 44,
@@ -378,101 +357,15 @@ class MockPutIn extends StatelessWidget {
                   ),
                 ),
                 Text(
-                  'youtube.com',
+                  tr(context, 'Not sorted', 'Chưa xếp'),
                   style: theme.textTheme.bodySmall?.copyWith(color: p.muted),
                 ),
-                const SizedBox(height: 6),
-                Wrap(
-                  spacing: 6,
-                  runSpacing: 6,
-                  children: [
-                    Ringed(
-                      radius: 999,
-                      child: chip(tr(context, 'Recipes', 'Công thức'), 0),
-                    ),
-                    chip(tr(context, 'Trips', 'Du lịch'), 1),
-                    chip(tr(context, 'Other…', 'Khác…'), 7),
-                  ],
-                ),
               ],
             ),
           ),
-        ],
-      ),
-    );
-  }
-}
-
-/// Home's Read later: one save under Tomorrow, its ribbon on the picture.
-class MockReadLater extends StatelessWidget {
-  const MockReadLater({super.key});
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final p = BookmarkPalette.of(context);
-    return MockCard(
-      title: tr(context, 'Read later', 'Hẹn đọc'),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text.rich(
-            TextSpan(
-              children: [
-                TextSpan(
-                  text: tr(context, 'Tomorrow', 'Ngày mai'),
-                  style: const TextStyle(fontWeight: FontWeight.w700),
-                ),
-                TextSpan(
-                  text: '  09:00',
-                  style: TextStyle(color: p.muted),
-                ),
-              ],
-            ),
-            style: theme.textTheme.bodySmall,
-          ),
-          const SizedBox(height: 6),
-          Row(
-            children: [
-              Ringed(
-                radius: 10,
-                child: SizedBox.square(
-                  dimension: 44,
-                  child: Stack(
-                    children: [
-                      Container(
-                        decoration: BoxDecoration(
-                          color: p.tint,
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                      ),
-                      Positioned(
-                        top: 0,
-                        left: 6,
-                        child: ReadLaterRibbon(
-                          DateTime.now().add(const Duration(days: 1)),
-                          small: true,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-              const SizedBox(width: 10),
-              Expanded(
-                child: Text(
-                  tr(
-                    context,
-                    'Best season for Hà Giang',
-                    'Mùa đẹp nhất để đi Hà Giang',
-                  ),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: theme.textTheme.bodyMedium?.copyWith(
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-              ),
-            ],
+          Ringed(
+            radius: 10,
+            child: Icon(Icons.drive_file_move_outline, color: p.ink),
           ),
         ],
       ),

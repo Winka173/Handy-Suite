@@ -115,10 +115,10 @@ class SampleCard extends StatelessWidget {
             maxLines: 2,
             overflow: TextOverflow.ellipsis,
             style: TextStyle(
-              fontFamily: handyFontFamily('Manrope'),
+              fontFamily: handyFontFamily('Newsreader'),
               fontSize: 16,
               height: 1.15,
-              fontWeight: FontWeight.w600,
+              fontWeight: FontWeight.w500,
               color: GuideColors.ink,
             ),
           ),

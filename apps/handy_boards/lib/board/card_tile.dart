@@ -4,9 +4,8 @@ import 'package:handy_ui/kit.dart';
 import '../design/theme.dart';
 import '../ui/look.dart';
 
-/// One card on a column: its category as a strip of tape at the top (over
-/// the cover when it has one, inset in the card like a print), the title,
-/// then one line of facts (subtasks, due). Detailed cards also list their
+/// One card on a column: a thin cover when it has one, the title, then one
+/// line of facts (category, subtasks, due). Detailed cards also list their
 /// first subtasks, tickable in place.
 class CardTile extends StatelessWidget {
   final BoardsState state;
@@ -57,6 +56,7 @@ class CardTile extends StatelessWidget {
         ? subtasksOf(state, card.id).take(3).toList()
         : const <BoardRecord>[];
     final facts = <Widget>[
+      if (category != null) Flexible(child: CategoryChip(category)),
       if (progress.total > 0)
         _Fact(
           icon: progress.done == progress.total
@@ -143,48 +143,9 @@ class CardTile extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               if (cover != null)
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(5, 5, 5, 0),
-                  child: SizedBox(
-                    height: detailed ? 96 : 52,
-                    child: Stack(
-                      fit: StackFit.expand,
-                      children: [
-                        ClipRRect(
-                          borderRadius: BorderRadius.circular(
-                            BoardsRadii.card - 5,
-                          ),
-                          child: cover,
-                        ),
-                        if (category != null)
-                          Positioned(
-                            top: 6,
-                            left: 4,
-                            right: 48,
-                            child: Align(
-                              alignment: Alignment.topLeft,
-                              child: CategoryTape(category),
-                            ),
-                          ),
-                      ],
-                    ),
-                  ),
-                ),
-              if (cover == null && category != null)
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(8, 8, 56, 0),
-                  child: Align(
-                    alignment: Alignment.topLeft,
-                    child: CategoryTape(category),
-                  ),
-                ),
+                SizedBox(height: detailed ? 96 : 52, child: cover),
               Padding(
-                padding: EdgeInsets.fromLTRB(
-                  12,
-                  cover == null && category != null ? 4 : 10,
-                  4,
-                  10,
-                ),
+                padding: const EdgeInsets.fromLTRB(12, 10, 4, 10),
                 child: Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [

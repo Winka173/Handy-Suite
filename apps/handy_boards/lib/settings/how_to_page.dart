@@ -91,16 +91,16 @@ List<_Topic> _topics(BuildContext context) => [
       _Step(
         tr(
           context,
-          'Press and hold a card, then drag it to another column or place. On a phone the next columns show at both sides: drop it there, or hold it near the side to turn. With a mouse, just drag. Undo in the message takes it back.',
-          'Nhấn giữ một thẻ rồi kéo sang cột hoặc chỗ khác. Trên điện thoại, cột kề lộ ra hai bên: thả vào đó, hoặc giữ gần mép để sang cột. Dùng chuột thì kéo luôn. Bấm Hoàn tác trong thông báo để trả lại.',
+          'Press and hold a card, then drag it to another column or place. With a mouse, just drag. Undo in the message takes it back.',
+          'Nhấn giữ một thẻ rồi kéo sang cột hoặc chỗ khác. Dùng chuột thì kéo luôn. Bấm Hoàn tác trong thông báo để trả lại.',
         ),
         picture: const MockColumns(drag: true),
       ),
       _Step(
         tr(
           context,
-          'No drag needed: open the card and tap … › Move to…. On a phone, tap a column name in the row above the board, or swipe sideways.',
-          'Không muốn kéo: mở thẻ rồi bấm … › Chuyển tới…. Trên điện thoại, chạm tên cột ở hàng phía trên bảng, hoặc vuốt ngang.',
+          'No drag needed: open the card and tap … › Move to…. On a phone, swipe sideways to see the next column.',
+          'Không muốn kéo: mở thẻ rồi bấm … › Chuyển tới…. Trên điện thoại, vuốt ngang để sang cột kế.',
         ),
         picture: MockRows(
           title: tr(context, 'Card options', 'Tuỳ chọn thẻ'),

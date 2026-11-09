@@ -948,9 +948,9 @@ class _OurSheet extends StatelessWidget {
               child: Container(
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
-                  color: const Color(0xFFEEF1F4),
+                  color: const Color(0xFFF1EEE7),
                   borderRadius: BorderRadius.circular(14),
-                  border: Border.all(color: const Color(0xFFE1E5E9)),
+                  border: Border.all(color: const Color(0xFFE3DED3)),
                 ),
                 child: _Preview(),
               ),
@@ -1147,9 +1147,9 @@ class _SavedState extends State<_Saved> with SingleTickerProviderStateMixin {
                           'Đã lưu vào ${widget.into}',
                         ),
                         style: TextStyle(
-                          fontFamily: handyFontFamily('Manrope'),
+                          fontFamily: handyFontFamily('Newsreader'),
                           fontSize: 26,
-                          fontWeight: FontWeight.w600,
+                          fontWeight: FontWeight.w500,
                           color: GuideColors.ink,
                         ),
                       ),

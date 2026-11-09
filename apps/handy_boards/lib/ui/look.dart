@@ -14,16 +14,6 @@ HandyHue categoryHue(BuildContext context, BoardRecord? category) {
   return HandyPalette.of(context, category.number('color'));
 }
 
-/// The dark of a category's own hue, for its name on its pale field (a
-/// light of the hue on the dark theme).
-Color categoryInk(BuildContext context, BoardRecord? category) {
-  if (category == null) return BoardsPalette.of(context).ink;
-  final mark = categoryHue(context, category).mark;
-  return Theme.of(context).brightness == Brightness.dark
-      ? Color.lerp(mark, Colors.white, .62)!
-      : Color.lerp(mark, Colors.black, .5)!;
-}
-
 String categoryName(BuildContext context, BoardRecord? category) =>
     category?.str('title') ?? tr(context, 'Uncategorised', 'Chưa phân nhóm');
 
@@ -64,68 +54,6 @@ class CategoryChip extends StatelessWidget {
       ),
     );
   }
-}
-
-/// A card's category as a strip of paper tape holding it to the board:
-/// the category's colour, a little crooked, torn ends, its name in ink.
-/// The board's one signature; the colour never stands alone.
-class CategoryTape extends StatelessWidget {
-  final BoardRecord? category;
-  const CategoryTape(this.category, {super.key});
-  @override
-  Widget build(BuildContext context) {
-    final hue = categoryHue(context, category);
-    final dark = Theme.of(context).brightness == Brightness.dark;
-    return Transform.rotate(
-      angle: -.03,
-      alignment: Alignment.centerLeft,
-      child: ClipPath(
-        clipper: const _TornEnds(),
-        child: Container(
-          constraints: const BoxConstraints(minHeight: 22),
-          padding: const EdgeInsets.fromLTRB(12, 3, 12, 3),
-          color: Color.lerp(hue.tint, hue.mark, dark ? .12 : .1),
-          child: Text(
-            categoryName(context, category),
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: Theme.of(context).textTheme.labelMedium?.copyWith(
-              color: categoryInk(context, category),
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-/// Both short ends cut in small teeth, as tape torn off a roll.
-class _TornEnds extends CustomClipper<Path> {
-  const _TornEnds();
-  @override
-  Path getClip(Size s) {
-    const tooth = 3.0;
-    final n = (s.height / 4).floor().clamp(3, 12);
-    final step = s.height / n;
-    final path = Path()..moveTo(0, 0);
-    path.lineTo(s.width, 0);
-    for (var i = 0; i < n; i++) {
-      path
-        ..lineTo(s.width - tooth, step * i + step / 2)
-        ..lineTo(s.width, step * (i + 1));
-    }
-    path.lineTo(0, s.height);
-    for (var i = n; i > 0; i--) {
-      path
-        ..lineTo(tooth, step * i - step / 2)
-        ..lineTo(0, step * (i - 1));
-    }
-    return path..close();
-  }
-
-  @override
-  bool shouldReclip(_TornEnds old) => false;
 }
 
 /// A card's cover as stored: built-in art, one of the identity colours, or

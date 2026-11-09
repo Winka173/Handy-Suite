@@ -18,7 +18,7 @@ abstract final class GuideColors {
   static const teal = Color(0xFF0E7490);
   static const tealDeep = Color(0xFF0B5A70);
   static const tint = Color(0xFFD7EEF3);
-  static const paper = Color(0xFFF3F5F7);
+  static const paper = Color(0xFFFAF8F3);
   static const ink = Color(0xFF141414);
   static const muted = Color(0xFF5B5E63);
   static const card = Color(0xFFFFFFFF);

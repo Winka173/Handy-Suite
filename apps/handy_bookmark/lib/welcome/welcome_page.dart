@@ -326,11 +326,11 @@ class _WelcomePageState extends State<WelcomePage>
   }) {
     final align = center ? TextAlign.center : TextAlign.start;
     final title = TextStyle(
-      fontFamily: handyFontFamily('Manrope'),
+      fontFamily: handyFontFamily('Newsreader'),
       fontSize: wide ? 46 : (center ? 36 : 32),
       height: 1.08,
       letterSpacing: -.6,
-      fontWeight: FontWeight.w600,
+      fontWeight: FontWeight.w500,
       color: GuideColors.ink,
     );
     return HandySwap(

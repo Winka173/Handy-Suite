@@ -9,7 +9,6 @@ import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import '../test/welcome_test.dart' show StillMotion;
 import 'package:handy_files/handy_files.dart';
-import 'package:handy_bookmark/services/read_later.dart';
 import 'package:handy_bookmark/app.dart';
 import 'package:handy_bookmark/pro/entitlements.dart';
 import 'package:handy_bookmark/links/batch_size.dart';
@@ -227,14 +226,6 @@ Future<NetController> boot(
               tags: i == 0 ? ['món-huế'] : (i == 3 ? ['cuối-tuần'] : null),
               isFavorite: i == 0 || i == 4,
               isRead: i == 2 || i == 6,
-              // Two saves put aside to read later (the ribbon).
-              reminderAt: switch (i) {
-                3 => readLaterChoices(DateTime.now()).last.at,
-                7 => readLaterChoices(
-                  DateTime.now(),
-                ).firstWhere((c) => c.id == 'tomorrow').at,
-                _ => null,
-              }?.toUtc().toIso8601String(),
               savedAt: DateTime.now()
                   .subtract(Duration(hours: i * 7 + 1))
                   .toUtc()
@@ -399,13 +390,9 @@ void main() {
       '$ui/BricolageGrotesque-Display.ttf',
     ]);
     final sdk = Platform.environment['FLUTTER_ROOT']!;
-    await _font('Manrope', [
-      for (final w in ['Regular', 'Medium', 'SemiBold', 'Bold'])
-        'fonts/Manrope-$w.ttf',
-    ]);
     await _font('Newsreader', [
       for (final f in Directory('fonts').listSync())
-        if (f.path.endsWith('.ttf') && f.path.contains('Newsreader')) f.path,
+        if (f.path.endsWith('.ttf')) f.path,
     ]);
     await _font('MaterialIcons', [
       '$sdk/bin/cache/artifacts/material_fonts/materialicons-regular.otf',
@@ -424,15 +411,6 @@ void main() {
         await tapKey(t, 'item-details');
       }
       await shot(t, '$label-1-home');
-      if (label == 'phone') {
-        // The rest of Home: the collections as tiles and the recent saves.
-        await t.drag(find.byKey(const Key('save-home')), const Offset(0, -900));
-        await t.pumpAndSettle();
-        await shot(t, 'phone-1b-home-below');
-        await t.drag(find.byKey(const Key('save-home')), const Offset(0, -900));
-        await t.pumpAndSettle();
-        await shot(t, 'phone-1c-home-end');
-      }
     });
   }
   testWidgets('phone share sheet', (t) async {

@@ -5,9 +5,9 @@ import '../ui/visual.dart';
 import '../ui/words.dart';
 import 'theme.dart';
 
-/// The onboarding's face, for the app's own sheets: a Manrope title
+/// The onboarding's face, for the app's own sheets: a Newsreader title
 /// with a pale band under its key words, saved things as paper clippings
-/// (picture, the source by name, the title in Manrope), and one tall
+/// (picture, the source by name, the title in Newsreader), and one tall
 /// primary button. Colours come from the theme, so dark mode follows.
 
 /// A sheet's title: [before], then [words] over a pale band of the hue.
@@ -21,11 +21,11 @@ class SheetTitle extends StatelessWidget {
   });
 
   static TextStyle style(BuildContext context) => TextStyle(
-    fontFamily: handyFontFamily('Manrope'),
+    fontFamily: handyFontFamily('Newsreader'),
     fontSize: 28,
     height: 1.1,
     letterSpacing: -.4,
-    fontWeight: FontWeight.w600,
+    fontWeight: FontWeight.w500,
     color: BookmarkPalette.of(context).ink,
   );
 
@@ -137,7 +137,7 @@ class SourceTag extends StatelessWidget {
 }
 
 /// A saved thing as a paper clipping, side by side: its picture, then its
-/// source and its title in Manrope.
+/// source and its title in Newsreader.
 class Clipping extends StatelessWidget {
   final SaveController controller;
   final Bookmark bookmark;
@@ -194,10 +194,10 @@ class Clipping extends StatelessWidget {
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
                   style: TextStyle(
-                    fontFamily: handyFontFamily('Manrope'),
+                    fontFamily: handyFontFamily('Newsreader'),
                     fontSize: 17,
                     height: 1.15,
-                    fontWeight: FontWeight.w600,
+                    fontWeight: FontWeight.w500,
                     color: p.ink,
                   ),
                 ),
@@ -218,7 +218,7 @@ class Clipping extends StatelessWidget {
 }
 
 /// A saved thing as a standing clipping, as in the onboarding's cards:
-/// its picture (4:3), its source by name, its title in Manrope.
+/// its picture (4:3), its source by name, its title in Newsreader.
 class ClippingTile extends StatelessWidget {
   final SaveController controller;
   final Bookmark bookmark;
@@ -282,10 +282,10 @@ class ClippingTile extends StatelessWidget {
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
                     style: TextStyle(
-                      fontFamily: handyFontFamily('Manrope'),
+                      fontFamily: handyFontFamily('Newsreader'),
                       fontSize: 16,
                       height: 1.15,
-                      fontWeight: FontWeight.w600,
+                      fontWeight: FontWeight.w500,
                       color: p.ink,
                     ),
                   ),
