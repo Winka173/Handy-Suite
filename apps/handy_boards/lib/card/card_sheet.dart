@@ -26,6 +26,10 @@ Future<void> openCard(
   String card, {
   bool readOnly = false,
   Widget Function(BuildContext context)? banner,
+
+  /// Opens at the subtask field, ready to type (the card menu's Add a
+  /// subtask).
+  bool addSubtask = false,
 }) {
   final wide = MediaQuery.sizeOf(context).width >= 900;
   Widget body(BuildContext context, ScrollController? scroll) =>
@@ -41,6 +45,7 @@ Future<void> openCard(
             scroll: scroll,
             readOnly: readOnly,
             banner: banner?.call(context),
+            addSubtask: addSubtask,
           );
         },
       );
@@ -75,6 +80,7 @@ class CardDetail extends StatefulWidget {
   final ScrollController? scroll;
   final bool readOnly;
   final Widget? banner;
+  final bool addSubtask;
   const CardDetail({
     super.key,
     required this.scope,
@@ -82,6 +88,7 @@ class CardDetail extends StatefulWidget {
     this.scroll,
     this.readOnly = false,
     this.banner,
+    this.addSubtask = false,
   });
   @override
   State<CardDetail> createState() => _CardDetailState();
@@ -92,7 +99,29 @@ class _CardDetailState extends State<CardDetail> {
   late final notes = TextEditingController(text: _card.str('notes'));
   final newSubtask = TextEditingController();
   final subtaskFocus = FocusNode();
+  final _subtaskField = GlobalKey();
   Timer? _notesTimer;
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.addSubtask && !widget.readOnly)
+      WidgetsBinding.instance.addPostFrameCallback((_) => _toSubtask());
+  }
+
+  /// Scrolls to the subtask field and puts the cursor in it.
+  void _toSubtask() {
+    if (!mounted) return;
+    final at = _subtaskField.currentContext;
+    if (at != null)
+      Scrollable.ensureVisible(
+        at,
+        duration: HandyMotion.of(context),
+        alignment: .5,
+      );
+    subtaskFocus.requestFocus();
+  }
+
   BoardsScope get scope => widget.scope;
   BoardRecord get _card => scope.state.get('tasks', widget.card);
 
@@ -665,6 +694,20 @@ class _CardDetailState extends State<CardDetail> {
                       onTap: () => menu.isOpen ? menu.close() : menu.open(),
                     ),
                   ),
+                  if (!widget.readOnly)
+                    chip(
+                      key: const Key('card-subtasks'),
+                      icon: Icons.checklist_rounded,
+                      label: progress.total > 0
+                          ? tr(
+                              context,
+                              'Subtasks ${progress.done}/${progress.total}',
+                              'Việc con ${progress.done}/${progress.total}',
+                            )
+                          : tr(context, 'Subtasks', 'Việc con'),
+                      set: progress.total > 0,
+                      onTap: _toSubtask,
+                    ),
                   if (cover == null)
                     chip(
                       key: const Key('card-cover'),
@@ -757,9 +800,11 @@ class _CardDetailState extends State<CardDetail> {
               ],
             ),
             Padding(
+              key: _subtaskField,
               padding: const EdgeInsets.fromLTRB(16, 4, 16, 0),
               child: TextField(
                 key: const Key('card-add-subtask'),
+
                 controller: newSubtask,
                 focusNode: subtaskFocus,
                 textInputAction: TextInputAction.done,

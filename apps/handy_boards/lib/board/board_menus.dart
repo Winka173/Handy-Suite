@@ -5,6 +5,7 @@ import 'time_actions.dart';
 import 'rules_page.dart';
 import '../card/fields_ui.dart';
 import '../card/card_templates_ui.dart';
+import '../card/card_sheet.dart' show openCard;
 import '../design/theme.dart';
 import 'key_dates.dart';
 import '../pro/pro.dart';
@@ -468,6 +469,13 @@ Future<void> cardMenu(
     }
 
     return [
+      _row(
+        sheet,
+        Icons.checklist_rounded,
+        tr(sheet, 'Add a subtask', 'Thêm việc con'),
+        () => then(() => openCard(context, scope, card, addSubtask: true)),
+        key: const Key('card-menu-subtask'),
+      ),
       if (open && planned != today)
         _row(
           sheet,
