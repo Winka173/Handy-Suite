@@ -153,9 +153,9 @@ class BookmarkSidebar extends StatelessWidget {
   }
 }
 
-/// The Library overview on a wide screen: Read later beside what waits
-/// (Not sorted, Focus), then the collections, then the newest saves; each
-/// section straight on the ground, as on the phone.
+/// The Library overview on a wide screen: what waits (Not sorted, Focus)
+/// as one slim strip, Read later side by side, then the collections and
+/// the newest saves in six columns; each section straight on the ground.
 class LibraryOverview extends StatelessWidget {
   final SaveScope scope;
   final ValueChanged<Bookmark> onOpen;
@@ -177,26 +177,17 @@ class LibraryOverview extends StatelessWidget {
       HandySpace.xxl,
     ),
     children: [
-      Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Expanded(
-            flex: 5,
-            child: ReadLaterShelf(scope: scope, onOpen: onOpen),
-          ),
-          const SizedBox(width: HandySpace.xl),
-          Expanded(
-            flex: 7,
-            child: Padding(
-              padding: const EdgeInsets.only(top: 20),
-              child: HomeQueues(
-                scope: scope,
-                onFocus: () => Navigator.pushNamed(context, '/focus'),
-              ),
-            ),
-          ),
-        ],
+      // What waits, as one slim strip across the top.
+      Padding(
+        padding: const EdgeInsets.only(top: HandySpace.s),
+        child: HomeQueues(
+          scope: scope,
+          across: true,
+          onFocus: () => Navigator.pushNamed(context, '/focus'),
+        ),
       ),
+      // Tonight, Tomorrow, This weekend side by side.
+      ReadLaterShelf(scope: scope, onOpen: onOpen, across: true),
       CollectionCovers(
         scope: scope,
         limit: 6,
@@ -207,6 +198,7 @@ class LibraryOverview extends StatelessWidget {
         scope: scope,
         onOpen: onOpen,
         onAll: () => onPick(Place.all),
+        maxColumns: 6,
       ),
     ],
   );

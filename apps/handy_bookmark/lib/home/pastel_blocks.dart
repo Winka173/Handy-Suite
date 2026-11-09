@@ -120,12 +120,16 @@ class ReadLaterShelf extends StatelessWidget {
   final SaveScope scope;
   final ValueChanged<Bookmark> onOpen;
   final DateTime? now;
+
+  /// A wide screen: the saves side by side, each under its day.
+  final bool across;
   static const shown = 3;
   const ReadLaterShelf({
     super.key,
     required this.scope,
     required this.onOpen,
     this.now,
+    this.across = false,
   });
 
   @override
@@ -141,6 +145,63 @@ class ReadLaterShelf extends StatelessWidget {
     final p = BookmarkPalette.of(context);
     final loc = MaterialLocalizations.of(context);
     String? lastDay;
+    Widget when(DateTime due) => Text.rich(
+      TextSpan(
+        children: [
+          TextSpan(
+            text: readLaterDay(context, due, at),
+            style: theme.textTheme.titleSmall?.copyWith(
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+          TextSpan(
+            text:
+                '  ${loc.formatTimeOfDay(TimeOfDay.fromDateTime(due), alwaysUse24HourFormat: true)}',
+            style: theme.textTheme.bodySmall?.copyWith(color: p.muted),
+          ),
+        ],
+      ),
+    );
+    if (across) {
+      return HomePanel(
+        key: const Key('read-later'),
+        title: tr(context, 'Read later', 'Hẹn đọc'),
+        count: items.length,
+        child: LayoutBuilder(
+          builder: (context, box) {
+            const gap = 12.0;
+            final width = (box.maxWidth - 2 * gap) / 3;
+            return Wrap(
+              spacing: gap,
+              runSpacing: gap,
+              children: [
+                for (final (b, due) in items.take(shown))
+                  SizedBox(
+                    width: width,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        Padding(
+                          padding: const EdgeInsets.fromLTRB(2, 4, 2, 8),
+                          child: when(due),
+                        ),
+                        _SaveRow(
+                          key: Key('later-${b.id}'),
+                          scope: scope,
+                          bookmark: b,
+                          filled: true,
+                          ribbon: due,
+                          onTap: () => onOpen(b),
+                        ),
+                      ],
+                    ),
+                  ),
+              ],
+            );
+          },
+        ),
+      );
+    }
     return HomePanel(
       key: const Key('read-later'),
       title: tr(context, 'Read later', 'Hẹn đọc'),

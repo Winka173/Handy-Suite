@@ -15,7 +15,15 @@ import 'pastel_blocks.dart';
 class HomeQueues extends StatelessWidget {
   final SaveScope scope;
   final VoidCallback onFocus;
-  const HomeQueues({super.key, required this.scope, required this.onFocus});
+
+  /// A wide screen: the two rows side by side in one slim strip.
+  final bool across;
+  const HomeQueues({
+    super.key,
+    required this.scope,
+    required this.onFocus,
+    this.across = false,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -56,64 +64,84 @@ class HomeQueues extends StatelessWidget {
     );
     if (unsorted.isEmpty && waiting.isEmpty) return calm;
     String n(int v) => formatFigure(context, '$v');
+    final rows = <Widget>[
+      if (unsorted.isNotEmpty)
+        _QueueRow(
+          key: const Key('home-quick-sort'),
+          scope: scope,
+          faces: unsorted,
+          title: tr(
+            context,
+            unsorted.length == 1
+                ? '1 save not sorted'
+                : '${n(unsorted.length)} saves not sorted',
+            '${n(unsorted.length)} mục chưa xếp',
+          ),
+          subtitle: tr(
+            context,
+            'Sort quickly, one at a time',
+            'Xếp nhanh, từng mục một',
+          ),
+          onTap: () => showQuickSort(context, scope),
+        ),
+      if (waiting.isEmpty)
+        Padding(padding: const EdgeInsets.symmetric(horizontal: 8), child: calm)
+      else
+        _QueueRow(
+          key: const Key('place-focus'),
+          scope: scope,
+          faces: waiting,
+          title: tr(
+            context,
+            waiting.length == 1
+                ? '1 thing waiting to revisit'
+                : '${n(waiting.length)} things waiting to revisit',
+            '${n(waiting.length)} mục chờ bạn xem lại',
+          ),
+          subtitle: tr(
+            context,
+            'One at a time, in Focus',
+            'Từng mục một, trong Tập trung',
+          ),
+          onTap: onFocus,
+        ),
+    ];
     return Material(
       color: p.tint,
       borderRadius: BorderRadius.circular(BookmarkRadii.item),
       clipBehavior: Clip.antiAlias,
-      child: Column(
-        children: [
-          if (unsorted.isNotEmpty)
-            _QueueRow(
-              key: const Key('home-quick-sort'),
-              scope: scope,
-              faces: unsorted,
-              title: tr(
-                context,
-                unsorted.length == 1
-                    ? '1 save not sorted'
-                    : '${n(unsorted.length)} saves not sorted',
-                '${n(unsorted.length)} mục chưa xếp',
+      child: across
+          ? IntrinsicHeight(
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  for (final (k, w) in rows.indexed) ...[
+                    if (k > 0)
+                      VerticalDivider(
+                        width: 1,
+                        indent: 12,
+                        endIndent: 12,
+                        color: p.primary.withValues(alpha: .16),
+                      ),
+                    Expanded(child: w),
+                  ],
+                ],
               ),
-              subtitle: tr(
-                context,
-                'Sort quickly, one at a time',
-                'Xếp nhanh, từng mục một',
-              ),
-              onTap: () => showQuickSort(context, scope),
-            ),
-          if (unsorted.isNotEmpty)
-            Divider(
-              height: 1,
-              indent: 12,
-              endIndent: 12,
-              color: p.primary.withValues(alpha: .16),
-            ),
-          if (waiting.isEmpty)
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 8),
-              child: calm,
             )
-          else
-            _QueueRow(
-              key: const Key('place-focus'),
-              scope: scope,
-              faces: waiting,
-              title: tr(
-                context,
-                waiting.length == 1
-                    ? '1 thing waiting to revisit'
-                    : '${n(waiting.length)} things waiting to revisit',
-                '${n(waiting.length)} mục chờ bạn xem lại',
-              ),
-              subtitle: tr(
-                context,
-                'One at a time, in Focus',
-                'Từng mục một, trong Tập trung',
-              ),
-              onTap: onFocus,
+          : Column(
+              children: [
+                for (final (k, w) in rows.indexed) ...[
+                  if (k > 0)
+                    Divider(
+                      height: 1,
+                      indent: 12,
+                      endIndent: 12,
+                      color: p.primary.withValues(alpha: .16),
+                    ),
+                  w,
+                ],
+              ],
             ),
-        ],
-      ),
     );
   }
 }

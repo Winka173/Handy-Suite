@@ -85,7 +85,7 @@ class CollectionCovers extends StatelessWidget {
             builder: (context, box) {
               final columns = (box.maxWidth / 170).floor().clamp(
                 box.maxWidth < 300 ? 1 : 2,
-                5,
+                limit == null ? 5 : 6,
               );
               const gap = HandySpace.m;
               final width = (box.maxWidth - gap * (columns - 1)) / columns;
@@ -186,8 +186,8 @@ class CollectionCover extends StatelessWidget {
     final f = hueField(context, hue);
     final dark = theme.brightness == Brightness.dark;
     final paper = dark
-        ? Colors.white.withValues(alpha: .08)
-        : Colors.white.withValues(alpha: .72);
+        ? Color.lerp(f.field, Colors.white, .06)!
+        : Color.lerp(f.field, Colors.white, .45)!;
     // Up to two saves, pictures first: each shows its picture, or its title
     // set on paper in the tile when it has none; empty, its mark.
     final Widget face = shown.isEmpty

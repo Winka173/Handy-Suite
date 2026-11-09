@@ -14,12 +14,16 @@ class RecentlySaved extends StatelessWidget {
   final SaveScope scope;
   final ValueChanged<Bookmark> onOpen;
   final VoidCallback onAll;
+
+  /// Up to this many across (six on the wide overview).
+  final int maxColumns;
   static const shown = 4;
   const RecentlySaved({
     super.key,
     required this.scope,
     required this.onOpen,
     required this.onAll,
+    this.maxColumns = 4,
   });
 
   @override
@@ -47,7 +51,7 @@ class RecentlySaved extends StatelessWidget {
             final scale = MediaQuery.textScalerOf(context).scale(14) / 14;
             final columns = (box.maxWidth / (140 * scale.clamp(1.0, 2.0)))
                 .floor()
-                .clamp(1, 4);
+                .clamp(1, maxColumns);
             const gap = HandySpace.m;
             final width = (box.maxWidth - gap * (columns - 1)) / columns;
             return Wrap(
