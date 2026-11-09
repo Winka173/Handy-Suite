@@ -103,13 +103,18 @@ class BookmarkSidebar extends StatelessWidget {
                   padding: const EdgeInsets.fromLTRB(4, 0, 4, 16),
                   children: [
                     Padding(
+                      // The same insets as the places below it, so the
+                      // icons and names line up in one column.
                       padding: const EdgeInsets.symmetric(
                         horizontal: 6,
-                        vertical: 1,
+                        vertical: 3,
                       ),
                       child: ListTile(
                         key: const Key('side-overview'),
                         dense: true,
+                        contentPadding: const EdgeInsets.symmetric(
+                          horizontal: HandySpace.l - 6,
+                        ),
                         selected: overview,
                         selectedTileColor: p.band,
                         selectedColor: p.bandInk,
@@ -134,6 +139,7 @@ class BookmarkSidebar extends StatelessWidget {
                           formatFigure(context, '$live'),
                           style: theme.textTheme.bodyMedium?.copyWith(
                             color: overview ? p.bandSub : p.muted,
+                            fontFeatures: const [FontFeature.tabularFigures()],
                           ),
                         ),
                         onTap: onOverview,
