@@ -26,10 +26,14 @@ class SettingsGroup extends StatelessWidget {
   final String? note;
   final bool first;
   final List<Widget> children;
+
+  /// Beside the title (a Pro tag).
+  final Widget? badge;
   const SettingsGroup({
     super.key,
     required this.title,
     this.note,
+    this.badge,
     this.first = false,
     required this.children,
   });
@@ -40,12 +44,19 @@ class SettingsGroup extends StatelessWidget {
     final head = Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Semantics(
-          header: true,
-          child: Text(
-            title,
-            style: theme.textTheme.headlineSmall?.copyWith(fontSize: 22),
-          ),
+        Wrap(
+          spacing: 8,
+          crossAxisAlignment: WrapCrossAlignment.center,
+          children: [
+            Semantics(
+              header: true,
+              child: Text(
+                title,
+                style: theme.textTheme.headlineSmall?.copyWith(fontSize: 22),
+              ),
+            ),
+            ?badge,
+          ],
         ),
         if (note != null) ...[
           const SizedBox(height: HandySpace.xs),

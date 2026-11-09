@@ -162,6 +162,7 @@ class SettingsPage extends StatelessWidget {
           // Automations (Pro).
           SettingsGroup(
             title: tr(context, 'Automations', 'Tự động hoá'),
+            badge: pro ? null : const ProBadge(),
             note: tr(
               context,
               'Pro. Each one is off until you turn it on; Undo always works.',
@@ -171,14 +172,6 @@ class SettingsPage extends StatelessWidget {
               SettingsPanel(
                 gap: false,
                 rows: [
-                  if (!pro)
-                    const Padding(
-                      padding: EdgeInsets.fromLTRB(16, 12, 16, 0),
-                      child: Align(
-                        alignment: Alignment.centerLeft,
-                        child: ProBadge(),
-                      ),
-                    ),
                   SettingsSwitch(
                     key: const Key('auto-subtasks-done'),
                     icon: Icons.task_alt,
