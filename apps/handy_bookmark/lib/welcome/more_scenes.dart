@@ -130,7 +130,7 @@ class FindScene extends StatelessWidget {
                               const Divider(
                                 height: 1,
                                 indent: 76,
-                                color: Color(0xFFECE9E2),
+                                color: Color(0xFFE8ECEF),
                               ),
                             _Row(sample: s, focus: s == pho ? focus : 0),
                           ],

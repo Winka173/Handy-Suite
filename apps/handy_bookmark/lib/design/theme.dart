@@ -24,7 +24,7 @@ class BookmarkPalette extends ThemeExtension<BookmarkPalette> {
   /// instead of parting by tone alone.
   final bool edges;
   const BookmarkPalette({
-    this.display = 'Newsreader',
+    this.display = 'Manrope',
     this.edges = false,
     required this.canvas,
     required this.surface,
@@ -48,18 +48,18 @@ class BookmarkPalette extends ThemeExtension<BookmarkPalette> {
   });
 
   static const light = BookmarkPalette(
-    canvas: Color(0xFFF6F4EE),
+    canvas: Color(0xFFF3F5F7),
     surface: Color(0xFFFFFFFF),
-    raised: Color(0xFFEFEDE6),
-    sunk: Color(0xFFEAE8E0),
+    raised: Color(0xFFEEF1F4),
+    sunk: Color(0xFFE7EBEE),
     primary: Color(0xFF0E7490),
     pressed: Color(0xFF0B5A70),
     tint: Color(0xFFD9EEF2),
     onPrimary: Color(0xFFFFFFFF),
-    ink: Color(0xFF1C2627),
-    muted: Color(0xFF5B6767),
-    line: Color(0xFFE3E2DA),
-    control: Color(0xFFC9CCC4),
+    ink: Color(0xFF1B1D1F),
+    muted: Color(0xFF5C6064),
+    line: Color(0xFFE6E6E6),
+    control: Color(0xFFD6D9DD),
     sage: Color(0xFF557A66),
     sageTint: Color(0xFFE3EDE4),
     warm: Color(0xFFC97A5B),
@@ -70,18 +70,18 @@ class BookmarkPalette extends ThemeExtension<BookmarkPalette> {
   );
 
   static const dark = BookmarkPalette(
-    canvas: Color(0xFF171D1C),
-    surface: Color(0xFF222A29),
-    raised: Color(0xFF2B3432),
-    sunk: Color(0xFF121716),
+    canvas: Color(0xFF141516),
+    surface: Color(0xFF1E2022),
+    raised: Color(0xFF26292B),
+    sunk: Color(0xFF101112),
     primary: Color(0xFF7CC8D8),
     pressed: Color(0xFF9AD6E3),
-    tint: Color(0xFF21424A),
-    onPrimary: Color(0xFF0C2A31),
-    ink: Color(0xFFEEF2EF),
-    muted: Color(0xFFB0BEBA),
-    line: Color(0xFF34403E),
-    control: Color(0xFF4A5856),
+    tint: Color(0xFF1F3A40),
+    onPrimary: Color(0xFF0B2A31),
+    ink: Color(0xFFF2F2F2),
+    muted: Color(0xFFA9ADB1),
+    line: Color(0xFF2C2F31),
+    control: Color(0xFF3A3D40),
     sage: Color(0xFF9CC2AC),
     sageTint: Color(0xFF263A31),
     warm: Color(0xFFE2A188),
@@ -109,24 +109,28 @@ class BookmarkPalette extends ThemeExtension<BookmarkPalette> {
 /// Corners step down from the largest surface to the smallest control.
 abstract final class BookmarkRadii {
   static const chip = 999.0;
-  static const field = 14.0;
-  static const button = 14.0;
-  static const thumb = 12.0;
-  static const item = 16.0;
+  static const field = 12.0;
+  static const button = 12.0;
+  static const thumb = 10.0;
+  static const item = 14.0;
+  static const panel = 20.0;
   static const collection = 20.0;
   static const focus = 22.0;
   static const dialog = 22.0;
   static const sheet = 26.0;
 }
 
-/// The serif kept for a few editorial moments: the library's name, an
-/// item's title on its own page, the guide.
+/// The display face for a few moments (the library's name, an item's
+/// title on its own page): Manrope in the pastel look, a serif in some
+/// Pro looks.
 TextStyle bookmarkSerif(BuildContext context, double size) => TextStyle(
   fontFamily: handyFontFamily(BookmarkPalette.of(context).display),
   fontSize: size,
   height: 1.12,
   letterSpacing: -.4,
-  fontWeight: FontWeight.w500,
+  fontWeight: BookmarkPalette.of(context).display == 'Manrope'
+      ? FontWeight.w600
+      : FontWeight.w500,
   color: BookmarkPalette.of(context).ink,
 );
 

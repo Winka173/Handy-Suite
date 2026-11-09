@@ -211,8 +211,8 @@ List<_Topic> _topics(BuildContext context) => [
       _Step(
         tr(
           context,
-          'New saves wait in Not sorted. Tap the folder on a row to put it in a collection.',
-          'Mục mới chờ ở Chưa xếp. Bấm biểu tượng thư mục trên dòng để cho vào bộ sưu tập.',
+          'New saves wait in Not sorted on Home. Tap one of the collections under a save to put it there, or Other… for the rest.',
+          'Mục mới chờ ở khung Chưa xếp trên Trang chủ. Bấm một bộ sưu tập dưới mục để cho vào đó, hoặc Khác… để chọn chỗ khác.',
         ),
         picture: const MockPutIn(),
       ),
@@ -344,6 +344,14 @@ List<_Topic> _topics(BuildContext context) => [
             (null, tr(context, 'Pictures', 'Ảnh')),
           ],
         ),
+      ),
+      _Step(
+        tr(
+          context,
+          'Set Remind me on a save and it waits on Home under Read later, by Tonight, Tomorrow or This weekend. A gold ribbon marks it everywhere.',
+          'Đặt Nhắc tôi cho một mục, nó chờ trên Trang chủ ở khung Hẹn đọc, theo Tối nay, Ngày mai hoặc Cuối tuần. Dải ruy băng vàng đánh dấu nó ở mọi nơi.',
+        ),
+        picture: const MockReadLater(),
       ),
     ],
   ),

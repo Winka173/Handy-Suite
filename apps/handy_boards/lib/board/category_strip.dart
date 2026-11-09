@@ -61,38 +61,67 @@ class CategoryStrip extends StatelessWidget {
     }
 
     final theme = Theme.of(context);
-    // The heading on the left, the quick filters and Edit on the right;
-    // on a narrow screen with large text the controls drop to a second line.
-    final header = Padding(
-      padding: const EdgeInsets.fromLTRB(16, 0, 4, 0),
-      child: Wrap(
-        alignment: WrapAlignment.spaceBetween,
-        crossAxisAlignment: WrapCrossAlignment.center,
-        runSpacing: 4,
-        children: [
-          Semantics(
-            header: true,
-            child: Text(
-              tr(context, 'Categories', 'Nhóm'),
-              style: theme.textTheme.titleSmall?.copyWith(color: p.muted),
-            ),
-          ),
-          Wrap(
-            crossAxisAlignment: WrapCrossAlignment.center,
-            spacing: 4,
-            children: [
-              ...trailing,
-              if (onEdit != null)
-                TextButton(
-                  key: const Key('strip-edit'),
-                  onPressed: onEdit,
-                  child: Text(tr(context, 'Edit', 'Sửa')),
-                ),
-            ],
-          ),
-        ],
+    final heading = Semantics(
+      header: true,
+      child: Text(
+        tr(context, 'Categories', 'Nhóm'),
+        style: theme.textTheme.titleSmall?.copyWith(color: p.muted),
       ),
     );
+    final edit = onEdit == null
+        ? null
+        : TextButton(
+            key: const Key('strip-edit'),
+            onPressed: onEdit,
+            child: Text(tr(context, 'Edit', 'Sửa')),
+          );
+    // Wide: the heading, then the quick filters and Edit at the right, on
+    // one line. Phone: the heading with Edit at the right, the quick
+    // filters on their own row from the page margin, scrolling sideways.
+    Widget header(bool phone) => phone
+        ? Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 0, 4, 0),
+                child: Row(
+                  children: [
+                    Expanded(child: heading),
+                    ?edit,
+                  ],
+                ),
+              ),
+              if (trailing.isNotEmpty)
+                SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+                  child: Row(
+                    children: [
+                      for (final (k, w) in trailing.indexed) ...[
+                        if (k > 0) const SizedBox(width: 6),
+                        w,
+                      ],
+                    ],
+                  ),
+                ),
+            ],
+          )
+        : Padding(
+            padding: const EdgeInsets.fromLTRB(24, 0, 16, 0),
+            child: Wrap(
+              alignment: WrapAlignment.spaceBetween,
+              crossAxisAlignment: WrapCrossAlignment.center,
+              runSpacing: 4,
+              children: [
+                heading,
+                Wrap(
+                  crossAxisAlignment: WrapCrossAlignment.center,
+                  spacing: 4,
+                  children: [...trailing, ?edit],
+                ),
+              ],
+            ),
+          );
     return LayoutBuilder(
       builder: (context, box) {
         final scale = MediaQuery.textScalerOf(context).scale(1);
@@ -114,7 +143,7 @@ class CategoryStrip extends StatelessWidget {
                 ),
               )
             : SizedBox(
-                height: 84 * scale.clamp(1.0, 2.0),
+                height: 58 * scale.clamp(1.0, 2.0),
                 child: ListView(
                   scrollDirection: Axis.horizontal,
                   padding: EdgeInsets.symmetric(horizontal: phone ? 16 : 24),
@@ -130,7 +159,7 @@ class CategoryStrip extends StatelessWidget {
         return Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [header, body],
+          children: [header(phone), body],
         );
       },
     );
@@ -164,7 +193,9 @@ class _Block extends StatelessWidget {
       excludeSemantics: true,
       child: Material(
         key: Key('strip-${progress.category?.id ?? 'none'}'),
-        color: selected ? p.tint : p.surface,
+        // The category's own pale field, so the strip reads as the board's
+        // colours at a glance; the picked one carries the board's line.
+        color: progress.category == null ? p.surface : hue.tint,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(BoardsRadii.card),
           side: selected
@@ -175,7 +206,7 @@ class _Block extends StatelessWidget {
           borderRadius: BorderRadius.circular(BoardsRadii.card),
           onTap: onTap,
           child: Padding(
-            padding: const EdgeInsets.fromLTRB(12, 10, 12, 12),
+            padding: const EdgeInsets.fromLTRB(12, 10, 12, 10),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               mainAxisSize: MainAxisSize.min,
@@ -196,33 +227,37 @@ class _Block extends StatelessWidget {
                         name,
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
-                        style: theme.textTheme.titleSmall,
-                      ),
-                    ),
-                    if (selected)
-                      Icon(Icons.filter_alt, size: 16, color: p.primary),
-                  ],
-                ),
-                const SizedBox(height: 6),
-                Text.rich(
-                  TextSpan(
-                    children: [
-                      TextSpan(
-                        text: '${progress.done}',
-                        style: theme.textTheme.titleMedium?.copyWith(
-                          fontWeight: FontWeight.w500,
+                        style: theme.textTheme.titleSmall?.copyWith(
+                          color: categoryInk(context, progress.category),
+                          fontWeight: FontWeight.w600,
                         ),
                       ),
+                    ),
+                    const SizedBox(width: 8),
+                    Text.rich(
                       TextSpan(
-                        text:
-                            '/${progress.total} ${tr(context, 'done', 'xong')}',
-                        style: theme.textTheme.bodySmall,
+                        children: [
+                          TextSpan(
+                            text: '${progress.done}',
+                            style: theme.textTheme.titleMedium?.copyWith(
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                          TextSpan(
+                            text: '/${progress.total}',
+                            style: theme.textTheme.bodySmall,
+                          ),
+                        ],
                       ),
+                      style: const TextStyle(
+                        fontFeatures: [FontFeature.tabularFigures()],
+                      ),
+                    ),
+                    if (selected) ...[
+                      const SizedBox(width: 4),
+                      Icon(Icons.filter_alt, size: 16, color: p.primary),
                     ],
-                  ),
-                  style: const TextStyle(
-                    fontFeatures: [FontFeature.tabularFigures()],
-                  ),
+                  ],
                 ),
                 const SizedBox(height: 8),
                 ClipRRect(
@@ -232,7 +267,7 @@ class _Block extends StatelessWidget {
                     child: Stack(
                       fit: StackFit.expand,
                       children: [
-                        ColoredBox(color: hue.tint),
+                        ColoredBox(color: p.surface.withValues(alpha: .75)),
                         FractionallySizedBox(
                           alignment: Alignment.centerLeft,
                           widthFactor: ratio,

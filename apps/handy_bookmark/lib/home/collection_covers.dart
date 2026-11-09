@@ -7,7 +7,7 @@ import '../controller.dart';
 import '../scope.dart';
 import '../design/theme.dart';
 import '../ui/collection_picker.dart';
-import '../ui/visual.dart';
+import 'pastel_blocks.dart';
 import '../view/library_view.dart';
 
 /// The library as a shelf: every collection with a cover made from what is
@@ -41,32 +41,34 @@ class CollectionCovers extends StatelessWidget {
       list.sort((a, b) => b.savedAt.compareTo(a.savedAt));
     }
     final names = {for (final c in l.collections) c.id: c.name};
-    return Column(
+    final action = Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        if (onAll != null)
+          Flexible(
+            child: TextButton(
+              key: const Key('home-library'),
+              onPressed: onAll,
+              child: Text(
+                tr(context, 'See all', 'Xem tất cả'),
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+          ),
+        // Plain, like Search and Settings above: the one filled
+        // button on Home is Save.
+        IconButton(
+          key: const Key('collection-new'),
+          tooltip: tr(context, 'New collection', 'Bộ sưu tập mới'),
+          // A folder, not a plus: the one + on Home is Save.
+          icon: const Icon(Icons.create_new_folder_outlined),
+          onPressed: () => scope.editCollection(context),
+        ),
+      ],
+    );
+    final grid = Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        SectionHead(
-          tr(context, 'Collections', 'Bộ sưu tập'),
-          action: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              if (onAll != null)
-                TextButton(
-                  key: const Key('home-library'),
-                  onPressed: onAll,
-                  child: Text(tr(context, 'See all', 'Xem tất cả')),
-                ),
-              // Plain, like Search and Settings above: the one filled
-              // button on Home is Save.
-              IconButton(
-                key: const Key('collection-new'),
-                tooltip: tr(context, 'New collection', 'Bộ sưu tập mới'),
-                // A folder, not a plus: the one + on Home is Save.
-                icon: const Icon(Icons.create_new_folder_outlined),
-                onPressed: () => scope.editCollection(context),
-              ),
-            ],
-          ),
-        ),
         if (l.collections.isEmpty)
           Text(
             tr(
@@ -115,6 +117,15 @@ class CollectionCovers extends StatelessWidget {
           ),
       ],
     );
+    // Home's shelf sits in a panel like Home's other blocks.
+    return Padding(
+      padding: const EdgeInsets.only(top: HandySpace.l),
+      child: HomePanel(
+        title: tr(context, 'Collections', 'Bộ sưu tập'),
+        action: action,
+        child: Padding(padding: const EdgeInsets.only(top: 4), child: grid),
+      ),
+    );
   }
 }
 
@@ -146,7 +157,6 @@ class CollectionCover extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final c = HandyColors.of(context);
     final pictures = items.where((b) => b.isImage).length;
     final links = items.length - pictures;
     final count = [
@@ -173,101 +183,118 @@ class CollectionCover extends StatelessWidget {
     final freshWords = fresh == 0
         ? ''
         : tr(context, ', $fresh not opened', ', $fresh mục chưa xem');
+    final f = hueField(context, hue);
+    final dark = theme.brightness == Brightness.dark;
+    final paper = dark
+        ? Colors.white.withValues(alpha: .08)
+        : Colors.white.withValues(alpha: .72);
+    // Up to two saves, pictures first: each shows its picture, or its title
+    // set on paper in the tile when it has none; empty, its mark.
+    final Widget face = shown.isEmpty
+        ? _EmptyCover(hue: hue, mark: mark)
+        : _mosaic([
+            for (final b in shown.take(2))
+              _CoverCell(
+                controller: scope.c,
+                bookmark: b,
+                paper: paper,
+                ink: f.ink,
+              ),
+          ]);
     return Semantics(
       button: onOpen != null,
       label: '${collection.name}, $count$freshWords',
       excludeSemantics: true,
-      child: InkWell(
-        key: Key('collection-${collection.id}'),
-        onTap: onOpen,
-        onLongPress: onOpen == null
-            ? null
-            : () => scope.editCollection(context, collection),
+      child: Material(
+        color: f.field,
         borderRadius: BorderRadius.circular(BookmarkRadii.collection),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            AspectRatio(
-              aspectRatio: 4 / 3,
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(BookmarkRadii.collection),
-                child: shown.isEmpty
-                    ? _EmptyCover(hue: hue, mark: mark)
-                    : _mosaic(shown),
-              ),
-            ),
-            const SizedBox(height: 10),
-            Row(
+        clipBehavior: Clip.antiAlias,
+        child: InkWell(
+          key: Key('collection-${collection.id}'),
+          onTap: onOpen,
+          onLongPress: onOpen == null
+              ? null
+              : () => scope.editCollection(context, collection),
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(10, 10, 10, 12),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                CollectionBadge(hue: hue, mark: mark, size: 9),
-                SizedBox(width: mark == null ? 6 : 8),
-                Expanded(
-                  child: Text(
-                    collection.name,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: theme.textTheme.titleSmall?.copyWith(
-                      fontSize: 15,
-                      fontWeight: FontWeight.w600,
-                    ),
+                AspectRatio(
+                  aspectRatio: 1.55,
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(12),
+                    child: face,
+                  ),
+                ),
+                const SizedBox(height: 10),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 4),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      Row(
+                        children: [
+                          if (mark != null) ...[
+                            CollectionBadge(hue: hue, mark: mark, size: 9),
+                            const SizedBox(width: 6),
+                          ],
+                          Expanded(
+                            child: Text(
+                              collection.name,
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                              style: theme.textTheme.titleSmall?.copyWith(
+                                fontSize: 15,
+                                fontWeight: FontWeight.w600,
+                                color: f.ink,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                      Row(
+                        children: [
+                          Flexible(
+                            child: Text(
+                              [if (parent != null) parent!, count].join(' · '),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: theme.textTheme.bodySmall?.copyWith(
+                                color: f.ink.withValues(alpha: .82),
+                              ),
+                            ),
+                          ),
+                          if (fresh > 0) ...[
+                            const SizedBox(width: 6),
+                            _New(
+                              fresh,
+                              key: Key('collection-new-${collection.id}'),
+                            ),
+                          ],
+                        ],
+                      ),
+                    ],
                   ),
                 ),
               ],
             ),
-            Row(
-              children: [
-                Flexible(
-                  child: Text(
-                    [if (parent != null) parent!, count].join(' · '),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: theme.textTheme.bodySmall?.copyWith(color: c.muted),
-                  ),
-                ),
-                if (fresh > 0) ...[
-                  const SizedBox(width: 6),
-                  _New(fresh, key: Key('collection-new-${collection.id}')),
-                ],
-              ],
-            ),
-          ],
+          ),
         ),
       ),
     );
   }
 
-  Widget _mosaic(List<Bookmark> shown) {
-    Widget cell(Bookmark b) => _CoverCell(controller: scope.c, bookmark: b);
-    return switch (shown.length) {
-      1 => cell(shown[0]),
-      2 => Row(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Expanded(child: cell(shown[0])),
-          const SizedBox(width: 3),
-          Expanded(child: cell(shown[1])),
-        ],
-      ),
-      _ => Row(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Expanded(flex: 3, child: cell(shown[0])),
-          const SizedBox(width: 3),
-          Expanded(
-            flex: 2,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                Expanded(child: cell(shown[1])),
-                const SizedBox(height: 3),
-                Expanded(child: cell(shown[2])),
-              ],
-            ),
-          ),
-        ],
-      ),
-    };
-  }
+  Widget _mosaic(List<Widget> cells) => cells.length == 1
+      ? cells.first
+      : Row(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Expanded(child: cells[0]),
+            const SizedBox(width: 3),
+            Expanded(child: cells[1]),
+          ],
+        );
 }
 
 /// One item on a cover: its picture, or its title set in the title face
@@ -275,23 +302,29 @@ class CollectionCover extends StatelessWidget {
 class _CoverCell extends StatelessWidget {
   final SaveController controller;
   final Bookmark bookmark;
-  const _CoverCell({required this.controller, required this.bookmark});
+  final Color paper, ink;
+  const _CoverCell({
+    required this.controller,
+    required this.bookmark,
+    required this.paper,
+    required this.ink,
+  });
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final c = HandyColors.of(context);
     final b = bookmark;
     final typeset = Container(
-      color: c.raised,
+      color: paper,
       padding: const EdgeInsets.all(HandySpace.s),
       alignment: AlignmentDirectional.topStart,
       child: Text(
         b.title.isNotEmpty ? b.title : b.sourceDomain,
         maxLines: 4,
         overflow: TextOverflow.fade,
-        style: theme.textTheme.titleSmall?.copyWith(
-          fontFamily: handyFontFamily('Newsreader'),
-          height: 1.15,
+        style: theme.textTheme.bodySmall?.copyWith(
+          color: ink,
+          fontWeight: FontWeight.w600,
+          height: 1.25,
         ),
       ),
     );

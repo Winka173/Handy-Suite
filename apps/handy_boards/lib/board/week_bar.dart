@@ -85,7 +85,8 @@ class TimelineBar extends StatelessWidget {
     };
     return Padding(
       key: const Key('week-bar'),
-      padding: const EdgeInsets.fromLTRB(8, 0, 12, 4),
+      // The chevron's glyph on the page's 16 pt margin.
+      padding: const EdgeInsets.fromLTRB(0, 0, 12, 4),
       child: Row(
         children: [
           IconButton(

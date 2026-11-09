@@ -1,3 +1,4 @@
+import 'package:handy_bookmark_engine/handy_bookmark_engine.dart';
 import 'package:handy_ui/kit.dart';
 import '../library/batch_bar.dart';
 import '../scope.dart';
@@ -10,6 +11,8 @@ import 'save_sheet.dart';
 import '../design/theme.dart';
 import 'empty_library.dart';
 import 'home_sections.dart';
+import 'home_queues.dart';
+import 'pastel_blocks.dart';
 import 'quick_save.dart';
 
 /// The phone's home, a launchpad: the library's name, the Quick Save row
@@ -41,6 +44,7 @@ class SaveHomePage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final v = scope.view;
+    void open(Bookmark b) => Navigator.pushNamed(context, '/bookmark/${b.id}');
     return ListenableBuilder(
       listenable: Listenable.merge([v, scope.c]),
       builder: (context, _) {
@@ -130,10 +134,14 @@ class SaveHomePage extends StatelessWidget {
               if (empty)
                 EmptyLibrary(onPicture: () => scope.addPhoto(context))
               else ...[
+                Padding(
+                  padding: const EdgeInsets.only(top: HandySpace.l),
+                  child: ReadLaterShelf(scope: scope, onOpen: open),
+                ),
                 const SizedBox(height: HandySpace.l),
-                FocusNudge(
+                HomeQueues(
                   scope: scope,
-                  onOpen: () => Navigator.pushNamed(context, '/focus'),
+                  onFocus: () => Navigator.pushNamed(context, '/focus'),
                 ),
               ],
               if (!empty || l.collections.isNotEmpty)
@@ -146,8 +154,7 @@ class SaveHomePage extends StatelessWidget {
               if (!empty)
                 RecentlySaved(
                   scope: scope,
-                  onOpen: (b) =>
-                      Navigator.pushNamed(context, '/bookmark/${b.id}'),
+                  onOpen: open,
                   onAll: () => openPlace(context, Place.all),
                 ),
             ],
