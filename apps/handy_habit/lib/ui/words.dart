@@ -11,9 +11,9 @@ String figure(BuildContext context, int milli) {
 }
 
 /// What a habit counts in, for a figure: "pages", "min", "times".
-String unitOf(BuildContext context, Habit h) => switch (h.type) {
+String unitOf(BuildContext context, Habit h, {int? value}) => switch (h.type) {
   'binary' => '',
-  'count' => tr(context, 'times', 'lần'),
+  'count' => tr(context, value == 1000 ? 'time' : 'times', 'lần'),
   'duration' => tr(context, 'min', 'phút'),
   _ => h.unit,
 };
@@ -24,7 +24,7 @@ String progressText(BuildContext context, Habit h, int value, int target) {
     return value >= target
         ? tr(context, 'Done', 'Đã xong')
         : tr(context, 'Not yet', 'Chưa làm');
-  return '${figure(context, value)} / ${figure(context, target)} ${unitOf(context, h)}'
+  return '${figure(context, value)} / ${figure(context, target)} ${unitOf(context, h, value: target)}'
       .trim();
 }
 

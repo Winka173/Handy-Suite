@@ -499,8 +499,8 @@ class _Linked extends StatelessWidget {
         HandyNotice(
           tr(
             context,
-            'Counts for ${h.title}${h.type == 'binary' ? '' : ': +${figure(context, step.linkedValue)} ${unitOf(context, h)}'}. Today: ${progressText(context, h, value, target)}${reached ? ', target reached' : ''}.',
-            'Tính cho ${h.title}${h.type == 'binary' ? '' : ': +${figure(context, step.linkedValue)} ${unitOf(context, h)}'}. Hôm nay: ${progressText(context, h, value, target)}${reached ? ', đã đạt mục tiêu' : ''}.',
+            'Counts for ${h.title}${h.type == 'binary' ? '' : ': +${figure(context, step.linkedValue)} ${unitOf(context, h, value: step.linkedValue)}'}. Today: ${progressText(context, h, value, target)}${reached ? ', target reached' : ''}.',
+            'Tính cho ${h.title}${h.type == 'binary' ? '' : ': +${figure(context, step.linkedValue)} ${unitOf(context, h, value: step.linkedValue)}'}. Hôm nay: ${progressText(context, h, value, target)}${reached ? ', đã đạt mục tiêu' : ''}.',
           ),
         ),
         if (h.type != 'binary' && reached)

@@ -324,11 +324,108 @@ class _Habits extends StatelessWidget {
             'Start with one small thing you want to do most days.',
             'Bắt đầu bằng một việc nhỏ bạn muốn làm gần như mỗi ngày.',
           ),
-          action: FilledButton.icon(
-            key: const Key('today-add-habit'),
-            onPressed: () => openHabitEditor(context, scope),
-            icon: const Icon(Icons.add),
-            label: Text(tr(context, 'New habit', 'Thói quen mới')),
+          action: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              FilledButton.icon(
+                key: const Key('today-add-habit'),
+                onPressed: () => openHabitEditor(context, scope),
+                icon: const Icon(Icons.add),
+                label: Text(tr(context, 'New habit', 'Thói quen mới')),
+              ),
+              const SizedBox(height: 16),
+              Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                alignment: WrapAlignment.center,
+                children: [
+                  for (final (id, en, vi, preset) in const [
+                    (
+                      'sleep',
+                      'Sleep',
+                      'Ngủ',
+                      HabitPreset(
+                        'goal-sleep',
+                        'sleep',
+                        'Go to bed on time',
+                        'Đi ngủ đúng giờ',
+                      ),
+                    ),
+                    (
+                      'move',
+                      'Move',
+                      'Vận động',
+                      HabitPreset(
+                        'goal-move',
+                        'workout',
+                        'Walk a little',
+                        'Đi bộ một chút',
+                        type: 'duration',
+                        target: 10,
+                      ),
+                    ),
+                    (
+                      'focus',
+                      'Focus',
+                      'Tập trung',
+                      HabitPreset(
+                        'goal-focus',
+                        'study',
+                        'Focus for a while',
+                        'Tập trung một lúc',
+                        type: 'duration',
+                        target: 15,
+                      ),
+                    ),
+                    (
+                      'read',
+                      'Read',
+                      'Đọc',
+                      HabitPreset(
+                        'goal-read',
+                        'study',
+                        'Read a little',
+                        'Đọc một chút',
+                        type: 'quantity',
+                        target: 10,
+                        unitEn: 'pages',
+                        unitVi: 'trang',
+                      ),
+                    ),
+                    (
+                      'water',
+                      'Water',
+                      'Uống nước',
+                      HabitPreset(
+                        'goal-water',
+                        'morning',
+                        'Drink water',
+                        'Uống nước',
+                        type: 'count',
+                        target: 8,
+                      ),
+                    ),
+                    (
+                      'phone',
+                      'Less phone',
+                      'Bớt điện thoại',
+                      HabitPreset(
+                        'goal-phone',
+                        'evening',
+                        'Put the phone away before bed',
+                        'Cất điện thoại trước khi ngủ',
+                      ),
+                    ),
+                  ])
+                    ActionChip(
+                      key: Key('goal-$id'),
+                      label: Text(tr(context, en, vi)),
+                      onPressed: () =>
+                          openHabitEditor(context, scope, null, preset),
+                    ),
+                ],
+              ),
+            ],
           ),
         ),
       );

@@ -146,7 +146,7 @@ class HabitView extends StatelessWidget {
                   [
                     scheduleText(context, current),
                     if (h.type != 'binary')
-                      '${figure(context, current.target)} ${unitOf(context, h)}',
+                      '${figure(context, current.target)} ${unitOf(context, h, value: current.target)}',
                     if (h.category.isNotEmpty) h.category,
                     if (h.archived) tr(context, 'archived', 'đã lưu trữ'),
                   ].join(' · '),
@@ -157,6 +157,22 @@ class HabitView extends StatelessWidget {
                     padding: const EdgeInsets.only(top: HandySpace.s),
                     child: Text(h.note),
                   ),
+                Align(
+                  alignment: AlignmentDirectional.centerStart,
+                  child: TextButton.icon(
+                    key: const Key('streak-help'),
+                    onPressed: () =>
+                        Navigator.pushNamed(context, '/help/streaks'),
+                    icon: const Icon(Icons.help_outline),
+                    label: Text(
+                      tr(
+                        context,
+                        'How does this streak work?',
+                        'Chuỗi này được tính ra sao?',
+                      ),
+                    ),
+                  ),
+                ),
                 const SizedBox(height: HandySpace.l),
                 Flex(
                   direction: compact ? Axis.vertical : Axis.horizontal,
@@ -233,7 +249,7 @@ class HabitView extends StatelessWidget {
                           [
                             scheduleText(context, v),
                             if (h.type != 'binary')
-                              '${figure(context, v.target)} ${unitOf(context, h)}',
+                              '${figure(context, v.target)} ${unitOf(context, h, value: v.target)}',
                           ].join(' · '),
                         ),
                         subtitle: Text(
@@ -274,7 +290,7 @@ class HabitView extends StatelessWidget {
                                     ? statusLabel(context, 'skipped')
                                     : h.type == 'binary'
                                     ? tr(context, 'Done', 'Đã xong')
-                                    : '${figure(context, e.value)} ${unitOf(context, h)}',
+                                    : '${figure(context, e.value)} ${unitOf(context, h, value: e.value)}',
                               ),
                               subtitle: Text(
                                 [
@@ -282,8 +298,8 @@ class HabitView extends StatelessWidget {
                                   if (h.type != 'binary')
                                     tr(
                                       context,
-                                      'Goal ${figure(context, scheduleOn(h, e.day)?.target ?? 1000)} ${unitOf(context, h)}',
-                                      'Mục tiêu ${figure(context, scheduleOn(h, e.day)?.target ?? 1000)} ${unitOf(context, h)}',
+                                      'Goal ${figure(context, scheduleOn(h, e.day)?.target ?? 1000)} ${unitOf(context, h, value: scheduleOn(h, e.day)?.target ?? 1000)}',
+                                      'Mục tiêu ${figure(context, scheduleOn(h, e.day)?.target ?? 1000)} ${unitOf(context, h, value: scheduleOn(h, e.day)?.target ?? 1000)}',
                                     ),
                                   if (e.source == 'routine')
                                     tr(

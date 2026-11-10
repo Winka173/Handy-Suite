@@ -45,7 +45,11 @@ class HabitRunNotices {
           done.complete(false);
           return;
         }
-        await port.show(notice);
+        await port.show(
+          s.settings['privateNotifications'] != false
+              ? RunNotice(notice.session, 'Handy Habit', notice.body)
+              : notice,
+        );
         _shown = true;
         done.complete(true);
       } catch (_) {

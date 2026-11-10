@@ -1,14 +1,12 @@
-import 'package:handy_habit_engine/handy_habit_engine.dart';
 import 'package:handy_ui/kit.dart';
 import '../habits/preset_sheet.dart';
-import '../habits/habit_editor.dart';
 import '../insights/insights_page.dart';
 import '../pauses/pauses.dart';
 import '../scope.dart';
 import '../routines/routines_page.dart';
 import '../today/today_page.dart';
-import '../ui/words.dart';
 import '../design/palette.dart';
+import '../welcome/welcome_page.dart';
 
 /// The three daily jobs. Legacy internal area IDs stay stable for notices.
 class HabitShell extends StatelessWidget {
@@ -27,8 +25,23 @@ class HabitShell extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    if (scope.state.settings['onboarded'] != true)
-      return Onboarding(scope: scope);
+    if (scope.state.settings['onboarded'] != true &&
+        scope.state.habits.isEmpty &&
+        scope.state.routines.isEmpty &&
+        scope.state.events.isEmpty &&
+        scope.state.sessions.isEmpty &&
+        scope.state.trash.isEmpty &&
+        scope.state.pauses.isEmpty)
+      return HabitWelcomePage(
+        onDone: () async {
+          await scope.controller.change(
+            (s) => s.copy({
+              'settings': {...s.settings, 'onboarded': true},
+            }),
+            remember: false,
+          );
+        },
+      );
     final wide = MediaQuery.sizeOf(context).width >= 840;
     final open = scope.state.settings['sidebarCollapsed'] != true;
     final areas = [
@@ -227,130 +240,6 @@ class HabitShell extends StatelessWidget {
           ),
           Expanded(child: page),
         ],
-      ),
-    );
-  }
-}
-
-/// The first open: one small habit to start, ready-made examples, or a
-/// blank day. Nothing else, and no ads, until a choice is made.
-class Onboarding extends StatelessWidget {
-  final HabitScope scope;
-  const Onboarding({super.key, required this.scope});
-
-  Future<bool> _start(BuildContext context, {bool examples = false}) {
-    final today = scope.today, vi = isVi(context);
-    final read = tr(context, 'Read', 'Đọc sách'),
-        pages = tr(context, 'pages', 'trang');
-    return scope.write(
-      context,
-      (s) => s.copy({
-        if (examples) ...{
-          'habits': [
-            ...s.habits.map((e) => e.toJson()),
-            Habit(
-              id: uid(),
-              title: read,
-              created: today,
-              type: 'quantity',
-              unit: pages,
-              schedules: [Schedule(id: uid(), from: today, target: 10000)],
-            ).toJson(),
-          ],
-          'routines': [
-            ...s.routines.map((e) => e.toJson()),
-            routineTemplates(vietnamese: vi).first.toJson(),
-          ],
-        },
-        'settings': {...s.settings, 'onboarded': true},
-      }),
-      remember: false,
-    );
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final c = HandyColors.of(context);
-    return Scaffold(
-      body: SafeArea(
-        child: Center(
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.all(HandySpace.xl),
-            child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 520),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  const Align(
-                    alignment: AlignmentDirectional.centerStart,
-                    child: HandyMark(Icons.check_circle, size: 48),
-                  ),
-                  const SizedBox(height: HandySpace.xl),
-                  Semantics(
-                    header: true,
-                    child: Text(
-                      tr(context, 'Start small.', 'Bắt đầu từ việc nhỏ.'),
-                      style: theme.textTheme.headlineMedium,
-                    ),
-                  ),
-                  const SizedBox(height: HandySpace.m),
-                  Text(
-                    tr(
-                      context,
-                      'Mark what you do each day with one tap, and run your routines step by step. Everything stays on this device; no account.',
-                      'Đánh dấu việc mỗi ngày bằng một chạm, và chạy quy trình từng bước. Mọi thứ ở trên máy này; không cần tài khoản.',
-                    ),
-                    style: theme.textTheme.bodyLarge,
-                  ),
-                  const SizedBox(height: HandySpace.xl),
-                  FilledButton(
-                    key: const Key('onboard-create'),
-                    onPressed: () async {
-                      if (await _start(context) && context.mounted)
-                        await openHabitEditor(context, scope);
-                    },
-                    child: Text(
-                      tr(
-                        context,
-                        'Make my first habit',
-                        'Tạo thói quen đầu tiên',
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: HandySpace.s),
-                  OutlinedButton(
-                    key: const Key('onboard-examples'),
-                    onPressed: () => _start(context, examples: true),
-                    child: Text(
-                      tr(
-                        context,
-                        'Show me examples I can change',
-                        'Thêm ví dụ để sửa',
-                      ),
-                    ),
-                  ),
-                  TextButton(
-                    key: const Key('onboard-skip'),
-                    onPressed: () => _start(context),
-                    child: Text(
-                      tr(context, 'Start with a blank day', 'Bắt đầu trống'),
-                    ),
-                  ),
-                  const SizedBox(height: HandySpace.l),
-                  Text(
-                    tr(
-                      context,
-                      'Reminders are optional and asked for later.',
-                      'Nhắc là tùy chọn, sẽ hỏi sau.',
-                    ),
-                    style: theme.textTheme.bodySmall?.copyWith(color: c.muted),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ),
       ),
     );
   }

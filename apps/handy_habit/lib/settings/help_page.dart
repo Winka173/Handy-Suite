@@ -1,65 +1,167 @@
 import 'package:handy_ui/kit.dart';
+import 'help_topics.dart';
+import 'how_to_mocks.dart';
 
-/// A concise entry point to the shipped daily jobs; the full help centre is R9.
-class HabitHelpPage extends StatelessWidget {
-  const HabitHelpPage({super.key});
+class HabitHelpPage extends StatefulWidget {
+  final String? topic;
+  final String query;
+  const HabitHelpPage({super.key, this.topic, this.query = ''});
   @override
-  Widget build(BuildContext context) => HandyPage(
-    title: tr(context, 'Help', 'Trợ giúp'),
-    children: [
-      for (final (en, vi, detailEn, detailVi, path) in const [
-        (
-          'Check in and Undo',
-          'Đánh dấu và hoàn tác',
-          'Tap today’s large bead. A count adds one; amounts open an entry. Undo appears after saving.',
-          'Chạm hạt lớn hôm nay. Số lần cộng một; số lượng mở ô nhập. Hoàn tác xuất hiện sau khi lưu.',
-          '/today',
-        ),
-        (
-          'Habits and history',
-          'Thói quen và lịch sử',
-          'Open a habit’s name to see its calendar and records. Show all opens older entries in place. Missed days stay neutral.',
-          'Mở tên thói quen để xem lịch và các lần ghi. Xem tất cả mở bản ghi cũ tại chỗ. Ngày bỏ lỡ giữ màu trung tính.',
-          '/habits',
-        ),
-        (
-          'Run a routine',
-          'Chạy quy trình',
-          'Choose Start on a routine. You can pause and continue an unfinished run.',
-          'Chọn Bắt đầu trên quy trình. Bạn có thể tạm dừng và tiếp tục buổi chạy còn dở.',
-          '/routines',
-        ),
-        (
-          'Review your progress',
-          'Xem tiến bộ',
-          'Choose a date range to see completed days and routine sessions. A pause is not a missed day.',
-          'Chọn khoảng ngày để xem ngày hoàn thành và các buổi chạy. Ngày nghỉ không phải ngày bỏ lỡ.',
-          '/progress',
-        ),
-        (
-          'Protect your data',
-          'Bảo vệ dữ liệu',
-          'Settings contains backup, restore, recovery and 30-day Trash. Keep a backup outside this device.',
-          'Cài đặt có sao lưu, khôi phục, bản phục hồi và Thùng rác 30 ngày. Giữ bản sao ngoài máy này.',
-          '/settings',
-        ),
-      ])
-        HandySection(
-          title: tr(context, en, vi),
-          children: [
-            Padding(
-              padding: const EdgeInsets.all(16),
-              child: Text(tr(context, detailEn, detailVi)),
-            ),
-            Align(
-              alignment: AlignmentDirectional.centerStart,
-              child: TextButton(
-                onPressed: () => Navigator.pushNamed(context, path),
-                child: Text(tr(context, 'Open', 'Mở')),
+  State<HabitHelpPage> createState() => _HabitHelpPageState();
+}
+
+class _HabitHelpPageState extends State<HabitHelpPage> {
+  late final search = TextEditingController(text: widget.query);
+  late String? selected = widget.topic;
+  final searchAnchor = GlobalKey(), articleAnchor = GlobalKey();
+  void select(String? id) {
+    setState(() => selected = id);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final target = (id == null ? searchAnchor : articleAnchor).currentContext;
+      if (mounted && target != null)
+        Scrollable.ensureVisible(target, duration: Duration.zero);
+    });
+  }
+
+  @override
+  void dispose() {
+    search.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final query = foldHabitHelp(search.text);
+    final topics = habitHelpTopics
+        .where((t) => foldHabitHelp(t.searchText()).contains(query))
+        .toList();
+    final topic = habitHelpTopics.where((t) => t.id == selected).firstOrNull;
+    final wide = MediaQuery.sizeOf(context).width >= 1000;
+    final searchField = TextField(
+      key: const Key('help-search'),
+      controller: search,
+      onChanged: (_) => setState(() => selected = null),
+      decoration: InputDecoration(
+        labelText: tr(context, 'Search How to use', 'Tìm cách dùng'),
+        prefixIcon: const Icon(Icons.search),
+        suffixIcon: search.text.isEmpty
+            ? null
+            : IconButton(
+                key: const Key('help-clear'),
+                tooltip: tr(context, 'Clear search', 'Xóa tìm kiếm'),
+                onPressed: () {
+                  search.clear();
+                  setState(() => selected = null);
+                },
+                icon: const Icon(Icons.close),
               ),
-            ),
-          ],
+      ),
+    );
+    final index = Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        const SizedBox(height: 12),
+        Semantics(
+          liveRegion: true,
+          child: Text(
+            tr(context, '${topics.length} topics', '${topics.length} chủ đề'),
+          ),
         ),
-    ],
-  );
+        if (topics.isEmpty)
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: 24),
+            child: Text(
+              tr(
+                context,
+                'No topics match. Try habit, reminder or backup, or clear the search.',
+                'Không có chủ đề phù hợp. Thử thói quen, nhắc, sao lưu hoặc xóa tìm kiếm.',
+              ),
+              key: const Key('help-no-match'),
+            ),
+          ),
+        for (final t in topics)
+          ListTile(
+            key: Key('help-topic-${t.id}'),
+            contentPadding: EdgeInsets.zero,
+            title: Text(
+              '${habitHelpTopics.indexOf(t) + 1}. ${t.title(context)}',
+            ),
+            selected: t.id == selected,
+            onTap: () => select(t.id),
+          ),
+      ],
+    );
+    final article = topic == null
+        ? null
+        : Column(
+            key: articleAnchor,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Text(
+                topic.title(context),
+                key: Key('help-article-${topic.id}'),
+                style: Theme.of(context).textTheme.titleLarge,
+              ),
+              const SizedBox(height: 16),
+              for (var i = 0; i < topic.steps.length; i++)
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 16),
+                  child: Text(
+                    '${i + 1}. ${tr(context, topic.steps[i].$1, topic.steps[i].$2)}',
+                  ),
+                ),
+              HabitHelpMock(topic: topic.id),
+              TextButton(
+                onPressed: () => select(null),
+                child: Text(tr(context, 'All topics', 'Mọi chủ đề')),
+              ),
+            ],
+          );
+    return HandyPage(
+      title: tr(context, 'How to use', 'Cách dùng'),
+      actions: [
+        IconButton(
+          key: const Key('help-replay'),
+          tooltip: tr(context, 'Replay guide', 'Xem lại hướng dẫn'),
+          onPressed: () => Navigator.pushNamed(context, '/welcome'),
+          icon: const Icon(Icons.replay),
+        ),
+      ],
+      children: [
+        HandyContent(
+          maxWidth: 960,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: 16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                KeyedSubtree(key: searchAnchor, child: searchField),
+                const SizedBox(height: 16),
+                wide
+                    ? Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          SizedBox(width: 300, child: index),
+                          const SizedBox(width: 32),
+                          Expanded(
+                            child:
+                                article ??
+                                Text(
+                                  tr(
+                                    context,
+                                    'Choose a topic to see its steps.',
+                                    'Chọn chủ đề để xem các bước.',
+                                  ),
+                                ),
+                          ),
+                        ],
+                      )
+                    : article ?? index,
+              ],
+            ),
+          ),
+        ),
+      ],
+    );
+  }
 }

@@ -22,6 +22,7 @@ class HabitScope {
   /// Today, Habits, Routines or Insights.
   final area = ValueNotifier(0);
   final clockTick = ValueNotifier(0);
+  final reminderError=ValueNotifier<Object?>(null);
   HabitScope({
     required this.controller,
     required this.files,
@@ -55,6 +56,7 @@ class HabitScope {
   void dispose() {
     area.dispose();
     clockTick.dispose();
+    reminderError.dispose();
   }
 
   /// Writes, then says so with an Undo; a failure says nothing changed.

@@ -99,11 +99,11 @@ class HabitRow extends StatelessWidget {
         key: Key('habit-${h.id}'),
         onTap: onOpen,
         child: Padding(
-          padding: const EdgeInsets.fromLTRB(
+          padding: EdgeInsets.fromLTRB(
             HandySpace.l,
-            10,
+            scope.state.settings['density'] == 'compact' ? 6 : 10,
             HandySpace.s,
-            10,
+            scope.state.settings['density'] == 'compact' ? 6 : 10,
           ),
           child: Row(
             children: [

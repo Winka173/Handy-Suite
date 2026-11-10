@@ -23,6 +23,7 @@ import 'scope.dart';
 import 'settings/settings_page.dart';
 import 'settings/trash_page.dart';
 import 'settings/help_page.dart';
+import 'welcome/welcome_page.dart';
 import 'shell/habit_shell.dart';
 import 'today/check_in.dart';
 
@@ -200,7 +201,7 @@ class _HabitAppState extends State<HabitApp> with WidgetsBindingObserver {
     final s = c.state;
     if (s == null) return;
     // Today still lists the next reminder if the system refuses.
-    unawaited(scope.reminders.sync(s).catchError((Object _) {}));
+    unawaited(scope.reminders.sync(s).then((_) {if(mounted)scope.reminderError.value=null;},onError:(Object e){if(mounted)scope.reminderError.value=e;}));
     if (widget.device) {
       final locale = s.settings['locale'] as String? ?? 'system';
       final vi =
@@ -290,7 +291,18 @@ class _HabitAppState extends State<HabitApp> with WidgetsBindingObserver {
               _ => _missing('/templates?kind=habit'),
             },
       ),
-      ['', 'help'] || ['', 'help', _] => () => HabitHelpPage(),
+      ['', 'welcome'] => () => HabitWelcomePage(
+        onDone: () async {
+          navigator.currentState?.pop();
+        },
+      ),
+      ['', 'help'] => () => HabitHelpPage(
+        query: uri.queryParameters['q'] ?? '',
+      ),
+      ['', 'help', final topic] => () => HabitHelpPage(
+        topic: topic,
+        query: uri.queryParameters['q'] ?? '',
+      ),
       ['', 'settings', 'trash'] => () => HabitTrashPage(scope: scope),
       ['', 'settings'] => () => HabitSettingsPage(scope: scope),
       ['', 'settings', _] => () => HabitSettingsPage(scope: scope),
@@ -404,7 +416,7 @@ class _HabitAppState extends State<HabitApp> with WidgetsBindingObserver {
     listenable: c,
     builder: (context, _) => HandyApp(
       brand: habitIdentity,
-      themeOverride: habitTheme,
+      themeOverride:habitTheme,
       app: 'habit',
       title: 'Handy Habit',
       accent: habitAccent,

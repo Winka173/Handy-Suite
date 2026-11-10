@@ -58,6 +58,7 @@ Future<bool> showHabitForm(
   required Map<String, dynamic> initial,
   required Future<void> Function(Map<String, dynamic> values) save,
   String saveLabel = '',
+  String? helpTopic,
 }) async =>
     await openSheet<bool>(
       context,
@@ -67,12 +68,14 @@ Future<bool> showHabitForm(
         initial: initial,
         save: save,
         saveLabel: saveLabel,
+        helpTopic: helpTopic,
       ),
     ) ==
     true;
 
 class HabitForm extends StatefulWidget {
   final String title, saveLabel;
+  final String? helpTopic;
   final List<HabitField> fields;
   final Map<String, dynamic> initial;
   final Future<void> Function(Map<String, dynamic>) save;
@@ -92,6 +95,7 @@ class HabitForm extends StatefulWidget {
     required this.initial,
     required this.save,
     this.saveLabel = '',
+    this.helpTopic,
     this.result,
     this.draftContent,
   });
@@ -292,6 +296,16 @@ class _HabitFormState extends State<HabitForm> {
       },
       child: SheetFrame(
         title: widget.title,
+        actions: [
+          if (widget.helpTopic != null)
+            IconButton(
+              key: Key('context-help-${widget.helpTopic}'),
+              tooltip: tr(context, 'How to use', 'Cách dùng'),
+              onPressed: () =>
+                  Navigator.pushNamed(context, '/help/${widget.helpTopic}'),
+              icon: const Icon(Icons.help_outline),
+            ),
+        ],
         busy: busy,
         error: error,
         primary: FilledButton(

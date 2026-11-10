@@ -134,3 +134,18 @@ Không sửa shared packages/lib/test/other apps, không secrets/devices/git wri
 Run 2 final host checks: engine74/74, app70/70 (`flutter test --no-pub`); both `dart analyze` clean and `dart format --output=none --set-exit-if-changed lib test` report0 changed. Fixture verifier PASS21 files/39 documented tools; no fixture/registry changes. No device/browser/store tests.
 
 R3 regression guard: manual habit/routine order is stored as validated entityOrder IDs, separate from database key/row order; guarded order revisions preserve reorder Undo across restart and backup roundtrip without snapshotting the whole state.
+
+### Run 3 / R5–R6 superseding evidence (2026-11-10)
+
+Shell/Today and editor/history are IMPLEMENTED / HOST WIDGET TESTED. The earlier four-area,
+no-area-URL, export-only older-history and midnight-only observations are historical: current
+source has three named areas, remembered kit sidebar/rail, typed-input-safe shortcuts, stable
+bead rows, editable inferred day parts, capped lists, dirty-exit guards and full in-place history.
+Appearance/Advanced tests remain green. Data schema4 adds custom effective clock policies,
+reads schemas1–3, keeps physical2 and never reassigns saved days; DST north/south, reminders,
+trash, roundtrip and foreground rollover are tested. Engine82/82 and app88/88 pass; both
+analyzers clean. Screenshot harness63/63 plus final matrix/extras27/27; EN/VI/light/dark,
+320/390/1440 at1.0/1.5text rendered and inspected. Fixture verifier passes21 files/39 tools.
+No shared infrastructure changes, git writes, devices, browser runtime or store checks.
+Full onboarding/help, expanded Progress and Pro remain their later slices; Help now links
+the shipped daily jobs. Device/browser verification remains open, as recorded in the report.

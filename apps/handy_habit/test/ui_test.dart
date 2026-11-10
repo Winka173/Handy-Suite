@@ -364,19 +364,20 @@ void main() {
     },
   );
 
-  testWidgets('first open: examples are added, ads stay off until then', (
-    tester,
-  ) async {
-    final c = await start(tester, state: HabitState());
-    expect(find.byKey(const Key('onboard-create')), findsOneWidget);
-    expect(c.adsVisible.value, isFalse);
-    await tapKey(tester, 'onboard-examples');
-    expect(c.state!.settings['onboarded'], isTrue);
-    expect(c.state!.habits, hasLength(1));
-    expect(c.state!.routines, hasLength(1));
-    await tester.pumpWidget(const SizedBox());
-    c.dispose();
-  });
+  testWidgets(
+    'first open: skippable guide leaves a blank day, ads off during guide',
+    (tester) async {
+      final c = await start(tester, state: HabitState());
+      expect(find.byKey(const Key('welcome-next')), findsOneWidget);
+      expect(c.adsVisible.value, isFalse);
+      await tapKey(tester, 'welcome-skip');
+      expect(c.state!.settings['onboarded'], isTrue);
+      expect(c.state!.habits, isEmpty);
+      expect(c.state!.routines, isEmpty);
+      await tester.pumpWidget(const SizedBox());
+      c.dispose();
+    },
+  );
 
   for (final width in [320.0, 768.0, 1024.0, 1440.0]) {
     testWidgets(

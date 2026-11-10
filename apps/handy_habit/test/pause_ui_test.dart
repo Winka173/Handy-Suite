@@ -44,7 +44,12 @@ Future<(HabitController, RoutineSession)> runner(
   );
   store.value = base.copy({
     'sessions': [session.toJson()],
-    'settings': {...base.settings, 'zone': 'UTC', ...settings},
+    'settings': {
+      ...base.settings,
+      'zone': 'UTC',
+      'privateNotifications': false,
+      ...settings,
+    },
   });
   final c = HabitController(open: () async => store);
   await c.load();

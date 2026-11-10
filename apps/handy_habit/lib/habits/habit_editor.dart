@@ -201,8 +201,16 @@ Widget buildHabitEditor(
       'unit':
           old?.unit ??
           (preset == null ? '' : tr(context, preset.unitEn, preset.unitVi)),
-      'target': current?.target ?? preset?.stored ?? 1000,
-      'schedule': current?.kind ?? preset?.schedule ?? 'daily',
+      'target':
+          current?.target ??
+          preset?.stored ??
+          s.settings['defaultGoal'] ??
+          1000,
+      'schedule':
+          current?.kind ??
+          preset?.schedule ??
+          s.settings['defaultSchedule'] ??
+          'daily',
       'weekdays':
           current?.weekdays ?? preset?.weekdays ?? const [1, 2, 3, 4, 5],
       'quota': '${current?.weeklyTarget ?? preset?.perWeek ?? 3}',

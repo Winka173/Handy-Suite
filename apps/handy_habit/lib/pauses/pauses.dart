@@ -23,6 +23,7 @@ Future<bool> openPauseEditor(
   final chosen = old?.habits ?? (habit == null ? const <String>[] : [habit]);
   return showHabitForm(
     context,
+    helpTopic: 'pause',
     title: old == null
         ? tr(context, 'New pause', 'Kỳ nghỉ mới')
         : tr(context, 'Pause', 'Kỳ nghỉ'),

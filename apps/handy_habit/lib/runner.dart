@@ -63,7 +63,9 @@ class _RunnerState extends State<RoutineRunner> with WidgetsBindingObserver {
 
   Future<void> initialize() async {
     try {
-      if (widget.fresh && foreground) {
+      if (widget.fresh &&
+          foreground &&
+          c.state!.settings['routineAutoTimer'] != false) {
         watch.start();
       } else if (session.running) {
         await c.change(
@@ -230,8 +232,14 @@ class _RunnerState extends State<RoutineRunner> with WidgetsBindingObserver {
       );
       watch.reset();
       extra = false;
+      if (c.state!.settings['routineHaptics'] == true &&
+          mounted &&
+          !MediaQuery.disableAnimationsOf(context))
+        await HapticFeedback.lightImpact();
       // The next step starts timing at once; pausing stays a choice.
-      if (foreground && session.steps[session.cursor].status == 'pending')
+      if (foreground &&
+          c.state!.settings['routineAutoTimer'] != false &&
+          session.steps[session.cursor].status == 'pending')
         await resume();
     } catch (_) {
       if (foreground && session.running) watch.start();
@@ -253,15 +261,17 @@ class _RunnerState extends State<RoutineRunner> with WidgetsBindingObserver {
   Future<void> leave() async {
     if (leaving || acting || askingExit || !ready) return;
     askingExit = true;
-    final ok = await confirmHandy(
-      context,
-      title: t('Pause and exit?', 'Tạm dừng và thoát?'),
-      message: t(
-        'Your progress is saved. Resume this run from Routines or Today.',
-        'Tiến độ được lưu. Tiếp tục phiên từ Quy trình hoặc Hôm nay.',
-      ),
-      confirmLabel: t('Pause and exit', 'Tạm dừng và thoát'),
-    );
+    final ok =
+        c.state!.settings['confirmRoutineExit'] == false ||
+        await confirmHandy(
+          context,
+          title: t('Pause and exit?', 'Tạm dừng và thoát?'),
+          message: t(
+            'Your progress is saved. Resume this run from Routines or Today.',
+            'Tiến độ được lưu. Tiếp tục phiên từ Quy trình hoặc Hôm nay.',
+          ),
+          confirmLabel: t('Pause and exit', 'Tạm dừng và thoát'),
+        );
     askingExit = false;
     if (!ok || !mounted) return;
     if (!await perform(pause) || !mounted) return;
