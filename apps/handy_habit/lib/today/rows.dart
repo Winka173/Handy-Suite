@@ -5,6 +5,7 @@ import '../scope.dart';
 import '../ui/words.dart';
 import 'beads.dart';
 import 'check_in.dart';
+import '../habits/habit_appearance.dart';
 
 /// Days done this week out of the quota, for a days-a-week habit.
 int doneThisWeek(Habit h, String today, HabitIndex index, int weekStart) {
@@ -112,7 +113,11 @@ class HabitRow extends StatelessWidget {
                   children: [
                     Row(
                       children: [
-                        HandyDot(scope.habitHue(h.id), size: 8),
+                        Icon(
+                          habitIcon(h.icon),
+                          size: 18,
+                          color: habitInk(h.color, theme.colorScheme.surface),
+                        ),
                         const SizedBox(width: HandySpace.s),
                         Flexible(
                           child: Text(
@@ -217,7 +222,11 @@ class RoutineRow extends StatelessWidget {
                   children: [
                     Row(
                       children: [
-                        HandyDot(scope.routineHue(r.id), size: 8),
+                        Icon(
+                          habitIcon(r.icon),
+                          size: 20,
+                          color: habitInk(r.color, theme.colorScheme.surface),
+                        ),
                         const SizedBox(width: HandySpace.s),
                         Flexible(
                           child: Text(

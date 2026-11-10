@@ -25,6 +25,8 @@ class HabitField {
   final FieldKind kind;
   final Map<String, String>? options;
   final bool required;
+  final bool advanced;
+  final Set<String> advancedOptions;
   final String? helpEn, helpVi;
 
   /// Shows the field only while this holds for the values typed so far.
@@ -36,6 +38,8 @@ class HabitField {
     this.kind = FieldKind.text,
     this.options,
     this.required = true,
+    this.advanced = false,
+    this.advancedOptions = const {},
     this.helpEn,
     this.helpVi,
     this.when,
@@ -95,7 +99,7 @@ class _HabitFormState extends State<HabitForm> {
         f.id: TextEditingController(text: _initial(f)),
   };
   final errors = <String, String>{};
-  bool busy = false;
+  bool busy = false, advanced = false;
   String error = '';
 
   String _initial(HabitField f) {
@@ -165,6 +169,9 @@ class _HabitFormState extends State<HabitForm> {
       }
     }
     if (errors.isNotEmpty) {
+      if (widget.fields.any((f) => f.advanced && errors.containsKey(f.id))) {
+        advanced = true;
+      }
       setState(
         () => error = tr(
           context,
@@ -213,7 +220,28 @@ class _HabitFormState extends State<HabitForm> {
     ),
     children: [
       for (final f in widget.fields)
-        if (shown(f)) _field(f),
+        if (!f.advanced && shown(f)) _field(f),
+      if (widget.fields.any(
+        (f) => f.advanced || f.advancedOptions.isNotEmpty,
+      )) ...[
+        SwitchListTile.adaptive(
+          key: const Key('habit-form-advanced'),
+          contentPadding: EdgeInsets.zero,
+          title: Text(tr(context, 'Advanced settings', 'Thiết lập nâng cao')),
+          subtitle: Text(
+            tr(
+              context,
+              'Dates, grouping and less common schedules. Existing values are kept.',
+              'Ngày, nhóm và lịch ít dùng. Giá trị đã lưu được giữ nguyên.',
+            ),
+          ),
+          value: advanced,
+          onChanged: busy ? null : (v) => setState(() => advanced = v),
+        ),
+        if (advanced)
+          for (final f in widget.fields)
+            if (f.advanced && shown(f)) _field(f),
+      ],
     ],
   );
 
@@ -280,14 +308,17 @@ class _HabitFormState extends State<HabitForm> {
         runSpacing: HandySpace.s,
         children: [
           for (final o in f.options!.entries)
-            ChoiceChip(
-              key: Key('field-${f.id}-${o.key}'),
-              label: Text(o.value),
-              selected: values[f.id] == o.key,
-              onSelected: busy
-                  ? null
-                  : (_) => setState(() => values[f.id] = o.key),
-            ),
+            if (advanced ||
+                !f.advancedOptions.contains(o.key) ||
+                values[f.id] == o.key)
+              ChoiceChip(
+                key: Key('field-${f.id}-${o.key}'),
+                label: Text(o.value),
+                selected: values[f.id] == o.key,
+                onSelected: busy
+                    ? null
+                    : (_) => setState(() => values[f.id] = o.key),
+              ),
         ],
       ),
       FieldKind.choice => DropdownButtonFormField<String>(
@@ -398,7 +429,8 @@ class _HabitFormState extends State<HabitForm> {
     String label,
     VoidCallback onTap, {
     bool clear = false,
-  }) => Row(
+  }) => Wrap(
+    crossAxisAlignment: WrapCrossAlignment.center,
     children: [
       OutlinedButton.icon(
         key: Key('field-${f.id}'),

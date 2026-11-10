@@ -397,6 +397,20 @@ void main() {
     await fixtures.tapKey(t, 'habit-read');
     await shot(t, 'phone-5-habit');
   });
+  for (final (name, size, theme) in [
+    ('phone', const Size(390, 844), 'light'),
+    ('narrow-dark', const Size(320, 700), 'dark'),
+  ]) {
+    testWidgets('$name appearance', (t) async {
+      await boot(t, size, theme: theme);
+      await fixtures.tapKey(t, 'habit-read');
+      await t.tap(find.byType(HandyMenuButton).first);
+      await t.pumpAndSettle();
+      await fixtures.tapKey(t, 'habit-appearance');
+      await shot(t, '$name-appearance');
+      expect(t.takeException(), isNull);
+    });
+  }
   testWidgets('phone amount', (t) async {
     await boot(t, const Size(390, 844));
     await fixtures.tapKey(t, 'bead-walk');
@@ -520,5 +534,19 @@ void main() {
     await boot(t, const Size(390, 844));
     await fixtures.tapKey(t, 'week-review-open');
     await shot(t, 'phone-22-week-review');
+  });
+  testWidgets('phone short habit editor', (t) async {
+    await boot(t, const Size(390, 844));
+    await fixtures.tapKey(t, 'habit-add');
+    await fixtures.tapKey(t, 'add-habit');
+    await fixtures.tapKey(t, 'preset-blank');
+    await t.enterText(
+      find.byKey(const Key('field-title')),
+      'Đọc sách mỗi ngày',
+    );
+    await t.pumpAndSettle();
+    await shot(t, 'phone-short-habit-editor');
+    await fixtures.tapKey(t, 'habit-form-advanced');
+    await shot(t, 'phone-habit-advanced');
   });
 }

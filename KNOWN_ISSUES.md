@@ -76,8 +76,9 @@ tối đa 30MB.
     hay emulator QA; bằng chứng trong `docs/qa/evidence` thuộc giao diện cũ.
 18. Giao diện mới của Handy Habit (2026-11-02): màu đổi từ teal sang đỏ son `#B42318`,
     nên ngày lỡ luôn là vòng rỗng xám có chữ, không bao giờ tô đỏ. Màu và icon riêng của
-    thói quen, quy trình vẫn giữ trong dữ liệu nhưng không còn sửa trong app; chấm màu lấy
-    theo thứ tự tạo. Xong một bước thì bước kế tự chạy (tạm dừng vẫn do bạn bấm; ra nền vẫn
+    quy trình vẫn giữ trong dữ liệu nhưng chưa có editor riêng. Thói quen đã có lại
+    menu Diện mạo (05/11) chọn icon/màu, Undo và Hủy, không sửa lịch/check-in; màu hiển
+    thị được điều chỉnh tương phản, giá trị lưu giữ nguyên. Xong một bước thì bước kế tự chạy (tạm dừng vẫn do bạn bấm; ra nền vẫn
     dừng). Bốn khu không có URL web riêng; trang con thì có. Tour và `native_test` mới chạy
     trên BlueStacks (máy giả lập); ảnh `habit-ui-review.pdf` và bằng chứng UI cũ thuộc bản
     trước. Run 2 (10/11): backup preview/sealed lỗi-mật-khẩu/hỏng/hủy, durable recovery trước Replace, migration schema3/physical2, domain Undo và trash30 ngày đã source/host tested. Provider SAF/iOS Files, nâng cấp/kill/thiếu chỗ thật và IndexedDB/quota/tab-blocked chưa runtime verified; checkpoint/recovery và plain export vẫn không mã hóa, `.hseal` có mã hóa xác thực. Không claim sync hoàn chỉnh (R15/R16).

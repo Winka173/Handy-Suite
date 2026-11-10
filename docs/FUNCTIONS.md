@@ -213,6 +213,9 @@ Xem [công thức](handy_spend/FORMULAS_AND_ASSUMPTIONS.md) và
   mở bản có sẵn, lưu thêm hoặc xem thông tin để hợp nhất thủ công.
 - Android nhận SEND/SEND_MULTIPLE bằng hàng chờ bền vững; iOS có Share Extension
   dùng App Group; Windows nhận text/URL/.url qua kéo thả; Web có POST Share Target.
+- Diện mạo thói quen (05/11): menu chọn icon/màu, preview, Hủy và Undo; chỉ sửa
+  trường diện mạo, không tạo phiên bản lịch hoặc đổi check-in. Màu hiển thị điều
+  chỉnh tương phản sáng/tối, không viết lại màu gốc trong dữ liệu.
   Clipboard chỉ được đọc khi người dùng bấm nút.
 - Bookmark: tiêu đề, mô tả, ghi chú, tags, bộ sưu tập; favorite, pin, read, archive;
   chỉnh sửa/xóa, Undo, mở/copy URL gốc và đếm lần mở.

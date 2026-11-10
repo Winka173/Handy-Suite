@@ -1,3 +1,4 @@
+import 'design/identity.dart';
 import 'dart:async';
 import 'package:handy_files/handy_files.dart';
 import 'package:handy_habit_engine/handy_habit_engine.dart';
@@ -235,7 +236,7 @@ class _HabitAppState extends State<HabitApp> with WidgetsBindingObserver {
   Widget build(BuildContext context) => ListenableBuilder(
     listenable: c,
     builder: (context, _) => HandyApp(
-      brand: HandyBrand.habit,
+      brand: habitIdentity,
       app: 'habit',
       title: 'Handy Habit',
       accent: habitAccent,

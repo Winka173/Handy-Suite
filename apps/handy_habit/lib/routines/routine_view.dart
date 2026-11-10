@@ -4,6 +4,7 @@ import '../scope.dart';
 import '../ui/words.dart';
 import 'routine_editor.dart';
 import 'run.dart';
+import '../habits/habit_appearance.dart';
 
 /// A routine on a page of its own (phones and web links).
 class RoutinePage extends StatelessWidget {
@@ -366,6 +367,32 @@ class RoutineMenu extends StatelessWidget {
     final r = routine;
     return HandyMenuButton(
       items: [
+        HandyMenuItem(
+          Icons.palette_outlined,
+          tr(context, 'Appearance', 'Diện mạo'),
+          () async {
+            final chosen = await pickHabitAppearance(
+              context,
+              title: r.title,
+              initialIcon: r.icon,
+              initialColor: r.color,
+            );
+            if (chosen == null ||
+                !context.mounted ||
+                (chosen.icon == r.icon && chosen.color == r.color))
+              return;
+            await scope.write(context, (s) {
+              final latest = s.routines.where((v) => v.id == r.id).firstOrNull;
+              if (!identical(latest, r))
+                throw StateError('Routine changed; reopen its appearance');
+              return replaceRoutine(
+                s,
+                r.copy({'icon': chosen.icon, 'color': chosen.color}),
+              );
+            }, done: (ctx) => tr(ctx, 'Appearance saved.', 'Đã lưu diện mạo.'));
+          },
+          key: const Key('routine-appearance'),
+        ),
         HandyMenuItem(
           Icons.edit_outlined,
           tr(context, 'Edit', 'Sửa'),

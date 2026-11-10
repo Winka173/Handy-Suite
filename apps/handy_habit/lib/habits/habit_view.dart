@@ -5,6 +5,7 @@ import '../scope.dart';
 import '../today/check_in.dart';
 import '../ui/words.dart';
 import 'habit_editor.dart';
+import 'habit_appearance.dart';
 import 'month_grid.dart';
 
 /// A habit on a page of its own (phones and web links).
@@ -317,6 +318,12 @@ class HabitMenu extends StatelessWidget {
           tr(context, 'Edit', 'Sửa'),
           () => openHabitEditor(context, scope, h),
           key: const Key('habit-edit'),
+        ),
+        HandyMenuItem(
+          Icons.palette_outlined,
+          tr(context, 'Appearance', 'Diện mạo'),
+          () => editHabitAppearance(context, scope, h),
+          key: const Key('habit-appearance'),
         ),
         HandyMenuItem(
           h.archived ? Icons.unarchive_outlined : Icons.archive_outlined,
