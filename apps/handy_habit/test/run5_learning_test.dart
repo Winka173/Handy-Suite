@@ -290,8 +290,9 @@ void main() {
         state: HabitState(settings: {'onboarded': true, 'locale': 'en'}),
       );
       await tap(t, 'goal-water');
-      expect(find.text('Drink water'), findsOneWidget);
-      expect(find.text('8'), findsOneWidget);
+      expect(find.byKey(const Key('collection-nutrition')), findsOneWidget);
+      expect(find.byKey(const Key('preset-water')), findsOneWidget);
+      expect(find.byKey(const Key('field-title')), findsNothing);
       expect(c.state!.habits, isEmpty);
       expect(store.writes, 0);
     },

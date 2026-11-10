@@ -179,68 +179,9 @@ HabitState closeSession(
   );
 }
 
-List<Routine> routineTemplates({bool vietnamese = false}) {
-  final titles = vietnamese
-      ? [
-          'Buổi sáng',
-          'Trước khi ngủ',
-          'Học tập',
-          'Khởi động',
-          'Dọn nhà',
-          'Đọc sách',
-          'Chăm da tối',
-          'Nghỉ màn hình',
-        ]
-      : [
-          'Morning',
-          'Bedtime',
-          'Study',
-          'Warmup',
-          'House reset',
-          'Reading',
-          'Evening skincare',
-          'Screen break',
-        ];
-  final steps = vietnamese
-      ? [
-          ['Chuẩn bị', 'Vận động nhẹ', 'Lên ý định hôm nay'],
-          ['Cất đồ', 'Chuẩn bị ngày mai', 'Thư giãn'],
-          ['Chuẩn bị bàn', 'Tập trung', 'Ghi điều đã học'],
-          ['Chuẩn bị', 'Vận động tùy khả năng', 'Kiểm tra lại'],
-          ['Chọn khu vực', 'Sắp xếp', 'Cất dụng cụ'],
-          ['Chọn sách', 'Đọc', 'Ghi chú'],
-          ['Tẩy trang', 'Rửa mặt', 'Dưỡng ẩm'],
-          ['Đứng dậy', 'Nhìn xa', 'Uống nước'],
-        ]
-      : [
-          ['Get ready', 'Gentle movement', 'Set an intention'],
-          ['Put things away', 'Prepare tomorrow', 'Wind down'],
-          ['Prepare your desk', 'Focus', 'Write what you learned'],
-          ['Get ready', 'Move at your own pace', 'Check in'],
-          ['Choose an area', 'Tidy up', 'Put tools away'],
-          ['Choose a book', 'Read', 'Make a note'],
-          ['Remove make-up', 'Cleanse', 'Moisturise'],
-          ['Stand up', 'Look far away', 'Drink water'],
-        ];
-  return List.generate(
-    titles.length,
-    (i) => Routine(
-      id: uid(),
-      title: titles[i],
-      steps: List.generate(
-        3,
-        (j) => RoutineStep(
-          id: uid(),
-          title: steps[i][j],
-          seconds: j == 1 ? 300 : 60,
-          minimum: j == 1 ? 120 : 60,
-          required: j != 2,
-          priority: 2 - j,
-        ),
-      ),
-    ),
-  );
-}
+List<Routine> routineTemplates({bool vietnamese = false}) => [
+  for (final t in routineTemplateCatalog) t.instantiate(vietnamese: vietnamese),
+];
 
 /// Seconds left on [step] after [running] more seconds; negative when
 /// over its plan, null for an untimed step.

@@ -34,13 +34,31 @@ const habitColors = [
   (0xff4d7c0f, 'Green', 'Xanh lá'),
 ];
 
+const templateIcons = [
+  Icons.restaurant_outlined,
+  Icons.school_outlined,
+  Icons.timer_outlined,
+  Icons.spa_outlined,
+  Icons.home_outlined,
+  Icons.people_outline,
+  Icons.savings_outlined,
+  Icons.phone_android_outlined,
+  Icons.remove_circle_outline,
+];
+
 IconData habitIcon(int code) =>
-    habitIcons.where((i) => i.codePoint == code).firstOrNull ?? Icons.check;
+    [
+      ...habitIcons,
+      ...templateIcons,
+    ].where((i) => i.codePoint == code).firstOrNull ??
+    Icons.check;
 
 /// A completion glyph is not an identity. Legacy defaults have no chosen
 /// appearance; show a stable palette dot instead of implying completion.
-bool hasHabitIcon(Habit h) =>
-    habitIcons.any((i) => i.codePoint == h.icon && i != Icons.check);
+bool hasHabitIcon(Habit h) => [
+  ...habitIcons,
+  ...templateIcons,
+].any((i) => i.codePoint == h.icon && i != Icons.check);
 
 Color habitMark(BuildContext context, Habit h) {
   final legacy = !hasHabitIcon(h) && h.color == 0xff0d9488;

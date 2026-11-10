@@ -94,17 +94,17 @@ void main() {
     expect(c.state!.routines.single.steps, hasLength(3));
     await end(t, c);
   });
-  testWidgets('all eight templates are reachable and discard writes nothing', (
+  testWidgets('all eleven templates are reachable and discard writes nothing', (
     t,
   ) async {
     final c = await f.start(t, state: f.seeded());
     await route(t, '/routine/new');
     await tap(t, 'routine-starters');
     expect(
-      find.byKey(const Key('draft-template-Screen break')),
+      find.byKey(const Key('draft-template-A screen break')),
       findsOneWidget,
     );
-    await tap(t, 'draft-template-Morning');
+    await tap(t, 'draft-template-A gentle morning');
     expect(c.state!.routines, hasLength(1));
     await tap(t, 'sheet-cancel');
     await tap(t, 'confirm-action');
@@ -413,11 +413,16 @@ void main() {
       await tap(t, 'routines-more');
       expect(find.byKey(const Key('routine-r6')), findsOneWidget);
       await tap(t, 'routine-new');
-      await tap(t, 'routine-starters');
-      await tap(t, 'draft-template-Morning');
+      await t.enterText(
+        find.byKey(const Key('template-search')),
+        'gentle morning',
+      );
+      await t.pumpAndSettle();
+      await tap(t, 'preset-morning');
+      await tap(t, 'template-customise');
       await tap(t, 'editor-save');
       expect(c.state!.routines, hasLength(8));
-      expect(c.state!.routines.last.title, 'Morning');
+      expect(c.state!.routines.last.title, 'A gentle morning');
       expect(c.state!.routines.last.steps, hasLength(3));
       expect(c.state!.revision, 1);
       await end(t, c);

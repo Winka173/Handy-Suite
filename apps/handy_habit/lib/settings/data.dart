@@ -49,7 +49,9 @@ Future<String?> exportHabits(
       mime = 'text/csv';
     case 'md':
       bytes = Uint8List.fromList(
-        utf8.encode(markdownReport(s, first, last, vietnamese: vi)),
+        utf8.encode(
+          markdownReport(s, first, last, vietnamese: vi, today: today),
+        ),
       );
       mime = 'text/markdown';
     default:
@@ -57,7 +59,7 @@ Future<String?> exportHabits(
         throw const FormatException(
           'Use CSV or ZIP for larger reports / Dùng CSV hoặc ZIP cho báo cáo lớn',
         );
-      bytes = await _pdf(context, s, first, last);
+      bytes = await _pdf(context, s, first, last, today);
       mime = 'application/pdf';
   }
   if (bytes.length > backupLimit)
@@ -82,6 +84,7 @@ Future<Uint8List> _pdf(
   HabitState s,
   String first,
   String last,
+  String today,
 ) async {
   final headers = [
     tr(context, 'Habit', 'Thói quen'),
@@ -92,8 +95,8 @@ Future<Uint8List> _pdf(
       days = tr(context, 'planned days', 'ngày có lịch');
   final note = tr(
     context,
-    'Skipped is not done. Periods still open are not failures. Paused days not done are left out; weekly quotas shrink with them.',
-    'Bỏ qua không phải đã làm. Kỳ còn mở chưa phải thất bại. Ngày nghỉ chưa làm không tính; hạn mức tuần giảm theo ngày nghỉ.',
+    'Pauses, unknown days and unfinished periods are left out. Weekly limits count recorded incidents; blank days mean none once the week closes. Positive weekly quotas shrink with pauses.',
+    'Bỏ qua ngày nghỉ, ngày chưa rõ và khoảng chưa hết. Giới hạn tuần tính số lần đã ghi; hết tuần, ngày trống hiểu là không có. Chỉ mục tiêu xây dựng theo tuần giảm theo ngày nghỉ.',
   );
   final names = {for (final h in s.habits) h.id: h.title};
   final pauses =
@@ -127,11 +130,19 @@ Future<Uint8List> _pdf(
           data: [
             for (final h in s.habits)
               () {
-                final m = metrics(h, last, s.weekStart, index, from: first);
+                final m = progressCount(h, first, last, today, index);
                 return [
                   h.title,
-                  '${m.completed} / ${m.eligible}',
-                  m.unit == 'weeks' ? weeks : days,
+                  '${m.kept} / ${m.eligible}',
+                  m.unit == 'goals'
+                      ? tr(
+                          context,
+                          'daily / weekly goals',
+                          'mục tiêu ngày / tuần',
+                        )
+                      : m.unit == 'weeks'
+                      ? weeks
+                      : days,
                 ];
               }(),
           ],

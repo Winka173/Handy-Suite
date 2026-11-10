@@ -60,7 +60,7 @@ String reviewWeekStart(String today, int weekStart) {
           p = negativePeriod(h, addDays(start, i), today, index);
       if (p.end != d ||
           p.end.compareTo(today) >= 0 ||
-          ['paused', 'notScheduled'].contains(p.status))
+          !const ['withinLimit', 'overLimit'].contains(p.status))
         continue;
       due++;
       if (p.status == 'withinLimit') kept++;

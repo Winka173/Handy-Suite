@@ -94,7 +94,7 @@ class HabitShell extends StatelessWidget {
             onSelected: (v) => switch (v) {
               'habit' => addHabit(context, scope),
               'pause' => openPauseEditor(context, scope),
-              _ => Navigator.pushNamed(context, '/routine/new'),
+              _ => Navigator.pushNamed(context, '/templates?kind=routine'),
             },
             itemBuilder: (context) => [
               for (final v
@@ -106,7 +106,7 @@ class HabitShell extends StatelessWidget {
                   value: v,
                   child: Text(switch (v) {
                     'habit' => tr(context, 'New habit', 'Thói quen mới'),
-                    'routine' => tr(context, 'New routine', 'Quy trình m?i'),
+                    'routine' => tr(context, 'New routine', 'Quy trình mới'),
                     _ => tr(context, 'Pause', 'Kỳ nghỉ'),
                   }),
                 ),

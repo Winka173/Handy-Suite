@@ -11,6 +11,7 @@ import 'habits/habit_view.dart';
 import 'habits/habit_editor.dart';
 import 'habits/habits_page.dart';
 import 'habits/preset_sheet.dart';
+import 'habits/template_preview.dart';
 import 'insights/week_review.dart';
 import 'home_widget.dart';
 import 'reminders.dart';
@@ -286,7 +287,12 @@ class _HabitAppState extends State<HabitApp> with WidgetsBindingObserver {
         },
       ),
       ['', 'routine', 'new'] => () => Builder(
-        builder: (context) => buildRoutineEditor(context, scope),
+        builder: (context) => buildRoutineEditor(
+          context,
+          scope,
+          null,
+          s.arguments is Routine ? s.arguments as Routine : null,
+        ),
       ),
       ['', 'routine', final id, 'edit'] => () => Builder(
         builder: (context) => switch (scope.routine(id)) {
@@ -294,14 +300,18 @@ class _HabitAppState extends State<HabitApp> with WidgetsBindingObserver {
           _ => _missing('/routines'),
         },
       ),
-      ['', 'templates'] => () => HabitTemplatesPage(scope: scope),
-      ['', 'templates', final id] => () => Builder(
-        builder: (context) =>
-            switch (habitPresets.where((p) => p.id == id).firstOrNull) {
-              final p? => buildHabitEditor(context, scope, null, p),
-              _ => _missing('/templates?kind=habit'),
-            },
+      ['', 'templates'] => () => HabitTemplatesPage(
+        scope: scope,
+        collection: uri.queryParameters['collection'],
+        routines: uri.queryParameters['kind'] == 'routine',
       ),
+      ['', 'templates', final id] => () {
+        final h = habitPresets.where((p) => p.id == id).firstOrNull;
+        final r = routineTemplateCatalog.where((p) => p.id == id).firstOrNull;
+        return h == null && r == null
+            ? _missing('/templates')
+            : TemplatePreviewPage(scope: scope, habit: h, routine: r);
+      },
       ['', 'welcome'] => () => HabitWelcomePage(
         onDone: () async {
           navigator.currentState?.pop();
@@ -346,7 +356,7 @@ class _HabitAppState extends State<HabitApp> with WidgetsBindingObserver {
     if (parts.length >= 3 &&
             parts[1] == 'habit' &&
             (parts[2] == 'new' || parts.last == 'edit') ||
-        parts.length == 3 && parts[1] == 'templates') {
+        parts.length >= 2 && parts[1] == 'templates') {
       return MaterialPageRoute<bool>(settings: s, builder: (_) => _ready(page));
     }
     if (parts.length >= 3 &&

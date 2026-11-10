@@ -2,70 +2,48 @@ import 'package:handy_habit_engine/handy_habit_engine.dart';
 import 'package:handy_ui/kit.dart';
 import '../scope.dart';
 import '../settings/data.dart';
-import '../ui/form.dart';
+import '../today/check_in.dart';
+import '../habits/habit_appearance.dart';
+import '../design/palette.dart';
+import '../ui/capped.dart';
 import '../ui/words.dart';
+import 'progress_calendar.dart';
 import 'week_review.dart';
 
-/// What actually happened over a range: days with any check-in each week,
-/// each habit as done out of planned (never a score), and routine runs.
-class InsightsPage extends StatelessWidget {
+class InsightsPage extends StatefulWidget {
   final HabitScope scope;
   const InsightsPage({super.key, required this.scope});
+  @override
+  State<InsightsPage> createState() => _InsightsPageState();
+}
 
-  (String, String) range() {
-    final s = scope.state, today = scope.today;
-    final until = s.settings['reportUntil'] as String? ?? today;
-    return (
-      s.settings['reportFrom'] as String? ?? addDays(today, -29),
-      until.compareTo(today) > 0 ? today : until,
-    );
-  }
-
-  Future<void> setRange(BuildContext context, String from, String until) =>
-      scope.write(
-        context,
-        (s) => s.copy({
-          'settings': {...s.settings, 'reportFrom': from, 'reportUntil': until},
-        }),
-        remember: false,
-      );
-
-  Future<void> custom(BuildContext context) {
-    final (from, until) = range();
-    return showHabitForm(
-      context,
-      title: tr(context, 'Range', 'Khoảng ngày'),
-      saveLabel: tr(context, 'Show', 'Xem'),
-      fields: const [
-        HabitField('from', 'From', 'Từ ngày', kind: FieldKind.date),
-        HabitField('until', 'To', 'Đến hết ngày', kind: FieldKind.date),
-      ],
-      initial: {'from': from, 'until': until},
-      save: (v) async {
-        final a = v['from'] as String, b = v['until'] as String;
-        if (b.compareTo(a) < 0 || b.compareTo(scope.today) > 0)
-          throw const FormatException(
-            'Choose a range that has passed / Chọn khoảng ngày đã qua',
-          );
-        await scope.controller.change(
-          (s) => s.copy({
-            'settings': {...s.settings, 'reportFrom': a, 'reportUntil': b},
-          }),
-          remember: false,
-        );
-      },
+class _InsightsPageState extends State<InsightsPage> {
+  HabitScope get scope => widget.scope;
+  String kind = 'month';
+  late String anchor = scope.today;
+  String? habit;
+  (String, String) get range =>
+      progressRange(kind, anchor, scope.state.weekStart);
+  void move(int direction) {
+    final d = date(anchor);
+    setState(
+      () => anchor = kind == 'week'
+          ? addDays(anchor, direction * 7)
+          : kind == 'month'
+          ? day(DateTime.utc(d.year, d.month + direction))
+          : day(DateTime.utc(d.year + direction, 1)),
     );
   }
 
   Future<void> export(BuildContext context, String format) async {
-    final (from, until) = range();
+    final (from, until) = range;
     try {
       final message = await exportHabits(
         context,
         scope,
         format,
         from: from,
-        until: until,
+        until: until.compareTo(scope.today) > 0 ? scope.today : until,
       );
       if (message != null && context.mounted)
         showHandyMessage(context, message);
@@ -82,278 +60,432 @@ class InsightsPage extends StatelessWidget {
     }
   }
 
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final c = HandyColors.of(context);
-    final s = scope.state, today = scope.today;
-    final (from, until) = range();
-    final span = date(until).difference(date(from)).inDays + 1;
-    final index = scope.index;
-    final habits = s.habits
-        .where((h) => h.created.compareTo(until) <= 0)
-        .toList();
-    final sessions = s.sessions
-        .where((x) => x.day.compareTo(from) >= 0 && x.day.compareTo(until) <= 0)
-        .toList();
-    return ListView(
-      padding: const EdgeInsets.fromLTRB(
-        HandySpace.l,
-        HandySpace.l,
-        HandySpace.l,
-        HandySpace.xxl,
-      ),
-      children: [
-        HandyContent(
+  Future<void> showDay(HeatDay d, List<Habit> habits) async {
+    final picked = await showModalBottomSheet<Habit>(
+      context: context,
+      isScrollControlled: true,
+      showDragHandle: true,
+      builder: (context) => SafeArea(
+        child: SizedBox(
+          height: MediaQuery.sizeOf(context).height * .65,
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              Semantics(
-                header: true,
-                child: Text(
-                  '${formatDay(context, from)} – ${formatDay(context, until)}',
-                  key: const Key('insights-range'),
-                  style: theme.textTheme.titleLarge,
-                ),
-              ),
-              const SizedBox(height: HandySpace.s),
-              Wrap(
-                spacing: HandySpace.s,
-                runSpacing: HandySpace.s,
-                children: [
-                  for (final d in [7, 30, 90])
-                    ChoiceChip(
-                      key: Key('range-$d'),
-                      label: Text(tr(context, '$d days', '$d ngày')),
-                      selected: until == today && span == d,
-                      onSelected: (_) =>
-                          setRange(context, addDays(today, -(d - 1)), today),
-                    ),
-                  ChoiceChip(
-                    key: const Key('range-custom'),
-                    label: Text(tr(context, 'Other…', 'Khác…')),
-                    selected: !(until == today && [7, 30, 90].contains(span)),
-                    onSelected: (_) => custom(context),
-                  ),
-                ],
-              ),
               Padding(
-                padding: const EdgeInsets.only(top: HandySpace.m),
-                child: Align(
-                  alignment: AlignmentDirectional.centerStart,
-                  child: OutlinedButton.icon(
-                    key: const Key('insights-week-review'),
-                    onPressed: () => openWeekReview(context, scope),
-                    icon: const Icon(Icons.event_note_outlined),
-                    label: Text(
-                      tr(context, 'Look back at the week', 'Nhìn lại tuần'),
-                    ),
-                  ),
-                ),
-              ),
-              HandyLabel(
-                tr(
-                  context,
-                  'Days with a check-in, each week',
-                  'Số ngày có ghi nhận mỗi tuần',
-                ),
-              ),
-              _Weeks(scope: scope, from: from, until: until),
-              HandySection(
-                title: tr(context, 'Each habit', 'Từng thói quen'),
-                children: [
-                  if (habits.isEmpty)
-                    Padding(
-                      padding: const EdgeInsets.all(HandySpace.l),
-                      child: Text(
-                        tr(
-                          context,
-                          'No habit in this range.',
-                          'Không có thói quen trong khoảng này.',
-                        ),
-                      ),
-                    ),
-                  for (final h in habits)
-                    Builder(
-                      builder: (context) {
-                        final m = metrics(
-                          h,
-                          until,
-                          s.weekStart,
-                          index,
-                          from: from,
-                        );
-                        final unit = m.unit == 'weeks'
-                            ? tr(context, 'weeks', 'tuần')
-                            : tr(context, 'days', 'ngày');
-                        return InkWell(
-                          key: Key('insight-${h.id}'),
-                          onTap: () =>
-                              Navigator.pushNamed(context, '/habit/${h.id}'),
-                          child: Padding(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: HandySpace.l,
-                              vertical: 10,
-                            ),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.stretch,
-                              children: [
-                                Row(
-                                  children: [
-                                    HandyDot(scope.habitHue(h.id), size: 8),
-                                    const SizedBox(width: HandySpace.s),
-                                    Expanded(
-                                      child: Text(
-                                        h.title,
-                                        overflow: TextOverflow.ellipsis,
-                                      ),
-                                    ),
-                                    Text(
-                                      tr(
-                                        context,
-                                        '${m.completed} of ${m.eligible} $unit',
-                                        '${m.completed}/${m.eligible} $unit',
-                                      ),
-                                      style: theme.textTheme.bodyMedium
-                                          ?.copyWith(fontFeatures: tabular),
-                                    ),
-                                  ],
-                                ),
-                                const SizedBox(height: 6),
-                                ClipRRect(
-                                  borderRadius: BorderRadius.circular(2),
-                                  child: SizedBox(
-                                    height: 3,
-                                    child: Stack(
-                                      children: [
-                                        Container(color: c.raised),
-                                        FractionallySizedBox(
-                                          widthFactor: m.eligible == 0
-                                              ? 0
-                                              : m.completed / m.eligible,
-                                          child: Container(
-                                            color: theme.colorScheme.onSurface
-                                                .withValues(alpha: .7),
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                ),
-                                if (h.isNegative)
-                                  Text(
-                                    tr(
-                                      context,
-                                      'Within the limit in closed periods; unknown periods included in the denominator.',
-                                      'Trong giới hạn của kỳ đã chốt; mẫu số gồm kỳ chưa rõ.',
-                                    ),
-                                    style: theme.textTheme.bodySmall?.copyWith(
-                                      color: c.muted,
-                                    ),
-                                  ),
-                                const SizedBox(height: 4),
-                                Text(
-                                  tr(
-                                    context,
-                                    'Running ${m.current} · longest ${m.longest} $unit',
-                                    'Chuỗi ${m.current} · dài nhất ${m.longest} $unit',
-                                  ),
-                                  style: theme.textTheme.bodySmall?.copyWith(
-                                    color: c.muted,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        );
-                      },
-                    ),
-                ],
-              ),
-              HandySection(
-                title: tr(context, 'Routine runs', 'Các lần chạy quy trình'),
-                children: [
-                  if (sessions.isEmpty)
-                    Padding(
-                      padding: const EdgeInsets.all(HandySpace.l),
-                      child: Text(
-                        tr(
-                          context,
-                          'No runs in this range.',
-                          'Không có lần chạy nào trong khoảng này.',
-                        ),
-                      ),
-                    ),
-                  for (final r in s.routines.where(
-                    (r) => sessions.any((x) => x.routine == r.id),
-                  ))
-                    Builder(
-                      builder: (context) {
-                        final mine = sessions
-                            .where((x) => x.routine == r.id)
-                            .toList();
-                        final finished = mine
-                            .where((x) => x.status == 'finished')
-                            .length;
-                        return ListTile(
-                          title: Text(r.title),
-                          subtitle: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                tr(
-                                  context,
-                                  '$finished finished of ${mine.length} started',
-                                  'Xong $finished trên ${mine.length} lần bắt đầu',
-                                ),
-                              ),
-                              Text(
-                                tr(
-                                  context,
-                                  '${minutesText(context, mine.fold(0, (v, x) => v + x.elapsed))} spent · ${minutesText(context, mine.fold(0, (v, x) => v + x.planned))} planned',
-                                  'Đã chạy ${minutesText(context, mine.fold(0, (v, x) => v + x.elapsed))} · dự kiến ${minutesText(context, mine.fold(0, (v, x) => v + x.planned))}',
-                                ),
-                                style: theme.textTheme.bodyMedium?.copyWith(
-                                  fontFeatures: tabular,
-                                ),
-                              ),
-                            ],
-                          ),
-                        );
-                      },
-                    ),
-                ],
-              ),
-              Padding(
-                padding: const EdgeInsets.only(top: HandySpace.m),
+                padding: const EdgeInsets.all(16),
                 child: Text(
-                  tr(
-                    context,
-                    'Skipped days are neither done nor missed. A days-a-week habit counts whole weeks; the week still open is left out until it is done.',
-                    'Ngày bỏ qua không tính là xong hay lỡ. Thói quen theo số ngày mỗi tuần tính theo tuần trọn; tuần đang mở chỉ được tính khi đã đủ.',
-                  ),
-                  style: theme.textTheme.bodySmall?.copyWith(color: c.muted),
+                  heatDayLabel(context, d, scope.today),
+                  style: Theme.of(context).textTheme.titleMedium,
                 ),
               ),
-              HandyLabel(tr(context, 'Export this range', 'Xuất khoảng này')),
-              Wrap(
-                spacing: HandySpace.s,
-                runSpacing: HandySpace.s,
-                children: [
-                  for (final (f, name) in const [
-                    ('csv', 'CSV'),
-                    ('md', 'Markdown'),
-                    ('pdf', 'PDF'),
-                  ])
-                    OutlinedButton.icon(
-                      key: Key('export-$f'),
-                      onPressed: () => export(context, f),
-                      icon: const Icon(Icons.download_outlined, size: 18),
-                      label: Text(name),
-                    ),
-                ],
+              Expanded(
+                child: ListView(
+                  children: [
+                    for (final h in habits)
+                      ListTile(
+                        title: Text(h.title),
+                        subtitle: Text(
+                          statusLabel(
+                            context,
+                            habitStatus(h, d.day, scope.today, scope.index),
+                          ),
+                        ),
+                        trailing: const Icon(Icons.chevron_right),
+                        onTap: () => Navigator.pop(context, h),
+                      ),
+                  ],
+                ),
               ),
             ],
+          ),
+        ),
+      ),
+    );
+    if (picked == null || !mounted) return;
+    if (!picked.archived &&
+        d.day.compareTo(scope.today) <= 0 &&
+        d.day.compareTo(addDays(scope.today, -scope.state.backfill)) >= 0 &&
+        d.day.compareTo(picked.created) >= 0) {
+      await editDay(context, scope, picked, d.day);
+    } else {
+      await Navigator.pushNamed(context, '/habit/${picked.id}');
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final s = scope.state, today = scope.today, index = scope.index;
+    final (from, until) = range;
+    final habits = s.liveHabits
+        .where((h) => h.created.compareTo(until) <= 0)
+        .toList();
+    final counts = {
+      for (final h in habits) h.id: progressCount(h, from, until, today, index),
+    };
+    final kept = counts.values.fold(0, (n, m) => n + m.kept),
+        due = counts.values.fold(0, (n, m) => n + m.eligible);
+    final shownHabit = habit == null
+        ? null
+        : habits.where((h) => h.id == habit).firstOrNull;
+    final selected = shownHabit == null ? habits : [shownHabit];
+    final hue = shownHabit == null
+        ? HabitPalette.of(context).vermilion
+        : habitMark(context, shownHabit);
+    final days = progressDays(selected, from, until, today, index);
+    final sessions = s.sessions
+        .where(
+          (x) =>
+              x.day.compareTo(from) >= 0 &&
+              x.day.compareTo(until) <= 0 &&
+              x.day.compareTo(today) <= 0,
+        )
+        .toList();
+    final routineIds = sessions.map((x) => x.routine).toSet().toList();
+    final finished = sessions.where((x) => x.status == 'finished').length;
+    final theme = Theme.of(context), p = HabitPalette.of(context);
+    final summary = Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Text(
+          tr(
+            context,
+            'Kept $kept of $due goals.',
+            'Giữ được $kept trên $due mục tiêu.',
+          ),
+          key: const Key('progress-finding'),
+          style: theme.textTheme.headlineSmall?.copyWith(
+            color: p.anchor,
+            fontWeight: FontWeight.w400,
+          ),
+        ),
+        const SizedBox(height: 8),
+        Text(
+          tr(
+            context,
+            'Each day or whole week counts once. Pauses, unknown days and unfinished periods are left out; only full weeks inside this range count.',
+            'Mỗi ngày hoặc tuần trọn tính một lần. Bỏ qua ngày nghỉ, ngày chưa rõ và khoảng chưa hết; chỉ tính tuần trọn trong khoảng đã chọn.',
+          ),
+          style: theme.textTheme.bodyMedium,
+        ),
+        if (habits.any((h) => h.negativeGoals.any((g) => g.window == 'week')))
+          Padding(
+            padding: const EdgeInsets.only(top: 8),
+            child: Text(
+              tr(
+                context,
+                'Weekly limits: counted from what you recorded.',
+                'Giới hạn tuần: tính từ những lần bạn đã ghi.',
+              ),
+              key: const Key('weekly-inference-note'),
+              style: theme.textTheme.bodySmall,
+            ),
+          ),
+        if (habits.isEmpty) ...[
+          const SizedBox(height: 16),
+          Text(
+            tr(
+              context,
+              s.liveHabits.isEmpty
+                  ? 'Your first habit will give this page a starting point.'
+                  : 'No habit was planned in this period.',
+              s.liveHabits.isEmpty
+                  ? 'Thói quen đầu tiên sẽ là điểm bắt đầu cho trang này.'
+                  : 'Khoảng này chưa có thói quen nào có lịch.',
+            ),
+          ),
+          Align(
+            alignment: AlignmentDirectional.centerStart,
+            child: TextButton(
+              key: const Key('progress-create'),
+              onPressed: () => Navigator.pushNamed(context, '/templates'),
+              child: Text(
+                tr(context, 'Find a small start', 'Chọn một khởi đầu nhỏ'),
+              ),
+            ),
+          ),
+        ],
+        Align(
+          alignment: AlignmentDirectional.centerStart,
+          child: TextButton.icon(
+            key: const Key('insights-week-review'),
+            onPressed: () => openWeekReview(context, scope),
+            icon: const Icon(Icons.event_note_outlined, size: 18),
+            label: Text(tr(context, 'Look back at the week', 'Nhìn lại tuần')),
+          ),
+        ),
+      ],
+    );
+    final selectedCount = shownHabit == null ? null : counts[shownHabit.id];
+    final weeklyOnly =
+        shownHabit?.isNegative == true && selectedCount?.unit == 'weeks';
+    final keptDays = days.where((d) => d.kept > 0).length;
+    final calendarFinding = weeklyOnly
+        ? selectedCount!.eligible == 0
+              ? tr(
+                  context,
+                  'No finished weeks to count yet.',
+                  'Chưa có tuần trọn để tính.',
+                )
+              : tr(
+                  context,
+                  '${selectedCount.kept} of ${selectedCount.eligible} weeks within your limit.',
+                  'Giữ giới hạn ${selectedCount.kept}/${selectedCount.eligible} tuần.',
+                )
+        : tr(
+            context,
+            '$keptDays ${keptDays == 1 ? 'day' : 'days'} with a kept goal in this $kind.',
+            '$keptDays ngày giữ được mục tiêu trong ${kind == 'year'
+                ? 'năm'
+                : kind == 'month'
+                ? 'tháng'
+                : 'tuần'} này.',
+          );
+    final calendar = Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        HandyLabel(
+          kind == 'year'
+              ? tr(context, 'A year of small steps', 'Một năm từng bước nhỏ')
+              : kind == 'month'
+              ? tr(context, 'Your month, day by day', 'Từng ngày trong tháng')
+              : tr(context, 'Your week, day by day', 'Từng ngày trong tuần'),
+        ),
+        DropdownButtonFormField<String>(
+          key: const Key('progress-habit-filter'),
+          initialValue: shownHabit?.id ?? '',
+          isExpanded: true,
+          decoration: InputDecoration(
+            labelText: tr(context, 'Whose rhythm?', 'Nhịp thói quen nào?'),
+          ),
+          items: [
+            DropdownMenuItem(
+              value: '',
+              child: Text(tr(context, 'All habits', 'Tất cả thói quen')),
+            ),
+            for (final h in habits)
+              DropdownMenuItem(
+                value: h.id,
+                child: Text(h.title, overflow: TextOverflow.ellipsis),
+              ),
+          ],
+          onChanged: (v) => setState(() => habit = v == '' ? null : v),
+        ),
+        const SizedBox(height: 12),
+        Text(
+          calendarFinding,
+          key: const Key('calendar-finding'),
+          style: theme.textTheme.bodyMedium,
+        ),
+        const SizedBox(height: 12),
+        if (kind == 'year')
+          YearHeatmap(
+            days: days,
+            today: today,
+            weekStart: s.weekStart,
+            hue: hue,
+            onDay: (d) => showDay(d, selected),
+          )
+        else
+          ProgressCalendar(
+            days: days,
+            weekStart: s.weekStart,
+            today: today,
+            hue: hue,
+            onDay: (d) => showDay(d, selected),
+          ),
+        const SizedBox(height: 12),
+        Text(
+          tr(
+            context,
+            'More colour means more goals kept. Hollow means unknown; grey means none kept, rest or later. Tap a date for details.',
+            'Màu đậm hơn là giữ được nhiều mục tiêu hơn. Ô rỗng là chưa rõ; xám là chưa đạt, ngày nghỉ hoặc sắp tới. Chạm ngày để xem.',
+          ),
+          style: theme.textTheme.bodySmall,
+        ),
+        if (selected.any((h) => h.negativeGoals.any((g) => g.window == 'week')))
+          Text(
+            tr(
+              context,
+              'A closed weekly limit shades all seven days of its week.',
+              'Giới hạn tuần tô màu cả bảy ngày khi tuần đã hết.',
+            ),
+            style: theme.textTheme.bodySmall,
+          ),
+      ],
+    );
+    final habitRows = Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        HandyLabel(tr(context, 'Each habit', 'Từng thói quen')),
+        Text(
+          tr(
+            context,
+            'Your streaks continue across pauses and unknown days.',
+            'Ngày nghỉ và ngày chưa rõ không làm đứt chuỗi.',
+          ),
+          style: theme.textTheme.bodyMedium,
+        ),
+        Capped(
+          count: habits.length,
+          max: 5,
+          name: 'progress-habits',
+          builder: (context, shown) => Column(
+            children: [
+              for (final h in habits.take(shown))
+                _HabitProgress(scope: scope, habit: h, count: counts[h.id]!),
+            ],
+          ),
+        ),
+      ],
+    );
+    final routineRows = Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        HandyLabel(tr(context, 'Routine completion', 'Hoàn thành quy trình')),
+        Text(
+          tr(
+            context,
+            '$finished finished of ${sessions.length} started.',
+            'Xong $finished trên ${sessions.length} lần bắt đầu.',
+          ),
+          key: const Key('routine-finding'),
+          style: theme.textTheme.titleMedium,
+        ),
+        if (sessions.isEmpty)
+          Text(
+            tr(
+              context,
+              'Your next routine run will appear here.',
+              'Lần chạy quy trình tiếp theo sẽ xuất hiện ở đây.',
+            ),
+          ),
+        Capped(
+          count: routineIds.length,
+          max: 5,
+          name: 'progress-routines',
+          builder: (context, shown) => Column(
+            children: [
+              for (final id in routineIds.take(shown))
+                Builder(
+                  builder: (context) {
+                    final mine = sessions
+                        .where((x) => x.routine == id)
+                        .toList();
+                    return ListTile(
+                      contentPadding: EdgeInsets.zero,
+                      title: Text(mine.last.title),
+                      subtitle: Text(
+                        tr(
+                          context,
+                          '${mine.where((x) => x.status == 'finished').length} of ${mine.length} runs finished · ${minutesText(context, mine.fold(0, (n, x) => n + x.elapsed))} spent',
+                          'Xong ${mine.where((x) => x.status == 'finished').length}/${mine.length} lần · đã chạy ${minutesText(context, mine.fold(0, (n, x) => n + x.elapsed))}',
+                        ),
+                      ),
+                      onTap: () => Navigator.pushNamed(
+                        context,
+                        '/session/${mine.last.id}',
+                      ),
+                    );
+                  },
+                ),
+            ],
+          ),
+        ),
+      ],
+    );
+    return ListView(
+      padding: const EdgeInsets.fromLTRB(16, 16, 16, 40),
+      children: [
+        HandyContent(
+          maxWidth: 1120,
+          child: LayoutBuilder(
+            builder: (context, constraints) => Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
+                  children: [
+                    for (final (id, en, vi) in const [
+                      ('week', 'Week', 'Tuần'),
+                      ('month', 'Month', 'Tháng'),
+                      ('year', 'Year', 'Năm'),
+                    ])
+                      ChoiceChip(
+                        key: Key('range-$id'),
+                        selected: kind == id,
+                        label: Text(tr(context, en, vi)),
+                        onSelected: (_) => setState(() => kind = id),
+                      ),
+                  ],
+                ),
+                Row(
+                  children: [
+                    IconButton(
+                      key: const Key('progress-prev'),
+                      tooltip: tr(context, 'Previous period', 'Khoảng trước'),
+                      onPressed: date(from).year > 1900 ? () => move(-1) : null,
+                      icon: const Icon(Icons.chevron_left),
+                    ),
+                    Expanded(
+                      child: Text(
+                        '${formatDay(context, from)} – ${formatDay(context, until)}',
+                        key: const Key('insights-range'),
+                        textAlign: TextAlign.center,
+                        style: theme.textTheme.bodyMedium,
+                      ),
+                    ),
+                    IconButton(
+                      key: const Key('progress-next'),
+                      tooltip: tr(context, 'Next period', 'Khoảng sau'),
+                      onPressed: until.compareTo(today) < 0
+                          ? () => move(1)
+                          : null,
+                      icon: const Icon(Icons.chevron_right),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 12), summary,
+                // At 1440: 1120 content = 548 + 24 + 548. Each block keeps its own height.
+                if (constraints.maxWidth >= 900)
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Expanded(child: calendar),
+                      const SizedBox(width: 24),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [habitRows, routineRows],
+                        ),
+                      ),
+                    ],
+                  )
+                else ...[
+                  calendar,
+                  habitRows,
+                  routineRows,
+                ],
+                HandyLabel(tr(context, 'Export this range', 'Xuất khoảng này')),
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
+                  children: [
+                    for (final (f, name) in const [
+                      ('csv', 'CSV'),
+                      ('md', 'Markdown'),
+                      ('pdf', 'PDF'),
+                    ])
+                      OutlinedButton.icon(
+                        key: Key('export-$f'),
+                        onPressed: () => export(context, f),
+                        icon: const Icon(Icons.download_outlined, size: 18),
+                        label: Text(name),
+                      ),
+                  ],
+                ),
+              ],
+            ),
           ),
         ),
       ],
@@ -361,138 +493,82 @@ class InsightsPage extends StatelessWidget {
   }
 }
 
-/// Days with any check-in in each week of the range, out of seven; the
-/// current week in the app's hue.
-class _Weeks extends StatelessWidget {
+class _HabitProgress extends StatelessWidget {
   final HabitScope scope;
-  final String from, until;
-  const _Weeks({required this.scope, required this.from, required this.until});
+  final Habit habit;
+  final ProgressCount count;
+  const _HabitProgress({
+    required this.scope,
+    required this.habit,
+    required this.count,
+  });
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final c = HandyColors.of(context);
-    final s = scope.state;
-    final days = <String, Set<String>>{};
-    final negatives = s.habits
-        .where((h) => h.isNegative)
-        .map((h) => h.id)
-        .toSet();
-    for (final e in s.events) {
-      if ((e.value <= 0 && !(negatives.contains(e.habit) && !e.skipped)) ||
-          e.day.compareTo(from) < 0 ||
-          e.day.compareTo(until) > 0)
-        continue;
-      days.putIfAbsent(weekOf(e.day, s.weekStart), () => {}).add(e.day);
-    }
-    final weeks = <String>[];
-    for (
-      var w = weekOf(from, s.weekStart);
-      w.compareTo(until) <= 0;
-      w = addDays(w, 7)
-    ) {
-      weeks.add(w);
-    }
-    final shown = weeks.length > 26 ? weeks.sublist(weeks.length - 26) : weeks;
-    final current = weekOf(scope.today, s.weekStart);
-    final labelHeight = MediaQuery.textScalerOf(context).scale(12) * 1.4 + 4;
-    final stride = (shown.length / 4).ceil().clamp(1, 26);
-    return Semantics(
-      label: [
-        for (final w in shown)
-          '${formatDay(context, w)}: ${days[w]?.length ?? 0}/7',
-      ].join('; '),
-      excludeSemantics: true,
-      child: SizedBox(
-        height: 160,
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.end,
+    final h = habit,
+        m = metrics(habit, scope.today, scope.state.weekStart, scope.index);
+    final unit = count.unit == 'goals'
+        ? tr(context, 'goals', 'mục tiêu')
+        : count.unit == 'weeks'
+        ? tr(context, count.eligible == 1 ? 'week' : 'weeks', 'tuần')
+        : tr(context, count.eligible == 1 ? 'day' : 'days', 'ngày');
+    final streakUnit = m.unit == 'weeks'
+        ? tr(context, 'weeks', 'tuần')
+        : tr(context, 'days', 'ngày');
+    return InkWell(
+      key: Key('insight-${h.id}'),
+      onTap: () => Navigator.pushNamed(context, '/habit/${h.id}'),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 12),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Padding(
-              padding: EdgeInsets.only(
-                right: HandySpace.s,
-                bottom: labelHeight + 5,
-              ),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                crossAxisAlignment: CrossAxisAlignment.end,
-                children: [
-                  Text(
-                    '7',
-                    style: theme.textTheme.labelSmall?.copyWith(color: c.muted),
-                  ),
-                  Text(
-                    '0',
-                    style: theme.textTheme.labelSmall?.copyWith(color: c.muted),
-                  ),
-                ],
-              ),
-            ),
-            for (final w in shown)
-              Expanded(
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 2),
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.end,
-                    children: [
-                      Expanded(
-                        child: Align(
-                          alignment: Alignment.bottomCenter,
-                          child: FractionallySizedBox(
-                            heightFactor: (days[w]?.length ?? 0) / 7,
-                            child: Container(
-                              decoration: BoxDecoration(
-                                color: w == current
-                                    ? c.accent
-                                    : theme.colorScheme.onSurface.withValues(
-                                        alpha: .22,
-                                      ),
-                                borderRadius: const BorderRadius.vertical(
-                                  top: Radius.circular(3),
-                                ),
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
-                      Container(height: 1, color: c.border),
-                      const SizedBox(height: 4),
-                      SizedBox(
-                        height: labelHeight,
-                        child:
-                            shown.indexOf(w) == 0 ||
-                                shown.indexOf(w) == shown.length - 1 ||
-                                shown.indexOf(w) % stride == 0 &&
-                                    shown.indexOf(w) < shown.length - stride
-                            ? OverflowBox(
-                                minWidth: 0,
-                                maxWidth: MediaQuery.textScalerOf(
-                                  context,
-                                ).scale(90),
-                                alignment: shown.indexOf(w) == 0
-                                    ? Alignment.centerLeft
-                                    : shown.indexOf(w) == shown.length - 1
-                                    ? Alignment.centerRight
-                                    : Alignment.center,
-                                child: Text(
-                                  '${date(w).day}/${date(w).month}',
-                                  textAlign: shown.indexOf(w) == 0
-                                      ? TextAlign.start
-                                      : shown.indexOf(w) == shown.length - 1
-                                      ? TextAlign.end
-                                      : TextAlign.center,
-                                  style: theme.textTheme.labelSmall?.copyWith(
-                                    color: c.muted,
-                                    fontSize: 12,
-                                  ),
-                                  maxLines: 1,
-                                ),
-                              )
-                            : null,
-                      ),
-                    ],
+            Row(
+              children: [
+                Container(
+                  width: 8,
+                  height: 8,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: habitMark(context, h),
                   ),
                 ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    h.title,
+                    style: Theme.of(context).textTheme.titleMedium,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 4),
+            Text(
+              count.eligible == 0
+                  ? tr(
+                      context,
+                      'No finished $unit to count yet.',
+                      'Chưa có $unit hoàn tất để tính.',
+                    )
+                  : tr(
+                      context,
+                      '${count.kept} of ${count.eligible} $unit kept · ${formatFigure(context, (count.kept * 100 / count.eligible).round().toString())}% consistency',
+                      'Giữ ${count.kept}/${count.eligible} $unit · đều đặn ${formatFigure(context, (count.kept * 100 / count.eligible).round().toString())}%',
+                    ),
+              style: Theme.of(
+                context,
+              ).textTheme.bodyMedium?.copyWith(fontFeatures: tabular),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              tr(
+                context,
+                'Current ${m.current} · best ${m.longest} $streakUnit',
+                'Hiện tại ${m.current} · dài nhất ${m.longest} $streakUnit',
               ),
+              style: Theme.of(
+                context,
+              ).textTheme.bodySmall?.copyWith(fontFeatures: tabular),
+            ),
           ],
         ),
       ),

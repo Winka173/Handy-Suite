@@ -95,8 +95,8 @@ class WeekReviewPage extends StatelessWidget {
         if (r.habits.any((w) => w.habit.isNegative))
           tr(
             context,
-            'Negative habits count closed periods. Unknown stays in the denominator; open, skipped and paused periods are left out.',
-            'Thói quen giảm tính kỳ đã chốt. Chưa rõ vẫn ở mẫu số; không tính kỳ đang mở, bỏ qua và nghỉ.',
+            'Weekly limits: counted from what you recorded. Pauses, unknown days and unfinished weeks are left out.',
+            'Giới hạn tuần: tính từ những lần bạn đã ghi. Không tính ngày nghỉ, ngày chưa rõ và tuần chưa hết.',
           ),
         if (r.dueBefore > 0)
           tr(
@@ -221,8 +221,8 @@ class _HabitWeekRow extends StatelessWidget {
             Text(
               tr(
                 context,
-                '${week.kept}/${week.due} closed periods within the limit · ${week.unknown} unknown ${week.unknown == 1 ? 'day' : 'days'}.',
-                '${week.kept}/${week.due} kỳ đã chốt trong giới hạn · ${week.unknown} ngày chưa rõ.',
+                'Kept ${week.kept} of ${week.due} ${negativeGoalOn(h, start)?.window == 'week' ? 'weeks' : 'days'} · ${week.unknown} ${week.unknown == 1 ? 'day' : 'days'} left unknown.',
+                'Giữ được ${week.kept}/${week.due} ${negativeGoalOn(h, start)?.window == 'week' ? 'tuần' : 'ngày'} · ${week.unknown} ngày chưa ghi.',
               ),
             ),
           ],

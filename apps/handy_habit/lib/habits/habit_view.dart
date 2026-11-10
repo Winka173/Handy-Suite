@@ -212,10 +212,10 @@ class HabitView extends StatelessWidget {
                   tr(
                     context,
                     h.isNegative
-                        ? 'Closed $unit only. Unknown periods stay in the denominator; open and paused periods earn no credit. Each new period is a fresh start.'
+                        ? 'Finished $unit only; pauses and unknown days are left out. Weekly limits are counted from what you recorded.'
                         : 'Counted over planned $unit that have closed; skipped and paused days and today, if not done yet, are left out.',
                     h.isNegative
-                        ? 'Chỉ tính $unit đã chốt. Kỳ chưa rõ vẫn nằm trong mẫu số; kỳ đang mở và kỳ nghỉ không tính đạt. Mỗi kỳ mới là khởi đầu mới.'
+                        ? 'Chỉ tính $unit đã qua; không tính ngày nghỉ và ngày chưa rõ. Giới hạn tuần tính từ những lần bạn đã ghi.'
                         : 'Tính trên số $unit có lịch đã qua; bỏ ngày bỏ qua, ngày nghỉ và hôm nay nếu chưa làm.',
                   ),
                   style: theme.textTheme.bodySmall?.copyWith(color: c.muted),

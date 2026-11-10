@@ -9,6 +9,9 @@ class HabitPreset {
   /// binary, count, duration (minutes) or quantity.
   final String type;
   final String unitEn, unitVi;
+  final String direction, window;
+  final int limit;
+  final String? collectionId;
 
   /// The daily minimum, in whole units (pages, glasses, minutes).
   final num target;
@@ -23,6 +26,10 @@ class HabitPreset {
     this.en,
     this.vi, {
     this.type = 'binary',
+    this.direction = 'build',
+    this.window = 'day',
+    this.limit = 0,
+    this.collectionId,
     this.unitEn = '',
     this.unitVi = '',
     this.target = 1,
@@ -30,6 +37,12 @@ class HabitPreset {
     this.weekdays = const [1, 2, 3, 4, 5],
     this.perWeek = 3,
   });
+
+  String get collection => collectionId ?? presetCollection(id, group);
+  int get color => templateCollections[collection]!.color;
+  int get icon => templateCollections[collection]!.icon;
+  String get descriptionEn => templateCollections[collection]!.descriptionEn;
+  String get descriptionVi => templateCollections[collection]!.descriptionVi;
 
   /// The editor's stored target: thousandths of a unit.
   int get stored => type == 'binary' ? 1000 : (target * 1000).round();
@@ -58,7 +71,7 @@ const habitPresets = [
   HabitPreset(
     'stretch',
     'morning',
-    'Stretch',
+    'Stretch for five minutes',
     'Giãn cơ',
     type: 'duration',
     target: 5,
@@ -81,7 +94,7 @@ const habitPresets = [
   HabitPreset(
     'prep-tomorrow',
     'evening',
-    'Lay out tomorrow',
+    'Get ready for tomorrow',
     'Chuẩn bị cho ngày mai',
   ),
   HabitPreset(
@@ -99,7 +112,7 @@ const habitPresets = [
     type: 'quantity',
     unitEn: 'steps',
     unitVi: 'bước',
-    target: 6000,
+    target: 4000,
   ),
   HabitPreset(
     'workout',
@@ -144,7 +157,7 @@ const habitPresets = [
     'Focused study',
     'Học tập trung',
     type: 'duration',
-    target: 45,
+    target: 25,
     schedule: 'weekdays',
   ),
   HabitPreset('bed-time', 'sleep', 'In bed on time', 'Lên giường đúng giờ'),
@@ -174,12 +187,12 @@ const habitPresets = [
   HabitPreset(
     'water',
     'skincare',
-    'Water',
-    'Uống nước',
+    'Drink water through the day',
+    'Uống nước trong ngày',
     type: 'quantity',
     unitEn: 'glasses',
     unitVi: 'ly',
-    target: 8,
+    target: 6,
   ),
   HabitPreset(
     'phone-free-meal',
@@ -230,5 +243,120 @@ const habitPresets = [
     'Tưới cây',
     schedule: 'weekdays',
     weekdays: [1, 4],
+  ),
+  HabitPreset(
+    'vegetables',
+    'morning',
+    'Add vegetables to a meal',
+    'Thêm rau vào một bữa ăn',
+    collectionId: 'nutrition',
+  ),
+  HabitPreset(
+    'breathe',
+    'evening',
+    'Take a breathing break',
+    'Dừng lại hít thở',
+    type: 'duration',
+    target: 2,
+    collectionId: 'mindfulness',
+  ),
+  HabitPreset(
+    'call-family',
+    'evening',
+    'Call someone you care about',
+    'Gọi người thân',
+    schedule: 'weekdays',
+    weekdays: [7],
+    collectionId: 'relationships',
+  ),
+  HabitPreset(
+    'kind-message',
+    'evening',
+    'Send a thoughtful message',
+    'Nhắn một lời quan tâm',
+    schedule: 'weekly',
+    perWeek: 2,
+    collectionId: 'relationships',
+  ),
+  HabitPreset(
+    'money-check',
+    'evening',
+    'Check this week’s spending',
+    'Xem chi tiêu tuần này',
+    schedule: 'weekdays',
+    weekdays: [7],
+    collectionId: 'finance',
+  ),
+  HabitPreset(
+    'save-small',
+    'evening',
+    'Set a little money aside',
+    'Để dành một khoản nhỏ',
+    schedule: 'weekdays',
+    weekdays: [5],
+    collectionId: 'finance',
+  ),
+  HabitPreset(
+    'sugary-drinks',
+    'digital',
+    'Fewer sugary drinks',
+    'Bớt nước ngọt',
+    type: 'count',
+    direction: 'reduce',
+    window: 'week',
+    limit: 3,
+    collectionId: 'reduce',
+  ),
+  HabitPreset(
+    'smoking',
+    'digital',
+    'Cut back on cigarettes',
+    'Bớt hút thuốc',
+    type: 'count',
+    direction: 'reduce',
+    limit: 5,
+    collectionId: 'reduce',
+  ),
+  HabitPreset(
+    'late-snacks',
+    'digital',
+    'Less late-night snacking',
+    'Bớt ăn khuya',
+    type: 'count',
+    direction: 'reduce',
+    window: 'week',
+    limit: 2,
+    collectionId: 'reduce',
+  ),
+  HabitPreset(
+    'social-checks',
+    'digital',
+    'Check social media less often',
+    'Bớt mở mạng xã hội',
+    type: 'count',
+    direction: 'reduce',
+    limit: 3,
+    collectionId: 'reduce',
+  ),
+  HabitPreset(
+    'impulse-buys',
+    'digital',
+    'Fewer impulse purchases',
+    'Bớt mua ngẫu hứng',
+    type: 'count',
+    direction: 'reduce',
+    window: 'week',
+    limit: 1,
+    collectionId: 'reduce',
+  ),
+  HabitPreset(
+    'phone-bed',
+    'digital',
+    'No phone checks in bed',
+    'Không mở điện thoại trên giường',
+    type: 'count',
+    direction: 'reduce',
+    limit: 0,
+    collectionId: 'reduce',
   ),
 ];

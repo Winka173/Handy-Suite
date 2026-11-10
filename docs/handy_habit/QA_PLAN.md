@@ -121,3 +121,12 @@ emulator. Grant tests clear these flags and use the real OS plugin. This proves 
 handling, not a human interaction with the OS permission dialog. A final linked-mapping
 regression rejects fractional counts on import and active sessions; archived links are
 visible as inactive and step completion does not fabricate a check-in.
+
+
+## R12/R13 run 7 host evidence
+
+- App: `cd apps/handy_habit; flutter test --no-pub` —145 pass (`build/run7-app-tests.log`).
+- Engine: `cd packages/handy_habit_engine; flutter test --no-pub` —119 pass (`build/run7-engine-tests.log`). Both scoped `dart analyze` clean; `dart format --output=none --set-exit-if-changed lib test` unchanged.
+- Render: from app, `$env:SHOTS_DIR='build/run7-shots'; flutter test --no-pub tool/run7_screens_test.dart` —24 matrix tests,336 PNGs; `build/run7-shots.log`. See R12_R13_REVIEW.md for fixture, critique and limits.
+- New regression coverage:16 engine cases in template_catalog_test/run7_progress_test, seven widget flows in run7_library_progress_test; earlier template/negative tests updated to current requirements, no deletion/skip. Save-error/busy/stale tests remain.
+- No device/emulator/browser/store check performed in run7; native/SR/browser/platform follow-up remains with supervisor. No claims from host pictures about OS permissions or persistence runtime.

@@ -60,14 +60,15 @@ void main() {
       );
       await host.boot(t, state: state);
       await host.go(t, '/progress');
-      final activity = find.byWidgetPredicate(
-        (w) => w is Semantics && (w.properties.label?.contains('1/7') ?? false),
-      );
-      expect(activity, findsOneWidget);
+      expect(find.byKey(const Key('progress-calendar')), findsOneWidget);
       expect(
         find.textContaining(
-          'Within the limit in closed periods; unknown periods included',
+          'Pauses, unknown days and unfinished periods are left out',
         ),
+        findsOneWidget,
+      );
+      expect(
+        find.textContaining('No finished days to count yet'),
         findsOneWidget,
       );
     },
@@ -106,7 +107,7 @@ void main() {
     for (var i = 0; i < 4; i++) await tap(t, 'bead-negative');
     expect(HabitIndex.of(c.state!).value('negative', '2024-01-08'), 4000);
     expect(
-      find.textContaining("Over today's limit — tomorrow is new"),
+      find.textContaining("Today: 4 of 3 — tomorrow is a fresh start"),
       findsOneWidget,
     );
     await tap(t, 'snack-undo');
@@ -117,7 +118,7 @@ void main() {
     'unknown is hollow, explicit None today is known and Undo returns unknown',
     (t) async {
       final c = await host.boot(t, state: mixed());
-      expect(find.textContaining('Unknown · nothing recorded'), findsOneWidget);
+      expect(find.textContaining('Nothing recorded yet'), findsOneWidget);
       final negative = c.state!.habits.last;
       expect(
         habitStatus(
@@ -135,7 +136,7 @@ void main() {
       await tap(t, 'none-negative');
       expect(HabitIndex.of(c.state!).known('negative', '2024-01-08'), isTrue);
       expect(HabitIndex.of(c.state!).value('negative', '2024-01-08'), 0);
-      expect(find.textContaining('period still open'), findsOneWidget);
+      expect(find.textContaining('0 of 3 allowed today'), findsOneWidget);
       expect(
         metrics(negative, '2024-01-08', 1, HabitIndex.of(c.state!)).completed,
         0,
@@ -189,7 +190,7 @@ void main() {
     expect(c.state!.habits.last.negativeGoals.single.limit, 0);
     expect(c.state!.habits.last.type, 'count');
   });
-  testWidgets('weekly review includes unknown in honest daily denominator', (
+  testWidgets('weekly review excludes unknown from daily denominator', (
     t,
   ) async {
     var state = mixed();
@@ -204,9 +205,7 @@ void main() {
     await host.boot(t, state: state);
     await host.go(t, '/progress/week?from=2024-01-01');
     expect(
-      find.textContaining(
-        '6/7 closed periods within the limit · 1 unknown day.',
-      ),
+      find.textContaining('Kept 6 of 6 days · 1 day left unknown.'),
       findsOneWidget,
     );
     expect(find.byKey(const Key('week-review-smaller-negative')), findsNothing);

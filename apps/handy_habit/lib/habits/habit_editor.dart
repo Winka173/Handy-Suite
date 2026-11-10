@@ -117,9 +117,9 @@ Widget buildHabitEditor(
           'week': tr(context, 'Week', 'Tuần'),
         },
         helpEn:
-            'Weekly limits close after the last habit day; every day needs a record. Nothing recorded means unknown.',
+            'When the week ends, count the incidents you recorded; blank days mean none. With a daily limit, a blank day stays unknown.',
         helpVi:
-            'Giới hạn tuần chốt sau ngày cuối; mỗi ngày cần ghi nhận. Không ghi là chưa rõ.',
+            'Khi hết tuần, tính những lần bạn đã ghi; ngày trống hiểu là không có. Với giới hạn ngày, ngày trống vẫn chưa rõ.',
       ),
       HabitField(
         'type',
@@ -257,12 +257,13 @@ Widget buildHabitEditor(
       ),
     ],
     initial: {
-      'direction': old?.direction ?? 'build',
-      'ceilingMode': negativeGoal == null || negativeGoal.limit == 0
+      'direction': old?.direction ?? preset?.direction ?? 'build',
+      'ceilingMode': (negativeGoal?.limit ?? preset?.limit ?? 0) == 0
           ? 'zero'
           : 'limit',
-      'ceiling': '${(negativeGoal?.limit ?? 3000) ~/ 1000}',
-      'window': negativeGoal?.window ?? 'day',
+      'ceiling':
+          '${negativeGoal == null ? preset?.limit ?? 3 : negativeGoal.limit ~/ 1000}',
+      'window': negativeGoal?.window ?? preset?.window ?? 'day',
       'title':
           old?.title ??
           (preset == null ? '' : tr(context, preset.en, preset.vi)),
@@ -292,8 +293,8 @@ Widget buildHabitEditor(
               ? ''
               : tr(
                   context,
-                  habitPresetGroups[preset.group]!.$1,
-                  habitPresetGroups[preset.group]!.$2,
+                  templateCollections[preset.collection]!.en,
+                  templateCollections[preset.collection]!.vi,
                 )),
       'dayPart': (s.settings['habitDayParts'] as Map?)?[old?.id] ?? 'auto',
       'priority': '${old?.priority ?? 1}',
@@ -377,8 +378,8 @@ Widget buildHabitEditor(
         unit: unit,
         category: v['category'] as String,
         priority: int.parse('${v['priority']}'),
-        icon: old?.icon ?? 0xe876,
-        color: old?.color ?? 0xffb42318,
+        icon: old?.icon ?? preset?.icon ?? 0xe876,
+        color: old?.color ?? preset?.color ?? 0xffb42318,
         archived: old?.archived ?? false,
         archivedFrom: old?.archivedFrom,
         archivedPeriods: old?.archivedPeriods ?? [],

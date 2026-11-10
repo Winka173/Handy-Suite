@@ -85,7 +85,11 @@ tối đa 30MB.
     và screen reader còn cần supervisor. History mở đủ tại chỗ; Advanced và appearance
     giữ nguyên. R8/R9 run5/5b đã có guide/practice độc lập, help tìm kiếm 15 chủ đề và
     Settings theo nhóm; không còn là phần chưa xây. Ảnh host không chứng minh OS back,
-    screen reader, quyền/nhắc thật, haptics, liên kết policy/support hay file provider.
+    screen reader, quyền/nhắc thật, haptics, liên kết policy/support hay file provider. R12/R13 run7
+    đã có thư viện44 habit/11 routine và Progress tuần/tháng/năm/heatmap/lịch/chuỗi;
+    tuần giảm đã qua suy ra ngày trống là không có, ngày trống giới hạn ngày được
+    loại khỏi độ đều đặn. Ảnh và test host không thay kiểm SR/native/browser thật;
+    heatmap năm cuộn ngang trong khung ở màn hẹp. Không có comparison/correlation Pro mới.
     Chưa xác minh policy URL công khai; cần supervisor kiểm trước release. Tour và `native_test` mới chạy
     trên BlueStacks (máy giả lập); ảnh `habit-ui-review.pdf` và bằng chứng UI cũ thuộc bản
     trước. Run 2 (10/11): backup preview/sealed lỗi-mật-khẩu/hỏng/hủy, durable recovery trước Replace, migration schema3/physical2, domain Undo và trash30 ngày đã source/host tested. Provider SAF/iOS Files, nâng cấp/kill/thiếu chỗ thật và IndexedDB/quota/tab-blocked chưa runtime verified; checkpoint/recovery và plain export vẫn không mã hóa, `.hseal` có mã hóa xác thực. Không claim sync hoàn chỉnh (R15/R16). R10/R11 run6: negative incidents/zero/unknown và giới hạn ngày/tuần schema5/physical2, help16 chủ đề đã source/host tested; tuần đang mở/nghỉ không cộng chuỗi, chưa rõ nằm trong mẫu số. Nâng cấp/ranh giới ngày-tuần trên thiết bị và IndexedDB thật vẫn chờ supervisor; giữ backup trước nâng schema.

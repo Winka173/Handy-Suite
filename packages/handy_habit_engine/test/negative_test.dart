@@ -78,34 +78,31 @@ void main() {
     expect(metrics(h, '2024-01-01', 1, HabitIndex.of(s)).completed, 0);
     expect(metrics(h, '2024-01-02', 1, HabitIndex.of(s)).completed, 1);
   });
-  test(
-    'weekly ceilings sum incidents, require every observation and close Monday',
-    () {
-      var s = seed(window: 'week');
-      final h = s.habits.single;
-      for (var i = 0; i < 6; i++)
-        s = total(s, addDays('2024-01-01', i), i == 0 ? 3000 : 0);
-      expect(
-        negativePeriod(h, '2024-01-01', '2024-01-08', HabitIndex.of(s)).status,
-        'unknown',
-      );
-      s = total(s, '2024-01-07', 0);
-      expect(
-        negativePeriod(h, '2024-01-01', '2024-01-07', HabitIndex.of(s)).status,
-        'open',
-      );
-      expect(
-        negativePeriod(h, '2024-01-01', '2024-01-08', HabitIndex.of(s)).status,
-        'withinLimit',
-      );
-      expect(metrics(h, '2024-01-08', 1, HabitIndex.of(s)).completed, 1);
-      s = total(s, '2024-01-07', 1000);
-      expect(
-        negativePeriod(h, '2024-01-01', '2024-01-08', HabitIndex.of(s)).status,
-        'overLimit',
-      );
-    },
-  );
+  test('weekly ceilings sum incidents, infer blanks and close Monday', () {
+    var s = seed(window: 'week');
+    final h = s.habits.single;
+    for (var i = 0; i < 6; i++)
+      s = total(s, addDays('2024-01-01', i), i == 0 ? 3000 : 0);
+    expect(
+      negativePeriod(h, '2024-01-01', '2024-01-08', HabitIndex.of(s)).status,
+      'withinLimit',
+    );
+    s = total(s, '2024-01-07', 0);
+    expect(
+      negativePeriod(h, '2024-01-01', '2024-01-07', HabitIndex.of(s)).status,
+      'open',
+    );
+    expect(
+      negativePeriod(h, '2024-01-01', '2024-01-08', HabitIndex.of(s)).status,
+      'withinLimit',
+    );
+    expect(metrics(h, '2024-01-08', 1, HabitIndex.of(s)).completed, 1);
+    s = total(s, '2024-01-07', 1000);
+    expect(
+      negativePeriod(h, '2024-01-01', '2024-01-08', HabitIndex.of(s)).status,
+      'overLimit',
+    );
+  });
 
   test(
     'pause and skip are neutral, never zero observations or prorated ceilings',
@@ -395,13 +392,13 @@ void main() {
     );
   });
   test(
-    'review denominators include unknown days and count weekly ceilings once',
+    'review excludes unknown daily days and counts weekly ceilings once',
     () {
       var s = seed();
       for (var i = 0; i < 6; i++)
         s = total(s, addDays('2024-01-01', i), i == 0 ? 4000 : 0);
       final daily = weekReview(s, HabitIndex.of(s), '2024-01-01', '2024-01-08');
-      expect([daily.kept, daily.due, daily.habits.single.unknown], [5, 7, 1]);
+      expect([daily.kept, daily.due, daily.habits.single.unknown], [5, 6, 1]);
       var w = seed(window: 'week');
       for (var i = 0; i < 7; i++) w = total(w, addDays('2024-01-01', i), 0);
       final weekly = weekReview(

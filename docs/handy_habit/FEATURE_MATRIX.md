@@ -1,8 +1,17 @@
 # Handy Habit feature matrix
 
-Updated 2026-11-10 (R10/R11 run 6; earlier evidence below is historical).
+Updated 2026-11-10 (R12/R13 run 7; earlier evidence below is historical).
 Source and tests exist; release certification is separate.
 No row below claims physical-device or real-store verification.
+
+| R12/R13 feature | Status | Host evidence | Remaining |
+| --- | --- | --- | --- |
+| 44 habit / 11 routine templates,13 collections, bilingual accent-folded search and featured picks | IMPLEMENTED / UNIT + WIDGET TESTED | Stable catalog IDs, original32 retained, defaults/content/EN-VI, independent routine/step IDs; search/category/no-match and goal-chip routes | Native keyboard/SR follow-along |
+| Preview → customisation → save once, blank creation and cancel | IMPLEMENTED / WIDGET TESTED | Habit/reduce/routine drafts; rapid save, zero writes on preview/cancel; existing save-error retention tests preserved | Native back and durable create on device |
+| Week/month/year Progress, calendar and overall/per-habit year heatmap, streak/consistency/routine completion | IMPLEMENTED / HOST TESTED | App145 / engine119 pass; leap/DST/quota/pause/unknown/conflict/ranges/Show all/zero/backfill/exports; full24-case render matrix | Device/SR/browser runtime |
+| Closed weekly inference and honest daily denominators | IMPLEMENTED / UNIT + WIDGET TESTED | Blank closed week uses recorded incidents, daily blank stays hollow/excluded; actual-today past range boundary, mixed day/week goal units | Real rollover/travel |
+
+See [R12/R13 review](R12_R13_REVIEW.md). Schema5/physical2 unchanged; no new platform certification.
 
 | R10/R11 feature | Status | Host evidence | Remaining |
 | --- | --- | --- | --- |

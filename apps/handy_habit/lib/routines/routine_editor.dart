@@ -26,6 +26,7 @@ Widget buildRoutineEditor(
   BuildContext context,
   HabitScope scope, [
   Routine? old,
+  Routine? preset,
 ]) {
   String? id;
   final baseline = old == null ? null : jsonEncode(old.toJson());
@@ -65,13 +66,15 @@ Widget buildRoutineEditor(
     ],
     initial: {
       'steps': [
-        for (final step in old?.steps ?? <RoutineStep>[]) step.toJson(),
+        for (final step in old?.steps ?? preset?.steps ?? <RoutineStep>[])
+          step.toJson(),
       ],
-      'title': old?.title ?? '',
-      'weekdays': old?.weekdays ?? const [1, 2, 3, 4, 5, 6, 7],
-      'time': old?.time ?? '07:00',
-      'category': old?.category ?? '',
-      'note': old?.note ?? '',
+      'title': old?.title ?? preset?.title ?? '',
+      'weekdays':
+          old?.weekdays ?? preset?.weekdays ?? const [1, 2, 3, 4, 5, 6, 7],
+      'time': old?.time ?? preset?.time ?? '07:00',
+      'category': old?.category ?? preset?.category ?? '',
+      'note': old?.note ?? preset?.note ?? '',
     },
     draftContent: (context, values, update) => DraftSteps(
       scope: scope,
@@ -91,8 +94,8 @@ Widget buildRoutineEditor(
           for (final step in v['steps'] as List)
             RoutineStep.fromJson(Map<String, dynamic>.from(step as Map)),
         ],
-        icon: old?.icon ?? 0xe037,
-        color: old?.color ?? 0xffb42318,
+        icon: old?.icon ?? preset?.icon ?? 0xe037,
+        color: old?.color ?? preset?.color ?? 0xffb42318,
         archived: old?.archived ?? false,
       );
       await scope.controller.change((s) {

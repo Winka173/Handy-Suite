@@ -41,7 +41,7 @@ class NegativeGoal {
 NegativeGoal? negativeGoalOn(Habit h, String d) =>
     h.negativeGoals.where((g) => g.from.compareTo(d) <= 0).lastOrNull;
 
-/// Period state: unknown never implies zero; open periods earn no streak.
+/// Closed whole weeks infer blank days as no incident. Daily blanks stay unknown.
 class NegativePeriod {
   final String start, end, status;
   final int total, known, unknown;
@@ -90,7 +90,7 @@ NegativePeriod negativePeriod(
       ? 'overLimit'
       : end.compareTo(today) >= 0
       ? 'open'
-      : unknown > 0
+      : unknown > 0 && g.window == 'day'
       ? 'unknown'
       : 'withinLimit';
   return NegativePeriod(start, end, status, total, known, unknown);
@@ -102,6 +102,11 @@ String negativeDayStatus(Habit h, String d, String today, HabitIndex index) {
   if (index.conflict(h.id, d)) return 'conflict';
   if (index.skip(h.id, d)) return 'skipped';
   if (index.paused(h.id, d)) return 'paused';
+  final goal = negativeGoalOn(h, d)!;
+  if (goal.window == 'week' &&
+      addDays(weekOf(d, goal.weekStart), 6).compareTo(today) < 0) {
+    return negativePeriod(h, d, today, index).status;
+  }
   if (!index.known(h.id, d)) return 'unknown';
   final g = negativeGoalOn(h, d)!;
   var total = index.value(h.id, d);
@@ -143,7 +148,7 @@ HabitMetrics negativeMetrics(
       continue;
     }
     if (p.end.compareTo(today) >= 0) break;
-    if (!['paused', 'notScheduled'].contains(p.status)) {
+    if (const ['withinLimit', 'overLimit'].contains(p.status)) {
       eligible++;
       if (p.status == 'withinLimit') {
         completed++;

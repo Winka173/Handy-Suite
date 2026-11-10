@@ -1,6 +1,6 @@
 import 'package:handy_habit_engine/handy_habit_engine.dart';
 import 'package:handy_ui/kit.dart';
-import '../habits/habit_editor.dart';
+import '../habits/preset_sheet.dart';
 import '../insights/week_review.dart';
 import '../pauses/pauses.dart';
 import '../routines/run.dart';
@@ -135,7 +135,8 @@ class _Greeting extends StatelessWidget {
     final left = due
         .where(
           (h) => h.isNegative
-              ? !index.known(h.id, today) &&
+              ? negativeGoalOn(h, today)?.window != 'week' &&
+                    !index.known(h.id, today) &&
                     !index.paused(h.id, today) &&
                     !index.skip(h.id, today)
               : !{
@@ -173,10 +174,10 @@ class _Greeting extends StatelessWidget {
                 context,
                 reductions.isEmpty
                     ? '$left left to do'
-                    : '$left left to record',
+                    : '$left habits still need a check-in',
                 reductions.isEmpty
                     ? 'Còn $left việc'
-                    : 'Còn $left việc cần ghi',
+                    : 'Còn $left thói quen chưa ghi hôm nay',
               ),
           ];
     final d = date(today);
@@ -198,8 +199,8 @@ class _Greeting extends StatelessWidget {
         ? ''
         : tr(
             context,
-            '$observedReductions of ${reductions.length} reduction habits recorded.',
-            '$observedReductions/${reductions.length} thói quen giảm đã ghi.',
+            'Checked in on $observedReductions of ${reductions.length} habits you’re cutting back on.',
+            'Đã ghi hôm nay cho $observedReductions/${reductions.length} thói quen muốn bớt.',
           );
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -375,7 +376,7 @@ class _Habits extends StatelessWidget {
             children: [
               FilledButton.icon(
                 key: const Key('today-add-habit'),
-                onPressed: () => openHabitEditor(context, scope),
+                onPressed: () => addHabit(context, scope),
                 icon: const Icon(Icons.add),
                 label: Text(tr(context, 'New habit', 'Thói quen mới')),
               ),
@@ -385,89 +386,21 @@ class _Habits extends StatelessWidget {
                 runSpacing: 8,
                 alignment: WrapAlignment.center,
                 children: [
-                  for (final (id, en, vi, preset) in const [
-                    (
-                      'sleep',
-                      'Sleep',
-                      'Ngủ',
-                      HabitPreset(
-                        'goal-sleep',
-                        'sleep',
-                        'Go to bed on time',
-                        'Đi ngủ đúng giờ',
-                      ),
-                    ),
-                    (
-                      'move',
-                      'Move',
-                      'Vận động',
-                      HabitPreset(
-                        'goal-move',
-                        'workout',
-                        'Walk a little',
-                        'Đi bộ một chút',
-                        type: 'duration',
-                        target: 10,
-                      ),
-                    ),
-                    (
-                      'focus',
-                      'Focus',
-                      'Tập trung',
-                      HabitPreset(
-                        'goal-focus',
-                        'study',
-                        'Focus for a while',
-                        'Tập trung một lúc',
-                        type: 'duration',
-                        target: 15,
-                      ),
-                    ),
-                    (
-                      'read',
-                      'Read',
-                      'Đọc',
-                      HabitPreset(
-                        'goal-read',
-                        'study',
-                        'Read a little',
-                        'Đọc một chút',
-                        type: 'quantity',
-                        target: 10,
-                        unitEn: 'pages',
-                        unitVi: 'trang',
-                      ),
-                    ),
-                    (
-                      'water',
-                      'Water',
-                      'Uống nước',
-                      HabitPreset(
-                        'goal-water',
-                        'morning',
-                        'Drink water',
-                        'Uống nước',
-                        type: 'count',
-                        target: 8,
-                      ),
-                    ),
-                    (
-                      'phone',
-                      'Less phone',
-                      'Bớt điện thoại',
-                      HabitPreset(
-                        'goal-phone',
-                        'evening',
-                        'Put the phone away before bed',
-                        'Cất điện thoại trước khi ngủ',
-                      ),
-                    ),
+                  for (final (id, en, vi, collection) in const [
+                    ('sleep', 'Sleep', 'Ngủ', 'sleep'),
+                    ('move', 'Move', 'Vận động', 'fitness'),
+                    ('focus', 'Focus', 'Tập trung', 'focus'),
+                    ('read', 'Read', 'Đọc', 'reading'),
+                    ('water', 'Water', 'Uống nước', 'nutrition'),
+                    ('phone', 'Less phone', 'Bớt điện thoại', 'digital'),
                   ])
                     ActionChip(
                       key: Key('goal-$id'),
                       label: Text(tr(context, en, vi)),
-                      onPressed: () =>
-                          openHabitEditor(context, scope, null, preset),
+                      onPressed: () => Navigator.pushNamed(
+                        context,
+                        '/templates?collection=$collection',
+                      ),
                     ),
                 ],
               ),

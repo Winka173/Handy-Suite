@@ -2,7 +2,6 @@ import 'package:handy_ui/kit.dart';
 import '../scope.dart';
 import '../today/rows.dart';
 import '../ui/capped.dart';
-import 'routine_editor.dart';
 import 'routine_view.dart';
 
 /// Every routine with Start, ready-made ones to begin from, and the runs
@@ -54,11 +53,15 @@ class _RoutinesPageState extends State<RoutinesPage> {
               FilledButton.icon(
                 key: const Key('routine-new'),
                 onPressed: () async {
-                  final id = await openRoutineEditor(context, scope);
-                  if (id != null && context.mounted) {
-                    wide
-                        ? setState(() => selected = id)
-                        : Navigator.pushNamed(context, '/routine/$id');
+                  final saved = await Navigator.pushNamed<bool>(
+                    context,
+                    '/templates?kind=routine',
+                  );
+                  if (saved == true &&
+                      context.mounted &&
+                      scope.state.liveRoutines.isNotEmpty) {
+                    final id = scope.state.liveRoutines.last.id;
+                    if (wide) setState(() => selected = id);
                   }
                 },
                 icon: const Icon(Icons.add, size: 18),

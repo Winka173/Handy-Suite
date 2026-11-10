@@ -435,15 +435,17 @@ String markdownReport(
   String from,
   String until, {
   bool vietnamese = false,
+  String? today,
 }) {
   String escape(String v) => v.replaceAll('|', r'\|').replaceAll('\n', ' ');
   final index = HabitIndex.of(s);
+  final asOf = today ?? until;
   final headers = vietnamese
       ? 'Thói quen | Hoàn thành | Hợp lệ | Chuỗi'
       : 'Habit | Completed | Eligible | Streak';
   final note = vietnamese
-      ? 'Ngày bỏ qua không phải thành công. Kỳ hiện tại chưa đóng không phải thất bại.'
-      : 'Skipped dates are neutral, not successes. Open current periods are not failures.';
+      ? 'Bỏ qua ngày nghỉ, ngày chưa rõ và khoảng chưa kết thúc. Giới hạn tuần tính số lần đã ghi; khi hết tuần, ngày trống hiểu là không có.'
+      : 'Pauses, skips, unknown daily dates and unfinished periods are left out. Weekly limits count recorded incidents, with blanks treated as none when the week closes.';
   final pauseNote = vietnamese
       ? 'Ngày nghỉ chưa làm không tính vào đâu; ngày nghỉ vẫn làm thì vẫn tính. Hạn mức tuần giảm theo số ngày nghỉ, làm tròn lên.'
       : 'Paused days not done are left out; a paused day done anyway still counts. Weekly quotas shrink with paused days, rounded up.';
@@ -466,8 +468,9 @@ String markdownReport(
       ? ''
       : '\n## ${vietnamese ? 'Kỳ nghỉ' : 'Pauses'}\n\n${pauseLines.join('\n')}\n\n$pauseNote\n';
   return '# Handy Habit\n\n$from — $until · ${s.zone}\n\n| $headers |\n| --- | ---: | ---: | ---: |\n${s.habits.map((h) {
-    final m = metrics(h, until, s.weekStart, index, from: from);
+    final m = metrics(h, asOf, s.weekStart, index);
+    final c = progressCount(h, from, until, asOf, index);
     final unit = vietnamese ? (m.unit == 'weeks' ? 'tuần' : 'ngày') : m.unit;
-    return '| ${escape(h.title)} | ${m.completed} | ${m.eligible} | ${m.current} $unit |';
+    return '| ${escape(h.title)} | ${c.kept} | ${c.eligible} | ${m.current} $unit |';
   }).join('\n')}\n\n$note\n$pauseSection';
 }

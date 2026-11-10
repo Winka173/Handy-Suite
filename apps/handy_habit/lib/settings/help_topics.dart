@@ -106,8 +106,8 @@ const habitHelpTopics = [
     'Mẫu thói quen và quy trình',
     [
       (
-        'Choose New habit to explore the existing starter groups, or use a routine template in Routines. Preview and customize before saving.',
-        'Chọn Thói quen mới để xem nhóm mẫu có sẵn, hoặc dùng mẫu trong Quy trình. Xem và tùy chỉnh trước khi lưu.',
+        'Choose New habit or New routine to open Templates. Search in English or Vietnamese, choose a collection, then preview the goal, schedule or steps. Customise opens a draft; only Save creates it.',
+        'Chọn Thói quen mới hoặc Quy trình mới để mở Mẫu gợi ý. Tìm tiếng Anh hoặc tiếng Việt, chọn nhóm rồi xem mục tiêu, lịch hoặc các bước. Tùy chỉnh mở bản nháp; chỉ Lưu mới tạo.',
       ),
       (
         'Templates create new items. Changing a template-based habit never changes your other habits or saved sessions.',
@@ -195,8 +195,8 @@ const habitHelpTopics = [
   ]),
   HabitHelpTopic('progress', 'Progress and weekly review', 'Tiến bộ và nhìn lại tuần', [
     (
-      'Progress shows the existing date-range summaries and saved routine sessions. Today offers a weekly review when one is due; choose a week to inspect its completed and due counts.',
-      'Tiến bộ hiện tổng kết theo khoảng ngày và phiên quy trình đã lưu. Hôm nay có nhìn lại tuần khi đến lịch; chọn tuần để xem số đã làm và đến lịch.',
+      'Choose Week, Month or Year in Progress. The calendar shows each day; Year has a heatmap for all habits or one habit. Current and best streaks sit beside each habit. Pauses and unknown daily days are excluded from consistency. Look back at the week stays available.',
+      'Chọn Tuần, Tháng hoặc Năm trong Tiến bộ. Lịch hiện từng ngày; Năm có bản đồ màu tổng hoặc riêng từng thói quen. Mỗi thói quen có chuỗi hiện tại và dài nhất. Độ đều đặn không tính ngày nghỉ và ngày chưa rõ. Bạn vẫn có thể Nhìn lại tuần.',
     ),
     (
       'Use a habit’s calendar for a particular day. These are records of your practice, not medical advice or a prediction.',
@@ -242,8 +242,8 @@ const habitHelpTopics = [
       'Hạt màu là ngày đã ghi trong giới hạn; dấu đầy có viền trung tính là vượt giới hạn, hạt rỗng là chưa rõ. Hôm nay chỉ tạm tính đến khi sang ngày thói quen tiếp theo. Mai là khởi đầu mới.',
     ),
     (
-      'Weekly limits sum incidents, not completed days. A week closes at your week boundary and needs a record for every day. Unknown stays in the denominator. Paused/skipped weeks earn no streak, and limits are never prorated. Change a weekly limit at the next week boundary.',
-      'Giới hạn tuần cộng số lần, không đếm ngày hoàn thành. Tuần chốt ở ranh giới tuần và cần ghi mỗi ngày. Chưa rõ vẫn nằm trong mẫu số. Tuần nghỉ/bỏ qua không cộng chuỗi; không chia nhỏ giới hạn. Đổi giới hạn tuần từ ranh giới tuần tới.',
+      'Weekly limits count incidents you recorded. When the week ends, blank days count as no incident; you do not need to log every day. Daily blank days stay unknown and are left out of consistency. Paused or skipped weeks earn no streak. Change a weekly limit from next week.',
+      'Giới hạn tuần tính những lần bạn đã ghi. Khi hết tuần, ngày để trống được hiểu là không có lần nào; bạn không cần ghi mỗi ngày. Với giới hạn ngày, ngày để trống vẫn chưa rõ và không tính vào độ đều đặn. Tuần nghỉ hoặc bỏ qua không cộng chuỗi. Đổi giới hạn tuần từ tuần sau.',
     ),
     (
       'Open a date in history to correct the incident total, add a note, confirm none or return it to unknown. Negative habits cannot be linked to routine steps.',

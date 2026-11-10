@@ -515,7 +515,7 @@ void main() {
       expect(vi, contains('Tất cả thói quen'));
       expect(
         markdownReport(world(), '2024-01-01', '2024-01-31'),
-        isNot(contains('Pauses')),
+        isNot(contains('## Pauses')),
       );
     });
   });
