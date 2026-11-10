@@ -177,9 +177,7 @@ void main() {
     await tap(t, find.byKey(const Key('welcome-do-it')));
     await shot(t, '02d-welcome-done');
     await tap(t, find.byKey(const Key('welcome-primary')));
-    await shot(t, '03-welcome-start');
-    await tap(t, find.byKey(const Key('welcome-purpose-work')));
-    await shot(t, '03b-welcome-start-work');
+    await shot(t, '03-welcome-time');
   });
 
   testWidgets('welcome wide', (t) async {
@@ -191,6 +189,12 @@ void main() {
     await shot(t, '03d-welcome-scattered-wide');
     await tap(t, find.byKey(const Key('welcome-primary')));
     await shot(t, '03e-welcome-gathered-wide');
+    await tap(t, find.byKey(const Key('welcome-primary')));
+    for (var i = 0; i < 4; i++) {
+      await tap(t, find.byKey(const Key('welcome-do-it')));
+    }
+    await tap(t, find.byKey(const Key('welcome-primary')));
+    await shot(t, '03f-welcome-time-wide');
   });
 
   testWidgets('phone journey', (t) async {

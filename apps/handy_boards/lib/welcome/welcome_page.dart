@@ -1,13 +1,11 @@
 import 'package:flutter/services.dart';
-import 'package:handy_boards_engine/handy_boards_engine.dart';
 import 'package:handy_ui/kit.dart';
-import '../covers/cover_art.dart';
 import 'motion.dart';
 import 'practice_board.dart';
 import 'story_scene.dart';
 
 /// The guide's three stages: the story, a practice on a pretend board, and
-/// where to start.
+/// time (what the practice did not show).
 enum _Stage { story, practice, start }
 
 /// The first run:
@@ -18,17 +16,16 @@ enum _Stage { story, practice, start }
 /// 2. a practice board at real size: add a card, move it, focus its
 ///    category (the others stay), tick a subtask (the card stays put).
 ///    Nothing is written;
-/// 3. three suggested templates (Study or Work narrows them; the choice is
-///    remembered as the purpose), all templates, or a blank board. Choosing
-///    one opens its own setup; nothing is made before the person taps
-///    Create there.
+/// 3. time: a new day starts, yesterday's unfinished card comes over to
+///    today, and the board's key date counts down under its name. One
+///    button, Start, leads home, where the first board is made from a
+///    template or blank.
 ///
 /// Back and Skip on every stage, Android back and Esc step back, Enter
 /// presses the button. With [replay] (from Settings) nothing changes.
 class WelcomePage extends StatefulWidget {
-  /// Called with what to open next ('template:<id>', 'gallery', 'blank',
-  /// or null for home) and the purpose picked ('study', 'work' or null).
-  final Future<void> Function(String? next, String? purpose) onDone;
+  /// Called when the guide ends (finished or skipped).
+  final Future<void> Function() onDone;
   final bool replay;
   const WelcomePage({super.key, required this.onDone, this.replay = false});
   @override
@@ -39,7 +36,6 @@ class _WelcomePageState extends State<WelcomePage>
     with SingleTickerProviderStateMixin {
   int at = 0;
   bool gathered = false, practiced = false, leaving = false;
-  String? purpose;
   PracticeStep practiceStep = PracticeStep.add;
   final practice = GlobalKey<PracticeBoardState>();
   late final AnimationController clock = AnimationController(
@@ -75,11 +71,11 @@ class _WelcomePageState extends State<WelcomePage>
     _play();
   }
 
-  Future<void> _leave(String? next) async {
+  Future<void> _leave() async {
     if (leaving) return;
     setState(() => leaving = true);
     try {
-      await widget.onDone(next, purpose);
+      await widget.onDone();
     } finally {
       if (mounted) setState(() => leaving = false);
     }
@@ -95,7 +91,7 @@ class _WelcomePageState extends State<WelcomePage>
       setState(() => gathered = false);
       _play();
     } else if (at == 0) {
-      _leave(null);
+      _leave();
     } else {
       _go(at - 1);
     }
@@ -201,168 +197,24 @@ class _WelcomePageState extends State<WelcomePage>
       ),
     ),
     _Stage.start => _Page(
-      before: tr(context, 'Where do you ', 'Bạn muốn '),
-      words: tr(context, 'want to start', 'bắt đầu từ đâu'),
-      after: '?',
+      before: tr(context, 'Unfinished work ', 'Việc chưa xong '),
+      words: tr(context, 'is not forgotten', 'không bị bỏ quên'),
+      after: '.',
       body: tr(
         context,
-        'A template asks a few questions and shows the board before it is '
-            'made. Nothing is created until you tap Create.',
-        'Mẫu hỏi vài câu và cho xem bảng trước khi tạo. Chưa có gì được tạo '
-            'cho tới khi bạn bấm Tạo bảng.',
+        'A board can follow days, weeks or months. When a new one starts, '
+            'what is not done comes back to it, and key dates like an exam '
+            'count down under the board\'s name.',
+        'Bảng có thể chia theo ngày, tuần hay tháng. Sang kỳ mới, việc chưa '
+            'xong tự quay về kỳ đó; ngày quan trọng như hôm thi luôn đếm '
+            'ngược dưới tên bảng.',
       ),
-      primary: widget.replay ? tr(context, 'Done', 'Xong') : null,
-      onPrimary: () => _leave(null),
+      primary: widget.replay
+          ? tr(context, 'Done', 'Xong')
+          : tr(context, 'Start', 'Bắt đầu'),
+      onPrimary: _leave,
     ),
   };
-
-  /// Three suggested templates (a mix until Study or Work is picked above
-  /// them), then all templates and a blank board. Each opens its own
-  /// setup; nothing is made here.
-  Widget _suggestions() {
-    final vi = Localizations.localeOf(context).languageCode == 'vi';
-    final ids = switch (purpose) {
-      'work' => const ['project', 'weekly', 'ideas'],
-      'study' => const ['semester', 'group-assignment', 'exam-revision'],
-      _ => const ['semester', 'project', 'weekly'],
-    };
-    final rows = [
-      for (final id in ids)
-        if (templateById(id) case final t?)
-          (
-            'template:${t.id}',
-            Icons.dashboard_customize_outlined,
-            t.name.of(vi),
-            t.goal.of(vi),
-            t.cover,
-          ),
-      (
-        'gallery',
-        Icons.grid_view_outlined,
-        tr(context, 'All templates', 'Tất cả mẫu'),
-        tr(
-          context,
-          '30 boards for study, work, home and plans.',
-          '30 mẫu cho học tập, công việc, nhà cửa, kế hoạch.',
-        ),
-        null,
-      ),
-      (
-        'blank',
-        Icons.view_week_outlined,
-        tr(context, 'A blank board', 'Bảng trống'),
-        tr(context, 'To Do, Doing, Done.', 'Cần làm, Đang làm, Xong.'),
-        null,
-      ),
-    ];
-    return Reveal(
-      from: .2,
-      to: .6,
-      child: SingleChildScrollView(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            // Narrows the suggestions; remembered as the purpose (also in
-            // Settings). Optional.
-            Padding(
-              padding: const EdgeInsets.only(bottom: 12),
-              child: Wrap(
-                spacing: 8,
-                runSpacing: 8,
-                crossAxisAlignment: WrapCrossAlignment.center,
-                children: [
-                  Text(
-                    tr(context, 'Mostly for', 'Chủ yếu cho'),
-                    style: const TextStyle(
-                      fontSize: 14,
-                      color: GuideColors.muted,
-                    ),
-                  ),
-                  for (final (id, label) in [
-                    ('study', tr(context, 'Study', 'Học tập')),
-                    ('work', tr(context, 'Work', 'Công việc')),
-                  ])
-                    ChoiceChip(
-                      key: Key('welcome-purpose-$id'),
-                      label: Text(label),
-                      selected: purpose == id,
-                      selectedColor: GuideColors.tint,
-                      side: BorderSide(
-                        color: purpose == id
-                            ? GuideColors.teal
-                            : const Color(0xFFE4DCDE),
-                      ),
-                      onSelected: (on) =>
-                          setState(() => purpose = on ? id : null),
-                    ),
-                ],
-              ),
-            ),
-            for (final (next, icon, title, hint, cover) in rows)
-              Padding(
-                padding: const EdgeInsets.only(bottom: 10),
-                child: Material(
-                  color: GuideColors.card,
-                  clipBehavior: Clip.antiAlias,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(18),
-                    side: const BorderSide(color: Color(0xFFE4DCDE)),
-                  ),
-                  child: InkWell(
-                    key: Key('welcome-start-$next'),
-                    onTap: leaving ? null : () => _leave(next),
-                    child: Row(
-                      children: [
-                        SizedBox(
-                          width: 72,
-                          height: 72,
-                          child: cover == null
-                              ? Icon(icon, color: GuideColors.ink)
-                              : ExcludeSemantics(child: CoverArt(cover)),
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                title,
-                                style: const TextStyle(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.w700,
-                                  color: GuideColors.ink,
-                                ),
-                              ),
-                              const SizedBox(height: 2),
-                              Text(
-                                hint,
-                                maxLines: 2,
-                                overflow: TextOverflow.ellipsis,
-                                style: const TextStyle(
-                                  fontSize: 13.5,
-                                  color: GuideColors.muted,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                        const Padding(
-                          padding: EdgeInsets.all(12),
-                          child: Icon(
-                            Icons.chevron_right,
-                            color: GuideColors.muted,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ),
-          ],
-        ),
-      ),
-    );
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -398,8 +250,7 @@ class _WelcomePageState extends State<WelcomePage>
     );
   }
 
-  /// The stage's picture: the purposes, the practice board, or where to
-  /// start.
+  /// The stage's picture: the story, the practice board, or time.
   Widget _scene({required bool framed}) => switch (stage) {
     _Stage.practice => PhoneFrame(
       interactive: true,
@@ -411,7 +262,7 @@ class _WelcomePageState extends State<WelcomePage>
       key: const ValueKey('story'),
       gathered: gathered,
     ),
-    _Stage.start => _suggestions(),
+    _Stage.start => const BoardsTimeScene(key: ValueKey('time')),
   };
 
   Widget _bar(BuildContext context) {
@@ -467,7 +318,7 @@ class _WelcomePageState extends State<WelcomePage>
           TextButton(
             key: const Key('welcome-skip'),
             style: TextButton.styleFrom(foregroundColor: GuideColors.ink),
-            onPressed: () => _leave(null),
+            onPressed: () => _leave(),
             child: Text(tr(context, 'Skip', 'Bỏ qua')),
           ),
         ],

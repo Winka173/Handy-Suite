@@ -953,3 +953,287 @@ class _LostNote extends StatelessWidget {
     ),
   );
 }
+
+/// The guide's last picture: time on a board. A new day starts (Tuesday
+/// lights up), what was left unfinished yesterday flies over to today, and
+/// the board's key date counts down under its name. Done things stay where
+/// they were.
+class BoardsTimeScene extends StatelessWidget {
+  const BoardsTimeScene({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final moving = moves(context);
+    return ExcludeSemantics(
+      child: MediaQuery(
+        data: MediaQuery.of(context).copyWith(textScaler: TextScaler.noScaling),
+        child: FittedBox(
+          child: SizedBox(
+            width: 400,
+            height: 474,
+            child: TweenAnimationBuilder<double>(
+              tween: Tween(begin: moving ? 0 : 1, end: 1),
+              duration: moving
+                  ? const Duration(milliseconds: 2600)
+                  : Duration.zero,
+              builder: (context, t, _) => _TimePicture(t),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _TimePicture extends StatelessWidget {
+  final double t;
+  const _TimePicture(this.t);
+
+  @override
+  Widget build(BuildContext context) {
+    final ground = boardGround(context, _storyBoard);
+    final day = Curves.easeInOutCubic.transform(_between(t, .08, .3));
+    final fly = Curves.easeInOutCubic.transform(_between(t, .34, .66));
+    final tag = Curves.easeOut.transform(_between(t, .64, .8));
+    final keyDate = Curves.easeOutBack.transform(_between(t, .78, .96));
+    const width = 158.0;
+    const from = Offset(26, 294), to = Offset(216, 294);
+    // A low arc between the lanes.
+    final at =
+        Offset.lerp(from, to, fly)! + Offset(0, -46 * math.sin(math.pi * fly));
+    final unfinished = _tasks[0], done = _tasks[2], today = _tasks[4];
+    Widget lane(double left, String label, bool now) => Positioned(
+      left: left,
+      top: 186,
+      width: 178,
+      height: 268,
+      child: Container(
+        padding: const EdgeInsets.fromLTRB(10, 10, 10, 0),
+        alignment: Alignment.topLeft,
+        decoration: BoxDecoration(
+          color: now
+              ? Color.lerp(ground.column, GuideColors.tint, day)
+              : ground.column,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: now
+                ? GuideColors.teal.withValues(alpha: .7 * day)
+                : Colors.transparent,
+            width: 1.5,
+          ),
+        ),
+        child: Text(label, style: _type(12, weight: FontWeight.w700)),
+      ),
+    );
+    return Stack(
+      clipBehavior: Clip.none,
+      children: [
+        Positioned.fill(
+          child: DecoratedBox(
+            decoration: BoxDecoration(
+              color: ground.page,
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(
+                color: coverTone('study.notebook-grid').withValues(alpha: .9),
+              ),
+            ),
+          ),
+        ),
+        const Positioned(left: 16, right: 16, top: 16, child: _BoardHeading()),
+        // The key date, counting down under the board's name.
+        Positioned(
+          left: 74,
+          top: 66,
+          child: Opacity(
+            opacity: keyDate.clamp(0.0, 1.0),
+            child: Transform.scale(
+              scale: .85 + .15 * keyDate,
+              alignment: Alignment.centerLeft,
+              child: Container(
+                key: const ValueKey('time-key-date'),
+                padding: const EdgeInsets.fromLTRB(8, 4, 10, 4),
+                decoration: BoxDecoration(
+                  color: GuideColors.tint,
+                  borderRadius: BorderRadius.circular(999),
+                  border: Border.all(color: GuideColors.teal),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Icon(Icons.flag, size: 14, color: GuideColors.teal),
+                    const SizedBox(width: 5),
+                    Text(
+                      tr(
+                        context,
+                        'Maths exam · in 3 days',
+                        'Thi Toán · còn 3 ngày',
+                      ),
+                      style: _type(
+                        12,
+                        weight: FontWeight.w700,
+                        color: GuideColors.tealDeep,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ),
+        // The week, with today moving on to Tuesday.
+        Positioned(
+          left: 16,
+          right: 16,
+          top: 112,
+          height: 56,
+          child: _Week(day),
+        ),
+        lane(16, tr(context, 'Yesterday', 'Hôm qua'), false),
+        lane(206, tr(context, 'Today', 'Hôm nay'), true),
+        // Done yesterday: it stays there.
+        Positioned(left: 26, top: 216, width: width, child: _TaskCard(done)),
+        Positioned(left: 216, top: 216, width: width, child: _TaskCard(today)),
+        // Unfinished: it comes over to today.
+        Positioned(
+          left: at.dx,
+          top: at.dy,
+          width: width,
+          child: Transform.rotate(
+            angle: -.04 * math.sin(math.pi * fly),
+            child: DecoratedBox(
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(12),
+                boxShadow: [
+                  BoxShadow(
+                    color: GuideColors.shadow.withValues(
+                      alpha: math.sin(math.pi * fly),
+                    ),
+                    blurRadius: 16,
+                    offset: const Offset(0, 8),
+                  ),
+                ],
+              ),
+              child: _TaskCard(unfinished),
+            ),
+          ),
+        ),
+        // Under the card once it has landed.
+        Positioned(
+          left: 216,
+          top: 294,
+          width: width,
+          child: Opacity(
+            opacity: tag,
+            child: Transform.translate(
+              offset: Offset(0, _carriedTop + 6 * (1 - tag)),
+              child: Container(
+                key: const ValueKey('time-carried'),
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
+                decoration: BoxDecoration(
+                  color: GuideColors.teal,
+                  borderRadius: BorderRadius.circular(999),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Icon(Icons.redo, size: 13, color: Colors.white),
+                    const SizedBox(width: 4),
+                    Flexible(
+                      child: Text(
+                        tr(context, 'Brought to today', 'Đem sang hôm nay'),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: _type(
+                          11,
+                          weight: FontWeight.w700,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+/// How far below the moved card's top its tag sits: the card's height
+/// (with its cover, title, category and 2/5) plus a small gap.
+const _carriedTop = 118.0;
+
+/// Seven days, Monday to Sunday; the lit one slides from Monday to
+/// Tuesday as [day] goes 0 → 1.
+class _Week extends StatelessWidget {
+  final double day;
+  const _Week(this.day);
+
+  @override
+  Widget build(BuildContext context) {
+    final names = tr(
+      context,
+      'Mon Tue Wed Thu Fri Sat Sun',
+      'T2 T3 T4 T5 T6 T7 CN',
+    ).split(' ');
+    bool lit(int i) => (day - i).abs() < .5;
+    return Container(
+      padding: const EdgeInsets.all(4),
+      decoration: BoxDecoration(
+        color: GuideColors.card,
+        borderRadius: BorderRadius.circular(14),
+      ),
+      child: LayoutBuilder(
+        builder: (context, box) {
+          final w = box.maxWidth / 7;
+          return Stack(
+            children: [
+              Positioned(
+                left: w * day,
+                top: 0,
+                bottom: 0,
+                width: w,
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: GuideColors.teal,
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                ),
+              ),
+              Row(
+                children: [
+                  for (var i = 0; i < 7; i++)
+                    Expanded(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Text(
+                            names[i],
+                            style: _type(
+                              11,
+                              weight: FontWeight.w600,
+                              color: lit(i) ? Colors.white : GuideColors.muted,
+                            ),
+                          ),
+                          Text(
+                            '${10 + i}',
+                            style: _type(
+                              15,
+                              weight: FontWeight.w700,
+                              color: lit(i) ? Colors.white : GuideColors.ink,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                ],
+              ),
+            ],
+          );
+        },
+      ),
+    );
+  }
+}

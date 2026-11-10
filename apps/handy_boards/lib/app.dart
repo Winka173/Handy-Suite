@@ -8,7 +8,6 @@ import 'card/card_sheet.dart';
 import 'controller.dart';
 import 'create/gallery.dart';
 import 'create/new_board.dart';
-import 'create/setup_page.dart';
 import 'design/identity.dart';
 import 'design/theme.dart';
 import 'export/export_page.dart';
@@ -397,45 +396,14 @@ class _BoardsAppState extends State<BoardsApp> with WidgetsBindingObserver {
     super.dispose();
   }
 
-  /// After the guide: remember it was seen and the purpose picked (only
-  /// for suggestions), then open what was chosen. Nothing is created here:
-  /// a template opens its own setup, a blank board its short form.
-  Future<void> _welcomed(String? next, String? purpose) async {
+  /// After the guide: remember it was seen. Home then offers the first
+  /// board (a template or blank); nothing is created here.
+  Future<void> _welcomed() async {
     await c.change(
-      (s) => s.copy(
-        preferences: {...s.preferences, 'welcomed': true, 'purpose': ?purpose},
-      ),
+      (s) => s.copy(preferences: {...s.preferences, 'welcomed': true}),
       history: false,
     );
     if (mounted) setState(() => replayWelcome = false);
-    final nav = navigator.currentState;
-    final ctx = navigator.currentContext;
-    if (nav == null || ctx == null) return;
-    if (next == 'gallery') {
-      nav.push(
-        MaterialPageRoute<void>(
-          settings: const RouteSettings(name: '/templates'),
-          builder: (_) => TemplateGallery(
-            scope: scope,
-            group: switch (purpose) {
-              'study' => TemplateGroup.study,
-              'work' => TemplateGroup.work,
-              _ => null,
-            },
-          ),
-        ),
-      );
-    } else if (next == 'blank') {
-      if (ctx.mounted) await createBlank(ctx, scope);
-    } else if (next != null && next.startsWith('template:')) {
-      final t = templateById(next.substring(9));
-      if (t != null)
-        nav.push(
-          MaterialPageRoute<void>(
-            builder: (_) => SetupPage(scope: scope, template: t),
-          ),
-        );
-    }
   }
 
   Route<void>? _route(RouteSettings settings) {

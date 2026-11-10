@@ -856,7 +856,7 @@ void main() {
       ),
     );
     await k.shot(t, '1');
-    await tapKey(t, 'welcome-purpose-study');
+    await tapKey(t, 'welcome-primary'); // gather
     await tapKey(t, 'welcome-primary');
     await k.shot(t, '2');
     for (var i = 3; i <= 6; i++) {
@@ -880,11 +880,7 @@ void main() {
         state: BoardsState(preferences: {'locale': lang, 'theme': 'light'}),
       );
       await k.film(t, 'welcome-0', 30);
-      await k.press(
-        t,
-        find.byKey(const Key('welcome-purpose-study')),
-        'welcome-1',
-      );
+      await k.press(t, find.byKey(const Key('welcome-primary')), 'welcome-1');
       await k.film(t, 'welcome-2', 15);
       await k.press(t, find.byKey(const Key('welcome-primary')), 'welcome-3');
       await k.film(t, 'welcome-4', 45);
