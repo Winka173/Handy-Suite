@@ -3439,3 +3439,150 @@ Kit sửa chung (`HandyPalette`): ở bản sáng, màu nhận diện được l
 - **Bỏ trang chọn Học tập/Công việc.** Bảng luyện tập luôn dùng ví dụ môn học; câu chữ nói nhóm là "thẻ thuộc về gì (một môn, một mảng việc)".
 - **Trang cuối là "thời gian"** (chủ chọn hướng A, thay cho trang chọn mẫu): "Việc chưa xong không bị bỏ quên." Cảnh động: dải 7 ngày, ô sáng trượt từ T2 sang T3; thẻ "Ôn chương 3 Toán" chưa xong bay từ cột Hôm qua sang Hôm nay, kèm nhãn "Đem sang hôm nay"; thẻ đã xong ở lại; cuối cùng mốc "Thi Toán · còn 3 ngày" hiện dưới tên bảng. Chỉ một nút "Bắt đầu" (xem lại từ Cài đặt thì là "Xong"), dẫn về Trang chủ, nơi khối "Tạo bảng đầu tiên" có Mẫu và Bảng trống. Mục đích Học tập/Công việc chỉ còn trong Cài đặt.
 - **Bookmark, bước tìm app trong bảng chia sẻ của máy:** trên hàng app có ngón tay vuốt từ phải sang trái kèm vệt và mũi tên ‹ (4 lần rồi nghỉ; giảm chuyển động thì đứng yên giữa đường). Cuối hàng có vùng mờ dần và nút › màu mực: bấm để dời hàng (chuột không vuốt được), tự ẩn khi đã tới cuối.
+
+
+## Hợp đồng bổ sung: Handy Habit · run 1 · 2026-11-10
+
+**DESIGN CONTRACT — chưa triển khai.** Phần này thay chỉ dẫn Habit cũ về onboarding3 choices/bốn khu/top switch/Lite Pro/không sửa appearance/history cắt; không đổi hợp đồng app khác. [AUDIT](HANDY_HABIT_AUDIT.md) ghi source/evidence; [PLAN](HANDY_HABIT_PLAN.md) ghi models/Free–Pro/slices. Không đọc “xong”02/11 như chứng nhận MASTER PROMPT này.
+
+Đã đọc hai skill tại C:/Users/Winka/.claude/skills/design-taste-frontend/SKILL.md + references/app-screens.md và frontend-ui-engineering/SKILL.md. Giữ editorial-greeting/Nunito vì dùng nhanh nhiều lần/ngày. Face: lời chào+fact thật. **Signature duy nhất: tràng hạt, hạt hôm nay chính là nút check-in.** Routine time strip là thông tin chức năng, không motif trang trí thứ hai. Draw mới bị EPERM/Node20<22; giữ style đã duyệt/seed lịch sử973037815, không claim deal/inspector mới.
+
+### Inventory dữ liệu và jobs — app-screens §2.1
+
+1. Habit: name/type/unit/target milli/versioned schedule/start-end/group/priority/identity/archive-trash; thường3–12, scale tới500.
+2. Check-in: local day/delta/manual total/skip/note/provenance/revision; vài lần/ngày, lịch sử nhiều năm.
+3. Negative: incident/budget ngày-tuần/observed zero≠unknown; không reversed checkbox.
+4. Routine:1–5 routine,3–8 steps,5–40 phút; schedule/time/minimum/required/canSkip/link, giữ dữ liệu cũ.
+5. Session: snapshot/cursor/current-total/elapsed-remaining/pause/recovery/summary;1active/máy.
+6. Mood:0hoặc1/ngày/mood-energy1–5/optional note-tag; không prerequisite để hoàn thành ngày.
+7. Stats: eligible/completed/current-best/range/planned-actual; có ghi≠đạt.
+8. Data safety: schema/counts/bytes/date/destination/last success-error/next eligible/pending-conflicts/provider.
+9. Người dùng mở phone vài giây để đánh dấu, sáng/tối chạy routine; desktop chỉnh nhiều/xem tuần.
+10. Jobs: check-in→resume/start→Undo/backfill→create-edit→review→backup, không thêm việc để lấp chart.
+
+Dùng fixture existing tool/screens_test.dart:practice() và test/ui_test.dart:6 habits/2 routines ngày02/11/2026, Today6due/1done/**5còn**, review23/32. Các con số từ cùng engine projection, không hardcode trong view; future fixtures assert sums/ranges/units. Demo không production seed hoặc telemetry.
+
+### Quy tắc chung R / A / P — mọi màn đều kế thừa
+
+**R responsive320–1440:**320–599 một cột/gutter16/targets≥48/body16/subline≥12/title24–32, text200% wrap/scroll, keyboard không che Save.600–839 một pane nếu mỗi pane<340.≥840 sidebar224 gập rail64 qua HandySidePanel/SideRail;≥1100 list/detail khi đủ.1440=224 sidebar+48gutters+1168 canvas; Today744+24+400. Editor/help max720, paywall800; không kéo panel ngắn tạo void. Overview cap4–6 rồi **Xem tất cả N** mở tại chỗ, không chỉ trỏ export. Một hệ edges/gaps16hoặc24.
+
+**A a11y:**semantic heading/focus order theo job/visible focus/Tab-ShiftTab-Enter-Space; return focus trigger khi đóng. AA4.5:1text/3:1large-control; disabled đọc được+reason. State có chữ/shape, không chỉ màu. formatFigure/tabular digits, pickHandyDate/adaptive time picker. Bead label đủ name/day/value/target/state/action; chart có text/table equivalent. Timer không announce mỗi giây; busy/success/error semantic sau commit, không cướp focus. Refresh giữ data cũ. Reduced motion OS hoặc app→duration0, haptic/sound không bắt buộc.
+
+**P platform:**named routes PLAN/hash strategy #/..., chưa claim server-path refresh trước browser test. Android Back/iOS swipe/Esc một cấp, dirty editor hỏi discard, saved không hỏi. Ctrl/Cmd N thêm/F tìm/comma Settings, Ctrl1–3 khu; input không bị shortcut chiếm. Dialog focus trap, OS picker cancel không lỗi. Phone3 destinations Today/Routines/Progress/gear cố định; desktop sidebar Settings/Help. Legacy habit/routine/run/session/settings routes giữ, ID thiếu có message+parent; browser Back/forward/scroll phải verified riêng.
+
+**Identity/motion:**Nunito 400/500/600/700 thật/VI đầy đủ. Light ground#FAFAFA/surface#FFFFFF/field#F1F1F1/ink#211F1E/muted#66615F/control#D3D0CE/accent#B42318. Dark riêng ground#151414/surface#201E1D/raised#2B2827/ink#F6F3F1/muted#C0B6B2/control#817773/accent#FF897D; kiểm contrast trước chốt code. Radius18 panel/12control, spacing4/8/12/16/24/32. Không gradient/glass/resting shadow. HandyPalette dots stable theo ID, icon trung tính; giữ raw legacy icon/color và appearance Free qua display adapter, không rewrite khi render. Missed luôn xám/mực, không đỏ; red cho current bead/step/primary hoặc lỗi thao tác. HandyMotion/Swap/Reveal cho state-size, Appear chỉ item mới, không entrance kéo dài; commit không chờ animation, reduced=0.
+
+### Today / Hôm nay
+
+- Job/câu hỏi: **Hôm nay còn gì đánh dấu ngay?** Finding: due remaining hoặc active run2/5một dòng Resume; fixture5còn. Primary hạt hôm nay: binary1tap/count+1/quantity-duration sheet; full bead sửa ngày, long-press có lối tương đương; Undo sau commit. Negative Ghi lần, zero action riêng.
+- R: greeting/date→active compact→habits→routine cap2→review1 dòng/mood optional; first bead top60%phone, cap6/Show all tại chỗ; wide habits trái/secondary phải. Group buổi chỉ khi hữu ích.
+- States: first-empty Tạo+optional goal chips sau guide; no due khác all done; paused neutral/End early; loading frame; load error Retry/restore không reset; save fail giữ committed number/Retry; conflict Cần xem lại. Permission không hỏi, denied chỉ in-app next reminder.
+- A/P: semantic bead48px/state shapes, /today, Tất cả→/habits, N thêm, back giữ scroll. Reject hero/KPI tiles, red missed, routine-review đẩy check-in xuống, ads xen hạt/mood mandatory.
+
+### Habit create/edit
+
+- Job/câu hỏi: **Việc gì, đo sao, bao lâu một lần?** Finding preview “Đọc10 trang/mỗi ngày”, edit ngày hiệu lực rõ. Primary Lưu. Name/type/goal/schedule trước, negative measure-threshold-window; Advanced start/end/group/priority/interval/quota thu gọn nhưng giữ controller/legacy choice. Standard schedules Free.
+- States blank/preset; validation cạnh field+first-invalid focus; save busy chống double tap; error giữ draft; type/unit locked giải thích/Duplicate; cancel/dirty back guard; permission N/A, chỉ xin sau explicit reminder enable.
+- R:320fullscreen/scroll/Save né keyboard/chips wrap;768max720;1100+preview nếu panes≥340. A/P labels thật/locale numeric/date-time picker; /habit/new, /habit/:id/edit, Ctrl-Cmd S valid/Esc guard. Reject raw ISO-HH:mm-weekday string, Advanced bắt buộc, tự đổi legacy values, khóa màu/icon đang Free.
+
+### Habit detail/history
+
+- Job/câu hỏi: **Đều ra sao, sửa ngày nào?** Finding completed/eligible và streak đúng đơn vị/segment. Primary chọn ngày xem/sửa total; Edit secondary. Month+legend/current-best/goal history/log30 rồi Xem thêm50tại chỗ.
+- States no log/missing/future/not scheduled/skip/pause tách; loading giữ month; error inline Retry; archived/trash read-only+Restore; outside backfill nói giới hạn; permission N/A.
+- R/A/P:320single/calendar không tiny35buttons,768giữ text scale,≥1100list-detail với route selection; daily semantic/text list, arrows/Enter; /habit/:id, Back đúng filter-scroll. Reject history cắt rồi export-only/red missed/ghi khi chỉ xem.
+
+### Routines list
+
+- Job/câu hỏi: **Chạy gì, mất bao lâu?** Finding active hoặc routine kế tiếp/duration. Primary Start/Resume ngay row, New secondary khi đã có.
+- States empty giải thích+Create/templates; loading rows; start fail không half-session; archive/trash riêng; đã active thì Resume hoặc xác nhận dừng trước start mới; permission N/A, Start không xin nhắc.
+- R/A/P:320Start wrap/active+4 routines/Show all N, recent4mở thêm;768one pane;≥1100list400/detail còn lại. Semantic name/time/steps; /routines,/routine/:id, keyboard Start/Back đúng row. Reject templates chen trước user data/Start cần detail/template title làm ID.
+
+### Routine builder — Basic/Advanced
+
+- Job/câu hỏi: **Các bước thành buổi chạy hợp lý chưa?** Finding5 steps/18 phút hoặc lỗi đúng link-step. Primary Lưu toàn draft, không tạo routine rỗng rồi save mỗi bước.
+- Basic name/steps/reorder/duration/link, schedule/details disclosure; minimum/priority/required/canSkip cũ giữ Free. Advanced mode rõ, badge cạnh title cho non-Pro, preview không write.
+- States empty Add step/loading draft/cycle-ref-duration validation/stale compare-reload/error giữ draft/archived link inactive; permission N/A.
+- R/A/P:320linear/rule form thay graph, drag có Up/Down;768max720;≥1100preview; /routine/new,/routine/:id/edit, Ctrl-Cmd S/dirty guard. Reject mandatory graph/code expression/drag-only/half-save/import tự chạy rules.
+
+### Runner / summary
+
+- Job/câu hỏi: **Bước gì, còn bao lâu, tiếp thế nào?** Finding current/total/running-paused-recovered. Primary Xong bước; Pause/Resume/Skip secondary, required/canSkip giải thích.
+- States initializing; untimed rõ; elapsed/remaining nhãn riêng; done transition+exactly-once link; final planned-actual/skips/credited habits; save fail giữ bước/Retry không double-credit; recovery paused+estimate; missing/deleted link nói rõ không event giả; denied notice không chặn runner.
+- R/A/P:320fullscreen/no nav-sidebar/controls wrap không che nội dung;768–1440focusmax800, overview phụ khi đủ. Timer lớn vì job chính/tabular, SR không đọc mỗi giây; Space pause/Enter done ngoài input; /run/:id,/session/:id. Back pause-save rồi leave, abort confirm riêng; background persist pause trước notice/resume explicit. Reject killed-background auto-complete/countdown không nhãn/Previous xóa edited event/noisy sounds/animation delay.
+
+
+### Progress / Tiến bộ và weekly review
+
+- Job/câu hỏi: **Nhịp nào giữ được, nên đổi gì?** Finding completed/eligible và so kỳ cùng độ dài; review23/32là fixture. Primary chọn tuần/habit; Làm nhỏ lại chỉ khi có evidence.
+- Review→month-year heatmap→habit/routine stats; core và reports hiện có Free, Advanced riêng. N/range/unit/unknown/pause/conflict rõ; có ghi≠đạt, correlation≥14 paired days và không gọi nguyên nhân.
+- States empty0axis/missing dash, loading giữ data khi refresh, aggregation/export error Retry giữ range, permission N/A/file cancel riêng; Pro preview không chặn core.
+- R/A/P:320một control row/chart160–200, year chia tháng-quý hoặc scroll trong frame;768hai block khi đủ;1440chart2/3+finding1/3, không KPItiles. Chart/table equivalent/cell keyboard label; /progress?range/filter,/progress/week, Back giữ range. Reject fake insight/missing=0/paused=miss/export cũ paywall/medical claim.
+
+### Templates / starter collections
+
+- Job/câu hỏi: **Mẫu nào vừa sức, sẽ tạo gì?** Finding target/schedule/steps/duration thật. Primary Dùng mẫu→customize→Save; preview không write.
+- Giữ32 habit/8 routine, search EN-VI không dấu/categories/featured ít/recent picks local, goals optional. Thêm thiếu nutrition/relationships/finance/reduction/recovery/weekend chọn lọc sau model, không chạy đua số lượng. Mẫu có title/explanation/icon/dot/realistic target/schedule; advanced premium badge trước dùng, core Free.
+- States initial search/no match+Clear/local catalog loading/error vẫn Tự đặt; similar item cho thêm bản riêng, không overwrite; canceled edit không data; permission N/A/reminders off.
+- R/A/P:320list-previewfullscreen;7682 columns nếu item≥300;1440list+preview/cap collections Show all; semantic selection, F search/Enter preview/Esc catalog; /templates?kind=habit,/templates/:id. Reject32chip wall/trăm mẫu rỗng/Use tự ghi/copyright art/mandatory goals trong guide.
+
+### Onboarding / story và practice
+
+- Job/câu hỏi: **App giúp gì, chạm đâu?** Finding ý định bị quên→hạt hôm nay làm được ngay. Primary theo beat; practice thao tác thật trên demo; cuối Start/Bắt đầu.
+- Stage1 hai beat: ý định đọc/uống nước/giãn cơ rời rạc→gom tràng hạt hôm nay. **Không question/purpose/profile/goal picker trang đầu.** Cùng objects chuyển state, Habit's palette/Nunito, không library teal/board terracotta; motion0vẫn hiểu.
+- Stage2 pretend Today/runner controller memory, không nhận store/controller thật/autoBackup/sync/widget. Spotlight window+word beside target: bead→Undo→goal demo→Start routine→Done step→progress. **Do it for me/Làm giúp tôi** làm đúng microstep; Back lùi microstep. Demo không statistics/backup thật, SR có thao tác tương đương.
+- Stage3 dạy thêm “Một ngày nghỉ không xóa hành trình”, hình dải nghỉ và đường Settings→Backup/How to. Nội dung **một nút Start**, không picker/chooser/chips; Back/Skip vẫn navigation bar. Start/Skip chỉ guide flag local→empty Today, goals/starter chips optional ở đó.
+- States fresh/beat/practice/done/saving flag/error Retry giữ stage; permission N/A, không notification request; returning đã onboarded không force update; replay reset demo không domain write/reset prefs. No ads.
+- R/A/P:320progress+Back+Skip cố định, picture scale nhưng text không nhỏ; target visible, coach không che;768stack hoặc panes đủ;1024/1440scene-left/words-rightmax1120. Progress stageX/3semantic, mọi stage có Back/Skip; Android Back/Esc/iOS lùi beat/microstep/stage, tại đầu thoát theo Skip; Enter primary hoặc Do it for me lúc practice, không tự kích control khác. /welcome replay về nơi gọi/first-launch về /today. Reject question đầu/chooser cuối/no Back-Skip/permissions sớm/real-data demo/drag-only/wait animation.
+
+### How to use / Cách dùng
+
+- Job/câu hỏi: **Làm việc này sao, vì sao kết quả vậy?** Finding topic đúng query, ví dụ ngày nghỉ không vào mẫu số. Primary chọn topic/step/mở feature; replay prominent secondary.
+- Search EN-VI không dấu/aliases, numbered steps+code-drawn mocks đúng tokens/labels thật và highlight vùng thao tác. Topics: create/edit/goals/negative/check-in/Undo/history/streak/missed/pause/routines/runner/timer/recovery/templates/mood/stats/widgets/reminders/Pro/backup/restore/sync/migration/privacy/troubleshoot. Chỉ guide feature đã ship, unsupported có note/alternative. Context help Chuỗi tính sao/Nghỉ ảnh hưởng gì/Sao không nhắc/Sync khác backup mở topic.
+- States index/query/results/no-match+clear/topics, loading skeleton, missing topic→index, feature unavailable có reason/alternative; permission N/A chỉ hướng dẫn bật context, không request khi đọc; replay no data writes.
+- R/A/P:320onecolumn/mocks scale picture nhưng steps text không scale nhỏ;768max720;1440index+article. Mocks ExcludeSemantics vì steps truyền đủ, results announce/focus/Next-Previous accessible; /help?q=...,/help/:topic; Back query-scroll/context. Reject stale pictures/technical instructions/auto-running feature/help gallery không search.
+
+### Settings / Cài đặt
+
+- Job/câu hỏi: **Đổi cách dùng/bảo vệ dữ liệu ở đâu?** Finding current values/last backup/error theo nhóm. Primary mở nhóm/đổi setting; self-save+quiet saved/error, không global Save.
+- Nhóm Appearance(theme/language/density/reduced motion/a11y), Habits(week/clock/default schedule-goal/check-in/streak/negative), Routines(timer/sound-haptic/transitions/confirm/Basic), Notifications(permission/rules/quiet/preview/test/private text), **Data**(Backup-Restore, Sync riêng, Trash/archive, export/integrity/reset preferences/delete), Pro, Help(how-to/replay/FAQ/What's New hữu ích), Privacy/About(local-first/permissions/policy/version-build/licenses/support/safe diagnostics). Chỉ controls đã có implementation, không placeholder.
+- Pro badge bên phải feature **title**, chỉ non-Pro; ownership không badge. KEEP HandyAutoBackupSection/openSealedBackup/HandyMoreApps; Pro generic không chiếm gần cả first screen.
+- States loading values/save fail rollback value+Retry/unsupported ẩn toggle+alternative/denied status+Open OS Settings trong Notifications; no data vẫn backup-help. Reset preferences giữ habit/log/mood/purchase; Delete all strong confirm nêu hậu quả, ở cuối và có backup path.
+- R/A/P:320groups/control dưới title khi dài;768label+control nếu fit;1024/1440group index+page riêngmax960, không scroll-spy dài. Semantic value/title/saved/badge, /settings, /settings/:section; gear/Ctrl-Cmd comma/Back1cấp. Reject dead buttons/toggles giả/copy No cloud sai khi sync bật/schema jargon trong daily flow.
+
+### Backup / Restore
+
+- Job/câu hỏi: **Bản sao an toàn ở đâu, restore thay gì?** Finding last success/date/destination/bytes/schema/error. Primary Sao lưu ngay, khi restore là hành động đúng preview; Free.
+- Manual JSON/ZIP compatibility/save-share; encrypted option dùng sealed core/kit/password+confirm/change/lost-password copy, không crypto mới. Auto HandyAutoBackupSection: on-off/daily-weekly/destination/retention3-7-14-30/last/next eligible/error/backup now/sealed; chạy khi mở-rời, không terminated. Auto config local không domain export.
+- Pick→bounded/hash/schema/password validate toàn bộ→preview counts/date/schema/conflicts/preference scope→copy-merge remap hoặc replace. Copy-merge nói có thể tạo bản sao, khác Sync. Replace recovery bền trước commit+confirm, stale CAS dừng re-preview; summary/rollback path. CSV là logs cần existing IDs, MD-PDF reports không backups.
+- States no backup Create/folder revoked Choose again/full-storage-write fail Retry giữ state-file/canceled picker-password không lỗi/wrong password-corrupt-future-too-large đúng reason/validating-decrypting no double action; permission chỉ lúc chọn folder.
+- R/A/P:320counts stack/actions wrap/password không lộ;768–1440max720/metadata dễ đọc/status-focus lỗi. /settings/backup; Back validating cancel an toàn, atomic commit chờ kết quả rõ. Android SAF/cloud document provider; iOS app Files+manual picker; Windows folder; Web manual upload-download, auto unavailable không toggle giả. Reject silent overwrite/off xóa data/settings-only gọi full backup/checksum gọi encryption/password recovery giả/credentials export/Pro gate.
+
+### Sync
+
+- Job/câu hỏi: **Các máy đã khớp chưa, cần xem gì?** Finding last successful/pending/conflict thực. Primary Sync now; off là Bật sau provider/privacy explanation, không account bắt buộc để tracking.
+- Provider/account/status/activity/error/pending/disconnect. Android appdata Free chỉ **HANDY_DRIVE_SYNC=true và Android**, flag-off không tile mời login. Windows folder conflict-aware riêng khi làm thật, backup-folder không sync. Chưa iCloud/Web auto-sync thì không hứa. Active timer local.
+- States off/authorizing/canceled/idle/syncing/offline/auth-needed/quota/failed/conflict; offline local usable; remote corrupt/future giữ local; conflict candidates có day/amount/source/resolution. Disable/disconnect không xóa local/remote; check-ins không LWW.
+- R/A/P:320status/candidates tuần tự;768–1440max800, hai cột chỉ≥340mỗi; text status/announce1 lần/focus resolver. /settings/sync; Back không hủy local commit; consent chỉ explicit enable, revoke/reconnect rõ. Reject success trước durable/upload/file-copy gọi sync/terminated guarantee/sync token-permission-purchase.
+
+### Pro Lifetime / paywall
+
+- Job/câu hỏi: **Một lần trả được gì ngoài Free?** Finding benefit đang xem/demo đúng UI/local store price thật. Primary Mua Pro Lifetime; Restore và Close tiếp tục Free luôn thấy.
+- Advanced routines/insights/personalization/convenience+remove ads. Demo hữu hạn bằng kit/still đọc được reduced motion, preview không write; Free table rõ ownership/core habits. Chỉ benefits đã làm, không demo native health giả.
+- States price loading/ready/pending/purchased/canceled/offline/error/restore none-success-error/unsupported-chưa bán; không giá placeholder/discount giả/pending cấp quyền; cached entitlement đúng adapter, refund không xóa data.
+- R/A/P:320benefit list+demo/bottom action không che;768–1440max800/comparison wrap; demo semantics đủ/no auto-focus Buy/keyboard Close-Restore-Buy. /pro?feature=..., Back context; store native purchase/restore, Web không checkout/xuyên-store promise. Reject subscription/scarcity/ownership paywall/fake purchase switch/upgrade để Undo-restore.
+
+### Mood optional
+
+- Job/câu hỏi: **Muốn ghi cảm nhận hôm nay thế nào?** Finding entry hoặc Chưa ghi trung tính. Primary mood-energy rồi Save thường2 chạm, note-tag optional/Skip không entry.
+- States none/edit/deleted/loading/save fail giữ draft/insufficient paired samples nói N; permission N/A; basic history Free. R/A/P320sheet không auto keyboard,768–1440max560, labels1–5không emoji-color only/focus selection; standalone /mood/:day, Back dirty guard. Reject due-count mood task/mandatory note/streak mood/medical inference.
+
+### Trash
+
+- Job/câu hỏi: **Lấy lại thứ đã xóa được không?** Finding N ngày còn/nội dung-links sẽ hồi. Primary Restore, permanent delete context+confirm.
+- States empty/loading/restore conflict-missing link giải thích giữ item/purge fail Retry/permission N/A;30 ngày khác archive/Undo RAM. R/A/P320rows wrap/countdown không cắt,768–1440max800+preview; semantic name-kind-Ndays/keyboard focus restored item; /settings/trash→Back Data. Reject hard-delete lúc move trash/không nói policy/ID mới khi restore/offline sync resurrect purge.
+
+### Gate trước khi đổi contract thành đã triển khai
+
+Mỗi slice render màn/state đã đổi EN/VI/light-dark/320/768/1024/1440/text200%/focus-hover-pressed-disabled, so sibling source. App-screens §2.7: biggest block trả lời câu hỏi; grid/edges kín; hue đúng data; totals/range/units khớp; zero/missing rõ; legend đúng marks; phone nav không chiếm canvas. Sửa ba lỗi nặng rồi render lại tối đa3vòng. Motion0vẫn đủ nghĩa, commit không chờ animation. Không cần marketing asset.
+
+Baseline36renderer cases PASS/direct critique7PNG ở AUDIT, films ngoài viewport chưa interaction evidence. Không UI mới vì chưa code; browser inspector/SR/OS/device/store chưa verified. Báo riêng source/unit/widget/emulator/device/store. Run1 không sửa lib/test/shared package và giữ uncommitted work khác.
