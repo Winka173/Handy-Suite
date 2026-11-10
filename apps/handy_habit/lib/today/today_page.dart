@@ -61,7 +61,7 @@ class TodayPage extends StatelessWidget {
           MediaQuery.sizeOf(context).width >= 840 ? 24 : 16,
           HandySpace.l,
           MediaQuery.sizeOf(context).width >= 840 ? 24 : 16,
-          HandySpace.xxl,
+          104,
         ),
         children: [
           HandyContent(

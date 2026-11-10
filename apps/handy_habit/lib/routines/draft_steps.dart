@@ -5,6 +5,7 @@ import '../ui/words.dart';
 import 'routine_editor.dart';
 import 'advanced_controls.dart';
 import 'advanced_library.dart';
+import '../pro/entitlements.dart';
 
 /// Structured edits stay inside HabitForm's draft until its single Save.
 class DraftSteps extends StatefulWidget {
@@ -107,6 +108,12 @@ class _DraftStepsState extends State<DraftSteps> {
           value: advanced,
           onChanged: (v) => setState(() => advanced = v),
         ),
+        if (advanced)
+          TextButton(
+            key: const Key('builder-learn-pro'),
+            onPressed: () => openHabitPro(context),
+            child: Text(tr(context, 'Learn about Pro', 'Tìm hiểu Pro')),
+          ),
         if (advanced)
           HandyReveal(
             child: AdvancedRoutineLibrary(

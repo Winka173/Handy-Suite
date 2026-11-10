@@ -78,7 +78,28 @@ class HabitShell extends StatelessWidget {
         automaticallyImplyLeading: false,
         title: wide
             ? Text(areas.firstWhere((a) => a.$1 == area).$3)
-            : const Text('Handy Habit'),
+            : Row(
+                children: [
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(8),
+                    child: Image.asset(
+                      'assets/icon.png',
+                      key: const Key('habit-mark'),
+                      width: 28,
+                      height: 28,
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  Flexible(
+                    child: Text(
+                      'Handy Habit',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: Theme.of(context).textTheme.titleMedium,
+                    ),
+                  ),
+                ],
+              ),
         actions: [
           PopupMenuButton<String>(
             key: const Key('habit-add'),
@@ -127,6 +148,20 @@ class HabitShell extends StatelessWidget {
           ),
         ),
       ),
+      floatingActionButton: area == 3
+          ? null
+          : FloatingActionButton.extended(
+              key: Key(area == 2 ? 'routine-new' : 'today-new'),
+              onPressed: () => area == 2
+                  ? Navigator.pushNamed(context, '/templates?kind=routine')
+                  : addHabit(context, scope),
+              icon: const Icon(Icons.add),
+              label: Text(
+                area == 2
+                    ? tr(context, 'New routine', 'Quy trình mới')
+                    : tr(context, 'New habit', 'Thói quen mới'),
+              ),
+            ),
       bottomNavigationBar: wide
           ? null
           : NavigationBar(
@@ -171,7 +206,14 @@ class HabitShell extends StatelessWidget {
                       padding: const EdgeInsets.fromLTRB(16, 12, 4, 20),
                       child: Row(
                         children: [
-                          const Icon(Icons.check_circle_outline, size: 24),
+                          ClipRRect(
+                            borderRadius: BorderRadius.circular(8),
+                            child: Image.asset(
+                              'assets/icon.png',
+                              width: 28,
+                              height: 28,
+                            ),
+                          ),
                           const SizedBox(width: 8),
                           Expanded(
                             child: Text(

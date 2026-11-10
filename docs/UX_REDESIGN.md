@@ -3546,6 +3546,45 @@ At narrow/enlarged widths bead/More and routine heading/actions stack; today's f
 still meets its existing visibility check. Shared HandyPage gutters, HandyLabel wrapping,
 HandyMenuButton sizing and shared confirm/message motion remain supervisor follow-ups.
 
+## Handy Habit · run 12 · R21 contract · 2026-11-10
+
+Contract before code. References: run11 sheets 01/02, Boards home/how-to/pro and
+Bookmark pro source. Inventory: 19 help topics, habits/check-ins, saved routines,
+nine shipped Advanced routine capabilities, verified store ownership and local price.
+Keep Nunito, vermilion/oxblood/ochre, editorial greeting and the today-bead signature.
+
+- Help asks “How do I do this?” Replay introduction card first (icon/title/one-line
+  practice description), search, Topics, then soft-square icon/title/summary/chevron.
+  No numbering, including filtered results. Drawn previews stay in articles. Search
+  empty/no-match, article/back/replay all retain existing mechanics. The explicit
+  sibling-matching icon-square requirement overrides the skill's general icon-box ban.
+- Shell asks “What can I do today?” Mark + app name on phone, destination name beside
+  the wide sidebar (whose identity uses the same real mark). Today and Routines have
+  labelled New habit / New routine floating actions; secondary Add menu retains other
+  creation and pause actions. Progress stays a reading destination. Settings and pushed
+  pages keep their title, back and responsive content heading; no duplicate identity.
+- Pro asks “What does this purchase add?” A live, replayable Advanced routine demo
+  leads, feature selection changes the stage, then Free/Pro comparison and purchase.
+  Existing rules/choices/dependencies/stacking/durations/blocks/presets only are sold.
+  R19 insights/R20 looks remain open and explicitly coming later, outside purchase claims.
+  Tracking, negative habits, routines/runner, templates, core progress/heatmap, mood,
+  exports and backup/restore/sync remain free. Existing Advanced routines run without Pro.
+- Purchase states: price loading/absent, ready with store price, pending, purchased,
+  restoring/no purchase found, cancellation, error, offline (cached verified owner kept),
+  unconfigured Android and unsupported Web/Windows/iOS. Buy requires a live store price;
+  Restore and Retry are explicit; busy/pending prevent duplicate requests. No static price,
+  fake checkout or entitlement in user backups. Settings includes Pro status/Buy/Restore.
+- Responsive: 320/390 single scroll column; 1440 centered max720 Pro, max960 Help with
+  article beside index. Text1/1.5 wraps titles/status/actions without truncating prices;
+  purchase panel stays in scroll content to remain reachable on short/enlarged screens.
+  Help index centers at max720; only a selected article opens the max960 two-pane layout.
+  FAB reserves list-bottom room. All controls ≥48px, semantic headings/live status,
+  keyboard focus/Enter and Back/Esc; named /pro?feature= routes survive deep links.
+- Motion: kit swap/reveal and finite demo transitions, explicit Play again, no auto-loop;
+  reduced motion shows the explanatory final frame. Demo writes only local pretend state.
+- Verify EN/VI × light/dark ×320/390/1440 ×text1/1.5, all purchase states and sibling
+  equivalents in sheets; critique, fix and re-render. Raster evidence is host-only.
+
 ## Hợp đồng bổ sung: Handy Habit · run 1 · 2026-11-10
 
 **DESIGN CONTRACT — chưa triển khai.** Phần này thay chỉ dẫn Habit cũ về onboarding3 choices/bốn khu/top switch/Lite Pro/không sửa appearance/history cắt; không đổi hợp đồng app khác. [AUDIT](HANDY_HABIT_AUDIT.md) ghi source/evidence; [PLAN](HANDY_HABIT_PLAN.md) ghi models/Free–Pro/slices. Không đọc “xong”02/11 như chứng nhận MASTER PROMPT này.

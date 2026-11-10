@@ -9,6 +9,8 @@ import 'data.dart';
 import 'settings_parts.dart';
 import 'about.dart';
 import 'notification_status.dart';
+import '../pro/entitlements.dart';
+import '../pro/purchase.dart';
 
 /// Habit's settings: the shared page with the calendar, reminders and the
 /// data added. Language and look live in the habit data, as before.
@@ -924,6 +926,22 @@ class HabitSettingsPage extends StatelessWidget {
                 destructive: true,
                 onTap: () => _clearAll(context),
               ),
+            ],
+          ),
+          HandySettingsSection(
+            title: 'Pro',
+            children: [
+              HandyTile(
+                key: const Key('settings-pro'),
+                title: 'Pro Lifetime',
+                subtitle: tr(
+                  context,
+                  'Advanced routines · pay once',
+                  'Quy trình nâng cao · trả một lần',
+                ),
+                onTap: () => openHabitPro(context),
+              ),
+              const HabitProPurchase(),
             ],
           ),
           HandySettingsSection(

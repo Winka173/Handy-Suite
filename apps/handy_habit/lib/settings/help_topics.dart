@@ -5,6 +5,108 @@ class HabitHelpTopic {
   final List<(String, String)> steps;
   const HabitHelpTopic(this.id, this.en, this.vi, this.steps);
   String title(BuildContext c) => tr(c, en, vi);
+  IconData get icon => switch (id) {
+    'start' => Icons.add_circle_outline,
+    'check-in' => Icons.check_circle_outline,
+    'streaks' => Icons.grain,
+    'pause' => Icons.pause_circle_outline,
+    'routines' => Icons.format_list_numbered,
+    'timers' => Icons.timer_outlined,
+    'templates' => Icons.dashboard_customize_outlined,
+    'appearance' => Icons.palette_outlined,
+    'reminders' => Icons.notifications_outlined,
+    'sync' => Icons.sync,
+    'new-phone' || 'migration' => Icons.phone_android,
+    'backup' => Icons.archive_outlined,
+    'trash' => Icons.delete_outline,
+    'progress' => Icons.insights_outlined,
+    'widgets' => Icons.widgets_outlined,
+    'privacy' => Icons.shield_outlined,
+    'negative' => Icons.remove_circle_outline,
+    _ => Icons.mood_outlined,
+  };
+  String summary(BuildContext c) {
+    final (en, vi) = switch (id) {
+      'start' => (
+        'Choose a habit, a goal and its rhythm.',
+        'Chọn thói quen, mục tiêu và lịch thực hiện.',
+      ),
+      'check-in' => (
+        'Tap today’s bead; correct a day in history.',
+        'Chạm hạt hôm nay; sửa một ngày trong lịch sử.',
+      ),
+      'streaks' => (
+        'Read filled, partial and quiet missed beads.',
+        'Đọc hạt đầy, một phần và ngày bỏ lỡ.',
+      ),
+      'pause' => (
+        'Take a break without losing your history.',
+        'Nghỉ một thời gian, vẫn giữ lịch sử.',
+      ),
+      'routines' => (
+        'Put steps in order and run them one at a time.',
+        'Xếp các bước rồi thực hiện từng bước.',
+      ),
+      'timers' => (
+        'Pause, return and finish at your own pace.',
+        'Tạm dừng, quay lại và hoàn thành theo nhịp riêng.',
+      ),
+      'templates' => (
+        'Preview a starting point before making it yours.',
+        'Xem trước một mẫu rồi chỉnh theo ý bạn.',
+      ),
+      'appearance' => (
+        'Theme, language, text and reduced motion.',
+        'Giao diện, ngôn ngữ, chữ và giảm chuyển động.',
+      ),
+      'reminders' => (
+        'Check permission, times and quiet hours.',
+        'Kiểm tra quyền, giờ nhắc và giờ yên lặng.',
+      ),
+      'sync' => (
+        'Keep devices in step with Google Drive.',
+        'Đồng bộ các máy bằng Google Drive.',
+      ),
+      'new-phone' => (
+        'Move your habits with a backup or sync.',
+        'Chuyển thói quen bằng sao lưu hoặc đồng bộ.',
+      ),
+      'backup' => (
+        'Save a copy, preview a restore and recover.',
+        'Lưu bản sao, xem trước khôi phục và phục hồi.',
+      ),
+      'trash' => (
+        'Bring deleted items back within 30 days.',
+        'Lấy lại mục đã xóa trong 30 ngày.',
+      ),
+      'migration' => (
+        'Check your data after moving to a new device.',
+        'Kiểm tra dữ liệu sau khi chuyển sang máy mới.',
+      ),
+      'progress' => (
+        'See your rhythm by week, month and year.',
+        'Xem nhịp thực hiện theo tuần, tháng và năm.',
+      ),
+      'widgets' => (
+        'See today’s habits on your home screen.',
+        'Xem thói quen hôm nay trên màn hình chính.',
+      ),
+      'privacy' => (
+        'Understand local data, backups and permissions.',
+        'Hiểu dữ liệu trên máy, sao lưu và các quyền.',
+      ),
+      'negative' => (
+        'Record incidents and days with none.',
+        'Ghi lần xảy ra và ngày không có lần nào.',
+      ),
+      _ => (
+        'Record how you feel, with an optional note.',
+        'Ghi cảm nhận, có thể thêm ghi chú.',
+      ),
+    };
+    return tr(c, en, vi);
+  }
+
   String searchText() =>
       '$en $vi ${steps.map((s) => '${s.$1} ${s.$2}').join(' ')}';
 }

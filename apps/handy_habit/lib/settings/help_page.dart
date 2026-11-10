@@ -1,6 +1,7 @@
 import 'package:handy_ui/kit.dart';
 import 'help_topics.dart';
 import 'how_to_mocks.dart';
+import '../design/palette.dart';
 
 class HabitHelpPage extends StatefulWidget {
   final String? topic;
@@ -76,12 +77,20 @@ class _HabitHelpPageState extends State<HabitHelpPage> {
         const SizedBox(height: 12),
         Semantics(
           liveRegion: true,
+          header: query.isEmpty,
           child: Text(
             tr(
               context,
-              topics.length == 1 ? '1 topic' : '${topics.length} topics',
-              '${topics.length} chủ đề',
+              query.isEmpty
+                  ? 'Topics'
+                  : topics.length == 1
+                  ? '1 topic'
+                  : '${topics.length} topics',
+              query.isEmpty ? 'Chủ đề' : '${topics.length} chủ đề',
             ),
+            style: query.isEmpty
+                ? Theme.of(context).textTheme.titleMedium
+                : Theme.of(context).textTheme.bodySmall,
           ),
         ),
         if (topics.isEmpty)
@@ -103,14 +112,18 @@ class _HabitHelpPageState extends State<HabitHelpPage> {
               key: Key('help-topic-${t.id}'),
               contentPadding: EdgeInsets.zero,
               minVerticalPadding: 12,
-              leading: SizedBox(
-                width: 64,
-                height: 56,
-                child: HabitHelpMock(topic: t.id, compact: true),
+              leading: Container(
+                width: 44,
+                height: 44,
+                decoration: BoxDecoration(
+                  color: HabitPalette.of(context).raised,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Icon(t.icon, size: 22),
               ),
-              title: Text(
-                '${habitHelpTopics.indexOf(t) + 1}. ${t.title(context)}',
-              ),
+              title: Text(t.title(context)),
+              subtitle: Text(t.summary(context)),
+              trailing: const Icon(Icons.chevron_right, size: 20),
               selected: t.id == selected,
               onTap: () => select(t.id),
             ),
@@ -188,14 +201,6 @@ class _HabitHelpPageState extends State<HabitHelpPage> {
           title: MediaQuery.sizeOf(context).width >= 840
               ? null
               : Text(tr(context, 'How to use', 'Cách dùng')),
-          actions: [
-            IconButton(
-              key: const Key('help-replay'),
-              tooltip: tr(context, 'Replay guide', 'Xem lại hướng dẫn'),
-              onPressed: () => Navigator.pushNamed(context, '/welcome'),
-              icon: const Icon(Icons.replay),
-            ),
-          ],
         ),
         body: SafeArea(
           child: ListView(
@@ -204,7 +209,7 @@ class _HabitHelpPageState extends State<HabitHelpPage> {
             ),
             children: [
               HandyContent(
-                maxWidth: 960,
+                maxWidth: topic == null ? 720 : 960,
                 child: _content(context, wide, searchField, index, article),
               ),
             ],
@@ -236,9 +241,36 @@ class _HabitHelpPageState extends State<HabitHelpPage> {
               ),
             ),
           ),
+        if (selected == null) ...[
+          Material(
+            color: HabitPalette.of(context).tint,
+            borderRadius: BorderRadius.circular(16),
+            child: ListTile(
+              key: const Key('help-replay'),
+              contentPadding: const EdgeInsets.all(16),
+              leading: const Icon(Icons.play_circle_outline, size: 28),
+              title: Text(
+                tr(
+                  context,
+                  'Replay the introduction',
+                  'Xem lại phần giới thiệu',
+                ),
+              ),
+              subtitle: Text(
+                tr(
+                  context,
+                  'Practise checking in and running a routine. Nothing is saved.',
+                  'Tập ghi nhận và chạy quy trình. Không lưu gì thật.',
+                ),
+              ),
+              onTap: () => Navigator.pushNamed(context, '/welcome'),
+            ),
+          ),
+          const SizedBox(height: 16),
+        ],
         KeyedSubtree(key: searchAnchor, child: searchField),
         const SizedBox(height: 16),
-        wide
+        wide && article != null
             ? Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -248,15 +280,7 @@ class _HabitHelpPageState extends State<HabitHelpPage> {
                     child: HandySwap(
                       child: KeyedSubtree(
                         key: ValueKey(selected),
-                        child:
-                            article ??
-                            Text(
-                              tr(
-                                context,
-                                'Choose a topic to see its steps.',
-                                'Chọn chủ đề để xem các bước.',
-                              ),
-                            ),
+                        child: article,
                       ),
                     ),
                   ),

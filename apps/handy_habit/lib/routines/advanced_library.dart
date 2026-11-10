@@ -4,6 +4,7 @@ import 'package:handy_ui/kit.dart';
 import '../scope.dart';
 import '../ui/form.dart';
 import 'advanced_controls.dart';
+import '../pro/entitlements.dart';
 
 /// Excludes ordinary title/note/schedule changes, but includes node order and
 /// habit links used by stacking. The save gate rechecks the live entitlement.
@@ -68,6 +69,9 @@ class AdvancedRoutineLibrary extends StatelessWidget {
         for (final b in saved(kind)) b.id: b,
       };
       return AdvancedPanel(
+        feature: kind == 'blocks'
+            ? HabitProFeature.blocks
+            : HabitProFeature.presets,
         pro: pro,
         title: title,
         help: help,

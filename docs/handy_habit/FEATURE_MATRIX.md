@@ -1,8 +1,17 @@
 # Handy Habit feature matrix
 
-Updated 2026-11-10 (R17/R18 run 10; earlier evidence below is historical).
+Updated 2026-11-10 (R21 run12; earlier evidence below is historical).
 Source and tests exist; release certification is separate.
 No row below claims physical-device or real-store verification.
+
+| R21 / run12 feature | Status | Host evidence | Remaining |
+| --- | --- | --- | --- |
+| Help replay card, icon/summary/chevron topic rows, no numbering; shell mark and contextual labelled creation | IMPLEMENTED / WIDGET TESTED / RENDERED | Search/detail/replay/back retained; 24-case matrix; sibling contact sheets | Device/SR follow-along |
+| Nine Advanced routine demos, exact badge destinations, builder Learn about Pro, Free/Pro comparison and Settings group | IMPLEMENTED / WIDGET TESTED / RENDERED | Engine-evaluated pretend routines; no writes, draft survives purchase/back, reduced motion | R19 insights and R20 studio remain OPEN; explicitly planned later |
+| Google Play lifetime store, localized price before Buy, Restore, pending/cancel/error/offline/refund handling, ads removal | SOURCE + FAKE-STORE HOST TESTED / ANDROID COMPILED | Same shared NativeLifetimeStore/LifetimeController as Boards; config habit/android; real plugin is a normal dependency; merged debug manifest includes BILLING | Product creation, release bundle and Play licence-test buy/restore/refund/cache-restart by supervisor; fake results are not verified billing |
+| iOS/Windows/Web Pro page | IMPLEMENTED / HOST TESTED (native platform branches) | Honest unsupported copy; no buy/restore checkout controls; Web source uses the same unsupported branch | No non-Android store offered; no browser/iOS runtime claim |
+
+Current review: [R21 run12](R21_REVIEW.md). Schema remains 8/physical2/protocol1.
 
 | R17/R18 feature | Status | Host evidence | Remaining |
 | --- | --- | --- | --- |

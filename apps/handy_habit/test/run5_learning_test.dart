@@ -303,7 +303,7 @@ void main() {
     (t) async {
       await learningBoot(t, state: f.seeded());
       await route(t, '/help');
-      expect(find.text('1. Getting started: create a habit'), findsOneWidget);
+      expect(find.text('Getting started: create a habit'), findsOneWidget);
       for (final query in ['thoi quen', 'thói quen']) {
         await t.enterText(find.byKey(const Key('help-search')), query);
         await t.pumpAndSettle();
@@ -311,7 +311,10 @@ void main() {
         final titles = t
             .widgetList<ListTile>(find.byType(ListTile))
             .map((tile) => (tile.title! as Text).data!);
-        expect(titles.any((title) => RegExp(r'^\d+\. ').hasMatch(title)), true);
+        expect(
+          titles.any((title) => RegExp(r'^\d+\. ').hasMatch(title)),
+          false,
+        );
       }
       await t.enterText(find.byKey(const Key('help-search')), 'zzzz');
       await t.pumpAndSettle();
@@ -600,7 +603,7 @@ void main() {
 
   for (final owned in [false, true])
     testWidgets(
-      'free Settings has no Pro badge or purchase row for tier $owned; reset preserves records and ownership',
+      'Settings Pro entry is separate from free preferences for tier $owned; reset preserves records and ownership',
       (t) async {
         final tier = TestTier(owned);
         addTearDown(tier.dispose);
@@ -629,8 +632,14 @@ void main() {
         });
         final (c, _, _) = await learningBoot(t, state: state, tier: tier);
         await route(t, '/settings');
-        expect(find.text('Pro'), findsNothing);
-        expect(find.text('Pro Lifetime'), findsNothing);
+        final proEntry = find.byKey(const Key('settings-pro'));
+        await t.scrollUntilVisible(
+          proEntry,
+          400,
+          scrollable: find.byType(Scrollable).last,
+        );
+        await t.ensureVisible(proEntry);
+        expect(find.text('Pro Lifetime'), findsOneWidget);
         await tap(t, 'settings-reset');
         await tap(t, 'confirm-action');
         expect(c.state!.events.single.toJson(), event.toJson());

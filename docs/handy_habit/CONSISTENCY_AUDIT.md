@@ -1,4 +1,26 @@
-# Handy Habit — consistency audit, run 11
+# Handy Habit — consistency audit, runs 11–12
+
+## Run12 corrections and R21
+
+Run11's Help index and shell rows below are historical and superseded here.
+Real source and screenshots were checked again; the supervisor's remaining gaps were valid.
+
+| Area | Sibling behaviour | Run12 correction | Status |
+| --- | --- | --- | --- |
+| Help index | Tinted Replay introduction card, Topics, soft-square icon/title/summary/chevron rows | Same structure in Habit palette; search retained below replay; no numbers even when filtered; drawn previews in detail only | Host tested/rendered |
+| Today identity | App mark and app name on phone | Actual assets/icon.png, 28px; same mark in wide sidebar; wide content bar names current destination | Host tested/rendered |
+| Creation | Boards labelled New board FAB | Contextual New habit / New routine FAB, same shape/anchor/placement; removed duplicate inline routine New; secondary Add menu keeps other paths and pause; 104px list-bottom space | Host tested/rendered |
+| Routines/Progress/Settings/pushed top bars | Destination/title/back mechanics | Reviewed: main pages have no detail Back; wide sidebar supplies identity; Settings and pushed pages keep title/back and content heading; no unrelated chrome added | Existing + new navigation tests retained |
+| Pro | Live feature stage, free comparison, price/Buy/Restore, title-right badges | Nine shipped Advanced routine demos; every badge selects its demo; Learn about Pro preserves draft; Pro group before Help | Host tested/rendered |
+| Store | Shared native lifetime adapter, no local ownership switch | NativeLifetimeStore via HandyApp's MonetizationHost/LifetimeController; Android config habit/productId + androidPublicKey; native read now fetches localized price, normal handy_store dependency | Android debug compiled; real Play checks pending |
+
+Evidence: `apps/handy_habit/build/run12/` has round1/final 24-case Habit rasters,
+fresh sibling captures from each app's own directory (correct asset bundles), six
+priority sheets and per-matrix sheets. All prices/ownership in host shots are synthetic
+test responses, never proof of billing. [Detailed critique and limits](R21_REVIEW.md).
+R19 and R20 remain open. Run11 shared K1–K4 follow-ups below remain unchanged.
+
+## Historical run11 audit
 
 Completed on 2026-11-10 against the real Bookmark and Boards source and host renders.
 Result: **22 Habit gaps fixed**, plus **4 shared-kit follow-ups**. No sibling, engine,

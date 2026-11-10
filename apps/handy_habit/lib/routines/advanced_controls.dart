@@ -3,6 +3,7 @@ import 'package:handy_ui/kit.dart';
 import '../scope.dart';
 import '../ui/form.dart';
 import '../ui/words.dart';
+import '../pro/entitlements.dart';
 
 /// Human-readable saved rules are also visible after an entitlement expires.
 String logicDescription(BuildContext context, RoutineStep step) {
@@ -38,12 +39,14 @@ class AdvancedPanel extends StatelessWidget {
   final bool pro;
   final String title, help;
   final List<Widget> children;
+  final HabitProFeature feature;
   const AdvancedPanel({
     super.key,
     required this.pro,
     required this.title,
     required this.help,
     required this.children,
+    required this.feature,
   });
   @override
   Widget build(BuildContext context) => ExpansionTile(
@@ -53,11 +56,7 @@ class AdvancedPanel extends StatelessWidget {
       children: [
         Expanded(child: Text(title)),
         if (!pro) const SizedBox(width: 8),
-        if (!pro)
-          const Text(
-            'Pro',
-            style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700),
-          ),
+        if (!pro) HabitProBadge(feature: feature),
       ],
     ),
     subtitle: Text(help),
@@ -181,6 +180,15 @@ class _AdvancedStepControlsState extends State<AdvancedStepControls> {
       String helpVi,
       List<Widget> children,
     ) => AdvancedPanel(
+      feature: switch (en) {
+        'Days to run' => HabitProFeature.days,
+        'Unfinished habit' => HabitProFeature.unfinished,
+        'Time left' => HabitProFeature.timeLeft,
+        'Choose A or B' => HabitProFeature.choices,
+        'Dependencies' => HabitProFeature.dependencies,
+        'After a habit' => HabitProFeature.stacking,
+        _ => HabitProFeature.durations,
+      },
       pro: pro,
       title: tr(context, en, vi),
       help: tr(context, helpEn, helpVi),

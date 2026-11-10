@@ -15,6 +15,7 @@ dependencies:
   handy_files: any
   handy_notifications: any
   handy_monetization: any
+  handy_store: any
   handy_ads: any
   handy_home_widget: any
   sqlite3: 3.5.2
@@ -29,7 +30,6 @@ dependencies:
   package_info_plus: 10.2.2
 dev_dependencies:
   google_sign_in_platform_interface: 3.1.0
-  handy_store: any
   flutter_test:
     sdk: flutter
   integration_test:
@@ -37,6 +37,7 @@ dev_dependencies:
 flutter:
   uses-material-design: true
   assets:
+    - assets/icon.png
     - fonts/Nunito-OFL.txt
   fonts:
     - family: Nunito

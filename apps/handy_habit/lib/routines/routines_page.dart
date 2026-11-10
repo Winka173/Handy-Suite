@@ -36,7 +36,7 @@ class _RoutinesPageState extends State<RoutinesPage> {
           MediaQuery.sizeOf(context).width >= 840 ? 24 : 16,
           HandySpace.l,
           MediaQuery.sizeOf(context).width >= 840 ? 24 : 16,
-          HandySpace.xxl,
+          104,
         ),
         children: [
           Row(
@@ -49,23 +49,6 @@ class _RoutinesPageState extends State<RoutinesPage> {
                     style: Theme.of(context).textTheme.titleLarge,
                   ),
                 ),
-              ),
-              FilledButton.icon(
-                key: const Key('routine-new'),
-                onPressed: () async {
-                  final saved = await Navigator.pushNamed<bool>(
-                    context,
-                    '/templates?kind=routine',
-                  );
-                  if (saved == true &&
-                      context.mounted &&
-                      scope.state.liveRoutines.isNotEmpty) {
-                    final id = scope.state.liveRoutines.last.id;
-                    if (wide) setState(() => selected = id);
-                  }
-                },
-                icon: const Icon(Icons.add, size: 18),
-                label: Text(tr(context, 'New', 'Thêm')),
               ),
             ],
           ),

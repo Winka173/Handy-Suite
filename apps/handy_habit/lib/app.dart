@@ -5,6 +5,7 @@ import 'package:flutter/services.dart';
 import 'package:handy_files/handy_files.dart';
 import 'package:handy_habit_engine/handy_habit_engine.dart';
 import 'package:handy_home_widget/handy_home_widget.dart';
+import 'package:handy_monetization/handy_monetization.dart';
 import 'package:handy_ui/kit.dart';
 import 'controller.dart';
 import 'mood/mood_sheet.dart';
@@ -30,6 +31,8 @@ import 'shell/habit_shell.dart';
 import 'today/check_in.dart';
 import 'sync/drive_sync.dart';
 import 'sync/sync_page.dart';
+import 'pro/entitlements.dart';
+import 'pro/pro_page.dart';
 
 export 'scope.dart' show HabitScope;
 
@@ -44,6 +47,10 @@ class HabitApp extends StatefulWidget {
   final HabitRunNotices? notices;
   final HabitDriveSync? driveSync;
 
+  /// Host tests inject a fake store here; production uses HandyApp's native host.
+  @visibleForTesting
+  final LifetimeController? lifetime;
+
   /// Off in host tests: no folder backups, no home-screen widget.
   final bool device;
   const HabitApp({
@@ -54,6 +61,7 @@ class HabitApp extends StatefulWidget {
     this.reminders,
     this.notices,
     this.driveSync,
+    this.lifetime,
     this.device = true,
   });
   @override
@@ -349,6 +357,13 @@ class _HabitAppState extends State<HabitApp> with WidgetsBindingObserver {
         () =>
             drive == null ? _missing('/settings') : HabitSyncPage(scope: scope),
       ['', 'settings'] => () => HabitSettingsPage(scope: scope),
+      ['', 'pro'] => () => HabitProPage(
+        feature:
+            HabitProFeature.values
+                .where((f) => f.name == uri.queryParameters['feature'])
+                .firstOrNull ??
+            HabitProFeature.days,
+      ),
       ['', 'mood', final day] =>
         () => _validMoodDay(day)
             ? MoodSheet(scope: scope, day: day)
@@ -511,7 +526,12 @@ class _HabitAppState extends State<HabitApp> with WidgetsBindingObserver {
               MediaQuery.disableAnimationsOf(context) ||
               c.state?.settings['reducedMotion'] == true,
         ),
-        child: Focus(onKeyEvent: _key, child: child),
+        child: widget.lifetime == null
+            ? Focus(onKeyEvent: _key, child: child)
+            : LifetimeScope(
+                notifier: widget.lifetime!,
+                child: Focus(onKeyEvent: _key, child: child),
+              ),
       ),
       home: _ready(() => HabitShell(scope: scope)),
     ),

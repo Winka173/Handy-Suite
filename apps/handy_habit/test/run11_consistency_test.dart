@@ -58,13 +58,13 @@ void main() {
     }
   });
 
-  testWidgets('help index pictures and Back/Esc stay in help one level', (
-    t,
-  ) async {
+  testWidgets('help topic rows and Back/Esc stay in help one level', (t) async {
     await host.boot(t);
     await host.go(t, '/help');
-    expect(find.byType(HabitHelpMock), findsWidgets);
+    expect(find.byType(HabitHelpMock), findsNothing);
+    expect(find.byIcon(Icons.chevron_right), findsWidgets);
     await tap(t, 'help-topic-start');
+    expect(find.byType(HabitHelpMock), findsWidgets);
     expect(find.byKey(const Key('help-article-start')), findsOneWidget);
     await t.tap(find.byType(BackButton));
     await t.pumpAndSettle();

@@ -7,7 +7,7 @@
 | Reminders  | Permission/local schedule               | Permission/source                                 | In-app due list         | In-app due list           |
 | Runner     | Foreground monotonic; paused-run notice | Foreground monotonic; paused-run notice (passive) | Foreground monotonic    | Foreground monotonic      |
 | Cloud sync | Optional Drive appdata; Android build define + owner OAuth setup | Not implemented; use backup | Not implemented; use backup | Not implemented; use backup |
-| Ads/Pro    | Existing official adapters              | Existing official adapters                        | Store adapter; no AdMob | Free, no invented payment |
+| Ads/Pro    | NativeLifetimeStore / Play Billing, device-bound verified cache; Pro page and configured ads removal (run12) | Pro demo page; purchase unavailable | Pro demo page; purchase unavailable | Pro demo page; no checkout |
 
 Runtime verification is separate from compilation. Browser eviction/quota, physical
 devices and real stores need evidence. iOS needs macOS/Xcode, unavailable on this host.

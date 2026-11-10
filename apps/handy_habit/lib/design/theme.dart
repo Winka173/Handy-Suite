@@ -156,6 +156,12 @@ ThemeData habitTheme(ThemeData base) {
       ),
     ),
     iconTheme: base.iconTheme.copyWith(color: p.muted),
+    floatingActionButtonTheme: base.floatingActionButtonTheme.copyWith(
+      backgroundColor: p.anchor,
+      foregroundColor: p.onAnchor,
+      elevation: 0,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+    ),
     listTileTheme: base.listTileTheme.copyWith(
       textColor: p.ink,
       iconColor: p.muted,

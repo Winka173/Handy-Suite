@@ -107,7 +107,19 @@ class HandyStorePlugin : FlutterPlugin, MethodChannel.MethodCallHandler, Activit
           if (response.responseCode != BillingClient.BillingResponseCode.OK) finish(state("unavailable", "ownership_query_failed"))
           else {
             val owned = purchases.firstOrNull { it.products.contains(product) }
-            if (owned == null) { clearProof(); finish(state("ready", owned = false)) } else verifyPurchase(owned) { finish(it) }
+            if (owned == null) {
+              clearProof()
+              // Ownership is authoritative even if the catalogue is unavailable.
+              // Read the localized price without launching a billing flow.
+              val params = QueryProductDetailsParams.newBuilder().setProductList(listOf(QueryProductDetailsParams.Product.newBuilder().setProductId(product).setProductType(BillingClient.ProductType.INAPP).build())).build()
+              client!!.queryProductDetailsAsync(params) { response, detailsResult ->
+                val details = detailsResult.productDetailsList.firstOrNull { it.productId == product }
+                val offer = details?.oneTimePurchaseOfferDetailsList?.firstOrNull() ?: details?.oneTimePurchaseOfferDetails
+                if (response.responseCode == BillingClient.BillingResponseCode.OK && offer != null)
+                  finish(state("ready", owned = false, price = offer.formattedPrice))
+                else finish(state("unavailable", "product_unavailable", false))
+              }
+            } else verifyPurchase(owned) { finish(it) }
           }
         }
       } else {
