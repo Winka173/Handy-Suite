@@ -30,6 +30,7 @@ String habitLine(
 ) {
   final today = scope.today;
   final s = scheduleOn(h, today) ?? h.schedules.last;
+  if (h.isNegative) return negativeLine(context, h, today, index);
   final parts = <String>[];
   // A pause for everything is said once, in the greeting; a pause for
   // this habit is said on its row.
@@ -142,14 +143,39 @@ class HabitRow extends StatelessWidget {
                     const SizedBox(height: 2),
                     Text(
                       habitLine(context, scope, h, index),
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
+                      maxLines: h.isNegative ? null : 2,
+                      overflow: h.isNegative ? null : TextOverflow.ellipsis,
                       style: theme.textTheme.bodySmall?.copyWith(
                         color: c.muted,
                       ),
                     ),
                     const SizedBox(height: 6),
                     EarlierBeads(data: HabitDay(h, scope.today, index)),
+                    if (h.isNegative &&
+                        scheduled &&
+                        !index.known(h.id, scope.today) &&
+                        !index.skip(h.id, scope.today))
+                      TextButton(
+                        key: Key('none-${h.id}'),
+                        onPressed: () => scope.write(
+                          context,
+                          (s) => setManualTotal(
+                            s,
+                            h.id,
+                            scope.today,
+                            0,
+                            today: scope.today,
+                          ),
+                          done: (c) => tr(
+                            c,
+                            '${h.title}: none today.',
+                            '${h.title}: hôm nay không có.',
+                          ),
+                        ),
+                        child: Text(
+                          tr(context, 'None today', 'Hôm nay không có'),
+                        ),
+                      ),
                   ],
                 ),
               ),

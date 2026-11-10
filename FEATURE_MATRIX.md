@@ -20,6 +20,11 @@ browser URL/back-forward và thiết bị thật vẫn cần supervisor. R7 (run
 Start/Resume/phiên gần nhất, builder bản nháp lưu một lần/dirty guard, runner xác nhận
 thoát + shortcuts + tổng kết habit được ghi; host/widget và ma trận ảnh EN/VI/sáng/tối/
 320–1440/text1–1.5; kill/background/keyboard/SR thật chờ supervisor.
+R8/R9 (run5/5b): guide ba giai đoạn/hai beat, practice Today không ghi dữ liệu,
+15 chủ đề tìm không dấu/hình minh họa/context help, Settings nhóm/persist/reset giữ data,
+múi giờ thân thiện có GMT/DST. Source/host widget tested; native OS back/permission,
+screen reader và link policy/support thật vẫn chờ supervisor.
+R10/R11 (run6): schema5/physical2, giảm thói quen bằng số lần/ghi rõ0/chưa rõ, giới hạn ngày/tuần có lịch sử; Today +1/Undo/Không có, history/review mẫu số trung thực, không liên kết routine; help hiện16 chủ đề EN/VI. Host engine/widget/render matrix; thiết bị/browser chưa kiểm mới.
 
 | App / nhóm            | Chức năng đã code                                                                                                                                                                                                                                            | Kiểm thử có bằng chứng                                                                                                                                                                                                     | Còn thiếu                                                                                                                          |
 | --------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------- |
@@ -54,10 +59,6 @@ Chưa dùng thiết bị Android/iOS thật. Không tuyên bố không còn bug
 hoặc sẵn sàng phát hành. Xem [KNOWN_ISSUES](KNOWN_ISSUES.md).
 
 Ảnh/log/artifact reports: [docs/qa/evidence](docs/qa/evidence).
-R8/R9 (run5/5b): guide ba giai đoạn/hai beat, practice Today không ghi dữ liệu,
-15 chủ đề tìm không dấu/hình minh họa/context help, Settings nhóm/persist/reset giữ data,
-múi giờ thân thiện có GMT/DST. Source/host widget tested; native OS back/permission,
-screen reader và link policy/support thật vẫn chờ supervisor.
 
 Các native integration/build của bảy app trước được giữ làm bằng chứng lịch sử,
 chưa chạy lại trên snapshot bổ sung Handy Spend. Regression unit/widget gồm cả tám app.

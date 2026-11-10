@@ -1,5 +1,14 @@
 # QA evidence and reproduction
 
+## Current R10/R11 host pass · run 6 · 2026-11-10
+
+- App `flutter test --no-pub`: **138 passed** (9 R11 widget tests + 1 SQLite negative persistence/Undo test added). Engine: **103 passed** (21 negative tests added).
+- App + engine `dart analyze`: clean; `dart format` and final unchanged-format check cover app lib/test/tool and engine lib/test.
+- Schema5 / physical2: incidents, explicit zero/unknown, day/week open-close, skip/pause, recovery, causal retraction/conflict resolution, backfill, goal history, JSON/ZIP/CSV, v1–v4 JSON+ZIP fixtures, New York/Sydney DST spring/fall and 04:00 week closure; real SQLite reopen and durable Undo.
+- `tool/run6_screens_test.dart`: 26 cases (24 locale/theme/width/scale combinations + 2 practice-placement checks); final matrix source is re-rendered after critique fixes. 242 PNGs (10 surfaces per combination + 2 practice shots). Folder `C:/Users/Winka/AppData/Local/Temp/habit-run6-shots/`, contact sheets under `review/` and `index.html` for browsing.
+- Local logs: `C:/Users/Winka/AppData/Local/Temp/habit-run6-app-tests.log`, `habit-run6-engine-tests.log`, `habit-run6-shots.log`. Early concurrent Flutter invocations hit the shared test-cache compiler race; those were stopped and all final invocations run serially per package.
+- [Visual critique](R10_R11_REVIEW.md). No device, emulator, real browser, store, new build or OS delivery checks in this run. Historical platform evidence below does not certify changed source.
+
 ## Current R8/R9 host pass · run 5b · 2026-11-10
 
 - App `flutter test --no-pub`: **128 passed**; engine: **82 passed**.

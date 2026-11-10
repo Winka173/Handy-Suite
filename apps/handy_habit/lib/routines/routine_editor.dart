@@ -124,7 +124,7 @@ Future<RoutineStep?> editRoutineStep(
   RoutineStep? result;
   final habits = {
     for (final h in scope.state.liveHabits.where(
-      (h) => !h.archived || h.id == old?.habit,
+      (h) => !h.isNegative && (!h.archived || h.id == old?.habit),
     ))
       h.id: h.title,
   };

@@ -39,6 +39,14 @@ Widget buildHabitEditor(
     while (date(effective).weekday != s.weekStart) {
       effective = addDays(effective, 1);
     }
+  final negativeGoal = old == null
+      ? null
+      : negativeGoalOn(old, today) ?? old.negativeGoals.lastOrNull;
+  var negativeEffective = effective;
+  if (negativeGoal?.window == 'week') {
+    while (date(negativeEffective).weekday != negativeGoal!.weekStart)
+      negativeEffective = addDays(negativeEffective, 1);
+  }
   final locked =
       old != null &&
       (s.events.any((e) => e.habit == old.id) ||
@@ -53,6 +61,24 @@ Widget buildHabitEditor(
         ? tr(context, 'New habit', 'Thói quen mới')
         : tr(context, 'Edit ${old.title}', 'Sửa ${old.title}'),
     fields: [
+      HabitField(
+        'direction',
+        'Your intention',
+        'Điều bạn muốn',
+        kind: FieldKind.choice,
+        options: {
+          if (!locked || !old.isNegative)
+            'build': tr(context, 'Build a habit', 'Xây dựng thói quen'),
+          if (!locked || old.isNegative)
+            'reduce': tr(context, 'Break a habit', 'Giảm thói quen'),
+        },
+        helpEn: locked
+            ? 'Fixed once recorded or linked to a routine.'
+            : 'Build something useful, or reduce something you want less of.',
+        helpVi: locked
+            ? 'Không đổi khi đã ghi nhận hoặc liên kết quy trình.'
+            : 'Xây điều hữu ích, hoặc giảm điều bạn muốn bớt.',
+      ),
       const HabitField(
         'title',
         'Name',
@@ -61,10 +87,46 @@ Widget buildHabitEditor(
         helpVi: 'Nhỏ và cụ thể: Đọc 10 trang, Đi bộ sau bữa trưa.',
       ),
       HabitField(
+        'ceilingMode',
+        'Limit',
+        'Giới hạn',
+        kind: FieldKind.choice,
+        when: (v) => v['direction'] == 'reduce',
+        options: {
+          'zero': tr(context, 'None at all', 'Không lần nào'),
+          'limit': tr(context, 'At most', 'Tối đa'),
+        },
+      ),
+      HabitField(
+        'ceiling',
+        'At most N incidents',
+        'Tối đa bao nhiêu lần',
+        kind: FieldKind.count,
+        when: (v) => v['direction'] == 'reduce' && v['ceilingMode'] == 'limit',
+        helpEn: 'A whole number, including zero. For example, 3 sugary drinks.',
+        helpVi: 'Số nguyên, có thể là 0. Ví dụ: 3 lần uống nước ngọt.',
+      ),
+      HabitField(
+        'window',
+        'Per',
+        'Trong mỗi',
+        kind: FieldKind.choice,
+        when: (v) => v['direction'] == 'reduce',
+        options: {
+          'day': tr(context, 'Day', 'Ngày'),
+          'week': tr(context, 'Week', 'Tuần'),
+        },
+        helpEn:
+            'Weekly limits close after the last habit day; every day needs a record. Nothing recorded means unknown.',
+        helpVi:
+            'Giới hạn tuần chốt sau ngày cuối; mỗi ngày cần ghi nhận. Không ghi là chưa rõ.',
+      ),
+      HabitField(
         'type',
         'It is counted as',
         'Ghi nhận theo',
         kind: FieldKind.choice,
+        when: (v) => v['direction'] != 'reduce',
         options: {
           for (final t in ['binary', 'count', 'duration', 'quantity'])
             if (!locked || t == old.type) t: typeLabel(context, t),
@@ -76,7 +138,7 @@ Widget buildHabitEditor(
         'unit',
         'Unit',
         'Đơn vị',
-        when: (v) => v['type'] == 'quantity',
+        when: (v) => v['direction'] != 'reduce' && v['type'] == 'quantity',
         helpEn: locked
             ? 'Fixed once something is recorded.'
             : 'pages, glasses, km…',
@@ -89,7 +151,7 @@ Widget buildHabitEditor(
         'Each day, at least',
         'Mỗi ngày tối thiểu',
         kind: FieldKind.amount,
-        when: (v) => v['type'] != 'binary',
+        when: (v) => v['direction'] != 'reduce' && v['type'] != 'binary',
         helpEn: 'Up to three decimals; times must be whole.',
         helpVi: 'Tối đa ba số lẻ; số lần phải là số nguyên.',
       ),
@@ -98,6 +160,7 @@ Widget buildHabitEditor(
         'How often',
         'Bao lâu một lần',
         kind: FieldKind.choice,
+        when: (v) => v['direction'] != 'reduce',
         advancedOptions: const {'weekly', 'interval'},
         options: {
           'daily': tr(context, 'Every day', 'Mỗi ngày'),
@@ -111,14 +174,14 @@ Widget buildHabitEditor(
         'On',
         'Vào',
         kind: FieldKind.weekdays,
-        when: (v) => v['schedule'] == 'weekdays',
+        when: (v) => v['direction'] != 'reduce' && v['schedule'] == 'weekdays',
       ),
       HabitField(
         'quota',
         'Days each week',
         'Số ngày mỗi tuần',
         kind: FieldKind.count,
-        when: (v) => v['schedule'] == 'weekly',
+        when: (v) => v['direction'] != 'reduce' && v['schedule'] == 'weekly',
         helpEn: '1 to 7, on any days you like.',
         helpVi: 'Từ 1 đến 7, vào ngày nào cũng được.',
       ),
@@ -127,7 +190,7 @@ Widget buildHabitEditor(
         'Every how many days',
         'Cách bao nhiêu ngày',
         kind: FieldKind.count,
-        when: (v) => v['schedule'] == 'interval',
+        when: (v) => v['direction'] != 'reduce' && v['schedule'] == 'interval',
         helpEn: '1 to 366.',
         helpVi: 'Từ 1 đến 366.',
       ),
@@ -194,6 +257,12 @@ Widget buildHabitEditor(
       ),
     ],
     initial: {
+      'direction': old?.direction ?? 'build',
+      'ceilingMode': negativeGoal == null || negativeGoal.limit == 0
+          ? 'zero'
+          : 'limit',
+      'ceiling': '${(negativeGoal?.limit ?? 3000) ~/ 1000}',
+      'window': negativeGoal?.window ?? 'day',
       'title':
           old?.title ??
           (preset == null ? '' : tr(context, preset.en, preset.vi)),
@@ -215,7 +284,7 @@ Widget buildHabitEditor(
           current?.weekdays ?? preset?.weekdays ?? const [1, 2, 3, 4, 5],
       'quota': '${current?.weeklyTarget ?? preset?.perWeek ?? 3}',
       'interval': '${current?.interval ?? 2}',
-      'effective': effective,
+      'effective': old?.isNegative == true ? negativeEffective : effective,
       'end': old?.end ?? '',
       'category':
           old?.category ??
@@ -231,7 +300,11 @@ Widget buildHabitEditor(
       'note': old?.note ?? '',
     },
     save: (v) async {
-      final type = v['type'] as String, kind = v['schedule'] as String;
+      final negative = v['direction'] == 'reduce';
+      final type = negative ? 'count' : v['type'] as String,
+          kind = negative ? 'daily' : v['schedule'] as String;
+      if (locked && v['direction'] != old.direction)
+        throw const FormatException('Keep the intention / Giữ điều bạn muốn');
       final from = v['effective'] as String, end = v['end'] as String;
       if (old != null &&
           (from.compareTo(today) < 0 ||
@@ -245,7 +318,11 @@ Widget buildHabitEditor(
         throw FormatException(
           'Start a weekly schedule on ${weekdayLong(context, s.weekStart)} / Lịch theo tuần bắt đầu vào ${weekdayLong(context, s.weekStart)}',
         );
-      final unit = type == 'duration' ? 'min' : (v['unit'] as String? ?? '');
+      final unit = negative
+          ? ''
+          : type == 'duration'
+          ? 'min'
+          : (v['unit'] as String? ?? '');
       if (type == 'quantity' && unit.isEmpty)
         throw const FormatException('Name the unit / Hãy đặt tên đơn vị');
       if (locked && (type != old.type || unit != old.unit))
@@ -261,13 +338,20 @@ Widget buildHabitEditor(
         from: from,
         kind: kind,
         weekStart: s.weekStart,
-        target: type == 'binary' ? 1000 : v['target'] as int,
+        target: negative || type == 'binary' ? 1000 : v['target'] as int,
         weekdays: kind == 'weekdays'
             ? List<int>.from(v['weekdays'] as List)
             : current?.weekdays ?? const [1, 2, 3, 4, 5],
         weeklyTarget: int.parse('${v['quota'] ?? 3}'),
         interval: int.parse('${v['interval'] ?? 2}'),
       );
+      if (negative &&
+          v['ceilingMode'] == 'limit' &&
+          ((v['ceiling'] as int) < 0 ||
+              (v['ceiling'] as int) > maxValue ~/ 1000))
+        throw const FormatException(
+          'Use a non-negative whole limit / Dùng giới hạn là số nguyên không âm',
+        );
       final next = Habit(
         id: old?.id ?? uid(),
         title: v['title'] as String,
@@ -275,6 +359,21 @@ Widget buildHabitEditor(
         schedules: [...?old?.schedules, schedule],
         note: v['note'] as String,
         type: type,
+        direction: negative ? 'reduce' : 'build',
+        negativeGoals: negative
+            ? [
+                ...?old?.negativeGoals,
+                NegativeGoal(
+                  id: uid(),
+                  from: old != null && !old.isNegative ? old.created : from,
+                  window: v['window'] as String,
+                  limit: v['ceilingMode'] == 'zero'
+                      ? 0
+                      : int.parse('${v['ceiling']}') * 1000,
+                  weekStart: s.weekStart,
+                ),
+              ]
+            : [],
         unit: unit,
         category: v['category'] as String,
         priority: int.parse('${v['priority']}'),

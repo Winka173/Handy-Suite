@@ -3,6 +3,7 @@ import 'package:handy_ui/kit.dart';
 import '../today/beads.dart';
 import '../ui/words.dart';
 import '../ui/capped.dart';
+import 'habit_appearance.dart';
 
 /// One month of a habit as beads on a calendar. A day inside the window
 /// that can still be edited opens it; other days only read.
@@ -146,7 +147,20 @@ class _MonthGridState extends State<MonthGrid> {
                         subtitle: Text(
                           [
                             statusLabel(context, status),
-                            if (target != null && widget.habit.type != 'binary')
+                            if (widget.habit.isNegative &&
+                                widget.index.known(widget.habit.id, d) &&
+                                negativeGoalOn(widget.habit, d) != null)
+                              '${figure(context, widget.index.value(widget.habit.id, d))} ${unitOf(context, widget.habit, value: widget.index.value(widget.habit.id, d))} · ${negativeLimitText(context, negativeGoalOn(widget.habit, d)!)}',
+                            if (widget.habit.isNegative &&
+                                !widget.index.known(widget.habit.id, d) &&
+                                negativeGoalOn(widget.habit, d) != null)
+                              negativeLimitText(
+                                context,
+                                negativeGoalOn(widget.habit, d)!,
+                              ),
+                            if (!widget.habit.isNegative &&
+                                target != null &&
+                                widget.habit.type != 'binary')
                               progressText(
                                 context,
                                 widget.habit,
@@ -241,7 +255,7 @@ class _Day extends StatelessWidget {
     return Semantics(
       button: editable,
       label:
-          '${formatDay(context, day)}: ${statusLabel(context, status)}, ${progressText(context, habit, index.value(habit.id, day), scheduleOn(habit, day)?.target ?? 1000)}',
+          '${formatDay(context, day)}: ${statusLabel(context, status)}, ${habit.isNegative ? (index.known(habit.id, day) ? '${figure(context, index.value(habit.id, day))} ${unitOf(context, habit, value: index.value(habit.id, day))}' : '') : progressText(context, habit, index.value(habit.id, day), scheduleOn(habit, day)?.target ?? 1000)}',
       excludeSemantics: true,
       child: InkResponse(
         key: Key('day-$day'),
@@ -255,7 +269,9 @@ class _Day extends StatelessWidget {
                 status: status,
                 fill: dayFill(habit, day, index),
                 size: 30,
-                color: isToday
+                color: habit.isNegative
+                    ? habitMark(context, habit)
+                    : isToday
                     ? c.accent
                     : theme.colorScheme.onSurface.withValues(alpha: .78),
               ),
@@ -263,7 +279,11 @@ class _Day extends StatelessWidget {
               '${int.parse(day.substring(8))}',
               style: theme.textTheme.labelSmall?.copyWith(
                 fontWeight: isToday ? FontWeight.w700 : null,
-                color: status == 'completed'
+                color: status == 'withinLimit'
+                    ? (habitMark(context, habit).computeLuminance() > .179
+                          ? Colors.black
+                          : Colors.white)
+                    : status == 'completed'
                     ? theme.colorScheme.surface
                     : planned
                     ? null

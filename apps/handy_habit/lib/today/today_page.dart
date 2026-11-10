@@ -127,13 +127,22 @@ class _Greeting extends StatelessWidget {
         : hour < 17
         ? tr(context, 'Good afternoon.', 'Chào buổi chiều.')
         : tr(context, 'Good evening.', 'Chào buổi tối.');
+    final buildDue = due.where((h) => !h.isNegative).toList();
+    final reductions = due.where((h) => h.isNegative).toList();
+    final observedReductions = reductions
+        .where((h) => index.known(h.id, today))
+        .length;
     final left = due
         .where(
-          (h) => !{
-            'completed',
-            'skipped',
-            'paused',
-          }.contains(habitStatus(h, today, today, index)),
+          (h) => h.isNegative
+              ? !index.known(h.id, today) &&
+                    !index.paused(h.id, today) &&
+                    !index.skip(h.id, today)
+              : !{
+                  'completed',
+                  'skipped',
+                  'paused',
+                }.contains(habitStatus(h, today, today, index)),
         )
         .length;
     final resting = restingNow(scope.state, today);
@@ -152,21 +161,46 @@ class _Greeting extends StatelessWidget {
             else if (left == 0)
               tr(
                 context,
-                'All ${due.length} done',
-                'Xong cả ${due.length} việc',
+                reductions.isEmpty
+                    ? 'All ${due.length} done'
+                    : 'Today’s records are up to date',
+                reductions.isEmpty
+                    ? 'Xong cả ${due.length} việc'
+                    : 'Đã cập nhật ghi nhận hôm nay',
               )
             else
-              tr(context, '$left left to do', 'Còn $left việc'),
+              tr(
+                context,
+                reductions.isEmpty
+                    ? '$left left to do'
+                    : '$left left to record',
+                reductions.isEmpty
+                    ? 'Còn $left việc'
+                    : 'Còn $left việc cần ghi',
+              ),
           ];
     final d = date(today);
-    final kept = due
+    final kept = buildDue
         .where((h) => habitStatus(h, today, today, index) == 'completed')
         .length;
-    final keptText = tr(
-      context,
-      '$kept of ${due.length} kept',
-      '$kept / ${due.length} đã giữ',
-    );
+    final keptText = buildDue.isEmpty && reductions.isNotEmpty
+        ? tr(
+            context,
+            '$observedReductions of ${reductions.length} recorded',
+            '$observedReductions/${reductions.length} đã ghi',
+          )
+        : tr(
+            context,
+            '$kept of ${buildDue.length} kept',
+            '$kept / ${buildDue.length} đã giữ',
+          );
+    final reductionText = reductions.isEmpty
+        ? ''
+        : tr(
+            context,
+            '$observedReductions of ${reductions.length} reduction habits recorded.',
+            '$observedReductions/${reductions.length} thói quen giảm đã ghi.',
+          );
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -195,7 +229,7 @@ class _Greeting extends StatelessWidget {
           Padding(
             padding: const EdgeInsets.only(top: 4, bottom: 4),
             child: Semantics(
-              label: keptText,
+              label: '$keptText. $reductionText ${facts.join(' · ')}',
               excludeSemantics: true,
               child: Row(
                 children: [
@@ -203,7 +237,11 @@ class _Greeting extends StatelessWidget {
                     dimension: 44,
                     child: Bead(
                       status: 'progress',
-                      fill: kept / due.length,
+                      fill: buildDue.isEmpty
+                          ? (reductions.isEmpty
+                                ? 0
+                                : observedReductions / reductions.length)
+                          : kept / buildDue.length,
                       size: 44,
                       color: p.vermilion,
                     ),
@@ -221,7 +259,11 @@ class _Greeting extends StatelessWidget {
                           ),
                         ),
                         Text(
-                          '${facts.join(' · ')}.',
+                          [
+                            if (reductionText.isNotEmpty && buildDue.isNotEmpty)
+                              reductionText,
+                            '${facts.join(' · ')}.',
+                          ].join(' '),
                           key: const Key('today-fact'),
                           style: theme.textTheme.bodyMedium,
                         ),
@@ -236,7 +278,11 @@ class _Greeting extends StatelessWidget {
         // The day's one fact, then the date, in a line under the greeting.
         if (due.isEmpty || resting != null)
           Text(
-            '${facts.join(' · ')}.',
+            [
+              if (reductionText.isNotEmpty && buildDue.isNotEmpty)
+                reductionText,
+              '${facts.join(' · ')}.',
+            ].join(' '),
             key: const Key('today-fact'),
             style: theme.textTheme.titleMedium,
           ),

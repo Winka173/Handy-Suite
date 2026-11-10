@@ -1,8 +1,15 @@
 # Handy Habit feature matrix
 
-Updated 2026-11-10 (R8/R9 run 5b; earlier evidence below is historical).
+Updated 2026-11-10 (R10/R11 run 6; earlier evidence below is historical).
 Source and tests exist; release certification is separate.
 No row below claims physical-device or real-store verification.
+
+| R10/R11 feature | Status | Host evidence | Remaining |
+| --- | --- | --- | --- |
+| Count incidents, explicit none/unknown, daily/weekly ceilings and goal history (schema5/physical2) | IMPLEMENTED / UNIT TESTED | Engine103 pass; 21 negative tests cover counts/zero/open-close/day-week/pause/skip/retract/backfill/conflict/history/JSON-ZIP-CSV/v1–v4/DST north+south | Real clock/travel/upgrade and IndexedDB runtime |
+| Basic intention/ceiling editor; mixed Today +1/Undo/None; neutral beads; history/month/review | IMPLEMENTED / WIDGET TESTED | App138 pass, including 9 R11 widgets + negative SQLite reopen/Undo; duplicate fresh goal and zero-activity counts | Native back/touch, screen reader, device persistence |
+| Negative routine guard and bilingual help | IMPLEMENTED / HOST TESTED | Picker + engine reject negative mappings; routine-origin incidents refused; searchable 16th topic and real bead mock | Device follow-along |
+| Practice coach placement + R11 visual matrix | HOST RENDERED / REVIEWED | 24 EN/VI × light/dark × 320/390/1440 × text1/1.5; create/Today/history/review/Progress, plus two practice cases; see R10_R11_REVIEW and QA_PLAN | No new device/browser/store certification |
 
 | R8/R9 feature | Status | Current host evidence | Remaining |
 | --- | --- | --- | --- |

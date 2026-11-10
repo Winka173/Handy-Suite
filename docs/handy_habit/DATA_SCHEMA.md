@@ -1,6 +1,6 @@
 # Data schema and portability
 
-Data schema 4 (2026-11-10; custom versioned day boundaries; schema3 causal revisions/trash retained); physical SQLite/IndexedDB version 2; isolated native `handy-habit.sqlite` / browser IndexedDB `handy-habit`.
+Data schema 5 (2026-11-10; negative goals/observations; custom day boundaries and schema3 causal revisions/trash retained); physical SQLite/IndexedDB version 2; isolated native `handy-habit.sqlite` / browser IndexedDB `handy-habit`.
 No other app database is opened. Native tables: habits, events, routines, sessions,
 operations (unique actor/sequence, entity index), singleton state metadata, and a device-local recovery table. Validated entity JSON plus indexed event habit/date/source,
 habit foreign key, unique linked (session,step), and session status index.
@@ -41,7 +41,7 @@ only requested by the two settings switches.
 `reason` (<= 200 chars, may be empty), `habits` (IDs; empty = every habit). At most
 1000 pauses; every named habit must exist. Overlapping pauses are allowed and read as
 their union. Migration: data written as schema 1 has no `pauses` and reads as an empty
-list; current reads normalize schemas 1/2/3 to4 and the next save writes4. Schema 1 carrying `pauses`, or an unsupported future schema, is refused without reset. Older apps refuse schema4; keep a backup before upgrading.
+list; current reads normalize schemas 1/2/3/4 to5 and the next save writes5. Schema 1 carrying `pauses`, or an unsupported future schema, is refused without reset. Older apps refuse schema5; keep a backup before upgrading.
 
 Counting rule. A paused day for a habit is a scheduled day inside a pause that covers
 it. Status order is future, not scheduled, skipped, completed, partial, **paused**,
@@ -60,7 +60,7 @@ then open/missed: a paused day done (or begun) anyway shows as done (or begun).
   finished pause is unchanged. Permanently deleting a habit removes it from pauses and removes a
   pause left with no habit (never widening it to every habit).
 
-Portability. JSON/ZIP backups carry pauses (manifest schema4; schema1/2/3 backups still restore). Merge gives pauses new IDs and remaps their habit IDs. Markdown/PDF reports
+Portability. JSON/ZIP backups carry pauses (manifest schema5; schema1/2/3/4 backups still restore). Merge gives pauses new IDs and remaps their habit IDs. Markdown/PDF reports
 list pauses that overlap the range with the counting rule.
 
 JSON/ZIP are full backups. ZIP has manifest.json + data.json, SHA-256 and empty assets
@@ -71,7 +71,7 @@ Replace requires preview plus confirmation and durable pre-replace recovery. Imp
 CSV log columns: id,habit_id,habit,local_date,value_milli,source,skipped,session_id,
 step_id,note,updated_at,record_b64. When pauses overlap the range, a blank line and a
 second table follow: pause_id,from,until,scope(all|chosen),habit_ids(space separated),
-habits,reason,record_b64 with record `{schema:4,pause}` (schema2/3 records remain readable). Event records stay schema 1, so
+habits,reason,record_b64 with record `{schema:5,pause}` (schema2/3/4 records remain readable). Positive event records stay schema 1, so
 a CSV without pauses is unchanged. Canonical schema+entry in record_b64 must match visible
 fields (habit names excepted); formula-like display cells escaped, UTF-8 multiline notes round-trip. Log import
 requires existing habit IDs, deduplicates identical IDs and refuses conflicts/orphans
@@ -123,3 +123,20 @@ habit IDs to auto/morning/afternoon/evening/anytime; auto infers the earliest en
 reminder or linked live routine time. Copy-merge remaps these habit IDs and retains the
 receiver's clock/settings. No historical event date, unit, appearance value or target is
 rewritten by presentation changes. Calendar edits append an effective clock-policy version.
+
+
+## Schema 5 — negative habits (R10/R11)
+
+Physical SQLite/IndexedDB remains version 2: all new domain fields are in existing entity JSON. Readers accept every shipped schema 1–5; writers emit 5. Schemas 1–4 retain positive payloads and causal IDs/hashes; a missing `direction` means `build`. Positive serialization omits the new fields so older operation before/after hashes and Undo guards remain valid. JSON/ZIP manifests now say 5; schema 4 ZIPs and schema 2–4 pause CSV records remain readable.
+
+A negative habit has `direction: reduce`, `type: count` (whole incidents), and immutable ordered `negativeGoals` (1–1000). Each goal: `id`, `from` (local date), `window: day|week`, `limit` (integer thousandths, 0 allowed, <=1e12, multiple of 1000), `weekStart` (1–7). First goal begins on `created`; later goals preserve historical ceilings. Changes from/to a weekly ceiling require both relevant week boundaries, so changing the device week preference cannot silently move a saved ceiling. No baseline or reduction percentage is inferred.
+
+Incidents reuse manual `HabitEvent` deltas, with optional note and original instant/day. An explicit non-skipped zero event is an observation (“None today”); absence of events is unknown. Skip is never an observation. `HabitIndex.known` retains the distinction. `setManualTotal(... observed: false)` retracts manual observations, requiring zero total/no note/no skip; it is not a zero confirmation. Day intent operations also carry `observed` for negative records/edits. Existing row revisions, guarded domain Undo, batch retractions, ID collision checks and causal conflict candidates apply. Conflicted periods cannot earn credit; a resolving edit observes all candidates. No network sync is claimed by this slice.
+
+Daily beads show withinLimit/overLimit/unknown, plus independent pause/skip/conflict states. Weekly beads show recorded daily cumulative use of that week’s ceiling; they do not mean a whole week succeeded. Metrics count a full weekly window once, only after its last habit day closes under the versioned timezone/day-boundary policy. Every day must be explicitly observed to qualify. Unknown closed periods remain eligible but uncredited and are labelled in review. Open periods earn no streak; skip/pause/partial first windows are neutral, never prorated. Within-limit closed periods extend the streak, over/unknown/conflict start a fresh run; longest remains. Archive/trash and backfill use existing rules.
+
+Routine plans and pending session mappings reject negative links; negative events with routine provenance are invalid. The runner also refuses to generate such an incident.
+
+Full JSON/ZIP backups carry goals, all observations, notes, operations, trash and history. CSV keeps its visible header and positive schema-1 records; negative record_b64 uses schema 5, with `negativeHabit` metadata on the first exported row per habit and plain entries thereafter. Import validates the full batch, recreates missing negative habits from that metadata, deduplicates entries, and refuses mismatching existing habit configuration atomically. Empty negative habits without logs travel in JSON/ZIP. Markdown/PDF stats use the same closed-period metrics; reports are not full backups.
+
+Host evidence: incident/none/unknown, open/closed day/week, pause/skip, fresh recovery, retraction, backfill, goal history, conflict resolution, JSON/ZIP/CSV, v1–v4 JSON+ZIP, DST spring/fall north/south, SQLite reopen and durable Undo. IndexedDB real-browser upgrade/quota/tab behavior and device checks remain unverified.

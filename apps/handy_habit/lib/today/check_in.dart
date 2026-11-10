@@ -8,6 +8,14 @@ import '../ui/words.dart';
 /// past the target); minutes and amounts ask how much; a full bead opens
 /// the day instead.
 Future<void> checkIn(BuildContext context, HabitScope scope, Habit h) async {
+  if (h.isNegative) {
+    if (scope.index.skip(h.id, scope.today)) {
+      await editDay(context, scope, h, scope.today);
+      return;
+    }
+    await record1(context, scope, h, 1000);
+    return;
+  }
   final today = scope.today, index = scope.index;
   final target = scheduleOn(h, today)?.target ?? 1000;
   final value = index.value(h.id, today);
@@ -40,6 +48,12 @@ Future<bool> record1(
     done: (c) {
       final target = scheduleOn(h, today)?.target ?? 1000;
       final now = HabitIndex(scope.state.events).value(h.id, today);
+      if (h.isNegative)
+        return tr(
+          c,
+          '${h.title}: incident recorded.',
+          '${h.title}: đã ghi nhận một lần.',
+        );
       return h.type == 'binary'
           ? tr(c, '${h.title}: done.', '${h.title}: đã xong.')
           : '${h.title}: ${progressText(c, h, now, target)}';
@@ -195,10 +209,20 @@ Future<void> editDay(
         'Ngày này',
         kind: FieldKind.choice,
         options: {
-          'done': binary
+          if (h.isNegative)
+            'unknown': tr(
+              context,
+              'Unknown · remove observation',
+              'Chưa rõ · gỡ ghi nhận',
+            ),
+          'done': h.isNegative
+              ? tr(context, 'Record incidents', 'Ghi số lần')
+              : binary
               ? tr(context, 'Done', 'Đã xong')
               : tr(context, 'Some done', 'Có làm'),
-          'none': tr(context, 'Not done', 'Chưa làm'),
+          'none': h.isNegative
+              ? tr(context, 'None today', 'Hôm nay không có')
+              : tr(context, 'Not done', 'Chưa làm'),
           'skip': tr(context, 'Skipped, with a reason', 'Bỏ qua có lý do'),
         },
         helpEn: 'A skipped day does not count as done or missed.',
@@ -207,8 +231,8 @@ Future<void> editDay(
       if (!binary)
         HabitField(
           'total',
-          'Total for the day',
-          'Tổng của ngày',
+          h.isNegative ? 'Incidents for the day' : 'Total for the day',
+          h.isNegative ? 'Số lần trong ngày' : 'Tổng của ngày',
           kind: FieldKind.amount,
           when: (v) => v['state'] == 'done',
           helpEn: 'In ${unitOf(context, h)}; up to three decimals.',
@@ -227,6 +251,8 @@ Future<void> editDay(
           ? 'skip'
           : index.value(h.id, d) > 0
           ? 'done'
+          : h.isNegative && !index.known(h.id, d)
+          ? 'unknown'
           : 'none',
       'total': index.value(h.id, d) > 0
           ? index.value(h.id, d)
@@ -246,8 +272,9 @@ Future<void> editDay(
           d,
           total,
           today: scope.today,
-          note: v['note'] as String,
+          note: state == 'unknown' ? '' : v['note'] as String,
           skipped: state == 'skip',
+          observed: state != 'unknown',
         ),
       );
     },

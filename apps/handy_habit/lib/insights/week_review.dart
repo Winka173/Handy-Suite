@@ -1,6 +1,7 @@
 import 'package:handy_habit_engine/handy_habit_engine.dart';
 import 'package:handy_ui/kit.dart';
 import '../habits/habit_editor.dart';
+import '../habits/habit_appearance.dart';
 import '../scope.dart';
 import '../today/beads.dart';
 import '../ui/words.dart';
@@ -74,8 +75,12 @@ class WeekReviewPage extends StatelessWidget {
             HandyEmpty(
               title: tr(
                 context,
-                'Nothing was due that week.',
-                'Tuần đó chưa có gì đến hạn.',
+                s.liveHabits.any((h) => h.isNegative)
+                    ? 'No closed periods to review yet.'
+                    : 'Nothing was due that week.',
+                s.liveHabits.any((h) => h.isNegative)
+                    ? 'Chưa có kỳ đã chốt để nhìn lại.'
+                    : 'Tuần đó chưa có gì đến hạn.',
               ),
               message: tr(
                 context,
@@ -87,6 +92,12 @@ class WeekReviewPage extends StatelessWidget {
         );
       }
       final facts = [
+        if (r.habits.any((w) => w.habit.isNegative))
+          tr(
+            context,
+            'Negative habits count closed periods. Unknown stays in the denominator; open, skipped and paused periods are left out.',
+            'Thói quen giảm tính kỳ đã chốt. Chưa rõ vẫn ở mẫu số; không tính kỳ đang mở, bỏ qua và nghỉ.',
+          ),
         if (r.dueBefore > 0)
           tr(
             context,
@@ -160,7 +171,17 @@ class _HabitWeekRow extends StatelessWidget {
         children: [
           Row(
             children: [
-              HandyDot(scope.habitHue(h.id), size: 8),
+              if (h.isNegative)
+                Container(
+                  width: 8,
+                  height: 8,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: habitMark(context, h),
+                  ),
+                )
+              else
+                HandyDot(scope.habitHue(h.id), size: 8),
               const SizedBox(width: HandySpace.s),
               Expanded(child: Text(h.title, style: theme.textTheme.bodyLarge)),
               Text(
@@ -187,12 +208,24 @@ class _HabitWeekRow extends StatelessWidget {
                       status: week.days[i],
                       fill: dayFill(h, addDays(start, i), scope.index),
                       size: 14,
-                      color: ink.withValues(alpha: .78),
+                      color: h.isNegative
+                          ? habitMark(context, h)
+                          : ink.withValues(alpha: .78),
                     ),
                   ),
               ],
             ),
           ),
+          if (h.isNegative) ...[
+            const SizedBox(height: HandySpace.s),
+            Text(
+              tr(
+                context,
+                '${week.kept}/${week.due} closed periods within the limit · ${week.unknown} unknown ${week.unknown == 1 ? 'day' : 'days'}.',
+                '${week.kept}/${week.due} kỳ đã chốt trong giới hạn · ${week.unknown} ngày chưa rõ.',
+              ),
+            ),
+          ],
           if (week.struggling) ...[
             const SizedBox(height: HandySpace.s),
             Text(

@@ -28,6 +28,10 @@ HomeWidgetView habitWidgetView(HabitState s, String today, {required bool vi}) {
                 !h.archived &&
                 isScheduledOn(h, today) &&
                 const {
+                  'unknown',
+                  'overLimit',
+                  'withinLimit',
+                  'conflict',
                   'open',
                   'partial',
                   'missed',

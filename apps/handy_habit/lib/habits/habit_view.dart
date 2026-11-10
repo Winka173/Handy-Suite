@@ -144,8 +144,14 @@ class HabitView extends StatelessWidget {
                   ),
                 Text(
                   [
-                    scheduleText(context, current),
-                    if (h.type != 'binary')
+                    if (h.isNegative)
+                      negativeLimitText(
+                        context,
+                        negativeGoalOn(h, today) ?? h.negativeGoals.last,
+                      )
+                    else
+                      scheduleText(context, current),
+                    if (!h.isNegative && h.type != 'binary')
                       '${figure(context, current.target)} ${unitOf(context, h, value: current.target)}',
                     if (h.category.isNotEmpty) h.category,
                     if (h.archived) tr(context, 'archived', 'đã lưu trữ'),
@@ -161,8 +167,10 @@ class HabitView extends StatelessWidget {
                   alignment: AlignmentDirectional.centerStart,
                   child: TextButton.icon(
                     key: const Key('streak-help'),
-                    onPressed: () =>
-                        Navigator.pushNamed(context, '/help/streaks'),
+                    onPressed: () => Navigator.pushNamed(
+                      context,
+                      h.isNegative ? '/help/negative' : '/help/streaks',
+                    ),
                     icon: const Icon(Icons.help_outline),
                     label: Text(
                       tr(
@@ -188,7 +196,9 @@ class HabitView extends StatelessWidget {
                       '${m.longest} $unit',
                     ),
                     figureCell(
-                      tr(context, 'Done', 'Đã làm'),
+                      h.isNegative
+                          ? tr(context, 'Within the limit', 'Trong giới hạn')
+                          : tr(context, 'Done', 'Đã làm'),
                       tr(
                         context,
                         '${m.completed} of ${m.eligible}',
@@ -201,8 +211,12 @@ class HabitView extends StatelessWidget {
                 Text(
                   tr(
                     context,
-                    'Counted over planned $unit that have closed; skipped and paused days and today, if not done yet, are left out.',
-                    'Tính trên số $unit có lịch đã qua; bỏ ngày bỏ qua, ngày nghỉ và hôm nay nếu chưa làm.',
+                    h.isNegative
+                        ? 'Closed $unit only. Unknown periods stay in the denominator; open and paused periods earn no credit. Each new period is a fresh start.'
+                        : 'Counted over planned $unit that have closed; skipped and paused days and today, if not done yet, are left out.',
+                    h.isNegative
+                        ? 'Chỉ tính $unit đã chốt. Kỳ chưa rõ vẫn nằm trong mẫu số; kỳ đang mở và kỳ nghỉ không tính đạt. Mỗi kỳ mới là khởi đầu mới.'
+                        : 'Tính trên số $unit có lịch đã qua; bỏ ngày bỏ qua, ngày nghỉ và hôm nay nếu chưa làm.',
                   ),
                   style: theme.textTheme.bodySmall?.copyWith(color: c.muted),
                 ),
@@ -240,28 +254,44 @@ class HabitView extends StatelessWidget {
                     title: tr(context, 'Pauses', 'Kỳ nghỉ'),
                     children: [PauseList(scope: scope, habit: h.id)],
                   ),
-                HandySection(
-                  title: tr(context, 'Schedules', 'Các lịch đã dùng'),
-                  children: [
-                    for (final v in h.schedules.reversed)
-                      ListTile(
-                        title: Text(
-                          [
-                            scheduleText(context, v),
-                            if (h.type != 'binary')
-                              '${figure(context, v.target)} ${unitOf(context, h, value: v.target)}',
-                          ].join(' · '),
+                if (h.isNegative)
+                  HandySection(
+                    title: tr(
+                      context,
+                      'Limits over time',
+                      'Giới hạn qua thời gian',
+                    ),
+                    children: [
+                      for (final g in h.negativeGoals.reversed)
+                        ListTile(
+                          title: Text(negativeLimitText(context, g)),
+                          subtitle: Text(formatDay(context, g.from)),
                         ),
-                        subtitle: Text(
-                          tr(
-                            context,
-                            'from ${formatDay(context, v.from)}',
-                            'từ ${formatDay(context, v.from)}',
+                    ],
+                  ),
+                if (!h.isNegative)
+                  HandySection(
+                    title: tr(context, 'Schedules', 'Các lịch đã dùng'),
+                    children: [
+                      for (final v in h.schedules.reversed)
+                        ListTile(
+                          title: Text(
+                            [
+                              scheduleText(context, v),
+                              if (h.type != 'binary')
+                                '${figure(context, v.target)} ${unitOf(context, h, value: v.target)}',
+                            ].join(' · '),
+                          ),
+                          subtitle: Text(
+                            tr(
+                              context,
+                              'from ${formatDay(context, v.from)}',
+                              'từ ${formatDay(context, v.from)}',
+                            ),
                           ),
                         ),
-                      ),
-                  ],
-                ),
+                    ],
+                  ),
                 HandySection(
                   title: tr(context, 'Recorded', 'Đã ghi'),
                   children: [
@@ -288,6 +318,12 @@ class HabitView extends StatelessWidget {
                               title: Text(
                                 e.skipped
                                     ? statusLabel(context, 'skipped')
+                                    : h.isNegative && e.value == 0
+                                    ? tr(
+                                        context,
+                                        'None today',
+                                        'Hôm nay không có',
+                                      )
                                     : h.type == 'binary'
                                     ? tr(context, 'Done', 'Đã xong')
                                     : '${figure(context, e.value)} ${unitOf(context, h, value: e.value)}',
@@ -295,7 +331,12 @@ class HabitView extends StatelessWidget {
                               subtitle: Text(
                                 [
                                   dayText(context, e.day, today),
-                                  if (h.type != 'binary')
+                                  if (h.isNegative)
+                                    negativeLimitText(
+                                      context,
+                                      negativeGoalOn(h, e.day)!,
+                                    ),
+                                  if (!h.isNegative && h.type != 'binary')
                                     tr(
                                       context,
                                       'Goal ${figure(context, scheduleOn(h, e.day)?.target ?? 1000)} ${unitOf(context, h, value: scheduleOn(h, e.day)?.target ?? 1000)}',
@@ -435,6 +476,15 @@ class HabitMenu extends StatelessWidget {
                     '${h.title} (bản sao)',
                   ),
                   'created': today,
+                  if (h.isNegative)
+                    'negativeGoals': [
+                      {
+                        ...(negativeGoalOn(h, today) ?? h.negativeGoals.last)
+                            .toJson(),
+                        'id': uid(),
+                        'from': today,
+                      },
+                    ],
                   'end': null,
                   'archived': false,
                   'archivedFrom': null,

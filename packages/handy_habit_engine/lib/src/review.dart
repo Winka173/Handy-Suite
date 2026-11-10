@@ -9,7 +9,9 @@ class HabitWeek {
   const HabitWeek(this.habit, this.days, this.kept, this.due);
 
   /// Kept under half of what was due: worth making smaller.
-  bool get struggling => due >= 2 && kept * 2 < due;
+  bool get struggling => !habit.isNegative && due >= 2 && kept * 2 < due;
+  int get unknown =>
+      days.where((d) => d == 'unknown' || d == 'conflict').length;
 }
 
 /// A look back at one week, with the week before for comparison.
@@ -51,6 +53,20 @@ String reviewWeekStart(String today, int weekStart) {
   final days = [
     for (var i = 0; i < 7; i++) habitStatus(h, addDays(start, i), today, index),
   ];
+  if (h.isNegative) {
+    var kept = 0, due = 0;
+    for (var i = 0; i < 7; i++) {
+      final d = addDays(start, i),
+          p = negativePeriod(h, addDays(start, i), today, index);
+      if (p.end != d ||
+          p.end.compareTo(today) >= 0 ||
+          ['paused', 'notScheduled'].contains(p.status))
+        continue;
+      due++;
+      if (p.status == 'withinLimit') kept++;
+    }
+    return (days, kept, due);
+  }
   final kept = days.where((d) => d == 'completed').length;
   final weekly = (scheduleOn(h, start) ?? h.schedules.first).kind == 'weekly';
   final due = weekly

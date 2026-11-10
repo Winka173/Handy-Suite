@@ -134,7 +134,7 @@ void main() {
       final files = RestoreFiles()
         ..file = ImportedBytes('old.zip', backup(fixtures.seeded()));
       await openImport(tester, c, files);
-      expect(find.textContaining('bytes · Schema 4'), findsOneWidget);
+      expect(find.textContaining('bytes · Schema 5'), findsOneWidget);
       expect(find.textContaining('items in Trash'), findsOneWidget);
       final saved = c.state!.toJson();
       await fixtures.tapKey(tester, 'import-cancel');

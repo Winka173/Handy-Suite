@@ -11,6 +11,14 @@ class HabitHelpMock extends StatelessWidget {
   Widget build(BuildContext context) {
     final p = HabitPalette.of(context);
     final rows = switch (topic) {
+      'negative' => [
+        ('Break a habit · Sugary drinks', 'Giảm thói quen · Nước ngọt'),
+        ('2 of 3 allowed today', '2/3 lần cho phép hôm nay'),
+        (
+          '+1 incident · None today · Undo',
+          '+1 lần · Hôm nay không có · Hoàn tác',
+        ),
+      ],
       'backup' || 'migration' => [
         ('Back up as ZIP', 'Sao lưu ZIP'),
         ('Bring in a backup or CSV', 'Nhập bản sao lưu hoặc CSV'),
@@ -67,6 +75,28 @@ class HabitHelpMock extends StatelessWidget {
               Padding(
                 padding: const EdgeInsets.symmetric(vertical: 8),
                 child: Text(tr(context, r.$1, r.$2)),
+              ),
+            if (topic == 'negative')
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: 12),
+                child: Row(
+                  children: [
+                    for (final status in [
+                      'withinLimit',
+                      'overLimit',
+                      'unknown',
+                    ])
+                      Padding(
+                        padding: const EdgeInsets.only(right: 16),
+                        child: Bead(
+                          status: status,
+                          fill: 0,
+                          size: 24,
+                          color: p.ochre,
+                        ),
+                      ),
+                  ],
+                ),
               ),
             if ([
               'check-in',

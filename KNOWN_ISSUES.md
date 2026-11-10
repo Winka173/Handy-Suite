@@ -88,7 +88,7 @@ tối đa 30MB.
     screen reader, quyền/nhắc thật, haptics, liên kết policy/support hay file provider.
     Chưa xác minh policy URL công khai; cần supervisor kiểm trước release. Tour và `native_test` mới chạy
     trên BlueStacks (máy giả lập); ảnh `habit-ui-review.pdf` và bằng chứng UI cũ thuộc bản
-    trước. Run 2 (10/11): backup preview/sealed lỗi-mật-khẩu/hỏng/hủy, durable recovery trước Replace, migration schema3/physical2, domain Undo và trash30 ngày đã source/host tested. Provider SAF/iOS Files, nâng cấp/kill/thiếu chỗ thật và IndexedDB/quota/tab-blocked chưa runtime verified; checkpoint/recovery và plain export vẫn không mã hóa, `.hseal` có mã hóa xác thực. Không claim sync hoàn chỉnh (R15/R16).
+    trước. Run 2 (10/11): backup preview/sealed lỗi-mật-khẩu/hỏng/hủy, durable recovery trước Replace, migration schema3/physical2, domain Undo và trash30 ngày đã source/host tested. Provider SAF/iOS Files, nâng cấp/kill/thiếu chỗ thật và IndexedDB/quota/tab-blocked chưa runtime verified; checkpoint/recovery và plain export vẫn không mã hóa, `.hseal` có mã hóa xác thực. Không claim sync hoàn chỉnh (R15/R16). R10/R11 run6: negative incidents/zero/unknown và giới hạn ngày/tuần schema5/physical2, help16 chủ đề đã source/host tested; tuần đang mở/nghỉ không cộng chuỗi, chưa rõ nằm trong mẫu số. Nâng cấp/ranh giới ngày-tuần trên thiết bị và IndexedDB thật vẫn chờ supervisor; giữ backup trước nâng schema.
 
 19. Tự sao lưu (2026-11-02) ghi bản sao lưu của Keep, Recall, Bookmark, Spend, Habit, Docs
     (tệp đã giữ) và Media vào thư mục người dùng chọn, khi mở hoặc rời app, không chạy nền khi

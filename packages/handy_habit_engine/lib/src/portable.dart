@@ -55,7 +55,7 @@ HabitBackupPreview inspectBackup(Uint8List bytes, {bool zip = true}) {
     if (files.length != 2) throw const FormatException('Missing backup files');
     final manifest = jsonDecode(utf8.decode(files['manifest.json']!)) as Map;
     if (manifest['app'] != 'handy-habit' ||
-        ![1, 2, 3, habitSchema].contains(manifest['schema']) ||
+        ![1, 2, 3, 4, habitSchema].contains(manifest['schema']) ||
         (manifest['files'] as Map)['data.json'] !=
             sha256.convert(files['data.json']!).toString())
       throw const FormatException('Backup checksum mismatch');
@@ -272,6 +272,8 @@ List<String> _pauseCells(Pause p, Map<String, String> names) => [
 /// a second table after a blank line, with their own header.
 String csvLogs(HabitState s, String from, String until) {
   final names = {for (final h in s.habits) h.id: h.title};
+  final byId = {for (final h in s.habits) h.id: h};
+  final metadataSent = <String>{};
   final pauses = s.pauses.where(
     (p) => p.until.compareTo(from) >= 0 && p.from.compareTo(until) <= 0,
   );
@@ -306,7 +308,14 @@ String csvLogs(HabitState s, String from, String until) {
         e.note,
         e.updated,
         base64Encode(
-          utf8.encode(jsonEncode({'schema': 1, 'entry': e.toJson()})),
+          utf8.encode(
+            jsonEncode({
+              'schema': byId[e.habit]!.isNegative ? habitSchema : 1,
+              'entry': e.toJson(),
+              if (byId[e.habit]!.isNegative && metadataSent.add(e.habit))
+                'negativeHabit': byId[e.habit]!.toJson(),
+            }),
+          ),
         ),
       ],
   ].map((row) => row.map(_csvCell).join(',')).join('\r\n');
@@ -339,16 +348,32 @@ HabitState importCsvLogs(HabitState current, Uint8List bytes) {
   );
   final logRows = rows.sublist(1, split < 0 ? rows.length : split),
       pauseRows = split < 0 ? <List<String>>[] : rows.sublist(split + 1);
+  final habits = {for (final h in current.habits) h.id: h};
   final entries = {for (final e in current.events) e.id: e};
   for (final row in logRows) {
     if (row.length != expected.length)
       throw const FormatException('Wrong CSV column count');
     final record = jsonDecode(utf8.decode(base64Decode(row.last))) as Map;
-    if (record['schema'] != 1)
+    if (![1, 5].contains(record['schema']))
       throw const FormatException('Unknown log record schema');
     final e = HabitEvent.fromJson(
       Map<String, dynamic>.from(record['entry'] as Map),
     );
+    if (record['schema'] == 5) {
+      final h = record['negativeHabit'] == null
+          ? habits[e.habit]
+          : Habit.fromJson(
+              Map<String, dynamic>.from(record['negativeHabit'] as Map),
+            );
+      if (h == null ||
+          !h.isNegative ||
+          h.id != e.habit ||
+          habits[h.id] != null && !_same(habits[h.id]!.toJson(), h.toJson()))
+        throw const FormatException('Conflicting negative habit in CSV');
+      habits[h.id] = h;
+    } else if (habits[e.habit]?.isNegative == true) {
+      throw const FormatException('Negative log requires its goal metadata');
+    }
     final values = [
       e.id,
       e.habit,
@@ -380,7 +405,7 @@ HabitState importCsvLogs(HabitState current, Uint8List bytes) {
     if (row.length != _pauseHeader.length)
       throw const FormatException('Wrong CSV column count');
     final record = jsonDecode(utf8.decode(base64Decode(row.last))) as Map;
-    if (![2, 3, habitSchema].contains(record['schema']))
+    if (![2, 3, 4, habitSchema].contains(record['schema']))
       throw const FormatException('Unknown pause record schema');
     final p = Pause.fromJson(Map<String, dynamic>.from(record['pause'] as Map));
     // Habit names (column 5) may differ between devices; IDs may not.
@@ -399,6 +424,7 @@ HabitState importCsvLogs(HabitState current, Uint8List bytes) {
     pauses[p.id] = p;
   }
   return current.copy({
+    'habits': habits.values.map((h) => h.toJson()).toList(),
     'events': entries.values.map((e) => e.toJson()).toList(),
     'pauses': pauses.values.map((p) => p.toJson()).toList(),
   });

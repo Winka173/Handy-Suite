@@ -59,6 +59,7 @@ build Android/Windows/Web hay ảnh widget là bằng chứng thiết bị thậ
 Theo dõi hành vi lặp lại và chạy quy trình cá nhân nhiều bước; không thay Recall,
 Keep, Spend hoặc timer đa dụng. [Trạng thái kiểm chứng](handy_habit/FEATURE_MATRIX.md).
 
+- **Giảm thói quen (R10/R11)**: Cơ bản chọn Xây dựng/Giảm; giới hạn Không lần nào hoặc tối đa N lần/ngày-tuần. Hạt hôm nay ghi +1 và Undo; Không có ghi rõ0, không ghi là chưa rõ. Hạt vượt giới hạn trung tính, không đỏ. Tuần cộng số lần và chỉ chốt khi sang ngày thói quen của tuần mới; cần ghi mọi ngày, không tự chia nhỏ giới hạn khi nghỉ. Kỳ chưa rõ vẫn ở mẫu số; mở/nghỉ/bỏ qua không cộng chuỗi. Sửa/ghi bù/note/đưa về chưa rõ trong lịch sử; giới hạn có phiên bản, backup JSON/ZIP/CSV giữ trường mới (schema5). Routine chỉ liên kết thói quen xây dựng. Help EN/VI giải thích riêng. Source/host tested, chưa kiểm thiết bị/browser mới.
 - **Gợi ý** (2026-11-04): thêm thói quen từ 32 gợi ý trong 8 nhóm (sáng, tối, vận động,
   học, ngủ, chăm da, màn hình, việc nhà) hoặc tự đặt; gợi ý chỉ điền sẵn trình sửa. Mẫu
   quy trình: 8, luôn có trong Quy trình mới; chọn mẫu chỉ điền bản nháp.
@@ -88,6 +89,10 @@ Keep, Spend hoặc timer đa dụng. [Trạng thái kiểm chứng](handy_habit/
   chỉnh tương phản sáng/tối, không viết lại màu gốc trong dữ liệu.
 - Runner: timer tiền cảnh, hoàn thành thủ công, pause/resume, bước trước/sau,
   skip, thêm thời gian, ghi chú, auto-next tùy chọn, kết thúc/dừng và tổng kết.
+  R7: fullscreen, tên bước lớn/tiến độ/các bước còn lại; Space tạm dừng/tiếp tục,
+  Enter xong bước ngoài ô nhập, Esc/Back xác nhận tạm dừng và thoát. Tổng kết
+  ghi tên những habit thực sự được check-in, bước bỏ qua, thời gian dự kiến/thực tế;
+  motion theo kit, reduced motion về 0, không trì hoãn check-in.
   Mở lại phiên sẽ khôi phục ở trạng thái tạm dừng; không hứa timer chính xác khi tắt app.
   Android/iOS: rời app khi đang ở màn chạy thì phiên vẫn tạm dừng và một thông báo im
   lặng nói "Bước 3/5 · Đã tạm dừng · còn 2:00" (không đếm ngược); chạm mở `/run/<id>`,
@@ -131,7 +136,7 @@ Keep, Spend hoặc timer đa dụng. [Trạng thái kiểm chứng](handy_habit/
 Schema/CSV và chính sách dữ liệu: [DATA_SCHEMA](handy_habit/DATA_SCHEMA.md).
 Giới hạn nền tảng: [PLATFORM_CAPABILITIES](handy_habit/PLATFORM_CAPABILITIES.md).
 
-Eight independent local-first Flutter apps. Current code/test status: [FEATURE_MATRIX](../FEATURE_MATRIX.md).
+Fourteen independent local-first Flutter apps. Current code/test status: [FEATURE_MATRIX](../FEATURE_MATRIX.md).
 Known limits: [KNOWN_ISSUES](../KNOWN_ISSUES.md). Screenshots: [UI_REVIEW](UI_REVIEW.md).
 
 ## Handy Spend
@@ -240,17 +245,6 @@ Xem [công thức](handy_spend/FORMULAS_AND_ASSUMPTIONS.md) và
   mở bản có sẵn, lưu thêm hoặc xem thông tin để hợp nhất thủ công.
 - Android nhận SEND/SEND_MULTIPLE bằng hàng chờ bền vững; iOS có Share Extension
   dùng App Group; Windows nhận text/URL/.url qua kéo thả; Web có POST Share Target.
-- Diện mạo thói quen (05/11): menu chọn icon/màu, preview, Hủy và Undo; chỉ sửa
-  trường diện mạo, không tạo phiên bản lịch hoặc đổi check-in. Màu hiển thị điều
-  R7: fullscreen, tên bước lớn/tiến độ/các bước còn lại; Space tạm dừng/tiếp tục,
-  Enter xong bước ngoài ô nhập, Esc/Back xác nhận tạm dừng và thoát. Tổng kết
-  ghi tên những habit thực sự được check-in, bước bỏ qua, thời gian dự kiến/thực tế;
-  motion theo kit, reduced motion về 0, không trì hoãn check-in.
-  R7: fullscreen, tên bước lớn/tiến độ/các bước còn lại; Space tạm dừng/tiếp tục,
-  Enter xong bước ngoài ô nhập, Esc/Back xác nhận tạm dừng và thoát. Tổng kết
-  ghi tên những habit thực sự được check-in, bước bỏ qua, thời gian dự kiến/thực tế;
-  motion theo kit, reduced motion về 0, không trì hoãn check-in.
-  chỉnh tương phản sáng/tối, không viết lại màu gốc trong dữ liệu.
   Clipboard chỉ được đọc khi người dùng bấm nút.
 - Bookmark: tiêu đề, mô tả, ghi chú, tags, bộ sưu tập; favorite, pin, read, archive;
   chỉnh sửa/xóa, Undo, mở/copy URL gốc và đếm lần mở.

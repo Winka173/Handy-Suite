@@ -117,12 +117,15 @@ String? nextDueDate(Habit h, String from) {
 class HabitIndex {
   final Map<String, int> totals = {};
   final Set<String> skipped = {};
+  final Set<String> observed = {};
+  Set<String> conflicts = {};
   final List<Pause> pauses;
   Map<String, String> deletedAfter = {};
   HabitIndex(Iterable<HabitEvent> events, [Iterable<Pause> pauses = const []])
     : pauses = List.unmodifiable(pauses) {
     for (final e in events) {
       final k = '${e.habit}:${e.day}';
+      if (!e.skipped) observed.add(k);
       totals[k] = (totals[k] ?? 0) + e.value;
       if (e.skipped) skipped.add(k);
     }
@@ -130,11 +133,14 @@ class HabitIndex {
 
   /// Records and pauses of [s]: what statuses and metrics read.
   factory HabitIndex.of(HabitState s) => HabitIndex(s.events, s.pauses)
+    ..conflicts = dayOperationConflicts(s.operations).keys.toSet()
     ..deletedAfter = {
       for (final t in s.trash.where((t) => t.kind == 'habit'))
         t.entity: t.localDay,
     };
   int value(String habit, String d) => totals['$habit:$d'] ?? 0;
+  bool known(String habit, String d) => observed.contains('$habit:$d');
+  bool conflict(String habit, String d) => conflicts.contains('$habit:$d');
   bool skip(String habit, String d) => skipped.contains('$habit:$d');
   bool paused(String habit, String d) =>
       deletedAfter[habit] != null && d.compareTo(deletedAfter[habit]!) > 0 ||
@@ -160,6 +166,7 @@ Habit archiveHabit(Habit h, String today, bool archived) {
 }
 
 String habitStatus(Habit h, String d, String today, HabitIndex index) {
+  if (h.isNegative) return negativeDayStatus(h, d, today, index);
   if (d.compareTo(today) > 0) return 'future';
   if (!isScheduledOn(h, d)) return 'notScheduled';
   if (index.skip(h.id, d)) return 'skipped';
@@ -191,6 +198,7 @@ HabitMetrics metrics(
   String? from,
 }) {
   date(today);
+  if (h.isNegative) return negativeMetrics(h, today, index, from: from);
   final latest = scheduleOn(h, today);
   if (latest == null) return const HabitMetrics(0, 0, 0, 0, 'days');
   final weekly = latest.kind == 'weekly';
@@ -292,7 +300,8 @@ HabitState record(
       event.day.compareTo(today) > 0 ||
       date(today).difference(date(event.day)).inDays > state.backfill)
     throw const FormatException('Outside editable check-in window');
-  if (!allowExtra &&
+  if (!h.isNegative &&
+      !allowExtra &&
       index.value(h.id, event.day) >=
           (scheduleOn(h, event.day)?.target ?? 1000))
     return state;
@@ -307,6 +316,7 @@ HabitState record(
     event.value,
     event: event.id,
     skipped: event.skipped,
+    observed: h.isNegative ? !event.skipped : null,
   );
 }
 
@@ -318,6 +328,7 @@ HabitState setManualTotal(
   required String today,
   String note = '',
   bool skipped = false,
+  bool observed = true,
 }) {
   final h = s.habits.firstWhere((h) => h.id == habit);
   if (s.isTrashed('habit', h.id) ||
@@ -326,6 +337,10 @@ HabitState setManualTotal(
       date(today).difference(date(d)).inDays > s.backfill ||
       d.compareTo(h.created) < 0)
     throw const FormatException('Date outside backfill window');
+  if (h.isNegative && !observed && (total != 0 || skipped || note.isNotEmpty))
+    throw const FormatException(
+      'Unknown cannot contain incidents, a skip or a note',
+    );
   final linked = s.events
       .where((e) => e.habit == habit && e.day == d && e.source != 'manual')
       .fold(0, (v, e) => v + e.value);
@@ -337,7 +352,7 @@ HabitState setManualTotal(
       .where((e) => !(e.habit == habit && e.day == d && e.source == 'manual'))
       .map((e) => e.toJson())
       .toList();
-  if (total > linked || skipped || note.isNotEmpty)
+  if (total > linked || skipped || note.isNotEmpty || h.isNegative && observed)
     entries.add(
       HabitEvent(
         id: uid(),
@@ -356,6 +371,7 @@ HabitState setManualTotal(
     'setManualTotal',
     total,
     skipped: skipped,
+    observed: h.isNegative ? observed && !skipped : null,
   );
 }
 

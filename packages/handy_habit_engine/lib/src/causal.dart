@@ -124,6 +124,7 @@ HabitState recordDayIntent(
   int value, {
   String? event,
   bool skipped = false,
+  bool? observed,
 }) {
   final entity = '$habit:$day', id = uid();
   final prior = before.operations
@@ -155,6 +156,7 @@ HabitState recordDayIntent(
       'value': value,
       'event': event,
       'skipped': skipped,
+      if (observed != null) 'observed': observed,
     },
   );
   return next.copy({
@@ -249,6 +251,7 @@ void validateOperations(List<HabitOperation> operations) {
       if (op.entity != '${payload['habit']}:${payload['day']}' ||
           !['addDelta', 'setManualTotal'].contains(op.intent) ||
           payload['skipped'] is! bool ||
+          payload.containsKey('observed') && payload['observed'] is! bool ||
           op.before?['observed'] is! List) {
         throw const FormatException('Invalid day intent');
       }

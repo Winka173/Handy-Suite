@@ -57,8 +57,12 @@ class _BeadPainter extends CustomPainter {
       ..style = PaintingStyle.stroke
       ..strokeWidth = stroke;
     switch (status) {
+      case 'withinLimit':
       case 'completed':
         canvas.drawCircle(c, r, Paint()..color = color);
+      case 'overLimit':
+        canvas.drawCircle(c, r * .62, Paint()..color = ring);
+        canvas.drawCircle(c, r - stroke / 2, ringPaint);
       case 'partial':
         canvas.drawCircle(c, r - stroke / 2, ringPaint);
         canvas.drawArc(
@@ -198,7 +202,13 @@ class TodayBead extends StatelessWidget {
         ? Colors.black
         : Colors.white;
     final paused = status == 'paused';
-    final label = paused
+    final label = habit.isNegative
+        ? tr(
+            context,
+            'Log an incident for ${habit.title}. ${statusLabel(context, status)}',
+            'Ghi một lần cho ${habit.title}. ${statusLabel(context, status)}',
+          )
+        : paused
         ? tr(
             context,
             '${habit.title}: paused today. Mark it done anyway',
@@ -259,7 +269,15 @@ class TodayBead extends StatelessWidget {
                 else if (paused)
                   Icon(Icons.pause, size: 18, color: c.muted)
                 else if (habit.type != 'binary' && status != 'skipped')
-                  Icon(Icons.add, size: 20, color: color),
+                  Icon(
+                    Icons.add,
+                    size: 20,
+                    color: status == 'withinLimit'
+                        ? checkInk
+                        : status == 'overLimit'
+                        ? c.muted
+                        : color,
+                  ),
               ],
             ),
           ),

@@ -381,7 +381,7 @@ void main() {
         pause('2024-01-06', '2024-01-07', id: 'q', habits: ['k']),
       ],
     );
-    test('schema 1 data reads with no pauses and is written as schema 4', () {
+    test('schema 1 data reads with no pauses and is written as schema 5', () {
       final old = s.toJson()
         ..['schema'] = 1
         ..remove('pauses');

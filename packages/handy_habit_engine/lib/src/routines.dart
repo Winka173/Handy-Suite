@@ -74,7 +74,7 @@ HabitState completeStep(
               !state.isTrashed('habit', h.id),
         )
         .firstOrNull;
-    if (h != null) {
+    if (h != null && !h.isNegative) {
       final index = HabitIndex(events),
           target = scheduleOn(h, today)?.target ?? 1000;
       if (addExtra && h.type != 'binary' || index.value(h.id, today) < target) {

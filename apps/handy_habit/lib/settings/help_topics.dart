@@ -228,6 +228,28 @@ const habitHelpTopics = [
       ),
     ],
   ),
+  HabitHelpTopic('negative', 'Positive vs negative habits', 'Thói quen xây dựng và giảm bớt', [
+    (
+      'Choose Build a habit to reach a minimum, or Break a habit to count incidents against an upper limit. For example: at most 3 sugary drinks per day, or no smoking at all.',
+      'Chọn Xây dựng thói quen để đạt tối thiểu, hoặc Giảm thói quen để ghi số lần so với giới hạn tối đa. Ví dụ: tối đa 3 lần uống nước ngọt mỗi ngày, hoặc không hút thuốc.',
+    ),
+    (
+      'For a negative habit, tap today’s bead to log one incident, even beyond the limit. Undo retracts that entry. None today records an explicit zero; no record means unknown, never success.',
+      'Với thói quen giảm bớt, chạm hạt hôm nay để ghi một lần, kể cả khi vượt giới hạn. Hoàn tác gỡ lần đó. Hôm nay không có ghi rõ số 0; không ghi là chưa rõ, không tự tính đạt.',
+    ),
+    (
+      'A coloured bead means a recorded day within the limit; a neutral filled-outline mark means over the limit, and a hollow bead means unknown. Today stays provisional until the next habit day. Tomorrow is a fresh start.',
+      'Hạt màu là ngày đã ghi trong giới hạn; dấu đầy có viền trung tính là vượt giới hạn, hạt rỗng là chưa rõ. Hôm nay chỉ tạm tính đến khi sang ngày thói quen tiếp theo. Mai là khởi đầu mới.',
+    ),
+    (
+      'Weekly limits sum incidents, not completed days. A week closes at your week boundary and needs a record for every day. Unknown stays in the denominator. Paused/skipped weeks earn no streak, and limits are never prorated. Change a weekly limit at the next week boundary.',
+      'Giới hạn tuần cộng số lần, không đếm ngày hoàn thành. Tuần chốt ở ranh giới tuần và cần ghi mỗi ngày. Chưa rõ vẫn nằm trong mẫu số. Tuần nghỉ/bỏ qua không cộng chuỗi; không chia nhỏ giới hạn. Đổi giới hạn tuần từ ranh giới tuần tới.',
+    ),
+    (
+      'Open a date in history to correct the incident total, add a note, confirm none or return it to unknown. Negative habits cannot be linked to routine steps.',
+      'Mở ngày trong lịch sử để sửa số lần, thêm ghi chú, xác nhận không có hoặc đưa về chưa rõ. Không liên kết thói quen giảm bớt với bước quy trình.',
+    ),
+  ]),
 ];
 
 String foldHabitHelp(String value) {

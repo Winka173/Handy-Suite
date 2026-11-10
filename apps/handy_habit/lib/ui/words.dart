@@ -97,6 +97,14 @@ String clockText(int seconds) {
 }
 
 String statusLabel(BuildContext context, String status) => switch (status) {
+  'withinLimit' => tr(context, 'Within the limit', 'Trong giới hạn'),
+  'overLimit' => tr(context, 'Over the limit', 'Vượt giới hạn'),
+  'unknown' => tr(
+    context,
+    'Unknown · nothing recorded',
+    'Chưa rõ · chưa ghi nhận',
+  ),
+  'conflict' => tr(context, 'Needs review', 'Cần xem lại'),
   'completed' => tr(context, 'Done', 'Đã xong'),
   'partial' => tr(context, 'Part done', 'Làm dở'),
   'skipped' => tr(context, 'Skipped, with a reason', 'Bỏ qua có lý do'),
@@ -119,4 +127,50 @@ String dayText(BuildContext context, String iso, String today) {
     return '${w[0].toUpperCase()}${w.substring(1)}';
   }
   return formatDay(context, iso);
+}
+
+String negativeLimitText(BuildContext context, NegativeGoal g) => g.limit == 0
+    ? tr(
+        context,
+        'None at all per ${g.window == 'week' ? 'week' : 'day'}',
+        'Không lần nào mỗi ${g.window == 'week' ? 'tuần' : 'ngày'}',
+      )
+    : tr(
+        context,
+        'At most ${figure(context, g.limit)} per ${g.window == 'week' ? 'week' : 'day'}',
+        'Tối đa ${figure(context, g.limit)} lần mỗi ${g.window == 'week' ? 'tuần' : 'ngày'}',
+      );
+String negativeLine(BuildContext context, Habit h, String d, HabitIndex index) {
+  final g = negativeGoalOn(h, d);
+  if (g == null) return statusLabel(context, 'notScheduled');
+  final p = negativePeriod(h, d, d, index), weekly = g.window == 'week';
+  final status = negativeDayStatus(h, d, d, index);
+  final budget = tr(
+    context,
+    '${figure(context, p.total)} of ${figure(context, g.limit)} allowed ${weekly ? 'this week' : 'today'}',
+    '${figure(context, p.total)}/${figure(context, g.limit)} lần cho phép ${weekly ? 'tuần này' : 'hôm nay'}',
+  );
+  final word = status == 'overLimit'
+      ? tr(
+          context,
+          weekly
+              ? 'Over this week’s limit — next week is new'
+              : "Over today's limit — tomorrow is new",
+          weekly
+              ? 'Vượt giới hạn tuần này — tuần sau là khởi đầu mới'
+              : 'Vượt giới hạn hôm nay — mai là khởi đầu mới',
+        )
+      : status == 'unknown' ||
+            status == 'conflict' ||
+            status == 'paused' ||
+            status == 'skipped'
+      ? statusLabel(context, status)
+      : tr(
+          context,
+          'Within the limit · period still open',
+          'Trong giới hạn · kỳ chưa chốt',
+        );
+  return status == 'unknown' && !weekly
+      ? '${negativeLimitText(context, g)} · $word'
+      : '$budget · $word';
 }

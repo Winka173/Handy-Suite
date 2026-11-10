@@ -54,6 +54,9 @@ class Schedule {
 
 class Habit {
   final String id, title, note, type, unit, category, created;
+  final String direction;
+  final List<NegativeGoal> negativeGoals;
+  bool get isNegative => direction == 'reduce';
   final int icon, color, priority;
   final bool archived;
   final String? end;
@@ -67,6 +70,8 @@ class Habit {
     required List<Schedule> schedules,
     this.note = '',
     this.type = 'binary',
+    this.direction = 'build',
+    List<NegativeGoal> negativeGoals = const [],
     this.unit = '',
     this.category = '',
     this.icon = 0xe876,
@@ -76,10 +81,37 @@ class Habit {
     this.end,
     this.archivedFrom,
     List<Json> archivedPeriods = const [],
-  }) : archivedPeriods = List.unmodifiable(
+  }) : negativeGoals = List.unmodifiable(negativeGoals),
+       archivedPeriods = List.unmodifiable(
          archivedPeriods.map((p) => Map<String, dynamic>.unmodifiable(p)),
        ),
        schedules = List.unmodifiable(schedules) {
+    if (!['build', 'reduce'].contains(direction) ||
+        isNegative &&
+            (type != 'count' ||
+                negativeGoals.isEmpty ||
+                negativeGoals.length > 1000) ||
+        !isNegative && negativeGoals.isNotEmpty)
+      throw const FormatException('Invalid habit direction/goals');
+    var goalFrom = '';
+    NegativeGoal? previousGoal;
+    for (final g in negativeGoals) {
+      if (g.from.compareTo(created) < 0 ||
+          g.from.compareTo(goalFrom) <= 0 ||
+          goalFrom.isEmpty && g.from != created)
+        throw const FormatException('Invalid negative goal history');
+      if (previousGoal != null &&
+          (g.window == 'week' && date(g.from).weekday != g.weekStart ||
+              previousGoal.window == 'week' &&
+                  date(g.from).weekday != previousGoal.weekStart))
+        throw const FormatException(
+          'Negative weekly changes require week boundary',
+        );
+      goalFrom = g.from;
+      previousGoal = g;
+    }
+    if (negativeGoals.map((g) => g.id).toSet().length != negativeGoals.length)
+      throw const FormatException('Duplicate negative goal ID');
     if (archivedFrom != null) date(archivedFrom!);
     for (final p in archivedPeriods) {
       if (date(text(p['until'])).isBefore(date(text(p['from']))))
@@ -116,6 +148,9 @@ class Habit {
     'title': title,
     'note': note,
     'type': type,
+    if (isNegative) 'direction': direction,
+    if (isNegative)
+      'negativeGoals': negativeGoals.map((g) => g.toJson()).toList(),
     'unit': unit,
     'category': category,
     'created': created,
@@ -136,6 +171,10 @@ class Habit {
     schedules: objects(j['schedules']).map(Schedule.fromJson).toList(),
     note: text(j['note'] ?? ''),
     type: text(j['type']),
+    direction: text(j['direction'] ?? 'build'),
+    negativeGoals: objects(
+      j['negativeGoals'] ?? [],
+    ).map(NegativeGoal.fromJson).toList(),
     unit: text(j['unit'] ?? ''),
     category: text(j['category'] ?? ''),
     icon: integer(j['icon'] ?? 0xe876, max: 0x10ffff),
@@ -523,7 +562,7 @@ class HabitState {
 
   factory HabitState.fromJson(Json j) {
     if (j['app'] != 'handy-habit' ||
-        ![1, 2, 3, 4].contains(j['schema']) ||
+        ![1, 2, 3, 4, 5].contains(j['schema']) ||
         j['schema'] == 1 && j['pauses'] != null) {
       throw const FormatException('Unsupported Habit backup/schema');
     }
@@ -633,7 +672,8 @@ class HabitState {
       if (h == null ||
           e.day.compareTo(h.created) < 0 ||
           h.type == 'binary' && e.value != 0 && e.value != 1000 ||
-          h.type == 'count' && e.value % 1000 != 0)
+          h.type == 'count' && e.value % 1000 != 0 ||
+          h.isNegative && e.source != 'manual')
         throw const FormatException('Incompatible entry');
       final k = '${e.habit}:${e.day}';
       totals[k] = (totals[k] ?? 0) + e.value;
@@ -693,7 +733,8 @@ class HabitState {
   void validateMapping(RoutineStep step) {
     final habit = habits.where((h) => h.id == step.habit).firstOrNull;
     if (habit != null &&
-        (habit.type == 'binary' && step.linkedValue != 1000 ||
+        (habit.isNegative ||
+            habit.type == 'binary' && step.linkedValue != 1000 ||
             habit.type == 'count' && step.linkedValue % 1000 != 0))
       throw const FormatException(
         'Linked value is incompatible with habit type',

@@ -370,10 +370,10 @@ class _PracticeTodayState extends State<PracticeToday> {
           Positioned(
             left: 12,
             right: 12,
-            top: window!.center.dy <= phoneHeight / 2
+            top: m.step != 0 && window!.center.dy <= phoneHeight / 2
                 ? window!.bottom + 16
                 : null,
-            bottom: window!.center.dy > phoneHeight / 2
+            bottom: (m.step == 0 || window!.center.dy > phoneHeight / 2)
                 ? phoneHeight - window!.top + 16
                 : null,
             child: IgnorePointer(

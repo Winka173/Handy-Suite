@@ -24,6 +24,65 @@ void main() {
     schedules: [Schedule(id: 'v', from: '2024-01-01')],
   );
   test(
+    'schema5 negative observations and causal Undo survive SQLite reopening',
+    () async {
+      final c = HabitController(open: () async => store);
+      await c.load();
+      await c.change(
+        (s) => s.copy({
+          'habits': [
+            Habit(
+              id: 'n',
+              title: 'Less sugar',
+              type: 'count',
+              direction: 'reduce',
+              created: '2024-01-01',
+              schedules: [Schedule(id: 's', from: '2024-01-01')],
+              negativeGoals: [
+                NegativeGoal(
+                  id: 'g',
+                  from: '2024-01-01',
+                  window: 'week',
+                  limit: 3000,
+                ),
+              ],
+            ).toJson(),
+          ],
+        }),
+      );
+      await c.change(
+        (s) => setManualTotal(
+          s,
+          'n',
+          '2024-01-07',
+          0,
+          today: '2024-01-08',
+          note: 'None at dinner',
+        ),
+      );
+      final read = await NativeHabitStore(path).read();
+      expect(read.habits.single.negativeGoals.single.window, 'week');
+      expect(read.events.single.note, 'None at dinner');
+      expect(HabitIndex.of(read).known('n', '2024-01-07'), isTrue);
+      expect(HabitIndex.of(read).known('n', '2024-01-06'), isFalse);
+      c.dispose();
+      final reopened = HabitController(
+        open: () async => NativeHabitStore(path),
+      );
+      await reopened.load();
+      expect(reopened.canUndo, isTrue);
+      await reopened.undo();
+      expect(
+        HabitIndex.of(
+          (await NativeHabitStore(path).read()),
+        ).known('n', '2024-01-07'),
+        isFalse,
+      );
+      expect(await store.integrity(), 'ok');
+      reopened.dispose();
+    },
+  );
+  test(
     'schema0 migration, FK/WAL, persisted reopening and stale revision guard',
     () async {
       final first = await store.read();
@@ -86,7 +145,7 @@ void main() {
     },
   );
   test(
-    'schema 1 data on disk reads, takes a pause and is written as schema 4',
+    'schema 1 data on disk reads, takes a pause and is written as schema 5',
     () async {
       await store.read();
       // A database written before pauses: its state row says schema 1.

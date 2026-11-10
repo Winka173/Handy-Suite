@@ -240,6 +240,17 @@ class InsightsPage extends StatelessWidget {
                                     ),
                                   ),
                                 ),
+                                if (h.isNegative)
+                                  Text(
+                                    tr(
+                                      context,
+                                      'Within the limit in closed periods; unknown periods included in the denominator.',
+                                      'Trong giới hạn của kỳ đã chốt; mẫu số gồm kỳ chưa rõ.',
+                                    ),
+                                    style: theme.textTheme.bodySmall?.copyWith(
+                                      color: c.muted,
+                                    ),
+                                  ),
                                 const SizedBox(height: 4),
                                 Text(
                                   tr(
@@ -362,8 +373,12 @@ class _Weeks extends StatelessWidget {
     final c = HandyColors.of(context);
     final s = scope.state;
     final days = <String, Set<String>>{};
+    final negatives = s.habits
+        .where((h) => h.isNegative)
+        .map((h) => h.id)
+        .toSet();
     for (final e in s.events) {
-      if (e.value <= 0 ||
+      if ((e.value <= 0 && !(negatives.contains(e.habit) && !e.skipped)) ||
           e.day.compareTo(from) < 0 ||
           e.day.compareTo(until) > 0)
         continue;
