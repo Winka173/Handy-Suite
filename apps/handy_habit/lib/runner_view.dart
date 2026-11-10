@@ -4,36 +4,52 @@ import 'ui/words.dart';
 
 /// Asks for a step's note; null when the person backed out.
 Future<String?> askStepNote(BuildContext context, String note) async {
-  final text = TextEditingController(text: note);
-  final result = await showAdaptiveDialog<String>(
+  return showAdaptiveDialog<String>(
     context: context,
-    builder: (context) => AlertDialog.adaptive(
-      title: Text(tr(context, 'Note for this step', 'Ghi chú cho bước này')),
-      content: Material(
-        type: MaterialType.transparency,
-        child: TextField(
-          key: const Key('step-note'),
-          controller: text,
-          autofocus: true,
-          maxLines: 3,
-          minLines: 1,
-          maxLength: 4096,
-        ),
-      ),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.pop(context),
-          child: Text(tr(context, 'Cancel', 'Hủy')),
-        ),
-        FilledButton(
-          onPressed: () => Navigator.pop(context, text.text.trim()),
-          child: Text(tr(context, 'Save', 'Lưu')),
-        ),
-      ],
-    ),
+    builder: (_) => _StepNoteDialog(note: note),
   );
-  text.dispose();
-  return result;
+}
+
+class _StepNoteDialog extends StatefulWidget {
+  final String note;
+  const _StepNoteDialog({required this.note});
+  @override
+  State<_StepNoteDialog> createState() => _StepNoteDialogState();
+}
+
+class _StepNoteDialogState extends State<_StepNoteDialog> {
+  late final text = TextEditingController(text: widget.note);
+  @override
+  void dispose() {
+    text.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) => AlertDialog.adaptive(
+    title: Text(tr(context, 'Note for this step', 'Ghi chú cho bước này')),
+    content: Material(
+      type: MaterialType.transparency,
+      child: TextField(
+        key: const Key('step-note'),
+        controller: text,
+        autofocus: true,
+        maxLines: 3,
+        minLines: 1,
+        maxLength: 4096,
+      ),
+    ),
+    actions: [
+      TextButton(
+        onPressed: () => Navigator.pop(context),
+        child: Text(tr(context, 'Cancel', 'Hủy')),
+      ),
+      FilledButton(
+        onPressed: () => Navigator.pop(context, text.text.trim()),
+        child: Text(tr(context, 'Save', 'Lưu')),
+      ),
+    ],
+  );
 }
 
 Future<bool> confirmAbort(BuildContext context) => confirmHandy(
@@ -178,9 +194,13 @@ class RunnerView extends StatelessWidget {
                         const SizedBox(height: HandySpace.xl),
                         Semantics(
                           header: true,
-                          child: Text(
-                            step.plan.title,
-                            style: theme.textTheme.headlineMedium,
+                          child: HandySwap(
+                            duration: HandyMotion.short,
+                            child: Text(
+                              step.plan.title,
+                              key: ValueKey(step.plan.id),
+                              style: theme.textTheme.headlineMedium,
+                            ),
                           ),
                         ),
                         if (step.plan.note.isNotEmpty)
@@ -272,7 +292,35 @@ class RunnerView extends StatelessWidget {
                               onExtra: acting ? null : onExtra,
                             ),
                           ),
-                        const SizedBox(height: HandySpace.xl),
+                        const SizedBox(height: HandySpace.l),
+                        Semantics(
+                          liveRegion: true,
+                          child: Text(
+                            tr(
+                              context,
+                              '${session.steps.where((s) => s.status != 'pending').length} of ${session.steps.length} steps resolved',
+                              '${session.steps.where((s) => s.status != 'pending').length}/${session.steps.length} bước đã xử lý',
+                            ),
+                          ),
+                        ),
+                        ExpansionTile(
+                          tilePadding: EdgeInsets.zero,
+                          title: Text(
+                            tr(context, 'Remaining steps', 'Các bước còn lại'),
+                          ),
+                          children: [
+                            for (final s in session.steps.where(
+                              (s) => s.status == 'pending',
+                            ))
+                              ListTile(
+                                title: Text(s.plan.title),
+                                subtitle: Text(
+                                  minutesText(context, s.plan.seconds),
+                                ),
+                              ),
+                          ],
+                        ),
+                        const SizedBox(height: HandySpace.s),
                         Wrap(
                           spacing: HandySpace.s,
                           runSpacing: HandySpace.s,
@@ -334,7 +382,10 @@ class RunnerView extends StatelessWidget {
                         ),
                       ),
                     )
-                  : Row(
+                  : Wrap(
+                      spacing: HandySpace.s,
+                      runSpacing: HandySpace.s,
+                      crossAxisAlignment: WrapCrossAlignment.center,
                       children: [
                         OutlinedButton(
                           key: const Key('routine-pause'),
@@ -354,12 +405,10 @@ class RunnerView extends StatelessWidget {
                           ),
                         ],
                         const SizedBox(width: HandySpace.s),
-                        Expanded(
-                          child: FilledButton(
-                            key: const Key('routine-complete-step'),
-                            onPressed: acting || !pending ? null : onComplete,
-                            child: Text(tr(context, 'Done', 'Xong bước')),
-                          ),
+                        FilledButton(
+                          key: const Key('routine-complete-step'),
+                          onPressed: acting || !pending ? null : onComplete,
+                          child: Text(tr(context, 'Done', 'Xong bước')),
                         ),
                       ],
                     ),
@@ -386,7 +435,8 @@ class _Track extends StatelessWidget {
               flex: s.plan.seconds == 0
                   ? 30
                   : (s.plan.seconds ~/ 10).clamp(30, 1000),
-              child: Container(
+              child: AnimatedContainer(
+                duration: HandyMotion.of(context, HandyMotion.short),
                 height: i == session.cursor ? 10 : 6,
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(3),

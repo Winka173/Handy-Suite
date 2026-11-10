@@ -1,8 +1,10 @@
+import 'dart:convert';
 import 'package:handy_habit_engine/handy_habit_engine.dart';
 import 'package:handy_ui/kit.dart';
 import '../scope.dart';
 import '../ui/form.dart';
 import '../ui/words.dart';
+import 'draft_steps.dart';
 
 HabitState replaceRoutine(HabitState state, Routine r) => state.copy({
   'routines': [
@@ -10,7 +12,7 @@ HabitState replaceRoutine(HabitState state, Routine r) => state.copy({
   ],
 });
 
-/// A routine's name and when it is planned. Steps are added on its page.
+/// One atomic routine draft, including its ordered steps.
 Future<String?> openRoutineEditor(
   BuildContext context,
   HabitScope scope, [
@@ -26,45 +28,57 @@ Widget buildRoutineEditor(
   Routine? old,
 ]) {
   String? id;
+  final baseline = old == null ? null : jsonEncode(old.toJson());
   return HabitForm(
     result: () => id,
     title: old == null
         ? tr(context, 'New routine', 'Quy trình mới')
         : tr(context, 'Edit ${old.title}', 'Sửa ${old.title}'),
     fields: const [
-      HabitField(
-        'title',
-        'Name',
-        'Tên',
-        helpEn: 'Morning, Before bed, Warm-up…',
-        helpVi: 'Buổi sáng, Trước khi ngủ, Khởi động…',
-      ),
+      HabitField('title', 'Name', 'Tên'),
       HabitField(
         'weekdays',
         'On',
         'Vào',
         kind: FieldKind.weekdays,
+        advanced: true,
         required: false,
         helpEn: 'No day chosen: it is only started by hand.',
         helpVi: 'Không chọn ngày: chỉ bắt đầu khi bạn bấm.',
       ),
-      HabitField('time', 'Around', 'Khoảng', kind: FieldKind.time),
-      HabitField('category', 'Group', 'Nhóm', required: false),
+      HabitField(
+        'time',
+        'Around',
+        'Khoảng',
+        kind: FieldKind.time,
+        advanced: true,
+      ),
+      HabitField('category', 'Group', 'Nhóm', required: false, advanced: true),
       HabitField(
         'note',
         'Note',
         'Ghi chú',
         kind: FieldKind.note,
+        advanced: true,
         required: false,
       ),
     ],
     initial: {
+      'steps': [
+        for (final step in old?.steps ?? <RoutineStep>[]) step.toJson(),
+      ],
       'title': old?.title ?? '',
       'weekdays': old?.weekdays ?? const [1, 2, 3, 4, 5, 6, 7],
       'time': old?.time ?? '07:00',
       'category': old?.category ?? '',
       'note': old?.note ?? '',
     },
+    draftContent: (context, values, update) => DraftSteps(
+      scope: scope,
+      values: values,
+      onChanged: update,
+      templates: old == null,
+    ),
     save: (v) async {
       final r = Routine(
         id: old?.id ?? uid(),
@@ -73,20 +87,28 @@ Widget buildRoutineEditor(
         time: v['time'] as String,
         category: v['category'] as String,
         note: v['note'] as String,
-        steps: old?.steps ?? [],
+        steps: [
+          for (final step in v['steps'] as List)
+            RoutineStep.fromJson(Map<String, dynamic>.from(step as Map)),
+        ],
         icon: old?.icon ?? 0xe037,
         color: old?.color ?? 0xffb42318,
         archived: old?.archived ?? false,
       );
-      await scope.controller.change(
-        (s) => s.copy({
+      await scope.controller.change((s) {
+        final latest = s.liveRoutines.where((x) => x.id == old?.id).firstOrNull;
+        if (old != null &&
+            (latest == null || jsonEncode(latest.toJson()) != baseline)) {
+          throw StateError('Routine changed; reopen the editor');
+        }
+        return s.copy({
           'routines': [
             for (final x in s.routines)
               if (x.id != r.id) x.toJson(),
             r.toJson(),
           ],
-        }),
-      );
+        });
+      });
       id = r.id;
     },
   );
@@ -94,12 +116,12 @@ Widget buildRoutineEditor(
 
 /// One step: how long it usually takes, how short it may get, and whether
 /// finishing it counts towards a habit.
-Future<void> openStepEditor(
+Future<RoutineStep?> editRoutineStep(
   BuildContext context,
-  HabitScope scope,
-  Routine r, [
+  HabitScope scope, [
   RoutineStep? old,
 ]) async {
+  RoutineStep? result;
   final habits = {
     for (final h in scope.state.liveHabits.where(
       (h) => !h.archived || h.id == old?.habit,
@@ -196,7 +218,7 @@ Future<void> openStepEditor(
       final h = scope.habit(linked);
       final value = h == null || h.type == 'binary' ? 1000 : v['value'] as int;
       final secs = seconds(v['minutes'] as int? ?? 0);
-      final step = RoutineStep(
+      result = RoutineStep(
         id: old?.id ?? uid(),
         title: v['title'] as String,
         note: v['note'] as String,
@@ -209,28 +231,9 @@ Future<void> openStepEditor(
         habit: linked,
         linkedValue: value,
       );
-      await scope.controller.change((s) {
-        final latest = s.routines.firstWhere((x) => x.id == r.id);
-        return replaceRoutine(
-          s,
-          latest.copy({
-            'steps': [
-              for (final x in latest.steps)
-                if (x.id == step.id) step.toJson() else x.toJson(),
-              if (old == null) step.toJson(),
-            ],
-          }),
-        );
-      });
     },
   );
-  if (saved && context.mounted)
-    scope.announce(
-      context,
-      old == null
-          ? tr(context, 'Step added.', 'Đã thêm bước.')
-          : tr(context, 'Step saved.', 'Đã lưu bước.'),
-    );
+  return saved ? result : null;
 }
 
 /// The routine's steps as one strip, each as long as its minutes.

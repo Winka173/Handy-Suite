@@ -5,6 +5,7 @@ import '../ui/words.dart';
 import 'routine_editor.dart';
 import 'run.dart';
 import '../habits/habit_appearance.dart';
+import '../ui/capped.dart';
 
 /// A routine on a page of its own (phones and web links).
 class RoutinePage extends StatelessWidget {
@@ -37,8 +38,7 @@ class RoutinePage extends StatelessWidget {
   );
 }
 
-/// The steps in order as one strip of minutes, then each step to edit,
-/// move or remove; Start and the quick version at the top.
+/// A saved plan and its recent sessions; Edit opens the whole draft.
 class RoutineView extends StatelessWidget {
   final HabitScope scope;
   final Routine routine;
@@ -50,63 +50,19 @@ class RoutineView extends StatelessWidget {
     this.showTitle = true,
   });
 
-  Future<void> move(BuildContext context, int from, int to) =>
-      scope.write(context, (s) {
-        final latest = s.routines.firstWhere((v) => v.id == routine.id);
-        final steps = latest.steps.toList();
-        steps.insert(to.clamp(0, steps.length - 1), steps.removeAt(from));
-        return replaceRoutine(
-          s,
-          latest.copy({
-            'steps': [for (final x in steps) x.toJson()],
-          }),
-        );
-      });
-
-  Future<void> remove(BuildContext context, RoutineStep step) async {
-    final ok = await confirmHandy(
-      context,
-      title: tr(context, 'Remove ${step.title}?', 'Bỏ bước ${step.title}?'),
-      message: tr(
-        context,
-        'Past runs keep it.',
-        'Các phiên đã chạy vẫn giữ bước này.',
-      ),
-      confirmLabel: tr(context, 'Remove', 'Bỏ'),
-      destructive: true,
-    );
-    if (!ok || !context.mounted) return;
-    await scope.write(context, (s) {
-      final latest = s.routines.firstWhere((v) => v.id == routine.id);
-      return replaceRoutine(
-        s,
-        latest.copy({
-          'steps': [
-            for (final x in latest.steps)
-              if (x.id != step.id) x.toJson(),
-          ],
-        }),
-      );
-    }, done: (c) => tr(c, 'Step removed.', 'Đã bỏ bước.'));
-  }
-
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final c = HandyColors.of(context);
     final r = routine;
-    final runs = scope.state.sessions
-        .where((s) => s.routine == r.id)
-        .toList()
-        .reversed
-        .take(8)
-        .toList();
+    final runs = scope.state.sessions.where((s) => s.routine == r.id).toList()
+      ..sort((a, b) => b.started.compareTo(a.started));
     final ready = !r.archived && r.steps.isNotEmpty;
     return ListView(
       padding: const EdgeInsets.all(HandySpace.l),
       children: [
         Align(
-          alignment: AlignmentDirectional.topStart,
+          alignment: AlignmentDirectional.topCenter,
           child: ConstrainedBox(
             constraints: const BoxConstraints(maxWidth: HandySpace.content),
             child: Column(
@@ -161,68 +117,94 @@ class RoutineView extends StatelessWidget {
                           ? () => startRoutine(context, scope, r)
                           : null,
                       icon: const Icon(Icons.play_arrow),
-                      label: Text(tr(context, 'Start', 'Bắt đầu')),
+                      label: Text(
+                        scope.activeSession?.routine == r.id
+                            ? tr(context, 'Resume', 'Tiếp tục')
+                            : tr(context, 'Start', 'Bắt đầu'),
+                      ),
                     ),
                   ],
                 ),
                 HandyLabel(
                   tr(context, 'Steps', 'Các bước'),
                   trailing: TextButton.icon(
-                    key: const Key('step-add'),
-                    onPressed: () => openStepEditor(context, scope, r),
-                    icon: const Icon(Icons.add, size: 18),
-                    label: Text(tr(context, 'Add step', 'Thêm bước')),
+                    key: const Key('routine-edit-steps'),
+                    onPressed: () => openRoutineEditor(context, scope, r),
+                    icon: const Icon(Icons.edit_outlined, size: 18),
+                    label: Text(tr(context, 'Edit steps', 'Sửa các bước')),
                   ),
                 ),
                 if (r.steps.isEmpty)
                   HandyNotice(
                     tr(
                       context,
-                      'Add the first step to start this routine.',
-                      'Thêm bước đầu tiên để bắt đầu quy trình.',
+                      'Edit this routine to add its first step.',
+                      'Sửa quy trình để thêm bước đầu tiên.',
                     ),
                   )
                 else
-                  Card(
-                    clipBehavior: Clip.antiAlias,
-                    child: ReorderableListView.builder(
-                      shrinkWrap: true,
-                      physics: const NeverScrollableScrollPhysics(),
-                      buildDefaultDragHandles: false,
-                      itemCount: r.steps.length,
-                      onReorderItem: (from, to) => move(context, from, to),
-                      itemBuilder: (context, i) => _StepRow(
-                        key: ValueKey(r.steps[i].id),
-                        scope: scope,
-                        routine: r,
-                        index: i,
-                        onMove: (to) => move(context, i, to),
-                        onRemove: () => remove(context, r.steps[i]),
-                      ),
+                  Capped(
+                    count: r.steps.length,
+                    max: 6,
+                    name: 'routine-steps',
+                    builder: (context, shown) => Column(
+                      children: [
+                        for (final step in r.steps.take(shown))
+                          ListTile(
+                            title: Text(step.title),
+                            subtitle: Text(
+                              [
+                                minutesText(context, step.seconds),
+                                if (scope.habit(step.habit) case final h?)
+                                  tr(
+                                    context,
+                                    'Counts for ${h.title}',
+                                    'Tính cho ${h.title}',
+                                  ),
+                                if (!step.canSkip)
+                                  tr(
+                                    context,
+                                    'Cannot skip',
+                                    'Không thể bỏ qua',
+                                  ),
+                                if (step.note.isNotEmpty) step.note,
+                              ].join(' · '),
+                            ),
+                          ),
+                      ],
                     ),
                   ),
                 if (runs.isNotEmpty)
                   HandySection(
                     title: tr(context, 'Recent runs', 'Các lần chạy gần đây'),
                     children: [
-                      for (final s in runs)
-                        ListTile(
-                          key: Key('run-${s.id}'),
-                          title: Text(formatDay(context, s.day)),
-                          subtitle: Text(statusLabel(context, s.status)),
-                          trailing: Text(
-                            '${clockText(s.elapsed)} / ${clockText(s.planned)}',
-                            style: theme.textTheme.bodyMedium?.copyWith(
-                              fontFeatures: tabular,
-                            ),
-                          ),
-                          onTap: () => s.status == 'active'
-                              ? openSession(context, scope, s.id)
-                              : Navigator.pushNamed(
-                                  context,
-                                  '/session/${s.id}',
+                      Capped(
+                        count: runs.length,
+                        max: 4,
+                        name: 'routine-runs',
+                        builder: (context, shown) => Column(
+                          children: [
+                            for (final s in runs.take(shown))
+                              ListTile(
+                                key: Key('run-${s.id}'),
+                                title: Text(formatDay(context, s.day)),
+                                subtitle: Text(statusLabel(context, s.status)),
+                                trailing: Text(
+                                  '${clockText(s.elapsed)} / ${clockText(s.planned)}',
+                                  style: theme.textTheme.bodyMedium?.copyWith(
+                                    fontFeatures: tabular,
+                                  ),
                                 ),
+                                onTap: () => s.status == 'active'
+                                    ? openSession(context, scope, s.id)
+                                    : Navigator.pushNamed(
+                                        context,
+                                        '/session/${s.id}',
+                                      ),
+                              ),
+                          ],
                         ),
+                      ),
                     ],
                   ),
               ],
@@ -230,101 +212,6 @@ class RoutineView extends StatelessWidget {
           ),
         ),
       ],
-    );
-  }
-}
-
-class _StepRow extends StatelessWidget {
-  final HabitScope scope;
-  final Routine routine;
-  final int index;
-  final ValueChanged<int> onMove;
-  final VoidCallback onRemove;
-  const _StepRow({
-    super.key,
-    required this.scope,
-    required this.routine,
-    required this.index,
-    required this.onMove,
-    required this.onRemove,
-  });
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final c = HandyColors.of(context);
-    final step = routine.steps[index];
-    final h = scope.habit(step.habit);
-    final meta = [
-      minutesText(context, step.seconds),
-      if (step.seconds > 0 && step.minimum < step.seconds)
-        tr(
-          context,
-          'at least ${minutesText(context, step.minimum)}',
-          'tối thiểu ${minutesText(context, step.minimum)}',
-        ),
-      if (!step.required) tr(context, 'may be left out', 'có thể bỏ khi gấp'),
-      if (h != null)
-        tr(context, 'counts for ${h.title}', 'tính cho ${h.title}'),
-    ].join(' · ');
-    return InkWell(
-      key: Key('step-${step.id}'),
-      onTap: () => openStepEditor(context, scope, routine, step),
-      child: Padding(
-        padding: const EdgeInsets.fromLTRB(HandySpace.s, 8, 0, 8),
-        child: Row(
-          children: [
-            ReorderableDragStartListener(
-              index: index,
-              child: Padding(
-                padding: const EdgeInsets.all(HandySpace.s),
-                child: Icon(
-                  Icons.drag_indicator,
-                  color: c.muted,
-                  semanticLabel: tr(
-                    context,
-                    'Drag to reorder',
-                    'Kéo để đổi thứ tự',
-                  ),
-                ),
-              ),
-            ),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(step.title, style: theme.textTheme.bodyLarge),
-                  Text(
-                    meta,
-                    style: theme.textTheme.bodySmall?.copyWith(color: c.muted),
-                  ),
-                ],
-              ),
-            ),
-            HandyMenuButton(
-              items: [
-                HandyMenuItem(
-                  Icons.arrow_upward,
-                  tr(context, 'Move up', 'Lên trên'),
-                  index == 0 ? null : () => onMove(index - 1),
-                ),
-                HandyMenuItem(
-                  Icons.arrow_downward,
-                  tr(context, 'Move down', 'Xuống dưới'),
-                  index == routine.steps.length - 1
-                      ? null
-                      : () => onMove(index + 1),
-                ),
-                HandyMenuItem(
-                  Icons.delete_outline,
-                  tr(context, 'Remove step', 'Bỏ bước'),
-                  onRemove,
-                  destructive: true,
-                ),
-              ],
-            ),
-          ],
-        ),
-      ),
     );
   }
 }

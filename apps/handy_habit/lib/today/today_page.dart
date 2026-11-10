@@ -350,10 +350,13 @@ class _Habits extends StatelessWidget {
                 ),
               ),
               Flexible(
-                child: TextButton(
-                  key: const Key('today-all-habits'),
-                  onPressed: () => Navigator.pushNamed(context, '/habits'),
-                  child: Text(tr(context, 'All habits', 'Tất cả')),
+                child: Align(
+                  alignment: AlignmentDirectional.centerEnd,
+                  child: TextButton(
+                    key: const Key('today-all-habits'),
+                    onPressed: () => Navigator.pushNamed(context, '/habits'),
+                    child: Text(tr(context, 'All habits', 'Tất cả')),
+                  ),
                 ),
               ),
             ],
@@ -481,9 +484,12 @@ class _Routines extends StatelessWidget {
                 ),
               ),
               Flexible(
-                child: TextButton(
-                  onPressed: () => Navigator.pushNamed(context, '/routines'),
-                  child: Text(tr(context, 'All routines', 'Tất cả')),
+                child: Align(
+                  alignment: AlignmentDirectional.centerEnd,
+                  child: TextButton(
+                    onPressed: () => Navigator.pushNamed(context, '/routines'),
+                    child: Text(tr(context, 'All routines', 'Tất cả')),
+                  ),
                 ),
               ),
             ],

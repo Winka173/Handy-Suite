@@ -27,6 +27,8 @@ Future<void> shot(WidgetTester t, String name, {bool settle = true}) async {
   final dir = Platform.environment['SHOTS_DIR'] ?? 'build/shots';
   Directory(dir).createSync(recursive: true);
   if (settle) {
+    await t.pump(const Duration(milliseconds: 400));
+    await t.pumpAndSettle();
     await t.runAsync(
       () => Future<void>.delayed(const Duration(milliseconds: 200)),
     );
@@ -428,6 +430,52 @@ void main() {
             await shot(t, '$prefix-progress');
             expect(t.takeException(), isNull, reason: prefix);
             expect(c.state!.habits, hasLength(6));
+          });
+        }
+      }
+    }
+  }
+
+  for (final width in [320.0, 390.0, 1440.0]) {
+    for (final locale in ['en', 'vi']) {
+      for (final theme in ['light', 'dark']) {
+        for (final scale in [1.0, 1.5]) {
+          final prefix =
+              'r4-${width.toInt()}-$locale-$theme-${scale == 1 ? '100' : '150'}';
+          testWidgets(prefix, (t) async {
+            final c = await boot(
+              t,
+              Size(width, width == 1440 ? 900 : 844),
+              locale: locale,
+              theme: theme,
+              scale: scale,
+            );
+            await shot(t, '$prefix-today');
+            await area(t, 2);
+            await shot(t, '$prefix-library');
+            final navigator = t.state<NavigatorState>(
+              find.byType(Navigator).first,
+            );
+            navigator.pushNamed('/routine/morning');
+            await t.pumpAndSettle();
+            await shot(t, '$prefix-detail');
+            navigator.pushNamed('/routine/morning/edit');
+            await t.pumpAndSettle();
+            await shot(t, '$prefix-builder');
+            await fixtures.tapKey(t, 'sheet-cancel');
+            await fixtures.tapKey(t, 'routine-start');
+            await shot(t, '$prefix-runner');
+            await fixtures.tapKey(t, 'routine-pause');
+            await shot(t, '$prefix-paused');
+            for (var i = 0; i < c.state!.sessions.last.steps.length; i++) {
+              await fixtures.tapKey(t, 'routine-complete-step');
+            }
+            await fixtures.tapKey(t, 'runner-finish');
+            await shot(t, '$prefix-summary');
+            expect(t.takeException(), isNull, reason: prefix);
+            final run = c.state!.sessions.last;
+            expect(run.status, 'finished');
+            expect(run.steps.every((s) => s.status == 'completed'), true);
           });
         }
       }

@@ -199,6 +199,10 @@ class RoutineRow extends StatelessWidget {
     final theme = Theme.of(context);
     final c = HandyColors.of(context);
     final r = routine;
+    final recent = scope.state.sessions.where((s) => s.routine == r.id).toList()
+      ..sort((a, b) => b.started.compareTo(a.started));
+    final latest = recent.firstOrNull;
+    final resume = scope.activeSession?.routine == r.id;
     final ranToday = scope.state.sessions.any(
       (s) =>
           s.routine == r.id && s.day == scope.today && s.status == 'finished',
@@ -207,11 +211,64 @@ class RoutineRow extends StatelessWidget {
       if (r.weekdays.isNotEmpty) r.time,
       tr(context, '${r.steps.length} steps', '${r.steps.length} bước'),
       minutesText(context, r.planned),
-      if (ranToday) tr(context, 'done today', 'hôm nay đã chạy'),
+      if (latest != null)
+        tr(
+          context,
+          'Last run: ${formatDay(context, latest.day)} · ${statusLabel(context, latest.status)}',
+          'Phiên gần nhất: ${formatDay(context, latest.day)} · ${statusLabel(context, latest.status)}',
+        )
+      else
+        tr(context, 'Not run yet', 'Chưa chạy'),
     ].join(' · ');
     final start = r.steps.isEmpty || r.archived
         ? null
         : () => startRoutine(context, scope, r);
+    final hasIcon = habitIcons.any(
+      (i) => i.codePoint == r.icon && i != Icons.check,
+    );
+    final details = Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Icon(
+              hasIcon ? habitIcon(r.icon) : Icons.format_list_numbered,
+              size: 20,
+              color: hasIcon
+                  ? habitInk(r.color, theme.colorScheme.surface)
+                  : c.muted,
+            ),
+            const SizedBox(width: HandySpace.s),
+            Expanded(
+              child: Text(
+                r.title,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                style: theme.textTheme.bodyLarge,
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 2),
+        Text(meta, style: theme.textTheme.bodySmall?.copyWith(color: c.muted)),
+      ],
+    );
+    final label = Text(
+      resume
+          ? tr(context, 'Resume', 'Tiếp tục')
+          : tr(context, 'Start', 'Bắt đầu'),
+    );
+    final action = primary && !ranToday
+        ? FilledButton(
+            key: Key('start-${r.id}'),
+            onPressed: start,
+            child: label,
+          )
+        : OutlinedButton(
+            key: Key('start-${r.id}'),
+            onPressed: start,
+            child: label,
+          );
     return Material(
       color: selected ? c.select : Colors.transparent,
       child: InkWell(
@@ -224,65 +281,32 @@ class RoutineRow extends StatelessWidget {
             HandySpace.m,
             10,
           ),
-          child: Row(
-            children: [
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
+          child: LayoutBuilder(
+            builder: (context, constraints) {
+              final stacked =
+                  constraints.maxWidth /
+                      MediaQuery.textScalerOf(context).scale(1) <
+                  280;
+              return stacked
+                  ? Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
-                        Icon(
-                          habitIcons.any(
-                                (i) =>
-                                    i.codePoint == r.icon && i != Icons.check,
-                              )
-                              ? habitIcon(r.icon)
-                              : Icons.format_list_numbered,
-                          size: 20,
-                          color:
-                              habitIcons.any(
-                                (i) =>
-                                    i.codePoint == r.icon && i != Icons.check,
-                              )
-                              ? habitInk(r.color, theme.colorScheme.surface)
-                              : c.muted,
-                        ),
-                        const SizedBox(width: HandySpace.s),
-                        Flexible(
-                          child: Text(
-                            r.title,
-                            maxLines: 2,
-                            overflow: TextOverflow.ellipsis,
-                            style: theme.textTheme.bodyLarge,
-                          ),
+                        details,
+                        const SizedBox(height: HandySpace.s),
+                        Align(
+                          alignment: AlignmentDirectional.centerEnd,
+                          child: action,
                         ),
                       ],
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      meta,
-                      style: theme.textTheme.bodySmall?.copyWith(
-                        color: c.muted,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(width: HandySpace.s),
-              if (primary && !ranToday)
-                FilledButton(
-                  key: Key('start-${r.id}'),
-                  onPressed: start,
-                  child: Text(tr(context, 'Start', 'Bắt đầu')),
-                )
-              else
-                OutlinedButton(
-                  key: Key('start-${r.id}'),
-                  onPressed: start,
-                  child: Text(tr(context, 'Start', 'Bắt đầu')),
-                ),
-            ],
+                    )
+                  : Row(
+                      children: [
+                        Expanded(child: details),
+                        const SizedBox(width: HandySpace.s),
+                        action,
+                      ],
+                    );
+            },
           ),
         ),
       ),

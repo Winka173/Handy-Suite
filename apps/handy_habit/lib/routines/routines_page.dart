@@ -1,8 +1,6 @@
-import 'package:handy_habit_engine/handy_habit_engine.dart';
 import 'package:handy_ui/kit.dart';
 import '../scope.dart';
 import '../today/rows.dart';
-import '../ui/words.dart';
 import '../ui/capped.dart';
 import 'routine_editor.dart';
 import 'routine_view.dart';
@@ -23,7 +21,7 @@ class _RoutinesPageState extends State<RoutinesPage> {
   @override
   Widget build(BuildContext context) => LayoutBuilder(
     builder: (context, size) {
-      final wide = size.maxWidth >= 1000;
+      final wide = size.maxWidth >= 1100;
       final s = scope.state;
       final routines = [...s.liveRoutines]
         ..sort(
@@ -34,11 +32,6 @@ class _RoutinesPageState extends State<RoutinesPage> {
       final open = wide
           ? scope.routine(selected) ?? routines.firstOrNull
           : null;
-      final vi = isVi(context);
-      final taken = {for (final r in s.routines) r.title};
-      final templates = routineTemplates(
-        vietnamese: vi,
-      ).where((t) => !taken.contains(t.title)).toList();
       final list = ListView(
         padding: const EdgeInsets.fromLTRB(
           HandySpace.l,
@@ -107,46 +100,6 @@ class _RoutinesPageState extends State<RoutinesPage> {
                                   context,
                                   '/routine/${r.id}',
                                 ),
-                        ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          if (templates.isNotEmpty)
-            HandySection(
-              title: tr(context, 'Start from one of these', 'Bắt đầu từ mẫu'),
-              children: [
-                Capped(
-                  count: templates.length,
-                  max: 4,
-                  name: 'routine-templates',
-                  builder: (context, shown) => Column(
-                    children: [
-                      for (final t in templates.take(shown))
-                        ListTile(
-                          key: Key('template-${t.title}'),
-                          title: Text(t.title),
-                          subtitle: Text(
-                            t.steps.map((x) => x.title).join(' · '),
-                          ),
-                          trailing: TextButton(
-                            onPressed: () => scope.write(
-                              context,
-                              (s) => s.copy({
-                                'routines': [
-                                  ...s.routines.map((x) => x.toJson()),
-                                  t.toJson(),
-                                ],
-                              }),
-                              done: (c) => tr(
-                                c,
-                                '${t.title} added; change it as you like.',
-                                'Đã thêm ${t.title}; sửa tùy ý.',
-                              ),
-                            ),
-                            child: Text(tr(context, 'Use', 'Dùng')),
-                          ),
                         ),
                     ],
                   ),

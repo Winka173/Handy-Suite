@@ -61,7 +61,7 @@ Keep, Spend hoặc timer đa dụng. [Trạng thái kiểm chứng](handy_habit/
 
 - **Gợi ý** (2026-11-04): thêm thói quen từ 32 gợi ý trong 8 nhóm (sáng, tối, vận động,
   học, ngủ, chăm da, màn hình, việc nhà) hoặc tự đặt; gợi ý chỉ điền sẵn trình sửa. Mẫu
-  quy trình: 8.
+  quy trình: 8, luôn có trong Quy trình mới; chọn mẫu chỉ điền bản nháp.
 - Thói quen: tạo/sửa, sắp xếp, tìm/lọc/nhóm, nhân bản, archive/unarchive, xác nhận
   xóa vào Thùng rác30 ngày (khôi phục ID/lịch sử/liên kết, số ngày còn lại, xóa vĩnh viễn có xác nhận và tự dọn khi mở). Archive riêng không hết hạn. Binary, count, thời lượng và lượng có đơn vị; mục tiêu, ghi chú, icon/màu/ưu tiên.
 - Lịch hằng ngày, chọn thứ, số ngày/tuần, mỗi N ngày; ngày bắt đầu/kết thúc, phiên
@@ -77,9 +77,15 @@ Keep, Spend hoặc timer đa dụng. [Trạng thái kiểm chứng](handy_habit/
   làm tròn lên quota × (7 − ngày nghỉ)/7, tuần nghỉ trọn thì bỏ qua. Không nhắc trong
   kỳ nghỉ (kỳ nghỉ cho mọi thói quen tắt cả nhắc quy trình). Hôm nay hiện "Đang nghỉ
   đến …" và Kết thúc sớm; hạt ngày nghỉ là đĩa nhạt.
-- Quy trình: template offline có thể sửa, builder kéo/sắp bước, thời lượng/tối
-  thiểu/ưu tiên, bước bắt buộc/tùy chọn, liên kết lượng vào habit. Phiên lưu bản
-  kế hoạch riêng; sửa template không làm đổi lịch sử.
+- Quy trình (R7): thư viện có Start/Resume, phiên gần nhất, thời lượng dự kiến;
+  danh sách dài và lịch sử phiên mở đủ tại chỗ. Chi tiết mở một builder bản nháp:
+  thêm/sửa/xóa/kéo bước hoặc nút lên/xuống, thời lượng/tối thiểu/ưu tiên,
+  bắt buộc/được bỏ qua, liên kết lượng vào habit. Lưu toàn bản nháp một lần;
+  Hủy/Back/Esc hỏi khi chưa lưu, lỗi giữ nháp, từ chối ghi đè routine đã đổi.
+  Phiên giữ kế hoạch riêng; sửa quy trình không đổi lịch sử.
+- Diện mạo thói quen (05/11): menu chọn icon/màu, preview, Hủy và Undo; chỉ sửa
+  trường diện mạo, không tạo phiên bản lịch hoặc đổi check-in. Màu hiển thị điều
+  chỉnh tương phản sáng/tối, không viết lại màu gốc trong dữ liệu.
 - Runner: timer tiền cảnh, hoàn thành thủ công, pause/resume, bước trước/sau,
   skip, thêm thời gian, ghi chú, auto-next tùy chọn, kết thúc/dừng và tổng kết.
   Mở lại phiên sẽ khôi phục ở trạng thái tạm dừng; không hứa timer chính xác khi tắt app.
@@ -215,6 +221,10 @@ Xem [công thức](handy_spend/FORMULAS_AND_ASSUMPTIONS.md) và
   dùng App Group; Windows nhận text/URL/.url qua kéo thả; Web có POST Share Target.
 - Diện mạo thói quen (05/11): menu chọn icon/màu, preview, Hủy và Undo; chỉ sửa
   trường diện mạo, không tạo phiên bản lịch hoặc đổi check-in. Màu hiển thị điều
+  R7: fullscreen, tên bước lớn/tiến độ/các bước còn lại; Space tạm dừng/tiếp tục,
+  Enter xong bước ngoài ô nhập, Esc/Back xác nhận tạm dừng và thoát. Tổng kết
+  ghi tên những habit thực sự được check-in, bước bỏ qua, thời gian dự kiến/thực tế;
+  motion theo kit, reduced motion về 0, không trì hoãn check-in.
   chỉnh tương phản sáng/tối, không viết lại màu gốc trong dữ liệu.
   Clipboard chỉ được đọc khi người dùng bấm nút.
 - Bookmark: tiêu đề, mô tả, ghi chú, tags, bộ sưu tập; favorite, pin, read, archive;

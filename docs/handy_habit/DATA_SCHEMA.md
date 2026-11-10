@@ -1,6 +1,6 @@
 # Data schema and portability
 
-Data schema 3 (2026-11-10; causal revisions, clock policy, trash); physical SQLite/IndexedDB version 2; isolated native `handy-habit.sqlite` / browser IndexedDB `handy-habit`.
+Data schema 4 (2026-11-10; custom versioned day boundaries; schema3 causal revisions/trash retained); physical SQLite/IndexedDB version 2; isolated native `handy-habit.sqlite` / browser IndexedDB `handy-habit`.
 No other app database is opened. Native tables: habits, events, routines, sessions,
 operations (unique actor/sequence, entity index), singleton state metadata, and a device-local recovery table. Validated entity JSON plus indexed event habit/date/source,
 habit foreign key, unique linked (session,step), and session status index.
@@ -41,7 +41,7 @@ only requested by the two settings switches.
 `reason` (<= 200 chars, may be empty), `habits` (IDs; empty = every habit). At most
 1000 pauses; every named habit must exist. Overlapping pauses are allowed and read as
 their union. Migration: data written as schema 1 has no `pauses` and reads as an empty
-list; current reads normalize schemas 1/2 to 3 and the next save writes 3. Schema 1 carrying `pauses`, or an unsupported future schema, is refused without reset. Older apps refuse schema 3.
+list; current reads normalize schemas 1/2/3 to4 and the next save writes4. Schema 1 carrying `pauses`, or an unsupported future schema, is refused without reset. Older apps refuse schema4; keep a backup before upgrading.
 
 Counting rule. A paused day for a habit is a scheduled day inside a pause that covers
 it. Status order is future, not scheduled, skipped, completed, partial, **paused**,
@@ -60,7 +60,7 @@ then open/missed: a paused day done (or begun) anyway shows as done (or begun).
   finished pause is unchanged. Permanently deleting a habit removes it from pauses and removes a
   pause left with no habit (never widening it to every habit).
 
-Portability. JSON/ZIP backups carry pauses (manifest schema 3; schema 1/2 backups still restore). Merge gives pauses new IDs and remaps their habit IDs. Markdown/PDF reports
+Portability. JSON/ZIP backups carry pauses (manifest schema4; schema1/2/3 backups still restore). Merge gives pauses new IDs and remaps their habit IDs. Markdown/PDF reports
 list pauses that overlap the range with the counting rule.
 
 JSON/ZIP are full backups. ZIP has manifest.json + data.json, SHA-256 and empty assets
@@ -71,13 +71,13 @@ Replace requires preview plus confirmation and durable pre-replace recovery. Imp
 CSV log columns: id,habit_id,habit,local_date,value_milli,source,skipped,session_id,
 step_id,note,updated_at,record_b64. When pauses overlap the range, a blank line and a
 second table follow: pause_id,from,until,scope(all|chosen),habit_ids(space separated),
-habits,reason,record_b64 with record `{schema:3,pause}` (schema 2 records remain readable). Event records stay schema 1, so
+habits,reason,record_b64 with record `{schema:4,pause}` (schema2/3 records remain readable). Event records stay schema 1, so
 a CSV without pauses is unchanged. Canonical schema+entry in record_b64 must match visible
 fields (habit names excepted); formula-like display cells escaped, UTF-8 multiline notes round-trip. Log import
 requires existing habit IDs, deduplicates identical IDs and refuses conflicts/orphans
 atomically. Use ZIP/JSON to transfer full apps. Markdown/PDF are reports, not backups.
 PDF embeds Vietnamese Noto fonts; >10k events use CSV/ZIP. Charts disclose last 52
-periods; range exports remain complete. Detail history currently shows 30 rows plus export; pagination is planned in R6.
+periods; range exports remain complete. Detail history starts at30 rows and Show all expands every older entry in place; dated goals remain visible.
 
 Future routine mappings and pending active-session mappings are checked against the
 habit's tracking type during import/commit. Fractional count/binary mappings refuse
@@ -90,7 +90,7 @@ are explicitly shown as inactive in the runner and create no event.
 
 Top-level `operations`, `clockPolicies`, `trash`, `tombstones`, `undoBatch` and validated `entityOrder` (habit/routine IDs) supplement the unchanged entity lists. Native operations have their own indexed table; the other new metadata lives in state. Operations carry format 1, stable ID, actor/writer incarnation, actor sequence, Lamport counter, parents, kind/entity, batch, intent, before/after content hashes and bounded row payloads. Neither actor counters nor conflict ordering use wall-clock time. Restart creates a new writer incarnation, avoiding sequence reuse after replacing an older backup; persisted operation identities never change.
 
-Legacy migration creates each event's revision ID from its canonical payload hash and an actor from its logical event ID. IDs, milli values, local days, source/session/step provenance, notes, updated instants and session event hashes are preserved. Schema 1 first supplies empty pauses. Parser accepts every emitted version 1/2/3, and refuses unknown versions before a commit. New clock policies snapshot zone, midnight boundary and effective instant; old events never recompute their days. Custom day boundaries are not enabled yet.
+Legacy migration creates each event's revision ID from its canonical payload hash and an actor from its logical event ID. IDs, milli values, local days, source/session/step provenance, notes, updated instants and session event hashes are preserved. Schema 1 first supplies empty pauses. Parser accepts every emitted version1/2/3/4, and refuses unknown versions before a commit. Clock policies snapshot zone, dayBoundaryMinutes0–1439 and an increasing effective instant; old events never recompute their days. Schema3 policies migrate unchanged (midnight). Schema4 enables custom boundaries from Settings/Calendar. `habitDayAt` chooses the effective version by instant, constructs a local cutoff, shifts nonexistent times forward by the DST gap and chooses the first repeated occurrence in either hemisphere. Check-ins, reminder eligibility and trash share this logical day. A foreground timer refreshes views within one minute of the cutoff, and app resume refreshes immediately.
 
 App mutations append row revisions in the same transaction as their materialized changes. Manual commands additionally retain `addDelta` versus `setManualTotal` and exactly observed contribution IDs. Deterministic union is idempotent, rejects ID/sequence/hash/ancestry collisions and exposes concurrent absolute-edit or skip/add candidates without choosing a timestamp winner. This is storage groundwork; cross-device projection/resolution and providers belong to R15/R16.
 
@@ -113,3 +113,13 @@ Merge remains a copy import, remapping entity/step/trash IDs and valid links, pr
 Before Replace, the app saves the complete current state in a separate durable device-local recovery record under revision CAS. Only after that transaction succeeds does the replacement transaction run, with another CAS. Failure rolls back live data; recovery stays available after restart via Settings / Your data / Recover before last replace. A failed checkpoint stops replacement. Recovery restores at a new local revision, preserving the checkpoint. Ordinary backups/merge do not export or import the recovery store, and replacement leaves it intact. The next pre-replace checkpoint overwrites it. Local database, recovery and plain exports are unencrypted; `.hseal` files are authenticated/encrypted. No new cryptography was introduced.
 
 Manual habit/routine order persists independently of SQLite row IDs or IndexedDB key ordering. Order-only edits append guarded order revisions; domain Undo restores their IDs/order and refuses changed membership or newer order. Old data without entityOrder preserves the repository order seen before migration.
+
+
+## R5/R6 presentation preferences
+
+`settings.sidebarCollapsed` and `settings.reducedMotion` persist shell/motion choices without
+creating check-in Undo batches. OS reduced motion always wins. `settings.habitDayParts` maps
+habit IDs to auto/morning/afternoon/evening/anytime; auto infers the earliest enabled habit
+reminder or linked live routine time. Copy-merge remaps these habit IDs and retains the
+receiver's clock/settings. No historical event date, unit, appearance value or target is
+rewritten by presentation changes. Calendar edits append an effective clock-policy version.

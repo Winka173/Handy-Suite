@@ -77,6 +77,14 @@ class HabitForm extends StatefulWidget {
   final Map<String, dynamic> initial;
   final Future<void> Function(Map<String, dynamic>) save;
   final Object? Function()? result;
+
+  /// Additional structured draft data participates in the same save/dirty guard.
+  final Widget Function(
+    BuildContext,
+    Map<String, dynamic>,
+    ValueChanged<Map<String, dynamic>>,
+  )?
+  draftContent;
   const HabitForm({
     super.key,
     required this.title,
@@ -85,6 +93,7 @@ class HabitForm extends StatefulWidget {
     required this.save,
     this.saveLabel = '',
     this.result,
+    this.draftContent,
   });
   @override
   State<HabitForm> createState() => _HabitFormState();
@@ -92,6 +101,15 @@ class HabitForm extends StatefulWidget {
 
 class _HabitFormState extends State<HabitForm> {
   // A clock refresh or an inherited rebuild must not move the draft's baseline.
+  late final Future<void> Function(Map<String, dynamic>) saveDraft;
+  late final Object? Function()? savedResult;
+  @override
+  void initState() {
+    super.initState();
+    saveDraft = widget.save;
+    savedResult = widget.result;
+  }
+
   late final original = Map<String, dynamic>.from(widget.initial);
   late final values = Map<String, dynamic>.from(original);
   late final text = {
@@ -109,11 +127,13 @@ class _HabitFormState extends State<HabitForm> {
   String error = '';
   bool leaving = false, asking = false;
 
-  bool get dirty => widget.fields.any(
-    (f) => text.containsKey(f.id)
-        ? text[f.id]!.text != _initial(f)
-        : jsonEncode(values[f.id]) != jsonEncode(original[f.id]),
-  );
+  bool get dirty =>
+      jsonEncode(values) != jsonEncode(original) ||
+      widget.fields.any(
+        (f) => text.containsKey(f.id)
+            ? text[f.id]!.text != _initial(f)
+            : jsonEncode(values[f.id]) != jsonEncode(original[f.id]),
+      );
 
   Future<void> leave() async {
     if (busy || asking) return;
@@ -172,7 +192,7 @@ class _HabitFormState extends State<HabitForm> {
   bool shown(HabitField f) => f.when?.call(values) ?? true;
 
   Future<void> submit() async {
-    if (busy) return;
+    if (busy || leaving) return;
     errors.clear();
     final out = Map<String, dynamic>.from(values);
     for (final f in widget.fields) {
@@ -238,11 +258,11 @@ class _HabitFormState extends State<HabitForm> {
       error = '';
     });
     try {
-      await widget.save(out);
+      await saveDraft(out);
       if (mounted) {
         setState(() => leaving = true);
         WidgetsBinding.instance.addPostFrameCallback((_) {
-          if (mounted) Navigator.pop(context, widget.result?.call() ?? true);
+          if (mounted) Navigator.pop(context, savedResult?.call() ?? true);
         });
       }
     } catch (e) {
@@ -288,6 +308,21 @@ class _HabitFormState extends State<HabitForm> {
         children: [
           for (final f in widget.fields)
             if (!f.advanced && shown(f)) _field(f),
+          if (widget.draftContent != null)
+            AbsorbPointer(
+              absorbing: busy,
+              child: widget.draftContent!(
+                context,
+                values,
+                (patch) => setState(() {
+                  values.addAll(patch);
+                  for (final entry in patch.entries) {
+                    if (text.containsKey(entry.key))
+                      text[entry.key]!.text = '${entry.value}';
+                  }
+                }),
+              ),
+            ),
           if (widget.fields.any(
             (f) => f.advanced || f.advancedOptions.isNotEmpty,
           )) ...[

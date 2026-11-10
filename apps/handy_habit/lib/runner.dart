@@ -35,7 +35,7 @@ class _RunnerState extends State<RoutineRunner> with WidgetsBindingObserver {
   bool foreground = true, noticed = false;
   HabitIndex? cachedIndex;
   int? indexedRevision;
-  bool recoveryFailed = false;
+  bool recoveryFailed = false, askingExit = false;
   HabitController get c => widget.controller;
   RoutineSession get session =>
       c.state!.sessions.firstWhere((s) => s.id == widget.sessionId);
@@ -141,14 +141,15 @@ class _RunnerState extends State<RoutineRunner> with WidgetsBindingObserver {
     unawaited(notices.show(s, RunNotice(run.id, title, body), widget.clock()));
   }
 
-  Future<void> perform(Future<void> Function() operation) async {
-    if (acting) return;
+  Future<bool> perform(Future<void> Function() operation) async {
+    if (acting || !ready) return false;
     setState(() => acting = true);
     try {
       await operation();
       // A save may cross the background transition. Persist the stopped timer
       // after it finishes, before accepting another foreground action.
       if (!foreground && session.status == 'active') await pause();
+      return true;
     } catch (_) {
       if (mounted)
         ScaffoldMessenger.of(context).showSnackBar(
@@ -161,6 +162,7 @@ class _RunnerState extends State<RoutineRunner> with WidgetsBindingObserver {
             ),
           ),
         );
+      return false;
     } finally {
       if (mounted) setState(() => acting = false);
     }
@@ -249,14 +251,34 @@ class _RunnerState extends State<RoutineRunner> with WidgetsBindingObserver {
     watch.reset();
   });
   Future<void> leave() async {
-    if (leaving || acting) return;
-    await perform(pause);
-    if (!mounted) return;
+    if (leaving || acting || askingExit || !ready) return;
+    askingExit = true;
+    final ok = await confirmHandy(
+      context,
+      title: t('Pause and exit?', 'Tạm dừng và thoát?'),
+      message: t(
+        'Your progress is saved. Resume this run from Routines or Today.',
+        'Tiến độ được lưu. Tiếp tục phiên từ Quy trình hoặc Hôm nay.',
+      ),
+      confirmLabel: t('Pause and exit', 'Tạm dừng và thoát'),
+    );
+    askingExit = false;
+    if (!ok || !mounted) return;
+    if (!await perform(pause) || !mounted) return;
     setState(() => leaving = true);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) Navigator.pop(context);
     });
   }
+
+  bool get shortcutsAllowed =>
+      ready &&
+      !acting &&
+      !askingExit &&
+      ModalRoute.of(context)?.isCurrent == true &&
+      FocusManager.instance.primaryFocus?.context
+              ?.findAncestorWidgetOfExactType<EditableText>() ==
+          null;
 
   Future<void> toggle() => perform(watch.isRunning ? pause : resume);
 
@@ -337,11 +359,20 @@ class _RunnerState extends State<RoutineRunner> with WidgetsBindingObserver {
       },
       child: CallbackShortcuts(
         bindings: {
+          const SingleActivator(LogicalKeyboardKey.escape): () {
+            if (shortcutsAllowed) unawaited(leave());
+          },
           const SingleActivator(LogicalKeyboardKey.space): () {
-            if (current.status == 'pending') unawaited(toggle());
+            if (shortcutsAllowed && current.status == 'pending')
+              unawaited(toggle());
           },
           const SingleActivator(LogicalKeyboardKey.enter): () {
-            if (!acting && current.status == 'pending') unawaited(complete());
+            if (!shortcutsAllowed) return;
+            if (session.steps.every((s) => s.status != 'pending')) {
+              unawaited(finish());
+            } else if (current.status == 'pending') {
+              unawaited(complete());
+            }
           },
         },
         child: Focus(

@@ -120,7 +120,10 @@ tối đa 30MB.
     hàng loạt và chụp liên tiếp mới kiểm thử trên host.
 27. Handy Habit: màn chạy quy trình vẫn tạm dừng khi app rời màn hình; trên Android/iOS một
     thông báo im lặng nói đang dừng ở đâu và còn bao lâu (không đếm ngược). Chế độ nghỉ và
-    thông báo này mới kiểm thử trên host.
+    thông báo này mới kiểm thử trên host. R7/run4: builder lưu cả bản nháp,
+    kéo/nút lên-xuống, dirty guard, runner exit-confirm/shortcuts/recovery/summary
+    đã source/widget/host-render tested; kill/reopen, IME, keyboard/SR, drag và
+    back/swipe trên thiết bị chưa kiểm chứng. Không hứa timer chạy khi app bị tắt.
 28. Handy Spend (schema 2): ảnh hóa đơn, chia tiền, gợi ý khoản định kỳ, mẫu sao kê và "Dự báo
     nếu…" mới kiểm thử trên host; camera, chia sẻ/mở hóa đơn, lưu hóa đơn trong IndexedDB và
     bản sao lưu ZIP 85 MB chưa chạy trên thiết bị hay trình duyệt.

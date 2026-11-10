@@ -12,7 +12,14 @@ replay, so sánh và recipe. Khả năng phát hành store chưa hoàn tất.
 Handy Habit là app độc lập thứ chín: thói quen, lịch/streak, routine runner,
 insights, nhắc cục bộ và backup. Run 2 (10/11): schema3/physical2, Undo domain bền, preview/khôi phục có bản phục hồi trước thay thế và Thùng rác30 ngày; source/host tested, chưa device/browser. Trạng thái từng chức năng và bằng
 chứng nằm tại [Habit matrix](docs/handy_habit/FEATURE_MATRIX.md). Kiểm thử host,
-emulator, thiết bị thật và store được ghi riêng.
+emulator, thiết bị thật và store được ghi riêng. Run3 (10/11), R5/R6: ba khu
+Today/Routines/Progress, sidebar gập/nhớ, routes/shortcuts, check-in + Undo, nhóm buổi,
+Show all tại chỗ, dirty-exit guard và lịch sử theo mục tiêu hiệu lực. Schema4 giữ ngày
+lịch sử, thêm giờ bắt đầu ngày có phiên bản; physical2. Host/widget/screenshots đã kiểm;
+browser URL/back-forward và thiết bị thật vẫn cần supervisor. R7 (run4): thư viện
+Start/Resume/phiên gần nhất, builder bản nháp lưu một lần/dirty guard, runner xác nhận
+thoát + shortcuts + tổng kết habit được ghi; host/widget và ma trận ảnh EN/VI/sáng/tối/
+320–1440/text1–1.5; kill/background/keyboard/SR thật chờ supervisor.
 
 | App / nhóm            | Chức năng đã code                                                                                                                                                                                                                                            | Kiểm thử có bằng chứng                                                                                                                                                                                                     | Còn thiếu                                                                                                                          |
 | --------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------- |
