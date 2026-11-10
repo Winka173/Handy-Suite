@@ -86,7 +86,7 @@ void main() {
     },
   );
   test(
-    'schema 1 data on disk reads, takes a pause and is written as schema 3',
+    'schema 1 data on disk reads, takes a pause and is written as schema 4',
     () async {
       await store.read();
       // A database written before pauses: its state row says schema 1.
@@ -125,7 +125,7 @@ void main() {
               )
               as Map;
       raw.close();
-      expect(payload['schema'], 3);
+      expect(payload['schema'], habitSchema);
       expect((payload['pauses'] as List).single['reason'], 'Huế');
     },
   );

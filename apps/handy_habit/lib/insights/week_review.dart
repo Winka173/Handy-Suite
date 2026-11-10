@@ -6,13 +6,7 @@ import '../today/beads.dart';
 import '../ui/words.dart';
 
 Future<void> openWeekReview(BuildContext context, HabitScope scope) =>
-    Navigator.push(
-      context,
-      MaterialPageRoute<void>(
-        settings: const RouteSettings(name: '/review'),
-        builder: (_) => WeekReviewPage(scope: scope),
-      ),
-    );
+    Navigator.pushNamed(context, '/progress/week');
 
 /// The week to look back on, or null on days it is not worth offering:
 /// from the week's last day to two days after it, when something was due.
@@ -55,7 +49,8 @@ class WeekReviewRow extends StatelessWidget {
 /// habits worth making smaller for the week ahead.
 class WeekReviewPage extends StatelessWidget {
   final HabitScope scope;
-  const WeekReviewPage({super.key, required this.scope});
+  final String? from;
+  const WeekReviewPage({super.key, required this.scope, this.from});
   @override
   Widget build(BuildContext context) => ListenableBuilder(
     listenable: scope.controller,
@@ -64,7 +59,9 @@ class WeekReviewPage extends StatelessWidget {
       final r = weekReview(
         s,
         scope.index,
-        reviewWeekStart(today, s.weekStart),
+        from != null && _validDay(from!)
+            ? from!
+            : reviewWeekStart(today, s.weekStart),
         today,
       );
       final theme = Theme.of(context);
@@ -135,7 +132,9 @@ class WeekReviewPage extends StatelessWidget {
             ),
           HandySection(
             title: tr(context, 'Each habit', 'Từng thói quen'),
-            children: [for (final w in r.habits) _HabitWeekRow(scope, w)],
+            children: [
+              for (final w in r.habits) _HabitWeekRow(scope, w, r.start),
+            ],
           ),
         ],
       );
@@ -146,13 +145,13 @@ class WeekReviewPage extends StatelessWidget {
 class _HabitWeekRow extends StatelessWidget {
   final HabitScope scope;
   final HabitWeek week;
-  const _HabitWeekRow(this.scope, this.week);
+  final String start;
+  const _HabitWeekRow(this.scope, this.week, this.start);
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final ink = theme.colorScheme.onSurface;
     final h = week.habit;
-    final start = reviewWeekStart(scope.today, scope.state.weekStart);
     return Padding(
       key: Key('week-review-${h.id}'),
       padding: const EdgeInsets.all(HandySpace.l),
@@ -217,5 +216,14 @@ class _HabitWeekRow extends StatelessWidget {
         ],
       ),
     );
+  }
+}
+
+bool _validDay(String value) {
+  try {
+    date(value);
+    return true;
+  } catch (_) {
+    return false;
   }
 }

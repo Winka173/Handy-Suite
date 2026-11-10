@@ -310,23 +310,31 @@ Future<HabitController> boot(
   WidgetTester t,
   Size size, {
   String theme = 'light',
+  String? locale,
+  double scale = 1,
   HabitState? state,
 }) async {
   t.view.physicalSize = size;
   t.view.devicePixelRatio = 1;
   addTearDown(t.view.resetPhysicalSize);
   addTearDown(t.view.resetDevicePixelRatio);
+  t.platformDispatcher.textScaleFactorTestValue = scale;
+  addTearDown(t.platformDispatcher.clearTextScaleFactorTestValue);
   final s = state ?? practice();
   final store = fixtures.MemoryStore()
     ..value = s.copy({
-      'settings': {...s.settings, 'theme': theme},
+      'settings': {
+        ...s.settings,
+        'theme': theme,
+        if (locale != null) 'locale': locale,
+      },
     });
   final c = HabitController(open: () async => store);
   await c.load();
   await t.pumpWidget(
     RepaintBoundary(
       key: _root,
-      child: HabitApp(controller: c, clock: () => now),
+      child: HabitApp(controller: c, clock: () => now, device: false),
     ),
   );
   await t.pumpAndSettle();
@@ -338,8 +346,12 @@ Future<HabitController> boot(
 }
 
 Future<void> area(WidgetTester t, int i) async {
-  final wide = t.view.physicalSize.width >= HandySpace.wide;
-  await fixtures.tapKey(t, wide ? 'area-$i' : 'nav-$i');
+  if (i == 1) {
+    await fixtures.tapKey(t, 'today-all-habits');
+  } else {
+    final wide = t.view.physicalSize.width >= 840;
+    await fixtures.tapKey(t, wide ? 'area-$i' : 'nav-$i');
+  }
 }
 
 void main() {
@@ -365,6 +377,124 @@ void main() {
     await _font('MaterialIcons', [
       '$sdk/bin/cache/artifacts/material_fonts/materialicons-regular.otf',
     ]);
+  });
+
+  for (final width in [320.0, 390.0, 1440.0]) {
+    for (final locale in ['en', 'vi']) {
+      for (final theme in ['light', 'dark']) {
+        for (final scale in [1.0, 1.5]) {
+          testWidgets('run3 ${width.toInt()} $locale $theme $scale', (t) async {
+            final prefix = 'r3-${width.toInt()}-$locale-$theme-x$scale';
+            final c = await boot(
+              t,
+              Size(width, width == 1440 ? 900 : 844),
+              locale: locale,
+              theme: theme,
+              scale: scale,
+            );
+            final bead = find.byKey(const Key('bead-read'));
+            expect(
+              t.getTopLeft(bead).dy,
+              lessThan((width == 1440 ? 900 : 844) * .6),
+            );
+            await shot(t, '$prefix-today');
+            final navigator = t.state<NavigatorState>(
+              find.byType(Navigator).first,
+            );
+            navigator.pushNamed('/habit/new');
+            await t.pumpAndSettle();
+            await shot(t, '$prefix-editor');
+            await fixtures.tapKey(t, 'sheet-cancel');
+            navigator.pushNamed('/habit/read');
+            await t.pumpAndSettle();
+            await shot(t, '$prefix-history');
+            navigator.pop();
+            await t.pumpAndSettle();
+            await area(t, 2);
+            await shot(t, '$prefix-routines');
+            await area(t, 3);
+            await shot(t, '$prefix-progress');
+            expect(t.takeException(), isNull, reason: prefix);
+            expect(c.state!.habits, hasLength(6));
+          });
+        }
+      }
+    }
+  }
+
+  testWidgets('run3 extra folded sidebar', (t) async {
+    final c = await boot(t, const Size(1440, 900));
+    await fixtures.tapKey(t, 'side-collapse');
+    expect(c.state!.settings['sidebarCollapsed'], true);
+    await shot(t, 'r3-desktop-folded');
+    await fixtures.tapKey(t, 'side-open');
+    expect(c.state!.settings['sidebarCollapsed'], false);
+    await shot(t, 'r3-desktop-reopened');
+  });
+  testWidgets('run3 extra history Show all', (t) async {
+    final base = practice();
+    await boot(
+      t,
+      const Size(390, 844),
+      locale: 'en',
+      state: base.copy({
+        'habits': [
+          for (final h in base.habits)
+            h.id == 'read'
+                ? h.copy({
+                    'created': addDays(today, -80),
+                    'schedules': [
+                      Schedule(
+                        id: 'old-read',
+                        from: addDays(today, -80),
+                        target: 10000,
+                      ).toJson(),
+                    ],
+                  }).toJson()
+                : h.toJson(),
+        ],
+        'events': [
+          ...base.events.map((e) => e.toJson()),
+          for (var i = 30; i < 75; i++)
+            HabitEvent(
+              id: 'older-$i',
+              habit: 'read',
+              day: addDays(today, -i),
+              value: 10000,
+              note: 'Read before breakfast $i',
+            ).toJson(),
+        ],
+      }),
+    );
+    t
+        .state<NavigatorState>(find.byType(Navigator).first)
+        .pushNamed('/habit/read');
+    await t.pumpAndSettle();
+    final more = find.byKey(const Key('history-more'));
+    await t.ensureVisible(more);
+    await t.pumpAndSettle();
+    await shot(t, 'r3-history-collapsed');
+    await t.tap(more);
+    await t.pumpAndSettle();
+    await t.ensureVisible(more);
+    await t.pumpAndSettle();
+    expect(find.textContaining('Read before breakfast 74'), findsOneWidget);
+    await shot(t, 'r3-history-expanded');
+  });
+  testWidgets('run3 extra dirty editor', (t) async {
+    final c = await boot(t, const Size(320, 844), locale: 'vi', scale: 1.5);
+    t
+        .state<NavigatorState>(find.byType(Navigator).first)
+        .pushNamed('/habit/new');
+    await t.pumpAndSettle();
+    await t.enterText(
+      find.byKey(const Key('field-title')),
+      'Đọc vài trang mỗi tối',
+    );
+    await fixtures.tapKey(t, 'sheet-cancel');
+    expect(find.text('Thay đổi chưa lưu'), findsOneWidget);
+    expect(c.state!.habits, hasLength(6));
+    await shot(t, 'r3-320-vi-dirty-editor');
   });
 
   for (final (label, size) in [
@@ -523,11 +653,30 @@ void main() {
     await shot(t, 'desktop-8-pause-editor');
   });
   testWidgets('films', (t) async {
-    await boot(t, const Size(390, 844));
+    final base = practice();
+    final c = await boot(
+      t,
+      const Size(390, 844),
+      state: base.copy({
+        'events': [
+          for (final e in base.events)
+            if (!(e.habit == 'meditate' && e.day == today)) e.toJson(),
+        ],
+      }),
+    );
+    final bead = find.byKey(const Key('bead-meditate')).first;
+    await t.ensureVisible(bead);
+    await t.pumpAndSettle();
     await film(t, 'phone-tap-bead', () async {
-      await t.tap(find.byKey(const Key('bead-meditate')).first);
+      await t.tap(bead);
       await t.pump();
     });
+    expect(HabitIndex.of(c.state!).value('meditate', today), 1000);
+    expect(
+      c.state!.events.where((e) => e.habit == 'meditate' && e.day == today),
+      hasLength(1),
+    );
+    expect(find.byKey(const Key('snack-undo')), findsOneWidget);
   });
 
   testWidgets('phone week review', (t) async {

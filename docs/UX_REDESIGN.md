@@ -3441,6 +3441,71 @@ Kit sửa chung (`HandyPalette`): ở bản sáng, màu nhận diện được l
 - **Bookmark, bước tìm app trong bảng chia sẻ của máy:** trên hàng app có ngón tay vuốt từ phải sang trái kèm vệt và mũi tên ‹ (4 lần rồi nghỉ; giảm chuyển động thì đứng yên giữa đường). Cuối hàng có vùng mờ dần và nút › màu mực: bấm để dời hàng (chuột không vuốt được), tự ẩn khi đã tới cuối.
 
 
+## Handy Habit · R5/R6 implementation contract · 2026-11-10
+
+This extends the Habit contracts below before implementation; other apps are unchanged.
+References inspected: Bookmark `shell/save_shell.dart`, `shell/sidebar.dart`, `ui/capped.dart`;
+Boards `shell/boards_frame.dart`, `card/card_sheet.dart`; both required UI skills and app-screens §2.7.
+Retain editorial-greeting, Nunito and vermilion; the single signature remains today's actionable bead.
+Real fixtures: 6 due habits, 1 completed, 5 remaining, 2 routines; counts come from the engine.
+
+- **Shell question:** Where do I check in, run a routine, or review progress? Three destinations
+  Today/Routines/Progress, with all habits one tap from Today. Phone <600 bottom navigation;
+  600–839 stays one pane with the same navigation; ≥840 sidebar224 folding to rail64 using
+  HandySidePanel/HandySideRail. Fold at sidebar top, reopen » at rail top, remembered setting;
+  Settings/Help at foot. Neutral selected navigation, product name/mark, contextual Add.
+  Named hash routes and existing detail routes coexist; unknown route/ID offers its parent.
+  Back/Esc closes one level; Ctrl/Cmd N/F/comma/1–3 do not intercept typing.
+- **Today question/finding:** What remains today? Greeting/date and real remaining count, then
+  a compact active-run line, then beads beginning in the first60% at320/390, including text×1.5.
+  Habit group is inferred from its reminder or linked routine time (morning<12, afternoon<18,
+  evening otherwise); explicit Advanced override wins, and untimed habits remain ungrouped.
+  Cap6 habits and2 routines, Show all N expands in place and can fold. Routine Start remains on
+  the row; weekly review follows habits, never before them. Wide: habits left, routines/review
+  right, aligned gutters16/24. No forced dashboard tiles, red missed days, or greeting over32px.
+  Empty/no-due/paused/all-done remain distinct; load and durable-save failures keep existing data.
+- **Editor question/finding:** What, how much, how often, and from when? Basic first; existing
+  Advanced values/options and appearance remain editable and preserved. Explicit day-part
+  override is Advanced. Save is primary, fixed above keyboard; Cancel/Back/Esc/barrier exit
+  asks about unsaved changes only after values actually differ. Busy blocks exit/double save;
+  failure retains draft. Effective schedule date and history-preservation explanation stay visible
+  on edits; historical targets are read from the schedule effective on each historical day.
+- **History question/finding:** Which days were recorded and against what target? Calendar,
+  current/best and schedule history retain the engine's dated targets. Recorded entries start
+  at30 then Show all N in place, reversible, with full notes/provenance and historical goal.
+  Empty records have a sentence; archived/deleted/missing dates remain neutral and truthful.
+  At narrow widths or large text, metrics become aligned label/value rows; the month offers
+  a day-list view with48px rows and dated targets, capped7 with in-place Show all. Calendar
+  remains available; the list is the default when seven48px columns cannot fit or text is enlarged.
+- **Clock policy:** Existing v3 midnight policy gains validated boundaries0–1439minutes. New
+  versions are effective at an instant; choose policy by instant then compare local wall-clock
+  minutes, including DST. Events retain their stored local dates forever. A settings change
+  records a new policy rather than re-bucketing old history. Existing v1/v2/v3 backups roundtrip.
+- **States/motion/accessibility:** Existing load recovery and write-error paths remain. Stable
+  keyed rows, HandyAppear for arrivals, HandySwap for changed status/areas, HandyReveal for
+  disclosures. No commit waits for animation; OS/app reduced motion gives zero durations.
+  Labels, state words/shapes and ≥48px bead controls accompany colour; text wraps at320,
+  EN/VI/light/dark/text×1.5. Keyboard focus follows route/guard. No new permission prompts.
+
+Visual gate: render real Flutter screenshots at320/390/1440 in EN/VI/light/dark/text×1.5;
+inspect §2.7 hierarchy, shared edges, colour, arithmetic, neutral missing values, legends and
+phone navigation; fix the three largest issues and re-render. Host screenshots/widget routes
+are evidence, not browser URL/back-forward, device, screen-reader or store verification.
+
+**R5/R6 visual critique, app-screens §2.7:** inspected the full24-configuration matrix
+(5 screens each), the existing screenshots/16-frame film and fold/history/dirty extras.
+The largest issues were the first bead pushed down by secondary content, ragged history
+figures/oversized calendar rows, and wide trailing Progress durations/clipped chart labels.
+Fixed: habits first and compact greeting/run/header; aligned metric rows and48px calendar/day
+list; wrapping duration labels and fewer, unclipped axis labels. Footer aligns with editor fields.
+The phone shell keeps the full product name and three destinations; wide edges and section
+headers align, with no stretched companion panel. Vermilion marks today's bead/current week;
+missed/paused days remain neutral. Remaining5 is6due−1done; review23/32 is engine-derived.
+Zero and missing states stay distinct; labels/shapes and semantic day/value/target supplement
+colour. Nunito is loaded in every capture; no stock art, invented figures or shared-brand restyle.
+Final renders:63 harness cases pass, and27 final matrix/extra cases pass after the compact
+calendar adjustment. Native Flutter renders replace the HTML-only DOM inspector here.
+
 ## Hợp đồng bổ sung: Handy Habit · run 1 · 2026-11-10
 
 **DESIGN CONTRACT — chưa triển khai.** Phần này thay chỉ dẫn Habit cũ về onboarding3 choices/bốn khu/top switch/Lite Pro/không sửa appearance/history cắt; không đổi hợp đồng app khác. [AUDIT](HANDY_HABIT_AUDIT.md) ghi source/evidence; [PLAN](HANDY_HABIT_PLAN.md) ghi models/Free–Pro/slices. Không đọc “xong”02/11 như chứng nhận MASTER PROMPT này.

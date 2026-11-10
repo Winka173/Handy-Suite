@@ -15,10 +15,19 @@ Future<String?> openRoutineEditor(
   BuildContext context,
   HabitScope scope, [
   Routine? old,
-]) async {
+]) async => Navigator.pushNamed<String>(
+  context,
+  old == null ? '/routine/new' : '/routine/${old.id}/edit',
+);
+
+Widget buildRoutineEditor(
+  BuildContext context,
+  HabitScope scope, [
+  Routine? old,
+]) {
   String? id;
-  final saved = await showHabitForm(
-    context,
+  return HabitForm(
+    result: () => id,
     title: old == null
         ? tr(context, 'New routine', 'Quy trình mới')
         : tr(context, 'Edit ${old.title}', 'Sửa ${old.title}'),
@@ -81,18 +90,6 @@ Future<String?> openRoutineEditor(
       id = r.id;
     },
   );
-  if (saved && context.mounted)
-    scope.announce(
-      context,
-      old == null
-          ? tr(
-              context,
-              'Routine added. Now add its steps.',
-              'Đã thêm quy trình. Giờ thêm các bước.',
-            )
-          : tr(context, 'Routine saved.', 'Đã lưu quy trình.'),
-    );
-  return id;
 }
 
 /// One step: how long it usually takes, how short it may get, and whether

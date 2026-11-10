@@ -1,3 +1,5 @@
+import 'dart:convert';
+import 'package:flutter/services.dart';
 import 'package:handy_habit_engine/handy_habit_engine.dart';
 import 'package:handy_ui/kit.dart';
 import 'sheet.dart';
@@ -74,6 +76,7 @@ class HabitForm extends StatefulWidget {
   final List<HabitField> fields;
   final Map<String, dynamic> initial;
   final Future<void> Function(Map<String, dynamic>) save;
+  final Object? Function()? result;
   const HabitForm({
     super.key,
     required this.title,
@@ -81,13 +84,16 @@ class HabitForm extends StatefulWidget {
     required this.initial,
     required this.save,
     this.saveLabel = '',
+    this.result,
   });
   @override
   State<HabitForm> createState() => _HabitFormState();
 }
 
 class _HabitFormState extends State<HabitForm> {
-  late final values = Map<String, dynamic>.from(widget.initial);
+  // A clock refresh or an inherited rebuild must not move the draft's baseline.
+  late final original = Map<String, dynamic>.from(widget.initial);
+  late final values = Map<String, dynamic>.from(original);
   late final text = {
     for (final f in widget.fields)
       if (const [
@@ -101,9 +107,55 @@ class _HabitFormState extends State<HabitForm> {
   final errors = <String, String>{};
   bool busy = false, advanced = false;
   String error = '';
+  bool leaving = false, asking = false;
+
+  bool get dirty => widget.fields.any(
+    (f) => text.containsKey(f.id)
+        ? text[f.id]!.text != _initial(f)
+        : jsonEncode(values[f.id]) != jsonEncode(original[f.id]),
+  );
+
+  Future<void> leave() async {
+    if (busy || asking) return;
+    if (dirty) {
+      asking = true;
+      final discard = await confirmHandy(
+        context,
+        title: tr(context, 'Unsaved changes', 'Thay đổi chưa lưu'),
+        message: tr(
+          context,
+          'Discard your changes?',
+          'Bỏ các thay đổi của bạn?',
+        ),
+        confirmLabel: tr(context, 'Discard', 'Bỏ thay đổi'),
+      );
+      asking = false;
+      if (!discard || !mounted) return;
+    }
+    setState(() => leaving = true);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) Navigator.pop(context);
+    });
+  }
+
+  bool attached = false;
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (!attached) {
+      attached = true;
+      for (final c in text.values) {
+        c.addListener(_edited);
+      }
+    }
+  }
+
+  void _edited() {
+    if (mounted) setState(() {});
+  }
 
   String _initial(HabitField f) {
-    final v = widget.initial[f.id];
+    final v = original[f.id];
     if (v == null) return '';
     if (f.kind == FieldKind.amount && v is int) return figure(context, v);
     return '$v';
@@ -187,7 +239,12 @@ class _HabitFormState extends State<HabitForm> {
     });
     try {
       await widget.save(out);
-      if (mounted) Navigator.pop(context, true);
+      if (mounted) {
+        setState(() => leaving = true);
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (mounted) Navigator.pop(context, widget.result?.call() ?? true);
+        });
+      }
     } catch (e) {
       if (mounted)
         setState(
@@ -203,46 +260,67 @@ class _HabitFormState extends State<HabitForm> {
   }
 
   @override
-  Widget build(BuildContext context) => SheetFrame(
-    title: widget.title,
-    busy: busy,
-    error: error,
-    primary: FilledButton(
-      key: const Key('editor-save'),
-      onPressed: busy ? null : submit,
-      child: Text(
-        busy
-            ? tr(context, 'Saving…', 'Đang lưu…')
-            : widget.saveLabel.isEmpty
-            ? tr(context, 'Save', 'Lưu')
-            : widget.saveLabel,
+  Widget build(BuildContext context) => PopScope(
+    canPop: leaving || !busy && !dirty,
+    onPopInvokedWithResult: (didPop, _) {
+      if (!didPop) leave();
+    },
+    child: CallbackShortcuts(
+      bindings: {
+        const SingleActivator(LogicalKeyboardKey.keyS, control: true): submit,
+        const SingleActivator(LogicalKeyboardKey.keyS, meta: true): submit,
+      },
+      child: SheetFrame(
+        title: widget.title,
+        busy: busy,
+        error: error,
+        primary: FilledButton(
+          key: const Key('editor-save'),
+          onPressed: busy ? null : submit,
+          child: Text(
+            busy
+                ? tr(context, 'Saving…', 'Đang lưu…')
+                : widget.saveLabel.isEmpty
+                ? tr(context, 'Save', 'Lưu')
+                : widget.saveLabel,
+          ),
+        ),
+        children: [
+          for (final f in widget.fields)
+            if (!f.advanced && shown(f)) _field(f),
+          if (widget.fields.any(
+            (f) => f.advanced || f.advancedOptions.isNotEmpty,
+          )) ...[
+            SwitchListTile.adaptive(
+              key: const Key('habit-form-advanced'),
+              contentPadding: EdgeInsets.zero,
+              title: Text(
+                tr(context, 'Advanced settings', 'Thiết lập nâng cao'),
+              ),
+              subtitle: Text(
+                tr(
+                  context,
+                  'Dates, grouping and less common schedules. Existing values are kept.',
+                  'Ngày, nhóm và lịch ít dùng. Giá trị đã lưu được giữ nguyên.',
+                ),
+              ),
+              value: advanced,
+              onChanged: busy ? null : (v) => setState(() => advanced = v),
+            ),
+            HandyReveal(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  if (advanced)
+                    for (final f in widget.fields)
+                      if (f.advanced && shown(f)) _field(f),
+                ],
+              ),
+            ),
+          ],
+        ],
       ),
     ),
-    children: [
-      for (final f in widget.fields)
-        if (!f.advanced && shown(f)) _field(f),
-      if (widget.fields.any(
-        (f) => f.advanced || f.advancedOptions.isNotEmpty,
-      )) ...[
-        SwitchListTile.adaptive(
-          key: const Key('habit-form-advanced'),
-          contentPadding: EdgeInsets.zero,
-          title: Text(tr(context, 'Advanced settings', 'Thiết lập nâng cao')),
-          subtitle: Text(
-            tr(
-              context,
-              'Dates, grouping and less common schedules. Existing values are kept.',
-              'Ngày, nhóm và lịch ít dùng. Giá trị đã lưu được giữ nguyên.',
-            ),
-          ),
-          value: advanced,
-          onChanged: busy ? null : (v) => setState(() => advanced = v),
-        ),
-        if (advanced)
-          for (final f in widget.fields)
-            if (f.advanced && shown(f)) _field(f),
-      ],
-    ],
   );
 
   Widget _field(HabitField f) {

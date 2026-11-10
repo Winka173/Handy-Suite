@@ -1,184 +1,219 @@
-import 'package:flutter/services.dart';
-import '../habits/preset_sheet.dart';
 import 'package:handy_habit_engine/handy_habit_engine.dart';
 import 'package:handy_ui/kit.dart';
+import '../habits/preset_sheet.dart';
 import '../habits/habit_editor.dart';
-import '../habits/habits_page.dart';
 import '../insights/insights_page.dart';
 import '../pauses/pauses.dart';
-import '../routines/routine_editor.dart';
-import '../routines/routines_page.dart';
 import '../scope.dart';
+import '../routines/routines_page.dart';
 import '../today/today_page.dart';
 import '../ui/words.dart';
 
-/// The four areas: a bottom bar on phones, a switch in the top bar on wide
-/// screens; Add (Ctrl N) is always in the top bar.
-class HabitShell extends StatefulWidget {
+/// The three daily jobs. Legacy internal area IDs stay stable for notices.
+class HabitShell extends StatelessWidget {
   final HabitScope scope;
-  const HabitShell({super.key, required this.scope});
-  @override
-  State<HabitShell> createState() => _HabitShellState();
-}
+  final int area;
+  const HabitShell({super.key, required this.scope, this.area = 0});
 
-class _HabitShellState extends State<HabitShell> {
-  HabitScope get scope => widget.scope;
-
-  @override
-  void initState() {
-    super.initState();
-    scope.area.addListener(_changed);
-  }
-
-  @override
-  void dispose() {
-    scope.area.removeListener(_changed);
-    super.dispose();
-  }
-
-  void _changed() {
-    if (mounted) setState(() {});
-  }
-
-  Future<void> addRoutine() async {
-    final id = await openRoutineEditor(context, scope);
-    if (id != null && mounted)
-      await Navigator.pushNamed(context, '/routine/$id');
+  void go(BuildContext context, String path) {
+    if (ModalRoute.of(context)?.settings.name == path) return;
+    if (ModalRoute.of(context)?.isFirst == true) {
+      Navigator.pushNamed(context, path);
+    } else {
+      Navigator.pushReplacementNamed(context, path);
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     if (scope.state.settings['onboarded'] != true)
       return Onboarding(scope: scope);
-    final wide = MediaQuery.sizeOf(context).width >= HandySpace.wide;
-    final area = scope.area.value;
+    final wide = MediaQuery.sizeOf(context).width >= 840;
+    final open = scope.state.settings['sidebarCollapsed'] != true;
     final areas = [
-      (Icons.today_outlined, Icons.today, tr(context, 'Today', 'Hôm nay')),
+      (0, Icons.today_outlined, tr(context, 'Today', 'Hôm nay'), '/today'),
       (
-        Icons.check_circle_outline,
-        Icons.check_circle,
-        tr(context, 'Habits', 'Thói quen'),
-      ),
-      (
-        Icons.format_list_numbered,
+        2,
         Icons.format_list_numbered,
         tr(context, 'Routines', 'Quy trình'),
+        '/routines',
       ),
       (
+        3,
         Icons.insights_outlined,
-        Icons.insights,
-        tr(context, 'Insights', 'Thống kê'),
+        tr(context, 'Progress', 'Tiến bộ'),
+        '/progress',
       ),
     ];
-    final scaffold = Scaffold(
-      appBar: HandyTopBar(
-        mark: Icons.check_circle,
-        name: 'Handy Habit',
-        nameIsTitle: false,
-        areas: wide
-            ? SegmentedButton<int>(
-                key: const Key('habit-areas'),
-                showSelectedIcon: false,
-                segments: [
-                  for (final (i, a) in areas.indexed)
-                    ButtonSegment(
-                      value: i,
-                      label: Text(a.$3, key: Key('area-$i')),
-                    ),
-                ],
-                selected: {area},
-                onSelectionChanged: (v) => scope.area.value = v.single,
-              )
-            : null,
+    void setSide(bool open) => scope.write(
+      context,
+      (s) => s.copy({
+        'settings': {...s.settings, 'sidebarCollapsed': !open},
+      }),
+      remember: false,
+    );
+    Widget foot(String key, IconData icon, String label, String path) =>
+        ListTile(
+          key: Key(key),
+          leading: Icon(icon, size: 20),
+          title: Text(label),
+          onTap: () => Navigator.pushNamed(context, path),
+        );
+    final page = Scaffold(
+      appBar: AppBar(
+        automaticallyImplyLeading: false,
+        title: wide
+            ? Text(areas.firstWhere((a) => a.$1 == area).$3)
+            : const Text('Handy Habit'),
         actions: [
+          if (!wide)
+            IconButton(
+              key: const Key('open-settings'),
+              tooltip: tr(context, 'Settings', 'Cài đặt'),
+              icon: const Icon(Icons.settings_outlined),
+              onPressed: () => Navigator.pushNamed(context, '/settings'),
+            ),
           PopupMenuButton<String>(
             key: const Key('habit-add'),
             tooltip: tr(context, 'Add', 'Thêm'),
-            position: PopupMenuPosition.under,
+            icon: const Icon(Icons.add),
             onSelected: (v) => switch (v) {
               'habit' => addHabit(context, scope),
               'pause' => openPauseEditor(context, scope),
-              _ => addRoutine(),
+              _ => Navigator.pushNamed(context, '/routine/new'),
             },
             itemBuilder: (context) => [
-              PopupMenuItem(
-                key: const Key('add-habit'),
-                value: 'habit',
-                child: Text(tr(context, 'New habit', 'Thói quen mới')),
-              ),
-              PopupMenuItem(
-                key: const Key('add-routine'),
-                value: 'routine',
-                child: Text(tr(context, 'New routine', 'Quy trình mới')),
-              ),
-              PopupMenuItem(
-                key: const Key('add-pause'),
-                value: 'pause',
-                child: Text(tr(context, 'Pause', 'Kỳ nghỉ')),
-              ),
+              for (final v
+                  in area == 2
+                      ? ['routine', 'habit', 'pause']
+                      : ['habit', 'routine', 'pause'])
+                PopupMenuItem(
+                  key: Key('add-$v'),
+                  value: v,
+                  child: Text(switch (v) {
+                    'habit' => tr(context, 'New habit', 'Thói quen mới'),
+                    'routine' => tr(context, 'New routine', 'Quy trình m?i'),
+                    _ => tr(context, 'Pause', 'Kỳ nghỉ'),
+                  }),
+                ),
             ],
-            // A 48px target on phones; a labelled chip on wide screens.
-            child: wide
-                ? Padding(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: HandySpace.s,
-                    ),
-                    child: Chip(
-                      avatar: const Icon(Icons.add, size: 18),
-                      label: Text(tr(context, 'Add', 'Thêm')),
-                    ),
-                  )
-                : const SizedBox.square(dimension: 48, child: Icon(Icons.add)),
           ),
         ],
       ),
       body: SafeArea(
         bottom: false,
-        child: IndexedStack(
-          index: area,
-          children: [
-            TodayPage(scope: scope),
-            HabitsPage(scope: scope),
-            RoutinesPage(scope: scope),
-            InsightsPage(scope: scope),
-          ],
+        child: HandySwap(
+          child: KeyedSubtree(
+            key: ValueKey(area),
+            child: switch (area) {
+              2 => RoutinesPage(scope: scope),
+              3 => InsightsPage(scope: scope),
+              _ => TodayPage(scope: scope),
+            },
+          ),
         ),
       ),
       bottomNavigationBar: wide
           ? null
           : NavigationBar(
               key: const Key('habit-nav'),
-              selectedIndex: area,
-              onDestinationSelected: (i) => scope.area.value = i,
+              selectedIndex: areas.indexWhere((a) => a.$1 == area),
+              onDestinationSelected: (i) => go(context, areas[i].$4),
               destinations: [
-                for (final (i, a) in areas.indexed)
+                for (final a in areas)
                   NavigationDestination(
-                    key: Key('nav-$i'),
-                    icon: Icon(a.$1),
-                    selectedIcon: Icon(a.$2),
+                    key: Key('nav-${a.$1}'),
+                    icon: Icon(a.$2),
                     label: a.$3,
                   ),
               ],
             ),
     );
-    return CallbackShortcuts(
-      bindings: {
-        const SingleActivator(LogicalKeyboardKey.keyN, control: true): () =>
-            addHabit(context, scope),
-        for (var i = 0; i < 4; i++)
-          SingleActivator(
-            [
-              LogicalKeyboardKey.digit1,
-              LogicalKeyboardKey.digit2,
-              LogicalKeyboardKey.digit3,
-              LogicalKeyboardKey.digit4,
-            ][i],
-            control: true,
-          ): () =>
-              scope.area.value = i,
-      },
-      child: Focus(autofocus: true, child: scaffold),
-    );
+    if (!wide) return page;
+    return Material(color: Theme.of(context).scaffoldBackgroundColor, child: Row(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        HandySideRail(
+          open: !open,
+          child: IconButton(
+            key: const Key('side-open'),
+            tooltip: tr(context, 'Show the sidebar', 'Hiện thanh bên'),
+            icon: const Icon(Icons.keyboard_double_arrow_right),
+            onPressed: () => setSide(true),
+          ),
+        ),
+        HandySidePanel(
+          width: 224,
+          open: open,
+          child: Material(
+            color: Theme.of(context).scaffoldBackgroundColor,
+            child: SafeArea(
+              right: false,
+              child: Column(
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(16, 12, 4, 20),
+                    child: Row(
+                      children: [
+                        const Icon(Icons.check_circle_outline, size: 24),
+                        const SizedBox(width: 8),
+                        const Expanded(child: Text('Handy Habit', maxLines: 2)),
+                        IconButton(
+                          key: const Key('side-collapse'),
+                          tooltip: tr(
+                            context,
+                            'Hide the sidebar',
+                            'Thu gọn thanh bên',
+                          ),
+                          icon: const Icon(Icons.keyboard_double_arrow_left),
+                          onPressed: () => setSide(false),
+                        ),
+                      ],
+                    ),
+                  ),
+                  Expanded(
+                    child: ListView(
+                      padding: const EdgeInsets.symmetric(horizontal: 8),
+                      children: [
+                        for (final a in areas)
+                          ListTile(
+                            key: Key('area-${a.$1}'),
+                            leading: Icon(a.$2, size: 20),
+                            title: Text(a.$3),
+                            selected: a.$1 == area,
+                            selectedColor: Theme.of(
+                              context,
+                            ).colorScheme.onSurface,
+                            selectedTileColor: HandyColors.of(context).select,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            onTap: () => go(context, a.$4),
+                          ),
+                      ],
+                    ),
+                  ),
+                  foot(
+                    'side-help',
+                    Icons.help_outline,
+                    tr(context, 'Help', 'Trợ giúp'),
+                    '/help',
+                  ),
+                  foot(
+                    'open-settings',
+                    Icons.settings_outlined,
+                    tr(context, 'Settings', 'Cài đặt'),
+                    '/settings',
+                  ),
+                  const SizedBox(height: 12),
+                ],
+              ),
+            ),
+          ),
+        ),
+        Expanded(child: page),
+      ],
+    ));
   }
 }
 

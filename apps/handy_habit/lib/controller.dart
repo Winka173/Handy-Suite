@@ -57,7 +57,13 @@ class HabitController extends ChangeNotifier {
         proposed.validate();
         final tracked = recorded
             ? proposed
-            : recordChange(before, proposed, actor: actor, undoable: remember);
+            : recordChange(
+                before,
+                proposed,
+                actor: actor,
+                undoable: remember,
+                now: clock(),
+              );
         final next = tracked.copy({'revision': before.revision + 1});
         if (recovery) {
           final recoverable = store;

@@ -2,6 +2,7 @@ import 'package:handy_habit_engine/handy_habit_engine.dart';
 import 'package:handy_ui/kit.dart';
 import '../today/beads.dart';
 import '../ui/words.dart';
+import '../ui/capped.dart';
 
 /// One month of a habit as beads on a calendar. A day inside the window
 /// that can still be edited opens it; other days only read.
@@ -25,6 +26,7 @@ class MonthGrid extends StatefulWidget {
 }
 
 class _MonthGridState extends State<MonthGrid> {
+  bool? asList;
   // Early in a month the one before says more, if the habit was there.
   late DateTime month = () {
     final t = date(widget.today);
@@ -51,6 +53,16 @@ class _MonthGridState extends State<MonthGrid> {
         first.substring(0, 7).compareTo(created.substring(0, 7)) > 0;
     final canNext =
         first.substring(0, 7).compareTo(widget.today.substring(0, 7)) < 0;
+    final list =
+        asList ??
+        (MediaQuery.sizeOf(context).width < 368 ||
+            MediaQuery.textScalerOf(context).scale(14) > 18);
+    bool editable(String d) =>
+        widget.onDay != null &&
+        !widget.habit.archived &&
+        d.compareTo(widget.today) <= 0 &&
+        d.compareTo(earliest) >= 0 &&
+        d.compareTo(created) >= 0;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
@@ -89,45 +101,112 @@ class _MonthGridState extends State<MonthGrid> {
             ),
           ],
         ),
-        GridView.count(
-          crossAxisCount: 7,
-          shrinkWrap: true,
-          physics: const NeverScrollableScrollPhysics(),
-          childAspectRatio: 1,
-          children: [
-            for (var i = 0; i < 7; i++)
-              Center(
-                child: Text(
-                  weekdayShort(context, (widget.weekStart - 1 + i) % 7 + 1),
-                  style: theme.textTheme.labelSmall?.copyWith(color: c.muted),
-                ),
-              ),
-            for (var i = 0; i < lead; i++) const SizedBox.shrink(),
-            for (var n = 1; n <= days; n++)
-              _Day(
-                habit: widget.habit,
-                day: day(DateTime.utc(month.year, month.month, n)),
-                today: widget.today,
-                index: widget.index,
-                editable:
-                    widget.onDay != null &&
-                    !widget.habit.archived &&
-                    day(
-                          DateTime.utc(month.year, month.month, n),
-                        ).compareTo(widget.today) <=
-                        0 &&
-                    day(
-                          DateTime.utc(month.year, month.month, n),
-                        ).compareTo(earliest) >=
-                        0 &&
-                    day(
-                          DateTime.utc(month.year, month.month, n),
-                        ).compareTo(created) >=
-                        0,
-                onTap: widget.onDay,
-              ),
-          ],
+        Align(
+          alignment: AlignmentDirectional.centerStart,
+          child: TextButton.icon(
+            key: const Key('month-view-toggle'),
+            icon: Icon(
+              list ? Icons.calendar_month_outlined : Icons.list,
+              size: 20,
+            ),
+            label: Text(
+              list
+                  ? tr(context, 'Calendar', 'Lịch tháng')
+                  : tr(context, 'Days as list', 'Danh sách ngày'),
+            ),
+            onPressed: () => setState(() => asList = !list),
+          ),
         ),
+        if (list)
+          Capped(
+            key: ValueKey(first),
+            count: days,
+            max: 7,
+            name: 'month-days',
+            builder: (context, shown) => Column(
+              children: [
+                for (var i = days; i > days - shown; i--)
+                  Builder(
+                    builder: (context) {
+                      final d = day(DateTime.utc(month.year, month.month, i));
+                      final status = habitStatus(
+                        widget.habit,
+                        d,
+                        widget.today,
+                        widget.index,
+                      );
+                      final target = scheduleOn(widget.habit, d)?.target;
+                      return ListTile(
+                        key: Key('day-$d'),
+                        contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                        ),
+                        minTileHeight: 48,
+                        title: Text(formatDay(context, d)),
+                        subtitle: Text(
+                          [
+                            statusLabel(context, status),
+                            if (target != null && widget.habit.type != 'binary')
+                              progressText(
+                                context,
+                                widget.habit,
+                                widget.index.value(widget.habit.id, d),
+                                target,
+                              ),
+                          ].join(' · '),
+                        ),
+                        trailing: editable(d)
+                            ? const Icon(Icons.edit_outlined, size: 18)
+                            : null,
+                        onTap: editable(d) ? () => widget.onDay!(d) : null,
+                      );
+                    },
+                  ),
+              ],
+            ),
+          )
+        else
+          GridView(
+            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: 7,
+              mainAxisExtent: 48,
+            ),
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            children: [
+              for (var i = 0; i < 7; i++)
+                Center(
+                  child: Text(
+                    weekdayShort(context, (widget.weekStart - 1 + i) % 7 + 1),
+                    style: theme.textTheme.labelSmall?.copyWith(color: c.muted),
+                  ),
+                ),
+              for (var i = 0; i < lead; i++) const SizedBox.shrink(),
+              for (var n = 1; n <= days; n++)
+                _Day(
+                  habit: widget.habit,
+                  day: day(DateTime.utc(month.year, month.month, n)),
+                  today: widget.today,
+                  index: widget.index,
+                  editable:
+                      widget.onDay != null &&
+                      !widget.habit.archived &&
+                      day(
+                            DateTime.utc(month.year, month.month, n),
+                          ).compareTo(widget.today) <=
+                          0 &&
+                      day(
+                            DateTime.utc(month.year, month.month, n),
+                          ).compareTo(earliest) >=
+                          0 &&
+                      day(
+                            DateTime.utc(month.year, month.month, n),
+                          ).compareTo(created) >=
+                          0,
+                  onTap: widget.onDay,
+                ),
+            ],
+          ),
       ],
     );
   }
@@ -161,7 +240,8 @@ class _Day extends StatelessWidget {
     final isToday = day == today;
     return Semantics(
       button: editable,
-      label: '${formatDay(context, day)}: ${statusLabel(context, status)}',
+      label:
+          '${formatDay(context, day)}: ${statusLabel(context, status)}, ${progressText(context, habit, index.value(habit.id, day), scheduleOn(habit, day)?.target ?? 1000)}',
       excludeSemantics: true,
       child: InkResponse(
         key: Key('day-$day'),

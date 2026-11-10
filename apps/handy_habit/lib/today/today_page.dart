@@ -7,6 +7,8 @@ import '../routines/run.dart';
 import '../scope.dart';
 import '../ui/words.dart';
 import 'rows.dart';
+import 'day_parts.dart';
+import '../ui/capped.dart';
 
 /// Today: what is left to do, each habit as a string of beads with today's
 /// bead to tap, and the routines to start.
@@ -22,15 +24,7 @@ class TodayPage extends StatelessWidget {
           s.liveHabits
               .where((h) => !h.archived && isScheduledOn(h, today))
               .toList()
-            ..sort((a, b) {
-              int rank(Habit h) =>
-                  switch (habitStatus(h, today, today, index)) {
-                    'completed' || 'skipped' || 'paused' => 1,
-                    _ => 0,
-                  };
-              final r = rank(a).compareTo(rank(b));
-              return r != 0 ? r : b.priority.compareTo(a.priority);
-            });
+            ..sort((a, b) => b.priority.compareTo(a.priority));
       final routines =
           s.liveRoutines
               .where(
@@ -48,12 +42,12 @@ class TodayPage extends StatelessWidget {
       final left = [
         _Greeting(scope: scope, due: due, routines: routines, index: index),
         if (scope.activeSession != null) _Resume(scope: scope),
-        if (reviewDue(scope) case final review?)
-          WeekReviewRow(scope: scope, review: review),
         _Habits(scope: scope, due: due, index: index, notToday: notToday),
       ];
       final right = [
         _Routines(scope: scope, routines: routines),
+        if (reviewDue(scope) case final review?)
+          WeekReviewRow(scope: scope, review: review),
         _NextReminder(scope: scope),
       ];
       return ListView(
@@ -95,17 +89,9 @@ class TodayPage extends StatelessWidget {
                       ),
                     ],
                   )
-                // On a phone the routine to start comes before the list,
-                // inside the first screen.
                 : Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      ...left.take(left.length - 1),
-                      if (routines.isNotEmpty) right.first,
-                      left.last,
-                      if (routines.isEmpty) right.first,
-                      ...right.skip(1),
-                    ],
+                    children: [...left, ...right],
                   ),
           ),
         ],
@@ -146,11 +132,6 @@ class _Greeting extends StatelessWidget {
           }.contains(habitStatus(h, today, today, index)),
         )
         .length;
-    final ran = {
-      for (final s in scope.state.sessions)
-        if (s.day == today && s.status == 'finished') s.routine,
-    };
-    final next = routines.where((r) => !ran.contains(r.id)).firstOrNull;
     final resting = restingNow(scope.state, today);
     final facts = resting != null
         ? [
@@ -172,12 +153,6 @@ class _Greeting extends StatelessWidget {
               )
             else
               tr(context, '$left left to do', 'Còn $left việc'),
-            if (next != null)
-              tr(
-                context,
-                '${next.title} at ${next.time}',
-                '${next.title} lúc ${next.time}',
-              ),
           ];
     final d = date(today);
     return Column(
@@ -191,7 +166,7 @@ class _Greeting extends StatelessWidget {
             // The editorial move: the greeting is the page's headline,
             // large and at regular weight.
             style: theme.textTheme.headlineSmall?.copyWith(
-              fontSize: MediaQuery.sizeOf(context).width < 400 ? 34 : 44,
+              fontSize: MediaQuery.sizeOf(context).width < 400 ? 28 : 32,
               fontWeight: FontWeight.w400,
               height: 1.1,
             ),
@@ -206,7 +181,7 @@ class _Greeting extends StatelessWidget {
         ),
         Text(
           [
-            '${weekdayLong(context, d.weekday)}, ${formatDay(context, today)}',
+            '${weekdayShort(context, d.weekday)}, ${formatDay(context, today)}',
             if (resting != null && resting.$1.reason.isNotEmpty)
               resting.$1.reason,
           ].join(' · '),
@@ -242,20 +217,23 @@ class _Resume extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final s = scope.activeSession!;
-    final done = s.steps.where((x) => x.status != 'pending').length;
     return Padding(
-      padding: const EdgeInsets.only(top: HandySpace.l),
-      child: HandyNotice(
-        tr(
-          context,
-          '${s.title} is not finished: step ${s.cursor + 1} of ${s.steps.length}, $done done.',
-          '${s.title} còn dở: bước ${s.cursor + 1}/${s.steps.length}, đã xong $done.',
-        ),
-        action: TextButton(
-          key: const Key('resume-session'),
-          onPressed: () => openSession(context, scope, s.id),
-          child: Text(tr(context, 'Continue', 'Tiếp tục')),
-        ),
+      padding: const EdgeInsets.only(top: 8),
+      child: Row(
+        children: [
+          Expanded(
+            child: Text(
+              '${s.title} · ${s.cursor + 1}/${s.steps.length}',
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
+          TextButton(
+            key: const Key('resume-session'),
+            onPressed: () => openSession(context, scope, s.id),
+            child: Text(tr(context, 'Continue', 'Tiếp tục')),
+          ),
+        ],
       ),
     );
   }
@@ -294,49 +272,116 @@ class _Habits extends StatelessWidget {
         ),
       );
     }
-    return HandySection(
-      title: tr(context, 'To do today', 'Việc hôm nay'),
-      // Also keeps this header the height of the routines one beside it.
-      trailing: TextButton(
-        key: const Key('today-all-habits'),
-        onPressed: () => scope.area.value = 1,
-        child: Text(tr(context, 'All habits', 'Tất cả')),
-      ),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        if (due.isEmpty)
-          Padding(
-            padding: const EdgeInsets.all(HandySpace.l),
-            child: Text(
-              tr(
-                context,
-                'Nothing is planned today. Your other habits are under Habits.',
-                'Hôm nay không có lịch. Các thói quen khác ở mục Thói quen.',
-              ),
-            ),
-          ),
-        for (final h in due)
-          HabitRow(
-            scope: scope,
-            habit: h,
-            index: index,
-            onOpen: () => Navigator.pushNamed(context, '/habit/${h.id}'),
-          ),
-        if (notToday > 0)
-          InkWell(
-            key: const Key('today-others'),
-            onTap: () => scope.area.value = 1,
-            child: Padding(
-              padding: const EdgeInsets.all(HandySpace.l),
-              child: Text(
-                tr(
-                  context,
-                  '$notToday more not planned today',
-                  'Thêm $notToday thói quen không có lịch hôm nay',
+        Padding(
+          padding: const EdgeInsets.only(top: 12, bottom: 4),
+          child: Row(
+            children: [
+              Expanded(
+                child: Semantics(
+                  header: true,
+                  child: Text(
+                    tr(context, 'Habits', 'Thói quen'),
+                    style: Theme.of(context).textTheme.titleMedium,
+                  ),
                 ),
-                style: TextStyle(color: c.muted),
               ),
-            ),
+              TextButton(
+                key: const Key('today-all-habits'),
+                onPressed: () => Navigator.pushNamed(context, '/habits'),
+                child: Text(tr(context, 'All habits', 'Tất cả')),
+              ),
+            ],
           ),
+        ),
+        HandyGroup(
+          children: [
+            if (due.isEmpty)
+              Padding(
+                padding: const EdgeInsets.all(HandySpace.l),
+                child: Text(
+                  tr(
+                    context,
+                    'Nothing is planned today. Your other habits are under Habits.',
+                    'Hôm nay không có lịch. Các thói quen khác ở mục Thói quen.',
+                  ),
+                ),
+              ),
+            Capped(
+              count: due.length,
+              max: 6,
+              name: 'today-habits',
+              builder: (context, shown) {
+                final parts = ['morning', 'afternoon', 'evening', 'anytime'];
+                final grouped = due.any(
+                  (h) => habitDayPart(scope.state, h) != 'anytime',
+                );
+                final ordered = [...due]
+                  ..sort(
+                    (a, b) => parts
+                        .indexOf(habitDayPart(scope.state, a))
+                        .compareTo(parts.indexOf(habitDayPart(scope.state, b))),
+                  );
+                final visible = ordered.take(shown).toList();
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    for (final part in parts) ...[
+                      if (grouped &&
+                          visible.any(
+                            (h) => habitDayPart(scope.state, h) == part,
+                          ))
+                        Padding(
+                          padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+                          child: Text(switch (part) {
+                            'morning' => tr(context, 'Morning', 'Buổi sáng'),
+                            'afternoon' => tr(
+                              context,
+                              'Afternoon',
+                              'Buổi chiều',
+                            ),
+                            'evening' => tr(context, 'Evening', 'Buổi tối'),
+                            _ => tr(context, 'Any time', 'Bất kỳ lúc nào'),
+                          }, style: Theme.of(context).textTheme.labelLarge),
+                        ),
+                      for (final h in visible.where(
+                        (h) => habitDayPart(scope.state, h) == part,
+                      ))
+                        HandyAppear(
+                          key: ValueKey(h.id),
+                          child: HabitRow(
+                            scope: scope,
+                            habit: h,
+                            index: index,
+                            onOpen: () =>
+                                Navigator.pushNamed(context, '/habit/${h.id}'),
+                          ),
+                        ),
+                    ],
+                  ],
+                );
+              },
+            ),
+            if (notToday > 0)
+              InkWell(
+                key: const Key('today-others'),
+                onTap: () => Navigator.pushNamed(context, '/habits'),
+                child: Padding(
+                  padding: const EdgeInsets.all(HandySpace.l),
+                  child: Text(
+                    tr(
+                      context,
+                      '$notToday more not planned today',
+                      'Thêm $notToday thói quen không có lịch hôm nay',
+                    ),
+                    style: TextStyle(color: c.muted),
+                  ),
+                ),
+              ),
+          ],
+        ),
       ],
     );
   }
@@ -356,31 +401,62 @@ class _Routines extends StatelessWidget {
     final next = restingNow(scope.state, scope.today) != null
         ? null
         : routines.where((r) => !ran.contains(r.id)).firstOrNull;
-    return HandySection(
-      title: tr(context, 'Routines today', 'Quy trình hôm nay'),
-      trailing: TextButton(
-        onPressed: () => scope.area.value = 2,
-        child: Text(tr(context, 'All routines', 'Tất cả')),
-      ),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        if (routines.isEmpty)
-          Padding(
-            padding: const EdgeInsets.all(HandySpace.l),
-            child: Text(
-              tr(
-                context,
-                'No routine planned today. A routine is a few steps in order, like a morning.',
-                'Hôm nay không có quy trình. Quy trình là vài bước theo thứ tự, như buổi sáng.',
+        Padding(
+          padding: const EdgeInsets.only(top: 12, bottom: 4),
+          child: Row(
+            children: [
+              Expanded(
+                child: Semantics(
+                  header: true,
+                  child: Text(
+                    tr(context, 'Routines today', 'Quy trình hôm nay'),
+                    style: Theme.of(context).textTheme.titleMedium,
+                  ),
+                ),
+              ),
+              TextButton(
+                onPressed: () => Navigator.pushNamed(context, '/routines'),
+                child: Text(tr(context, 'All routines', 'Tất cả')),
+              ),
+            ],
+          ),
+        ),
+        HandyGroup(
+          children: [
+            if (routines.isEmpty)
+              Padding(
+                padding: const EdgeInsets.all(HandySpace.l),
+                child: Text(
+                  tr(
+                    context,
+                    'No routine planned today. A routine is a few steps in order, like a morning.',
+                    'Hôm nay không có quy trình. Quy trình là vài bước theo thứ tự, như buổi sáng.',
+                  ),
+                ),
+              ),
+            Capped(
+              count: routines.length,
+              max: 2,
+              name: 'today-routines',
+              builder: (context, shown) => Column(
+                children: [
+                  for (final r in routines.take(shown))
+                    RoutineRow(
+                      key: ValueKey(r.id),
+                      scope: scope,
+                      routine: r,
+                      primary: r.id == next?.id,
+                      onOpen: () =>
+                          Navigator.pushNamed(context, '/routine/${r.id}'),
+                    ),
+                ],
               ),
             ),
-          ),
-        for (final r in routines)
-          RoutineRow(
-            scope: scope,
-            routine: r,
-            primary: r.id == next?.id,
-            onOpen: () => Navigator.pushNamed(context, '/routine/${r.id}'),
-          ),
+          ],
+        ),
       ],
     );
   }

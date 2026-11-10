@@ -55,7 +55,7 @@ HabitBackupPreview inspectBackup(Uint8List bytes, {bool zip = true}) {
     if (files.length != 2) throw const FormatException('Missing backup files');
     final manifest = jsonDecode(utf8.decode(files['manifest.json']!)) as Map;
     if (manifest['app'] != 'handy-habit' ||
-        ![1, 2, habitSchema].contains(manifest['schema']) ||
+        ![1, 2, 3, habitSchema].contains(manifest['schema']) ||
         (manifest['files'] as Map)['data.json'] !=
             sha256.convert(files['data.json']!).toString())
       throw const FormatException('Backup checksum mismatch');
@@ -216,6 +216,16 @@ HabitState merge(HabitState current, HabitState imported) {
     ],
     'settings': {
       ...current.settings,
+      if (current.settings['habitDayParts'] != null ||
+          imported.settings['habitDayParts'] != null)
+        'habitDayParts': <String, dynamic>{
+          ...Map<String, dynamic>.from(
+            current.settings['habitDayParts'] as Map? ?? {},
+          ),
+          for (final entry
+              in (imported.settings['habitDayParts'] as Map? ?? {}).entries)
+            if (habits.containsKey(entry.key)) habits[entry.key]!: entry.value,
+        },
       'imports': [...existingBatches, digest],
       'reminders': [
         ...objects(current.settings['reminders'] ?? []),
@@ -370,7 +380,7 @@ HabitState importCsvLogs(HabitState current, Uint8List bytes) {
     if (row.length != _pauseHeader.length)
       throw const FormatException('Wrong CSV column count');
     final record = jsonDecode(utf8.decode(base64Decode(row.last))) as Map;
-    if (![2, habitSchema].contains(record['schema']))
+    if (![2, 3, habitSchema].contains(record['schema']))
       throw const FormatException('Unknown pause record schema');
     final p = Pause.fromJson(Map<String, dynamic>.from(record['pause'] as Map));
     // Habit names (column 5) may differ between devices; IDs may not.

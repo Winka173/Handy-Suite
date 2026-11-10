@@ -67,6 +67,15 @@ class HabitSettingsPage extends StatelessWidget {
           helpVi: 'Cho các lịch theo số ngày mỗi tuần tạo sau này.',
         ),
         const HabitField(
+          'dayBoundary',
+          'Day starts at',
+          'Ngày bắt đầu lúc',
+          kind: FieldKind.time,
+          helpEn:
+              'Applies to future check-ins only. Saved history days never move.',
+          helpVi: 'Chỉ áp dụng cho lần ghi mới. Ngày trong lịch sử không đổi.',
+        ),
+        const HabitField(
           'backfill',
           'Fill in days up to',
           'Cho ghi bù tối đa',
@@ -79,6 +88,8 @@ class HabitSettingsPage extends StatelessWidget {
         'zone': s.zone,
         'weekStart': '${s.weekStart}',
         'backfill': '${s.backfill}',
+        'dayBoundary':
+            '${(s.dayBoundaryMinutes ~/ 60).toString().padLeft(2, '0')}:${(s.dayBoundaryMinutes % 60).toString().padLeft(2, '0')}',
       },
       save: (v) async {
         location(v['zone'] as String);
@@ -92,6 +103,7 @@ class HabitSettingsPage extends StatelessWidget {
               'zone': v['zone'],
               'weekStart': int.parse(v['weekStart'] as String),
               'backfill': backfill,
+              'dayBoundaryMinutes': minuteOfDay(v['dayBoundary'] as String),
             },
           }),
           remember: false,
@@ -264,6 +276,24 @@ class HabitSettingsPage extends StatelessWidget {
         ),
         sections: [
           HandySettingsSection(
+            title: tr(context, 'Motion', 'Chuyển động'),
+            children: [
+              SwitchListTile.adaptive(
+                key: const Key('set-reduced-motion'),
+                title: Text(tr(context, 'Reduce motion', 'Giảm chuyển động')),
+                subtitle: Text(
+                  tr(
+                    context,
+                    'Keep changes immediate. The system preference is also respected.',
+                    'Hiện thay đổi ngay. Luôn tôn trọng tùy chọn giảm chuyển động của máy.',
+                  ),
+                ),
+                value: s.settings['reducedMotion'] == true,
+                onChanged: (v) => _set(context, {'reducedMotion': v}),
+              ),
+            ],
+          ),
+          HandySettingsSection(
             title: tr(context, 'Calendar', 'Lịch'),
             children: [
               HandyTile(
@@ -274,6 +304,13 @@ class HabitSettingsPage extends StatelessWidget {
               HandyTile(
                 title: tr(context, 'Weeks start on', 'Tuần bắt đầu vào'),
                 subtitle: weekdayLong(context, s.weekStart),
+                onTap: () => _calendar(context),
+              ),
+              HandyTile(
+                key: const Key('set-day-boundary'),
+                title: tr(context, 'Day starts at', 'Ngày bắt đầu lúc'),
+                subtitle:
+                    '${(s.dayBoundaryMinutes ~/ 60).toString().padLeft(2, '0')}:${(s.dayBoundaryMinutes % 60).toString().padLeft(2, '0')}',
                 onTap: () => _calendar(context),
               ),
               HandyTile(

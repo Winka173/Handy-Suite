@@ -230,15 +230,20 @@ class TodayBead extends StatelessWidget {
             child: Stack(
               alignment: Alignment.center,
               children: [
-                Bead(
-                  status: switch (status) {
-                    'partial' => 'progress',
-                    'open' || 'missed' => 'open',
-                    _ => status,
-                  },
-                  fill: dayFill(habit, today, index),
-                  size: 36,
-                  color: c.accent,
+                HandySwap(
+                  child: KeyedSubtree(
+                    key: ValueKey('$status:$value'),
+                    child: Bead(
+                      status: switch (status) {
+                        'partial' => 'progress',
+                        'open' || 'missed' => 'open',
+                        _ => status,
+                      },
+                      fill: dayFill(habit, today, index),
+                      size: 36,
+                      color: c.accent,
+                    ),
+                  ),
                 ),
                 if (done)
                   const Icon(Icons.check, size: 20, color: Colors.white)

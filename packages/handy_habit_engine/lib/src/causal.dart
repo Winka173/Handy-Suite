@@ -380,16 +380,24 @@ HabitState recordChange(
   required String actor,
   String? undoBatch,
   bool undoable = true,
+  DateTime? now,
 }) {
-  if (before.zone != proposed.zone) {
+  if (before.zone != proposed.zone ||
+      before.dayBoundaryMinutes != proposed.dayBoundaryMinutes) {
+    var effective = (now ?? DateTime.now()).toUtc();
+    final previous = DateTime.parse(
+      timestamp(before.clockPolicies.last['effectiveFrom']),
+    );
+    if (!effective.isAfter(previous))
+      effective = previous.add(const Duration(microseconds: 1));
     proposed = proposed.copy({
       'clockPolicies': [
         ...before.clockPolicies,
         {
           'id': uid(),
           'zone': proposed.zone,
-          'dayBoundaryMinutes': 0,
-          'effectiveFrom': DateTime.now().toUtc().toIso8601String(),
+          'dayBoundaryMinutes': proposed.dayBoundaryMinutes,
+          'effectiveFrom': effective.toIso8601String(),
         },
       ],
     });

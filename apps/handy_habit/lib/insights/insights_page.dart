@@ -286,18 +286,27 @@ class InsightsPage extends StatelessWidget {
                             .length;
                         return ListTile(
                           title: Text(r.title),
-                          subtitle: Text(
-                            tr(
-                              context,
-                              '$finished finished of ${mine.length} started',
-                              'Xong $finished trên ${mine.length} lần bắt đầu',
-                            ),
-                          ),
-                          trailing: Text(
-                            '${minutesText(context, mine.fold(0, (v, x) => v + x.elapsed))} / ${minutesText(context, mine.fold(0, (v, x) => v + x.planned))}',
-                            style: theme.textTheme.bodyMedium?.copyWith(
-                              fontFeatures: tabular,
-                            ),
+                          subtitle: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                tr(
+                                  context,
+                                  '$finished finished of ${mine.length} started',
+                                  'Xong $finished trên ${mine.length} lần bắt đầu',
+                                ),
+                              ),
+                              Text(
+                                tr(
+                                  context,
+                                  '${minutesText(context, mine.fold(0, (v, x) => v + x.elapsed))} spent · ${minutesText(context, mine.fold(0, (v, x) => v + x.planned))} planned',
+                                  'Đã chạy ${minutesText(context, mine.fold(0, (v, x) => v + x.elapsed))} · dự kiến ${minutesText(context, mine.fold(0, (v, x) => v + x.planned))}',
+                                ),
+                                style: theme.textTheme.bodyMedium?.copyWith(
+                                  fontFeatures: tabular,
+                                ),
+                              ),
+                            ],
                           ),
                         );
                       },
@@ -370,6 +379,8 @@ class _Weeks extends StatelessWidget {
     }
     final shown = weeks.length > 26 ? weeks.sublist(weeks.length - 26) : weeks;
     final current = weekOf(scope.today, s.weekStart);
+    final labelHeight = MediaQuery.textScalerOf(context).scale(12) * 1.4 + 4;
+    final stride = (shown.length / 4).ceil().clamp(1, 26);
     return Semantics(
       label: [
         for (final w in shown)
@@ -377,12 +388,15 @@ class _Weeks extends StatelessWidget {
       ].join('; '),
       excludeSemantics: true,
       child: SizedBox(
-        height: 120,
+        height: 160,
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.end,
           children: [
             Padding(
-              padding: const EdgeInsets.only(right: HandySpace.s, bottom: 20),
+              padding: EdgeInsets.only(
+                right: HandySpace.s,
+                bottom: labelHeight + 5,
+              ),
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 crossAxisAlignment: CrossAxisAlignment.end,
@@ -428,15 +442,35 @@ class _Weeks extends StatelessWidget {
                       Container(height: 1, color: c.border),
                       const SizedBox(height: 4),
                       SizedBox(
-                        height: 15,
-                        child: shown.length <= 8 || shown.indexOf(w) % 4 == 0
-                            ? Text(
-                                '${date(w).day}/${date(w).month}',
-                                style: theme.textTheme.labelSmall?.copyWith(
-                                  color: c.muted,
+                        height: labelHeight,
+                        child:
+                            shown.indexOf(w) == 0 ||
+                                shown.indexOf(w) == shown.length - 1 ||
+                                shown.indexOf(w) % stride == 0 &&
+                                    shown.indexOf(w) < shown.length - stride
+                            ? OverflowBox(
+                                minWidth: 0,
+                                maxWidth: MediaQuery.textScalerOf(
+                                  context,
+                                ).scale(90),
+                                alignment: shown.indexOf(w) == 0
+                                    ? Alignment.centerLeft
+                                    : shown.indexOf(w) == shown.length - 1
+                                    ? Alignment.centerRight
+                                    : Alignment.center,
+                                child: Text(
+                                  '${date(w).day}/${date(w).month}',
+                                  textAlign: shown.indexOf(w) == 0
+                                      ? TextAlign.start
+                                      : shown.indexOf(w) == shown.length - 1
+                                      ? TextAlign.end
+                                      : TextAlign.center,
+                                  style: theme.textTheme.labelSmall?.copyWith(
+                                    color: c.muted,
+                                    fontSize: 12,
+                                  ),
+                                  maxLines: 1,
                                 ),
-                                overflow: TextOverflow.clip,
-                                maxLines: 1,
                               )
                             : null,
                       ),

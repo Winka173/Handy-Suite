@@ -26,6 +26,62 @@ tz.Location location(String zone) {
 
 String localDay(DateTime now, String zone) =>
     day(tz.TZDateTime.from(now, location(zone)));
+
+/// Chooses a version by instant and constructs that local day's cutoff. A DST
+/// gap moves the cutoff forward by the gap; a repeated time uses its first
+/// occurrence, so the habit day cannot roll back during the repeated hour.
+/// Saved event days are never derived again from timestamps.
+String habitDayAt(HabitState s, DateTime instant) {
+  final eligible = s.clockPolicies
+      .where(
+        (p) => !DateTime.parse(timestamp(p['effectiveFrom'])).isAfter(instant),
+      )
+      .toList();
+  eligible.sort(
+    (a, b) => DateTime.parse(
+      timestamp(a['effectiveFrom']),
+    ).compareTo(DateTime.parse(timestamp(b['effectiveFrom']))),
+  );
+  final policy = eligible.isEmpty ? s.clockPolicies.first : eligible.last;
+  final local = tz.TZDateTime.from(instant, location(policy['zone'] as String));
+  final calendar = day(local);
+  final minutes = policy['dayBoundaryMinutes'] as int;
+  var cutoff = tz.TZDateTime(
+    local.location,
+    local.year,
+    local.month,
+    local.day,
+    minutes ~/ 60,
+    minutes % 60,
+  );
+  // TZDateTime chooses different sides of an ambiguous time across hemispheres.
+  // Resolve matching wall times explicitly, taking the earliest occurrence.
+  final wall = DateTime.utc(
+    local.year,
+    local.month,
+    local.day,
+    minutes ~/ 60,
+    minutes % 60,
+  );
+  final offsets = {
+    for (final shift in [-2, 0, 2])
+      tz.TZDateTime.from(
+        cutoff.add(Duration(days: shift)),
+        local.location,
+      ).timeZoneOffset,
+  };
+  for (final offset in offsets) {
+    final candidate = tz.TZDateTime.from(wall.subtract(offset), local.location);
+    if (candidate.year == local.year &&
+        candidate.month == local.month &&
+        candidate.day == local.day &&
+        candidate.hour * 60 + candidate.minute == minutes &&
+        candidate.isBefore(cutoff))
+      cutoff = candidate;
+  }
+  return instant.isBefore(cutoff) ? addDays(calendar, -1) : calendar;
+}
+
 String weekOf(String d, int weekStart) =>
     addDays(d, -((date(d).weekday - weekStart + 7) % 7));
 Schedule? scheduleOn(Habit h, String d) =>
@@ -413,7 +469,7 @@ List<DueReminder> dueReminders(HabitState s, DateTime now) {
           quietEnd ~/ 60,
           quietEnd % 60,
         );
-      if (at.isAfter(local) && eligible(day(at)))
+      if (at.isAfter(local) && eligible(habitDayAt(s, at)))
         result.add(DueReminder(key, at));
     }
 
@@ -428,7 +484,6 @@ List<DueReminder> dueReminders(HabitState s, DateTime now) {
     var scheduled = 0;
     for (var i = 0; i < 400 && scheduled < 50; i++) {
       final d = day(DateTime.utc(local.year, local.month, local.day + i));
-      if (!eligible(d)) continue;
       final a = date(d);
       var at = tz.TZDateTime(
         loc,

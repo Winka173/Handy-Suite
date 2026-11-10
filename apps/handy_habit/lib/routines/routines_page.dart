@@ -3,6 +3,7 @@ import 'package:handy_ui/kit.dart';
 import '../scope.dart';
 import '../today/rows.dart';
 import '../ui/words.dart';
+import '../ui/capped.dart';
 import 'routine_editor.dart';
 import 'routine_view.dart';
 
@@ -86,44 +87,70 @@ class _RoutinesPageState extends State<RoutinesPage> {
           if (routines.isNotEmpty)
             HandySection(
               children: [
-                for (final r in routines)
-                  RoutineRow(
-                    scope: scope,
-                    routine: r,
-                    selected: open?.id == r.id,
-                    onOpen: () => wide
-                        ? setState(() => selected = r.id)
-                        : Navigator.pushNamed(context, '/routine/${r.id}'),
+                Capped(
+                  count: routines.length,
+                  max: 4,
+                  name: 'routines',
+                  open:
+                      selected != null && routines.any((r) => r.id == selected),
+                  builder: (context, shown) => Column(
+                    children: [
+                      for (final r in routines.take(shown))
+                        RoutineRow(
+                          key: ValueKey(r.id),
+                          scope: scope,
+                          routine: r,
+                          selected: open?.id == r.id,
+                          onOpen: () => wide
+                              ? setState(() => selected = r.id)
+                              : Navigator.pushNamed(
+                                  context,
+                                  '/routine/${r.id}',
+                                ),
+                        ),
+                    ],
                   ),
+                ),
               ],
             ),
           if (templates.isNotEmpty)
             HandySection(
               title: tr(context, 'Start from one of these', 'Bắt đầu từ mẫu'),
               children: [
-                for (final t in templates)
-                  ListTile(
-                    key: Key('template-${t.title}'),
-                    title: Text(t.title),
-                    subtitle: Text(t.steps.map((x) => x.title).join(' · ')),
-                    trailing: TextButton(
-                      onPressed: () => scope.write(
-                        context,
-                        (s) => s.copy({
-                          'routines': [
-                            ...s.routines.map((x) => x.toJson()),
-                            t.toJson(),
-                          ],
-                        }),
-                        done: (c) => tr(
-                          c,
-                          '${t.title} added; change it as you like.',
-                          'Đã thêm ${t.title}; sửa tùy ý.',
+                Capped(
+                  count: templates.length,
+                  max: 4,
+                  name: 'routine-templates',
+                  builder: (context, shown) => Column(
+                    children: [
+                      for (final t in templates.take(shown))
+                        ListTile(
+                          key: Key('template-${t.title}'),
+                          title: Text(t.title),
+                          subtitle: Text(
+                            t.steps.map((x) => x.title).join(' · '),
+                          ),
+                          trailing: TextButton(
+                            onPressed: () => scope.write(
+                              context,
+                              (s) => s.copy({
+                                'routines': [
+                                  ...s.routines.map((x) => x.toJson()),
+                                  t.toJson(),
+                                ],
+                              }),
+                              done: (c) => tr(
+                                c,
+                                '${t.title} added; change it as you like.',
+                                'Đã thêm ${t.title}; sửa tùy ý.',
+                              ),
+                            ),
+                            child: Text(tr(context, 'Use', 'Dùng')),
+                          ),
                         ),
-                      ),
-                      child: Text(tr(context, 'Use', 'Dùng')),
-                    ),
+                    ],
                   ),
+                ),
               ],
             ),
         ],

@@ -469,7 +469,7 @@ class HabitState {
                    {
                      'id': 'legacy-clock',
                      'zone': settings['zone'] ?? 'Asia/Ho_Chi_Minh',
-                     'dayBoundaryMinutes': 0,
+                     'dayBoundaryMinutes': settings['dayBoundaryMinutes'] ?? 0,
                      'effectiveFrom': '1900-01-01T00:00:00.000Z',
                    },
                  ])
@@ -489,6 +489,7 @@ class HabitState {
   String get zone => settings['zone'] as String? ?? 'Asia/Ho_Chi_Minh';
   int get weekStart => settings['weekStart'] as int? ?? 1;
   int get backfill => settings['backfill'] as int? ?? 90;
+  int get dayBoundaryMinutes => settings['dayBoundaryMinutes'] as int? ?? 0;
   Json toJson() => {
     'app': 'handy-habit',
     'schema': habitSchema,
@@ -522,11 +523,11 @@ class HabitState {
 
   factory HabitState.fromJson(Json j) {
     if (j['app'] != 'handy-habit' ||
-        ![1, 2, 3].contains(j['schema']) ||
+        ![1, 2, 3, 4].contains(j['schema']) ||
         j['schema'] == 1 && j['pauses'] != null) {
       throw const FormatException('Unsupported Habit backup/schema');
     }
-    final old = j['schema'] != 3;
+    final old = (j['schema'] as int) < 3;
     final s = HabitState(
       revision: integer(j['revision']),
       operations: objects(
@@ -550,16 +551,23 @@ class HabitState {
   }
   void validate() {
     location(zone);
+    integer(dayBoundaryMinutes, max: 1439);
     validateOperations(operations);
     if (clockPolicies.isEmpty || clockPolicies.length > 1000)
       throw const FormatException('Invalid clock policies');
     final policyIds = <String>{};
+    DateTime? previousPolicy;
     for (final p in clockPolicies) {
       if (!policyIds.add(text(p['id'])))
         throw const FormatException('Duplicate clock policy');
       location(text(p['zone']));
-      integer(p['dayBoundaryMinutes'], max: 0);
-      timestamp(p['effectiveFrom']);
+      integer(p['dayBoundaryMinutes'], max: 1439);
+      final effective = DateTime.parse(timestamp(p['effectiveFrom']));
+      if (previousPolicy != null && !effective.isAfter(previousPolicy))
+        throw const FormatException(
+          'Clock policies must have increasing effective instants',
+        );
+      previousPolicy = effective;
     }
     for (final t in tombstones) {
       text(t['id']);

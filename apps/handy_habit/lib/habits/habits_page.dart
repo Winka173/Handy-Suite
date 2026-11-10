@@ -3,13 +3,15 @@ import 'preset_sheet.dart';
 import 'package:handy_ui/kit.dart';
 import '../scope.dart';
 import '../today/rows.dart';
+import '../ui/capped.dart';
 import 'habit_view.dart';
 
 /// Every habit, by group, with today's bead on each. A wide screen opens
 /// the chosen one beside the list.
 class HabitsPage extends StatefulWidget {
   final HabitScope scope;
-  const HabitsPage({super.key, required this.scope});
+  final bool autofocus;
+  const HabitsPage({super.key, required this.scope, this.autofocus = false});
   @override
   State<HabitsPage> createState() => _HabitsPageState();
 }
@@ -84,6 +86,7 @@ class _HabitsPageState extends State<HabitsPage> {
           ),
           const SizedBox(height: HandySpace.m),
           TextField(
+            autofocus: widget.autofocus,
             key: const Key('habit-search'),
             decoration: InputDecoration(
               hintText: tr(context, 'Find a habit', 'Tìm thói quen'),
@@ -149,16 +152,29 @@ class _HabitsPageState extends State<HabitsPage> {
                         : tr(context, 'No group', 'Không nhóm'))
                   : name,
               children: [
-                for (final h in groups[name]!)
-                  HabitRow(
-                    scope: scope,
-                    habit: h,
-                    index: index,
-                    selected: open?.id == h.id,
-                    onOpen: () => wide
-                        ? setState(() => selected = h.id)
-                        : Navigator.pushNamed(context, '/habit/${h.id}'),
+                Capped(
+                  count: groups[name]!.length,
+                  max: 6,
+                  name: 'habits-$name',
+                  open:
+                      selected != null &&
+                      groups[name]!.any((h) => h.id == selected),
+                  builder: (context, shown) => Column(
+                    children: [
+                      for (final h in groups[name]!.take(shown))
+                        HabitRow(
+                          key: ValueKey(h.id),
+                          scope: scope,
+                          habit: h,
+                          index: index,
+                          selected: open?.id == h.id,
+                          onOpen: () => wide
+                              ? setState(() => selected = h.id)
+                              : Navigator.pushNamed(context, '/habit/${h.id}'),
+                        ),
+                    ],
                   ),
+                ),
               ],
             ),
         ],

@@ -70,7 +70,7 @@ HabitState trashEntity(HabitState s, String kind, String id, DateTime now) {
     entity: id,
     deletedAt: now.toUtc().toIso8601String(),
     expiresAt: now.toUtc().add(trashRetention).toIso8601String(),
-    localDay: localDay(now, s.zone),
+    localDay: habitDayAt(s, now),
   );
   return s.copy({
     'trash': [...s.trash.map((t) => t.toJson()), entry.toJson()],
@@ -84,7 +84,7 @@ HabitState restoreTrash(HabitState s, String id, DateTime now) {
   // Original entities and references stayed in place, so restoration cannot overwrite edits.
   return s.copy({
     if (entry.kind == 'habit' &&
-        date(localDay(now, s.zone)).difference(date(entry.localDay)).inDays > 1)
+        date(habitDayAt(s, now)).difference(date(entry.localDay)).inDays > 1)
       'habits': [
         for (final h in s.habits)
           if (h.id == entry.entity)
@@ -93,7 +93,7 @@ HabitState restoreTrash(HabitState s, String id, DateTime now) {
                 ...h.archivedPeriods,
                 {
                   'from': addDays(entry.localDay, 1),
-                  'until': addDays(localDay(now, s.zone), -1),
+                  'until': addDays(habitDayAt(s, now), -1),
                 },
               ],
             }).toJson()

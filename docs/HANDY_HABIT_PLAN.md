@@ -36,14 +36,15 @@ Bất biến: validate toàn bộ→CAS transaction→publish; cancel/error gi�
 
 ### Version và migration
 
-Baseline data schema2, SQLite/IDB physical1. Run 2 ships data3/physical2, including R4 trash in v3 as required by the combined brief. Read chain shipped: 1→2→3; planned next versions: 4→5→6; writer theo slice, không parser chỉ nhận1/latest bỏ schema giữa. Backup manifest/data phải tương thích sau normalize.
+Baseline data schema2, SQLite/IDB physical1. Run2 shipped data3/physical2, including R4 trash in v3. Run3 ships data4/physical2 for custom day boundaries. Read chain shipped:1→2→3→4; planned next versions:5→6→7; writer theo slice, không parser chỉ nhận1/latest bỏ schema giữa. Backup manifest/data phải tương thích sau normalize.
 
 | Schema | Thêm | Migration/roundtrip |
 | --- | --- | --- |
 | 3/R3+R4 (IMPLEMENTED, host tested) | Causal operations/revisions, versioned clock policy, trash/tombstones | Mỗi v2 event→legacy op ID tất định từ eventId/payload hash, actor legacy ổn định; entityId giữ logical eventId để phát hiện cùng event khác payload; số/ngày/provenance giữ, cùng ancestry không double count |
-| 4/R10 (planned) | Negative GoalRevision/IncidentOp/Observation | Habits cũ positive, unit/target history giữ, zero/unknown riêng, CSV cũ đọc được |
-| 5/R14 (planned) | MoodEntry/revision/delete | Mood rỗng, không suy từ notes; time/tags/note roundtrip |
-| 6/R17 (planned) | Advanced graph/plan snapshots/trace | List cũ→linear path tương đương; active/closed sessions giữ snapshot |
+| 4/R6 (IMPLEMENTED, host tested) | Custom versioned day-boundary policy | v3 causal IDs/policies preserved; v1–v3 readers retained; historical days fixed; JSON/ZIP/CSV compatible, DST north/south tested |
+| 5/R10 (planned) | Negative GoalRevision/IncidentOp/Observation | Habits cũ positive, unit/target history giữ, zero/unknown riêng, CSV cũ đọc được |
+| 6/R14 (planned) | MoodEntry/revision/delete | Mood rỗng, không suy từ notes; time/tags/note roundtrip |
+| 7/R17 (planned) | Advanced graph/plan snapshots/trace | List cũ→linear path tương đương; active/closed sessions giữ snapshot |
 
 R3 tạo operations table/index và IDB store→physical2. Slice sau ưu tiên payload; cần thêm table/index thì bump physical tiếp. Không đổi DB name/format app ID. Migration transaction + durable recovery trước migrate, future/corrupt/quota giữ bản gốc, IDB onblocked/versionchange xử lý tab cũ.
 
@@ -64,19 +65,19 @@ Operation{id,actorId,actorSeq,lamport,parents,entityKind,entityId,intent,payload
 
 TrashEntry{id,kind,entityId,deletedAtUtc,expiresAtUtc,deletionRevision,payloadRef,referenceSnapshot}. Giữ30 ngày, days-left=ceil(remaining/24h) clamp0..30. Habit ẩn Today/reminders ngay, history còn khi trong trash, future eligibility chốt ngày xóa. Routine giữ session snapshots. Restore nguyên ID/links còn hợp lệ; đã purge habit thì nói không còn, không tạo habit mới. Active session dùng entity phải pause/đóng/xác nhận xử lý trước xóa. Purge payload/history sau30 ngày theo lời báo trước, idempotent, giữ tombstone nhẹ cho sync. Archive cất lâu dài, không expire.
 
-### Negative (planned v4)
+### Negative (planned v5)
 
 Habit.direction=build|reduce, không reversed binary. GoalRevision{id,effectiveFrom,measure=count|quantity|duration,unit,window=day|week,maxIncidentsMilli,weekStart,baselineMilli?}; positive weekly quota giữ riêng. IncidentOp có habit/day/amount/source/note/instant/revision, edit/retract qua ledger. Observation{habitId,localDay,confirmedThrough}: observed+no incidents=zero, thiếu ghi=unknown. Optional xác nhận0 cho cả nhóm, không bắt nhiều việc mỗi ngày.
 
 Today1/2 lần trong giới hạn, primary Ghi lần, zero action riêng. Kỳ mở provisional, không cộng streak trước đóng; closed observed≤threshold đạt, vượt phản hồi trung tính/không đỏ. Weekly là tổng incidents, không số ngày tốt. Nghỉ không thành zero; kỳ thiếu observation/đang nghỉ không đủ tuyên bố đạt, hiển thị known+unknown. Không auto-prorate threshold âm làm mục tiêu chặt hơn, sửa từ kỳ sau. Không routine completion→incident; reduction% chỉ baseline người dùng xác nhận và cùng đơn vị/kỳ, không y tế.
 
-### Mood (planned v5)
+### Mood (planned v6)
 
 MoodEntry{id,day,recordedAtUtc,mood1..5?,energy1..5?,note≤4096,tags≤8,revision,deletedAt?}; ít nhất mood hoặc energy, một entry hiệu lực/ngày, edit có revision; concurrent không ngầm average. Skip không tạo entry, không suy mood từ habit. Correlation local cần≥14 paired observed days, nêu N/missing, chỉ liên hệ không nguyên nhân/chẩn đoán. Thiếu mẫu nói thiếu, không upsell che data.
 
 Basic routine library chính là các plan tái sử dụng. Save as template tạo bản Routine độc lập bằng model hiện có, không chỉnh plan gốc hoặc session snapshot; bản này đi trong full backup. Nếu cần metadata mới ngoài model phải có schema bump/roundtrip trước, không giấu fields mới trong UI.
 
-### Advanced routines (planned v6)
+### Advanced routines (planned v7)
 
 RoutinePlanRevision{id,from,graphVersion,nodes,edges,blocksSnapshot,presets}; node ID stable. Rules hữu hạn: condition theo dữ liệu ngày/session đã có, prior-node dependency, choice branch, stack-after; không expression/code tùy ý. DAG≤200 expanded steps, không cycle/recursive blocks, mọi path có exit/required reachable. Block snapshot/version lúc thêm, sửa không rewrite session. Seconds theo weekday, foreground timer policy/auto-transition opt-in, không background alarm giả.
 
@@ -141,19 +142,19 @@ Mỗi run một feature area, supervisor review rồi chuyển. A/E/AT/ET theo A
 | R2 P0 data safety — IMPLEMENTED / HOST TESTED | A settings/data, backup/recovery helpers, kit integration | AT backup_restore: hseal wrong password/tamper/cancel, metadata/schema/size preview, stale CAS/rollback, durable pre-replace recovery; giữ v1/v2 | SAF local/cloud provider, iOS Files, Windows retention/sealed, Web upload/download |
 | R3 P0 causal storage — IMPLEMENTED / HOST TESTED | E operations/migration/models/portable/calendar/routines; A stores/controller; schema3/physical2 | ET legacy migration/union/retract/absolute-conflict; AT transaction/CAS/restart; số/ngày/provenance giữ, domain Undo | Upgrade years data/kill migration/commit/low storage; browser blocked tab/quota |
 | R4 P0 trash — IMPLEMENTED / HOST TESTED | E trash/models/portable; A delete menus/settings trash; bundled schema3 | ET restore/purge/day/refs/backup; AT restart→restore/Ndays/active guard/archive riêng | Ngày29/30/restore links/permanent delete/backup |
-| R5 P1 shell/Today | A shell/app/today/habits list/kit motion | AT routes/URL/one-tap/Undo/reduced motion/scale; bead top60%; cap→Show all; films ensureVisible+state assert | Rapid tap/back/rotation/SR, fold/keyboard, browser refresh/back |
-| R6 P1 habit editor/history | A editor/appearance/view/month_grid/form; E clock policy | AT cancel/fail/legacy Advanced/effective targets/history Show all; ET custom day-boundary/DST giữ ngày cũ |320keyboard/VI dài/swipe dirty/midnight/appearance giữ log |
+| R5 P1 shell/Today — IMPLEMENTED / HOST TESTED | A shell/app/today/habits list/kit motion | AT named routes/back/shortcuts, one-tap/Undo, reduced motion, fold/reopen remembered, scale/top60%, cap/Show all; films ensureVisible+committed-state assertions | Rapid tap/back/rotation/SR, fold/keyboard, browser refresh/back |
+| R6 P1 habit editor/history — IMPLEMENTED / HOST TESTED | A editor/appearance/view/month_grid/form; E clock policy schema4 | AT dirty Cancel/Back/Esc, fail/busy/retry, Advanced/appearance regressions, effective targets, history Show all, foreground rollover; ET custom boundary/DST north+south/old-day preservation/roundtrip |320keyboard/VI dài/swipe dirty/midnight/appearance giữ log |
 | R7 P1 Basic routines | A draft builder/list/detail/runner UI | AT draft add/reorder/link/cancel/fail/required/skip/time/summary; ET exactly-once regressions; save toàn draft | Drag+nút up/down/linked count/background/kill/reopen/exit |
 | R8 P1 onboarding | A welcome/page/story/practice + routes | AT2beats/no-question/Back-Skip-Esc-Enter/practice check-in-Undo-goal-run-done/Do it for me/final1Start/replay no writes/upgrade no force | First launch/update/replay/OS back/large text/dark/VI/no permissions |
 | R9 P1 help/Settings | A how_to_page/how_to_mocks/groups/parts/routes | AT search không dấu/EN-VI/no-match/context/replay, badge non-Pro, persist/error/reset-only-prefs; topics theo enabled features | Làm theo ảnh/SR/reset giữ data-purchase/support/privacy |
-| R10 P1 negative engine | E negative/goal/ops/calendar/portable/migration; schema4 | ET incident/zero/unknown/day-week/open-close/skip/pause/retract/DST/history/conflict; full formats/old positives | Upgrade/reopen/restore mixed/check day-week boundaries |
+| R10 P1 negative engine | E negative/goal/ops/calendar/portable/migration; schema5 | ET incident/zero/unknown/day-week/open-close/skip/pause/retract/DST/history/conflict; full formats/old positives | Upgrade/reopen/restore mixed/check day-week boundaries |
 | R11 P1 negative UX | A editor/today/check_in/history/help | AT incident/Undo/zero optional/unknown≠success/budget/backfill/neutral/no routine incident |2/day,3/week/EN-VI/SR/zero-vs-unknown |
 | R12 P1 templates | E presets/catalog/routines; A templates/create/help | ET IDs/content/EN-VI/defaults; AT search/category/preview/customize/cancel/save once; giữ32/8, report counts mới | Offline/back/no duplicate/previews khớp UI |
 | R13 P1 core Progress | E review/heatmap; A insights/progress/week | ET denominator/leap/DST/quota/unknown/conflict; AT range/filter/Show all/export/zero; month-year Free | Years data/text scale/SR table/cell backfill |
-| R14 P2 mood | E mood/model/portable/migration; A optional sheet/calendar; schema5 | ET validation/revision/delete/roundtrip; AT2tap/skip/no forced note/privacy, core không phụ thuộc | Offline/edit/delete/restart/restore/export privacy |
+| R14 P2 mood | E mood/model/portable/migration; A optional sheet/calendar; schema6 | ET validation/revision/delete/roundtrip; AT2tap/skip/no forced note/privacy, core không phụ thuộc | Offline/edit/delete/restart/restore/export privacy |
 | R15 P0 sync engine | E sync/protocol/merge/reducer; A base abstraction | ET full conflict suite ở §3/convergence/closed union/active local/corrupt/local edits in flight |2 states/2 processes/conflict values/manual+linked không mất |
 | R16 P1 Android Drive | A sync/provider/controller/section/lifecycle/pubspec | AT fake auth/offline/quota/CAS/retry/disable/rejoin/flag-off/no delete/token export; appdata only | Owner OAuth/signing/2Android/deny-revoke/offline/interruption/Sync now |
-| R17 P2 Advanced engine | E routine_rules/plans/portable/migration; schema6 | ET DAG/cycle/refs/path cap/inputs snapshot/Undo/linked/weekday/all-schema roundtrip | Active basic upgrade/branch restart/restore no automation |
+| R17 P2 Advanced engine | E routine_rules/plans/portable/migration; schema7 | ET DAG/cycle/refs/path cap/inputs snapshot/Undo/linked/weekday/all-schema roundtrip | Active basic upgrade/branch restart/restore no automation |
 | R18 P2 Advanced UX | A builder/blocks/presets/trace/runner/gates | AT Basic-Advanced/readable preview/draft/validation/fail/existing run-safe/summary | Branch/dependency/skip/Undo/recovery/motion, no terminated timer |
 | R19 P2 insights | E correlation/comparison/suggestions; A advanced progress/report | ET≥14 pairs/missing/no-cause/segments; AT explain-why/free core/report preview | Check against independent export/data ít-nhiều/no medical |
 | R20 P2 studio | A design/theme/dashboard/widget preview | AT AA light-dark/preview cancel-apply/entitlement loss/Nunito VI/widths/no data rewrite | OS theme/text scale/contrast/stable dots/appearance giữ lịch |
@@ -188,3 +189,25 @@ R2–R4 are source implemented and host tested, not device/browser verified. R4 
 Run 2 final host checks: engine74/74, app70/70 (`flutter test --no-pub`); both `dart analyze` clean and `dart format --output=none --set-exit-if-changed lib test` report0 changed. Fixture verifier PASS21 files/39 documented tools; no fixture/registry changes. No device/browser/store tests.
 
 R3 regression guard: manual habit/routine order is stored as validated entityOrder IDs, separate from database key/row order; guarded order revisions preserve reorder Undo across restart and backup roundtrip without snapshotting the whole state.
+
+
+### Run 3 implementation notes (2026-11-10)
+
+R5/R6 are source implemented and host/widget tested. Today/Routines/Progress use named routes;
+all habits remains one tap from Today, legacy detail/runner/session/settings routes remain.
+Wide sidebar224 folds to kit rail64, remembers its state and reopens at the top. Navigation
+preserves an editor underneath keyboard navigation; its draft is not removed silently.
+Beads precede routine/review on phones, row positions stay fixed after check-in; automatic
+morning/afternoon/evening grouping has an Advanced override. Long lists expand in place.
+The existing appearance editor and Advanced fields/options remain covered by their tests.
+Dirty Cancel/Back/Esc asks before discard; busy saves block exit and failure keeps the draft.
+History expands past30 records, reads dated targets, offers48px day-list rows at narrow/large text.
+Data writers now use schema4, physical stores remain2. Readers preserve v1/v2/v3 and their causal
+operations. Clock policies support0–1439minutes and effective instants; saved event days never
+move. DST gaps shift the cutoff forward by the gap; repeated times use the first occurrence
+in either hemisphere. New check-ins, reminder eligibility and trash use the same logical day.
+Foreground day refresh is at most one minute; resume refreshes immediately. Copy-merge remaps
+day-part overrides and keeps the receiver's clock. Future negative/mood/advanced schema slots
+move to5/6/7; the earlier run2 notes describe that run's schema3, not current writer version.
+Help is a small working daily-jobs entry; searchable illustrated help remains R9.
+No shared infrastructure packages, devices, browser runtime, stores or git writes in this run.

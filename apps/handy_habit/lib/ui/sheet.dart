@@ -132,7 +132,9 @@ class SheetFrame extends StatelessWidget {
           : Scaffold(
               appBar: AppBar(title: Text(title), actions: actions),
               body: SafeArea(bottom: false, child: body),
-              bottomNavigationBar: HandyBottomBar(child: foot),
+              bottomNavigationBar: HandyBottomBar(
+                child: HandyContent(maxWidth: 560, child: foot),
+              ),
             ),
     );
   }

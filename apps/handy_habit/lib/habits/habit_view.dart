@@ -4,6 +4,7 @@ import '../pauses/pauses.dart';
 import '../scope.dart';
 import '../today/check_in.dart';
 import '../ui/words.dart';
+import '../ui/capped.dart';
 import 'habit_editor.dart';
 import 'habit_appearance.dart';
 import 'month_grid.dart';
@@ -69,27 +70,58 @@ class HabitView extends StatelessWidget {
     final unit = m.unit == 'weeks'
         ? tr(context, 'weeks', 'tuần')
         : tr(context, 'days', 'ngày');
-    Widget figureCell(String label, String value, {Key? key}) => Expanded(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            label,
-            style: theme.textTheme.bodySmall?.copyWith(color: c.muted),
-          ),
-          Text(
-            value,
-            key: key,
-            style: theme.textTheme.titleLarge?.copyWith(fontFeatures: tabular),
-          ),
-        ],
-      ),
-    );
+    final compact =
+        MediaQuery.sizeOf(context).width < 360 ||
+        MediaQuery.sizeOf(context).width < 600 &&
+            MediaQuery.textScalerOf(context).scale(16) > 20;
+    Widget figureCell(String label, String value, {Key? key}) => compact
+        ? Padding(
+            padding: const EdgeInsets.symmetric(vertical: 4),
+            child: Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    label,
+                    style: theme.textTheme.bodyMedium?.copyWith(color: c.muted),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Flexible(
+                  child: Text(
+                    value,
+                    key: key,
+                    textAlign: TextAlign.end,
+                    style: theme.textTheme.titleMedium?.copyWith(
+                      fontFeatures: tabular,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          )
+        : Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  label,
+                  style: theme.textTheme.bodySmall?.copyWith(color: c.muted),
+                ),
+                Text(
+                  value,
+                  key: key,
+                  style: theme.textTheme.titleLarge?.copyWith(
+                    fontFeatures: tabular,
+                  ),
+                ),
+              ],
+            ),
+          );
     return ListView(
       padding: const EdgeInsets.all(HandySpace.l),
       children: [
         Align(
-          alignment: AlignmentDirectional.topStart,
+          alignment: AlignmentDirectional.topCenter,
           child: ConstrainedBox(
             constraints: const BoxConstraints(maxWidth: HandySpace.content),
             child: Column(
@@ -126,7 +158,9 @@ class HabitView extends StatelessWidget {
                     child: Text(h.note),
                   ),
                 const SizedBox(height: HandySpace.l),
-                Row(
+                Flex(
+                  direction: compact ? Axis.vertical : Axis.horizontal,
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     figureCell(
                       tr(context, 'Running now', 'Chuỗi hiện tại'),
@@ -226,36 +260,44 @@ class HabitView extends StatelessWidget {
                           ),
                         ),
                       ),
-                    for (final e in events.take(30))
-                      ListTile(
-                        title: Text(
-                          e.skipped
-                              ? statusLabel(context, 'skipped')
-                              : h.type == 'binary'
-                              ? tr(context, 'Done', 'Đã xong')
-                              : '${figure(context, e.value)} ${unitOf(context, h)}',
-                        ),
-                        subtitle: Text(
-                          [
-                            dayText(context, e.day, today),
-                            if (e.source == 'routine')
-                              tr(context, 'from a routine', 'từ quy trình'),
-                            if (e.note.isNotEmpty) e.note,
-                          ].join(' · '),
-                        ),
+                    Capped(
+                      key: ValueKey('history-${h.id}'),
+                      count: events.length,
+                      max: 30,
+                      name: 'history',
+                      builder: (context, shown) => Column(
+                        children: [
+                          for (final e in events.take(shown))
+                            ListTile(
+                              title: Text(
+                                e.skipped
+                                    ? statusLabel(context, 'skipped')
+                                    : h.type == 'binary'
+                                    ? tr(context, 'Done', 'Đã xong')
+                                    : '${figure(context, e.value)} ${unitOf(context, h)}',
+                              ),
+                              subtitle: Text(
+                                [
+                                  dayText(context, e.day, today),
+                                  if (h.type != 'binary')
+                                    tr(
+                                      context,
+                                      'Goal ${figure(context, scheduleOn(h, e.day)?.target ?? 1000)} ${unitOf(context, h)}',
+                                      'Mục tiêu ${figure(context, scheduleOn(h, e.day)?.target ?? 1000)} ${unitOf(context, h)}',
+                                    ),
+                                  if (e.source == 'routine')
+                                    tr(
+                                      context,
+                                      'from a routine',
+                                      'từ quy trình',
+                                    ),
+                                  if (e.note.isNotEmpty) e.note,
+                                ].join(' · '),
+                              ),
+                            ),
+                        ],
                       ),
-                    if (events.length > 30)
-                      Padding(
-                        padding: const EdgeInsets.all(HandySpace.l),
-                        child: Text(
-                          tr(
-                            context,
-                            '${events.length - 30} older entries are in the exports.',
-                            'Còn ${events.length - 30} lần cũ hơn trong file xuất.',
-                          ),
-                          style: TextStyle(color: c.muted),
-                        ),
-                      ),
+                    ),
                   ],
                 ),
               ],

@@ -379,21 +379,26 @@ void main() {
   });
 
   for (final width in [320.0, 768.0, 1024.0, 1440.0]) {
-    testWidgets('four areas and long Vietnamese text fit $width wide', (
-      tester,
-    ) async {
-      tester.view.physicalSize = Size(width, 1000);
-      tester.view.devicePixelRatio = 1;
-      addTearDown(tester.view.resetPhysicalSize);
-      addTearDown(tester.view.resetDevicePixelRatio);
-      final c = await start(tester, state: seeded(), locale: 'vi');
-      for (final label in ['Thói quen', 'Quy trình', 'Thống kê', 'Hôm nay']) {
-        await tester.tap(find.text(label).last);
+    testWidgets(
+      'three areas, habit management and long Vietnamese text fit $width wide',
+      (tester) async {
+        tester.view.physicalSize = Size(width, 1000);
+        tester.view.devicePixelRatio = 1;
+        addTearDown(tester.view.resetPhysicalSize);
+        addTearDown(tester.view.resetDevicePixelRatio);
+        final c = await start(tester, state: seeded(), locale: 'vi');
+        await tapKey(tester, 'today-all-habits');
+        expect(tester.takeException(), isNull);
+        await tester.tap(find.byType(BackButton));
         await tester.pumpAndSettle();
-        expect(tester.takeException(), isNull, reason: label);
-      }
-      await tester.pumpWidget(const SizedBox());
-      c.dispose();
-    });
+        for (final label in ['Quy trình', 'Tiến bộ', 'Hôm nay']) {
+          await tester.tap(find.text(label).last);
+          await tester.pumpAndSettle();
+          expect(tester.takeException(), isNull, reason: label);
+        }
+        await tester.pumpWidget(const SizedBox());
+        c.dispose();
+      },
+    );
   }
 }

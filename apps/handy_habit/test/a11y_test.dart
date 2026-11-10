@@ -20,12 +20,22 @@ void main() {
               'settings': {'onboarded': true, 'theme': theme},
             }),
           );
-          for (final label in [
-            'Hôm nay',
-            'Thói quen',
-            'Quy trình',
-            'Thống kê',
+          await fixtures.tapKey(tester, 'today-all-habits');
+          for (final guideline in [
+            textContrastGuideline,
+            androidTapTargetGuideline,
+            iOSTapTargetGuideline,
+            labeledTapTargetGuideline,
           ]) {
+            await expectLater(
+              tester,
+              meetsGuideline(guideline),
+              reason: '$theme $width habits',
+            );
+          }
+          await tester.tap(find.byType(BackButton));
+          await tester.pumpAndSettle();
+          for (final label in ['Hôm nay', 'Quy trình', 'Tiến bộ']) {
             await tester.tap(find.text(label).last);
             await tester.pumpAndSettle();
             for (final guideline in [

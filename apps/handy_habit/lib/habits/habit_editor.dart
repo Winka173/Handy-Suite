@@ -12,7 +12,20 @@ Future<bool> openHabitEditor(
   HabitScope scope, [
   Habit? old,
   HabitPreset? preset,
-]) async {
+]) async =>
+    await Navigator.pushNamed<bool>(
+      context,
+      old == null ? '/habit/new' : '/habit/${old.id}/edit',
+      arguments: preset,
+    ) ==
+    true;
+
+Widget buildHabitEditor(
+  BuildContext context,
+  HabitScope scope, [
+  Habit? old,
+  HabitPreset? preset,
+]) {
   final s = scope.state, today = scope.today;
   final current = old == null
       ? null
@@ -35,8 +48,7 @@ Future<bool> openHabitEditor(
                 v.status == 'active' &&
                 v.steps.any((step) => step.plan.habit == old.id),
           ));
-  final saved = await showHabitForm(
-    context,
+  return HabitForm(
     title: old == null
         ? tr(context, 'New habit', 'Thói quen mới')
         : tr(context, 'Edit ${old.title}', 'Sửa ${old.title}'),
@@ -145,6 +157,24 @@ Future<bool> openHabitEditor(
         helpEn: 'Health, Study… Habits are listed by group.',
         helpVi: 'Sức khỏe, Học tập… Thói quen được xếp theo nhóm.',
       ),
+      HabitField(
+        'dayPart',
+        'Time of day',
+        'Buổi trong ngày',
+        advanced: true,
+        kind: FieldKind.choice,
+        options: {
+          'auto': tr(
+            context,
+            'From reminders / routines',
+            'Theo nhắc / quy trình',
+          ),
+          'morning': tr(context, 'Morning', 'Buổi sáng'),
+          'afternoon': tr(context, 'Afternoon', 'Buổi chiều'),
+          'evening': tr(context, 'Evening', 'Buổi tối'),
+          'anytime': tr(context, 'Any time', 'Bất kỳ lúc nào'),
+        },
+      ),
       const HabitField(
         'priority',
         'Priority',
@@ -188,6 +218,7 @@ Future<bool> openHabitEditor(
                   habitPresetGroups[preset.group]!.$1,
                   habitPresetGroups[preset.group]!.$2,
                 )),
+      'dayPart': (s.settings['habitDayParts'] as Map?)?[old?.id] ?? 'auto',
       'priority': '${old?.priority ?? 1}',
       'note': old?.note ?? '',
     },
@@ -248,6 +279,15 @@ Future<bool> openHabitEditor(
       );
       await scope.controller.change(
         (s) => s.copy({
+          'settings': {
+            ...s.settings,
+            'habitDayParts': <String, dynamic>{
+              ...Map<String, dynamic>.from(
+                s.settings['habitDayParts'] as Map? ?? {},
+              ),
+              next.id: v['dayPart'],
+            },
+          },
           'habits': [
             for (final h in s.habits)
               if (h.id != next.id) h.toJson(),
@@ -255,14 +295,13 @@ Future<bool> openHabitEditor(
           ],
         }),
       );
+      if (context.mounted)
+        scope.announce(
+          context,
+          old == null
+              ? tr(context, 'Habit added.', 'Đã thêm thói quen.')
+              : tr(context, 'Habit saved.', 'Đã lưu thói quen.'),
+        );
     },
   );
-  if (saved && context.mounted)
-    scope.announce(
-      context,
-      old == null
-          ? tr(context, 'Habit added.', 'Đã thêm thói quen.')
-          : tr(context, 'Habit saved.', 'Đã lưu thói quen.'),
-    );
-  return saved;
 }

@@ -21,6 +21,7 @@ class HabitScope {
 
   /// Today, Habits, Routines or Insights.
   final area = ValueNotifier(0);
+  final clockTick = ValueNotifier(0);
   HabitScope({
     required this.controller,
     required this.files,
@@ -31,7 +32,7 @@ class HabitScope {
   });
 
   HabitState get state => controller.state!;
-  String get today => localDay(clock(), state.zone);
+  String get today => habitDayAt(state, clock());
   HabitIndex get index => HabitIndex.of(state);
 
   /// The hour of the day where the data's time zone is.
@@ -51,7 +52,10 @@ class HabitScope {
 
   bool pro(BuildContext context) => LifetimeScope.maybeOf(context)?.pro == true;
 
-  void dispose() => area.dispose();
+  void dispose() {
+    area.dispose();
+    clockTick.dispose();
+  }
 
   /// Writes, then says so with an Undo; a failure says nothing changed.
   Future<bool> write(
