@@ -1,6 +1,15 @@
 # QA evidence and reproduction
 
-## Current R15/R16 host pass · run 9 · 2026-11-10
+## Current R17/R18 host pass · run10 · 2026- 11-10
+
+- App 187/187 and engine 175/175: `flutter test --no-pub --reporter expanded` in each package. Logs: root `build/habit-run10-app-tests.log` and `build/habit-run10-engine-tests.log`.
+- `dart format --output=none --set-exit-if-changed lib test` and `dart analyze lib test` clean in both; app screenshot harness is also formatted/analyzed.
+- New engine `routine_rules_test.dart`: 17 cases for each condition, branches/Undo, blocks/presets/remap, dependencies/stacking, weekday durations, time budget/foreground elapsed, frozen inputs/closed traces, true v1–v7 JSON+ZIP migration, nested sync merges/convergence and past-session preservation.
+- New app `run10_advanced_test.dart` + `google_authorization_test.dart`: 9 cases covering Basic default/reveal/badges/non-saving demo/Pro edit and entitlement loss/free existing run/skip+branch explanations/stack prompt/atomic blocks+presets/SQLite restart; SDK fake asserts no client IDs and exact appdata authorization/denial/expiry/forget/revoke.
+- `SHOTS_DIR=.../apps/handy_habit/build/run10-shots flutter test --no-pub tool/run10_screens_test.dart`: 24 passes, 168 PNGs plus six contact sheets; EN/VI × light/dark ×320/390/1440 ×text1/1.5. Basic/Advanced/free badges/demo/condition/branch/summary. [Critique and fixes](R17_R18_REVIEW.md).
+- 11 pre-existing files under `docs/qa/evidence/habit-export/` restored from a pre-test copy and SHA-256 checked. No git writes, devices, browser runtime, secrets, signing or store operations. Android clients table and Google Play section verified unchanged.
+
+## Current R15/R16 host pass · run 9 · 2026- 11-10
 
 - App178 / engine158 tests pass; both `dart analyze` clean; `dart format` clean. Engine28 sync tests plus a new schema6 migration case; app11 controller +7 HTTP +4 gate/route/review tests added. Schemas1–6 migrate to7; physical2.
 - Cases: simultaneous check-ins/incidents; three-device six-order convergence; binary provenance/cap; absolute versus addition; absolute/skip review; remote/local Undo; concurrent mood edit/removal/review; habit fields/schedules/archive; Trash/edit/restore/duplicate Trash/purge/redaction; routines/steps/linked idempotence/sessions; duplicate IDs/sequences; clock skew; base ancestors; concurrent/interrupted uploads; corrupt/truncated/checksum/missing download/newer schema and version receipt refusal.
@@ -10,7 +19,7 @@
 - Owner still creates Cloud project/consent/Android clients/SHA-1/public web client ID. No actual OAuth, devices, browser runtime, iOS or store test. [Exact setup and supervisor cases](RELEASE.md). APK compilation is not Google authorization evidence.
 - Export-test evidence is restored byte-for-byte after the final app test. Remote old generations retain payloads until manually removed; no compaction, E2EE or closed-app scheduling claimed.
 
-## Current R14 host pass · run 8 · 2026-11-10
+## Current R14 host pass · run 8 · 2026- 11-10
 
 - App156 / engine129 tests pass; both `dart analyze` clean and changed Dart files formatted. Schema6, physical SQLite/IndexedDB2; old schemas1–5 and CSV formats preserved.
 - Two-tap/optional/skip/edit/delete/Undo/Restore, preference hiding/unaffected habits, failure/busy/retry, privacy payloads, glyph cmap and real SQLite reopen are host tested. [R14 review](R14_REVIEW.md) records decisions and limits.
@@ -18,7 +27,7 @@
 - Logs: Temp `habit-run8-app-tests.log`, `habit-run8-engine-tests.log`, `habit-run8-shots.log`. Export-test QA evidence restored byte-for-byte; no new evidence retained there.
 - No devices, emulator, browser runtime, build or store tests in this run. Supervisor: upgrade/restart/IME/back/SR, native backup/provider restore, lock screen and IndexedDB/quota/tab checks.
 
-## Current R10/R11 host pass · run 6 · 2026-11-10
+## Current R10/R11 host pass · run 6 · 2026- 11-10
 
 - App `flutter test --no-pub`: **138 passed** (9 R11 widget tests + 1 SQLite negative persistence/Undo test added). Engine: **103 passed** (21 negative tests added).
 - App + engine `dart analyze`: clean; `dart format` and final unchanged-format check cover app lib/test/tool and engine lib/test.
@@ -27,7 +36,7 @@
 - Local logs: `C:/Users/Winka/AppData/Local/Temp/habit-run6-app-tests.log`, `habit-run6-engine-tests.log`, `habit-run6-shots.log`. Early concurrent Flutter invocations hit the shared test-cache compiler race; those were stopped and all final invocations run serially per package.
 - [Visual critique](R10_R11_REVIEW.md). No device, emulator, real browser, store, new build or OS delivery checks in this run. Historical platform evidence below does not certify changed source.
 
-## Current R8/R9 host pass · run 5b · 2026-11-10
+## Current R8/R9 host pass · run 5b · 2026- 11-10
 
 - App `flutter test --no-pub`: **128 passed**; engine: **82 passed**.
 - Both `dart analyze` clean; `dart format --output=none --set-exit-if-changed`
@@ -51,7 +60,7 @@
   rendering only; no device/emulator/browser/store checks or new builds in 5b.
   Historical platform evidence below does not certify the changed source.
 
-2026-11-01, Flutter 3.44.9 / Dart 3.12.2, Windows host. Baseline before schema/config
+2026- 11-01, Flutter 3.44.9 / Dart 3.12.2, Windows host. Baseline before schema/config
 changes is preserved in habit-baseline-*. Initial Spend analyze errors were pre-existing;
 current full-workspace analysis passes after concurrent existing-app work. No unrelated
 app was reset or deleted. Work is on real Flutter implementations, not production mocks.

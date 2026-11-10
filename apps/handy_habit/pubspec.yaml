@@ -28,6 +28,8 @@ dependencies:
   url_launcher: 6.3.2
   package_info_plus: 10.2.2
 dev_dependencies:
+  google_sign_in_platform_interface: 3.1.0
+  handy_store: any
   flutter_test:
     sdk: flutter
   integration_test:

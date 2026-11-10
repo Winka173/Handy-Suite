@@ -247,6 +247,7 @@ class RoutineStep {
   final int seconds, minimum, priority, icon, linkedValue;
   final bool required, canSkip;
   final String? habit;
+  final StepLogic logic;
   RoutineStep({
     required this.id,
     required this.title,
@@ -259,7 +260,8 @@ class RoutineStep {
     this.canSkip = true,
     this.habit,
     this.linkedValue = 1000,
-  }) {
+    StepLogic? logic,
+  }) : logic = logic ?? StepLogic() {
     if (title.trim().isEmpty ||
         title.length > 200 ||
         seconds < 0 ||
@@ -286,6 +288,7 @@ class RoutineStep {
     'canSkip': canSkip,
     'habit': habit,
     'linkedValue': linkedValue,
+    'logic': logic.toJson(),
   };
   RoutineStep copy(Json changes) =>
       RoutineStep.fromJson({...toJson(), ...changes});
@@ -301,6 +304,9 @@ class RoutineStep {
     canSkip: j['canSkip'] != false,
     habit: j['habit'] as String?,
     linkedValue: integer(j['linkedValue'] ?? 1000, min: 1),
+    logic: StepLogic.fromJson(
+      Map<String, dynamic>.from(j['logic'] as Map? ?? {}),
+    ),
   );
 }
 
@@ -311,6 +317,7 @@ class Routine {
   final int icon, color;
   final bool archived;
   final String time;
+  final List<StepBlock> blocks, presets;
   Routine({
     required this.id,
     required this.title,
@@ -322,7 +329,11 @@ class Routine {
     this.icon = 0xe037,
     this.color = 0xff0d9488,
     this.archived = false,
+    List<StepBlock> blocks = const [],
+    List<StepBlock> presets = const [],
   }) : steps = List.unmodifiable(steps),
+       blocks = List.unmodifiable(blocks),
+       presets = List.unmodifiable(presets),
        weekdays = List.unmodifiable(weekdays) {
     if (title.trim().isEmpty ||
         title.length > 200 ||
@@ -333,7 +344,18 @@ class Routine {
     minuteOfDay(time);
     text(note);
     text(category, max: 100);
+    validateStepGraph(steps);
+    for (final list in [blocks, presets]) {
+      if (list.length > 50 ||
+          list.map((b) => b.id).toSet().length != list.length) {
+        throw const FormatException('Too many or duplicate blocks/presets');
+      }
+    }
   }
+  bool get advanced =>
+      steps.any((s) => s.logic.advanced) ||
+      blocks.isNotEmpty ||
+      presets.isNotEmpty;
   int get planned => steps.fold(0, (a, b) => a + b.seconds);
   Json toJson() => {
     'id': id,
@@ -346,6 +368,8 @@ class Routine {
     'archived': archived,
     'weekdays': weekdays,
     'steps': steps.map((s) => s.toJson()).toList(),
+    'blocks': blocks.map((b) => b.toJson()).toList(),
+    'presets': presets.map((b) => b.toJson()).toList(),
   };
   Routine copy(Json c) => Routine.fromJson({...toJson(), ...c});
   factory Routine.fromJson(Json j) => Routine(
@@ -359,6 +383,8 @@ class Routine {
     archived: j['archived'] == true,
     weekdays: List<int>.from(j['weekdays'] as List),
     steps: objects(j['steps']).map(RoutineStep.fromJson).toList(),
+    blocks: objects(j['blocks'] ?? []).map(StepBlock.fromJson).toList(),
+    presets: objects(j['presets'] ?? []).map(StepBlock.fromJson).toList(),
   );
 }
 
@@ -369,6 +395,8 @@ class StepRun {
   final String? event;
   final String? eventHash;
   final String note;
+  final String reason;
+  final bool evaluated;
   StepRun({
     required this.plan,
     this.status = 'pending',
@@ -376,6 +404,8 @@ class StepRun {
     this.event,
     this.eventHash,
     this.note = '',
+    this.reason = '',
+    this.evaluated = false,
   }) {
     if (!['pending', 'completed', 'skipped'].contains(status) ||
         elapsed < 0 ||
@@ -389,6 +419,8 @@ class StepRun {
     'event': event,
     'eventHash': eventHash,
     'note': note,
+    'reason': reason,
+    'evaluated': evaluated,
   };
   StepRun copy(Json c) => StepRun.fromJson({...toJson(), ...c});
   factory StepRun.fromJson(Json j) => StepRun(
@@ -398,6 +430,8 @@ class StepRun {
     event: j['event'] as String?,
     eventHash: j['eventHash'] as String?,
     note: text(j['note'] ?? ''),
+    reason: text(j['reason'] ?? ''),
+    evaluated: j['evaluated'] == true,
   );
 }
 
@@ -407,6 +441,9 @@ class RoutineSession {
   final List<StepRun> steps;
   final int cursor;
   final bool autoNext, recoveryWarning;
+  final Json inputs;
+  final Map<String, String> choices;
+  final List<Json> trace;
   RoutineSession({
     required this.id,
     required this.routine,
@@ -421,7 +458,13 @@ class RoutineSession {
     this.note = '',
     this.autoNext = false,
     this.recoveryWarning = false,
-  }) : steps = List.unmodifiable(steps) {
+    Json inputs = const {},
+    Map<String, String> choices = const {},
+    List<Json> trace = const [],
+  }) : steps = List.unmodifiable(steps),
+       inputs = freezeJson(inputs) as Json,
+       choices = Map.unmodifiable(choices),
+       trace = List.unmodifiable(trace.map((v) => freezeJson(v) as Json)) {
     timestamp(started);
     date(day);
     if (anchor != null) timestamp(anchor);
@@ -433,6 +476,40 @@ class RoutineSession {
         !['active', 'finished', 'aborted'].contains(status) ||
         status != 'active' && anchor != null)
       throw const FormatException('Invalid session');
+    if (trace.length > 10000 ||
+        choices.length > 100 ||
+        choices.values.any((v) => !['A', 'B'].contains(v))) {
+      throw const FormatException('Invalid execution trace/choices');
+    }
+    if (inputs.isNotEmpty) {
+      integer(inputs['weekday'], min: 1, max: 7);
+      integer(inputs['budget'], max: 200 * 86400);
+      final done = List<String>.from(inputs['doneHabits'] as List);
+      if (done.length > 10000)
+        throw const FormatException('Too many rule inputs');
+      for (final key in ['habitValues', 'habitTargets']) {
+        final map = Map<String, dynamic>.from(inputs[key] as Map? ?? {});
+        if (map.length > 10000)
+          throw const FormatException('Too many rule inputs');
+        for (final v in map.values) integer(v);
+      }
+    }
+    for (final entry in trace) {
+      if (![
+        'start',
+        'evaluate',
+        'choice',
+        'undoChoice',
+        'complete',
+        'skip',
+        'undo',
+        'finish',
+        'abort',
+        'extend',
+      ].contains(entry['kind'])) {
+        throw const FormatException('Unknown trace entry');
+      }
+    }
   }
   bool get running => anchor != null && status == 'active';
   int get elapsed => steps.fold(0, (a, b) => a + b.elapsed);
@@ -451,6 +528,9 @@ class RoutineSession {
     'note': note,
     'autoNext': autoNext,
     'recoveryWarning': recoveryWarning,
+    'inputs': inputs,
+    'choices': choices,
+    'trace': trace,
   };
   RoutineSession copy(Json c) => RoutineSession.fromJson({...toJson(), ...c});
   factory RoutineSession.fromJson(Json j) => RoutineSession(
@@ -467,6 +547,9 @@ class RoutineSession {
     note: text(j['note'] ?? ''),
     autoNext: j['autoNext'] == true,
     recoveryWarning: j['recoveryWarning'] == true,
+    inputs: Map<String, dynamic>.from(j['inputs'] as Map? ?? {}),
+    choices: Map<String, String>.from(j['choices'] as Map? ?? {}),
+    trace: objects(j['trace'] ?? []),
   );
 }
 
@@ -566,7 +649,7 @@ class HabitState {
 
   factory HabitState.fromJson(Json j) {
     if (j['app'] != 'handy-habit' ||
-        ![1, 2, 3, 4, 5, 6, 7].contains(j['schema']) ||
+        ![1, 2, 3, 4, 5, 6, 7, 8].contains(j['schema']) ||
         j['schema'] == 1 && j['pauses'] != null) {
       throw const FormatException('Unsupported Habit backup/schema');
     }

@@ -1,6 +1,7 @@
 import 'package:handy_habit_engine/handy_habit_engine.dart';
 import 'package:handy_ui/kit.dart';
 import 'ui/words.dart';
+import 'routines/decision_text.dart';
 
 /// Asks for a step's note; null when the person backed out.
 Future<String?> askStepNote(BuildContext context, String note) async {
@@ -75,6 +76,8 @@ class RunnerView extends StatelessWidget {
   final ValueChanged<int> onMove;
   final VoidCallback onBack, onComplete, onSkip, onToggle, onExtend, onNote;
   final VoidCallback onUndo, onFinish, onAbort;
+  final ValueChanged<String>? onChoose;
+  final ValueChanged<String>? onChangeChoice;
   const RunnerView({
     super.key,
     required this.session,
@@ -100,6 +103,8 @@ class RunnerView extends StatelessWidget {
     required this.onUndo,
     required this.onFinish,
     required this.onAbort,
+    this.onChoose,
+    this.onChangeChoice,
   });
 
   @override
@@ -107,7 +112,8 @@ class RunnerView extends StatelessWidget {
     final theme = Theme.of(context);
     final c = HandyColors.of(context);
     final step = session.steps[session.cursor];
-    final pending = step.status == 'pending';
+    final branch = pendingBranch(session);
+    final pending = step.status == 'pending' && branch == null;
     final resolved = session.steps.every((s) => s.status != 'pending');
     final planned = step.plan.seconds;
     final over = planned > 0 && elapsed > planned;
@@ -192,174 +198,232 @@ class RunnerView extends StatelessWidget {
                           ),
                         ),
                         const SizedBox(height: HandySpace.xl),
-                        Semantics(
-                          header: true,
-                          child: HandySwap(
-                            duration: HandyMotion.short,
-                            child: Text(
-                              step.plan.title,
-                              key: ValueKey(step.plan.id),
-                              style: theme.textTheme.headlineMedium,
-                            ),
+                        if (branch != null)
+                          BranchChoice(
+                            session: session,
+                            onChoose: acting ? null : onChoose,
                           ),
-                        ),
-                        if (step.plan.note.isNotEmpty)
-                          Padding(
-                            padding: const EdgeInsets.only(top: HandySpace.s),
-                            child: Text(
-                              step.plan.note,
-                              style: theme.textTheme.bodyLarge,
-                            ),
-                          ),
-                        const SizedBox(height: HandySpace.xl),
-                        Semantics(
-                          liveRegion: false,
-                          label: tr(
-                            context,
-                            '${clockText(elapsed)} so far',
-                            'Đã chạy ${clockText(elapsed)}',
-                          ),
-                          excludeSemantics: true,
-                          child: Text(
-                            clockText(elapsed),
-                            key: const Key('runner-clock'),
-                            style: theme.textTheme.displayLarge?.copyWith(
-                              fontFeatures: tabular,
-                              color: running ? c.accent : null,
-                            ),
-                          ),
-                        ),
-                        Text(
-                          [
-                            planned == 0
-                                ? tr(
-                                    context,
-                                    'No timer: done when you say so',
-                                    'Không đếm giờ: xong khi bạn bấm',
-                                  )
-                                : over
-                                ? tr(
-                                    context,
-                                    '${clockText(elapsed - planned)} over the ${clockText(planned)} planned',
-                                    'quá ${clockText(elapsed - planned)} so với ${clockText(planned)} dự kiến',
-                                  )
-                                : tr(
-                                    context,
-                                    'of ${clockText(planned)} planned',
-                                    'trên ${clockText(planned)} dự kiến',
-                                  ),
-                            if (!running && pending)
-                              tr(context, 'paused', 'đang dừng'),
-                            if (!pending)
-                              statusLabel(context, step.status).toLowerCase(),
-                          ].join(' · '),
-                          style: theme.textTheme.bodyLarge?.copyWith(
-                            color: c.muted,
-                          ),
-                        ),
-                        if (session.recoveryWarning)
-                          Padding(
-                            padding: const EdgeInsets.only(top: HandySpace.l),
-                            child: HandyNotice(
-                              tr(
-                                context,
-                                'Paused while the app was away. The time is an estimate; big or backwards clock jumps were left out.',
-                                'Đã tạm dừng khi app vắng mặt. Thời gian chỉ là ước tính; bỏ qua các bước nhảy đồng hồ lớn hoặc ngược.',
-                              ),
-                            ),
-                          ),
-                        if (recoveryFailed)
-                          Padding(
-                            padding: const EdgeInsets.only(top: HandySpace.l),
-                            child: HandyNotice(
-                              tr(
-                                context,
-                                'The pause could not be saved. Nothing was lost; go back and open the run again.',
-                                'Chưa lưu được lúc tạm dừng. Không mất gì; hãy quay lại và mở lại phiên.',
-                              ),
-                              tone: HandyTone.error,
-                            ),
-                          ),
-                        if (step.plan.habit != null)
-                          Padding(
-                            padding: const EdgeInsets.only(top: HandySpace.l),
-                            child: _Linked(
-                              habit: habit,
-                              step: step.plan,
-                              value: linkedValue,
-                              target: linkedTarget,
-                              extra: extra,
-                              onExtra: acting ? null : onExtra,
-                            ),
-                          ),
-                        const SizedBox(height: HandySpace.l),
-                        Semantics(
-                          liveRegion: true,
-                          child: Text(
+                        if (branch == null && step.plan.logic.branch.isNotEmpty)
+                          Text(
                             tr(
                               context,
-                              '${session.steps.where((s) => s.status != 'pending').length} of ${session.steps.length} steps resolved',
-                              '${session.steps.where((s) => s.status != 'pending').length}/${session.steps.length} bước đã xử lý',
+                              'Choice: ${step.plan.logic.branch} · ${session.choices[step.plan.logic.branch]}',
+                              'Đã chọn: ${step.plan.logic.branch} · ${session.choices[step.plan.logic.branch]}',
                             ),
                           ),
-                        ),
-                        ExpansionTile(
-                          tilePadding: EdgeInsets.zero,
-                          title: Text(
-                            tr(context, 'Remaining steps', 'Các bước còn lại'),
+                        if (branch == null &&
+                            step.plan.logic.branch.isNotEmpty &&
+                            onChangeChoice != null)
+                          TextButton(
+                            key: const Key('runner-change-choice'),
+                            onPressed: acting
+                                ? null
+                                : () => onChangeChoice!(step.plan.logic.branch),
+                            child: Text(
+                              tr(
+                                context,
+                                'Change choice (undo later steps first)',
+                                'Đổi lựa chọn (hoàn tác các bước sau trước)',
+                              ),
+                            ),
                           ),
-                          children: [
-                            for (final s in session.steps.where(
-                              (s) => s.status == 'pending',
-                            ))
-                              ListTile(
-                                title: Text(s.plan.title),
-                                subtitle: Text(
-                                  minutesText(context, s.plan.seconds),
+                        for (final skipped
+                            in session.steps
+                                .take(session.cursor + 1)
+                                .where((s) => s.reason.isNotEmpty))
+                          Padding(
+                            padding: const EdgeInsets.symmetric(vertical: 8),
+                            child: Text(
+                              '${skipped.plan.title} · ${decisionText(context, skipped.reason)}',
+                            ),
+                          ),
+                        if (pending && step.plan.logic.stackAfter != null)
+                          HandyNotice(
+                            tr(
+                              context,
+                              'After ${session.steps.firstWhere((s) => s.plan.id == step.plan.logic.stackAfter).plan.title}, do ${step.plan.title}.',
+                              'Sau ${session.steps.firstWhere((s) => s.plan.id == step.plan.logic.stackAfter).plan.title}, hãy ${step.plan.title}.',
+                            ),
+                          ),
+                        if (branch == null) ...[
+                          Semantics(
+                            header: true,
+                            child: HandySwap(
+                              duration: HandyMotion.short,
+                              child: Text(
+                                step.plan.title,
+                                key: ValueKey(step.plan.id),
+                                style: theme.textTheme.headlineMedium,
+                              ),
+                            ),
+                          ),
+                          if (step.plan.note.isNotEmpty)
+                            Padding(
+                              padding: const EdgeInsets.only(top: HandySpace.s),
+                              child: Text(
+                                step.plan.note,
+                                style: theme.textTheme.bodyLarge,
+                              ),
+                            ),
+                          const SizedBox(height: HandySpace.xl),
+                          Semantics(
+                            liveRegion: false,
+                            label: tr(
+                              context,
+                              '${clockText(elapsed)} so far',
+                              'Đã chạy ${clockText(elapsed)}',
+                            ),
+                            excludeSemantics: true,
+                            child: Text(
+                              clockText(elapsed),
+                              key: const Key('runner-clock'),
+                              style: theme.textTheme.displayLarge?.copyWith(
+                                fontFeatures: tabular,
+                                color: running ? c.accent : null,
+                              ),
+                            ),
+                          ),
+                          Text(
+                            [
+                              planned == 0
+                                  ? tr(
+                                      context,
+                                      'No timer: done when you say so',
+                                      'Không đếm giờ: xong khi bạn bấm',
+                                    )
+                                  : over
+                                  ? tr(
+                                      context,
+                                      '${clockText(elapsed - planned)} over the ${clockText(planned)} planned',
+                                      'quá ${clockText(elapsed - planned)} so với ${clockText(planned)} dự kiến',
+                                    )
+                                  : tr(
+                                      context,
+                                      'of ${clockText(planned)} planned',
+                                      'trên ${clockText(planned)} dự kiến',
+                                    ),
+                              if (!running && pending)
+                                tr(context, 'paused', 'đang dừng'),
+                              if (!pending &&
+                                  branch == null &&
+                                  step.reason.isEmpty)
+                                statusLabel(context, step.status).toLowerCase(),
+                            ].join(' · '),
+                            style: theme.textTheme.bodyLarge?.copyWith(
+                              color: c.muted,
+                            ),
+                          ),
+                          if (session.recoveryWarning)
+                            Padding(
+                              padding: const EdgeInsets.only(top: HandySpace.l),
+                              child: HandyNotice(
+                                tr(
+                                  context,
+                                  'Paused while the app was away. Only saved foreground time is counted.',
+                                  'Đã tạm dừng khi app vắng mặt. Chỉ tính thời gian đã lưu khi app đang mở.',
                                 ),
                               ),
-                          ],
-                        ),
-                        const SizedBox(height: HandySpace.s),
-                        Wrap(
-                          spacing: HandySpace.s,
-                          runSpacing: HandySpace.s,
-                          children: [
-                            TextButton.icon(
-                              key: const Key('runner-prev'),
-                              onPressed: acting || session.cursor == 0
-                                  ? null
-                                  : () => onMove(-1),
-                              icon: const Icon(Icons.chevron_left),
-                              label: Text(
-                                tr(context, 'Previous step', 'Bước trước'),
+                            ),
+                          if (recoveryFailed)
+                            Padding(
+                              padding: const EdgeInsets.only(top: HandySpace.l),
+                              child: HandyNotice(
+                                tr(
+                                  context,
+                                  'The pause could not be saved. Nothing was lost; go back and open the run again.',
+                                  'Chưa lưu được lúc tạm dừng. Không mất gì; hãy quay lại và mở lại phiên.',
+                                ),
+                                tone: HandyTone.error,
                               ),
                             ),
-                            TextButton.icon(
-                              key: const Key('runner-next'),
-                              onPressed:
-                                  acting ||
-                                      session.cursor == session.steps.length - 1
-                                  ? null
-                                  : () => onMove(1),
-                              icon: const Icon(Icons.chevron_right),
-                              label: Text(tr(context, 'Next step', 'Bước sau')),
+                          if (step.plan.habit != null)
+                            Padding(
+                              padding: const EdgeInsets.only(top: HandySpace.l),
+                              child: _Linked(
+                                habit: habit,
+                                step: step.plan,
+                                value: linkedValue,
+                                target: linkedTarget,
+                                extra: extra,
+                                onExtra: acting ? null : onExtra,
+                              ),
                             ),
-                            if (!pending)
-                              TextButton.icon(
-                                key: const Key('runner-undo'),
-                                onPressed: acting ? null : onUndo,
-                                icon: const Icon(Icons.undo),
-                                label: Text(
-                                  tr(
-                                    context,
-                                    'Undo this step',
-                                    'Hoàn tác bước này',
+                          const SizedBox(height: HandySpace.l),
+                          Semantics(
+                            liveRegion: true,
+                            child: Text(
+                              tr(
+                                context,
+                                '${session.steps.where((s) => s.status != 'pending').length} of ${session.steps.length} steps resolved',
+                                '${session.steps.where((s) => s.status != 'pending').length}/${session.steps.length} bước đã xử lý',
+                              ),
+                            ),
+                          ),
+                          ExpansionTile(
+                            tilePadding: EdgeInsets.zero,
+                            title: Text(
+                              tr(
+                                context,
+                                'Remaining steps',
+                                'Các bước còn lại',
+                              ),
+                            ),
+                            children: [
+                              for (final s in session.steps.where(
+                                (s) => s.status == 'pending',
+                              ))
+                                ListTile(
+                                  title: Text(s.plan.title),
+                                  subtitle: Text(
+                                    minutesText(context, s.plan.seconds),
                                   ),
                                 ),
+                            ],
+                          ),
+                          const SizedBox(height: HandySpace.s),
+                          Wrap(
+                            spacing: HandySpace.s,
+                            runSpacing: HandySpace.s,
+                            children: [
+                              TextButton.icon(
+                                key: const Key('runner-prev'),
+                                onPressed: acting || session.cursor == 0
+                                    ? null
+                                    : () => onMove(-1),
+                                icon: const Icon(Icons.chevron_left),
+                                label: Text(
+                                  tr(context, 'Previous step', 'Bước trước'),
+                                ),
                               ),
-                          ],
-                        ),
+                              TextButton.icon(
+                                key: const Key('runner-next'),
+                                onPressed:
+                                    acting ||
+                                        session.cursor ==
+                                            session.steps.length - 1
+                                    ? null
+                                    : () => onMove(1),
+                                icon: const Icon(Icons.chevron_right),
+                                label: Text(
+                                  tr(context, 'Next step', 'Bước sau'),
+                                ),
+                              ),
+                              if (!pending && step.reason.isEmpty)
+                                TextButton.icon(
+                                  key: const Key('runner-undo'),
+                                  onPressed: acting ? null : onUndo,
+                                  icon: const Icon(Icons.undo),
+                                  label: Text(
+                                    tr(
+                                      context,
+                                      'Undo this step',
+                                      'Hoàn tác bước này',
+                                    ),
+                                  ),
+                                ),
+                            ],
+                          ),
+                        ],
                       ],
                     ),
                   ),
@@ -369,7 +433,15 @@ class RunnerView extends StatelessWidget {
       bottomNavigationBar: !ready
           ? null
           : HandyBottomBar(
-              child: resolved
+              child: branch != null
+                  ? Text(
+                      tr(
+                        context,
+                        'Choose A or B to continue',
+                        'Chọn A hoặc B để tiếp tục',
+                      ),
+                    )
+                  : resolved
                   ? FilledButton.icon(
                       key: const Key('runner-finish'),
                       onPressed: acting ? null : onFinish,

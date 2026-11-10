@@ -59,6 +59,12 @@ Future<bool> showHabitForm(
   required Future<void> Function(Map<String, dynamic> values) save,
   String saveLabel = '',
   String? helpTopic,
+  Widget Function(
+    BuildContext,
+    Map<String, dynamic>,
+    ValueChanged<Map<String, dynamic>>,
+  )?
+  draftContent,
 }) async =>
     await openSheet<bool>(
       context,
@@ -69,6 +75,7 @@ Future<bool> showHabitForm(
         save: save,
         saveLabel: saveLabel,
         helpTopic: helpTopic,
+        draftContent: draftContent,
       ),
     ) ==
     true;

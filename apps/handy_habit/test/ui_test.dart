@@ -167,7 +167,7 @@ void main() {
       expect(tester.takeException(), isNull);
       expect(c.state!.sessions.single.running, isFalse);
       expect(c.state!.sessions.single.recoveryWarning, isTrue);
-      expect(c.state!.sessions.single.steps.first.elapsed, 60);
+      expect(c.state!.sessions.single.steps.first.elapsed, 0);
       expect(c.state!.events, isEmpty);
       await tester.pumpWidget(const SizedBox());
       c.dispose();

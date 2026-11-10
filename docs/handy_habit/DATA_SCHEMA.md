@@ -1,6 +1,6 @@
 # Data schema and portability
 
-Data schema 7 (2026-11-10; causal sync projection including concurrent binary contributions; schemas1–6 migrate); physical SQLite/IndexedDB version 2; isolated native `handy-habit.sqlite` / browser IndexedDB `handy-habit`.
+Data schema 8 (2026-11-10; Advanced routine rules, reusable snapshots and execution traces; schemas1–7 migrate); sync protocol 1 and physical SQLite/IndexedDB version 2; isolated native `handy-habit.sqlite` / browser IndexedDB `handy-habit`.
 No other app database is opened. Native tables: habits, events, routines, sessions,
 operations (unique actor/sequence, entity index), singleton state metadata, and a device-local recovery table. Validated entity JSON plus indexed event habit/date/source,
 habit foreign key, unique linked (session,step), and session status index.
@@ -25,7 +25,7 @@ Sessions snapshot step plans. Expected-step IDs reject stale double taps. Event 
 cursor commit together. Undo removes only its own unchanged event (hash protected);
 abort retains completed check-ins. Trashing retains entries/links for 30 days; permanent deletion clears entries/future links;
 historical session snapshots remain. One active session. Stopwatch in foreground,
-background pauses; crash recovery estimates only 0-24h wall gaps, pauses and warns.
+background pauses; crash recovery preserves saved foreground elapsed time, pauses and warns. Closed-app wall gaps add no elapsed time.
 Elapsed duration caps at 366 days. No killed/background auto-complete promise.
 The background rule is unchanged by the run notice (Android/iOS): leaving the app from the
 runner still persists the pause first; the notice then states the step and the time left
@@ -34,6 +34,16 @@ abort or leaving the runner. Setting `runNotice` (bool) overrides; unset it foll
 `notifications`. It is never shown in quiet hours or without the OS permission, which is
 only requested by the two settings switches.
 
+## Advanced routines (schema 8, R17/R18)
+
+- `RoutineStep.logic`: `weekdays` (empty means every day), `habitNotDone` (positive habit ID), `minimumRemaining` (seconds), `dependencies` (prior step IDs), `stackAfter` (prior step ID, offered for linked habits), `branch` + `option` (`A`/`B`), `durations` (weekday 1–7 → seconds), and source `block` ID. Conditions are ANDed in a fixed order: day, habit availability/completion, time, prerequisites, branch. No expressions or executable code.
+- Each branch name must contain both A and B. All dependencies/stack links point backwards, which excludes cycles and guarantees finite traversal. At most 200 expanded steps; each step is 0–86400 seconds. Invalid edits/imports fail before commit. Missing condition habits skip with an explicit unavailable reason.
+- `Routine.blocks` and `.presets` contain named `StepBlock{id,title,steps}` snapshots (at most 50 each). No recursive references: insertion creates independent IDs, remaps internal dependencies/stacking and namespaces choices. Blocks append, presets replace draft steps. Saved sets are available from other routines. Editing/removing a source set never rewrites insertions or runs.
+- Starting a run resolves weekday durations and captures immutable `inputs`: logical weekday, initial session budget (sum of plan seconds, or caller-supplied budget), habit values/targets/titles and already-completed IDs. Conditions evaluate only on reaching a step; completed linked contributions update the captured values. Paused/closed-app time consumes no budget. Later habit edits, routine edits or sync do not reevaluate captured decisions.
+- `StepRun.reason` is a stable reason code; `evaluated` distinguishes an admitted step from one waiting on a decision. `RoutineSession.choices` records each choice; `trace` is deeply immutable, bounded to 10000 entries and append-only through session operations. The start entry contains the original plan and inputs; evaluation, choices, completion/skip/Undo/finish are retained. Undo requires later completed work to be undone first; changing a branch appends Undo/choice records. Closed sessions refuse mutation.
+- Existing schemas migrate to the same linear path with empty rules/sets/inputs/choices/trace. JSON and ZIP retain all new data. Copy-import remaps nested step/habit/block IDs and trace/input references. Protocol1 merges new routine fields with the existing causal reducer; closed snapshots survive later routine edits. Restoration/sync never starts timers or reruns automation.
+- Pro gates live in the app and are checked again at Save; running stored logic, backup, restore, export and sync remain Free. Entitlement never lives in a backup.
+
 ## Pauses (schema 2)
 
 `pauses` is a top-level list beside `habits`; it lives in the state row (SQLite
@@ -41,7 +51,7 @@ only requested by the two settings switches.
 `reason` (<= 200 chars, may be empty), `habits` (IDs; empty = every habit). At most
 1000 pauses; every named habit must exist. Overlapping pauses are allowed and read as
 their union. Migration: data written as schema 1 has no `pauses` and reads as an empty
-list; current reads normalize schemas 1–5 to6 and the next save writes6. Schema 1 carrying `pauses`, or an unsupported future schema, is refused without reset. Older apps refuse schema6; keep a backup before upgrading.
+list; current reads normalize schemas 1–7 to8 and the next save writes8. Schema 1 carrying `pauses`, or an unsupported future schema, is refused without reset. Older apps refuse schema8; keep a backup before upgrading.
 
 Counting rule. A paused day for a habit is a scheduled day inside a pause that covers
 it. Status order is future, not scheduled, skipped, completed, partial, **paused**,

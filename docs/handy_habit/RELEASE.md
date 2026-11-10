@@ -8,13 +8,12 @@ No iOS cloud adapter, iCloud entitlement or Android ↔ iOS automatic sync is cl
 
 The Free, optional adapter uses `google_sign_in: 7.2.0` and `http: 1.6.0`, matching
 Boards. It requests **only** `https://www.googleapis.com/auth/drive.appdata` for
-Drive storage. The account picker’s basic sign-in identity is used to show the
-selected account; it does not grant access to ordinary Drive files.
+Drive storage. Google handles account selection; authorization alone does not
+expose the selected email to Habit or access ordinary Drive files.
 
 The Settings › Data › Sync row exists only on Android with
-`--dart-define=HANDY_DRIVE_SYNC=true`. The public web OAuth client ID described
-below is also needed to connect. It is an identifier, not a client secret. A
-build without it gives a setup error; backup and offline tracking still work.
+`--dart-define=HANDY_DRIVE_SYNC=true`. No server client ID or Web OAuth client
+is needed: initialization and scope authorization match Boards/Bookmark.
 Do not bundle OAuth secrets, tokens, keystores or `google-services.json`.
 
 The engine writes immutable, checksummed operation generations and per-device
@@ -68,22 +67,8 @@ No keystore or signing certificate was read during this run.
    Release builds sign with the upload key `C:\Users\Winka\handy-habit-upload.jks`
    (alias `upload`; passwords in `~/.secrets/handy-habit-upload.properties`,
    copied to the gitignored `apps/handy_habit/android/key.properties`).
-8. Still in the same project, **Clients → Create client → Web application**.
-   Name it **Handy Habit Android sign-in** → **Create**. For this native-only
-   use, no web redirect URI or JavaScript origin is needed. Copy its public
-   **Client ID**, not the client secret. This is required by the Android
-   Google Sign-In 7 integration when no Google Services JSON is used.
-9. Build the Android app with the two non-secret defines:
-
-   ```powershell
-   flutter build apk --debug --dart-define=HANDY_DRIVE_SYNC=true --dart-define=HANDY_GOOGLE_SERVER_CLIENT_ID=<WEB_CLIENT_ID>
-   ```
-
-   Use the equivalent defines for the signed release/appbundle build after
-   configuring release signing. A debug build with only the sync gate is a
-   compilation check and cannot prove Google authorization is configured.
-10. On the owner’s two Android devices, choose the same Google account in Sync.
-    Verify the displayed account, successful sync, pending count and activity.
+8. On the owner’s two Android devices, choose the same Google account in Sync.
+    Verify the account in Google’s sheet, successful sync, pending count and activity.
     Recheck all three signing variants before calling Drive release-ready.
 
 Official references: [Drive appdata](https://developers.google.com/workspace/drive/api/guides/appdata),
@@ -93,7 +78,7 @@ Official references: [Drive appdata](https://developers.google.com/workspace/dri
 ## Supervisor two-device verification
 
 - Start with a separate backup on both phones. Cancel account selection and deny
-  permission once; then connect. Confirm only appdata access and the correct account.
+  permission once; then connect. Confirm only appdata access and the correct account in Google’s sheet.
 - Make simultaneous count check-ins and negative incidents offline; reconnect in
   both orders. Confirm both contributions, no duplicates, and stable stored days.
 - Record conflicting absolute totals, skip versus add, and same-day mood notes.

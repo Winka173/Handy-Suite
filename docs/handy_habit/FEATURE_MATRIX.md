@@ -1,8 +1,17 @@
 # Handy Habit feature matrix
 
-Updated 2026-11-10 (R15/R16 run 9; earlier evidence below is historical).
+Updated 2026-11-10 (R17/R18 run 10; earlier evidence below is historical).
 Source and tests exist; release certification is separate.
 No row below claims physical-device or real-store verification.
+
+| R17/R18 feature | Status | Host evidence | Remaining |
+| --- | --- | --- | --- |
+| Weekday/unfinished-habit/time conditions, A/B choices, dependencies/stacking, weekday durations | IMPLEMENTED / UNIT + WIDGET TESTED | Engine175/app187; finite DAG/ref/200-step validation, deterministic inputs, branch Undo, linked credit and stacking prompt | Device restart/clock/OS back/SR |
+| Reusable blocks/presets, frozen plan and append-only decision trace; schema8/physical2/protocol1 | IMPLEMENTED / HOST TESTED | v1–v7 JSON/ZIP migration, roundtrip, copy-import remap, nested sync merges in both orders, closed-trace preservation, SQLite reopen | Real provider/IndexedDB upgrades and two-device sync |
+| Basic-default builder, progressive Advanced controls, Pro badges/demo/edit gates, existing runs Free | IMPLEMENTED / WIDGET TESTED / RENDERED | Live LifetimeScope entitlement/recheck, no purchase placeholder; 24 matrix combinations ×7 scenes =168 PNGs; critique/fix/re-render | Store purchase flow R21; real entitlements/devices/accessibility |
+| Google sign-in alignment | IMPLEMENTED / SDK-FAKE TESTED | initialize without IDs; SDK authorization scopes, denial, expiry, token clearing and revoke; only HANDY_DRIVE_SYNC define | Real Google OAuth and two Android accounts/devices |
+
+See [R17/R18 review](R17_R18_REVIEW.md), [schema](DATA_SCHEMA.md) and [release setup](RELEASE.md). No shared package or Android signing changes in run10.
 
 | R15/R16 feature | Status | Evidence / limit |
 | --- | --- | --- |

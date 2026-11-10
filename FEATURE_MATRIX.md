@@ -10,7 +10,7 @@ P1 đã code và có kiểm thử host/Android emulator: stamp, Memory Book, EXI
 replay, so sánh và recipe. Khả năng phát hành store chưa hoàn tất.
 
 Handy Habit là app độc lập thứ chín: thói quen, lịch/streak, routine runner,
-insights, nhắc cục bộ và backup. R15/R16/run9: schema7/physical2, causal sync và Android Drive appdata Free tùy chọn đã source/host tested; chỉ hiện với build define, còn owner OAuth và kiểm tra hai Android ([setup](docs/handy_habit/RELEASE.md)). Run 2 (10/11): schema3/physical2, Undo domain bền, preview/khôi phục có bản phục hồi trước thay thế và Thùng rác30 ngày; source/host tested, chưa device/browser. Trạng thái từng chức năng và bằng
+insights, nhắc cục bộ và backup. R17/R18/run10: quy trình nâng cao/schema8/physical2 đã source/host tested; Basic mặc định, Pro để tạo/sửa, chạy bản đã lưu miễn phí, trace bất biến. R15/R16/run9: protocol1, causal sync và Android Drive appdata Free tùy chọn đã source/host tested; chỉ hiện với build define, còn owner OAuth và kiểm tra hai Android ([setup](docs/handy_habit/RELEASE.md)). Run 2 (10/11): schema3/physical2, Undo domain bền, preview/khôi phục có bản phục hồi trước thay thế và Thùng rác30 ngày; source/host tested, chưa device/browser. Trạng thái từng chức năng và bằng
 chứng nằm tại [Habit matrix](docs/handy_habit/FEATURE_MATRIX.md). Kiểm thử host,
 emulator, thiết bị thật và store được ghi riêng. Run3 (10/11), R5/R6: ba khu
 Today/Routines/Progress, sidebar gập/nhớ, routes/shortcuts, check-in + Undo, nhóm buổi,

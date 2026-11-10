@@ -65,6 +65,8 @@ class _RunnerState extends State<RoutineRunner> with WidgetsBindingObserver {
     try {
       if (widget.fresh &&
           foreground &&
+          session.steps[session.cursor].status == 'pending' &&
+          pendingBranch(session) == null &&
           c.state!.settings['routineAutoTimer'] != false) {
         watch.start();
       } else if (session.running) {
@@ -199,6 +201,7 @@ class _RunnerState extends State<RoutineRunner> with WidgetsBindingObserver {
 
   Future<void> resume() async {
     if (!foreground ||
+        pendingBranch(session) != null ||
         watch.isRunning ||
         session.steps[session.cursor].status != 'pending')
       return;
@@ -214,6 +217,7 @@ class _RunnerState extends State<RoutineRunner> with WidgetsBindingObserver {
   }
 
   Future<void> complete({bool skip = false}) => perform(() async {
+    if (pendingBranch(session) != null) return;
     final step = session.steps[session.cursor], expected = step.plan.id;
     watch.stop();
     final delta = watch.elapsed.inSeconds;
@@ -252,6 +256,10 @@ class _RunnerState extends State<RoutineRunner> with WidgetsBindingObserver {
       0,
       session.steps.length - 1,
     );
+    if (session.inputs.isNotEmpty &&
+        session.steps[next].status == 'pending' &&
+        session.steps.take(next).any((s) => s.status == 'pending'))
+      return;
     await c.change(
       (s) => putSession(s, session.copy({'cursor': next, 'anchor': null})),
       remember: false,
@@ -303,7 +311,14 @@ class _RunnerState extends State<RoutineRunner> with WidgetsBindingObserver {
     await c.change(
       (s) => putSession(
         s,
-        session.copy({'steps': steps.map((s) => s.toJson()).toList()}),
+        session.copy({
+          'steps': steps.map((s) => s.toJson()).toList(),
+          if (session.inputs.isNotEmpty)
+            'trace': [
+              ...session.trace,
+              {'kind': 'extend', 'step': current.plan.id, 'seconds': 60},
+            ],
+        }),
       ),
     );
   });
@@ -326,6 +341,19 @@ class _RunnerState extends State<RoutineRunner> with WidgetsBindingObserver {
   Future<void> autoNext(bool on) => perform(
     () => c.change((s) => putSession(s, session.copy({'autoNext': on}))),
   );
+
+  Future<void> choose(String option) => perform(() async {
+    await pause();
+    await c.change((s) => chooseRoutineBranch(s, session.id, option));
+    watch.reset();
+    if (c.state!.settings['routineAutoTimer'] != false) await resume();
+  });
+
+  Future<void> changeChoice(String branch) => perform(() async {
+    await pause();
+    await c.change((s) => undoRoutineChoice(s, session.id, branch));
+    watch.reset();
+  });
 
   Future<void> undo() => perform(() async {
     await pause();
@@ -415,6 +443,8 @@ class _RunnerState extends State<RoutineRunner> with WidgetsBindingObserver {
             onUndo: () => unawaited(undo()),
             onFinish: () => unawaited(finish()),
             onAbort: () => unawaited(finish(abort: true)),
+            onChoose: (option) => unawaited(choose(option)),
+            onChangeChoice: (branch) => unawaited(changeChoice(branch)),
           ),
         ),
       ),

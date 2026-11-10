@@ -3,9 +3,11 @@ import 'package:handy_ui/kit.dart';
 import '../scope.dart';
 import '../ui/words.dart';
 import 'routine_editor.dart';
+import 'advanced_controls.dart';
+import 'advanced_library.dart';
 
 /// Structured edits stay inside HabitForm's draft until its single Save.
-class DraftSteps extends StatelessWidget {
+class DraftSteps extends StatefulWidget {
   final HabitScope scope;
   final Map<String, dynamic> values;
   final ValueChanged<Map<String, dynamic>> onChanged;
@@ -17,6 +19,16 @@ class DraftSteps extends StatelessWidget {
     required this.onChanged,
     required this.templates,
   });
+  @override
+  State<DraftSteps> createState() => _DraftStepsState();
+}
+
+class _DraftStepsState extends State<DraftSteps> {
+  HabitScope get scope => widget.scope;
+  Map<String, dynamic> get values => widget.values;
+  ValueChanged<Map<String, dynamic>> get onChanged => widget.onChanged;
+  bool get templates => widget.templates;
+  bool advanced = false;
 
   List<RoutineStep> get steps => [
     for (final v in values['steps'] as List)
@@ -30,6 +42,7 @@ class DraftSteps extends StatelessWidget {
       context,
       scope,
       index == null ? null : steps[index],
+      index == null ? steps : steps.take(index).toList(),
     );
     if (result == null || !context.mounted) return;
     final next = steps;
@@ -80,6 +93,28 @@ class DraftSteps extends StatelessWidget {
           ),
         ),
         DurationStrip(steps: items, color: c.accent),
+        SwitchListTile.adaptive(
+          key: const Key('routine-advanced'),
+          contentPadding: EdgeInsets.zero,
+          title: Text(tr(context, 'Advanced mode', 'Chế độ nâng cao')),
+          subtitle: Text(
+            tr(
+              context,
+              'Conditions, choices and reusable plans. Basic is the default.',
+              'Điều kiện, lựa chọn và phương án dùng lại. Mặc định là Cơ bản.',
+            ),
+          ),
+          value: advanced,
+          onChanged: (v) => setState(() => advanced = v),
+        ),
+        if (advanced)
+          HandyReveal(
+            child: AdvancedRoutineLibrary(
+              scope: scope,
+              values: values,
+              onChanged: onChanged,
+            ),
+          ),
         const SizedBox(height: HandySpace.m),
         if (items.isEmpty)
           Text(tr(context, 'Add your first step.', 'Thêm bước đầu tiên.')),
@@ -141,6 +176,8 @@ class DraftSteps extends StatelessWidget {
                           tr(context, 'Cannot skip', 'Không thể bỏ qua'),
                       ].join(' · '),
                     ),
+                    if (advanced && step.logic.advanced)
+                      Text(logicDescription(context, step)),
                     Wrap(
                       children: [
                         IconButton(

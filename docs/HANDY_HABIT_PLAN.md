@@ -45,7 +45,7 @@ Baseline data schema2, SQLite/IDB physical1. Run2 shipped data3/physical2, inclu
 | 5/R10 (IMPLEMENTED, host tested) | Negative GoalRevision/IncidentOp/Observation | Habits cũ positive, unit/target history giữ, zero/unknown riêng, CSV cũ đọc được |
 | 6/R14 (IMPLEMENTED, host tested) | MoodEntry/revision/delete | Mood rỗng, không suy từ notes; time/tags/note roundtrip |
 | 7/R15 (IMPLEMENTED, host tested) | Causal sync projection/retained binary provenance | v1–v6 JSON/ZIP migrate, physical2; optional Drive transport protocol1 |
-| 8/R17 (planned) | Advanced graph/plan snapshots/trace | List cũ→linear path tương đương; active/closed sessions giữ snapshot |
+| 8/R17 (IMPLEMENTED, host tested) | Finite rules/prior-node DAG/block and preset snapshots/append-only trace | List cũ→linear path tương đương; active/closed sessions giữ snapshot; protocol1/physical2 |
 
 R3 tạo operations table/index và IDB store→physical2. Slice sau ưu tiên payload; cần thêm table/index thì bump physical tiếp. Không đổi DB name/format app ID. Migration transaction + durable recovery trước migrate, future/corrupt/quota giữ bản gốc, IDB onblocked/versionchange xử lý tab cũ.
 
@@ -78,9 +78,9 @@ MoodEntry{id,day,recordedAtUtc,mood1..5?,energy1..5?,note≤4096,tags≤8,revisi
 
 Basic routine library chính là các plan tái sử dụng. Save as template tạo bản Routine độc lập bằng model hiện có, không chỉnh plan gốc hoặc session snapshot; bản này đi trong full backup. Nếu cần metadata mới ngoài model phải có schema bump/roundtrip trước, không giấu fields mới trong UI.
 
-### Advanced routines (planned v7)
+### Advanced routines (implemented schema8, R17/R18)
 
-RoutinePlanRevision{id,from,graphVersion,nodes,edges,blocksSnapshot,presets}; node ID stable. Rules hữu hạn: condition theo dữ liệu ngày/session đã có, prior-node dependency, choice branch, stack-after; không expression/code tùy ý. DAG≤200 expanded steps, không cycle/recursive blocks, mọi path có exit/required reachable. Block snapshot/version lúc thêm, sửa không rewrite session. Seconds theo weekday, foreground timer policy/auto-transition opt-in, không background alarm giả.
+Routine giữ steps với node ID ổn định, StepLogic hữu hạn, blocks/presets là StepBlock snapshot độc lập; causal operation giữ phiên bản sửa. Condition theo dữ liệu ngày/session đã chụp, prior-node dependency, choice branch A/B, stack-after; không expression/code tùy ý. DAG≤200 expanded steps, không cycle/recursive blocks, mọi nhánh có A/B và traversal hữu hạn. Block snapshot lúc thêm; sửa không rewrite session. Seconds theo weekday, foreground timer policy/auto-transition opt-in, không background alarm giả.
 
 Session chụp resolved plan+decision inputs/trace+steps; nhánh đã đi không đổi vì sync mới. Undo branch phải undo dependent steps trước nếu cần; linked exactly-once vẫn đúng; restore/sync không rerun automation.
 
@@ -155,8 +155,8 @@ Mỗi run một feature area, supervisor review rồi chuyển. A/E/AT/ET theo A
 | R14 P2 mood — IMPLEMENTED / HOST TESTED | E mood/model/portable/migration; A optional sheet/calendar; schema6 | ET validation/revision/delete/Undo/v1–v5/JSON-ZIP-CSV; AT2tap/skip/edit/delete/restore/preference/privacy, SQLite reopen; ma trận24 tổ hợp | Offline/edit/delete/restart/restore/export privacy |
 | R15 P0 sync engine — IMPLEMENTED / HOST TESTED | E sync/protocol/merge/reducer; A base abstraction | ET full conflict suite ở §3/convergence/closed union/active local/corrupt/local edits in flight |2 states/2 processes/conflict values/manual+linked không mất |
 | R16 P1 Android Drive — IMPLEMENTED / HOST TESTED; OWNER SETUP PENDING | A sync/provider/controller/section/lifecycle/pubspec | AT fake auth/offline/quota/CAS/retry/disable/rejoin/flag-off/no delete/token export; appdata only | Owner OAuth/signing/2Android/deny-revoke/offline/interruption/Sync now |
-| R17 P2 Advanced engine | E routine_rules/plans/portable/migration; next schema | ET DAG/cycle/refs/path cap/inputs snapshot/Undo/linked/weekday/all-schema roundtrip | Active basic upgrade/branch restart/restore no automation |
-| R18 P2 Advanced UX | A builder/blocks/presets/trace/runner/gates | AT Basic-Advanced/readable preview/draft/validation/fail/existing run-safe/summary | Branch/dependency/skip/Undo/recovery/motion, no terminated timer |
+| R17 P2 Advanced engine — IMPLEMENTED / HOST TESTED | E routine_rules/models/routines/portable/sync/trash; schema8 | ET conditions/DAG/cycle/refs/path cap/inputs snapshot/branch Undo/linked/weekday/blocks/presets/v1–v7 migration/roundtrip/copy-merge/sync | Real upgrade/branch restart/OS provider restore; no automation or terminated timer |
+| R18 P2 Advanced UX — IMPLEMENTED / HOST TESTED | A builder/blocks/presets/trace/runner/gates | AT Basic default/Advanced reveal/non-Pro badges/demo/verified entitlement recheck/free existing runs/skip explanations/summary; 24-case raster matrix | Device branch/stacking/skip/Undo/recovery/SR/motion follow-up; purchase flow deferred to R21 |
 | R19 P2 insights | E correlation/comparison/suggestions; A advanced progress/report | ET≥14 pairs/missing/no-cause/segments; AT explain-why/free core/report preview | Check against independent export/data ít-nhiều/no medical |
 | R20 P2 studio | A design/theme/dashboard/widget preview | AT AA light-dark/preview cancel-apply/entitlement loss/Nunito VI/widths/no data rewrite | OS theme/text scale/contrast/stable dots/appearance giữ lịch |
 | R21 P1 paywall | A pro/entitlements/page/demos/settings + shared purchase | AT matrix/demo/motion/pending/cancel/offline/error/restore/price absent/refund; fake chỉ host | Real sandbox buy/restore/refund Android-iOS-Windows/local price/Web honest |

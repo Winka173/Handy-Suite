@@ -25,7 +25,13 @@ Future<void> startRoutine(
     await openSession(context, scope, running.id);
     return;
   }
-  final session = startSession(routine, scope.today, scope.clock(), plan: plan);
+  final session = startSession(
+    routine,
+    scope.today,
+    scope.clock(),
+    plan: plan,
+    state: scope.state,
+  );
   final ok = await scope.write(context, (s) {
     if (!s.liveRoutines.any((r) => r.id == routine.id && !r.archived)) {
       throw StateError('Routine is no longer available');

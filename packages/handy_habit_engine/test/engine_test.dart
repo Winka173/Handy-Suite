@@ -442,7 +442,7 @@ void main() {
       final r = routine(),
           session = startSession(r, '2024-01-01', DateTime.utc(2024));
       final recovered = recoverSession(session, DateTime.utc(2024, 1, 1, 0, 2));
-      expect(recovered.elapsed, 120);
+      expect(recovered.elapsed, 0);
       expect(recovered.running, false);
       expect(recovered.steps.first.status, 'pending');
       expect(recoverSession(session, DateTime.utc(2023)).elapsed, 0);

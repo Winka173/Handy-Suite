@@ -1,6 +1,7 @@
 import 'package:handy_ui/kit.dart';
 import '../scope.dart';
 import '../ui/words.dart';
+import 'decision_text.dart';
 
 /// Immutable session results, including the links that actually earned credit.
 class SessionPage extends StatelessWidget {
@@ -80,7 +81,8 @@ class SessionPage extends StatelessWidget {
                 key: Key('summary-habit-$habitId'),
                 leading: const Icon(Icons.check),
                 title: Text(
-                  scope.state.habits
+                  (s.inputs['habitTitles'] as Map?)?[habitId] as String? ??
+                      scope.state.habits
                           .where((h) => h.id == habitId)
                           .firstOrNull
                           ?.title ??
@@ -107,6 +109,8 @@ class SessionPage extends StatelessWidget {
                       ),
                     ),
                     if (step.note.isNotEmpty) Text(step.note),
+                    if (step.reason.isNotEmpty)
+                      Text(decisionText(context, step.reason)),
                     if (step.plan.habit != null)
                       Text(
                         step.event != null
@@ -122,6 +126,32 @@ class SessionPage extends StatelessWidget {
               ),
           ],
         ),
+        if (s.trace.isNotEmpty)
+          ExpansionTile(
+            tilePadding: EdgeInsets.zero,
+            title: Text(tr(context, 'Saved decisions', 'Quyết định đã lưu')),
+            children: [
+              for (final entry in s.trace)
+                if (entry['kind'] == 'choice')
+                  ListTile(
+                    title: Text('${entry['branch']} · ${entry['option']}'),
+                  )
+                else if (entry['kind'] == 'evaluate' && entry['reason'] != '')
+                  ListTile(
+                    title: Text(
+                      s.steps
+                              .where((x) => x.plan.id == entry['step'])
+                              .firstOrNull
+                              ?.plan
+                              .title ??
+                          '',
+                    ),
+                    subtitle: Text(
+                      decisionText(context, entry['reason'] as String),
+                    ),
+                  ),
+            ],
+          ),
         Text(
           tr(
             context,

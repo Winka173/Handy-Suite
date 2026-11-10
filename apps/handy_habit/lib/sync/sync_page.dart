@@ -19,8 +19,8 @@ String syncStateText(BuildContext c, DriveSyncState state) => switch (state) {
 String syncErrorText(BuildContext c, String? error) => switch (error) {
   'configuration' => tr(
     c,
-    'Google Drive setup is missing in this build. Use backup to move data; contact the app publisher.',
-    'Bản này chưa được cấu hình Google Drive. Dùng sao lưu để chuyển dữ liệu; liên hệ nhà phát hành.',
+    'Allow Google Drive access again to reconnect. Your local data is preserved.',
+    'Cho phép truy cập Google Drive lần nữa để kết nối lại. Dữ liệu trên máy vẫn được giữ.',
   ),
   'newer' => tr(
     c,
@@ -166,7 +166,15 @@ class HabitSyncPage extends StatelessWidget {
                       fact(
                         tr(context, 'Account', 'Tài khoản'),
                         d.account ??
-                            tr(context, 'Not connected', 'Chưa kết nối'),
+                            tr(
+                              context,
+                              d.enabled
+                                  ? 'Access allowed in Google'
+                                  : 'Not connected',
+                              d.enabled
+                                  ? 'Đã cho phép trong Google'
+                                  : 'Chưa kết nối',
+                            ),
                       ),
                       fact(
                         tr(

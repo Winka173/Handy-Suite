@@ -299,9 +299,13 @@ class RoutineMenu extends StatelessWidget {
         HandyMenuItem(
           Icons.copy_outlined,
           tr(context, 'Duplicate', 'Nhân bản'),
-          () => scope.write(
-            context,
-            (s) => s.copy({
+          () => scope.write(context, (s) {
+            if (r.advanced && !scope.pro(context)) {
+              throw const FormatException(
+                'Pro is needed to create advanced routines / Cần Pro để tạo quy trình nâng cao',
+              );
+            }
+            return s.copy({
               'routines': [
                 ...s.routines.map((x) => x.toJson()),
                 r.copy({
@@ -313,13 +317,15 @@ class RoutineMenu extends StatelessWidget {
                   ),
                   'archived': false,
                   'steps': [
-                    for (final st in r.steps) st.copy({'id': uid()}).toJson(),
+                    if (r.steps.isNotEmpty)
+                      ...StepBlock(id: 'copy', title: r.title, steps: r.steps)
+                          .insert(instance: uid(), markBlock: false)
+                          .map((s) => s.toJson()),
                   ],
                 }).toJson(),
               ],
-            }),
-            done: (c) => tr(c, 'Duplicated.', 'Đã nhân bản.'),
-          ),
+            });
+          }, done: (c) => tr(c, 'Duplicated.', 'Đã nhân bản.')),
         ),
         HandyMenuItem(
           Icons.delete_outline,

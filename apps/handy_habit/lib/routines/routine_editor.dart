@@ -5,6 +5,8 @@ import '../scope.dart';
 import '../ui/form.dart';
 import '../ui/words.dart';
 import 'draft_steps.dart';
+import 'advanced_controls.dart';
+import 'advanced_library.dart';
 
 HabitState replaceRoutine(HabitState state, Routine r) => state.copy({
   'routines': [
@@ -65,6 +67,12 @@ Widget buildRoutineEditor(
       ),
     ],
     initial: {
+      'blocks': (old?.blocks ?? preset?.blocks ?? [])
+          .map((b) => b.toJson())
+          .toList(),
+      'presets': (old?.presets ?? preset?.presets ?? [])
+          .map((b) => b.toJson())
+          .toList(),
       'steps': [
         for (final step in old?.steps ?? preset?.steps ?? <RoutineStep>[])
           step.toJson(),
@@ -97,7 +105,18 @@ Widget buildRoutineEditor(
         icon: old?.icon ?? preset?.icon ?? 0xe037,
         color: old?.color ?? preset?.color ?? 0xffb42318,
         archived: old?.archived ?? false,
+        blocks: objects(v['blocks']).map(StepBlock.fromJson).toList(),
+        presets: objects(v['presets']).map(StepBlock.fromJson).toList(),
       );
+      if (!scope.pro(context) &&
+          ((old == null && r.advanced) ||
+              old != null &&
+                  (old.advanced || r.advanced) &&
+                  advancedFingerprint(old) != advancedFingerprint(r))) {
+        throw const FormatException(
+          'Pro is needed to create or edit advanced logic / Cần Pro để tạo hoặc sửa quy tắc nâng cao',
+        );
+      }
       await scope.controller.change((s) {
         final latest = s.liveRoutines.where((x) => x.id == old?.id).firstOrNull;
         if (old != null &&
@@ -123,6 +142,7 @@ Future<RoutineStep?> editRoutineStep(
   BuildContext context,
   HabitScope scope, [
   RoutineStep? old,
+  List<RoutineStep> prior = const [],
 ]) async {
   RoutineStep? result;
   final habits = {
@@ -204,6 +224,7 @@ Future<RoutineStep?> editRoutineStep(
       ),
     ],
     initial: {
+      'logic': (old?.logic ?? StepLogic()).toJson(),
       'title': old?.title ?? '',
       'minutes': old == null ? 5000 : minutes(old.seconds),
       'shortest': old == null ? 2000 : minutes(old.minimum),
@@ -214,6 +235,13 @@ Future<RoutineStep?> editRoutineStep(
       'value': old?.linkedValue ?? 1000,
       'note': old?.note ?? '',
     },
+    draftContent: (context, values, update) => AdvancedStepControls(
+      scope: scope,
+      old: old,
+      prior: prior,
+      values: values,
+      onChanged: update,
+    ),
     save: (v) async {
       final linked = (v['habit'] as String).isEmpty
           ? null
@@ -233,6 +261,7 @@ Future<RoutineStep?> editRoutineStep(
         canSkip: v['skip'] == true,
         habit: linked,
         linkedValue: value,
+        logic: StepLogic.fromJson(Map<String, dynamic>.from(v['logic'] as Map)),
       );
     },
   );

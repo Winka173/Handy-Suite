@@ -55,7 +55,7 @@ HabitBackupPreview inspectBackup(Uint8List bytes, {bool zip = true}) {
     if (files.length != 2) throw const FormatException('Missing backup files');
     final manifest = jsonDecode(utf8.decode(files['manifest.json']!)) as Map;
     if (manifest['app'] != 'handy-habit' ||
-        ![1, 2, 3, 4, 5, 6, habitSchema].contains(manifest['schema']) ||
+        ![1, 2, 3, 4, 5, 6, 7, habitSchema].contains(manifest['schema']) ||
         (manifest['files'] as Map)['data.json'] !=
             sha256.convert(files['data.json']!).toString())
       throw const FormatException('Backup checksum mismatch');
@@ -103,10 +103,57 @@ HabitState merge(HabitState current, HabitState imported) {
       events = {for (final e in imported.events) e.id: uid()},
       steps = <String, String>{};
   String stepId(String id) => steps.putIfAbsent(id, uid);
+  final blocks = <String, String>{};
+  String blockId(String id) => blocks.putIfAbsent(id, uid);
   RoutineStep step(RoutineStep s) => s.copy({
     'id': stepId(s.id),
     'habit': s.habit == null ? null : habits[s.habit],
+    'logic': {
+      ...s.logic.toJson(),
+      'dependencies': s.logic.dependencies.map(stepId).toList(),
+      'stackAfter': s.logic.stackAfter == null
+          ? null
+          : stepId(s.logic.stackAfter!),
+      'habitNotDone': s.logic.habitNotDone == null
+          ? null
+          : habits[s.logic.habitNotDone] ?? s.logic.habitNotDone,
+      'block': s.logic.block.isEmpty ? '' : blockId(s.logic.block),
+    },
   });
+  Json block(StepBlock b) => {
+    ...b.toJson(),
+    'id': blockId(b.id),
+    'steps': b.steps.map((s) => step(s).toJson()).toList(),
+  };
+  Json inputs(Json i) => i.isEmpty
+      ? {}
+      : {
+          ...i,
+          'doneHabits': [
+            for (final h in i['doneHabits'] as List? ?? []) habits[h] ?? h,
+          ],
+          for (final key in ['habitValues', 'habitTargets', 'habitTitles'])
+            key: <String, dynamic>{
+              for (final e in (i[key] as Map? ?? {}).entries)
+                (habits[e.key] ?? e.key as String): e.value,
+            },
+        };
+  Json trace(Json entry) => {
+    ...entry,
+    if (entry['step'] != null) 'step': stepId(entry['step'] as String),
+    if (entry['event'] != null) 'event': events[entry['event']],
+    if (entry['plan'] != null)
+      'plan': [
+        for (final p in objects(entry['plan']))
+          step(RoutineStep.fromJson(p)).toJson(),
+      ],
+    if (entry['inputs'] != null)
+      'inputs': inputs(Map<String, dynamic>.from(entry['inputs'] as Map)),
+    if (entry['doneHabits'] != null)
+      'doneHabits': [
+        for (final h in entry['doneHabits'] as List) habits[h] ?? h,
+      ],
+  };
   final incomingHabits = imported.habits
       .map(
         (h) => h.copy({
@@ -122,6 +169,8 @@ HabitState merge(HabitState current, HabitState imported) {
         (r) => r.copy({
           'id': routines[r.id],
           'steps': r.steps.map((s) => step(s).toJson()).toList(),
+          'blocks': r.blocks.map(block).toList(),
+          'presets': r.presets.map(block).toList(),
         }),
       )
       .toList();
@@ -131,6 +180,8 @@ HabitState merge(HabitState current, HabitState imported) {
           'id': sessions[s.id],
           'routine': routines[s.routine] ?? uid(),
           'anchor': null,
+          'inputs': inputs(s.inputs),
+          'trace': s.trace.map(trace).toList(),
           'steps': [
             for (final v in s.steps)
               {
@@ -400,7 +451,7 @@ HabitState importCsvLogs(HabitState current, Uint8List bytes) {
     if (row.length != _moodHeader.length)
       throw const FormatException('Wrong mood CSV column count');
     final record = jsonDecode(utf8.decode(base64Decode(row.last))) as Map;
-    if (![6, habitSchema].contains(record['schema']))
+    if (![6, 7, habitSchema].contains(record['schema']))
       throw const FormatException('Unknown mood record schema');
     final m = MoodEntry.fromJson(
       Map<String, dynamic>.from(record['mood'] as Map),
@@ -485,7 +536,7 @@ HabitState importCsvLogs(HabitState current, Uint8List bytes) {
     if (row.length != _pauseHeader.length)
       throw const FormatException('Wrong CSV column count');
     final record = jsonDecode(utf8.decode(base64Decode(row.last))) as Map;
-    if (![2, 3, 4, 5, habitSchema].contains(record['schema']))
+    if (![2, 3, 4, 5, 6, 7, habitSchema].contains(record['schema']))
       throw const FormatException('Unknown pause record schema');
     final p = Pause.fromJson(Map<String, dynamic>.from(record['pause'] as Map));
     // Habit names (column 5) may differ between devices; IDs may not.

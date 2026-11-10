@@ -17,6 +17,7 @@ part 'src/trash.dart';
 part 'src/calendar.dart';
 part 'src/negative.dart';
 part 'src/routines.dart';
+part 'src/routine_rules.dart';
 part 'src/portable.dart';
 part 'src/pauses.dart';
 part 'src/review.dart';

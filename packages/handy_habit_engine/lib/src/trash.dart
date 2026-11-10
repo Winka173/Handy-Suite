@@ -180,6 +180,19 @@ HabitState deleteTrash(HabitState s, String id) {
                 'habit': step.habit == t.entity ? null : step.habit,
               }).toJson(),
           ],
+          for (final kind in ['blocks', 'presets'])
+            kind: [
+              for (final b in kind == 'blocks' ? r.blocks : r.presets)
+                {
+                  ...b.toJson(),
+                  'steps': [
+                    for (final step in b.steps)
+                      step.copy({
+                        'habit': step.habit == t.entity ? null : step.habit,
+                      }).toJson(),
+                  ],
+                },
+            ],
         }).toJson(),
     ];
   } else {

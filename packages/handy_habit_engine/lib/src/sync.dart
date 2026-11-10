@@ -335,6 +335,23 @@ HabitState materializeHabitOperations(
         positiveDays.contains('${e['habit']}:${e['day']}'),
   );
   for (final r in routines.values) {
+    for (final kind in ['blocks', 'presets']) {
+      r[kind] = [
+        for (final b in objects(r[kind] ?? []))
+          {
+            ...b,
+            'steps': [
+              for (final step in objects(b['steps']))
+                {
+                  ...step,
+                  if (step['habit'] != null &&
+                      !habits.containsKey(step['habit']))
+                    'habit': null,
+                },
+            ],
+          },
+      ];
+    }
     r['steps'] = [
       for (final step in objects(r['steps']))
         {

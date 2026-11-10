@@ -5,7 +5,7 @@ import 'package:google_sign_in/google_sign_in.dart';
 import 'package:handy_habit_engine/handy_habit_engine.dart';
 import 'package:http/http.dart' as http;
 
-enum DriveFailure { offline, authNeeded, quota, damaged, configuration, other }
+enum DriveFailure { offline, authNeeded, quota, damaged, other }
 
 class DriveException implements Exception {
   final DriveFailure failure;
@@ -20,25 +20,26 @@ abstract interface class DriveAuth {
 }
 
 /// Same SDK and appdata scope as Boards/Bookmark; tokens never enter storage,
-/// logs, backups or URLs. Account display is device-local metadata only.
+/// logs, backups or URLs. Google owns account selection; no email is exposed.
 class GoogleDriveAuth implements DriveAuth {
-  final String? expectedAccount;
-  const GoogleDriveAuth({this.expectedAccount});
+  const GoogleDriveAuth();
   static const scope = 'https://www.googleapis.com/auth/drive.appdata';
   static Future<void>? _ready;
-  static GoogleSignInAccount? _account;
-  static String? get account => _account?.email;
-  static Future<void> _init() {
-    const client = String.fromEnvironment('HANDY_GOOGLE_SERVER_CLIENT_ID');
-    if (client.isEmpty) throw const DriveException(DriveFailure.configuration);
-    return _ready ??= GoogleSignIn.instance.initialize(serverClientId: client);
+  // Authorization-only Google Sign-In does not expose account identity.
+  static String? get account => null;
+  static Future<void> _init() async {
+    try {
+      await (_ready ??= GoogleSignIn.instance.initialize());
+    } catch (_) {
+      _ready = null;
+      rethrow;
+    }
   }
 
   static Future<bool> authorize() async {
-    await _init();
     try {
-      _account = await GoogleSignIn.instance.authenticate(scopeHint: [scope]);
-      await _account!.authorizationClient.authorizeScopes([scope]);
+      await _init();
+      await GoogleSignIn.instance.authorizationClient.authorizeScopes([scope]);
       return true;
     } catch (_) {
       return false;
@@ -48,20 +49,14 @@ class GoogleDriveAuth implements DriveAuth {
   static Future<void> revoke() async {
     await _init();
     await GoogleSignIn.instance.disconnect();
-    _account = null;
   }
 
   @override
   Future<String> token({bool fresh = false}) async {
     try {
       await _init();
-      _account ??= await GoogleSignIn.instance
-          .attemptLightweightAuthentication();
-      if (expectedAccount != null && _account?.email != expectedAccount)
-        throw const DriveException(DriveFailure.authNeeded);
-      final auth = await _account?.authorizationClient.authorizationForScopes([
-        scope,
-      ]);
+      final auth = await GoogleSignIn.instance.authorizationClient
+          .authorizationForScopes([scope]);
       if (auth == null) throw const DriveException(DriveFailure.authNeeded);
       return auth.accessToken;
     } on DriveException {

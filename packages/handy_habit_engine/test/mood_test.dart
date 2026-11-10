@@ -171,7 +171,7 @@ void main() {
           expect(migrated.moods, isEmpty);
           expect(migrated.settings, old['settings']);
           expect(restore(backup(migrated)).toJson(), migrated.toJson());
-          expect(migrated.toJson()['schema'], 7);
+          expect(migrated.toJson()['schema'], 8);
         }
       },
     );

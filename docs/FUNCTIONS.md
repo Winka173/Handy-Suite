@@ -54,6 +54,8 @@ build Android/Windows/Web hay ảnh widget là bằng chứng thiết bị thậ
 
 ## Handy Habit
 
+- **Quy trình nâng cao (R17/R18, Pro để tạo/sửa)**: điều kiện theo thứ/thói quen chưa xong/thời gian còn lại, nhánh A/B, nhóm bước dùng lại, bước cần xong trước, nối sau thói quen, thời lượng theo thứ và cấu hình đã lưu. Cơ bản là mặc định; Nâng cao mở dần, có giải thích và demo/nhãn Pro cho người chưa có Pro. Mọi người vẫn chạy quy trình đã lưu. Phiên giữ bản chụp và quyết định bất biến, giải thích bước bỏ qua; không tính giờ khi app đóng. Schema8/physical2/protocol1; host tested, chưa kiểm trên thiết bị.
+
 - **Nhìn lại tuần**: từ ngày cuối tuần tới hai ngày sau, Hôm nay có một dòng mở trang nhìn lại (Thống kê có nút mở bất cứ lúc nào). Trang nêu số lần giữ được trên số lần đến hạn, so với tuần trước nữa, ngày trong tuần hay bị lỡ nhất (khi lỡ từ 2 lần trở lên), và chuỗi hạt 7 ngày của từng thói quen; thói quen giữ chưa được một nửa có nút "Làm nhỏ lại" mở trình sửa. Không lưu thêm dữ liệu.
 
 Theo dõi hành vi lặp lại và chạy quy trình cá nhân nhiều bước; không thay Recall,

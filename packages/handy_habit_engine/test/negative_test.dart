@@ -451,7 +451,7 @@ void main() {
         );
         expect(read.habits.single.direction, 'build');
         expect(read.habits.single.toJson(), h.toJson());
-        expect(read.toJson()['schema'], 7);
+        expect(read.toJson()['schema'], 8);
         expect(restore(backup(read)).toJson(), read.toJson());
       },
     );

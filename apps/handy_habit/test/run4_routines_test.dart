@@ -228,7 +228,7 @@ void main() {
       await tap(t, 'resume-session');
       expect(c.state!.sessions.single.running, false);
       expect(c.state!.sessions.single.recoveryWarning, true);
-      expect(c.state!.sessions.single.steps.first.elapsed, 120);
+      expect(c.state!.sessions.single.steps.first.elapsed, 0);
       await tap(t, 'routine-complete-step');
       await c.change(
         (s) => completeStep(
@@ -293,7 +293,7 @@ void main() {
         ),
       );
       expect((await store.read()).events, hasLength(1));
-      expect(again.state!.sessions.single.steps.first.elapsed, 120);
+      expect(again.state!.sessions.single.steps.first.elapsed, 0);
       again.dispose();
     },
   );

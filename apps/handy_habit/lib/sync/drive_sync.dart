@@ -123,9 +123,7 @@ class HabitDriveSync extends ChangeNotifier {
     if (enabled && c.state != null) await syncNow();
   }
 
-  HabitSyncProvider _newProvider() =>
-      _provider?.call() ??
-      DriveSyncProvider(auth: GoogleDriveAuth(expectedAccount: account));
+  HabitSyncProvider _newProvider() => _provider?.call() ?? DriveSyncProvider();
 
   Future<bool> enable() async {
     await initialize();
