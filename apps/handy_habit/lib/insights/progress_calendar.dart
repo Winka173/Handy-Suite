@@ -180,6 +180,8 @@ class YearHeatmap extends StatelessWidget {
   final int weekStart;
   final Color hue;
   final ValueChanged<HeatDay> onDay;
+  final Set<String>? visibleDays;
+  final String cellKeyPrefix;
   const YearHeatmap({
     super.key,
     required this.days,
@@ -187,6 +189,8 @@ class YearHeatmap extends StatelessWidget {
     required this.weekStart,
     required this.hue,
     required this.onDay,
+    this.visibleDays,
+    this.cellKeyPrefix = 'heatmap',
   });
   @override
   Widget build(BuildContext context) {
@@ -237,6 +241,8 @@ class YearHeatmap extends StatelessWidget {
   Widget _cell(BuildContext context, int i) {
     if (i < 0 || i >= days.length) return const SizedBox(width: 48, height: 48);
     final d = days[i], label = heatDayLabel(context, days[i], today);
+    if (visibleDays != null && !visibleDays!.contains(d.day))
+      return const SizedBox(width: 48, height: 48);
     return Semantics(
       label: label,
       button: true,
@@ -244,7 +250,7 @@ class YearHeatmap extends StatelessWidget {
       child: Tooltip(
         message: label,
         child: InkWell(
-          key: Key('heatmap-${d.day}'),
+          key: Key('$cellKeyPrefix-${d.day}'),
           onTap: () => onDay(d),
           child: Container(
             width: 48,

@@ -246,8 +246,8 @@ const habitHelpTopics = [
         'Kiểm tra Gửi nhắc, nút Bật của lịch, quyền thông báo hệ thống, giờ yên lặng và kỳ nghỉ. Giờ yên lặng dời nhắc tới cuối khoảng. Mục lưu trữ hoặc trong thùng rác không nhắc.',
       ),
       (
-        'Use Test notification after permission is granted. On Android, battery restrictions can delay delivery; allow Handy Habit in system notification settings. Windows cannot report whether you disabled toasts. Web has no background reminders. Opening the app refreshes upcoming notices; delivery after termination has not been device verified.',
-        'Dùng Thử thông báo sau khi cấp quyền. Android có thể chậm do hạn chế pin; cho phép Handy Habit trong cài đặt thông báo hệ thống. Windows không đọc được việc bạn tắt thông báo. Web không nhắc nền. Mở app làm mới lịch nhắc; chưa kiểm tra trên thiết bị khi app bị đóng hẳn.',
+        'Open Settings → Notifications → Why didn’t my reminder appear? Diagnostics shows permission, Android exact alarms and battery optimisation, last successful scheduling, and Test notification. Flexible reminders do not require exact alarms; Android can delay them. Battery and notification links open system Settings. Windows uses local toasts but cannot read whether they are disabled; iOS uses local notices. Web has no background reminders. Reopen Habit to refresh the earliest 50 reminders within 400 days; delivery after termination needs device checks.',
+        'Mở Cài đặt → Thông báo → Vì sao không thấy thông báo? Trang kiểm tra có quyền, báo thức chính xác và tối ưu pin Android, lần đặt lịch thành công, và Thử thông báo. Lịch nhắc linh hoạt không cần báo thức chính xác; Android vẫn có thể làm chậm. Liên kết pin và thông báo mở Cài đặt hệ thống. Windows dùng thông báo cục bộ nhưng không đọc được bạn đã tắt chưa; iOS dùng thông báo cục bộ. Web không nhắc nền. Mở Habit để làm mới 50 lần nhắc sớm nhất trong 400 ngày; gửi khi đóng hẳn cần kiểm tra trên thiết bị.',
       ),
     ],
   ),
@@ -335,12 +335,12 @@ const habitHelpTopics = [
   ]),
   HabitHelpTopic('widgets', 'Home-screen widget', 'Tiện ích màn hình chính', [
     (
-      'Android has the existing Today widget with habit links and quick check-in. Add it using the launcher’s widget picker, then open Habit to refresh its data.',
-      'Android có tiện ích Hôm nay với liên kết thói quen và ghi nhận nhanh. Thêm qua bộ chọn tiện ích của màn hình chính, rồi mở Habit để làm mới dữ liệu.',
+      'Open Settings → Widgets to preview Today’s progress, One habit and Routine launcher. Choose the habit and routine there; the selection applies to every widget of the same type. Turn names off for counts and neutral labels only. Mood and notes are never included.',
+      'Mở Cài đặt → Tiện ích để xem Tiến độ hôm nay, Một thói quen và Mở quy trình. Chọn thói quen và quy trình tại đây; áp dụng cho mọi tiện ích cùng loại. Tắt tên để chỉ hiện số và nhãn chung. Không bao giờ có tâm trạng hay ghi chú.',
     ),
     (
-      'Widget support is not provided here for iOS, Windows or Web. Launcher behavior and refresh need device checks.',
-      'Ở đây chưa có tiện ích cho iOS, Windows hoặc Web. Cách launcher hoạt động và làm mới cần kiểm tra trên thiết bị.',
+      'On Android, hold an empty home-screen spot → Widgets → Handy Habit and drag out a widget. Resize for compact or large. Taps open Habit for quick check-in with Undo, amount entry, or Start/Resume of a routine. Light/dark follows the system; Pro adds the studio palette. Refresh happens after changes and on app open, not at midnight while closed. The launcher controls placement and timing; this is not an installation confirmation. iOS, Windows and Web show previews only.',
+      'Trên Android, giữ chỗ trống màn hình chính → Tiện ích → Handy Habit rồi kéo ra. Đổi kích thước để dùng bản gọn hoặc lớn. Chạm mở Habit để ghi nhận kèm Hoàn tác, nhập lượng hoặc Bắt đầu/Tiếp tục quy trình. Sáng/tối theo hệ thống; Pro thêm bảng màu xưởng. Làm mới sau thay đổi và khi mở app, không tự đổi lúc nửa đêm khi app đóng. Launcher quyết định vị trí và thời điểm; đây không phải xác nhận đã cài. iOS, Windows và Web chỉ xem trước.',
     ),
   ]),
   HabitHelpTopic(

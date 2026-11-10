@@ -51,6 +51,6 @@ void main() {
     );
     final view = habitWidgetView(resting, day, vi: true);
     expect(view.value, 'Đang nghỉ');
-    expect(view.detail, 'Đến hết 12/01');
+    expect(view.detail, 'Đến hết 12 thg 1');
   });
 }

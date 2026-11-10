@@ -29,7 +29,11 @@ abstract interface class RunNoticePort {
 class HabitRunNotices {
   final RunNoticePort port;
   HabitRunNotices({RunNoticePort? port})
-    : port = port ?? DeviceRunNoticePort(DeviceNotifications());
+    : port =
+          port ??
+          DeviceRunNoticePort(
+            DeviceNotifications(windows: windowsIdentity('habit')),
+          );
   bool _shown = false;
   Future<void> _queue = Future.value();
 
@@ -131,6 +135,7 @@ class DeviceRunNoticePort implements RunNoticePort {
           presentBadge: false,
           interruptionLevel: InterruptionLevel.passive,
         ),
+        windows: WindowsNotificationDetails(),
       ),
       payload: '$_payload${n.session}',
     );
@@ -151,9 +156,10 @@ class DeviceRunNoticePort implements RunNoticePort {
         : null;
     // The same settings the reminders initialise with, plus the tap.
     await notifications.plugin.initialize(
-      settings: const InitializationSettings(
-        android: AndroidInitializationSettings('@mipmap/ic_launcher'),
-        iOS: DarwinInitializationSettings(
+      settings: InitializationSettings(
+        windows: notifications.windows,
+        android: const AndroidInitializationSettings('@mipmap/ic_launcher'),
+        iOS: const DarwinInitializationSettings(
           requestAlertPermission: false,
           requestBadgePermission: false,
           requestSoundPermission: false,

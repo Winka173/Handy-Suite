@@ -1,15 +1,26 @@
 # Handy Habit feature matrix
 
-Updated 2026-11-11 (run13; earlier evidence below is historical).
+Updated 2026-11-11 (run14; earlier evidence below is historical).
 Source and tests exist; release certification is separate.
 No row below claims physical-device or real-store verification.
+
+| R22 / run14 | Status | Evidence / limits |
+| --- | --- | --- |
+| Finding-first insights, method sheets, EN/VI dates/PDF, compact filter chips/count/Clear, aligned tap heatmaps | IMPLEMENTED / WIDGET + HOST RENDER TESTED | 24 language/theme/width/text cases; actual PDF pages decoded; rules/counts unchanged |
+| Reminders: per-habit/routine, quiet/private, reason before permission | IMPLEMENTED / HOST TESTED | Existing controls retained; schedule capped50 within400 days; no mood/notes |
+| Diagnostics: permission, exact/battery Android, system links, last schedule, Test/Retry | IMPLEMENTED / UNIT + WIDGET TESTED / ANDROID COMPILED | Inexact delivery needs no exact permission; persisted diagnostics are device-local, not sync/backup; no delivery proof |
+| Windows toast and iOS local notifications | SOURCE WIRED | Kit identity/details used for Windows reminders and paused runs; Windows permission unreadable; native delivery unverified; iOS build not run |
+| Three Android widgets: Today, selected habit, routine launcher | IMPLEMENTED / FEED TESTED / ANDROID COMPILED | Compact/large native layouts; light/dark and Pro palettes, privacy, shared selection per type; taps open app; no midnight refresh while closed |
+| iOS/Windows/Web widgets | PREVIEW ONLY | No unsupported install/pin controls; native widgets outside kit support |
+
+Current [R22 review and supervisor checks](R22_REVIEW.md): app265/engine191; schema8/physical2/protocol1 retained. No OS/device certification.
 
 | R19/R20 / run13 feature | Status | Evidence / limit |
 | --- | --- | --- |
 | Pro top live/replayable demo, drawn thumbnails, grouped rows, pinned Restore/Get Pro | IMPLEMENTED / HOST TESTED / RENDERED | Existing25 Pro tests retained; synthetic store states beside saved sibling rasters; real store unverified |
 | Month/quarter and current-group comparisons, difficulty, missed weekdays, mood co-occurrence | IMPLEMENTED / UNIT + WIDGET TESTED | Exact windows, weighted counts, exclusions, ≥14 pairs/≥3 each group, no causation; engine191 total |
 | Accept/dismiss goals, combined heatmap filters, EN/VI designed PDF preview/export | IMPLEMENTED / UNIT + WIDGET TESTED / RENDERED | Ten daily opportunities, changes tomorrow, stale/entitlement checks; core Progress/export free |
-| Three light/dark palettes, Today rows/cards/spacing, six Material icons, runner looks | IMPLEMENTED / WIDGET TESTED / RENDERED | App247 total; six AA cases, glyph coverage, failed/stale save, preview/cancel/no-write/refund/regrant; widget fixed |
+| Three light/dark palettes, Today rows/cards/spacing, six Material icons, runner looks | IMPLEMENTED / WIDGET TESTED / RENDERED | App247 total; six AA cases, glyph coverage, failed/stale save, preview/cancel/no-write/refund/regrant; widget palette support superseded by R22 |
 
 Current review: [R19/R20 and Pro run13](R19_R20_REVIEW.md). Schema8/physical2/protocol1 retained. No device/browser/store certification.
 

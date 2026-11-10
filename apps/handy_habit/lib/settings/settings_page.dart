@@ -275,6 +275,262 @@ class HabitSettingsPage extends StatelessWidget {
     );
   }
 
+  Widget notifications(BuildContext context) {
+    final s = scope.state, c = HandyColors.of(context);
+    final rules = objects(s.settings['reminders'] ?? [])
+        .map(Reminder.fromJson)
+        .where((r) => !s.isTrashed(r.type, r.target))
+        .toList();
+    String targetName(Reminder r) =>
+        (r.type == 'habit'
+            ? scope.habit(r.target)?.title
+            : scope.routine(r.target)?.title) ??
+        tr(context, 'deleted', 'đã xóa');
+    final next = dueReminders(s, scope.clock()).take(3).toList();
+    return HandySettingsSection(
+      title: tr(context, 'Notifications', 'Thông báo'),
+      description: scope.reminders.supported
+          ? tr(
+              context,
+              'Permission is asked only when you turn this on. The earliest 50 within 400 days are set; opening the app refreshes them.',
+              'Chỉ hỏi quyền khi bạn bật. Đặt 50 lần nhắc sớm nhất trong 400 ngày; mở app sẽ làm mới.',
+            )
+          : tr(
+              context,
+              'This platform cannot remind in the background. Today shows the next reminder instead.',
+              'Nền tảng này không nhắc nền được. Hôm nay sẽ hiện lần nhắc tiếp theo.',
+            ),
+      children: [
+        if (scope.reminderError.value != null)
+          Padding(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                HandyNotice(
+                  tr(
+                    context,
+                    'Could not update scheduled reminders. Your rules are saved. Try again or check notification settings.',
+                    'Chưa cập nhật được lịch thông báo. Lịch nhắc đã lưu. Hãy thử lại hoặc kiểm tra cài đặt thông báo.',
+                  ),
+                  tone: HandyTone.error,
+                ),
+                TextButton(
+                  key: const Key('reminder-retry'),
+                  onPressed: () async {
+                    try {
+                      await scope.reminders.sync(scope.state);
+                      scope.reminderError.value = null;
+                    } catch (e) {
+                      scope.reminderError.value = e;
+                    }
+                  },
+                  child: Text(tr(context, 'Retry', 'Thử lại')),
+                ),
+              ],
+            ),
+          ),
+        HabitNotificationStatus(
+          reminders: scope.reminders,
+          revision: s.revision,
+        ),
+        HandyTile(
+          key: const Key('reminder-help'),
+          title: tr(
+            context,
+            'Why didn’t my reminder appear?',
+            'Vì sao không thấy thông báo?',
+          ),
+          onTap: () => Navigator.pushNamed(
+            context,
+            '/settings/notifications/diagnostics',
+          ),
+        ),
+        if (scope.reminders.supported)
+          HabitSettingToggle(
+            id: 'settings-private-notifications',
+            title: tr(
+              context,
+              'Private lock-screen text',
+              'Ẩn tên trên màn hình khóa',
+            ),
+            value: s.settings['privateNotifications'] != false,
+            onChanged: (v) => _set(context, {'privateNotifications': v}),
+          ),
+        if (scope.reminders.supported)
+          HandyTile(
+            key: const Key('notification-test'),
+            title: tr(context, 'Test notification', 'Thử thông báo'),
+            onTap: () => _guard(context, () async {
+              await scope.reminders.test(s);
+              return context.mounted
+                  ? tr(
+                      context,
+                      'Test sent. If it is hidden, check system notification settings.',
+                      'Đã gửi thử. Nếu chưa thấy, kiểm tra thông báo trong cài đặt hệ thống.',
+                    )
+                  : null;
+            }),
+          ),
+        if (scope.reminders.supported)
+          SwitchListTile.adaptive(
+            key: const Key('set-notifications'),
+            title: Text(tr(context, 'Send reminders', 'Gửi nhắc')),
+            subtitle: Text(
+              s.settings['notifications'] == true
+                  ? tr(context, 'On', 'Bật')
+                  : tr(context, 'Off', 'Tắt'),
+            ),
+            value: s.settings['notifications'] == true,
+            onChanged: (on) async {
+              final allowed = on && await _allowNotifications(context);
+              if (on && !allowed && context.mounted)
+                showHandyMessage(
+                  context,
+                  tr(
+                    context,
+                    'Notifications are off for Handy Habit in the system settings; tracking still works.',
+                    'Thông báo của Handy Habit đang tắt trong cài đặt hệ thống; ghi nhận vẫn dùng bình thường.',
+                  ),
+                );
+              if (context.mounted)
+                await _set(context, {
+                  'notifications': allowed,
+                  if (!allowed) 'runNotice': false,
+                });
+            },
+          ),
+        if (scope.reminders.supported)
+          SwitchListTile.adaptive(
+            key: const Key('set-run-notice'),
+            title: Text(
+              tr(
+                context,
+                'Show a paused routine in notifications',
+                'Báo quy trình đang dở trong thông báo',
+              ),
+            ),
+            subtitle: Text(
+              tr(
+                context,
+                'When you leave a run, it pauses; the notice says where you stopped and opens it again.',
+                'Rời màn chạy thì phiên tạm dừng; thông báo nói bạn dừng ở đâu và mở lại phiên.',
+              ),
+            ),
+            value: runNoticeOn(s),
+            onChanged: (on) async {
+              final allowed = on && await _allowNotifications(context);
+              if (on && !allowed && context.mounted)
+                showHandyMessage(
+                  context,
+                  tr(
+                    context,
+                    'Notifications are off for Handy Habit in the system settings; routines still run.',
+                    'Thông báo của Handy Habit đang tắt trong cài đặt hệ thống; quy trình vẫn chạy bình thường.',
+                  ),
+                );
+              if (context.mounted)
+                await _set(context, {
+                  'runNotice': allowed,
+                  if (allowed) 'notifications': true,
+                });
+            },
+          ),
+        HandyTile(
+          key: const Key('set-quiet'),
+          title: tr(context, 'Quiet hours', 'Giờ yên lặng'),
+          subtitle:
+              '${s.settings['quietStart'] ?? '22:00'} – ${s.settings['quietEnd'] ?? '07:00'}',
+          onTap: () => _quiet(context),
+        ),
+        for (final r in rules)
+          ListTile(
+            key: Key('reminder-${r.id}'),
+            title: Text('${r.time} · ${targetName(r)}'),
+            subtitle: Text(
+              '${weekdaysText(context, r.weekdays)}${r.enabled ? '' : ' · ${tr(context, 'off', 'tắt')}'}${r.snooze == null ? '' : ' · ${tr(context, 'snoozed', 'đã hoãn')}'}',
+            ),
+            onTap: () => _reminder(context, r),
+            trailing: HandyMenuButton(
+              items: [
+                HandyMenuItem(
+                  Icons.snooze,
+                  tr(context, 'Again in 10 minutes', 'Nhắc lại sau 10 phút'),
+                  () => _set(context, {
+                    'reminders': [
+                      for (final x in objects(s.settings['reminders'] ?? []))
+                        if (x['id'] != r.id) x,
+                      {
+                        ...r.toJson(),
+                        'snooze': scope
+                            .clock()
+                            .add(const Duration(minutes: 10))
+                            .toUtc()
+                            .toIso8601String(),
+                      },
+                    ],
+                  }),
+                ),
+                HandyMenuItem(
+                  Icons.delete_outline,
+                  tr(context, 'Delete', 'Xóa'),
+                  () async {
+                    if (!await confirmHandy(
+                          context,
+                          title: tr(
+                            context,
+                            'Delete this reminder?',
+                            'Xóa lịch nhắc này?',
+                          ),
+                          message: tr(
+                            context,
+                            'The habit and its history are kept.',
+                            'Giữ nguyên thói quen và lịch sử.',
+                          ),
+                          confirmLabel: tr(context, 'Delete', 'Xóa'),
+                        ) ||
+                        !context.mounted)
+                      return;
+                    await _set(context, {
+                      'reminders': [
+                        for (final x in objects(s.settings['reminders'] ?? []))
+                          if (x['id'] != r.id) x,
+                      ],
+                    });
+                  },
+                  destructive: true,
+                ),
+              ],
+            ),
+          ),
+        HandyTile(
+          key: const Key('reminder-add'),
+          icon: Icons.add,
+          title: tr(context, 'Add a reminder', 'Thêm lịch nhắc'),
+          onTap:
+              s.liveHabits.any((h) => !h.archived) ||
+                  s.liveRoutines.any((r) => !r.archived)
+              ? () => _reminder(context)
+              : null,
+        ),
+        if (next.isNotEmpty)
+          Padding(
+            padding: const EdgeInsets.all(HandySpace.l),
+            child: Text(
+              tr(context, 'Next: ', 'Sắp tới: ') +
+                  next
+                      .map(
+                        (d) =>
+                            '${dayText(context, day(d.when), scope.today).toLowerCase()} ${d.when.hour.toString().padLeft(2, '0')}:${d.when.minute.toString().padLeft(2, '0')}',
+                      )
+                      .join(', '),
+              style: TextStyle(color: c.muted),
+            ),
+          ),
+      ],
+    );
+  }
+
   Future<void> _clearAll(BuildContext context) async {
     final ok = await confirmHandy(
       context,
@@ -312,17 +568,6 @@ class HabitSettingsPage extends StatelessWidget {
     listenable: Listenable.merge([scope.controller, scope.reminderError]),
     builder: (context, _) {
       final s = scope.state;
-      final c = HandyColors.of(context);
-      final rules = objects(s.settings['reminders'] ?? [])
-          .map(Reminder.fromJson)
-          .where((r) => !s.isTrashed(r.type, r.target))
-          .toList();
-      String targetName(Reminder r) =>
-          (r.type == 'habit'
-              ? scope.habit(r.target)?.title
-              : scope.routine(r.target)?.title) ??
-          tr(context, 'deleted', 'đã xóa');
-      final next = dueReminders(s, scope.clock()).take(3).toList();
       return HandyPage(
         title: tr(context, 'Settings', 'Cài đặt'),
         children: [
@@ -522,251 +767,20 @@ class HabitSettingsPage extends StatelessWidget {
               ),
             ],
           ),
+          notifications(context),
           HandySettingsSection(
-            title: tr(context, 'Notifications', 'Thông báo'),
-            description: scope.reminders.supported
-                ? tr(
-                    context,
-                    'Permission is asked only when you turn this on. The earliest 50 within 400 days are set; opening the app refreshes them.',
-                    'Chỉ hỏi quyền khi bạn bật. Đặt 50 lần nhắc sớm nhất trong 400 ngày; mở app sẽ làm mới.',
-                  )
-                : tr(
-                    context,
-                    'This platform cannot remind in the background. Today shows the next reminder instead.',
-                    'Nền tảng này không nhắc nền được. Hôm nay sẽ hiện lần nhắc tiếp theo.',
-                  ),
+            title: tr(context, 'Home screen', 'Màn hình chính'),
             children: [
-              if (scope.reminderError.value != null)
-                Padding(
-                  padding: const EdgeInsets.all(16),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      HandyNotice(
-                        tr(
-                          context,
-                          'Could not update scheduled reminders. Your rules are saved. Try again or check notification settings.',
-                          'Chưa cập nhật được lịch thông báo. Lịch nhắc đã lưu. Hãy thử lại hoặc kiểm tra cài đặt thông báo.',
-                        ),
-                        tone: HandyTone.error,
-                      ),
-                      TextButton(
-                        key: const Key('reminder-retry'),
-                        onPressed: () async {
-                          try {
-                            await scope.reminders.sync(scope.state);
-                            scope.reminderError.value = null;
-                          } catch (e) {
-                            scope.reminderError.value = e;
-                          }
-                        },
-                        child: Text(tr(context, 'Retry', 'Thử lại')),
-                      ),
-                    ],
-                  ),
-                ),
-              HabitNotificationStatus(
-                reminders: scope.reminders,
-                revision: s.revision,
-              ),
               HandyTile(
-                key: const Key('reminder-help'),
-                title: tr(
+                key: const Key('settings-widgets'),
+                title: tr(context, 'Widgets', 'Tiện ích'),
+                subtitle: tr(
                   context,
-                  'Why didn’t my reminder appear?',
-                  'Vì sao không thấy thông báo?',
+                  'Today, one habit, or a routine',
+                  'Hôm nay, một thói quen hoặc quy trình',
                 ),
-                onTap: () => Navigator.pushNamed(context, '/help/reminders'),
+                onTap: () => Navigator.pushNamed(context, '/settings/widgets'),
               ),
-              if (scope.reminders.supported)
-                HabitSettingToggle(
-                  id: 'settings-private-notifications',
-                  title: tr(
-                    context,
-                    'Private lock-screen text',
-                    'Ẩn tên trên màn hình khóa',
-                  ),
-                  value: s.settings['privateNotifications'] != false,
-                  onChanged: (v) => _set(context, {'privateNotifications': v}),
-                ),
-              if (scope.reminders.supported)
-                HandyTile(
-                  key: const Key('notification-test'),
-                  title: tr(context, 'Test notification', 'Thử thông báo'),
-                  onTap: () => _guard(context, () async {
-                    await scope.reminders.test(s);
-                    return context.mounted
-                        ? tr(
-                            context,
-                            'Test sent. If it is hidden, check system notification settings.',
-                            'Đã gửi thử. Nếu chưa thấy, kiểm tra thông báo trong cài đặt hệ thống.',
-                          )
-                        : null;
-                  }),
-                ),
-              if (scope.reminders.supported)
-                SwitchListTile.adaptive(
-                  key: const Key('set-notifications'),
-                  title: Text(tr(context, 'Send reminders', 'Gửi nhắc')),
-                  subtitle: Text(
-                    s.settings['notifications'] == true
-                        ? tr(context, 'On', 'Bật')
-                        : tr(context, 'Off', 'Tắt'),
-                  ),
-                  value: s.settings['notifications'] == true,
-                  onChanged: (on) async {
-                    final allowed = on && await _allowNotifications(context);
-                    if (on && !allowed && context.mounted)
-                      showHandyMessage(
-                        context,
-                        tr(
-                          context,
-                          'Notifications are off for Handy Habit in the system settings; tracking still works.',
-                          'Thông báo của Handy Habit đang tắt trong cài đặt hệ thống; ghi nhận vẫn dùng bình thường.',
-                        ),
-                      );
-                    if (context.mounted)
-                      await _set(context, {
-                        'notifications': allowed,
-                        if (!allowed) 'runNotice': false,
-                      });
-                  },
-                ),
-              if (scope.reminders.supported)
-                SwitchListTile.adaptive(
-                  key: const Key('set-run-notice'),
-                  title: Text(
-                    tr(
-                      context,
-                      'Show a paused routine in notifications',
-                      'Báo quy trình đang dở trong thông báo',
-                    ),
-                  ),
-                  subtitle: Text(
-                    tr(
-                      context,
-                      'When you leave a run, it pauses; the notice says where you stopped and opens it again.',
-                      'Rời màn chạy thì phiên tạm dừng; thông báo nói bạn dừng ở đâu và mở lại phiên.',
-                    ),
-                  ),
-                  value: runNoticeOn(s),
-                  onChanged: (on) async {
-                    final allowed = on && await _allowNotifications(context);
-                    if (on && !allowed && context.mounted)
-                      showHandyMessage(
-                        context,
-                        tr(
-                          context,
-                          'Notifications are off for Handy Habit in the system settings; routines still run.',
-                          'Thông báo của Handy Habit đang tắt trong cài đặt hệ thống; quy trình vẫn chạy bình thường.',
-                        ),
-                      );
-                    if (context.mounted)
-                      await _set(context, {
-                        'runNotice': allowed,
-                        if (allowed) 'notifications': true,
-                      });
-                  },
-                ),
-              HandyTile(
-                key: const Key('set-quiet'),
-                title: tr(context, 'Quiet hours', 'Giờ yên lặng'),
-                subtitle:
-                    '${s.settings['quietStart'] ?? '22:00'} – ${s.settings['quietEnd'] ?? '07:00'}',
-                onTap: () => _quiet(context),
-              ),
-              for (final r in rules)
-                ListTile(
-                  key: Key('reminder-${r.id}'),
-                  title: Text('${r.time} · ${targetName(r)}'),
-                  subtitle: Text(
-                    '${weekdaysText(context, r.weekdays)}${r.enabled ? '' : ' · ${tr(context, 'off', 'tắt')}'}${r.snooze == null ? '' : ' · ${tr(context, 'snoozed', 'đã hoãn')}'}',
-                  ),
-                  onTap: () => _reminder(context, r),
-                  trailing: HandyMenuButton(
-                    items: [
-                      HandyMenuItem(
-                        Icons.snooze,
-                        tr(
-                          context,
-                          'Again in 10 minutes',
-                          'Nhắc lại sau 10 phút',
-                        ),
-                        () => _set(context, {
-                          'reminders': [
-                            for (final x in objects(
-                              s.settings['reminders'] ?? [],
-                            ))
-                              if (x['id'] != r.id) x,
-                            {
-                              ...r.toJson(),
-                              'snooze': scope
-                                  .clock()
-                                  .add(const Duration(minutes: 10))
-                                  .toUtc()
-                                  .toIso8601String(),
-                            },
-                          ],
-                        }),
-                      ),
-                      HandyMenuItem(
-                        Icons.delete_outline,
-                        tr(context, 'Delete', 'Xóa'),
-                        () async {
-                          if (!await confirmHandy(
-                                context,
-                                title: tr(
-                                  context,
-                                  'Delete this reminder?',
-                                  'Xóa lịch nhắc này?',
-                                ),
-                                message: tr(
-                                  context,
-                                  'The habit and its history are kept.',
-                                  'Giữ nguyên thói quen và lịch sử.',
-                                ),
-                                confirmLabel: tr(context, 'Delete', 'Xóa'),
-                              ) ||
-                              !context.mounted)
-                            return;
-                          await _set(context, {
-                            'reminders': [
-                              for (final x in objects(
-                                s.settings['reminders'] ?? [],
-                              ))
-                                if (x['id'] != r.id) x,
-                            ],
-                          });
-                        },
-                        destructive: true,
-                      ),
-                    ],
-                  ),
-                ),
-              HandyTile(
-                key: const Key('reminder-add'),
-                icon: Icons.add,
-                title: tr(context, 'Add a reminder', 'Thêm lịch nhắc'),
-                onTap:
-                    s.liveHabits.any((h) => !h.archived) ||
-                        s.liveRoutines.any((r) => !r.archived)
-                    ? () => _reminder(context)
-                    : null,
-              ),
-              if (next.isNotEmpty)
-                Padding(
-                  padding: const EdgeInsets.all(HandySpace.l),
-                  child: Text(
-                    tr(context, 'Next: ', 'Sắp tới: ') +
-                        next
-                            .map(
-                              (d) =>
-                                  '${dayText(context, day(d.when), scope.today).toLowerCase()} ${d.when.hour.toString().padLeft(2, '0')}:${d.when.minute.toString().padLeft(2, '0')}',
-                            )
-                            .join(', '),
-                    style: TextStyle(color: c.muted),
-                  ),
-                ),
             ],
           ),
           HandySettingsSection(
@@ -1017,5 +1031,24 @@ class HabitSettingsPage extends StatelessWidget {
         ],
       );
     },
+  );
+}
+
+class HabitNotificationSettingsPage extends StatelessWidget {
+  final HabitScope scope;
+  const HabitNotificationSettingsPage({super.key, required this.scope});
+  @override
+  Widget build(BuildContext context) => Scaffold(
+    appBar: AppBar(title: Text(tr(context, 'Notifications', 'Thông báo'))),
+    body: ListView(
+      key: const Key('notifications-scroll'),
+      padding: const EdgeInsets.all(16),
+      children: [
+        HandyContent(
+          maxWidth: 720,
+          child: HabitSettingsPage(scope: scope).notifications(context),
+        ),
+      ],
+    ),
   );
 }

@@ -1,6 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="handy_widget_ground">#FFFFFF</color>
-    <color name="handy_widget_ink">#17181A</color>
-    <color name="handy_widget_muted">#5F636B</color>
+<color name="handy_widget_ground">#FFFFFF</color>
+<color name="handy_widget_ink">#281B18</color>
+<color name="handy_widget_muted">#69534B</color>
+<color name="handy_widget_accent">#B42318</color>
+<color name="handy_widget_grove">#FFFFFF</color>
+<color name="handy_widget_ochre">#FFFFFF</color>
+<color name="handy_widget_accent_grove">#27643F</color>
+<color name="handy_widget_accent_ochre">#805500</color>
 </resources>

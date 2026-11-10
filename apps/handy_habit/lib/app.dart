@@ -29,6 +29,8 @@ import 'scope.dart';
 import 'settings/settings_page.dart';
 import 'settings/trash_page.dart';
 import 'settings/help_page.dart';
+import 'settings/reminder_diagnostics.dart';
+import 'settings/widgets_page.dart';
 import 'welcome/welcome_page.dart';
 import 'shell/habit_shell.dart';
 import 'today/check_in.dart';
@@ -97,6 +99,16 @@ class _HabitAppState extends State<HabitApp> with WidgetsBindingObserver {
         : null,
   );
   final widgetFeed = HomeWidgetFeed(habitWidgetClass);
+  final singleWidgetFeed = HomeWidgetFeed(
+    singleHabitWidgetClass,
+    prefix: 'habit_',
+  );
+  final routineWidgetFeed = HomeWidgetFeed(
+    routineWidgetClass,
+    prefix: 'routine_',
+  );
+  Future<void> _widgetQueue = Future.value();
+  bool _widgetPro = false;
   StreamSubscription<Uri>? _links;
   Timer? _clockWatch;
   String? _clockStamp;
@@ -121,6 +133,9 @@ class _HabitAppState extends State<HabitApp> with WidgetsBindingObserver {
     );
     _ads();
     if (widget.device) _links = widgetFeed.links().listen(_widgetLink);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) _sync();
+    });
     unawaited(
       scope.notices.start(_openRun).then((id) {
         if (id == null || !mounted) return;
@@ -148,24 +163,57 @@ class _HabitAppState extends State<HabitApp> with WidgetsBindingObserver {
   /// check-in that leaves the usual Undo.
   Uri? _pendingLink;
   void _widgetLink(Uri uri) {
+    if (uri.scheme != 'handy-habit' ||
+        !const {
+          'today',
+          'habit',
+          'checkin',
+          'routine',
+          'widgets',
+        }.contains(uri.host))
+      return;
     final s = c.state, nav = navigator.currentState;
     if (s == null || nav == null) {
       _pendingLink = uri;
       return;
     }
     final id = uri.pathSegments.firstOrNull;
-    final habit = s.habits.where((h) => h.id == id).firstOrNull;
+    final habit = s.liveHabits
+        .where((h) => h.id == id && !h.archived)
+        .firstOrNull;
     // Keep an editor draft underneath a link instead of removing its route.
     unawaited(nav.pushNamed('/today'));
     scope.area.value = 0;
+    if (uri.host == 'widgets') {
+      unawaited(nav.pushNamed('/settings/widgets'));
+      return;
+    }
+    if (uri.host == 'routine') {
+      final routine = s.liveRoutines
+          .where((r) => r.id == id && !r.archived)
+          .firstOrNull;
+      if (routine != null) unawaited(nav.pushNamed('/routine/${routine.id}'));
+      return;
+    }
     if (habit == null) return;
     if (uri.host == 'habit') {
       unawaited(nav.pushNamed('/habit/${habit.id}'));
     } else if (uri.host == 'checkin') {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         final context = navigator.currentContext;
-        if (context != null && mounted)
-          unawaited(checkIn(context, scope, habit));
+        final current = scope.habit(habit.id);
+        if (context != null &&
+            mounted &&
+            current != null &&
+            !current.archived) {
+          if (isScheduledOn(current, scope.today) &&
+              !scope.index.paused(current.id, scope.today) &&
+              !current.isNegative) {
+            unawaited(checkIn(context, scope, current));
+          } else {
+            unawaited(nav.pushNamed('/habit/${current.id}'));
+          }
+        }
       });
     }
   }
@@ -192,6 +240,11 @@ class _HabitAppState extends State<HabitApp> with WidgetsBindingObserver {
       drive?.resumed();
     }
   }
+
+  @override
+  void didChangePlatformBrightness() => _sync();
+  @override
+  void didChangeLocales(List<Locale>? locales) => _sync();
 
   void _refreshClock() {
     if (!mounted || c.state == null) return;
@@ -252,7 +305,21 @@ class _HabitAppState extends State<HabitApp> with WidgetsBindingObserver {
           locale == 'system' &&
               WidgetsBinding.instance.platformDispatcher.locale.languageCode ==
                   'vi';
-      unawaited(widgetFeed.publish(habitWidgetView(s, scope.today, vi: vi)));
+      final views = habitWidgetViews(
+        s,
+        scope.today,
+        vi: vi,
+        pro: _widgetPro,
+        dark:
+            WidgetsBinding.instance.platformDispatcher.platformBrightness ==
+            Brightness.dark,
+      );
+      _widgetQueue = _widgetQueue.catchError((Object _) {}).then((_) async {
+        if (!mounted) return;
+        await widgetFeed.publish(views['today']!);
+        await singleWidgetFeed.publish(views['habit']!);
+        await routineWidgetFeed.publish(views['routine']!);
+      });
     }
   }
 
@@ -292,6 +359,12 @@ class _HabitAppState extends State<HabitApp> with WidgetsBindingObserver {
       ['', 'insights'] => () => HabitShell(scope: scope, area: 3),
       ['', 'progress', 'smart'] => () => HabitSmartPage(scope: scope),
       ['', 'settings', 'studio'] => () => HabitStudioPage(scope: scope),
+      ['', 'settings', 'widgets'] => () => HabitWidgetsPage(scope: scope),
+      ['', 'settings', 'notifications'] => () => HabitNotificationSettingsPage(
+        scope: scope,
+      ),
+      ['', 'settings', 'notifications', 'diagnostics'] =>
+        () => HabitReminderDiagnosticsPage(scope: scope),
       ['', 'progress', 'week'] || ['', 'review'] => () => WeekReviewPage(
         scope: scope,
         from: uri.queryParameters['from'],
@@ -540,16 +613,25 @@ class _HabitAppState extends State<HabitApp> with WidgetsBindingObserver {
   );
 
   Widget _styled(Widget child) => Builder(
-    builder: (context) => Theme(
-      data: habitTheme(
-        Theme.of(context),
-        style: StudioStyle.read(
-          c.state?.settings ?? {},
-          pro: LifetimeScope.maybeOf(context)?.pro == true,
+    builder: (context) {
+      final pro = LifetimeScope.maybeOf(context)?.pro == true;
+      if (_widgetPro != pro) {
+        _widgetPro = pro;
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (mounted) _sync();
+        });
+      }
+      return Theme(
+        data: habitTheme(
+          Theme.of(context),
+          style: StudioStyle.read(
+            c.state?.settings ?? {},
+            pro: LifetimeScope.maybeOf(context)?.pro == true,
+          ),
         ),
-      ),
-      child: Focus(onKeyEvent: _key, child: child),
-    ),
+        child: Focus(onKeyEvent: _key, child: child),
+      );
+    },
   );
 }
 

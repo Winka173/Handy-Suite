@@ -54,8 +54,10 @@ build Android/Windows/Web hay ảnh widget là bằng chứng thiết bị thậ
 
 ## Handy Habit
 
+- **R22/run14**: insights nêu một kết luận lớn/mục, số hỗ trợ, phương pháp trong sheet; ngày ngắn EN/VI cả PDF, preview dùng tên múi giờ thân thiện, PDF bỏ zone. Filter chip có số đếm/Clear; heatmap màu habit, lịch tuần/48px và chạm xem chi tiết. Diagnostics có quyền, exact/battery Android, liên kết hệ thống, lần đặt lịch thành công và Test/Retry. Android dùng inexact không cần quyền exact; Windows toast dùng kit identity (quyền bật/tắt không đọc được); iOS local source, Web chỉ danh sách trong app. Ba widget Android: Today/One habit/Routine, compact/large, ẩn tên, chọn mục dùng chung theo loại, system light/dark + bảng màu Pro. Tap mở app và Undo/nhập lượng/Start/Resume; cập nhật sau thay đổi/mở app, không hứa refresh nửa đêm khi đóng. Không lộ mood/notes; iOS/Windows/Web chỉ xem preview. Host265/engine191, APK debug biên dịch; thiết bị/launcher chưa kiểm. [R22](handy_habit/R22_REVIEW.md).
+
 - **Pro R19/run13**: so sánh cùng phần đã qua của tháng/quý, nhóm theo buổi/collection, độ khó có công thức, thứ hay lỡ kèm mẫu số, gợi ý tăng/giảm mục tiêu nhận hoặc bỏ qua (từ ngày mai), tâm trạng cùng xuất hiện với tối thiểu14 ngày ghép, bộ lọc heatmap kết hợp và PDF EN/VI xem trước rồi lưu. Chỉ tính trên máy, không suy ra nguyên nhân. Progress/xuất/backup/sync cốt lõi vẫn miễn phí.
-- **Studio R20**: ba bảng màu Habit sáng/tối đạt AA, Today hàng/thẻ và khoảng cách, sáu icon Material outline và hai diện mạo runner. Ai cũng xem trước; Pro áp dụng. Mất Pro dùng mặc định an toàn, giữ lựa chọn, không sửa lịch sử. Widget Android giữ giao diện hệ thống hiện có, chưa có tùy chỉnh riêng. Pro có demo trên cùng, thumbnail, các nhóm và footer Restore/Get Pro với giá store; host tested, chưa giao dịch thật.
+- **Studio R20**: ba bảng màu Habit sáng/tối đạt AA, Today hàng/thẻ và khoảng cách, sáu icon Material outline và hai diện mạo runner. Ai cũng xem trước; Pro áp dụng. Mất Pro dùng mặc định an toàn, giữ lựa chọn, không sửa lịch sử. Run14/R22 đưa bảng màu studio vào widget Android và giữ fallback miễn phí khi mất Pro. Pro có demo trên cùng, thumbnail, các nhóm và footer Restore/Get Pro với giá store; host tested, chưa giao dịch thật.
 
 - **Quy trình nâng cao (R17/R18, Pro để tạo/sửa)**: điều kiện theo thứ/thói quen chưa xong/thời gian còn lại, nhánh A/B, nhóm bước dùng lại, bước cần xong trước, nối sau thói quen, thời lượng theo thứ và cấu hình đã lưu. Cơ bản là mặc định; Nâng cao mở dần, có giải thích và demo/nhãn Pro cho người chưa có Pro. Mọi người vẫn chạy quy trình đã lưu. Phiên giữ bản chụp và quyết định bất biến, giải thích bước bỏ qua; không tính giờ khi app đóng. Schema8/physical2/protocol1; host tested, chưa kiểm trên thiết bị.
 
@@ -108,7 +110,7 @@ Keep, Spend hoặc timer đa dụng. [Trạng thái kiểm chứng](handy_habit/
 - Insights: khoảng ngày, habit, nhóm, routine; mẫu số cơ hội hợp lệ, phiên hoàn
   thành và thời gian dự kiến/thực tế, không chấm điểm năng suất tùy tiện.
 - Nhắc cục bộ Android/iOS: quyền chỉ xin khi bật, giờ yên lặng, chọn thứ, snooze,
-  preview, hủy khi tắt/xóa. Windows/Web dùng danh sách đến hạn trong app.
+  preview, hủy khi tắt/xóa. Windows có toast cục bộ ở source từ R22; Web dùng danh sách đến hạn trong app.
 - SQLite native/IndexedDB Web, integrity check, schema version, bảo vệ ghi đồng
   thời. JSON/ZIP full backup miễn phí, preview merge/replace, đổi ID khi merge,
   checksum và rollback. Replace lưu bản phục hồi bền trên máy trước khi commit; Cài đặt có khôi phục trước lần thay thế cuối. `.hseal` dùng mã hóa xác thực chung, sai mật khẩu/hỏng/hủy giữ dữ liệu. CSV log nhập/xuất (kèm bảng kỳ nghỉ và tâm trạng khi có);
@@ -123,7 +125,7 @@ Keep, Spend hoặc timer đa dụng. [Trạng thái kiểm chứng](handy_habit/
   ở Hôm nay trống. Cách dùng có 15 chủ đề EN/VI, tìm không dấu, số kết quả và hình đúng UI;
   khi lọc bỏ số thứ tự chủ đề. Cài đặt nhóm, giá trị thân thiện (múi giờ kèm GMT),
   mật độ/giảm chuyển động/mặc định thói quen/quy trình, quyền nhắc có giải thích trước,
-  ẩn tên thông báo, kiểm tra nhắc, đặt lại tùy chọn giữ dữ liệu. Chưa có hàng mua Pro; Sync Android có build gate riêng.
+  ẩn tên thông báo, kiểm tra nhắc, đặt lại tùy chọn giữ dữ liệu. Pro có trạng thái/Mua/Khôi phục; Sync Android có build gate riêng.
 - Hôm nay ưu tiên tràng hạt trước quy trình/review; active run một dòng. Tự nhóm buổi
   theo nhắc hoặc quy trình liên kết, đổi được trong Advanced. Danh sách dài mở
   “Xem tất cả N” tại chỗ; check-in không đổi vị trí dòng. Motion theo kit, tắt theo máy

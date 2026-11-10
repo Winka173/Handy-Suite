@@ -4,6 +4,8 @@ import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 import '../scope.dart';
 import 'smart_review.dart';
+import 'insight_dates.dart';
+import '../settings/settings_parts.dart';
 
 Future<Uint8List> smartReportPdf(
   List<ReviewSection> sections, {
@@ -14,7 +16,10 @@ Future<Uint8List> smartReportPdf(
   final font = pw.Font.ttf(await rootBundle.load('fonts/Nunito-Regular.ttf'));
   final bold = pw.Font.ttf(await rootBundle.load('fonts/Nunito-Bold.ttf'));
   final ink = PdfColor.fromHex('#54261F'), accent = PdfColor.fromHex('#B42318');
-  final doc = pw.Document(title: 'Handy Habit · $today', author: 'Handy Habit');
+  final doc = pw.Document(
+    title: 'Handy Habit · ${insightDate(today, vi: vi, year: true)}',
+    author: 'Handy Habit',
+  );
   doc.addPage(
     pw.MultiPage(
       pageFormat: PdfPageFormat.a4,
@@ -37,7 +42,7 @@ Future<Uint8List> smartReportPdf(
                 color: ink,
               ),
             ),
-            pw.Text(today),
+            pw.Text(insightDate(today, vi: vi, year: true)),
           ],
         ),
       ),
@@ -59,19 +64,34 @@ Future<Uint8List> smartReportPdf(
           vi ? 'Nhìn lại nhịp sống' : 'A review of your rhythms',
           style: pw.TextStyle(fontSize: 25, color: ink),
         ),
-        pw.Text('$today · $zone'),
+        pw.Text(insightDate(today, vi: vi, year: true)),
         for (final (title, lines) in sections) ...[
           pw.SizedBox(height: 22),
-          pw.Header(
-            level: 1,
-            text: title,
-            textStyle: pw.TextStyle(
-              fontSize: 16,
-              color: ink,
-              fontWeight: pw.FontWeight.bold,
+          pw.Inseparable(
+            child: pw.Column(
+              crossAxisAlignment: pw.CrossAxisAlignment.start,
+              children: [
+                pw.Header(
+                  level: 1,
+                  text: title,
+                  textStyle: pw.TextStyle(
+                    fontSize: 16,
+                    color: ink,
+                    fontWeight: pw.FontWeight.bold,
+                  ),
+                ),
+                for (final line in lines.where((l) => l.isNotEmpty).take(2))
+                  pw.Padding(
+                    padding: const pw.EdgeInsets.only(bottom: 8),
+                    child: pw.Text(
+                      line,
+                      style: const pw.TextStyle(fontSize: 11, lineSpacing: 3),
+                    ),
+                  ),
+              ],
             ),
           ),
-          for (final line in lines.where((l) => l.isNotEmpty))
+          for (final line in lines.where((l) => l.isNotEmpty).skip(2))
             pw.Padding(
               padding: const pw.EdgeInsets.only(bottom: 8),
               child: pw.Text(
@@ -141,9 +161,7 @@ class _SmartReportPageState extends State<SmartReportPage> {
 
   @override
   Widget build(BuildContext context) => Scaffold(
-    appBar: AppBar(
-      title: Text(tr(context, 'Report preview', 'Xem trước báo cáo')),
-    ),
+    appBar: AppBar(title: Text(tr(context, 'PDF review', 'Báo cáo PDF'))),
     bottomNavigationBar: SafeArea(
       top: false,
       child: Padding(
@@ -172,7 +190,9 @@ class _SmartReportPageState extends State<SmartReportPage> {
               'Handy Habit',
               style: Theme.of(context).textTheme.headlineSmall,
             ),
-            Text('${widget.today} · ${widget.scope.state.zone}'),
+            Text(
+              '${insightDate(widget.today, vi: Localizations.localeOf(context).languageCode == 'vi', year: true)} · ${habitZoneLabel(context, widget.scope.state.zone, widget.scope.clock())}',
+            ),
             Text(
               tr(
                 context,

@@ -158,9 +158,9 @@ Mỗi run một feature area, supervisor review rồi chuyển. A/E/AT/ET theo A
 | R17 P2 Advanced engine — IMPLEMENTED / HOST TESTED | E routine_rules/models/routines/portable/sync/trash; schema8 | ET conditions/DAG/cycle/refs/path cap/inputs snapshot/branch Undo/linked/weekday/blocks/presets/v1–v7 migration/roundtrip/copy-merge/sync | Real upgrade/branch restart/OS provider restore; no automation or terminated timer |
 | R18 P2 Advanced UX — IMPLEMENTED / HOST TESTED | A builder/blocks/presets/trace/runner/gates | AT Basic default/Advanced reveal/non-Pro badges/demo/verified entitlement recheck/free existing runs/skip explanations/summary; 24-case raster matrix | Device branch/stacking/skip/Undo/recovery/SR/motion follow-up; purchase flow deferred to R21 |
 | R19 P2 insights — IMPLEMENTED / HOST TESTED (run13) | E smart windows/counts/groups/weekdays/mood/suggestions/filter; A smart page/PDF | Engine191/app247; denominators/pauses/unknown/negative/DST; minimum14 mood pairs; gating/accept-dismiss/tomorrow/EN-VI PDF | Device/SR/large-history and independent report checks remain; no medical/causal claims |
-| R20 P2 studio — IMPLEMENTED / HOST TESTED (run13) | A 3 palettes/Today layout-spacing/6 icons/runner/live preview | AA6 themes, preview-cancel/apply/refund fallback/stale-write/retry/Nunito glyphs; 24-case renders | OS/SR/native checks remain; fixed system day-night widget has no custom controls |
+| R20 P2 studio — IMPLEMENTED / HOST TESTED (run13) | A 3 palettes/Today layout-spacing/6 icons/runner/live preview | AA6 themes, preview-cancel/apply/refund fallback/stale-write/retry/Nunito glyphs; 24-case renders | OS/SR/native checks remain; R22 adds studio palette to native widgets |
 | R21 P1 paywall — IMPLEMENTED / HOST TESTED (run12–13) | A pro/entitlements/page/demos/settings + shared NativeLifetimeStore via HandyApp; normal handy_store dependency | Fake-store purchase/restore/cancel/offline/error/pending/refund, live price, gate/badge/draft, unsupported platforms; 24-case EN/VI raster matrix; debug APK with Drive define | Supervisor reports handy_habit_pro active at 99,000 VND; remaining release bundle, Play sandbox price/buy/restore/refund/offline-restart; iOS/Windows/Web checkout unavailable |
-| R22 P1 reminders/widgets | A reminders/run_notice/home_widget/settings + Android native | AT status/test/permission/quiet/redaction/pin≠installed; ET cap/provenance/native compile | Deny/grant/revoke/reboot/battery/launcher refresh/pin/single-habit/routine; iOS notice |
+| R22 P1 reminders/widgets — IMPLEMENTED / HOST TESTED (run14) | A reminders/run_notice/home_widget/settings + Android diagnostics/3 widget providers | App265/engine191; EN/VI dates/filter count-clear/privacy/diagnostics/feed tests; 24-case renders + palette/status extras; debug APK with Drive define | Supervisor: permission/revoke/reboot/exact/battery/toast/iOS delivery; launcher resize/theme/refresh; no native iOS/Windows/Web widgets |
 | R23 P2 Windows sync | A folder_provider/panel dùng engine chung | ET/AT temp→rename/CAS/2process/cancel/errors; Free/off default |2Windows/cloud-folder locks/interruption/disconnect giữ local |
 | R24 P2 convenience | E local rules; A saved filters/batch preview | ET replay IDs/cycle/cap/atomic batch; AT preview/Undo/gates/local foreground | Batch totals/Undo/error/kill-reopen no double rule |
 | R25 platform gate | Capability docs và native shortcuts/health/iOS widget riêng từng run |1integration/run, channel tests/build; thiếu source/toolchain/entitlement báo BLOCKED, không fake UI | Signed permission/revoke/source dedupe/privacy, owner Mac/entitlements |
@@ -261,3 +261,18 @@ backup for migration. Schema7/physical2; schemas1–6 read. See
 [protocol](handy_habit/DATA_SCHEMA.md), [review](handy_habit/R15_R16_REVIEW.md),
 [owner setup and two-device checks](handy_habit/RELEASE.md). Real Google OAuth,
 signatures, two-device behavior and store verification remain owner/supervisor work.
+
+
+### Run 14 / R22 · insights polish (2026-11-11)
+
+R22 đã triển khai ở source, unit/widget/host render và biên dịch Android; chưa kiểm thiết bị.
+Insights nêu kết luận trước, phương pháp mở sheet; ngày ngắn EN/VI, PDF bỏ IANA zone;
+filter chip có số đếm/Clear, heatmap cùng lịch tuần với yearly, gợi ý/mood bằng lời.
+Diagnostics đọc quyền, exact/battery Android và lịch thành công cục bộ; liên kết cài đặt,
+Test/Retry. Android dùng inexact, không đòi quyền exact. Windows toast dùng identity của kit;
+không đọc được trạng thái bật/tắt hệ thống. iOS local notification giữ nguyên, chưa build ở host này.
+Android có Today/One habit/Routine, compact/large, ẩn tên, chọn mục dùng chung theo loại,
+light/dark và bảng màu studio khi Pro. Tap mở app; không chạy check-in nền/không refresh lúc
+nửa đêm khi app đóng; launcher quyết định thời điểm. Không có nút pin giả hoặc native widget
+cho nền tảng khác. Schema8/physical2/protocol1 không đổi; không sửa shared package.
+Review và checklist supervisor: [R22](handy_habit/R22_REVIEW.md).

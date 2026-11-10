@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+<string name="handy_widget_description">Tiến độ hôm nay</string>
+<string name="handy_widget_habit">Một thói quen</string>
+<string name="handy_widget_routine">Mở quy trình</string>
+<string name="handy_widget_open">Chạm để mở Handy Habit</string>
+</resources>

@@ -1,4 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="handy_widget_description">Handy Habit</string>
+<string name="handy_widget_description">Today’s progress</string>
+<string name="handy_widget_habit">One habit</string>
+<string name="handy_widget_routine">Routine launcher</string>
+<string name="handy_widget_open">Tap to open Handy Habit</string>
 </resources>

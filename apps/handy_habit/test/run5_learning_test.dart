@@ -48,6 +48,11 @@ class LearningReminders extends HabitReminders {
   @override
   Future<bool> permission() async => allowed;
   @override
+  Future<ReminderDiagnostics> diagnostics() async => ReminderDiagnostics(
+    permission: allowed ? HabitPermission.allowed : HabitPermission.denied,
+  );
+
+  @override
   Future<void> sync(HabitState state) async {}
   @override
   Future<void> test(HabitState state) async {
@@ -342,9 +347,20 @@ void main() {
         ('backup-help', 'backup'),
       ]) {
         await tap(t, entry);
+        if (entry == 'reminder-help') {
+          expect(
+            find.byKey(const Key('diagnostics-permission')),
+            findsOneWidget,
+          );
+          await tap(t, 'diagnostics-help');
+        }
         expect(find.byKey(Key('help-article-$topic')), findsOneWidget);
         await t.pageBack();
         await t.pumpAndSettle();
+        if (entry == 'reminder-help') {
+          await t.pageBack();
+          await t.pumpAndSettle();
+        }
       }
       await tap(t, 'pause-add');
       await tap(t, 'context-help-pause');

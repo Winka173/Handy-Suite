@@ -1,6 +1,6 @@
 import 'package:handy_habit_engine/handy_habit_engine.dart';
 import 'package:handy_ui/kit.dart';
-import '../design/palette.dart';
+import '../habits/habit_appearance.dart';
 import '../pro/entitlements.dart';
 import '../scope.dart';
 import '../ui/words.dart';
@@ -8,6 +8,8 @@ import 'smart_demo.dart';
 import 'smart_review.dart';
 import 'smart_report.dart';
 import 'progress_calendar.dart';
+import 'insight_dates.dart';
+import 'insight_filters.dart';
 
 class HabitSmartPage extends StatefulWidget {
   final HabitScope scope;
@@ -17,12 +19,8 @@ class HabitSmartPage extends StatefulWidget {
 }
 
 class _HabitSmartPageState extends State<HabitSmartPage> {
-  String kind = 'month',
-      collection = '',
-      part = '',
-      direction = '',
-      outcome = '';
-  int weekday = 0;
+  String kind = 'month';
+  InsightFilter filter = const InsightFilter();
   bool acting = false;
   Future<void> decide(GoalSuggestion g, bool accept) async {
     if (!widget.scope.pro(context) || acting) return;
@@ -60,6 +58,43 @@ class _HabitSmartPageState extends State<HabitSmartPage> {
     if (mounted) setState(() => acting = false);
   }
 
+  Future<void> method(int i) => showModalBottomSheet<void>(
+    context: context,
+    isScrollControlled: true,
+    useSafeArea: true,
+    constraints: const BoxConstraints(maxWidth: 560),
+    builder: (c) => SingleChildScrollView(
+      padding: const EdgeInsets.all(24),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            tr(c, 'How is this counted?', 'Số này được tính thế nào?'),
+            style: Theme.of(c).textTheme.titleLarge,
+          ),
+          const SizedBox(height: 16),
+          Text(insightMethods(c)[i]),
+          const SizedBox(height: 16),
+          TextButton(
+            onPressed: () => Navigator.pop(c),
+            child: Text(tr(c, 'Done', 'Xong')),
+          ),
+        ],
+      ),
+    ),
+  );
+  Widget how(int i) => Align(
+    alignment: AlignmentDirectional.centerStart,
+    child: TextButton(
+      key: Key('smart-method-$i'),
+      onPressed: () => method(i),
+      child: Text(
+        tr(context, 'How is this counted?', 'Số này được tính thế nào?'),
+      ),
+    ),
+  );
+
   @override
   Widget build(BuildContext context) {
     String t(String en, String vi) => tr(context, en, vi);
@@ -67,31 +102,40 @@ class _HabitSmartPageState extends State<HabitSmartPage> {
     final s = pro ? scope.state : smartDemoState(),
         today = pro ? scope.today : smartDemoToday;
     final review = smartReview(context, s, today, kind);
-    final from = addDays(today, -28), until = addDays(today, -1);
-    final suggestions = [
-      for (final h in s.liveHabits)
-        if (goalSuggestion(s, h, today) case final g?) g,
-    ];
-    Widget evidence(ReviewSection section, {bool expanded = false}) =>
-        ExpansionTile(
-          tilePadding: EdgeInsets.zero,
-          childrenPadding: const EdgeInsets.only(bottom: 16),
-          initiallyExpanded: expanded,
-          title: Text(
-            section.$1,
-            style: Theme.of(context).textTheme.titleMedium,
+    Widget evidence(int i) => Padding(
+      key: Key('smart-section-$i'),
+      padding: const EdgeInsets.symmetric(vertical: 20),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Semantics(
+            header: true,
+            child: Text(
+              review[i].$1,
+              style: Theme.of(context).textTheme.headlineSmall,
+            ),
           ),
-          children: [
-            for (final line in section.$2.where((l) => l.isNotEmpty))
-              Align(
-                alignment: AlignmentDirectional.centerStart,
-                child: Padding(
-                  padding: const EdgeInsets.only(bottom: 8),
-                  child: Text(line),
-                ),
+          const SizedBox(height: 8),
+          for (var j = 0; j < review[i].$2.length; j++)
+            Padding(
+              padding: const EdgeInsets.only(bottom: 6),
+              child: Text(
+                review[i].$2[j],
+                style: i == 4 && j == review[i].$2.length - 1
+                    ? Theme.of(context).textTheme.bodySmall
+                    : Theme.of(context).textTheme.bodyMedium,
               ),
-          ],
-        );
+            ),
+          how(
+            i == 2
+                ? 1
+                : i > 2
+                ? i - 1
+                : i,
+          ),
+        ],
+      ),
+    );
     return Scaffold(
       appBar: AppBar(title: Text(t('Smart insights', 'Phân tích'))),
       body: SingleChildScrollView(
@@ -112,23 +156,7 @@ class _HabitSmartPageState extends State<HabitSmartPage> {
                   style: Theme.of(context).textTheme.titleMedium,
                 ),
                 const HabitProBadge(feature: HabitProFeature.comparisons),
-                Text(
-                  t(
-                    'Explore one local example. Core Progress stays free.',
-                    'Khám phá một ví dụ tính trên máy. Tiến bộ cốt lõi luôn miễn phí.',
-                  ),
-                ),
               ],
-              Text(
-                t('One small adjustment.', 'Một điều chỉnh nhỏ.'),
-                style: Theme.of(context).textTheme.headlineSmall,
-              ),
-              Text(
-                t(
-                  'Counts first. Suggestions stay yours to choose.',
-                  'Số liệu rõ ràng. Gợi ý do bạn quyết định.',
-                ),
-              ),
               Wrap(
                 spacing: 8,
                 children: [
@@ -144,18 +172,12 @@ class _HabitSmartPageState extends State<HabitSmartPage> {
                     ),
                 ],
               ),
-              evidence(review.first, expanded: true),
+              evidence(0),
               if (!pro) ...[
                 Text(
                   t(
-                    'Read: keep 9/10 at 6 pages — try 8?',
-                    'Đọc: giữ 9/10 ở mức 6 trang — thử 8?',
-                  ),
-                ),
-                Text(
-                  t(
-                    'A sample rule, never an automatic change. Pro adds your groups, weekday patterns, mood co-occurrence, filters and PDF reviews.',
-                    'Quy tắc ví dụ, không tự đổi mục tiêu. Pro thêm nhóm, mẫu theo thứ, tâm trạng cùng xuất hiện, bộ lọc và PDF của bạn.',
+                    'Try 8 pages a day? You kept 9 of the last 10 days at 6.',
+                    'Thử 8 trang mỗi ngày? Bạn giữ 9 trong 10 ngày gần nhất ở mức 6.',
                   ),
                 ),
                 FilledButton(
@@ -165,75 +187,123 @@ class _HabitSmartPageState extends State<HabitSmartPage> {
                   child: Text(t('Explore Pro', 'Khám phá Pro')),
                 ),
               ] else ...[
-                if (s.liveHabits.isEmpty)
-                  Text(
-                    t(
-                      'Your first habit starts the story. No figure is estimated.',
-                      'Thói quen đầu tiên bắt đầu câu chuyện. Không ước đoán số liệu.',
-                    ),
-                  ),
-                Semantics(
-                  header: true,
-                  child: Text(
-                    t('A goal to try', 'Mục tiêu để thử'),
-                    style: Theme.of(context).textTheme.titleLarge,
-                  ),
-                ),
-                Text(
-                  t(
-                    'After 10 comparable daily goals in the last 28 days: ≥9 kept suggests +25%; ≤5 suggests −25%, rounded to whole units (one minute for timers). Binary, reduction and weekly goals are excluded. Changes start tomorrow.',
-                    'Sau 10 mục tiêu ngày tương đương trong 28 ngày qua: giữ ≥9 gợi ý +25%; ≤5 gợi ý −25%, làm tròn đơn vị (một phút cho bộ đếm). Bỏ mục tiêu có/không, giảm và theo tuần. Thay đổi từ ngày mai.',
-                  ),
-                ),
-                if (suggestions.isEmpty)
-                  Text(
-                    t(
-                      'No adjustment suggested right now.',
-                      'Hiện chưa có gợi ý điều chỉnh.',
-                    ),
-                  ),
-                for (final g in suggestions) ...[
-                  const SizedBox(height: 12),
-                  Text(
-                    '${scope.habit(g.habit)!.title}: ${g.kept}/${g.eligible} · ${figure(context, g.target)} ${t('to', 'thành')} ${figure(context, g.proposed)} ${unitOf(context, scope.habit(g.habit)!, value: g.proposed)}',
-                    key: Key('goal-${g.habit}'),
-                    style: Theme.of(context).textTheme.titleMedium,
-                  ),
-                  Wrap(
-                    spacing: 8,
+                const Divider(),
+                Padding(
+                  key: const Key('smart-goals'),
+                  padding: const EdgeInsets.symmetric(vertical: 20),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
-                      FilledButton(
-                        key: Key('goal-accept-${g.habit}'),
-                        onPressed: acting ? null : () => decide(g, true),
-                        child: Text(t('Accept', 'Nhận')),
+                      Text(
+                        t('A goal to try', 'Mục tiêu để thử'),
+                        style: Theme.of(context).textTheme.titleLarge,
                       ),
-                      TextButton(
-                        key: Key('goal-dismiss-${g.habit}'),
-                        onPressed: acting ? null : () => decide(g, false),
-                        child: Text(t('Dismiss', 'Bỏ qua')),
-                      ),
+                      const SizedBox(height: 8),
+                      if (![
+                        for (final h in s.liveHabits)
+                          goalSuggestion(s, h, today),
+                      ].any((g) => g != null))
+                        Text(
+                          t(
+                            'No adjustment suggested right now.',
+                            'Hiện chưa có gợi ý điều chỉnh.',
+                          ),
+                        ),
+                      for (final h in s.liveHabits)
+                        if (goalSuggestion(s, h, today) case final g?) ...[
+                          Text(
+                            t(
+                              'Try ${figure(context, g.proposed)} ${unitOf(context, h, value: g.proposed)} a day for ${h.title}? You kept ${g.kept} of the last ${g.eligible} days at ${figure(context, g.target)}.',
+                              'Thử ${figure(context, g.proposed)} ${unitOf(context, h, value: g.proposed)} mỗi ngày cho ${h.title}? Bạn giữ ${g.kept} trong ${g.eligible} ngày gần nhất ở mức ${figure(context, g.target)}.',
+                            ),
+                            key: Key('goal-${g.habit}'),
+                            style: Theme.of(context).textTheme.titleMedium,
+                          ),
+                          Wrap(
+                            spacing: 8,
+                            children: [
+                              FilledButton(
+                                key: Key('goal-accept-${g.habit}'),
+                                onPressed: acting
+                                    ? null
+                                    : () => decide(g, true),
+                                child: Text(t('Accept', 'Nhận')),
+                              ),
+                              TextButton(
+                                key: Key('goal-dismiss-${g.habit}'),
+                                onPressed: acting
+                                    ? null
+                                    : () => decide(g, false),
+                                child: Text(t('Not now', 'Để sau')),
+                              ),
+                            ],
+                          ),
+                          Text(
+                            t(
+                              'Changes start tomorrow.',
+                              'Thay đổi từ ngày mai.',
+                            ),
+                            style: Theme.of(context).textTheme.bodySmall,
+                          ),
+                        ],
+                      how(4),
                     ],
                   ),
-                ],
-                const SizedBox(height: 16),
-                for (final section in review.skip(1)) evidence(section),
-                const SizedBox(height: 16),
+                ),
+                LayoutBuilder(
+                  builder: (context, box) {
+                    if (box.maxWidth < 760)
+                      return Column(
+                        children: [
+                          for (var i = 1; i < review.length; i++) ...[
+                            const Divider(),
+                            evidence(i),
+                          ],
+                        ],
+                      );
+                    return Column(
+                      children: [
+                        for (var i = 1; i < review.length; i += 2) ...[
+                          const Divider(),
+                          Row(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Expanded(child: evidence(i)),
+                              const SizedBox(width: 32),
+                              Expanded(child: evidence(i + 1)),
+                            ],
+                          ),
+                        ],
+                      ],
+                    );
+                  },
+                ),
+                const Divider(),
+                const SizedBox(height: 20),
                 Text(
                   t(
-                    'Focused heatmap · last 28 days',
-                    'Biểu đồ nhiệt · 28 ngày qua',
+                    'Find your rhythm, one day at a time.',
+                    'Nhìn nhịp sống qua từng ngày.',
                   ),
-                  style: Theme.of(context).textTheme.titleLarge,
+                  key: const Key('smart-heat-title'),
+                  style: Theme.of(context).textTheme.headlineSmall,
                 ),
                 Text(
-                  t(
-                    'Combine filters. Counts describe known goals on shown dates; weekly goals repeat their closed week result. Hollow cells mean unknown or no closed goal; missed cells stay neutral.',
-                    'Kết hợp bộ lọc. Số liệu mô tả mục tiêu đã rõ ở ngày hiển thị; mục tiêu tuần lặp kết quả tuần đã hết. Ô rỗng là chưa rõ hoặc chưa có mục tiêu đã hết; ngày lỡ luôn trung tính.',
+                  insightDates(
+                    context,
+                    addDays(today, -28),
+                    addDays(today, -1),
                   ),
                 ),
-                _filters(context, s),
                 const SizedBox(height: 12),
-                _heat(context, s, today, from, until),
+                InsightFilters(
+                  state: s,
+                  value: filter,
+                  onChanged: (v) => setState(() => filter = v),
+                ),
+                const SizedBox(height: 12),
+                _heat(context, s, today),
+                how(5),
                 const SizedBox(height: 24),
                 OutlinedButton.icon(
                   key: const Key('smart-report'),
@@ -261,97 +331,12 @@ class _HabitSmartPageState extends State<HabitSmartPage> {
     );
   }
 
-  Widget _filters(BuildContext context, HabitState s) {
-    String t(String en, String vi) => tr(context, en, vi);
-    Widget choice(
-      String id,
-      String label,
-      String value,
-      Map<String, String> options,
-      ValueChanged<String> set,
-    ) => SizedBox(
-      width: MediaQuery.textScalerOf(context).scale(210).clamp(210, 280),
-      child: DropdownButtonFormField<String>(
-        key: Key('smart-filter-$id-$value'),
-        initialValue: options.containsKey(value) ? value : '',
-        isExpanded: true,
-        decoration: InputDecoration(labelText: label),
-        items: [
-          for (final e in options.entries)
-            DropdownMenuItem(
-              value: e.key,
-              child: Text(e.value, softWrap: true),
-            ),
-        ],
-        onChanged: (v) => setState(() => set(v!)),
-      ),
-    );
-    return Wrap(
-      spacing: 12,
-      runSpacing: 12,
-      children: [
-        choice('collection', t('Collection', 'Nhóm'), collection, {
-          '': t('All collections', 'Mọi nhóm'),
-          for (final h in s.liveHabits)
-            if (h.category.isNotEmpty) h.category: h.category,
-        }, (v) => collection = v),
-        choice('time', t('Time of day', 'Buổi'), part, {
-          '': t('Any time', 'Mọi buổi'),
-          for (final p in ['morning', 'afternoon', 'evening', 'anytime'])
-            p: dayPartText(context, p),
-        }, (v) => part = v),
-        choice('direction', t('Direction', 'Hướng'), direction, {
-          '': t('Build and reduce', 'Xây và giảm'),
-          'build': t('Build', 'Xây'),
-          'reduce': t('Reduce', 'Giảm'),
-        }, (v) => direction = v),
-        choice(
-          'weekday',
-          t('Weekday', 'Thứ'),
-          weekday == 0 ? '' : '$weekday',
-          {
-            '': t('All weekdays', 'Mọi thứ'),
-            for (var i = 1; i <= 7; i++) '$i': weekdayLong(context, i),
-          },
-          (v) => weekday = int.tryParse(v) ?? 0,
-        ),
-        choice('outcome', t('Recorded outcome', 'Kết quả'), outcome, {
-          '': t('All outcomes', 'Mọi kết quả'),
-          'kept': t('Kept', 'Đã giữ'),
-          'missed': t('Missed', 'Đã lỡ'),
-          'unknown': t('Unknown', 'Chưa rõ'),
-        }, (v) => outcome = v),
-        TextButton(
-          onPressed: () => setState(() {
-            collection = '';
-            part = '';
-            direction = '';
-            outcome = '';
-            weekday = 0;
-          }),
-          child: Text(t('Clear filters', 'Xóa bộ lọc')),
-        ),
-      ],
-    );
-  }
-
-  Widget _heat(
-    BuildContext context,
-    HabitState s,
-    String today,
-    String from,
-    String until,
-  ) {
-    final filter = InsightFilter(
-      collection: collection,
-      dayPart: part,
-      direction: direction,
-      outcome: outcome,
-      weekday: weekday,
-    );
+  Widget _heat(BuildContext context, HabitState s, String today) {
+    final from = addDays(today, -28), until = addDays(today, -1);
     final days = filter.days(s, from, until, today),
-        p = HabitPalette.of(context);
-    if (days.isEmpty || filter.habits(s).isEmpty)
+        habits = filter.habits(s),
+        index = HabitIndex.of(s);
+    if (days.isEmpty || habits.isEmpty)
       return Text(
         tr(
           context,
@@ -360,37 +345,116 @@ class _HabitSmartPageState extends State<HabitSmartPage> {
         ),
         key: const Key('smart-heat-empty'),
       );
-    return Wrap(
+    return Column(
       key: const Key('smart-heatmap'),
-      spacing: 8,
-      runSpacing: 8,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        for (final d in days)
-          Semantics(
-            label: heatDayLabel(context, d, today),
-            excludeSemantics: true,
-            child: Tooltip(
-              message: heatDayLabel(context, d, today),
-              child: Container(
-                width: MediaQuery.textScalerOf(context).scale(74),
-                padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                  color: d.kept > 0 ? p.tint : p.raised,
-                  border: Border.all(color: d.unknown > 0 ? p.control : p.line),
-                  borderRadius: BorderRadius.circular(8),
-                ),
+        Text(
+          tr(context, '${days.length} days shown', 'Hiện ${days.length} ngày'),
+          style: Theme.of(context).textTheme.bodySmall,
+        ),
+        Wrap(
+          spacing: 24,
+          runSpacing: 16,
+          children: [
+            for (final h in habits)
+              SizedBox(
+                width: 280,
                 child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(d.day.substring(5)),
+                    const SizedBox(height: 12),
                     Text(
-                      d.eligible == 0 ? '—' : '${d.kept}/${d.eligible}',
-                      style: TextStyle(color: p.ink),
+                      h.title,
+                      style: Theme.of(context).textTheme.titleMedium,
+                    ),
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        SizedBox(
+                          width: 36,
+                          child: Column(
+                            children: [
+                              SizedBox(
+                                height:
+                                    MediaQuery.textScalerOf(context).scale(14) +
+                                    12,
+                              ),
+                              for (var i = 0; i < 7; i++)
+                                SizedBox(
+                                  height: 48,
+                                  child: Center(
+                                    child: Text(
+                                      weekdayShort(
+                                        context,
+                                        (s.weekStart + i - 1) % 7 + 1,
+                                      ),
+                                      style: Theme.of(
+                                        context,
+                                      ).textTheme.bodySmall,
+                                    ),
+                                  ),
+                                ),
+                            ],
+                          ),
+                        ),
+                        Expanded(
+                          child: YearHeatmap(
+                            days: progressDays([h], from, until, today, index),
+                            today: today,
+                            weekStart: s.weekStart,
+                            hue: habitMark(context, h),
+                            visibleDays: days.map((d) => d.day).toSet(),
+                            cellKeyPrefix: 'smart-cell-${h.id}',
+                            onDay: (cell) => showModalBottomSheet<void>(
+                              context: context,
+                              useSafeArea: true,
+                              constraints: const BoxConstraints(maxWidth: 560),
+                              builder: (c) => Padding(
+                                padding: const EdgeInsets.all(24),
+                                child: Column(
+                                  mainAxisSize: MainAxisSize.min,
+                                  crossAxisAlignment:
+                                      CrossAxisAlignment.stretch,
+                                  children: [
+                                    Text(
+                                      h.title,
+                                      style: Theme.of(c).textTheme.titleLarge,
+                                    ),
+                                    Text(heatDayLabel(c, cell, today)),
+                                    Text(
+                                      tr(
+                                        c,
+                                        '${cell.kept} kept · ${cell.eligible} known goals · ${cell.unknown} unknown',
+                                        '${cell.kept} đã giữ · ${cell.eligible} mục tiêu đã rõ · ${cell.unknown} chưa rõ',
+                                      ),
+                                    ),
+                                    TextButton(
+                                      onPressed: () => Navigator.pop(c),
+                                      child: Text(tr(c, 'Done', 'Xong')),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
                   ],
                 ),
               ),
-            ),
+          ],
+        ),
+        const SizedBox(height: 12),
+        Text(
+          tr(
+            context,
+            'Colour: kept · Neutral: not kept · Hollow: unknown · Tap for details',
+            'Màu: đã giữ · Trung tính: chưa giữ · Rỗng: chưa rõ · Chạm để xem',
           ),
+          style: Theme.of(context).textTheme.bodySmall,
+        ),
       ],
     );
   }

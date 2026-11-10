@@ -39,6 +39,14 @@
             </intent-filter>
             <meta-data android:name="android.appwidget.provider" android:resource="@xml/handy_widget_info" />
         </receiver>
+        <receiver android:name=".SingleHabitWidget" android:exported="false" android:label="@string/handy_widget_habit">
+            <intent-filter><action android:name="android.appwidget.action.APPWIDGET_UPDATE" /></intent-filter>
+            <meta-data android:name="android.appwidget.provider" android:resource="@xml/handy_widget_habit_info" />
+        </receiver>
+        <receiver android:name=".RoutineWidget" android:exported="false" android:label="@string/handy_widget_routine">
+            <intent-filter><action android:name="android.appwidget.action.APPWIDGET_UPDATE" /></intent-filter>
+            <meta-data android:name="android.appwidget.provider" android:resource="@xml/handy_widget_routine_info" />
+        </receiver>
         <!-- Don't delete the meta-data below.
              This is used by the Flutter tool to generate GeneratedPluginRegistrant.java -->
         <meta-data

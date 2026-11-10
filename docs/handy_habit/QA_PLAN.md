@@ -157,3 +157,14 @@ visible as inactive and step completion does not fabricate a check-in.
 - Render: from app, `$env:SHOTS_DIR='build/run7-shots'; flutter test --no-pub tool/run7_screens_test.dart` —24 matrix tests,336 PNGs; `build/run7-shots.log`. See R12_R13_REVIEW.md for fixture, critique and limits.
 - New regression coverage:16 engine cases in template_catalog_test/run7_progress_test, seven widget flows in run7_library_progress_test; earlier template/negative tests updated to current requirements, no deletion/skip. Save-error/busy/stale tests remain.
 - No device/emulator/browser/store check performed in run7; native/SR/browser/platform follow-up remains with supervisor. No claims from host pictures about OS permissions or persistence runtime.
+
+
+## Run14 / R22 — 2026-11-11
+
+App265/engine191 host tests,18 new run14 cases; both analyzers clean and scoped format check.
+24 matrix cases plus a supplemental palette/permission render case; actual PDF pages decoded
+for EN/VI short dates, no ISO/raw zone, and heading/evidence page integrity. Debug APK with
+Drive define compiles. Review: [R22_REVIEW](R22_REVIEW.md); artifacts under
+`apps/handy_habit/build/run14` (index, six summary sheets, raw rasters, PDFs, logs).
+No device evidence: supervisor owns notification permission/reboot/exact/battery/delivery,
+Windows/iOS notices and Android launcher placement/resize/theme/refresh/quick check-in.

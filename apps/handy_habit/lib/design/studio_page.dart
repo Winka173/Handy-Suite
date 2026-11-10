@@ -198,8 +198,8 @@ class _HabitStudioPageState extends State<HabitStudioPage> {
         const SizedBox(height: 16),
         Text(
           t(
-            'Home-screen widget: follows the system light/dark look. This widget has no custom appearance controls.',
-            'Tiện ích màn hình chính: theo sáng/tối của hệ thống. Tiện ích này chưa có điều khiển giao diện riêng.',
+            'Home-screen widgets follow system light/dark and your studio palette with Pro. Choose a habit or routine in Settings › Widgets.',
+            'Tiện ích màn hình chính theo sáng/tối hệ thống và bảng màu xưởng khi có Pro. Chọn thói quen hoặc quy trình trong Cài đặt › Tiện ích.',
           ),
         ),
       ],
