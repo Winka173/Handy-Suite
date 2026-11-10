@@ -118,10 +118,11 @@ until the owner and supervisor complete the steps above.
 | Kotlin namespace | `com.example.handysuite.habit` (unchanged) |
 | Upload key | `C:\Users\Winka\handy-habit-upload.jks`, alias `upload`, SHA-1 `56:52:FC:04:88:CC:82:DD:63:7D:F4:F9:5C:B8:37:B1:FA:3C:60:15`. Never print or commit its passwords |
 | Listing | EN + VI title, short and full description pushed by the API (`android/fastlane/metadata/android/*`); contact `apps.winka.studio@gmail.com` |
-| Pro product | `handy_habit_pro` (99,000 VND like the siblings) **not created yet**: Play needs a bundle with the billing permission first, and Habit does not depend on `handy_store` yet (paywall run) |
+| Pro product | one-time product `handy_habit_pro`, created and ACTIVE 2026-11-10 by the API after 1.0.0 (2) brought the billing permission: 99,000 VND (US 3.89 USD, 174 regions, others converted by Play), listing EN + VI. The licence key (Play Console > Monetization setup) still goes into `config/monetization.local.json` `habit.android.androidPublicKey` |
 
 Publish from `apps/handy_habit/android/` as Boards does (`docs/HANDY_BOARDS_RELEASE.md`): bump `version:` in `pubspec.yaml`, write `fastlane/metadata/android/{en-US,vi}/changelogs/N.txt`, run `python tooling/prepare-store-config.py config/monetization.local.json` from the repo root, then `HANDY_DRIVE_SYNC=true fastlane android publish`. The build lane keeps the pub step: without it the Android plugin registrant lists the dev-only `integration_test` plugin and the release compile fails.
 
 | Version | Track | Date | Notes |
 |---|---|---|---|
 | 1.0.0 (1) | closed testing (alpha), **draft** | 2026-11-10 | First upload by the API (store forms not filled yet, so Play keeps it a draft). Built with `HANDY_DRIVE_SYNC=true`. Gives the Play app-signing SHA-1 for the OAuth client |
+| 1.0.0 (2) | closed testing (alpha), **draft** | 2026-11-10 | Adds Pro Lifetime with the real Play store (`handy_store`, billing permission), Advanced routines, consistency pass. Built with `HANDY_DRIVE_SYNC=true` |
