@@ -211,3 +211,10 @@ day-part overrides and keeps the receiver's clock. Future negative/mood/advanced
 move to5/6/7; the earlier run2 notes describe that run's schema3, not current writer version.
 Help is a small working daily-jobs entry; searchable illustrated help remains R9.
 No shared infrastructure packages, devices, browser runtime, stores or git writes in this run.
+
+
+### Run 3b visual identity status (2026-11-10)
+
+R5/R6 visual pass: IMPLEMENTED / HOST VERIFIED. Habit owns light/dark palette and theme under lib/design: oxblood anchor, vermilion progress, ochre secondary; all Nunito, larger type, contrast tests. Default/unknown completion glyphs become stable identity dots; recognised saved icons/colours remain, with no data migration. History beads18px, today40px within48px target; partial ring and neutral missed/paused states stay. Today adds engine-derived kept/due, bounded600px habit column at1440 with routines/review/next reminder beside it. Editor Save/Start and selected choices use Habit colours. No functional scope, schema or route changes.
+
+Verification: app93/engine82 tests pass; both analyze clean and format checks unchanged. Full screenshots tool63 scenarios passes, including24 EN/VI x light/dark x320/390/1440 x100/150% matrix cases (120 PNGs across five screens), plus legacy states/films. Three comparison sheets and key individual shots reviewed against app-screens §2.7; fix/re-render completed. Original top60% check and all run2/run3 tests retained. Source/unit/widget/host-render evidence only; device/browser/platform gates below R5/R6 remain open.

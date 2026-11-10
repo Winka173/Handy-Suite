@@ -9,6 +9,8 @@ import '../ui/words.dart';
 import 'rows.dart';
 import 'day_parts.dart';
 import '../ui/capped.dart';
+import '../design/palette.dart';
+import 'beads.dart';
 
 /// Today: what is left to do, each habit as a string of beads with today's
 /// bead to tap, and the routines to start.
@@ -38,7 +40,9 @@ class TodayPage extends StatelessWidget {
       final notToday = s.liveHabits
           .where((h) => !h.archived && !isScheduledOn(h, today))
           .length;
-      final wide = size.maxWidth >= 1000;
+      // 1440 - 224 sidebar - 32 gutters = 1184; 1024 content gives
+      // (1024 - 24) * 3/5 = 600px habits and 400px secondary column.
+      final wide = size.maxWidth >= 900;
       final left = [
         _Greeting(scope: scope, due: due, routines: routines, index: index),
         if (scope.activeSession != null) _Resume(scope: scope),
@@ -53,13 +57,13 @@ class TodayPage extends StatelessWidget {
       return ListView(
         padding: const EdgeInsets.fromLTRB(
           HandySpace.l,
-          HandySpace.xl,
+          HandySpace.l,
           HandySpace.l,
           HandySpace.xxl,
         ),
         children: [
           HandyContent(
-            maxWidth: HandySpace.contentWide,
+            maxWidth: wide ? 1024 : 680,
             // The greeting spans both columns, so the two sections below
             // start on one line whatever the greeting holds.
             child: wide
@@ -115,7 +119,7 @@ class _Greeting extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final c = HandyColors.of(context);
+    final p = HabitPalette.of(context);
     final today = scope.today;
     final hour = scope.hour;
     final hello = hour < 11
@@ -155,6 +159,14 @@ class _Greeting extends StatelessWidget {
               tr(context, '$left left to do', 'Còn $left việc'),
           ];
     final d = date(today);
+    final kept = due
+        .where((h) => habitStatus(h, today, today, index) == 'completed')
+        .length;
+    final keptText = tr(
+      context,
+      '$kept of ${due.length} kept',
+      '$kept / ${due.length} đã giữ',
+    );
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -163,29 +175,78 @@ class _Greeting extends StatelessWidget {
           child: Text(
             hello,
             key: const Key('today-greeting'),
-            // The editorial move: the greeting is the page's headline,
-            // large and at regular weight.
+            // Editorial greeting: Nunito bold in Habit's warm anchor.
             style: theme.textTheme.headlineSmall?.copyWith(
-              fontSize: MediaQuery.sizeOf(context).width < 400 ? 28 : 32,
-              fontWeight: FontWeight.w400,
+              fontSize:
+                  MediaQuery.sizeOf(context).width /
+                          MediaQuery.textScalerOf(context).scale(1) <
+                      240
+                  ? 24
+                  : MediaQuery.sizeOf(context).width < 400
+                  ? 28
+                  : 30,
+              fontWeight: FontWeight.w700,
+              color: p.anchor,
               height: 1.1,
             ),
           ),
         ),
+        if (due.isNotEmpty && resting == null)
+          Padding(
+            padding: const EdgeInsets.only(top: 4, bottom: 4),
+            child: Semantics(
+              label: keptText,
+              excludeSemantics: true,
+              child: Row(
+                children: [
+                  SizedBox.square(
+                    dimension: 44,
+                    child: Bead(
+                      status: 'progress',
+                      fill: kept / due.length,
+                      size: 44,
+                      color: p.vermilion,
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Flexible(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          keptText,
+                          key: const Key('today-kept'),
+                          style: theme.textTheme.titleLarge?.copyWith(
+                            color: p.vermilion,
+                          ),
+                        ),
+                        Text(
+                          '${facts.join(' · ')}.',
+                          key: const Key('today-fact'),
+                          style: theme.textTheme.bodyMedium,
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
         const SizedBox(height: HandySpace.xs),
         // The day's one fact, then the date, in a line under the greeting.
-        Text(
-          '${facts.join(' · ')}.',
-          key: const Key('today-fact'),
-          style: theme.textTheme.titleMedium,
-        ),
+        if (due.isEmpty || resting != null)
+          Text(
+            '${facts.join(' · ')}.',
+            key: const Key('today-fact'),
+            style: theme.textTheme.titleMedium,
+          ),
         Text(
           [
             '${weekdayShort(context, d.weekday)}, ${formatDay(context, today)}',
             if (resting != null && resting.$1.reason.isNotEmpty)
               resting.$1.reason,
           ].join(' · '),
-          style: theme.textTheme.bodyMedium?.copyWith(color: c.muted),
+          style: theme.textTheme.bodyMedium?.copyWith(color: p.ochre),
         ),
         if (resting != null)
           Padding(
@@ -288,10 +349,12 @@ class _Habits extends StatelessWidget {
                   ),
                 ),
               ),
-              TextButton(
-                key: const Key('today-all-habits'),
-                onPressed: () => Navigator.pushNamed(context, '/habits'),
-                child: Text(tr(context, 'All habits', 'Tất cả')),
+              Flexible(
+                child: TextButton(
+                  key: const Key('today-all-habits'),
+                  onPressed: () => Navigator.pushNamed(context, '/habits'),
+                  child: Text(tr(context, 'All habits', 'Tất cả')),
+                ),
               ),
             ],
           ),
@@ -417,9 +480,11 @@ class _Routines extends StatelessWidget {
                   ),
                 ),
               ),
-              TextButton(
-                onPressed: () => Navigator.pushNamed(context, '/routines'),
-                child: Text(tr(context, 'All routines', 'Tất cả')),
+              Flexible(
+                child: TextButton(
+                  onPressed: () => Navigator.pushNamed(context, '/routines'),
+                  child: Text(tr(context, 'All routines', 'Tất cả')),
+                ),
               ),
             ],
           ),

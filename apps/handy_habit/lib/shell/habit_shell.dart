@@ -8,6 +8,7 @@ import '../scope.dart';
 import '../routines/routines_page.dart';
 import '../today/today_page.dart';
 import '../ui/words.dart';
+import '../design/palette.dart';
 
 /// The three daily jobs. Legacy internal area IDs stay stable for notices.
 class HabitShell extends StatelessWidget {
@@ -130,90 +131,104 @@ class HabitShell extends StatelessWidget {
             ),
     );
     if (!wide) return page;
-    return Material(color: Theme.of(context).scaffoldBackgroundColor, child: Row(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        HandySideRail(
-          open: !open,
-          child: IconButton(
-            key: const Key('side-open'),
-            tooltip: tr(context, 'Show the sidebar', 'Hiện thanh bên'),
-            icon: const Icon(Icons.keyboard_double_arrow_right),
-            onPressed: () => setSide(true),
+    return Material(
+      color: Theme.of(context).scaffoldBackgroundColor,
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          HandySideRail(
+            open: !open,
+            child: IconButton(
+              key: const Key('side-open'),
+              tooltip: tr(context, 'Show the sidebar', 'Hiện thanh bên'),
+              icon: const Icon(Icons.keyboard_double_arrow_right),
+              onPressed: () => setSide(true),
+            ),
           ),
-        ),
-        HandySidePanel(
-          width: 224,
-          open: open,
-          child: Material(
-            color: Theme.of(context).scaffoldBackgroundColor,
-            child: SafeArea(
-              right: false,
-              child: Column(
-                children: [
-                  Padding(
-                    padding: const EdgeInsets.fromLTRB(16, 12, 4, 20),
-                    child: Row(
-                      children: [
-                        const Icon(Icons.check_circle_outline, size: 24),
-                        const SizedBox(width: 8),
-                        const Expanded(child: Text('Handy Habit', maxLines: 2)),
-                        IconButton(
-                          key: const Key('side-collapse'),
-                          tooltip: tr(
-                            context,
-                            'Hide the sidebar',
-                            'Thu gọn thanh bên',
-                          ),
-                          icon: const Icon(Icons.keyboard_double_arrow_left),
-                          onPressed: () => setSide(false),
-                        ),
-                      ],
-                    ),
-                  ),
-                  Expanded(
-                    child: ListView(
-                      padding: const EdgeInsets.symmetric(horizontal: 8),
-                      children: [
-                        for (final a in areas)
-                          ListTile(
-                            key: Key('area-${a.$1}'),
-                            leading: Icon(a.$2, size: 20),
-                            title: Text(a.$3),
-                            selected: a.$1 == area,
-                            selectedColor: Theme.of(
-                              context,
-                            ).colorScheme.onSurface,
-                            selectedTileColor: HandyColors.of(context).select,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
+          HandySidePanel(
+            width: 224,
+            open: open,
+            child: Material(
+              color: Theme.of(context).scaffoldBackgroundColor,
+              child: SafeArea(
+                right: false,
+                child: Column(
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(16, 12, 4, 20),
+                      child: Row(
+                        children: [
+                          const Icon(Icons.check_circle_outline, size: 24),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: Text(
+                              'Handy Habit',
+                              maxLines: 2,
+                              style: Theme.of(context).textTheme.titleMedium
+                                  ?.copyWith(
+                                    color: HabitPalette.of(context).anchor,
+                                  ),
                             ),
-                            onTap: () => go(context, a.$4),
                           ),
-                      ],
+                          IconButton(
+                            key: const Key('side-collapse'),
+                            tooltip: tr(
+                              context,
+                              'Hide the sidebar',
+                              'Thu gọn thanh bên',
+                            ),
+                            icon: const Icon(Icons.keyboard_double_arrow_left),
+                            onPressed: () => setSide(false),
+                          ),
+                        ],
+                      ),
                     ),
-                  ),
-                  foot(
-                    'side-help',
-                    Icons.help_outline,
-                    tr(context, 'Help', 'Trợ giúp'),
-                    '/help',
-                  ),
-                  foot(
-                    'open-settings',
-                    Icons.settings_outlined,
-                    tr(context, 'Settings', 'Cài đặt'),
-                    '/settings',
-                  ),
-                  const SizedBox(height: 12),
-                ],
+                    Expanded(
+                      child: ListView(
+                        padding: const EdgeInsets.symmetric(horizontal: 8),
+                        children: [
+                          for (final a in areas)
+                            ListTile(
+                              key: Key('area-${a.$1}'),
+                              leading: Icon(a.$2, size: 20),
+                              title: Text(a.$3),
+                              selected: a.$1 == area,
+                              selectedColor: Theme.of(
+                                context,
+                              ).colorScheme.onSurface,
+                              selectedTileColor: HabitPalette.of(
+                                context,
+                              ).raised,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              onTap: () => go(context, a.$4),
+                            ),
+                        ],
+                      ),
+                    ),
+                    foot(
+                      'side-help',
+                      Icons.help_outline,
+                      tr(context, 'Help', 'Trợ giúp'),
+                      '/help',
+                    ),
+                    foot(
+                      'open-settings',
+                      Icons.settings_outlined,
+                      tr(context, 'Settings', 'Cài đặt'),
+                      '/settings',
+                    ),
+                    const SizedBox(height: 12),
+                  ],
+                ),
               ),
             ),
           ),
-        ),
-        Expanded(child: page),
-      ],
-    ));
+          Expanded(child: page),
+        ],
+      ),
+    );
   }
 }
 

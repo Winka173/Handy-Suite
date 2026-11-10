@@ -80,6 +80,8 @@ HabitState practice() {
   final habits = [
     Habit(
       id: 'read',
+      icon: Icons.menu_book_outlined.codePoint,
+      color: 0xffa16207,
       title: 'Đọc sách',
       created: start,
       type: 'quantity',
@@ -90,6 +92,8 @@ HabitState practice() {
     ),
     Habit(
       id: 'water',
+      icon: Icons.water_drop_outlined.codePoint,
+      color: 0xff2563eb,
       title: 'Uống nước',
       created: start,
       type: 'count',
@@ -99,6 +103,8 @@ HabitState practice() {
     ),
     Habit(
       id: 'walk',
+      icon: Icons.directions_walk.codePoint,
+      color: 0xff4d7c0f,
       title: 'Đi bộ sau bữa trưa',
       created: start,
       type: 'duration',
@@ -108,6 +114,8 @@ HabitState practice() {
     ),
     Habit(
       id: 'meditate',
+      icon: Icons.self_improvement.codePoint,
+      color: 0xffb42318,
       title: 'Thiền 10 phút',
       created: start,
       category: 'Sức khỏe',
@@ -116,6 +124,8 @@ HabitState practice() {
     ),
     Habit(
       id: 'gym',
+      icon: Icons.fitness_center.codePoint,
+      color: 0xffa16207,
       title: 'Tập gym',
       created: start,
       category: 'Sức khỏe',
@@ -383,8 +393,10 @@ void main() {
     for (final locale in ['en', 'vi']) {
       for (final theme in ['light', 'dark']) {
         for (final scale in [1.0, 1.5]) {
-          testWidgets('run3 ${width.toInt()} $locale $theme $scale', (t) async {
-            final prefix = 'r3-${width.toInt()}-$locale-$theme-x$scale';
+          testWidgets('run3b ${width.toInt()} $locale $theme $scale', (
+            t,
+          ) async {
+            final prefix = 'r3b-${width.toInt()}-$locale-$theme-x$scale';
             final c = await boot(
               t,
               Size(width, width == 1440 ? 900 : 844),
@@ -393,11 +405,11 @@ void main() {
               scale: scale,
             );
             final bead = find.byKey(const Key('bead-read'));
+            await shot(t, '$prefix-today');
             expect(
               t.getTopLeft(bead).dy,
               lessThan((width == 1440 ? 900 : 844) * .6),
             );
-            await shot(t, '$prefix-today');
             final navigator = t.state<NavigatorState>(
               find.byType(Navigator).first,
             );

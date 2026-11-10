@@ -3,6 +3,7 @@ import 'package:handy_habit_engine/handy_habit_engine.dart';
 import 'package:handy_ui/kit.dart';
 import '../scope.dart';
 import '../ui/words.dart';
+import '../habits/habit_appearance.dart';
 
 /// One day of a habit, as a bead: full when done, filled part way when
 /// begun, an empty grey ring when planned and not done, a ring with a
@@ -48,7 +49,11 @@ class _BeadPainter extends CustomPainter {
     final c = size.center(Offset.zero), r = size.width / 2;
     final stroke = math.max(1.5, size.width / 14);
     final ringPaint = Paint()
-      ..color = status == 'partial' ? color.withValues(alpha: .45) : ring
+      ..color = status == 'partial' || status == 'progress'
+          ? color.withValues(alpha: .35)
+          : status == 'open'
+          ? color
+          : ring
       ..style = PaintingStyle.stroke
       ..strokeWidth = stroke;
     switch (status) {
@@ -125,13 +130,13 @@ double dayFill(Habit h, String d, HabitIndex index) {
   return (index.value(h.id, d) / target).clamp(0.0, 1.0);
 }
 
-/// The small beads of the days before today, in ink.
+/// Recent beads carry the habit's identity; missed and paused remain neutral.
 class EarlierBeads extends StatelessWidget {
   final HabitDay data;
   const EarlierBeads({super.key, required this.data});
   @override
   Widget build(BuildContext context) {
-    final ink = Theme.of(context).colorScheme.onSurface;
+    final ink = habitMark(context, data.habit);
     final days = earlierDays(data.habit, data.today);
     return Semantics(
       label: [
@@ -148,8 +153,8 @@ class EarlierBeads extends StatelessWidget {
               child: Bead(
                 status: habitStatus(data.habit, d, data.today, data.index),
                 fill: dayFill(data.habit, d, data.index),
-                size: 12,
-                color: ink.withValues(alpha: .78),
+                size: 18,
+                color: ink,
               ),
             ),
         ],
@@ -166,7 +171,7 @@ class HabitDay {
   const HabitDay(this.habit, this.today, this.index);
 }
 
-/// Today's bead, large, in the app's hue: the state and the button.
+/// Today's bead, in the habit's hue: the state and the button.
 class TodayBead extends StatelessWidget {
   final HabitScope scope;
   final Habit habit;
@@ -188,6 +193,10 @@ class TodayBead extends StatelessWidget {
     final value = index.value(habit.id, today);
     final done = status == 'completed';
     final c = HandyColors.of(context);
+    final color = habitMark(context, habit);
+    final checkInk = color.computeLuminance() > .179
+        ? Colors.black
+        : Colors.white;
     final paused = status == 'paused';
     final label = paused
         ? tr(
@@ -240,17 +249,17 @@ class TodayBead extends StatelessWidget {
                         _ => status,
                       },
                       fill: dayFill(habit, today, index),
-                      size: 36,
-                      color: c.accent,
+                      size: 40,
+                      color: color,
                     ),
                   ),
                 ),
                 if (done)
-                  const Icon(Icons.check, size: 20, color: Colors.white)
+                  Icon(Icons.check, size: 22, color: checkInk)
                 else if (paused)
                   Icon(Icons.pause, size: 18, color: c.muted)
                 else if (habit.type != 'binary' && status != 'skipped')
-                  Icon(Icons.add, size: 18, color: c.muted),
+                  Icon(Icons.add, size: 20, color: color),
               ],
             ),
           ),

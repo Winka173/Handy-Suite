@@ -392,6 +392,15 @@ class _HabitFormState extends State<HabitForm> {
               ChoiceChip(
                 key: Key('field-${f.id}-${o.key}'),
                 label: Text(o.value),
+                labelStyle: theme.textTheme.labelMedium?.copyWith(
+                  color: values[f.id] == o.key
+                      ? c.selectInk
+                      : theme.colorScheme.onSurface,
+                ),
+                side: BorderSide(
+                  color: values[f.id] == o.key ? c.accent : c.control,
+                  width: values[f.id] == o.key ? 2 : 1,
+                ),
                 selected: values[f.id] == o.key,
                 onSelected: busy
                     ? null

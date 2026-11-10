@@ -1,6 +1,7 @@
 import 'package:handy_habit_engine/handy_habit_engine.dart';
 import 'package:handy_ui/kit.dart';
 import '../scope.dart';
+import '../design/palette.dart';
 
 // Static IconData keeps release icon tree-shaking working. Unknown legacy IDs
 // still round-trip; the fallback is presentation only, never a migration.
@@ -35,6 +36,27 @@ const habitColors = [
 
 IconData habitIcon(int code) =>
     habitIcons.where((i) => i.codePoint == code).firstOrNull ?? Icons.check;
+
+/// A completion glyph is not an identity. Legacy defaults have no chosen
+/// appearance; show a stable palette dot instead of implying completion.
+bool hasHabitIcon(Habit h) =>
+    habitIcons.any((i) => i.codePoint == h.icon && i != Icons.check);
+
+Color habitMark(BuildContext context, Habit h) {
+  final legacy = !hasHabitIcon(h) && h.color == 0xff0d9488;
+  final color = legacy
+      ? HandyPalette.of(context, HandyPalette.forKey(h.id)).mark
+      : Color(h.color);
+  // Cover the row and the surrounding page, whichever requires more contrast.
+  final theme = Theme.of(context);
+  if (!legacy && h.color == 0xffb42318 && theme.brightness == Brightness.dark) {
+    return HabitPalette.of(context).vermilion;
+  }
+  final surface = theme.brightness == Brightness.dark
+      ? theme.colorScheme.surface
+      : theme.scaffoldBackgroundColor;
+  return habitInk(color.toARGB32(), surface);
+}
 
 /// Adjust only the displayed ink when necessary; never mutate the saved hue.
 Color habitInk(int saved, Color surface) {

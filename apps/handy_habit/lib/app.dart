@@ -1,4 +1,5 @@
 import 'design/identity.dart';
+import 'design/theme.dart';
 import 'dart:async';
 import 'package:flutter/services.dart';
 import 'package:handy_files/handy_files.dart';
@@ -403,6 +404,7 @@ class _HabitAppState extends State<HabitApp> with WidgetsBindingObserver {
     listenable: c,
     builder: (context, _) => HandyApp(
       brand: habitIdentity,
+      themeOverride: habitTheme,
       app: 'habit',
       title: 'Handy Habit',
       accent: habitAccent,

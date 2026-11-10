@@ -113,18 +113,28 @@ class HabitRow extends StatelessWidget {
                   children: [
                     Row(
                       children: [
-                        Icon(
-                          habitIcon(h.icon),
-                          size: 18,
-                          color: habitInk(h.color, theme.colorScheme.surface),
-                        ),
+                        if (hasHabitIcon(h))
+                          Icon(
+                            habitIcon(h.icon),
+                            size: 22,
+                            color: habitMark(context, h),
+                          )
+                        else
+                          Container(
+                            width: 12,
+                            height: 12,
+                            decoration: BoxDecoration(
+                              color: habitMark(context, h),
+                              shape: BoxShape.circle,
+                            ),
+                          ),
                         const SizedBox(width: HandySpace.s),
                         Flexible(
                           child: Text(
                             h.title,
                             maxLines: 2,
                             overflow: TextOverflow.ellipsis,
-                            style: theme.textTheme.bodyLarge,
+                            style: theme.textTheme.titleMedium,
                           ),
                         ),
                       ],
@@ -223,9 +233,20 @@ class RoutineRow extends StatelessWidget {
                     Row(
                       children: [
                         Icon(
-                          habitIcon(r.icon),
+                          habitIcons.any(
+                                (i) =>
+                                    i.codePoint == r.icon && i != Icons.check,
+                              )
+                              ? habitIcon(r.icon)
+                              : Icons.format_list_numbered,
                           size: 20,
-                          color: habitInk(r.color, theme.colorScheme.surface),
+                          color:
+                              habitIcons.any(
+                                (i) =>
+                                    i.codePoint == r.icon && i != Icons.check,
+                              )
+                              ? habitInk(r.color, theme.colorScheme.surface)
+                              : c.muted,
                         ),
                         const SizedBox(width: HandySpace.s),
                         Flexible(
