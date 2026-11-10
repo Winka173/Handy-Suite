@@ -60,9 +60,11 @@ void main() {
       await store(t, '$lang-1-home');
       await tap(t, find.byKey(const Key('board-$board')));
       await store(t, '$lang-2-board');
-      await tap(t, find.text(vi ? 'Thời gian' : 'Time'));
+      // The time span: tapping the week's dates opens its settings.
+      await tap(t, find.byKey(const Key('week-setup')));
       await store(t, '$lang-3-time');
-      await tap(t, find.text(vi ? 'Bảng' : 'Board'));
+      await t.binding.handlePopRoute();
+      await settle(t);
       final card = topTasks(c.state!, board: board).first;
       await tap(t, find.text(card.str('title')).first);
       await store(t, '$lang-4-card');

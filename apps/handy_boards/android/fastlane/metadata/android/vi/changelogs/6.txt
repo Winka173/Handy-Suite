@@ -1,0 +1,6 @@
+• Giao diện màu cam đất và icon mới.
+• Thêm việc con từ menu của thẻ, có thể hiện việc con trên thẻ; kéo thẻ sang Xong là việc con được tích luôn.
+• Kéo cả cột; cột đang kéo tới sáng lên.
+• Ngày quan trọng có giờ. Khoảng thời gian tuỳ chỉnh: mỗi 10 ngày, sprint 2 tuần…
+• Ảnh làm bìa bảng, lịch sử bảng, trang Bảng đã lưu trữ, Thùng rác giữ 30 ngày.
+• Mẫu giải thích từng ô. Hướng dẫn mở đầu mới.

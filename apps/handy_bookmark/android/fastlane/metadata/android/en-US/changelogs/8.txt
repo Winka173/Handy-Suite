@@ -1,0 +1,6 @@
+• Send collections to friends as one file; they read it in a browser or add it to Handy Bookmark. Free both ways.
+• Offline copies keep the article's pictures.
+• Links are checked once a day; a broken one is greyed and marked, never deleted.
+• Cards show favourite, new, a note and opened often.
+• Fold the sidebar away on a tablet or computer; long lists show a few with Show all.
+• Stronger contrast and a two-column detail on wide screens.

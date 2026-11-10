@@ -82,6 +82,7 @@ bundle.
   nudge is gone. Listing text updated (`fastlane android metadata`). Codes
   1–6 are used up.
 - **1.0.0 (7)** rolled out on closed testing on 2026-11-09 by `HANDY_DRIVE_SYNC=true fastlane android publish`: folders in a collection (one level, Pro to make), Pro page with live demos, privacy and terms on winka.top. Changelog `changelogs/7.txt` EN + VI.
+- **1.0.0 (8)** rolled out on closed testing on 2026-11-10 by `HANDY_DRIVE_SYNC=true fastlane android publish`: send and receive collections as one file, offline copies with pictures, a daily link check (broken links greyed, never deleted), card marks, a sidebar that folds away, capped long lists, stronger contrast, two-column detail on wide screens, a swipe hint in the welcome. The 6 phone screenshots were remade (`store/screenshots`); the icon and feature graphic were already current. Changelog `changelogs/8.txt` EN + VI.
 
 ## Left for the owner in Play Console (the API cannot do these)
 

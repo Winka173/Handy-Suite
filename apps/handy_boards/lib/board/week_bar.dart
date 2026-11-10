@@ -132,36 +132,42 @@ class TimelineBar extends StatelessWidget {
                         'Change the time span',
                         'Đổi khoảng thời gian',
                       ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.baseline,
-                  textBaseline: TextBaseline.alphabetic,
-                  children: [
-                    Flexible(
-                      flex: 3,
-                      child: Text(
-                        windowLabel(context, window, now),
-                        key: const Key('week-label'),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: theme.textTheme.titleSmall?.copyWith(
-                          fontWeight: FontWeight.w600,
+                child: LayoutBuilder(
+                  builder: (context, box) => Row(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.baseline,
+                    textBaseline: TextBaseline.alphabetic,
+                    children: [
+                      // The dates keep their room (up to most of the row); the
+                      // note takes what is left, not a fixed share of it.
+                      ConstrainedBox(
+                        constraints: BoxConstraints(
+                          maxWidth: box.maxWidth * .7,
+                        ),
+                        child: Text(
+                          windowLabel(context, window, now),
+                          key: const Key('week-label'),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: theme.textTheme.titleSmall?.copyWith(
+                            fontWeight: FontWeight.w600,
+                          ),
                         ),
                       ),
-                    ),
-                    const SizedBox(width: 8),
-                    Flexible(
-                      child: Text(
-                        note,
-                        key: const Key('week-kind'),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: theme.textTheme.bodyMedium?.copyWith(
-                          color: kind == PeriodKind.current ? p.ink : p.muted,
+                      const SizedBox(width: 8),
+                      Flexible(
+                        child: Text(
+                          note,
+                          key: const Key('week-kind'),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: theme.textTheme.bodyMedium?.copyWith(
+                            color: kind == PeriodKind.current ? p.ink : p.muted,
+                          ),
                         ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
               ),
             ),

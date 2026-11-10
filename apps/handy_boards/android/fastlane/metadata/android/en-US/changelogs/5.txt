@@ -1,0 +1,6 @@
+• A new terracotta look and a new icon.
+• Subtasks from a card's menu, with an option to show them on cards; moving a card to Done ticks them.
+• Drag whole columns; the column you drag over lights up.
+• Key dates can have a time. Custom time spans: every 10 days, 2-week sprints…
+• Board photos as covers, a board history, an Archived boards page, Trash kept 30 days.
+• Templates explain every field. A new welcome tour.
