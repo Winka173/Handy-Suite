@@ -103,9 +103,30 @@ Keep, Spend hoặc timer đa dụng. [Trạng thái kiểm chứng](handy_habit/
 - SQLite native/IndexedDB Web, integrity check, schema version, bảo vệ ghi đồng
   thời. JSON/ZIP full backup miễn phí, preview merge/replace, đổi ID khi merge,
   checksum và rollback. Replace lưu bản phục hồi bền trên máy trước khi commit; Cài đặt có khôi phục trước lần thay thế cuối. `.hseal` dùng mã hóa xác thực chung, sai mật khẩu/hỏng/hủy giữ dữ liệu. CSV log nhập/xuất (kèm bảng kỳ nghỉ thứ hai khi có);
-  Markdown/PDF báo cáo EN/VI có khoảng ngày, liệt kê kỳ nghỉ. Schema dữ liệu3/physical2, đọc backup/schema1 và2; causal operations có ID/ancestry và delta/tổng tuyệt đối, chưa phải sync (R15/R16).
-- EN/VI, sáng/tối, bốn tab mobile/rail màn hình rộng, bàn phím và UI kit dùng chung.
-  Ads + Pro Lifetime dùng adapter thật; Pro bỏ ads được hỗ trợ.
+  Markdown/PDF báo cáo EN/VI có khoảng ngày, liệt kê kỳ nghỉ. Schema dữ liệu4/physical2, đọc backup/schema1–3; causal operations có ID/ancestry và delta/tổng tuyệt đối, chưa phải sync (R15/R16).
+- EN/VI, sáng/tối; ba khu Hôm nay / Quy trình / Tiến bộ, gear Cài đặt ở trên phone,
+  sidebar224 từ840px gập thành rail64 và nhớ trạng thái. Named routes `/today`,
+  `/routines`, `/progress`, `/habits`, editor và các route cũ; Ctrl/Cmd N/F/comma/1–3,
+  không chiếm lúc gõ, Back/Esc một cấp. Help ở chân sidebar và Cài đặt.
+- R8/R9 (10/11): hướng dẫn ba giai đoạn, hai beat ý định→chuỗi hạt, thực hành Hôm nay
+  độc lập dữ liệu (ghi/Hoàn tác/đổi mục tiêu/chạy bước), cuối chỉ Bắt đầu; Back/Skip/Esc/Enter,
+  xem lại không ghi dữ liệu, người đã có thư viện không bị ép xem. Mục tiêu gợi ý tùy chọn
+  ở Hôm nay trống. Cách dùng có 15 chủ đề EN/VI, tìm không dấu, số kết quả và hình đúng UI;
+  khi lọc bỏ số thứ tự chủ đề. Cài đặt nhóm, giá trị thân thiện (múi giờ kèm GMT),
+  mật độ/giảm chuyển động/mặc định thói quen/quy trình, quyền nhắc có giải thích trước,
+  ẩn tên thông báo, kiểm tra nhắc, đặt lại tùy chọn giữ dữ liệu. Chưa có hàng mua Pro/sync.
+- Hôm nay ưu tiên tràng hạt trước quy trình/review; active run một dòng. Tự nhóm buổi
+  theo nhắc hoặc quy trình liên kết, đổi được trong Advanced. Danh sách dài mở
+  “Xem tất cả N” tại chỗ; check-in không đổi vị trí dòng. Motion theo kit, tắt theo máy
+  hoặc tùy chọn Giảm chuyển động. Basic/Advanced và menu Diện mạo hiện có được giữ.
+- Trình sửa hỏi trước khi bỏ thay đổi chưa lưu; đang lưu chặn thoát/lưu hai lần, lỗi giữ
+  draft. Lịch sử mở đủ bản ghi tại chỗ (ban đầu30), hiển thị mục tiêu đúng ngày;
+  màn hẹp/chữ lớn dùng danh sách ngày48px và số liệu căn hàng, vẫn chọn được lịch tháng.
+- Schema4/physical2: giờ bắt đầu ngày00:00–23:59 có phiên bản hiệu lực theo thời điểm;
+  ghi mới/nhắc/trash dùng cùng ngày, lịch sử đã lưu không dời. Đọc schema1–3. Ngày mới
+  hiện khi mở lại app hoặc trong vòng một phút khi đang mở. DST: giờ trùng lấy lần đầu,
+  giờ không tồn tại dời theo khoảng nhảy giờ. Không có thay đổi package hạ tầng dùng chung.
+- Ads + Pro Lifetime dùng adapter thật; Pro bỏ ads được hỗ trợ.
 
 Schema/CSV và chính sách dữ liệu: [DATA_SCHEMA](handy_habit/DATA_SCHEMA.md).
 Giới hạn nền tảng: [PLATFORM_CAPABILITIES](handy_habit/PLATFORM_CAPABILITIES.md).
@@ -221,6 +242,10 @@ Xem [công thức](handy_spend/FORMULAS_AND_ASSUMPTIONS.md) và
   dùng App Group; Windows nhận text/URL/.url qua kéo thả; Web có POST Share Target.
 - Diện mạo thói quen (05/11): menu chọn icon/màu, preview, Hủy và Undo; chỉ sửa
   trường diện mạo, không tạo phiên bản lịch hoặc đổi check-in. Màu hiển thị điều
+  R7: fullscreen, tên bước lớn/tiến độ/các bước còn lại; Space tạm dừng/tiếp tục,
+  Enter xong bước ngoài ô nhập, Esc/Back xác nhận tạm dừng và thoát. Tổng kết
+  ghi tên những habit thực sự được check-in, bước bỏ qua, thời gian dự kiến/thực tế;
+  motion theo kit, reduced motion về 0, không trì hoãn check-in.
   R7: fullscreen, tên bước lớn/tiến độ/các bước còn lại; Space tạm dừng/tiếp tục,
   Enter xong bước ngoài ô nhập, Esc/Back xác nhận tạm dừng và thoát. Tổng kết
   ghi tên những habit thực sự được check-in, bước bỏ qua, thời gian dự kiến/thực tế;

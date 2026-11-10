@@ -79,7 +79,14 @@ tối đa 30MB.
     quy trình vẫn giữ trong dữ liệu nhưng chưa có editor riêng. Thói quen đã có lại
     menu Diện mạo (05/11) chọn icon/màu, Undo và Hủy, không sửa lịch/check-in; màu hiển
     thị được điều chỉnh tương phản, giá trị lưu giữ nguyên. Xong một bước thì bước kế tự chạy (tạm dừng vẫn do bạn bấm; ra nền vẫn
-    dừng). Bốn khu không có URL web riêng; trang con thì có. Tour và `native_test` mới chạy
+    dừng). Run3 đổi thành ba khu có named routes `/today`, `/routines`, `/progress`,
+    sidebar gập/nhớ và editor/history/clock policy schema4 đã host/widget tested;
+    URL refresh/back-forward thật, keyboard/OS back trên máy, day-boundary/DST trên máy
+    và screen reader còn cần supervisor. History mở đủ tại chỗ; Advanced và appearance
+    giữ nguyên. R8/R9 run5/5b đã có guide/practice độc lập, help tìm kiếm 15 chủ đề và
+    Settings theo nhóm; không còn là phần chưa xây. Ảnh host không chứng minh OS back,
+    screen reader, quyền/nhắc thật, haptics, liên kết policy/support hay file provider.
+    Chưa xác minh policy URL công khai; cần supervisor kiểm trước release. Tour và `native_test` mới chạy
     trên BlueStacks (máy giả lập); ảnh `habit-ui-review.pdf` và bằng chứng UI cũ thuộc bản
     trước. Run 2 (10/11): backup preview/sealed lỗi-mật-khẩu/hỏng/hủy, durable recovery trước Replace, migration schema3/physical2, domain Undo và trash30 ngày đã source/host tested. Provider SAF/iOS Files, nâng cấp/kill/thiếu chỗ thật và IndexedDB/quota/tab-blocked chưa runtime verified; checkpoint/recovery và plain export vẫn không mã hóa, `.hseal` có mã hóa xác thực. Không claim sync hoàn chỉnh (R15/R16).
 

@@ -145,8 +145,8 @@ Mỗi run một feature area, supervisor review rồi chuyển. A/E/AT/ET theo A
 | R5 P1 shell/Today — IMPLEMENTED / HOST TESTED | A shell/app/today/habits list/kit motion | AT named routes/back/shortcuts, one-tap/Undo, reduced motion, fold/reopen remembered, scale/top60%, cap/Show all; films ensureVisible+committed-state assertions | Rapid tap/back/rotation/SR, fold/keyboard, browser refresh/back |
 | R6 P1 habit editor/history — IMPLEMENTED / HOST TESTED | A editor/appearance/view/month_grid/form; E clock policy schema4 | AT dirty Cancel/Back/Esc, fail/busy/retry, Advanced/appearance regressions, effective targets, history Show all, foreground rollover; ET custom boundary/DST north+south/old-day preservation/roundtrip |320keyboard/VI dài/swipe dirty/midnight/appearance giữ log |
 | R7 P1 Basic routines — IMPLEMENTED / HOST TESTED | A draft builder/list/detail/runner UI | AT draft add/reorder/link/cancel/fail/required/skip/time/summary; ET exactly-once regressions; save toàn draft | Drag+nút up/down/linked count/background/kill/reopen/exit |
-| R8 P1 onboarding | A welcome/page/story/practice + routes | AT2beats/no-question/Back-Skip-Esc-Enter/practice check-in-Undo-goal-run-done/Do it for me/final1Start/replay no writes/upgrade no force | First launch/update/replay/OS back/large text/dark/VI/no permissions |
-| R9 P1 help/Settings | A how_to_page/how_to_mocks/groups/parts/routes | AT search không dấu/EN-VI/no-match/context/replay, badge non-Pro, persist/error/reset-only-prefs; topics theo enabled features | Làm theo ảnh/SR/reset giữ data-purchase/support/privacy |
+| R8 P1 onboarding — IMPLEMENTED / HOST TESTED | A welcome/page/scenes/practice_today + routes | AT2beats/no-question/Back-Skip-Esc-Enter/practice check-in-Undo-goal-run-done/Do it for me/final1Start/replay no writes/upgrade no force; run5b visual pass below | Device first launch/update/replay/OS back/permissions/SR |
+| R9 P1 help/Settings — IMPLEMENTED / HOST TESTED | A help_page/help_topics/how_to_mocks/settings_parts + routes | AT search không dấu/EN-VI/no-match/context/replay, no badges on free controls, persist/error/reset-only-prefs; 15 shipped-feature topics; friendly zones/DST; filtered results omit numbering | Device follow-along/SR/support/privacy links/native permission delivery |
 | R10 P1 negative engine | E negative/goal/ops/calendar/portable/migration; schema5 | ET incident/zero/unknown/day-week/open-close/skip/pause/retract/DST/history/conflict; full formats/old positives | Upgrade/reopen/restore mixed/check day-week boundaries |
 | R11 P1 negative UX | A editor/today/check_in/history/help | AT incident/Undo/zero optional/unknown≠success/budget/backfill/neutral/no routine incident |2/day,3/week/EN-VI/SR/zero-vs-unknown |
 | R12 P1 templates | E presets/catalog/routines; A templates/create/help | ET IDs/content/EN-VI/defaults; AT search/category/preview/customize/cancel/save once; giữ32/8, report counts mới | Offline/back/no duplicate/previews khớp UI |
@@ -209,8 +209,26 @@ in either hemisphere. New check-ins, reminder eligibility and trash use the same
 Foreground day refresh is at most one minute; resume refreshes immediately. Copy-merge remaps
 day-part overrides and keeps the receiver's clock. Future negative/mood/advanced schema slots
 move to5/6/7; the earlier run2 notes describe that run's schema3, not current writer version.
-Help is a small working daily-jobs entry; searchable illustrated help remains R9.
+At the end of run 3, help was a small daily-jobs entry; R8/R9 are now implemented
+and host verified in run 5/5b (current status below).
 No shared infrastructure packages, devices, browser runtime, stores or git writes in this run.
+
+### R8/R9 run 5/5b completion · 2026-11-10
+
+IMPLEMENTED / HOST VERIFIED. Three-stage guide and two-beat story; real-size,
+isolated Today practice with dark spotlight and fixed footer; a single Start;
+15 bilingual searchable illustrated topics and contextual help; grouped persisted
+Settings, privacy/permission opt-in, defaults, error handling and preference-only
+reset. No purchase/sync placeholder rows. Friendly zone/GMT/DST values and no
+topic numbers while filtering. Wide words left, scene right, practice phone frame.
+
+Verification: app128 / engine82 tests pass; both analyze and format checks clean.
+Two full render rounds; final 24 matrix combinations + one animation check pass,
+949 PNGs including enlarged-text picture continuations. [Critique](handy_habit/R8_R9_REVIEW.md)
+and [QA details](handy_habit/QA_PLAN.md) record the bounds of this evidence.
+Source/unit/widget/host-render complete; supervisor device/SR/OS back/permission/
+delivery/haptics/links and new platform build checks remain. No schema or engine
+change in 5b; no shared-package/sibling edits, git writes or devices.
 
 
 ### Run 3b visual identity status (2026-11-10)

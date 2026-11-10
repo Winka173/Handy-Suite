@@ -84,7 +84,9 @@ class _HabitHelpPageState extends State<HabitHelpPage> {
             key: Key('help-topic-${t.id}'),
             contentPadding: EdgeInsets.zero,
             title: Text(
-              '${habitHelpTopics.indexOf(t) + 1}. ${t.title(context)}',
+              query.isEmpty
+                  ? '${habitHelpTopics.indexOf(t) + 1}. ${t.title(context)}'
+                  : t.title(context),
             ),
             selected: t.id == selected,
             onTap: () => select(t.id),

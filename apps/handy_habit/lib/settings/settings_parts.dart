@@ -1,4 +1,5 @@
 import 'package:handy_ui/kit.dart';
+import 'package:handy_habit_engine/handy_habit_engine.dart';
 
 /// Values stay below their labels, including on narrow enlarged-text screens.
 class HabitSettingChoice extends StatelessWidget {
@@ -83,3 +84,24 @@ const habitPreferenceKeys = {
   'routineHaptics',
   'confirmRoutineExit',
 };
+
+/// A readable place and its current offset; historical check-in days stay fixed.
+String habitZoneLabel(BuildContext context, String zone, DateTime now) {
+  final minutes = location(
+    zone,
+  ).timeZone(now.millisecondsSinceEpoch).offset.inMinutes;
+  final hours = minutes.abs() ~/ 60;
+  final remainder = minutes.abs() % 60;
+  final offset = minutes == 0
+      ? 'GMT'
+      : 'GMT${minutes < 0 ? '−' : '+'}$hours${remainder == 0 ? '' : ':${remainder.toString().padLeft(2, '0')}'}';
+  final name = switch (zone) {
+    'Asia/Ho_Chi_Minh' ||
+    'Asia/Saigon' => tr(context, 'Vietnam time', 'Giờ Việt Nam'),
+    'UTC' ||
+    'Etc/UTC' ||
+    'Etc/GMT' => tr(context, 'Coordinated universal time', 'Giờ quốc tế'),
+    _ => zone.split('/').last.replaceAll('_', ' '),
+  };
+  return '$name ($offset)';
+}

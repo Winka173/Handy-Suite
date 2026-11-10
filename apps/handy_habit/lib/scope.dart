@@ -22,7 +22,7 @@ class HabitScope {
   /// Today, Habits, Routines or Insights.
   final area = ValueNotifier(0);
   final clockTick = ValueNotifier(0);
-  final reminderError=ValueNotifier<Object?>(null);
+  final reminderError = ValueNotifier<Object?>(null);
   HabitScope({
     required this.controller,
     required this.files,

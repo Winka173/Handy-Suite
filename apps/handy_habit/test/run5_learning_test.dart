@@ -6,6 +6,7 @@ import 'package:handy_habit/app.dart';
 import 'package:handy_habit/controller.dart';
 import 'package:handy_habit/reminders.dart';
 import 'package:handy_habit/settings/help_topics.dart';
+import 'package:handy_habit/settings/settings_parts.dart';
 import 'package:handy_habit/welcome/welcome_page.dart';
 import 'package:handy_habit_engine/handy_habit_engine.dart';
 import 'package:handy_habit/run_notice.dart';
@@ -110,6 +111,30 @@ void main() {
   test('help folds Vietnamese precomposed and combining accents', () {
     expect(foldHabitHelp('THÓI QUEN Đều đặn'), 'thoi quen deu dan');
     expect(foldHabitHelp('tho\u0301i quen'), 'thoi quen');
+  });
+
+  testWidgets('friendly zones keep current DST and fractional GMT offsets', (
+    t,
+  ) async {
+    for (final (zone, month, expected) in [
+      ('Asia/Ho_Chi_Minh', 1, 'Vietnam time (GMT+7)'),
+      ('UTC', 1, 'Coordinated universal time (GMT)'),
+      ('Europe/London', 1, 'London (GMT)'),
+      ('Europe/London', 7, 'London (GMT+1)'),
+      ('America/New_York', 1, 'New York (GMT−5)'),
+      ('Asia/Kolkata', 1, 'Kolkata (GMT+5:30)'),
+    ]) {
+      await t.pumpWidget(
+        MaterialApp(
+          home: Builder(
+            builder: (context) => Text(
+              habitZoneLabel(context, zone, DateTime.utc(2026, month, 10)),
+            ),
+          ),
+        ),
+      );
+      expect(find.text(expected), findsOneWidget);
+    }
   });
 
   testWidgets(
@@ -277,10 +302,18 @@ void main() {
     (t) async {
       await learningBoot(t, state: f.seeded());
       await route(t, '/help');
+      expect(find.text('1. Getting started: create a habit'), findsOneWidget);
       for (final query in ['thoi quen', 'thói quen']) {
         await t.enterText(find.byKey(const Key('help-search')), query);
         await t.pumpAndSettle();
         expect(find.byKey(const Key('help-topic-start')), findsOneWidget);
+        final titles = t
+            .widgetList<ListTile>(find.byType(ListTile))
+            .map((tile) => (tile.title! as Text).data!);
+        expect(
+          titles.any((title) => RegExp(r'^\d+\. ').hasMatch(title)),
+          false,
+        );
       }
       await t.enterText(find.byKey(const Key('help-search')), 'zzzz');
       await t.pumpAndSettle();

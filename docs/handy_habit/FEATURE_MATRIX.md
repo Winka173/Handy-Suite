@@ -1,7 +1,15 @@
 # Handy Habit feature matrix
 
-Updated 2026-11-01. Source and tests exist; release certification is separate.
+Updated 2026-11-10 (R8/R9 run 5b; earlier evidence below is historical).
+Source and tests exist; release certification is separate.
 No row below claims physical-device or real-store verification.
+
+| R8/R9 feature | Status | Current host evidence | Remaining |
+| --- | --- | --- | --- |
+| Three-stage guide, two story beats, isolated Today practice, one Start | IMPLEMENTED / WIDGET TESTED | All microsteps + Do it for me, Back/Esc/Enter/Skip, replay and practice leave state/backup unchanged, returning-user bypass, no launch permission | Native OS back/first-launch/update/replay and assistive tech |
+| Searchable illustrated help, contextual entry, replay | IMPLEMENTED / WIDGET TESTED | 15 EN/VI topics; accent folding, no match/clear, filtered count without numbers; all articles rendered | Device follow-along / screen reader |
+| Grouped persisted Settings, reminder privacy/permission/test, preference-only reset | IMPLEMENTED / WIDGET TESTED | Values/errors/defaults/reset/no free Pro badge; friendly zone/current GMT/DST; app128 + engine82 pass | Actual native delivery/haptics/public privacy/support URLs |
+| R8/R9 visual finish | HOST RENDERED / REVIEWED | 24 matrix combinations + motion check pass; 949 PNGs incl. continuations; [critique](R8_R9_REVIEW.md) / [commands and logs](QA_PLAN.md) | No new device/browser/build/store certification |
 
 | P0 area                                                                           | Code                                       | Host evidence                                                                                                                                                                                                                                                         | Platform evidence / remaining gap                                                                                                |
 | --------------------------------------------------------------------------------- | ------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------- |

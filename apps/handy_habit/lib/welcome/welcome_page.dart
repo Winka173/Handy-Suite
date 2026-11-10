@@ -120,6 +120,22 @@ class _HabitWelcomePageState extends State<HabitWelcomePage> {
           ? 'Chỉ tôi cách dùng'
           : 'Gom về hôm nay',
     );
+    final wide = MediaQuery.sizeOf(context).width >= 900;
+    final palette = HabitPalette.of(context);
+    final emphasis = tr(
+      context,
+      stage == 0
+          ? (gathered ? 'Visible days.' : 'drift away.')
+          : stage == 1
+          ? 'in Habit.'
+          : 'keeps its place.',
+      stage == 0
+          ? (gathered ? 'Ngày rõ ràng.' : 'nhạt dần.')
+          : stage == 1
+          ? 'cùng Habit.'
+          : 'chỗ của mình.',
+    );
+    final split = title.indexOf(emphasis);
     final words = Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       mainAxisSize: MainAxisSize.min,
@@ -128,30 +144,54 @@ class _HabitWelcomePageState extends State<HabitWelcomePage> {
         const SizedBox(height: 12),
         Semantics(
           header: true,
-          child: Text(
-            title,
+          child: Text.rich(
+            TextSpan(
+              children: [
+                TextSpan(text: title.substring(0, split)),
+                TextSpan(
+                  text: emphasis,
+                  style: TextStyle(backgroundColor: palette.tint),
+                ),
+              ],
+            ),
             key: Key('welcome-title-$stage-$gathered'),
-            style: Theme.of(context).textTheme.headlineMedium,
+            style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+              fontSize: wide ? 44 : 30,
+              height: 1.12,
+              fontWeight: FontWeight.w800,
+              color: palette.anchor,
+              letterSpacing: -.6,
+            ),
           ),
         ),
         const SizedBox(height: 16),
-        Text(body),
+        Text(
+          body,
+          style: TextStyle(
+            fontSize: wide ? 18 : 16,
+            height: 1.5,
+            color: palette.ink,
+          ),
+        ),
         if (error != null) HandyNotice(error!, tone: HandyTone.error),
       ],
     );
-    final action = Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        if (stage != 1 || practice.done) ...[
-          const SizedBox(height: 24),
-          FilledButton(
-            key: const Key('welcome-next'),
-            onPressed: busy ? null : next,
-            child: Text(label),
-          ),
-        ],
-      ],
+    final action = Padding(
+      padding: const EdgeInsets.fromLTRB(20, 12, 20, 20),
+      child: stage == 1 && !practice.done
+          ? TextButton(
+              key: const Key('welcome-do-it'),
+              onPressed: busy ? null : next,
+              child: Text(tr(context, 'Do it for me', 'Làm giúp tôi')),
+            )
+          : FilledButton(
+              key: const Key('welcome-next'),
+              style: FilledButton.styleFrom(
+                minimumSize: const Size(double.infinity, 56),
+              ),
+              onPressed: busy ? null : next,
+              child: Text(label),
+            ),
     );
     final scene = stage == 0
         ? HabitStoryScene(gathered: gathered)
@@ -213,71 +253,107 @@ class _HabitWelcomePageState extends State<HabitWelcomePage> {
                   Expanded(
                     child: LayoutBuilder(
                       builder: (context, box) {
-                        if (box.maxWidth >= 900)
+                        if (wide) {
                           return Center(
-                            child: SingleChildScrollView(
-                              padding: const EdgeInsets.all(32),
-                              child: ConstrainedBox(
-                                constraints: const BoxConstraints(
-                                  maxWidth: 1120,
+                            child: ConstrainedBox(
+                              constraints: const BoxConstraints(maxWidth: 1180),
+                              child: Padding(
+                                padding: const EdgeInsets.fromLTRB(
+                                  32,
+                                  16,
+                                  32,
+                                  24,
                                 ),
                                 child: Row(
-                                  crossAxisAlignment: CrossAxisAlignment.center,
                                   children: [
                                     Expanded(
-                                      child: Center(
-                                        child: ConstrainedBox(
-                                          constraints: const BoxConstraints(
-                                            maxWidth: 390,
+                                      child: Column(
+                                        children: [
+                                          Expanded(
+                                            child: Center(
+                                              child: SingleChildScrollView(
+                                                child: words,
+                                              ),
+                                            ),
                                           ),
-                                          child: stage == 0
-                                              ? SizedBox(
-                                                  height: 420,
-                                                  child: scene,
-                                                )
-                                              : scene,
-                                        ),
+                                          action,
+                                        ],
                                       ),
                                     ),
                                     const SizedBox(width: 64),
                                     Expanded(
-                                      child: Column(
-                                        mainAxisSize: MainAxisSize.min,
-                                        crossAxisAlignment:
-                                            CrossAxisAlignment.stretch,
-                                        children: [words, action],
-                                      ),
+                                      child: stage == 1
+                                          ? SingleChildScrollView(
+                                              child: Center(
+                                                child: ConstrainedBox(
+                                                  constraints:
+                                                      const BoxConstraints(
+                                                        maxWidth: 390,
+                                                      ),
+                                                  child: scene,
+                                                ),
+                                              ),
+                                            )
+                                          : scene,
                                     ),
                                   ],
                                 ),
                               ),
                             ),
                           );
-                        return SingleChildScrollView(
-                          padding: EdgeInsets.all(stage == 1 ? 12 : 24),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.stretch,
-                            children: [
-                              if (stage != 1 || practice.done)
-                                words
-                              else
-                                Text(
-                                  tr(
-                                    context,
-                                    'Practice · nothing is saved',
-                                    'Bản tập · không lưu gì thật',
-                                  ),
-                                  style: Theme.of(
-                                    context,
-                                  ).textTheme.titleMedium,
+                        }
+                        final heading = stage == 1
+                            ? Text(
+                                tr(
+                                  context,
+                                  'Practice · nothing is saved',
+                                  'Bản tập · không lưu gì thật',
                                 ),
-                              const SizedBox(height: 16),
-                              stage == 0
-                                  ? SizedBox(height: 320, child: scene)
-                                  : scene,
-                              action,
-                            ],
-                          ),
+                                style: Theme.of(context).textTheme.titleMedium,
+                              )
+                            : words;
+                        final roomy =
+                            stage != 1 &&
+                            box.maxHeight > 620 &&
+                            MediaQuery.textScalerOf(context).scale(16) <= 18;
+                        return Column(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            Expanded(
+                              child: Padding(
+                                padding: EdgeInsets.symmetric(
+                                  horizontal: stage == 1 ? 12 : 20,
+                                ),
+                                child: roomy
+                                    ? Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.stretch,
+                                        children: [
+                                          heading,
+                                          const SizedBox(height: 16),
+                                          Expanded(child: scene),
+                                        ],
+                                      )
+                                    : SingleChildScrollView(
+                                        child: Column(
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.stretch,
+                                          children: [
+                                            heading,
+                                            const SizedBox(height: 16),
+                                            stage == 1
+                                                ? scene
+                                                : SizedBox(
+                                                    height: 420,
+                                                    child: scene,
+                                                  ),
+                                          ],
+                                        ),
+                                      ),
+                              ),
+                            ),
+                            action,
+                          ],
                         );
                       },
                     ),

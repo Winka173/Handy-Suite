@@ -1,5 +1,14 @@
 # Release checklist
 
+Current R8/R9 run 5b (2026-11-10): app128/engine82 host tests, analysis/format
+and 24 screenshot combinations plus a motion check pass. Guide/practice/help and
+Settings are implemented; [visual review](R8_R9_REVIEW.md) and [QA details](QA_PLAN.md).
+Earlier build/emulator checkmarks below are historical, not current-source proof.
+
+- [x] R8/R9 source, host widget/data-isolation tests and EN/VI light/dark visual pass.
+- [ ] Supervisor: real OS back/keyboard/SR, fresh/update/replay, notification privacy/
+  permission/delivery/haptics, public policy/support links; new platform build QA.
+
 - [x] Audit architecture, pinned dependencies/licenses and baseline before config/schema.
 - [x] P0 habits/effective schedules/streaks, routines/runner, Lite and insights implemented.
 - [x] SQLite/IndexedDB adapters, validation, corruption refusal and portable formats coded.

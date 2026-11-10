@@ -305,7 +305,7 @@ class HabitSettingsPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => ListenableBuilder(
-    listenable: Listenable.merge([scope.controller,scope.reminderError]),
+    listenable: Listenable.merge([scope.controller, scope.reminderError]),
     builder: (context, _) {
       final s = scope.state;
       final c = HandyColors.of(context);
@@ -400,7 +400,7 @@ class HabitSettingsPage extends StatelessWidget {
               ),
               HandyTile(
                 title: tr(context, 'Time zone', 'Múi giờ'),
-                subtitle: s.zone,
+                subtitle: habitZoneLabel(context, s.zone, scope.clock()),
                 onTap: () => _calendar(context),
               ),
               HandyTile(
@@ -440,17 +440,36 @@ class HabitSettingsPage extends StatelessWidget {
                 value: s.settings['routineAutoTimer'] != false,
                 onChanged: (v) => _set(context, {'routineAutoTimer': v}),
               ),
-              if(!kIsWeb && [TargetPlatform.android,TargetPlatform.iOS].contains(defaultTargetPlatform))HabitSettingToggle(
-                id: 'settings-routine-haptics',
-                title: tr(
-                  context,
-                  'Haptic feedback on completed steps',
-                  'Rung khi xong bước',
+              if (!kIsWeb &&
+                  [
+                    TargetPlatform.android,
+                    TargetPlatform.iOS,
+                  ].contains(defaultTargetPlatform))
+                HabitSettingToggle(
+                  id: 'settings-routine-haptics',
+                  title: tr(
+                    context,
+                    'Haptic feedback on completed steps',
+                    'Rung khi xong bước',
+                  ),
+                  value: s.settings['routineHaptics'] == true,
+                  onChanged: (v) => _set(context, {'routineHaptics': v}),
                 ),
-                value: s.settings['routineHaptics'] == true,
-                onChanged: (v) => _set(context, {'routineHaptics': v}),
-              ),
-              if(kIsWeb || ![TargetPlatform.android,TargetPlatform.iOS].contains(defaultTargetPlatform))Padding(padding:const EdgeInsets.all(16),child:Text(tr(context,'Haptic feedback is available on supported Android and iOS phones.','Rung phản hồi có trên điện thoại Android và iOS hỗ trợ.'))),
+              if (kIsWeb ||
+                  ![
+                    TargetPlatform.android,
+                    TargetPlatform.iOS,
+                  ].contains(defaultTargetPlatform))
+                Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Text(
+                    tr(
+                      context,
+                      'Haptic feedback is available on supported Android and iOS phones.',
+                      'Rung phản hồi có trên điện thoại Android và iOS hỗ trợ.',
+                    ),
+                  ),
+                ),
               HabitSettingToggle(
                 id: 'settings-routine-confirm',
                 title: tr(
@@ -477,7 +496,35 @@ class HabitSettingsPage extends StatelessWidget {
                     'Nền tảng này không nhắc nền được. Hôm nay sẽ hiện lần nhắc tiếp theo.',
                   ),
             children: [
-              if(scope.reminderError.value!=null)Padding(padding:const EdgeInsets.all(16),child:Column(crossAxisAlignment:CrossAxisAlignment.stretch,children:[HandyNotice(tr(context,'Could not update scheduled reminders. Your rules are saved. Try again or check notification settings.','Chưa cập nhật được lịch thông báo. Lịch nhắc đã lưu. Hãy thử lại hoặc kiểm tra cài đặt thông báo.'),tone:HandyTone.error),TextButton(key:const Key('reminder-retry'),onPressed:()async{try{await scope.reminders.sync(scope.state);scope.reminderError.value=null;}catch(e){scope.reminderError.value=e;}},child:Text(tr(context,'Retry','Thử lại')))])),
+              if (scope.reminderError.value != null)
+                Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      HandyNotice(
+                        tr(
+                          context,
+                          'Could not update scheduled reminders. Your rules are saved. Try again or check notification settings.',
+                          'Chưa cập nhật được lịch thông báo. Lịch nhắc đã lưu. Hãy thử lại hoặc kiểm tra cài đặt thông báo.',
+                        ),
+                        tone: HandyTone.error,
+                      ),
+                      TextButton(
+                        key: const Key('reminder-retry'),
+                        onPressed: () async {
+                          try {
+                            await scope.reminders.sync(scope.state);
+                            scope.reminderError.value = null;
+                          } catch (e) {
+                            scope.reminderError.value = e;
+                          }
+                        },
+                        child: Text(tr(context, 'Retry', 'Thử lại')),
+                      ),
+                    ],
+                  ),
+                ),
               HabitNotificationStatus(
                 reminders: scope.reminders,
                 revision: s.revision,

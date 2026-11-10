@@ -1,5 +1,29 @@
 # QA evidence and reproduction
 
+## Current R8/R9 host pass · run 5b · 2026-11-10
+
+- App `flutter test --no-pub`: **128 passed**; engine: **82 passed**.
+- Both `dart analyze` clean; `dart format --output=none --set-exit-if-changed`
+  clean on app lib/test/tool and engine lib/test. Two inherited unformatted app
+  files (app.dart/scope.dart) received formatting only.
+- `tool/run5_screens_test.dart`: **25 passed**, comprising 24 combinations of
+  EN/VI × light/dark × 320/390/1440 × text 1/1.5 and one real-animation gather
+  check. First matrix passed before the final frame-clipping fix; full final
+  matrix passed after it. **949 PNGs**: 912 surface captures, 36 enlarged-text
+  picture continuations, one animation midpoint. Includes all 15 help articles,
+  all seven practice states, search/no match, every Settings group and empty Today.
+- Captures/review board: `C:/Users/Winka/AppData/Local/Temp/habit-run5-shots/5b/`
+  (`index.html`, contact sheets under `review/`). Logs in the same Temp root:
+  `habit-5b-app-final.log`, `habit-5b-engine-tests.log`,
+  `habit-5b-matrix-final.log`. These are local artifacts, not checked-in evidence.
+- New regression checks friendly GMT labels, current DST and half-hour offsets;
+  existing help test now verifies unnumbered filtered / numbered complete lists.
+  Replay/practice unchanged-state-and-backup, all microsteps, keyboard/back,
+  persistence/failure/reset and permission opt-in regressions still pass.
+- [Visual critique and remaining device work](R8_R9_REVIEW.md). Host widget
+  rendering only; no device/emulator/browser/store checks or new builds in 5b.
+  Historical platform evidence below does not certify the changed source.
+
 2026-11-01, Flutter 3.44.9 / Dart 3.12.2, Windows host. Baseline before schema/config
 changes is preserved in habit-baseline-*. Initial Spend analyze errors were pre-existing;
 current full-workspace analysis passes after concurrent existing-app work. No unrelated

@@ -4,6 +4,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:handy_habit_engine/handy_habit_engine.dart';
 import 'package:handy_habit/settings/help_topics.dart';
+import 'package:handy_habit/welcome/scenes.dart';
 import 'package:handy_ui/kit.dart';
 import '../test/run4_routines_test.dart' show route;
 import '../test/run5_learning_test.dart' show tap;
@@ -19,6 +20,10 @@ Future<void> loadFont(String family, List<String> paths) async {
 }
 
 Future<void> top(WidgetTester t) async {
+  final scrollables = find.byWidgetPredicate(
+    (w) => w is Scrollable && w.axisDirection == AxisDirection.down,
+  );
+  if (scrollables.evaluate().isEmpty) return;
   final scroll = find
       .byWidgetPredicate(
         (w) => w is Scrollable && w.axisDirection == AxisDirection.down,
@@ -75,9 +80,17 @@ void main() {
               state: HabitState(settings: {'reducedMotion': true}),
             );
             await shots.shot(t, '$name-stage1-scattered');
+            if (scale > 1) {
+              await t.ensureVisible(find.byType(HabitStoryScene));
+              await shots.shot(t, '$name-stage1-scattered-picture');
+            }
             await tap(t, 'welcome-next');
             await top(t);
             await shots.shot(t, '$name-stage1-gathered');
+            if (scale > 1) {
+              await t.ensureVisible(find.byType(HabitStoryScene));
+              await shots.shot(t, '$name-stage1-gathered-picture');
+            }
             await tap(t, 'welcome-next');
             for (var i = 0; i <= 6; i++) {
               await top(t);
@@ -89,6 +102,10 @@ void main() {
             await tap(t, 'welcome-next');
             await top(t);
             await shots.shot(t, '$name-stage3');
+            if (scale > 1) {
+              await t.ensureVisible(find.byType(MissedDayScene));
+              await shots.shot(t, '$name-stage3-picture');
+            }
             await tap(t, 'welcome-next');
             await top(t);
             await shots.shot(t, '$name-empty-goals');
@@ -129,4 +146,32 @@ void main() {
             expect(c.state!.events, isEmpty);
           });
         }
+
+  testWidgets('R8 story motion retains objects through the gather', (t) async {
+    await shots.boot(
+      t,
+      const Size(390, 900),
+      locale: 'vi',
+      state: HabitState(),
+    );
+    final scene = find.byType(HabitStoryScene);
+    final objects = find.descendant(
+      of: scene,
+      matching: find.byType(AnimatedPositioned),
+    );
+    final first = t.getTopLeft(objects.first);
+    await t.tap(find.byKey(const Key('welcome-next')));
+    await t.pump();
+    await t.pump(const Duration(milliseconds: 300));
+    final middle = t.getTopLeft(objects.first);
+    expect(middle, isNot(first));
+    expect(
+      find.descendant(of: scene, matching: find.text('Uống nước')),
+      findsOneWidget,
+    );
+    await shots.shot(t, '390-vi-light-100-gather-midpoint', settle: false);
+    await t.pumpAndSettle();
+    expect(t.getTopLeft(objects.first), isNot(middle));
+    expect(t.takeException(), isNull);
+  });
 }
