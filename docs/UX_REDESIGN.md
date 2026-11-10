@@ -3518,6 +3518,34 @@ colour. Nunito is loaded in every capture; no stock art, invented figures or sha
 Final renders:63 harness cases pass, and27 final matrix/extra cases pass after the compact
 calendar adjustment. Native Flutter renders replace the HTML-only DOM inspector here.
 
+## Handy Habit · run 11 · consistency contract · 2026-11-10
+
+Reference: Bookmark/Boards source and host screenshots; this section changes Habit only.
+Inventory remains habits/check-ins, routines/sessions, optional mood, local settings and backups.
+Nunito, editorial greeting, vermilion/oxblood/ochre and today's bead as the check-in remain the face and signature.
+
+| Screen/job and one question | Primary action/finding | Required behaviour and states |
+| --- | --- | --- |
+| Shell: where am I, what next? | Today's bead / Start routine | Three phone destinations; add before gear; wide sidebar224/rail64, fold/reopen at top, persist preference. Gutters16 phone/24 wide. |
+| Lists/detail: what can I do to this habit/routine? | Check in / Start; name opens detail | Visible 48px More, same menu on row long-press/right-click; destructive confirmation; in-place caps; preserve selection and scroll. |
+| Help: how do I do this? | Select numbered topic, read illustrated steps | Drawn real-control fragments in list and detail; search EN/VI without accents, result count/no-match/Clear; article Back/Esc returns to index before leaving; Previous/Next; replay remains available. |
+| Mood: how do I feel today? | Tap face to save immediately | Five drawn faces differentiated by expression and label, never colour alone. Two taps from Today, no required note/keyboard; selected state, busy/error/retry, optional details and confirmed delete with Undo. |
+| Pushed pages: how do I return? | Visible Back, one level | Sync explicitly renders Back; editors preserve dirty guard; guide and runner retain their specific back semantics. Every pushed route covered by widget navigation checks. |
+| Feedback/data: did that save? | Undo after successful commit | Non-persistent snackbars use HandyMotion duration including zero under reduced motion; latest message replaces previous, no Undo for irreversible deletes. Trash says 1 day / N days; reset/replace/delete still confirm. |
+
+Responsive320–1440 and text100/150/200%: scroll instead of clipping; actions wrap, drawings can scale but instructional text stays full size. AA text contrast, labelled face buttons/More controls, logical traversal and Enter/Space activation. Motion uses kit Swap/Reveal/Appear and zero-duration reduced motion. Reject text-only faux pictures, colour-only moods, inaccessible row-only gestures, unconfirmed deletes, indefinite Undo, and browser/device/store verification claims from host renders. Existing empty/loading/error/recovery states remain usable. Pro purchase/live demos are next-run work; existing advanced feature title-right badges remain non-Pro only.
+
+Run11 audit outcome: 22 Habit gaps fixed; see `docs/handy_habit/CONSISTENCY_AUDIT.md`.
+Settings order ends Data → Reset → Help → About → HandyMoreApps; Trash counts live below
+their label. Search keeps topic numbers. Deleting a row leaves its list open; deleting a
+detail returns to that list after commit. Latest feedback replaces queued messages.
+Habit-owned menus/dialogs/sheets use HandyMotion, including the pretend practice dialog.
+Month day targets and year cells are at least48px; enlarged calendars scroll horizontally
+instead of squeezing text. The year view consequently shows fewer weeks at once.
+At narrow/enlarged widths bead/More and routine heading/actions stack; today's first bead
+still meets its existing visibility check. Shared HandyPage gutters, HandyLabel wrapping,
+HandyMenuButton sizing and shared confirm/message motion remain supervisor follow-ups.
+
 ## Hợp đồng bổ sung: Handy Habit · run 1 · 2026-11-10
 
 **DESIGN CONTRACT — chưa triển khai.** Phần này thay chỉ dẫn Habit cũ về onboarding3 choices/bốn khu/top switch/Lite Pro/không sửa appearance/history cắt; không đổi hợp đồng app khác. [AUDIT](HANDY_HABIT_AUDIT.md) ghi source/evidence; [PLAN](HANDY_HABIT_PLAN.md) ghi models/Free–Pro/slices. Không đọc “xong”02/11 như chứng nhận MASTER PROMPT này.

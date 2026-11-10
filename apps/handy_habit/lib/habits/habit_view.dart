@@ -1,3 +1,4 @@
+import '../ui/row_menu.dart';
 import 'package:handy_habit_engine/handy_habit_engine.dart';
 import 'package:handy_ui/kit.dart';
 import '../pauses/pauses.dart';
@@ -239,7 +240,7 @@ class HabitView extends StatelessWidget {
                       child: Text(
                         tr(
                           context,
-                          'Tap a day in the last ${s.backfill} days to fill it in.${next == null ? '' : ' Next planned: ${dayText(context, next, today).toLowerCase()}.'}',
+                          'Tap a day in the last ${s.backfill} ${s.backfill == 1 ? 'day' : 'days'} to fill it in.${next == null ? '' : ' Next planned: ${dayText(context, next, today).toLowerCase()}.'}',
                           'Chạm một ngày trong ${s.backfill} ngày gần nhất để ghi bù.${next == null ? '' : ' Lần có lịch tới: ${dayText(context, next, today).toLowerCase()}.'}',
                         ),
                         style: TextStyle(color: c.muted),
@@ -394,6 +395,7 @@ class HabitMenu extends StatelessWidget {
     );
     if (!ok || !context.mounted) return;
     final navigator = Navigator.of(context);
+    final route = ModalRoute.of(context);
     final h = habit;
     final done = await scope.write(
       context,
@@ -404,118 +406,122 @@ class HabitMenu extends StatelessWidget {
         'Đã chuyển ${h.title} vào Thùng rác.',
       ),
     );
-    if (done && navigator.canPop()) navigator.maybePop();
+    if (done &&
+        route?.settings.name == '/habit/${habit.id}' &&
+        route?.isCurrent == true &&
+        navigator.mounted &&
+        navigator.canPop())
+      navigator.maybePop();
   }
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context) => HabitMenuButton(
+    items: items(context),
+    tooltip: tr(context, 'More for ${habit.title}', 'Thêm cho ${habit.title}'),
+  );
+
+  List<HandyMenuItem> items(BuildContext context) {
     final h = habit, today = scope.today;
-    return HandyMenuButton(
-      items: [
-        HandyMenuItem(
-          Icons.edit_outlined,
-          tr(context, 'Edit', 'Sửa'),
-          () => openHabitEditor(context, scope, h),
-          key: const Key('habit-edit'),
+    return [
+      HandyMenuItem(
+        Icons.edit_outlined,
+        tr(context, 'Edit', 'Sửa'),
+        () => openHabitEditor(context, scope, h),
+        key: const Key('habit-edit'),
+      ),
+      HandyMenuItem(
+        Icons.palette_outlined,
+        tr(context, 'Appearance', 'Diện mạo'),
+        () => editHabitAppearance(context, scope, h),
+        key: const Key('habit-appearance'),
+      ),
+      HandyMenuItem(
+        h.archived ? Icons.unarchive_outlined : Icons.archive_outlined,
+        h.archived
+            ? tr(context, 'Bring back', 'Dùng lại')
+            : tr(context, 'Archive', 'Lưu trữ'),
+        () => scope.write(
+          context,
+          (s) => s.copy({
+            'habits': [
+              for (final x in s.habits)
+                x.id == h.id
+                    ? archiveHabit(x, today, !x.archived).toJson()
+                    : x.toJson(),
+            ],
+          }),
+          done: (c) => h.archived
+              ? tr(c, '${h.title} is back.', 'Đã dùng lại ${h.title}.')
+              : tr(
+                  c,
+                  '${h.title} archived from tomorrow; its history stays.',
+                  'Lưu trữ ${h.title} từ ngày mai; lịch sử vẫn giữ.',
+                ),
         ),
+        key: const Key('habit-archive'),
+      ),
+      if (!h.archived)
         HandyMenuItem(
-          Icons.palette_outlined,
-          tr(context, 'Appearance', 'Diện mạo'),
-          () => editHabitAppearance(context, scope, h),
-          key: const Key('habit-appearance'),
+          Icons.pause_circle_outline,
+          tr(context, 'Pause this habit', 'Nghỉ thói quen này'),
+          () => openPauseEditor(context, scope, habit: h.id),
+          key: const Key('habit-pause'),
         ),
-        HandyMenuItem(
-          h.archived ? Icons.unarchive_outlined : Icons.archive_outlined,
-          h.archived
-              ? tr(context, 'Bring back', 'Dùng lại')
-              : tr(context, 'Archive', 'Lưu trữ'),
-          () => scope.write(
-            context,
-            (s) => s.copy({
-              'habits': [
-                for (final x in s.habits)
-                  x.id == h.id
-                      ? archiveHabit(x, today, !x.archived).toJson()
-                      : x.toJson(),
-              ],
-            }),
-            done: (c) => h.archived
-                ? tr(c, '${h.title} is back.', 'Đã dùng lại ${h.title}.')
-                : tr(
-                    c,
-                    '${h.title} archived from tomorrow; its history stays.',
-                    'Lưu trữ ${h.title} từ ngày mai; lịch sử vẫn giữ.',
-                  ),
-          ),
-          key: const Key('habit-archive'),
-        ),
-        if (!h.archived)
-          HandyMenuItem(
-            Icons.pause_circle_outline,
-            tr(context, 'Pause this habit', 'Nghỉ thói quen này'),
-            () => openPauseEditor(context, scope, habit: h.id),
-            key: const Key('habit-pause'),
-          ),
-        HandyMenuItem(
-          Icons.copy_outlined,
-          tr(
-            context,
-            'Duplicate without history',
-            'Nhân bản không kèm lịch sử',
-          ),
-          () => scope.write(context, (s) {
-            final schedule = scheduleOn(h, today) ?? h.schedules.last;
-            return s.copy({
-              'habits': [
-                ...s.habits.map((e) => e.toJson()),
-                h.copy({
-                  'id': uid(),
-                  'title': tr(
-                    context,
-                    '${h.title} (copy)',
-                    '${h.title} (bản sao)',
-                  ),
-                  'created': today,
-                  if (h.isNegative)
-                    'negativeGoals': [
-                      {
-                        ...(negativeGoalOn(h, today) ?? h.negativeGoals.last)
-                            .toJson(),
-                        'id': uid(),
-                        'from': today,
-                      },
-                    ],
-                  'end': null,
-                  'archived': false,
-                  'archivedFrom': null,
-                  'archivedPeriods': [],
-                  'schedules': [
-                    {...schedule.toJson(), 'id': uid(), 'from': today},
+      HandyMenuItem(
+        Icons.copy_outlined,
+        tr(context, 'Duplicate without history', 'Nhân bản không kèm lịch sử'),
+        () => scope.write(context, (s) {
+          final schedule = scheduleOn(h, today) ?? h.schedules.last;
+          return s.copy({
+            'habits': [
+              ...s.habits.map((e) => e.toJson()),
+              h.copy({
+                'id': uid(),
+                'title': tr(
+                  context,
+                  '${h.title} (copy)',
+                  '${h.title} (bản sao)',
+                ),
+                'created': today,
+                if (h.isNegative)
+                  'negativeGoals': [
+                    {
+                      ...(negativeGoalOn(h, today) ?? h.negativeGoals.last)
+                          .toJson(),
+                      'id': uid(),
+                      'from': today,
+                    },
                   ],
-                }).toJson(),
-              ],
-            });
-          }, done: (c) => tr(c, 'Duplicated.', 'Đã nhân bản.')),
-          key: const Key('habit-duplicate'),
-        ),
-        HandyMenuItem(
-          Icons.arrow_upward,
-          tr(context, 'Move up', 'Lên trên'),
-          () => scope.write(context, (s) => _move(s, -1)),
-        ),
-        HandyMenuItem(
-          Icons.arrow_downward,
-          tr(context, 'Move down', 'Xuống dưới'),
-          () => scope.write(context, (s) => _move(s, 1)),
-        ),
-        HandyMenuItem(
-          Icons.delete_outline,
-          tr(context, 'Delete', 'Xóa'),
-          () => _delete(context),
-          destructive: true,
-          key: const Key('habit-delete'),
-        ),
-      ],
-    );
+                'end': null,
+                'archived': false,
+                'archivedFrom': null,
+                'archivedPeriods': [],
+                'schedules': [
+                  {...schedule.toJson(), 'id': uid(), 'from': today},
+                ],
+              }).toJson(),
+            ],
+          });
+        }, done: (c) => tr(c, 'Duplicated.', 'Đã nhân bản.')),
+        key: const Key('habit-duplicate'),
+      ),
+      HandyMenuItem(
+        Icons.arrow_upward,
+        tr(context, 'Move up', 'Lên trên'),
+        () => scope.write(context, (s) => _move(s, -1)),
+      ),
+      HandyMenuItem(
+        Icons.arrow_downward,
+        tr(context, 'Move down', 'Xuống dưới'),
+        () => scope.write(context, (s) => _move(s, 1)),
+      ),
+      HandyMenuItem(
+        Icons.delete_outline,
+        tr(context, 'Delete', 'Xóa'),
+        () => _delete(context),
+        destructive: true,
+        key: const Key('habit-delete'),
+      ),
+    ];
   }
 }

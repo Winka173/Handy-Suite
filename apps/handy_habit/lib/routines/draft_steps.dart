@@ -86,7 +86,7 @@ class _DraftStepsState extends State<DraftSteps> {
           child: Text(
             tr(
               context,
-              '${items.length} steps · ${minutesText(context, items.fold(0, (n, s) => n + s.seconds))}',
+              '${items.length} ${items.length == 1 ? 'step' : 'steps'} · ${minutesText(context, items.fold(0, (n, s) => n + s.seconds))}',
               '${items.length} bước · ${minutesText(context, items.fold(0, (n, s) => n + s.seconds))}',
             ),
             style: Theme.of(context).textTheme.titleMedium,

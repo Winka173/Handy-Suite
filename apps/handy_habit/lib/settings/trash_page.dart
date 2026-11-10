@@ -53,7 +53,10 @@ class HabitTrashPage extends StatelessWidget {
           child: ConstrainedBox(
             constraints: const BoxConstraints(maxWidth: 800),
             child: ListView(
-              padding: const EdgeInsets.all(HandySpace.l),
+              padding: EdgeInsets.symmetric(
+                horizontal: MediaQuery.sizeOf(context).width >= 840 ? 24 : 16,
+                vertical: 16,
+              ),
               children: [
                 Text(
                   tr(
@@ -128,7 +131,7 @@ class HabitTrashPage extends StatelessWidget {
                                             ],
                                           ),
                                           Text(
-                                            '$kind · ${tr(context, '$left days left', 'còn $left ngày')}',
+                                            '$kind · ${tr(context, t.daysLeft(scope.clock()) == 1 ? '$left day left' : '$left days left', 'còn $left ngày')}',
                                           ),
                                           Wrap(
                                             spacing: HandySpace.m,

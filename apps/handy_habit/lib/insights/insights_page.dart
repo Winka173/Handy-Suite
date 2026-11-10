@@ -64,6 +64,10 @@ class _InsightsPageState extends State<InsightsPage> {
   Future<void> showDay(HeatDay d, List<Habit> habits) async {
     final picked = await showModalBottomSheet<Habit>(
       context: context,
+      sheetAnimationStyle: AnimationStyle(
+        duration: HandyMotion.of(context),
+        reverseDuration: HandyMotion.of(context),
+      ),
       isScrollControlled: true,
       showDragHandle: true,
       builder: (context) => SafeArea(
@@ -395,7 +399,12 @@ class _InsightsPageState extends State<InsightsPage> {
       ],
     );
     return ListView(
-      padding: const EdgeInsets.fromLTRB(16, 16, 16, 40),
+      padding: EdgeInsets.fromLTRB(
+        MediaQuery.sizeOf(context).width >= 840 ? 24 : 16,
+        16,
+        MediaQuery.sizeOf(context).width >= 840 ? 24 : 16,
+        40,
+      ),
       children: [
         HandyContent(
           maxWidth: 1120,

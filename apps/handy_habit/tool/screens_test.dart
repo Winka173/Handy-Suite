@@ -1,6 +1,7 @@
 // Review screenshots with the real typefaces and icons.
 // SHOTS_DIR=<dir> flutter test --no-pub tool/screens_test.dart
 import 'dart:io';
+import 'package:handy_habit/ui/row_menu.dart';
 import 'dart:ui' as ui;
 import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
@@ -594,7 +595,7 @@ void main() {
     testWidgets('$name appearance', (t) async {
       await boot(t, size, theme: theme);
       await fixtures.tapKey(t, 'habit-read');
-      await t.tap(find.byType(HandyMenuButton).first);
+      await t.tap(find.byType(HabitMenuButton).first);
       await t.pumpAndSettle();
       await fixtures.tapKey(t, 'habit-appearance');
       await shot(t, '$name-appearance');
@@ -611,7 +612,13 @@ void main() {
     await fixtures.tapKey(t, 'habit-add');
     await fixtures.tapKey(t, 'add-habit');
     await shot(t, 'phone-6-presets');
+    await t.enterText(
+      find.byKey(const Key('template-search')),
+      'write a few lines',
+    );
+    await t.pumpAndSettle();
     await fixtures.tapKey(t, 'preset-journal');
+    await fixtures.tapKey(t, 'template-customise');
     await fixtures.tapKey(t, 'field-schedule-weekdays');
     await shot(t, 'phone-7-editor');
   });

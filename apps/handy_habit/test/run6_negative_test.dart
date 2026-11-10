@@ -2,6 +2,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:handy_habit_engine/handy_habit_engine.dart';
 import 'package:handy_habit/today/beads.dart';
 import 'package:handy_ui/kit.dart';
+import 'package:handy_habit/ui/row_menu.dart';
 import 'run3_ui_test.dart' as host;
 import 'run4_routines_test.dart' show tap;
 import 'ui_test.dart' as f;
@@ -37,7 +38,7 @@ void main() {
         ),
       );
       await host.go(t, '/habit/negative');
-      await t.tap(find.byType(HandyMenuButton).last);
+      await t.tap(find.byType(HabitMenuButton).last);
       await t.pumpAndSettle();
       await tap(t, 'habit-duplicate');
       final copied = c.state!.habits.last;

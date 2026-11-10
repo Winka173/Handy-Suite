@@ -3,6 +3,7 @@ import 'package:handy_ui/kit.dart';
 import '../scope.dart';
 import '../ui/form.dart';
 import '../ui/sheet.dart';
+import 'mood_faces.dart';
 
 String moodLabel(BuildContext context, int value) => tr(
   context,
@@ -79,6 +80,23 @@ class _MoodSheetState extends State<MoodSheet> {
 
   Future<void> remove() async {
     if (busy) return;
+    if (!await confirmHandy(
+          context,
+          title: tr(
+            context,
+            'Delete this mood entry?',
+            'Xóa bản ghi tâm trạng này?',
+          ),
+          message: tr(
+            context,
+            'You can Undo or restore it in Progress.',
+            'Bạn có thể Hoàn tác hoặc khôi phục ở Tiến bộ.',
+          ),
+          confirmLabel: tr(context, 'Delete', 'Xóa'),
+          destructive: true,
+        ) ||
+        !mounted)
+      return;
     setState(() {
       busy = true;
       error = '';
@@ -238,21 +256,7 @@ class _MoodSheetState extends State<MoodSheet> {
           ),
         ),
         const SizedBox(height: 16),
-        Wrap(
-          spacing: 8,
-          runSpacing: 8,
-          children: [
-            for (var n = 1; n <= 5; n++)
-              OutlinedButton(
-                key: Key('mood-choice-$n'),
-                style: OutlinedButton.styleFrom(
-                  minimumSize: const Size(48, 48),
-                ),
-                onPressed: busy ? null : () => save(n),
-                child: Text(moodLabel(context, n)),
-              ),
-          ],
-        ),
+        MoodFaces(selected: liveOriginal?.mood, onSelected: busy ? null : save),
         const SizedBox(height: 16),
         if (original != null && !original!.deleted) ...[
           Text(

@@ -42,112 +42,133 @@ class ProgressCalendar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final lead = (date(days.first.day).weekday - weekStart + 7) % 7;
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        Row(
-          children: [
-            for (var i = 0; i < 7; i++)
-              Expanded(
-                child: Text(
-                  weekdayShort(context, (weekStart + i - 1) % 7 + 1),
-                  textAlign: TextAlign.center,
-                  style: Theme.of(context).textTheme.bodySmall,
-                ),
-              ),
-          ],
-        ),
-        const SizedBox(height: 8),
-        GridView.builder(
-          key: const Key('progress-calendar'),
-          shrinkWrap: true,
-          physics: const NeverScrollableScrollPhysics(),
-          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-            crossAxisCount: 7,
-            mainAxisSpacing: 4,
-            crossAxisSpacing: 4,
-            mainAxisExtent: MediaQuery.textScalerOf(context).scale(14) * 2 + 24,
+    return LayoutBuilder(
+      builder: (context, box) => SingleChildScrollView(
+        scrollDirection: Axis.horizontal,
+        child: SizedBox(
+          // Seven readable days, each at least a full touch target. At large
+          // text sizes the week scrolls horizontally instead of squeezing labels.
+          width: box.maxWidth.clamp(
+            7 *
+                    MediaQuery.textScalerOf(
+                      context,
+                    ).scale(40).clamp(48, double.infinity) +
+                12,
+            double.infinity,
           ),
-          itemCount: ((lead + days.length + 6) ~/ 7) * 7,
-          itemBuilder: (context, i) {
-            if (i < lead || i >= lead + days.length) return const SizedBox();
-            final d = days[i - lead],
-                label = heatDayLabel(context, days[i - lead], today);
-            return Semantics(
-              label: label,
-              button: true,
-              excludeSemantics: true,
-              child: Tooltip(
-                message: label,
-                child: InkWell(
-                  key: Key('calendar-${d.day}'),
-                  onTap: () => onDay(d),
-                  borderRadius: BorderRadius.circular(12),
-                  child: Container(
-                    decoration: BoxDecoration(
-                      color: heatFill(
-                        context,
-                        d,
-                        hue,
-                      ).withValues(alpha: d.day.compareTo(today) > 0 ? .35 : 1),
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(
-                        color: d.day == today
-                            ? hue
-                            : d.unknown > 0
-                            ? HabitPalette.of(context).control
-                            : Colors.transparent,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Row(
+                children: [
+                  for (var i = 0; i < 7; i++)
+                    Expanded(
+                      child: Text(
+                        weekdayShort(context, (weekStart + i - 1) % 7 + 1),
+                        textAlign: TextAlign.center,
+                        style: Theme.of(context).textTheme.bodySmall,
                       ),
                     ),
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Text(
-                          '${date(d.day).day}',
-                          style: Theme.of(context).textTheme.bodyMedium
-                              ?.copyWith(
-                                color: d.kept > 0 && d.ratio > .5
-                                    ? (hue.computeLuminance() > .4
-                                          ? Colors.black
-                                          : Colors.white)
-                                    : null,
-                              ),
-                        ),
-                        if (d.eligible == 0 && d.unknown > 0)
-                          Container(
-                            key: const Key('calendar-unknown-mark'),
-                            width: 10,
-                            height: 10,
-                            margin: const EdgeInsets.symmetric(vertical: 3),
-                            decoration: BoxDecoration(
-                              shape: BoxShape.circle,
-                              border: Border.all(
-                                color: HabitPalette.of(context).control,
-                              ),
-                            ),
-                          )
-                        else
-                          Text(
-                            d.eligible > 0 ? '${d.kept}/${d.eligible}' : '–',
-                            style: Theme.of(context).textTheme.bodySmall
-                                ?.copyWith(
-                                  fontSize: 11,
-                                  color: d.kept > 0 && d.ratio > .5
-                                      ? (hue.computeLuminance() > .4
-                                            ? Colors.black
-                                            : Colors.white)
-                                      : null,
-                                ),
-                          ),
-                      ],
-                    ),
-                  ),
-                ),
+                ],
               ),
-            );
-          },
+              const SizedBox(height: 8),
+              GridView.builder(
+                key: const Key('progress-calendar'),
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                  crossAxisCount: 7,
+                  mainAxisSpacing: 4,
+                  crossAxisSpacing: 2,
+                  mainAxisExtent:
+                      MediaQuery.textScalerOf(context).scale(14) * 2 + 24,
+                ),
+                itemCount: ((lead + days.length + 6) ~/ 7) * 7,
+                itemBuilder: (context, i) {
+                  if (i < lead || i >= lead + days.length)
+                    return const SizedBox();
+                  final d = days[i - lead],
+                      label = heatDayLabel(context, days[i - lead], today);
+                  return Semantics(
+                    label: label,
+                    button: true,
+                    excludeSemantics: true,
+                    child: Tooltip(
+                      message: label,
+                      child: InkWell(
+                        key: Key('calendar-${d.day}'),
+                        onTap: () => onDay(d),
+                        borderRadius: BorderRadius.circular(12),
+                        child: Container(
+                          decoration: BoxDecoration(
+                            color: heatFill(context, d, hue).withValues(
+                              alpha: d.day.compareTo(today) > 0 ? .35 : 1,
+                            ),
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(
+                              color: d.day == today
+                                  ? hue
+                                  : d.unknown > 0
+                                  ? HabitPalette.of(context).control
+                                  : Colors.transparent,
+                            ),
+                          ),
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Text(
+                                '${date(d.day).day}',
+                                style: Theme.of(context).textTheme.bodyMedium
+                                    ?.copyWith(
+                                      color: d.kept > 0 && d.ratio > .5
+                                          ? (hue.computeLuminance() > .4
+                                                ? Colors.black
+                                                : Colors.white)
+                                          : null,
+                                    ),
+                              ),
+                              if (d.eligible == 0 && d.unknown > 0)
+                                Container(
+                                  key: const Key('calendar-unknown-mark'),
+                                  width: 10,
+                                  height: 10,
+                                  margin: const EdgeInsets.symmetric(
+                                    vertical: 3,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    shape: BoxShape.circle,
+                                    border: Border.all(
+                                      color: HabitPalette.of(context).control,
+                                    ),
+                                  ),
+                                )
+                              else
+                                Text(
+                                  d.eligible > 0
+                                      ? '${d.kept}/${d.eligible}'
+                                      : '–',
+                                  style: Theme.of(context).textTheme.bodySmall
+                                      ?.copyWith(
+                                        fontSize: 11,
+                                        color: d.kept > 0 && d.ratio > .5
+                                            ? (hue.computeLuminance() > .4
+                                                  ? Colors.black
+                                                  : Colors.white)
+                                            : null,
+                                      ),
+                                ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                  );
+                },
+              ),
+            ],
+          ),
         ),
-      ],
+      ),
     );
   }
 }
@@ -179,11 +200,11 @@ class YearHeatmap extends StatelessWidget {
         children: [
           for (var w = 0; w < weeks; w++)
             SizedBox(
-              width: 18,
+              width: 48,
               child: Column(
                 children: [
                   SizedBox(
-                    height: 26,
+                    height: MediaQuery.textScalerOf(context).scale(14) + 12,
                     child: Builder(
                       builder: (context) {
                         final firsts = [
@@ -214,21 +235,22 @@ class YearHeatmap extends StatelessWidget {
   }
 
   Widget _cell(BuildContext context, int i) {
-    if (i < 0 || i >= days.length) return const SizedBox(width: 18, height: 18);
+    if (i < 0 || i >= days.length) return const SizedBox(width: 48, height: 48);
     final d = days[i], label = heatDayLabel(context, days[i], today);
-    return Padding(
-      padding: const EdgeInsets.all(2),
-      child: Semantics(
-        label: label,
-        button: true,
-        excludeSemantics: true,
-        child: Tooltip(
-          message: label,
-          child: InkWell(
-            onTap: () => onDay(d),
-            child: Container(
-              width: 14,
-              height: 14,
+    return Semantics(
+      label: label,
+      button: true,
+      excludeSemantics: true,
+      child: Tooltip(
+        message: label,
+        child: InkWell(
+          key: Key('heatmap-${d.day}'),
+          onTap: () => onDay(d),
+          child: Container(
+            width: 48,
+            height: 48,
+            padding: const EdgeInsets.all(2),
+            child: DecoratedBox(
               decoration: BoxDecoration(
                 color: d.unknown > 0 && d.eligible == 0
                     ? Colors.transparent

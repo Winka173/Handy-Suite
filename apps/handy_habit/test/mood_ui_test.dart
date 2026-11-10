@@ -164,11 +164,15 @@ void main() {
       expect(c.state!.moods.single.revision, 2);
       await tap(t, 'today-mood');
       await tap(t, 'mood-delete');
+      expect(c.state!.moods.single.deleted, isFalse);
+      await tap(t, 'confirm-action');
       expect(c.state!.moods.single.deleted, true);
       await tap(t, 'snack-undo');
       expect(c.state!.moods.single.deleted, false);
       await tap(t, 'today-mood');
       await tap(t, 'mood-delete');
+      expect(c.state!.moods.single.deleted, isFalse);
+      await tap(t, 'confirm-action');
       await host.go(t, '/progress');
       await tap(t, 'mood-show-deleted');
       await tap(t, 'mood-restore-2024-01-08');

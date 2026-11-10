@@ -139,6 +139,10 @@ Future<({int icon, int color})?> pickHabitAppearance(
   var icon = initialIcon, color = initialColor;
   final chosen = await showDialog<({int icon, int color})>(
     context: context,
+    animationStyle: AnimationStyle(
+      duration: HandyMotion.of(context),
+      reverseDuration: HandyMotion.of(context),
+    ),
     builder: (ctx) => StatefulBuilder(
       builder: (ctx, update) => AlertDialog(
         title: Text(tr(ctx, 'Appearance', 'Diện mạo thói quen')),

@@ -311,10 +311,7 @@ void main() {
         final titles = t
             .widgetList<ListTile>(find.byType(ListTile))
             .map((tile) => (tile.title! as Text).data!);
-        expect(
-          titles.any((title) => RegExp(r'^\d+\. ').hasMatch(title)),
-          false,
-        );
+        expect(titles.any((title) => RegExp(r'^\d+\. ').hasMatch(title)), true);
       }
       await t.enterText(find.byKey(const Key('help-search')), 'zzzz');
       await t.pumpAndSettle();

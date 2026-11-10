@@ -1,3 +1,4 @@
+import '../ui/row_menu.dart';
 import 'package:handy_habit_engine/handy_habit_engine.dart';
 import 'package:handy_ui/kit.dart';
 import '../scope.dart';
@@ -92,7 +93,7 @@ class RoutineView extends StatelessWidget {
                     minutesText(context, r.planned),
                     tr(
                       context,
-                      '${r.steps.length} steps',
+                      '${r.steps.length} ${r.steps.length == 1 ? 'step' : 'steps'}',
                       '${r.steps.length} bước',
                     ),
                     if (r.archived) tr(context, 'archived', 'đã lưu trữ'),
@@ -125,14 +126,30 @@ class RoutineView extends StatelessWidget {
                     ),
                   ],
                 ),
-                HandyLabel(
-                  tr(context, 'Steps', 'Các bước'),
-                  trailing: TextButton.icon(
-                    key: const Key('routine-edit-steps'),
-                    onPressed: () => openRoutineEditor(context, scope, r),
-                    icon: const Icon(Icons.edit_outlined, size: 18),
-                    label: Text(tr(context, 'Edit steps', 'Sửa các bước')),
-                  ),
+                LayoutBuilder(
+                  builder: (context, box) {
+                    final edit = TextButton.icon(
+                      key: const Key('routine-edit-steps'),
+                      onPressed: () => openRoutineEditor(context, scope, r),
+                      icon: const Icon(Icons.edit_outlined, size: 18),
+                      label: Text(tr(context, 'Edit steps', 'Sửa các bước')),
+                    );
+                    final label = tr(context, 'Steps', 'Các bước');
+                    return box.maxWidth /
+                                MediaQuery.textScalerOf(context).scale(1) <
+                            320
+                        ? Column(
+                            crossAxisAlignment: CrossAxisAlignment.stretch,
+                            children: [
+                              HandyLabel(label),
+                              Align(
+                                alignment: AlignmentDirectional.centerStart,
+                                child: edit,
+                              ),
+                            ],
+                          )
+                        : HandyLabel(label, trailing: edit);
+                  },
                 ),
                 if (r.steps.isEmpty)
                   HandyNotice(
@@ -237,6 +254,7 @@ class RoutineMenu extends StatelessWidget {
     );
     if (!ok || !context.mounted) return;
     final navigator = Navigator.of(context);
+    final route = ModalRoute.of(context);
     final done = await scope.write(
       context,
       (s) => trashEntity(s, 'routine', r.id, scope.clock()),
@@ -246,95 +264,107 @@ class RoutineMenu extends StatelessWidget {
         'Đã chuyển ${r.title} vào Thùng rác.',
       ),
     );
-    if (done && navigator.canPop()) navigator.maybePop();
+    if (done &&
+        route?.settings.name == '/routine/${routine.id}' &&
+        route?.isCurrent == true &&
+        navigator.mounted &&
+        navigator.canPop())
+      navigator.maybePop();
   }
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context) => HabitMenuButton(
+    items: items(context),
+    tooltip: tr(
+      context,
+      'More for ${routine.title}',
+      'Thêm cho ${routine.title}',
+    ),
+  );
+
+  List<HandyMenuItem> items(BuildContext context) {
     final r = routine;
-    return HandyMenuButton(
-      items: [
-        HandyMenuItem(
-          Icons.palette_outlined,
-          tr(context, 'Appearance', 'Diện mạo'),
-          () async {
-            final chosen = await pickHabitAppearance(
-              context,
-              title: r.title,
-              initialIcon: r.icon,
-              initialColor: r.color,
-            );
-            if (chosen == null ||
-                !context.mounted ||
-                (chosen.icon == r.icon && chosen.color == r.color))
-              return;
-            await scope.write(context, (s) {
-              final latest = s.routines.where((v) => v.id == r.id).firstOrNull;
-              if (!identical(latest, r))
-                throw StateError('Routine changed; reopen its appearance');
-              return replaceRoutine(
-                s,
-                r.copy({'icon': chosen.icon, 'color': chosen.color}),
-              );
-            }, done: (ctx) => tr(ctx, 'Appearance saved.', 'Đã lưu diện mạo.'));
-          },
-          key: const Key('routine-appearance'),
-        ),
-        HandyMenuItem(
-          Icons.edit_outlined,
-          tr(context, 'Edit', 'Sửa'),
-          () => openRoutineEditor(context, scope, r),
-          key: const Key('routine-edit'),
-        ),
-        HandyMenuItem(
-          r.archived ? Icons.unarchive_outlined : Icons.archive_outlined,
-          r.archived
-              ? tr(context, 'Bring back', 'Dùng lại')
-              : tr(context, 'Archive', 'Lưu trữ'),
-          () => scope.write(
+    return [
+      HandyMenuItem(
+        Icons.palette_outlined,
+        tr(context, 'Appearance', 'Diện mạo'),
+        () async {
+          final chosen = await pickHabitAppearance(
             context,
-            (s) => replaceRoutine(s, r.copy({'archived': !r.archived})),
-          ),
+            title: r.title,
+            initialIcon: r.icon,
+            initialColor: r.color,
+          );
+          if (chosen == null ||
+              !context.mounted ||
+              (chosen.icon == r.icon && chosen.color == r.color))
+            return;
+          await scope.write(context, (s) {
+            final latest = s.routines.where((v) => v.id == r.id).firstOrNull;
+            if (!identical(latest, r))
+              throw StateError('Routine changed; reopen its appearance');
+            return replaceRoutine(
+              s,
+              r.copy({'icon': chosen.icon, 'color': chosen.color}),
+            );
+          }, done: (ctx) => tr(ctx, 'Appearance saved.', 'Đã lưu diện mạo.'));
+        },
+        key: const Key('routine-appearance'),
+      ),
+      HandyMenuItem(
+        Icons.edit_outlined,
+        tr(context, 'Edit', 'Sửa'),
+        () => openRoutineEditor(context, scope, r),
+        key: const Key('routine-edit'),
+      ),
+      HandyMenuItem(
+        r.archived ? Icons.unarchive_outlined : Icons.archive_outlined,
+        r.archived
+            ? tr(context, 'Bring back', 'Dùng lại')
+            : tr(context, 'Archive', 'Lưu trữ'),
+        () => scope.write(
+          context,
+          (s) => replaceRoutine(s, r.copy({'archived': !r.archived})),
         ),
-        HandyMenuItem(
-          Icons.copy_outlined,
-          tr(context, 'Duplicate', 'Nhân bản'),
-          () => scope.write(context, (s) {
-            if (r.advanced && !scope.pro(context)) {
-              throw const FormatException(
-                'Pro is needed to create advanced routines / Cần Pro để tạo quy trình nâng cao',
-              );
-            }
-            return s.copy({
-              'routines': [
-                ...s.routines.map((x) => x.toJson()),
-                r.copy({
-                  'id': uid(),
-                  'title': tr(
-                    context,
-                    '${r.title} (copy)',
-                    '${r.title} (bản sao)',
-                  ),
-                  'archived': false,
-                  'steps': [
-                    if (r.steps.isNotEmpty)
-                      ...StepBlock(id: 'copy', title: r.title, steps: r.steps)
-                          .insert(instance: uid(), markBlock: false)
-                          .map((s) => s.toJson()),
-                  ],
-                }).toJson(),
-              ],
-            });
-          }, done: (c) => tr(c, 'Duplicated.', 'Đã nhân bản.')),
-        ),
-        HandyMenuItem(
-          Icons.delete_outline,
-          tr(context, 'Delete', 'Xóa'),
-          () => _delete(context),
-          destructive: true,
-          key: const Key('routine-delete'),
-        ),
-      ],
-    );
+      ),
+      HandyMenuItem(
+        Icons.copy_outlined,
+        tr(context, 'Duplicate', 'Nhân bản'),
+        () => scope.write(context, (s) {
+          if (r.advanced && !scope.pro(context)) {
+            throw const FormatException(
+              'Pro is needed to create advanced routines / Cần Pro để tạo quy trình nâng cao',
+            );
+          }
+          return s.copy({
+            'routines': [
+              ...s.routines.map((x) => x.toJson()),
+              r.copy({
+                'id': uid(),
+                'title': tr(
+                  context,
+                  '${r.title} (copy)',
+                  '${r.title} (bản sao)',
+                ),
+                'archived': false,
+                'steps': [
+                  if (r.steps.isNotEmpty)
+                    ...StepBlock(id: 'copy', title: r.title, steps: r.steps)
+                        .insert(instance: uid(), markBlock: false)
+                        .map((s) => s.toJson()),
+                ],
+              }).toJson(),
+            ],
+          });
+        }, done: (c) => tr(c, 'Duplicated.', 'Đã nhân bản.')),
+      ),
+      HandyMenuItem(
+        Icons.delete_outline,
+        tr(context, 'Delete', 'Xóa'),
+        () => _delete(context),
+        destructive: true,
+        key: const Key('routine-delete'),
+      ),
+    ];
   }
 }

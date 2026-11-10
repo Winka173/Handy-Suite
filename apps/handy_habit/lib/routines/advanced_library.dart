@@ -92,7 +92,7 @@ class AdvancedRoutineLibrary extends StatelessWidget {
               subtitle: Text(
                 tr(
                   context,
-                  '${b.steps.length} steps · ${kind == 'blocks' ? 'Insert a copy' : 'Replace draft steps'}',
+                  '${b.steps.length} ${b.steps.length == 1 ? 'step' : 'steps'} · ${kind == 'blocks' ? 'Insert a copy' : 'Replace draft steps'}',
                   '${b.steps.length} bước · ${kind == 'blocks' ? 'Chèn bản sao' : 'Thay các bước trong nháp'}',
                 ),
               ),

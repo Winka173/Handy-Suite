@@ -311,7 +311,6 @@ class HabitSettingsPage extends StatelessWidget {
     builder: (context, _) {
       final s = scope.state;
       final c = HandyColors.of(context);
-      Widget value(String text) => Text(text, style: TextStyle(color: c.muted));
       final rules = objects(s.settings['reminders'] ?? [])
           .map(Reminder.fromJson)
           .where((r) => !s.isTrashed(r.type, r.target))
@@ -422,7 +421,7 @@ class HabitSettingsPage extends StatelessWidget {
                 title: tr(context, 'Fill in days up to', 'Cho ghi bù tối đa'),
                 subtitle: tr(
                   context,
-                  '${s.backfill} days back',
+                  '${s.backfill} ${s.backfill == 1 ? 'day' : 'days'} back',
                   '${s.backfill} ngày trước',
                 ),
                 onTap: () => _calendar(context),
@@ -812,7 +811,11 @@ class HabitSettingsPage extends StatelessWidget {
                 key: const Key('habit-trash'),
                 icon: Icons.delete_outline,
                 title: tr(context, 'Trash', 'Thùng rác'),
-                trailing: value(formatFigure(context, '${s.trash.length}')),
+                subtitle: tr(
+                  context,
+                  s.trash.length == 1 ? '1 item' : '${s.trash.length} items',
+                  '${s.trash.length} mục',
+                ),
                 onTap: () => Navigator.of(context).pushNamed('/settings/trash'),
               ),
               if (scope.controller.hasRecovery)
@@ -898,59 +901,6 @@ class HabitSettingsPage extends StatelessWidget {
             ],
           ),
           HandySettingsSection(
-            title: tr(context, 'Help & Learning', 'Trợ giúp & Hướng dẫn'),
-            children: [
-              HandyTile(
-                key: const Key('settings-help'),
-                title: tr(context, 'How to use', 'Cách dùng'),
-                onTap: () => Navigator.pushNamed(context, '/help'),
-              ),
-              HandyTile(
-                key: const Key('settings-replay'),
-                title: tr(context, 'Replay guide', 'Xem lại hướng dẫn'),
-                onTap: () => Navigator.pushNamed(context, '/welcome'),
-              ),
-              HandyTile(
-                key: const Key('settings-whats-new'),
-                title: tr(context, 'What’s New', 'Có gì mới'),
-                subtitle: tr(
-                  context,
-                  'Guided practice, searchable help and personal preferences',
-                  'Bản tập, tìm cách dùng và tùy chọn cá nhân',
-                ),
-                onTap: () => showDialog<void>(
-                  context: context,
-                  builder: (context) => AlertDialog(
-                    title: Text(tr(context, 'What’s New', 'Có gì mới')),
-                    content: Text(
-                      tr(
-                        context,
-                        'Try the three-stage guide without changing your library. Search help with or without accents. Customize your daily defaults in Settings.',
-                        'Thử hướng dẫn ba giai đoạn, không đổi thư viện. Tìm cách dùng có dấu hoặc không dấu. Đổi mặc định hằng ngày trong Cài đặt.',
-                      ),
-                    ),
-                    actions: [
-                      TextButton(
-                        onPressed: () => Navigator.pop(context),
-                        child: Text(tr(context, 'Done', 'Xong')),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ],
-          ),
-          HandySettingsSection(
-            title: tr(context, 'Privacy & About', 'Riêng tư & Giới thiệu'),
-            description: tr(
-              context,
-              'Local-first, without an account. Exported backups contain your personal data.',
-              'Dữ liệu trên máy, không cần tài khoản. File sao lưu chứa dữ liệu cá nhân.',
-            ),
-            children: const [HabitAboutRows()],
-          ),
-          const HandyMoreApps(app: 'habit'),
-          HandySettingsSection(
             title: tr(context, 'Reset', 'Đặt lại'),
             children: [
               HandyTile(
@@ -976,6 +926,63 @@ class HabitSettingsPage extends StatelessWidget {
               ),
             ],
           ),
+          HandySettingsSection(
+            title: tr(context, 'Help & Learning', 'Trợ giúp & Hướng dẫn'),
+            children: [
+              HandyTile(
+                key: const Key('settings-help'),
+                title: tr(context, 'How to use', 'Cách dùng'),
+                onTap: () => Navigator.pushNamed(context, '/help'),
+              ),
+              HandyTile(
+                key: const Key('settings-replay'),
+                title: tr(context, 'Replay guide', 'Xem lại hướng dẫn'),
+                onTap: () => Navigator.pushNamed(context, '/welcome'),
+              ),
+              HandyTile(
+                key: const Key('settings-whats-new'),
+                title: tr(context, 'What’s New', 'Có gì mới'),
+                subtitle: tr(
+                  context,
+                  'Guided practice, searchable help and personal preferences',
+                  'Bản tập, tìm cách dùng và tùy chọn cá nhân',
+                ),
+                onTap: () => showDialog<void>(
+                  context: context,
+                  animationStyle: AnimationStyle(
+                    duration: HandyMotion.of(context),
+                    reverseDuration: HandyMotion.of(context),
+                  ),
+                  builder: (context) => AlertDialog(
+                    title: Text(tr(context, 'What’s New', 'Có gì mới')),
+                    content: Text(
+                      tr(
+                        context,
+                        'Try the three-stage guide without changing your library. Search help with or without accents. Customize your daily defaults in Settings.',
+                        'Thử hướng dẫn ba giai đoạn, không đổi thư viện. Tìm cách dùng có dấu hoặc không dấu. Đổi mặc định hằng ngày trong Cài đặt.',
+                      ),
+                    ),
+                    actions: [
+                      TextButton(
+                        onPressed: () => Navigator.pop(context),
+                        child: Text(tr(context, 'Done', 'Xong')),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
+          HandySettingsSection(
+            title: tr(context, 'Privacy & About', 'Riêng tư & Giới thiệu'),
+            description: tr(
+              context,
+              'Saved on this device. No account needed. Exported backups contain your personal data.',
+              'Dữ liệu trên máy, không cần tài khoản. File sao lưu chứa dữ liệu cá nhân.',
+            ),
+            children: const [HabitAboutRows()],
+          ),
+          const HandyMoreApps(app: 'habit'),
         ],
       );
     },

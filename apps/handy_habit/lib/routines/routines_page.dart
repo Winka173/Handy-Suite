@@ -32,10 +32,10 @@ class _RoutinesPageState extends State<RoutinesPage> {
           ? scope.routine(selected) ?? routines.firstOrNull
           : null;
       final list = ListView(
-        padding: const EdgeInsets.fromLTRB(
+        padding: EdgeInsets.fromLTRB(
+          MediaQuery.sizeOf(context).width >= 840 ? 24 : 16,
           HandySpace.l,
-          HandySpace.l,
-          HandySpace.l,
+          MediaQuery.sizeOf(context).width >= 840 ? 24 : 16,
           HandySpace.xxl,
         ),
         children: [

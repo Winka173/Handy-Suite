@@ -68,7 +68,7 @@ class _MoodHistoryState extends State<MoodHistory> {
         Text(
           tr(
             context,
-            '${live.length} days recorded. Blank days stay blank.',
+            '${live.length} ${live.length == 1 ? 'day' : 'days'} recorded. Blank days stay blank.',
             'Đã ghi ${live.length} ngày. Ngày trống vẫn để trống.',
           ),
         ),

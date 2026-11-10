@@ -180,46 +180,59 @@ class _MonthGridState extends State<MonthGrid> {
             ),
           )
         else
-          GridView(
-            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: 7,
-              mainAxisExtent: 48,
-            ),
-            shrinkWrap: true,
-            physics: const NeverScrollableScrollPhysics(),
-            children: [
-              for (var i = 0; i < 7; i++)
-                Center(
-                  child: Text(
-                    weekdayShort(context, (widget.weekStart - 1 + i) % 7 + 1),
-                    style: theme.textTheme.labelSmall?.copyWith(color: c.muted),
+          LayoutBuilder(
+            builder: (context, box) => SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              child: SizedBox(
+                width: box.maxWidth.clamp(336, double.infinity),
+                child: GridView(
+                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount: 7,
+                    mainAxisExtent: 48,
                   ),
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                  children: [
+                    for (var i = 0; i < 7; i++)
+                      Center(
+                        child: Text(
+                          weekdayShort(
+                            context,
+                            (widget.weekStart - 1 + i) % 7 + 1,
+                          ),
+                          style: theme.textTheme.labelSmall?.copyWith(
+                            color: c.muted,
+                          ),
+                        ),
+                      ),
+                    for (var i = 0; i < lead; i++) const SizedBox.shrink(),
+                    for (var n = 1; n <= days; n++)
+                      _Day(
+                        habit: widget.habit,
+                        day: day(DateTime.utc(month.year, month.month, n)),
+                        today: widget.today,
+                        index: widget.index,
+                        editable:
+                            widget.onDay != null &&
+                            !widget.habit.archived &&
+                            day(
+                                  DateTime.utc(month.year, month.month, n),
+                                ).compareTo(widget.today) <=
+                                0 &&
+                            day(
+                                  DateTime.utc(month.year, month.month, n),
+                                ).compareTo(earliest) >=
+                                0 &&
+                            day(
+                                  DateTime.utc(month.year, month.month, n),
+                                ).compareTo(created) >=
+                                0,
+                        onTap: widget.onDay,
+                      ),
+                  ],
                 ),
-              for (var i = 0; i < lead; i++) const SizedBox.shrink(),
-              for (var n = 1; n <= days; n++)
-                _Day(
-                  habit: widget.habit,
-                  day: day(DateTime.utc(month.year, month.month, n)),
-                  today: widget.today,
-                  index: widget.index,
-                  editable:
-                      widget.onDay != null &&
-                      !widget.habit.archived &&
-                      day(
-                            DateTime.utc(month.year, month.month, n),
-                          ).compareTo(widget.today) <=
-                          0 &&
-                      day(
-                            DateTime.utc(month.year, month.month, n),
-                          ).compareTo(earliest) >=
-                          0 &&
-                      day(
-                            DateTime.utc(month.year, month.month, n),
-                          ).compareTo(created) >=
-                          0,
-                  onTap: widget.onDay,
-                ),
-            ],
+              ),
+            ),
           ),
       ],
     );

@@ -57,10 +57,10 @@ class TodayPage extends StatelessWidget {
         _NextReminder(scope: scope),
       ];
       return ListView(
-        padding: const EdgeInsets.fromLTRB(
+        padding: EdgeInsets.fromLTRB(
+          MediaQuery.sizeOf(context).width >= 840 ? 24 : 16,
           HandySpace.l,
-          HandySpace.l,
-          HandySpace.l,
+          MediaQuery.sizeOf(context).width >= 840 ? 24 : 16,
           HandySpace.xxl,
         ),
         children: [

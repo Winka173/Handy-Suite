@@ -1,3 +1,6 @@
+import '../ui/row_menu.dart';
+import '../habits/habit_view.dart' show HabitMenu;
+import '../routines/routine_view.dart' show RoutineMenu;
 import 'package:handy_habit_engine/handy_habit_engine.dart';
 import 'package:handy_ui/kit.dart';
 import '../routines/run.dart';
@@ -53,7 +56,7 @@ String habitLine(
       parts.add(
         tr(
           context,
-          '${doneThisWeek(h, today, index, s.weekStart)} of $quota days this week',
+          '${doneThisWeek(h, today, index, s.weekStart)} of $quota ${quota == 1 ? 'day' : 'days'} this week',
           '${doneThisWeek(h, today, index, s.weekStart)}/$quota ngày tuần này',
         ),
       );
@@ -65,7 +68,11 @@ String habitLine(
     parts.add(
       m.unit == 'weeks'
           ? tr(context, '${m.current} weeks running', 'chuỗi ${m.current} tuần')
-          : tr(context, '${m.current} days running', 'chuỗi ${m.current} ngày'),
+          : tr(
+              context,
+              '${m.current} ${m.current == 1 ? 'day' : 'days'} running',
+              'chuỗi ${m.current} ngày',
+            ),
     );
   if (parts.isEmpty) parts.add(scheduleText(context, s));
   return parts.join(' · ');
@@ -94,110 +101,134 @@ class HabitRow extends StatelessWidget {
     final c = HandyColors.of(context);
     final h = habit;
     final scheduled = isScheduledOn(h, scope.today);
-    return Material(
-      color: selected ? c.select : Colors.transparent,
-      child: InkWell(
-        key: Key('habit-${h.id}'),
-        onTap: onOpen,
-        child: Padding(
-          padding: EdgeInsets.fromLTRB(
-            HandySpace.l,
-            scope.state.settings['density'] == 'compact' ? 6 : 10,
-            HandySpace.s,
-            scope.state.settings['density'] == 'compact' ? 6 : 10,
-          ),
-          child: Row(
-            children: [
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        if (hasHabitIcon(h))
-                          Icon(
-                            habitIcon(h.icon),
-                            size: 22,
-                            color: habitMark(context, h),
-                          )
-                        else
-                          Container(
-                            width: 12,
-                            height: 12,
-                            decoration: BoxDecoration(
+    return HabitContextMenu(
+      items: HabitMenu(scope: scope, habit: h).items(context),
+      child: Material(
+        color: selected ? c.select : Colors.transparent,
+        child: InkWell(
+          key: Key('habit-${h.id}'),
+          onTap: onOpen,
+          child: Padding(
+            padding: EdgeInsets.fromLTRB(
+              HandySpace.l,
+              scope.state.settings['density'] == 'compact' ? 6 : 10,
+              HandySpace.s,
+              scope.state.settings['density'] == 'compact' ? 6 : 10,
+            ),
+            child: Row(
+              children: [
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          if (hasHabitIcon(h))
+                            Icon(
+                              habitIcon(h.icon),
+                              size: 22,
                               color: habitMark(context, h),
-                              shape: BoxShape.circle,
+                            )
+                          else
+                            Container(
+                              width: 12,
+                              height: 12,
+                              decoration: BoxDecoration(
+                                color: habitMark(context, h),
+                                shape: BoxShape.circle,
+                              ),
+                            ),
+                          const SizedBox(width: HandySpace.s),
+                          Flexible(
+                            child: Text(
+                              h.title,
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                              style: theme.textTheme.titleMedium,
                             ),
                           ),
-                        const SizedBox(width: HandySpace.s),
-                        Flexible(
+                        ],
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        habitLine(context, scope, h, index),
+                        maxLines: h.isNegative ? null : 2,
+                        overflow: h.isNegative ? null : TextOverflow.ellipsis,
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: c.muted,
+                        ),
+                      ),
+                      const SizedBox(height: 6),
+                      EarlierBeads(data: HabitDay(h, scope.today, index)),
+                      if (h.isNegative &&
+                          scheduled &&
+                          !index.known(h.id, scope.today) &&
+                          !index.skip(h.id, scope.today))
+                        TextButton(
+                          key: Key('none-${h.id}'),
+                          onPressed: () => scope.write(
+                            context,
+                            (s) => setManualTotal(
+                              s,
+                              h.id,
+                              scope.today,
+                              0,
+                              today: scope.today,
+                            ),
+                            done: (c) => tr(
+                              c,
+                              '${h.title}: none today.',
+                              '${h.title}: hôm nay không có.',
+                            ),
+                          ),
                           child: Text(
-                            h.title,
-                            maxLines: 2,
-                            overflow: TextOverflow.ellipsis,
-                            style: theme.textTheme.titleMedium,
+                            tr(context, 'None today', 'Hôm nay không có'),
                           ),
                         ),
-                      ],
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      habitLine(context, scope, h, index),
-                      maxLines: h.isNegative ? null : 2,
-                      overflow: h.isNegative ? null : TextOverflow.ellipsis,
-                      style: theme.textTheme.bodySmall?.copyWith(
-                        color: c.muted,
-                      ),
-                    ),
-                    const SizedBox(height: 6),
-                    EarlierBeads(data: HabitDay(h, scope.today, index)),
-                    if (h.isNegative &&
-                        scheduled &&
-                        !index.known(h.id, scope.today) &&
-                        !index.skip(h.id, scope.today))
-                      TextButton(
-                        key: Key('none-${h.id}'),
-                        onPressed: () => scope.write(
-                          context,
-                          (s) => setManualTotal(
-                            s,
-                            h.id,
-                            scope.today,
-                            0,
-                            today: scope.today,
-                          ),
-                          done: (c) => tr(
-                            c,
-                            '${h.title}: none today.',
-                            '${h.title}: hôm nay không có.',
-                          ),
-                        ),
-                        child: Text(
-                          tr(context, 'None today', 'Hôm nay không có'),
-                        ),
-                      ),
-                  ],
-                ),
-              ),
-              if (scheduled && !h.archived)
-                TodayBead(
-                  scope: scope,
-                  habit: h,
-                  index: index,
-                  onTap: () => checkIn(context, scope, h),
-                  onLongPress: () => editDay(context, scope, h, scope.today),
-                )
-              else
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: HandySpace.s),
-                  child: Text(
-                    h.archived
-                        ? tr(context, 'Archived', 'Đã lưu trữ')
-                        : tr(context, 'Not today', 'Không phải hôm nay'),
-                    style: theme.textTheme.bodySmall?.copyWith(color: c.muted),
+                    ],
                   ),
                 ),
-            ],
+                Flex(
+                  direction:
+                      MediaQuery.sizeOf(context).width /
+                              MediaQuery.textScalerOf(context).scale(1) <
+                          360
+                      ? Axis.vertical
+                      : Axis.horizontal,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    if (scheduled && !h.archived)
+                      TodayBead(
+                        scope: scope,
+                        habit: h,
+                        index: index,
+                        onTap: () => checkIn(context, scope, h),
+                        onLongPress: () =>
+                            editDay(context, scope, h, scope.today),
+                      )
+                    else
+                      Padding(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: HandySpace.s,
+                        ),
+                        child: Text(
+                          h.archived
+                              ? tr(context, 'Archived', 'Đã lưu trữ')
+                              : tr(context, 'Not today', 'Không phải hôm nay'),
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            color: c.muted,
+                          ),
+                        ),
+                      ),
+                    HabitMenu(
+                      key: Key('habit-more-${h.id}'),
+                      scope: scope,
+                      habit: h,
+                    ),
+                  ],
+                ),
+              ],
+            ),
           ),
         ),
       ),
@@ -235,7 +266,11 @@ class RoutineRow extends StatelessWidget {
     );
     final meta = [
       if (r.weekdays.isNotEmpty) r.time,
-      tr(context, '${r.steps.length} steps', '${r.steps.length} bước'),
+      tr(
+        context,
+        '${r.steps.length} ${r.steps.length == 1 ? 'step' : 'steps'}',
+        '${r.steps.length} bước',
+      ),
       minutesText(context, r.planned),
       if (latest != null)
         tr(
@@ -295,44 +330,62 @@ class RoutineRow extends StatelessWidget {
             onPressed: start,
             child: label,
           );
-    return Material(
-      color: selected ? c.select : Colors.transparent,
-      child: InkWell(
-        key: Key('routine-${r.id}'),
-        onTap: onOpen,
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(
-            HandySpace.l,
-            10,
-            HandySpace.m,
-            10,
-          ),
-          child: LayoutBuilder(
-            builder: (context, constraints) {
-              final stacked =
-                  constraints.maxWidth /
-                      MediaQuery.textScalerOf(context).scale(1) <
-                  280;
-              return stacked
-                  ? Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        details,
-                        const SizedBox(height: HandySpace.s),
-                        Align(
-                          alignment: AlignmentDirectional.centerEnd,
-                          child: action,
-                        ),
-                      ],
-                    )
-                  : Row(
-                      children: [
-                        Expanded(child: details),
-                        const SizedBox(width: HandySpace.s),
-                        action,
-                      ],
-                    );
-            },
+    return HabitContextMenu(
+      items: RoutineMenu(scope: scope, routine: r).items(context),
+      child: Material(
+        color: selected ? c.select : Colors.transparent,
+        child: InkWell(
+          key: Key('routine-${r.id}'),
+          onTap: onOpen,
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(
+              HandySpace.l,
+              10,
+              HandySpace.m,
+              10,
+            ),
+            child: LayoutBuilder(
+              builder: (context, constraints) {
+                final stacked =
+                    constraints.maxWidth /
+                        MediaQuery.textScalerOf(context).scale(1) <
+                    280;
+                return stacked
+                    ? Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          details,
+                          const SizedBox(height: HandySpace.s),
+                          Align(
+                            alignment: AlignmentDirectional.centerEnd,
+                            child: Wrap(
+                              crossAxisAlignment: WrapCrossAlignment.center,
+                              children: [
+                                action,
+                                RoutineMenu(
+                                  key: Key('routine-more-${r.id}'),
+                                  scope: scope,
+                                  routine: r,
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      )
+                    : Row(
+                        children: [
+                          Expanded(child: details),
+                          const SizedBox(width: HandySpace.s),
+                          action,
+                          RoutineMenu(
+                            key: Key('routine-more-${r.id}'),
+                            scope: scope,
+                            routine: r,
+                          ),
+                        ],
+                      );
+              },
+            ),
           ),
         ),
       ),

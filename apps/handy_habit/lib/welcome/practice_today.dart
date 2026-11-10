@@ -23,6 +23,10 @@ class _PracticeTodayState extends State<PracticeToday> {
     var value = '3';
     final picked = await showDialog<bool>(
       context: context,
+      animationStyle: AnimationStyle(
+        duration: HandyMotion.of(context),
+        reverseDuration: HandyMotion.of(context),
+      ),
       builder: (context) => AlertDialog(
         scrollable: true,
         title: Text(tr(context, 'Daily goal', 'Mục tiêu mỗi ngày')),

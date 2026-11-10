@@ -9,6 +9,7 @@ Future<void> openHabitLink(BuildContext context, Uri uri) async {
   if (context.mounted)
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
+        persist: false,
         content: Text(
           tr(
             context,
@@ -20,6 +21,10 @@ Future<void> openHabitLink(BuildContext context, Uri uri) async {
           label: tr(context, 'Copy', 'Chép'),
           onPressed: () => copyToClipboard(context, uri.toString()),
         ),
+      ),
+      snackBarAnimationStyle: AnimationStyle(
+        duration: HandyMotion.of(context),
+        reverseDuration: HandyMotion.of(context),
       ),
     );
 }

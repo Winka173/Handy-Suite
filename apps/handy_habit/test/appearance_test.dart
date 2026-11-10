@@ -2,6 +2,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:handy_ui/kit.dart';
 import 'package:handy_habit/habits/habit_appearance.dart';
 import 'package:handy_habit/routines/routine_view.dart';
+import 'package:handy_habit/ui/row_menu.dart';
 import 'ui_test.dart' show start, seeded, tapKey;
 
 void main() {
@@ -16,7 +17,7 @@ void main() {
       await t.tap(
         find.descendant(
           of: find.byType(RoutineMenu),
-          matching: find.byType(HandyMenuButton),
+          matching: find.byType(HabitMenuButton),
         ),
       );
       await t.pumpAndSettle();
@@ -69,7 +70,7 @@ void main() {
         final before = c.state!.habits.single.toJson();
         final routine = c.state!.routines.single.toJson();
         await tapKey(t, 'habit-h');
-        await t.tap(find.byType(HandyMenuButton).first);
+        await t.tap(find.byType(HabitMenuButton).first);
         await t.pumpAndSettle();
         await tapKey(t, 'habit-appearance');
         await tapKey(t, 'habit-icon-2');

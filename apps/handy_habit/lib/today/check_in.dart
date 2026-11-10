@@ -69,6 +69,10 @@ Future<void> addAmount(BuildContext context, HabitScope scope, Habit h) async {
   final unit = unitOf(context, h);
   final chosen = await showModalBottomSheet<int>(
     context: context,
+    sheetAnimationStyle: AnimationStyle(
+      duration: HandyMotion.of(context),
+      reverseDuration: HandyMotion.of(context),
+    ),
     showDragHandle: true,
     builder: (context) => SafeArea(
       child: Padding(

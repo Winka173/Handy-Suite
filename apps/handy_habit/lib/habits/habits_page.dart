@@ -58,10 +58,10 @@ class _HabitsPageState extends State<HabitsPage> {
       final names = groups.keys.toList()
         ..sort((a, b) => a.isEmpty ? 1 : (b.isEmpty ? -1 : a.compareTo(b)));
       final list = ListView(
-        padding: const EdgeInsets.fromLTRB(
+        padding: EdgeInsets.fromLTRB(
+          MediaQuery.sizeOf(context).width >= 840 ? 24 : 16,
           HandySpace.l,
-          HandySpace.l,
-          HandySpace.l,
+          MediaQuery.sizeOf(context).width >= 840 ? 24 : 16,
           HandySpace.xxl,
         ),
         children: [

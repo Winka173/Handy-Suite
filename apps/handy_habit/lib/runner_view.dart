@@ -7,6 +7,10 @@ import 'routines/decision_text.dart';
 Future<String?> askStepNote(BuildContext context, String note) async {
   return showAdaptiveDialog<String>(
     context: context,
+    animationStyle: AnimationStyle(
+      duration: HandyMotion.of(context),
+      reverseDuration: HandyMotion.of(context),
+    ),
     builder: (_) => _StepNoteDialog(note: note),
   );
 }
@@ -354,7 +358,7 @@ class RunnerView extends StatelessWidget {
                             child: Text(
                               tr(
                                 context,
-                                '${session.steps.where((s) => s.status != 'pending').length} of ${session.steps.length} steps resolved',
+                                '${session.steps.where((s) => s.status != 'pending').length} of ${session.steps.length} ${session.steps.length == 1 ? 'step' : 'steps'} resolved',
                                 '${session.steps.where((s) => s.status != 'pending').length}/${session.steps.length} bước đã xử lý',
                               ),
                             ),

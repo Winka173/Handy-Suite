@@ -192,15 +192,19 @@ Future<String?> importHabits(BuildContext context, HabitScope scope) async {
     final ok = await confirmHandy(
       context,
       title: pauses == 0
-          ? tr(context, 'Add $count records?', 'Thêm $count lần ghi?')
+          ? tr(
+              context,
+              'Add $count ${count == 1 ? 'record' : 'records'}?',
+              'Thêm $count lần ghi?',
+            )
           : tr(
               context,
-              'Add $count records and $pauses pauses?',
+              'Add $count ${count == 1 ? 'record' : 'records'} and $pauses ${pauses == 1 ? 'pause' : 'pauses'}?',
               'Thêm $count lần ghi và $pauses kỳ nghỉ?',
             ),
       message: tr(
         context,
-        '$moods mood entries included. Their habits must already exist here. Repeated records are left out; conflicting ones stop the import.',
+        '$moods ${moods == 1 ? 'mood entry' : 'mood entries'} included. Their habits must already exist here. Repeated records are left out; conflicting ones stop the import.',
         'Gồm $moods bản ghi tâm trạng. Thói quen tương ứng phải có sẵn. Lần ghi trùng được bỏ qua; lần ghi xung đột sẽ dừng việc nhập.',
       ),
       confirmLabel: tr(context, 'Add', 'Thêm'),
@@ -217,10 +221,14 @@ Future<String?> importHabits(BuildContext context, HabitScope scope) async {
     });
     return context.mounted
         ? (pauses == 0
-              ? tr(context, '$count records added.', 'Đã thêm $count lần ghi.')
+              ? tr(
+                  context,
+                  '$count ${count == 1 ? 'record' : 'records'} added.',
+                  'Đã thêm $count lần ghi.',
+                )
               : tr(
                   context,
-                  '$count records and $pauses pauses added.',
+                  '$count ${count == 1 ? 'record' : 'records'} and $pauses ${pauses == 1 ? 'pause' : 'pauses'} added.',
                   'Đã thêm $count lần ghi và $pauses kỳ nghỉ.',
                 ))
         : null;
@@ -239,6 +247,10 @@ Future<String?> importHabits(BuildContext context, HabitScope scope) async {
       : '${formatDay(context, day(created))} · ${TimeOfDay.fromDateTime(created).format(context)}';
   final choice = await showAdaptiveDialog<String>(
     context: context,
+    animationStyle: AnimationStyle(
+      duration: HandyMotion.of(context),
+      reverseDuration: HandyMotion.of(context),
+    ),
     builder: (context) => AlertDialog.adaptive(
       title: Text(tr(context, 'What the backup holds', 'Bản sao lưu có gì')),
       constraints: const BoxConstraints(maxWidth: 720),
@@ -246,7 +258,7 @@ Future<String?> importHabits(BuildContext context, HabitScope scope) async {
       content: Text(
         tr(
           context,
-          '${formatFigure(context, '${file.bytes.length}')} bytes · Schema ${preview.schema}\n$backupDate\n${imported.trash.length} items in Trash\n${imported.habits.length} habits, ${imported.events.length} records, ${imported.routines.length} routines, ${imported.sessions.length} runs, ${imported.pauses.length} pauses, ${imported.moods.length} mood entries (including deleted).\n\nMerge adds them beside yours with new IDs. Mood dates stay fixed: identical entries are left out; different entries for the same date stop the merge. Replace puts the backup in place of everything here. Reminders in it stay off until you turn them on.',
+          '${formatFigure(context, '${file.bytes.length}')} bytes · Schema ${preview.schema}\n$backupDate\n${imported.trash.length} ${imported.trash.length == 1 ? 'item' : 'items'} in Trash\n${imported.habits.length} ${imported.habits.length == 1 ? 'habit' : 'habits'}, ${imported.events.length} ${imported.events.length == 1 ? 'record' : 'records'}, ${imported.routines.length} ${imported.routines.length == 1 ? 'routine' : 'routines'}, ${imported.sessions.length} ${imported.sessions.length == 1 ? 'run' : 'runs'}, ${imported.pauses.length} ${imported.pauses.length == 1 ? 'pause' : 'pauses'}, ${imported.moods.length} ${imported.moods.length == 1 ? 'mood entry' : 'mood entries'} (including deleted).\n\nMerge adds them beside yours with new IDs. Mood dates stay fixed: identical entries are left out; different entries for the same date stop the merge. Replace puts the backup in place of everything here. Reminders in it stay off until you turn them on.',
           '${formatFigure(context, '${file.bytes.length}')} byte · Schema ${preview.schema}\n$backupDate\n${imported.trash.length} mục trong Thùng rác\n${imported.habits.length} thói quen, ${imported.events.length} lần ghi, ${imported.routines.length} quy trình, ${imported.sessions.length} phiên, ${imported.pauses.length} kỳ nghỉ, ${imported.moods.length} bản ghi tâm trạng (gồm đã xóa).\n\nHợp nhất thêm chúng cạnh dữ liệu của bạn với ID mới. Ngày tâm trạng giữ nguyên: bỏ bản ghi giống nhau; khác nhau cùng ngày thì dừng gộp. Thay thế đặt bản sao lưu vào chỗ toàn bộ dữ liệu ở đây. Nhắc trong đó vẫn tắt cho tới khi bạn bật.',
         ),
       ),

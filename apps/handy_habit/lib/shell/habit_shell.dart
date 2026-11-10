@@ -80,13 +80,6 @@ class HabitShell extends StatelessWidget {
             ? Text(areas.firstWhere((a) => a.$1 == area).$3)
             : const Text('Handy Habit'),
         actions: [
-          if (!wide)
-            IconButton(
-              key: const Key('open-settings'),
-              tooltip: tr(context, 'Settings', 'Cài đặt'),
-              icon: const Icon(Icons.settings_outlined),
-              onPressed: () => Navigator.pushNamed(context, '/settings'),
-            ),
           PopupMenuButton<String>(
             key: const Key('habit-add'),
             tooltip: tr(context, 'Add', 'Thêm'),
@@ -112,6 +105,13 @@ class HabitShell extends StatelessWidget {
                 ),
             ],
           ),
+          if (!wide)
+            IconButton(
+              key: const Key('open-settings'),
+              tooltip: tr(context, 'Settings', 'Cài đặt'),
+              icon: const Icon(Icons.settings_outlined),
+              onPressed: () => Navigator.pushNamed(context, '/settings'),
+            ),
         ],
       ),
       body: SafeArea(

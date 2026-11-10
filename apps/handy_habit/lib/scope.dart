@@ -91,6 +91,11 @@ class HabitScope {
   void announce(BuildContext context, String message) {
     final messenger = ScaffoldMessenger.maybeOf(context);
     if (messenger == null) return;
+    final duration = HandyMotion.of(context);
+    final motion = AnimationStyle(
+      duration: duration,
+      reverseDuration: duration,
+    );
     final undone = tr(context, 'Undone.', 'Đã hoàn tác.');
     final failed = tr(
       context,
@@ -98,7 +103,7 @@ class HabitScope {
       'Không còn hoàn tác được.',
     );
     messenger
-      ..hideCurrentSnackBar()
+      ..clearSnackBars()
       ..showSnackBar(
         SnackBar(
           content: Text(message),
@@ -111,14 +116,21 @@ class HabitScope {
                   onPressed: () async {
                     try {
                       await controller.undo();
-                      messenger.showSnackBar(SnackBar(content: Text(undone)));
+                      messenger.showSnackBar(
+                        SnackBar(persist: false, content: Text(undone)),
+                        snackBarAnimationStyle: motion,
+                      );
                     } catch (_) {
-                      messenger.showSnackBar(SnackBar(content: Text(failed)));
+                      messenger.showSnackBar(
+                        SnackBar(persist: false, content: Text(failed)),
+                        snackBarAnimationStyle: motion,
+                      );
                     }
                   },
                 )
               : null,
         ),
+        snackBarAnimationStyle: motion,
       );
   }
 }

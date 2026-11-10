@@ -22,6 +22,10 @@ class HabitSettingChoice extends StatelessWidget {
     onTap: () async {
       final picked = await showDialog<String>(
         context: context,
+        animationStyle: AnimationStyle(
+          duration: HandyMotion.of(context),
+          reverseDuration: HandyMotion.of(context),
+        ),
         builder: (context) => SimpleDialog(
           title: Text(title),
           children: [

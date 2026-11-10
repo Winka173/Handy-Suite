@@ -66,12 +66,12 @@ String scheduleText(BuildContext context, Schedule s) => switch (s.kind) {
   'weekdays' => weekdaysText(context, s.weekdays),
   'weekly' => tr(
     context,
-    '${s.weeklyTarget} days a week',
+    '${s.weeklyTarget} ${s.weeklyTarget == 1 ? 'day' : 'days'} a week',
     '${s.weeklyTarget} ngày mỗi tuần',
   ),
   'interval' => tr(
     context,
-    'Every ${s.interval} days',
+    'Every ${s.interval} ${s.interval == 1 ? 'day' : 'days'}',
     'Mỗi ${s.interval} ngày',
   ),
   _ => tr(context, 'Every day', 'Mỗi ngày'),

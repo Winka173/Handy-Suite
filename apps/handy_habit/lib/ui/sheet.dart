@@ -6,6 +6,10 @@ Future<T?> openSheet<T>(BuildContext context, WidgetBuilder builder) {
   if (MediaQuery.sizeOf(context).width >= HandySpace.wide) {
     return showDialog<T>(
       context: context,
+      animationStyle: AnimationStyle(
+        duration: HandyMotion.of(context),
+        reverseDuration: HandyMotion.of(context),
+      ),
       builder: (context) => Dialog(
         clipBehavior: Clip.antiAlias,
         child: ConstrainedBox(

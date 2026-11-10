@@ -90,11 +90,22 @@ class HabitSyncPage extends StatelessWidget {
         final days = dayOperationConflicts(scope.state.operations),
             moods = moodSyncConflicts(scope.state);
         return Scaffold(
-          appBar: AppBar(title: Text(tr(context, 'Sync', 'Đồng bộ'))),
+          appBar: AppBar(
+            leading: BackButton(
+              key: const Key('sync-back'),
+              onPressed: () => Navigator.maybePop(context),
+            ),
+            title: Text(tr(context, 'Sync', 'Đồng bộ')),
+          ),
           body: SafeArea(
             child: SingleChildScrollView(
               key: const Key('sync-scroll'),
-              padding: const EdgeInsets.fromLTRB(16, 16, 16, 32),
+              padding: EdgeInsets.fromLTRB(
+                MediaQuery.sizeOf(context).width >= 840 ? 24 : 16,
+                16,
+                MediaQuery.sizeOf(context).width >= 840 ? 24 : 16,
+                32,
+              ),
               child: Align(
                 alignment: Alignment.topCenter,
                 child: ConstrainedBox(
