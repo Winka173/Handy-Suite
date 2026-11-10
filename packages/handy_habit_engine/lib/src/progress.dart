@@ -66,7 +66,12 @@ ProgressCount progressCount(
             end.compareTo(until) > 0)
           continue;
         final quota = weekQuota(h, start, index);
-        if (quota == 0) continue;
+        if (quota == 0 ||
+            List.generate(
+              7,
+              (i) => addDays(start, i),
+            ).any((d) => index.conflict(h.id, d)))
+          continue;
         var done = 0;
         for (var v = start; v.compareTo(end) <= 0; v = addDays(v, 1)) {
           if (habitStatus(h, v, today, index) == 'completed') done++;

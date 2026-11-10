@@ -133,11 +133,20 @@ class HabitIndex {
 
   /// Records and pauses of [s]: what statuses and metrics read.
   factory HabitIndex.of(HabitState s) => HabitIndex(s.events, s.pauses)
+    ..capBinary(s.habits)
     ..conflicts = dayOperationConflicts(s.operations).keys.toSet()
     ..deletedAfter = {
       for (final t in s.trash.where((t) => t.kind == 'habit'))
         t.entity: t.localDay,
     };
+  void capBinary(Iterable<Habit> habits) {
+    for (final h in habits.where((h) => h.type == 'binary')) {
+      for (final key in totals.keys.where((k) => k.startsWith('${h.id}:'))) {
+        totals[key] = min(1000, totals[key]!);
+      }
+    }
+  }
+
   int value(String habit, String d) => totals['$habit:$d'] ?? 0;
   bool known(String habit, String d) => observed.contains('$habit:$d');
   bool conflict(String habit, String d) => conflicts.contains('$habit:$d');
@@ -166,6 +175,7 @@ Habit archiveHabit(Habit h, String today, bool archived) {
 }
 
 String habitStatus(Habit h, String d, String today, HabitIndex index) {
+  if (index.conflict(h.id, d)) return 'conflict';
   if (h.isNegative) return negativeDayStatus(h, d, today, index);
   if (d.compareTo(today) > 0) return 'future';
   if (!isScheduledOn(h, d)) return 'notScheduled';
@@ -236,7 +246,13 @@ HabitMetrics metrics(
         }
       }
       final quota = weekQuota(h, w, index);
-      if (quota == 0 || opportunities < quota) continue;
+      if (quota == 0 ||
+          opportunities < quota ||
+          List.generate(
+            7,
+            (i) => addDays(w, i),
+          ).any((d) => index.conflict(h.id, d)))
+        continue;
       final qualifies = count >= quota,
           closed = addDays(w, 6).compareTo(today) < 0;
       if (!closed && !qualifies) continue;
@@ -255,7 +271,8 @@ HabitMetrics metrics(
       if (s == null ||
           s.kind == 'weekly' ||
           !isScheduledOn(h, d) ||
-          index.skip(h.id, d))
+          index.skip(h.id, d) ||
+          index.conflict(h.id, d))
         continue;
       final ok = index.value(h.id, d) >= s.target;
       // A paused day not done is neither kept nor broken.

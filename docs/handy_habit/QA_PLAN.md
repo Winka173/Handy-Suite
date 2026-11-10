@@ -1,5 +1,15 @@
 # QA evidence and reproduction
 
+## Current R15/R16 host pass · run 9 · 2026-11-10
+
+- App178 / engine158 tests pass; both `dart analyze` clean; `dart format` clean. Engine28 sync tests plus a new schema6 migration case; app11 controller +7 HTTP +4 gate/route/review tests added. Schemas1–6 migrate to7; physical2.
+- Cases: simultaneous check-ins/incidents; three-device six-order convergence; binary provenance/cap; absolute versus addition; absolute/skip review; remote/local Undo; concurrent mood edit/removal/review; habit fields/schedules/archive; Trash/edit/restore/duplicate Trash/purge/redaction; routines/steps/linked idempotence/sessions; duplicate IDs/sequences; clock skew; base ancestors; concurrent/interrupted uploads; corrupt/truncated/checksum/missing download/newer schema and version receipt refusal.
+- Controller: opt-in/cancel, local preferences, offline pending/retry, edits in flight, metadata corruption, restart, foreground/debounce, auth/quota, off/disconnect/rejoin and disable during upload. HTTP: appdata scope, paginated complete listing,401 refresh,503 backoff,quota,immutable multipart/read-back,duplicate bodies,partial pagination/network refusal.
+- `tool/sync_screens_test.dart`:24 passing combinations, six states, top/detail/privacy;432 PNGs per pass in app `build/run9-sync-pass1` and `build/run9-sync-final`. [Critique/fixes](R15_R16_REVIEW.md).
+- Android debug APK with HANDY_DRIVE_SYNC=true compiled, Google Sign-In plugin included and registered; no install. Scoped offline Dart dependency resolution and Android-only plugin generation avoided other-app edits; build used writable Gradle/Android/Kotlin cache homes. Logs under `apps/handy_habit/build/run9-*`.
+- Owner still creates Cloud project/consent/Android clients/SHA-1/public web client ID. No actual OAuth, devices, browser runtime, iOS or store test. [Exact setup and supervisor cases](RELEASE.md). APK compilation is not Google authorization evidence.
+- Export-test evidence is restored byte-for-byte after the final app test. Remote old generations retain payloads until manually removed; no compaction, E2EE or closed-app scheduling claimed.
+
 ## Current R14 host pass · run 8 · 2026-11-10
 
 - App156 / engine129 tests pass; both `dart analyze` clean and changed Dart files formatted. Schema6, physical SQLite/IndexedDB2; old schemas1–5 and CSV formats preserved.

@@ -139,9 +139,9 @@ void main() {
       );
     },
   );
-  for (var schema = 1; schema <= 5; schema++) {
+  for (var schema = 1; schema <= 6; schema++) {
     test(
-      'v$schema JSON and ZIP migrate unchanged old data and roundtrip as 6',
+      'v$schema JSON and ZIP migrate unchanged old data and roundtrip as 7',
       () {
         final old = HabitState(settings: {'onboarded': true}).toJson()
           ..['schema'] = schema
@@ -171,7 +171,7 @@ void main() {
           expect(migrated.moods, isEmpty);
           expect(migrated.settings, old['settings']);
           expect(restore(backup(migrated)).toJson(), migrated.toJson());
-          expect(migrated.toJson()['schema'], 6);
+          expect(migrated.toJson()['schema'], 7);
         }
       },
     );

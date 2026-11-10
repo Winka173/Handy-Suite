@@ -83,6 +83,12 @@ HabitState restoreTrash(HabitState s, String id, DateTime now) {
     throw StateError('This item has expired');
   // Original entities and references stayed in place, so restoration cannot overwrite edits.
   return s.copy({
+    // Concurrent deletions have distinct Trash IDs but refer to one logical
+    // item. Retract every observed hidden duplicate as well as the visible row.
+    'operations': _restoreDuplicateTrash(
+      s,
+      entry,
+    ).map((o) => o.toJson()).toList(),
     if (entry.kind == 'habit' &&
         date(habitDayAt(s, now)).difference(date(entry.localDay)).inDays > 1)
       'habits': [
@@ -105,6 +111,40 @@ HabitState restoreTrash(HabitState s, String id, DateTime now) {
         if (t.id != id) t.toJson(),
     ],
   });
+}
+
+List<HabitOperation> _restoreDuplicateTrash(HabitState s, HabitTrash visible) {
+  final groups = <String, List<HabitOperation>>{};
+  for (final o in s.operations.where((o) => o.kind == 'trash')) {
+    groups.putIfAbsent(o.entity, () => []).add(o);
+  }
+  final ops = s.operations.toList();
+  var clock = ops.fold(0, (n, o) => max(n, o.lamport));
+  for (final e in groups.entries.where((e) => e.key != visible.id)) {
+    final parents = {for (final o in e.value) ...o.parents};
+    final heads = e.value.where((o) => !parents.contains(o.id)).toList()
+      ..sort(_operationOrder);
+    if (heads.any((o) => o.after == null)) continue;
+    final row = heads.lastOrNull?.after;
+    if (row?['entity'] != visible.entity || row?['kind'] != visible.kind)
+      continue;
+    final command = uid();
+    ops.add(
+      HabitOperation(
+        id: command,
+        actor: 'restore:$command',
+        sequence: 1,
+        lamport: ++clock,
+        kind: 'trash',
+        entity: e.key,
+        batch: command,
+        intent: 'remove',
+        parents: heads.map((o) => o.id).toList(),
+        before: row,
+      ),
+    );
+  }
+  return ops;
 }
 
 HabitState deleteTrash(HabitState s, String id) {

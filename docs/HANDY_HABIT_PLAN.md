@@ -43,8 +43,9 @@ Baseline data schema2, SQLite/IDB physical1. Run2 shipped data3/physical2, inclu
 | 3/R3+R4 (IMPLEMENTED, host tested) | Causal operations/revisions, versioned clock policy, trash/tombstones | Mỗi v2 event→legacy op ID tất định từ eventId/payload hash, actor legacy ổn định; entityId giữ logical eventId để phát hiện cùng event khác payload; số/ngày/provenance giữ, cùng ancestry không double count |
 | 4/R6 (IMPLEMENTED, host tested) | Custom versioned day-boundary policy | v3 causal IDs/policies preserved; v1–v3 readers retained; historical days fixed; JSON/ZIP/CSV compatible, DST north/south tested |
 | 5/R10 (IMPLEMENTED, host tested) | Negative GoalRevision/IncidentOp/Observation | Habits cũ positive, unit/target history giữ, zero/unknown riêng, CSV cũ đọc được |
-| 6/R14 (planned) | MoodEntry/revision/delete | Mood rỗng, không suy từ notes; time/tags/note roundtrip |
-| 7/R17 (planned) | Advanced graph/plan snapshots/trace | List cũ→linear path tương đương; active/closed sessions giữ snapshot |
+| 6/R14 (IMPLEMENTED, host tested) | MoodEntry/revision/delete | Mood rỗng, không suy từ notes; time/tags/note roundtrip |
+| 7/R15 (IMPLEMENTED, host tested) | Causal sync projection/retained binary provenance | v1–v6 JSON/ZIP migrate, physical2; optional Drive transport protocol1 |
+| 8/R17 (planned) | Advanced graph/plan snapshots/trace | List cũ→linear path tương đương; active/closed sessions giữ snapshot |
 
 R3 tạo operations table/index và IDB store→physical2. Slice sau ưu tiên payload; cần thêm table/index thì bump physical tiếp. Không đổi DB name/format app ID. Migration transaction + durable recovery trước migrate, future/corrupt/quota giữ bản gốc, IDB onblocked/versionchange xử lý tab cũ.
 
@@ -152,9 +153,9 @@ Mỗi run một feature area, supervisor review rồi chuyển. A/E/AT/ET theo A
 | R12 P1 templates — IMPLEMENTED / HOST TESTED | E presets/catalog/routines; A templates/create/help | ET IDs/content/EN-VI/defaults; AT search/category/preview/customize/cancel/save once; giữ32/8, report counts mới | Offline/back/no duplicate/previews khớp UI |
 | R13 P1 core Progress — IMPLEMENTED / HOST TESTED | E review/heatmap; A insights/progress/week | ET denominator/leap/DST/quota/unknown/conflict; AT range/filter/Show all/export/zero; month-year Free | Years data/text scale/SR table/cell backfill |
 | R14 P2 mood — IMPLEMENTED / HOST TESTED | E mood/model/portable/migration; A optional sheet/calendar; schema6 | ET validation/revision/delete/Undo/v1–v5/JSON-ZIP-CSV; AT2tap/skip/edit/delete/restore/preference/privacy, SQLite reopen; ma trận24 tổ hợp | Offline/edit/delete/restart/restore/export privacy |
-| R15 P0 sync engine | E sync/protocol/merge/reducer; A base abstraction | ET full conflict suite ở §3/convergence/closed union/active local/corrupt/local edits in flight |2 states/2 processes/conflict values/manual+linked không mất |
-| R16 P1 Android Drive | A sync/provider/controller/section/lifecycle/pubspec | AT fake auth/offline/quota/CAS/retry/disable/rejoin/flag-off/no delete/token export; appdata only | Owner OAuth/signing/2Android/deny-revoke/offline/interruption/Sync now |
-| R17 P2 Advanced engine | E routine_rules/plans/portable/migration; schema7 | ET DAG/cycle/refs/path cap/inputs snapshot/Undo/linked/weekday/all-schema roundtrip | Active basic upgrade/branch restart/restore no automation |
+| R15 P0 sync engine — IMPLEMENTED / HOST TESTED | E sync/protocol/merge/reducer; A base abstraction | ET full conflict suite ở §3/convergence/closed union/active local/corrupt/local edits in flight |2 states/2 processes/conflict values/manual+linked không mất |
+| R16 P1 Android Drive — IMPLEMENTED / HOST TESTED; OWNER SETUP PENDING | A sync/provider/controller/section/lifecycle/pubspec | AT fake auth/offline/quota/CAS/retry/disable/rejoin/flag-off/no delete/token export; appdata only | Owner OAuth/signing/2Android/deny-revoke/offline/interruption/Sync now |
+| R17 P2 Advanced engine | E routine_rules/plans/portable/migration; next schema | ET DAG/cycle/refs/path cap/inputs snapshot/Undo/linked/weekday/all-schema roundtrip | Active basic upgrade/branch restart/restore no automation |
 | R18 P2 Advanced UX | A builder/blocks/presets/trace/runner/gates | AT Basic-Advanced/readable preview/draft/validation/fail/existing run-safe/summary | Branch/dependency/skip/Undo/recovery/motion, no terminated timer |
 | R19 P2 insights | E correlation/comparison/suggestions; A advanced progress/report | ET≥14 pairs/missing/no-cause/segments; AT explain-why/free core/report preview | Check against independent export/data ít-nhiều/no medical |
 | R20 P2 studio | A design/theme/dashboard/widget preview | AT AA light-dark/preview cancel-apply/entitlement loss/Nunito VI/widths/no data rewrite | OS theme/text scale/contrast/stable dots/appearance giữ lịch |
@@ -248,3 +249,15 @@ Schema5/physical2 uses typed NegativeGoal revisions plus the existing causal man
 44 habit / 11 routine templates (baseline32/8 retained),13 collections, EN/VI accent-folded search, featured picks, read-only preview and disposable customisation draft; save once. Six reduction templates use count ceilings, plus nutrition/mindfulness/relationships/finance starts; study and warmup improved, exercise/recovery/weekend routines added. Boards create mechanics were consulted. Empty-Today goals open collections, no fourth destination.
 
 Core Free Progress: calendar week/month/year, month grid, overall/per-habit yearly heatmap, current/best streak, ranged consistency, routine completion, capped lists, existing weekly review and exports. Engine uses civil dates and actual today for closed past range ends; mixed day/week revisions name goals rather than pretending a single unit. Closed whole negative weeks now infer blanks as no incident; blank daily days stay hollow and excluded. This supersedes run6’s all-days-observed/unknown-denominator rule; schema5/physical2 unchanged, historical event rows untouched. Pauses/skips/conflicts/partial weeks remain neutral. Host unit/widget/render evidence and critique in handy_habit/R12_R13_REVIEW.md; native/browser/store remain supervisor checks.
+
+
+### Run 9 R15/R16 · 2026-11-10
+
+Operation/base/remote union, deterministic reducer, retained day and mood conflicts,
+Undo, archive/trash/tombstones, routine edits/sessions, immutable Drive generations
+and per-device version receipts are implemented and host tested. Sync is Free and
+Android/build gated; Sync screen is separate from Backup. Other platforms use
+backup for migration. Schema7/physical2; schemas1–6 read. See
+[protocol](handy_habit/DATA_SCHEMA.md), [review](handy_habit/R15_R16_REVIEW.md),
+[owner setup and two-device checks](handy_habit/RELEASE.md). Real Google OAuth,
+signatures, two-device behavior and store verification remain owner/supervisor work.

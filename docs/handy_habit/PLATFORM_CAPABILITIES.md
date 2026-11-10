@@ -6,6 +6,7 @@
 | Files      | User picker/share                       | User picker/share                                 | Native dialogs          | Upload/download           |
 | Reminders  | Permission/local schedule               | Permission/source                                 | In-app due list         | In-app due list           |
 | Runner     | Foreground monotonic; paused-run notice | Foreground monotonic; paused-run notice (passive) | Foreground monotonic    | Foreground monotonic      |
+| Cloud sync | Optional Drive appdata; Android build define + owner OAuth setup | Not implemented; use backup | Not implemented; use backup | Not implemented; use backup |
 | Ads/Pro    | Existing official adapters              | Existing official adapters                        | Store adapter; no AdMob | Free, no invented payment |
 
 Runtime verification is separate from compilation. Browser eviction/quota, physical
@@ -18,3 +19,5 @@ month-only preview. Android boot receiver is registered; actual delayed/reboot d
 is NOT VERIFIED. Desktop/Web background reminders remain unavailable, not simulated.
 Builds, emulator runtime, host SQLite tests and physical/store verification are separate
 in QA_PLAN and the audit. No release readiness follows from compilation alone.
+
+R15/R16 source/host tested; actual Android Drive authorization and two-device runtime remain unverified. [Owner setup](RELEASE.md).

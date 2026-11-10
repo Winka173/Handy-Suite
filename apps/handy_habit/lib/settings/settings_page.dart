@@ -290,6 +290,8 @@ class HabitSettingsPage extends StatelessWidget {
       destructive: true,
     );
     if (!ok || !context.mounted) return;
+    await scope.drive?.disable();
+    if (!context.mounted) return;
     await scope.write(
       context,
       (s) => HabitState(
@@ -782,13 +784,21 @@ class HabitSettingsPage extends StatelessWidget {
           if (scope.autoBackup != null)
             HandyAutoBackupSection(backup: scope.autoBackup!),
           HandySettingsSection(
-            title: tr(context, 'Data / Backup', 'Dữ liệu / Sao lưu'),
+            title: tr(context, 'Data', 'Dữ liệu'),
             description: tr(
               context,
-              'Everything stays on this device, unencrypted. No account, cloud or tracking; habit names never reach ads. Keep a backup elsewhere, above all on the web.',
-              'Mọi thứ ở trên máy này, không mã hóa. Không tài khoản, cloud hay theo dõi; tên thói quen không bao giờ vào quảng cáo. Hãy giữ bản sao lưu ở nơi khác, nhất là trên web.',
+              'Your data is saved on this device, unencrypted. Habit names never reach ads. Keep a separate backup. Use backup to move data between platforms.',
+              'Dữ liệu được lưu trên máy này, không mã hóa. Tên thói quen không vào quảng cáo. Hãy giữ bản sao lưu riêng. Dùng sao lưu để chuyển dữ liệu giữa các nền tảng.',
             ),
             children: [
+              if (scope.drive != null)
+                HandyTile(
+                  key: const Key('habit-sync'),
+                  icon: Icons.sync,
+                  title: tr(context, 'Sync', 'Đồng bộ'),
+                  subtitle: 'Google Drive · Android',
+                  onTap: () => Navigator.pushNamed(context, '/settings/sync'),
+                ),
               HandyTile(
                 key: const Key('backup-help'),
                 title: tr(

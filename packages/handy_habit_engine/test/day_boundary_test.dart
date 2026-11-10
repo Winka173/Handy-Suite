@@ -161,7 +161,7 @@ void main() {
     final before = clockState('UTC', 0);
     final legacy = before.toJson()..['schema'] = 3;
     final read = HabitState.fromJson(legacy);
-    expect(read.toJson()['schema'], 6);
+    expect(read.toJson()['schema'], 7);
     expect(read.clockPolicies, before.clockPolicies);
     expect(habitDayAt(read, DateTime.utc(2026, 11, 2)), '2026-11-02');
     expect(restore(backup(read)).toJson(), read.toJson());

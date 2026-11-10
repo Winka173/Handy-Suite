@@ -134,7 +134,7 @@ tối đa 30MB.
     thông báo này mới kiểm thử trên host. R7/run4: builder lưu cả bản nháp,
     kéo/nút lên-xuống, dirty guard, runner exit-confirm/shortcuts/recovery/summary
     đã source/widget/host-render tested; kill/reopen, IME, keyboard/SR, drag và
-    back/swipe trên thiết bị chưa kiểm chứng. Không hứa timer chạy khi app bị tắt.
+    back/swipe trên thiết bị chưa kiểm chứng. Không hứa timer chạy khi app bị tắt. R15/R16/run9: Drive appdata đã source/host tested nhưng chưa OAuth thật/hai thiết bị. Cần project Handy Habit, Android clients/SHA-1 và public web client ID; [setup](docs/handy_habit/RELEASE.md). Không hứa sync tự động ngoài Android; remote generations chưa compact, có thể giữ payload đã xóa đến khi người dùng xóa app data trong Drive.
 28. Handy Spend (schema 2): ảnh hóa đơn, chia tiền, gợi ý khoản định kỳ, mẫu sao kê và "Dự báo
     nếu…" mới kiểm thử trên host; camera, chia sẻ/mở hóa đơn, lưu hóa đơn trong IndexedDB và
     bản sao lưu ZIP 85 MB chưa chạy trên thiết bị hay trình duyệt.

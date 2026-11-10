@@ -1,8 +1,18 @@
 # Handy Habit feature matrix
 
-Updated 2026-11-10 (R14 run 8; earlier evidence below is historical).
+Updated 2026-11-10 (R15/R16 run 9; earlier evidence below is historical).
 Source and tests exist; release certification is separate.
 No row below claims physical-device or real-store verification.
+
+| R15/R16 feature | Status | Evidence / limit |
+| --- | --- | --- |
+| Causal sync, conflict review, convergence, Undo, tombstones, routine/session union | IMPLEMENTED / HOST TESTED | Schema7, physical2; deterministic operation union; additive records survive, disputed totals/moods require review |
+| Android Drive appdata provider, immutable generations and device version receipts | IMPLEMENTED / HTTP + CONTROLLER TESTED | Retries, pagination, auth/quota/network/corruption handling; actual Google OAuth and two-device runtime unverified |
+| Settings › Data › Sync, opt-in/account/status/pending/activity/error/Sync now/off/disconnect | IMPLEMENTED / WIDGET TESTED | Android + HANDY_DRIVE_SYNC only; public web client ID also required for Google authorization; no unavailable toggle elsewhere |
+| EN/VI light/dark 320/390/1440 text1/1.5, six states | HOST RENDERED / CRITIQUED | 432 PNGs per pass, full re-render after fixes; native SR/account picker remains unverified |
+| iOS / Windows / Web automatic cloud sync | NOT IMPLEMENTED / NOT CLAIMED | Use backup to move data; no Android ↔ iOS claim |
+
+Current implementation and owner gate: [Release](RELEASE.md), [sync protocol](DATA_SCHEMA.md), [review](R15_R16_REVIEW.md).
 
 | R14 feature | Status | Host evidence | Remaining |
 | --- | --- | --- | --- |

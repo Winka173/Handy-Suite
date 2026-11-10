@@ -1,6 +1,6 @@
 # Data schema and portability
 
-Data schema 6 (2026-11-10; optional mood; negative goals/observations; custom day boundaries and schema3 causal revisions/trash retained); physical SQLite/IndexedDB version 2; isolated native `handy-habit.sqlite` / browser IndexedDB `handy-habit`.
+Data schema 7 (2026-11-10; causal sync projection including concurrent binary contributions; schemas1–6 migrate); physical SQLite/IndexedDB version 2; isolated native `handy-habit.sqlite` / browser IndexedDB `handy-habit`.
 No other app database is opened. Native tables: habits, events, routines, sessions,
 operations (unique actor/sequence, entity index), singleton state metadata, and a device-local recovery table. Validated entity JSON plus indexed event habit/date/source,
 habit foreign key, unique linked (session,step), and session status index.
@@ -9,7 +9,7 @@ for event + session updates. IndexedDB commits six data stores atomically; its s
 commits currently rewrite stores. Future schemas/corruption refuse without blank reset.
 
 Values are integer thousandths of displayed units, bounded to 1e12; count is whole
-units, binary daily total <=1000, duration in minutes. Events are deltas. Daily-total
+units, binary displayed daily total <=1000 (independent causal contributions retained), duration in minutes. Events are deltas. Daily-total
 editing replaces manual contributions and preserves linked entries. Immutable entities
 and deeply frozen settings; stable local dates, strict timestamp clocks/offsets and
 1900-2200 calendar bounds. Changing timezone never shifts saved dates.
@@ -161,3 +161,89 @@ JSON/ZIP/plain/encrypted/auto backups and durable recovery carry live/deleted mo
 CSV adds an optional table headed mood_id/local_date/mood/energy/note/tags/revision/recorded_at/updated_at/deleted_at/record_b64 after the existing log and optional pause tables. Visible cells and portable schema6 payload must match; notes/tags retain Unicode/newlines and formula-like cells are escaped. All entries in range, including deleted, travel. Import validates the entire batch, deduplicates identical entries and stops on conflicting dates. Existing positive schema1 / negative schema5 / pause schemas2–5 remain readable. Markdown/PDF remain habit summaries, not complete mood backups; use JSON/ZIP/CSV for mood.
 
 Notes stay in local app data (not encrypted at rest) and exports/backups explicitly chosen by the user. Notification, paused-run and home-widget builders never receive mood fields. No mood reminders, permission requests or Pro gate are introduced. Host evidence covers validation, stale revisions, causal Undo, all formats, v1–v5 migrations, two-tap/skip/optional details, history/edit/delete/restore, preference hiding and real SQLite reopen. Browser/device/lock-screen delivery checks remain supervisor work.
+
+## Schema 7 — causal sync projection (R15/R16)
+
+Writers emit7; JSON/ZIP readers accept1–7, including schema6 moods. Physical
+SQLite/IndexedDB remains2. Mood CSV portable payloads6 and7 are accepted. Other
+CSV record formats keep their existing version rules. No new entity field is
+needed: retained operations are the conflict evidence. The bump prevents older
+readers from misinterpreting a binary day containing independent contributions.
+Binary raw sum may exceed1000 only when every contribution has matching causal
+event provenance; `HabitIndex.of` caps displayed progress at1000. Raw IDs and
+routine links survive JSON/ZIP/store roundtrip.
+
+### Remote protocol 1
+
+`handy-habit/commits/<deviceUUID>-<sha256-of-envelope>.json` is immutable. Each
+envelope contains `format: handy-habit-sync`, `version:1`, `minReader:1`,
+`schema:7`, `size` (UTF-8 canonical operations byte length), `sha256` (payload),
+and `operations`. Object keys sort recursively; operation order is Lamport then
+stable ID. Filename hash protects the whole envelope. Limit30MB/file and200000
+operations; invalid payload hashes, IDs, actor sequences, ancestry and schema
+refuse the whole round before any upload or local write.
+
+After a verified generation upload, an immutable
+`handy-habit/versions/<deviceUUID>-<generationHash>.json` records
+`format: handy-habit-device-version`, protocol/schema, device and generation.
+Version receipts are validated before upload; missing referenced commits or
+partial/missing downloads refuse. A generation without a receipt is still read,
+so interruption between these uploads loses nothing. These per-device version
+files avoid a shared mutable lock/version overwrite race: concurrent writers
+append independent generations. Repeated same-name creates must have identical
+bodies, including Drive duplicates after an uncertain POST response.
+
+Every device retains its last successful operation base outside the library in
+`habit-drive-device.json`, alongside device UUID, opt-in, selected account, last
+success, five recent success times and last error code. No access token is stored.
+The three-way result is the validated union of base, current local and every
+complete remote generation. Absence from a snapshot is never a deletion. A
+received result joins current local data again inside the controller queue so
+edits made during network I/O survive and remain pending for the next round.
+
+### Deterministic materialization and review
+
+- Pre-ledger rows receive content-validated, deterministic identity seeds from
+  the earliest before-image, once. Operation/actor-sequence collisions refuse;
+  same logical event ID with different content refuses. The same routine step’s
+  deterministic event ID may differ only in recording timestamp; its semantic
+  contribution is projected once and the session’s event hash is repaired.
+- Count check-ins and negative incidents union by independent event IDs. Undo
+  retracts its observed operation/batch only. A stale replica cannot resurrect
+  it. Binary contributions retain both provenance rows and display one success.
+- An absolute total replaces manual contributions it observed; linked entries
+  and concurrent additions survive. Concurrent absolute totals or skip versus
+  add retain candidates in `dayOperationConflicts`. No automatic clock winner
+  and no sum of two absolute totals. Projection omits disputed manual values;
+  `conflict` days/periods are excluded from eligibility/streak calculations.
+  Review chooses a total/skip and records parents observing all candidates.
+- Same-day mood maximal revisions retain all payloads in the ledger. If their
+  contents differ, no mood is projected or averaged. Sync shows each candidate,
+  including Undo/removal, and explicit review observes them all. A later normal
+  mood edit also observes the current heads. Other dates stay unchanged.
+- Configuration patches change only fields changed from their before-image.
+  Disjoint fields and ID-addressed routine steps merge; same-field concurrent
+  edits apply in stable Lamport/operation-ID order. Schedule/goal histories sort
+  by effective day; same-day duplicate revisions project by stable revision ID,
+  with the original alternatives still retained in operations. Wall time never
+  chooses a tracking-data winner.
+- Concurrent row removal wins over an unobserved edit; observed restore can
+  supersede Trash removal. Trash hides an edited item without losing its rows.
+  Permanent tombstones dominate every stale edit; late offline payloads are
+  redacted locally, preserving header/hashes. Dangling habit links clear;
+  a targeted pause with no surviving target is removed, never broadened to all.
+- Routine edits and sessions union. Independent session IDs survive. Only one
+  active runner is projected; extra concurrent active sessions remain as aborted
+  recovery records, deterministically. Remote anchors never start a local timer;
+  an unchanged local anchor can remain on the recording device. Preferences,
+  reminders, permissions, clock policies and runtime timer ownership stay local.
+  Existing civil event/session dates never recalculate from wall timestamps.
+
+There are no Habit attachments in this model. No compaction is performed without
+replica acknowledgements. Remote generations can retain older/deleted payloads;
+redaction applies to newly materialized generations, not already-uploaded copies.
+To erase all cloud copies, the owner uses Drive Settings → Manage apps → Handy
+Habit → delete hidden app data, after turning sync off on all devices. Switching
+sync off or disconnecting itself deletes neither local nor remote data. Long
+history growth, initial-sync latency, true network interruption and actual Google
+authorization require the scale/device follow-up in [RELEASE](RELEASE.md).

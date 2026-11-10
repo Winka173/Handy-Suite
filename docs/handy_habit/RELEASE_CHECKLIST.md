@@ -1,6 +1,8 @@
 # Release checklist
 
-Current R8/R9 run 5b (2026-11-10): app128/engine82 host tests, analysis/format
+Current R15/R16/run9: schema7/physical2; app178 / engine158 host tests and analysis/format clean; Android debug APK with Drive define built. [Owner OAuth setup and two-device checks](RELEASE.md) remain mandatory before claiming real Drive verification. [Visual review](R15_R16_REVIEW.md).
+
+Historical R8/R9 run 5b (2026-11-10): app128/engine82 host tests, analysis/format
 and 24 screenshot combinations plus a motion check pass. Guide/practice/help and
 Settings are implemented; [visual review](R8_R9_REVIEW.md) and [QA details](QA_PLAN.md).
 Earlier build/emulator checkmarks below are historical, not current-source proof.

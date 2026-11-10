@@ -28,6 +28,8 @@ import 'settings/help_page.dart';
 import 'welcome/welcome_page.dart';
 import 'shell/habit_shell.dart';
 import 'today/check_in.dart';
+import 'sync/drive_sync.dart';
+import 'sync/sync_page.dart';
 
 export 'scope.dart' show HabitScope;
 
@@ -40,6 +42,7 @@ class HabitApp extends StatefulWidget {
   final DateTime Function()? clock;
   final HabitReminders? reminders;
   final HabitRunNotices? notices;
+  final HabitDriveSync? driveSync;
 
   /// Off in host tests: no folder backups, no home-screen widget.
   final bool device;
@@ -50,6 +53,7 @@ class HabitApp extends StatefulWidget {
     this.clock,
     this.reminders,
     this.notices,
+    this.driveSync,
     this.device = true,
   });
   @override
@@ -59,10 +63,14 @@ class HabitApp extends StatefulWidget {
 class _HabitAppState extends State<HabitApp> with WidgetsBindingObserver {
   late final c = widget.controller ?? HabitController(clock: widget.clock);
   late final reminders = widget.reminders ?? HabitReminders();
+  late final drive =
+      widget.driveSync ??
+      (driveSyncOffered && widget.device ? HabitDriveSync(c) : null);
   late final scope = HabitScope(
     controller: c,
     files: widget.files,
     reminders: reminders,
+    drive: drive,
     // One plugin set-up for both, so the tap handler is not reset.
     notices:
         widget.notices ??
@@ -92,6 +100,10 @@ class _HabitAppState extends State<HabitApp> with WidgetsBindingObserver {
     c.addListener(_changed);
     scope.area.addListener(_ads);
     if (c.state == null) unawaited(c.load());
+    if (drive != null && c.state != null) {
+      _driveStarted = true;
+      unawaited(drive!.start());
+    }
     _clockWatch = Timer.periodic(
       const Duration(minutes: 1),
       (_) => _refreshClock(),
@@ -152,6 +164,7 @@ class _HabitAppState extends State<HabitApp> with WidgetsBindingObserver {
     _clockWatch?.cancel();
     unawaited(_links?.cancel());
     scope.autoBackup?.dispose();
+    if (widget.driveSync == null) drive?.dispose();
     WidgetsBinding.instance.removeObserver(this);
     c.removeListener(_changed);
     scope.area.removeListener(_ads);
@@ -165,6 +178,7 @@ class _HabitAppState extends State<HabitApp> with WidgetsBindingObserver {
     if (state == AppLifecycleState.resumed) {
       _refreshClock();
       _sync();
+      drive?.resumed();
     }
   }
 
@@ -177,6 +191,7 @@ class _HabitAppState extends State<HabitApp> with WidgetsBindingObserver {
     _sync();
   }
 
+  bool _driveStarted = false;
   int? _synced;
   void _changed() {
     final launched = _launched;
@@ -189,6 +204,10 @@ class _HabitAppState extends State<HabitApp> with WidgetsBindingObserver {
       _sync();
     }
     if (c.state != null) {
+      if (drive != null && !_driveStarted) {
+        _driveStarted = true;
+        unawaited(drive!.start());
+      }
       scope.autoBackup?.attach();
       final link = _pendingLink;
       if (link != null && navigator.currentState != null) {
@@ -326,6 +345,9 @@ class _HabitAppState extends State<HabitApp> with WidgetsBindingObserver {
         query: uri.queryParameters['q'] ?? '',
       ),
       ['', 'settings', 'trash'] => () => HabitTrashPage(scope: scope),
+      ['', 'settings', 'sync'] =>
+        () =>
+            drive == null ? _missing('/settings') : HabitSyncPage(scope: scope),
       ['', 'settings'] => () => HabitSettingsPage(scope: scope),
       ['', 'mood', final day] =>
         () => _validMoodDay(day)

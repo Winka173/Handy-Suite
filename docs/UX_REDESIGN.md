@@ -3745,6 +3745,15 @@ Historical R11 Progress contract (counting superseded by R12/R13 below): “What
 - Reject: chip wall of 32 presets, automatic save on selection, generic KPI cards, red misses, blank-as-failure denominator, chart without a finding. HandySwap/Reveal transitions respect reduced motion. Host render → app-screens §2.7 critique → fix → re-render; no device claim.
 
 
+### Handy Habit R15/R16 Sync contract · run 9 · 2026-11-10
+
+- Job/question: is my Habit data in step with my other Android phone, and what needs attention? Finding: Off / Connecting / Synced / Pending / Error / Update required, followed by pending count and last successful sync. One primary action: Turn on or Sync now; separate Turn off and Disconnect.
+- Inventory: optional Free provider Google Drive; selected account; device-local enabled/base/activity/error/time; immutable causal operations for habits, check-ins, incidents, moods, routines, sessions, trash and tombstones. Concurrent absolute totals/skips and moods expose retained candidates with explicit review actions. Never choose tracking data by wall time.
+- Route /settings/sync from Settings › Data, separate from Backup. Android row exists only with HANDY_DRIVE_SYNC=true. Other platforms state “Use backup to move data” in help/data guidance. Back/Esc return to Settings; keyboard focus follows visual order; state changes use live semantics.
+- Face/signature: keep Nunito, owned vermilion/oxblood/ochre and existing bead identity; a quiet status line, open rows and one primary button. No KPI cards, decorative cloud hero, fake progress, disabled unavailable toggle or Android↔iOS claim.
+- Layout: 320/390 single scroll column with 16px gutters, wrapped values/actions and ≥48px targets; 1440 centered readable max720 column. Text at 1.5 must wrap without truncating account/error/privacy. Loading keeps page stable and disables duplicate actions; errors explain recovery while local tracking remains usable.
+- Privacy/limits paragraph: own hidden Drive app folder, appdata scope only, no developer server, no end-to-end encryption, foreground sync, deletions propagate, backup remains separate; off/disconnect delete neither copy. Review EN/VI × light/dark × 320/390/1440 × text1/1.5 for all six states, critique, fix and re-render.
+
 ### Handy Habit R14 mood contract · run 8 · 2026-11-10
 
 - Inventory/jobs: 0–1 mood/day, mood 1–5, optional energy 1–5/note up to 4096/tags up to 8; no inferred mood. Daily glance on phone, occasional edits/history on desktop. Existing habits, due totals, beads and routines stay primary. Nunito/editorial greeting and owned oxblood/vermilion/ochre palette; beads remain the only signature.

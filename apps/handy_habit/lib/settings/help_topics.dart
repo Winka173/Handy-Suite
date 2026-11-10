@@ -149,6 +149,34 @@ const habitHelpTopics = [
       ),
     ],
   ),
+  HabitHelpTopic('sync', 'Sync vs backup', 'Đồng bộ và sao lưu', [
+    (
+      'Sync keeps edits, check-ins, incidents, mood and deletions in step between Android devices. It is optional and free. Open Settings → Data → Sync → Turn on sync and choose the same Google account on each phone. The row appears only in Android builds configured for Drive.',
+      'Đồng bộ giữ các sửa đổi, lần ghi, sự cố, tâm trạng và xóa nhất quán giữa các máy Android. Tùy chọn và miễn phí. Mở Cài đặt → Dữ liệu → Đồng bộ → Bật đồng bộ rồi chọn cùng tài khoản Google trên từng máy. Mục này chỉ có ở bản Android được cấu hình Drive.',
+    ),
+    (
+      'Sync runs on app open, on return and after changes while open. Offline changes wait here. Sync now, pending changes, last successful sync, activity and errors are on the Sync screen.',
+      'Đồng bộ khi mở app, quay lại và sau thay đổi lúc đang mở. Thay đổi ngoại tuyến chờ trên máy. Màn Đồng bộ có Đồng bộ ngay, thay đổi chờ, lần thành công gần nhất, hoạt động và lỗi.',
+    ),
+    (
+      'A backup is a separate copy you can restore later. Sync carries deletions too, so keep backups. Turning off or disconnecting deletes neither copy. Data goes to your own hidden Drive app folder without developer servers or end-to-end encryption.',
+      'Sao lưu là bản riêng có thể khôi phục sau. Đồng bộ cũng chuyển thao tác xóa, nên hãy giữ bản sao lưu. Tắt hay ngắt kết nối không xóa bản nào. Dữ liệu vào thư mục ẩn riêng của app trên Drive của bạn, không qua máy chủ nhà phát triển và không mã hóa đầu-cuối.',
+    ),
+    (
+      'Needs review keeps conflicting totals, skips and mood versions on the Sync screen. Choose what to use. Unresolved days are excluded from progress. Newer remote data stops sync until you update this app.',
+      'Cần xem lại giữ các tổng, lựa chọn bỏ qua và phiên bản tâm trạng xung đột ở màn Đồng bộ. Chọn bản muốn dùng. Ngày chưa giải quyết không tính tiến trình. Dữ liệu từ app mới hơn dừng đồng bộ đến khi cập nhật app.',
+    ),
+  ]),
+  HabitHelpTopic('new-phone', 'Move to a new phone', 'Chuyển sang điện thoại mới', [
+    (
+      'On two Android phones with Drive sync: sync the old phone, turn on sync with the same Google account on the new phone, then Sync now on both. Check habits and history before retiring the old phone. Keep a separate backup.',
+      'Trên hai máy Android có đồng bộ Drive: đồng bộ máy cũ, bật đồng bộ cùng tài khoản Google ở máy mới, rồi Đồng bộ ngay trên cả hai. Kiểm tra thói quen và lịch sử trước khi bỏ máy cũ. Giữ bản sao lưu riêng.',
+    ),
+    (
+      'On iOS, Windows, web or an Android build without Sync: use backup to move data. Export ZIP, transfer it privately, then Bring in a backup on the new device. There is no Android ↔ iOS automatic sync. Recheck reminders and permissions.',
+      'Trên iOS, Windows, web hoặc bản Android không có Đồng bộ: dùng sao lưu để chuyển dữ liệu. Xuất ZIP, chuyển riêng tư, rồi Nhập bản sao lưu ở máy mới. Không có đồng bộ tự động Android ↔ iOS. Kiểm tra lại lịch nhắc và quyền.',
+    ),
+  ]),
   HabitHelpTopic(
     'backup',
     'Backup, restore and recovery',

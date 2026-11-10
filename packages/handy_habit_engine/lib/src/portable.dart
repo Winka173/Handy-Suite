@@ -55,7 +55,7 @@ HabitBackupPreview inspectBackup(Uint8List bytes, {bool zip = true}) {
     if (files.length != 2) throw const FormatException('Missing backup files');
     final manifest = jsonDecode(utf8.decode(files['manifest.json']!)) as Map;
     if (manifest['app'] != 'handy-habit' ||
-        ![1, 2, 3, 4, 5, habitSchema].contains(manifest['schema']) ||
+        ![1, 2, 3, 4, 5, 6, habitSchema].contains(manifest['schema']) ||
         (manifest['files'] as Map)['data.json'] !=
             sha256.convert(files['data.json']!).toString())
       throw const FormatException('Backup checksum mismatch');
@@ -400,7 +400,7 @@ HabitState importCsvLogs(HabitState current, Uint8List bytes) {
     if (row.length != _moodHeader.length)
       throw const FormatException('Wrong mood CSV column count');
     final record = jsonDecode(utf8.decode(base64Decode(row.last))) as Map;
-    if (record['schema'] != 6)
+    if (![6, habitSchema].contains(record['schema']))
       throw const FormatException('Unknown mood record schema');
     final m = MoodEntry.fromJson(
       Map<String, dynamic>.from(record['mood'] as Map),

@@ -13,6 +13,7 @@ class HabitController extends ChangeNotifier {
   final adsVisible = ValueNotifier(false);
   final String actor = uid();
   bool hasRecovery = false;
+  Future<void> Function()? beforeReplace;
   Future<void> _queue = Future.value();
   HabitController({
     Future<HabitStore> Function()? open,
@@ -30,7 +31,13 @@ class HabitController extends ChangeNotifier {
       }
       final purged = purgeTrash(state!, clock().toUtc());
       if (purged.trash.length != state!.trash.length) {
-        final next = purged.copy({'revision': state!.revision + 1});
+        final next = recordChange(
+          state!,
+          purged,
+          actor: actor,
+          undoable: false,
+          now: clock(),
+        ).copy({'revision': state!.revision + 1});
         await store!.commit(next, expectedRevision: state!.revision);
         state = next;
       }
@@ -101,18 +108,22 @@ class HabitController extends ChangeNotifier {
   Future<void> replaceFromBackup(
     HabitState imported, {
     required int expectedRevision,
-  }) => change(
-    (s) {
-      if (s.revision != expectedRevision)
-        throw StateError('Data changed during preview');
-      return imported.copy({'undoBatch': null});
-    },
-    remember: false,
-    recorded: true,
-    recovery: true,
-  );
+  }) async {
+    await beforeReplace?.call();
+    await change(
+      (s) {
+        if (s.revision != expectedRevision)
+          throw StateError('Data changed during preview');
+        return imported.copy({'undoBatch': null});
+      },
+      remember: false,
+      recorded: true,
+      recovery: true,
+    );
+  }
 
   Future<void> recoverBeforeReplace() async {
+    await beforeReplace?.call();
     final recoverable = store;
     if (recoverable is! RecoverableHabitStore)
       throw StateError('Recovery unavailable');

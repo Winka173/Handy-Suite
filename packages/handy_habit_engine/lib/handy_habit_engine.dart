@@ -12,6 +12,7 @@ import 'package:timezone/timezone.dart' as tz;
 part 'src/models.dart';
 part 'src/mood.dart';
 part 'src/causal.dart';
+part 'src/sync.dart';
 part 'src/trash.dart';
 part 'src/calendar.dart';
 part 'src/negative.dart';

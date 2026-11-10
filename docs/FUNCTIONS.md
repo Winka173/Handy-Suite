@@ -107,7 +107,7 @@ Keep, Spend hoặc timer đa dụng. [Trạng thái kiểm chứng](handy_habit/
 - SQLite native/IndexedDB Web, integrity check, schema version, bảo vệ ghi đồng
   thời. JSON/ZIP full backup miễn phí, preview merge/replace, đổi ID khi merge,
   checksum và rollback. Replace lưu bản phục hồi bền trên máy trước khi commit; Cài đặt có khôi phục trước lần thay thế cuối. `.hseal` dùng mã hóa xác thực chung, sai mật khẩu/hỏng/hủy giữ dữ liệu. CSV log nhập/xuất (kèm bảng kỳ nghỉ và tâm trạng khi có);
-  Markdown/PDF báo cáo EN/VI có khoảng ngày, liệt kê kỳ nghỉ. Schema dữ liệu6/physical2, đọc backup/schema1–5; causal operations có ID/ancestry và delta/tổng tuyệt đối, chưa phải sync (R15/R16).
+  Markdown/PDF báo cáo EN/VI có khoảng ngày, liệt kê kỳ nghỉ. Schema dữ liệu7/physical2, đọc backup/schema1–6; causal operations có ID/ancestry, delta/tổng tuyệt đối và giao thức sync R15/R16.
 - EN/VI, sáng/tối; ba khu Hôm nay / Quy trình / Tiến bộ, gear Cài đặt ở trên phone,
   sidebar224 từ840px gập thành rail64 và nhớ trạng thái. Named routes `/today`,
   `/routines`, `/progress`, `/habits`, editor và các route cũ; Ctrl/Cmd N/F/comma/1–3,
@@ -118,7 +118,7 @@ Keep, Spend hoặc timer đa dụng. [Trạng thái kiểm chứng](handy_habit/
   ở Hôm nay trống. Cách dùng có 15 chủ đề EN/VI, tìm không dấu, số kết quả và hình đúng UI;
   khi lọc bỏ số thứ tự chủ đề. Cài đặt nhóm, giá trị thân thiện (múi giờ kèm GMT),
   mật độ/giảm chuyển động/mặc định thói quen/quy trình, quyền nhắc có giải thích trước,
-  ẩn tên thông báo, kiểm tra nhắc, đặt lại tùy chọn giữ dữ liệu. Chưa có hàng mua Pro/sync.
+  ẩn tên thông báo, kiểm tra nhắc, đặt lại tùy chọn giữ dữ liệu. Chưa có hàng mua Pro; Sync Android có build gate riêng.
 - Hôm nay ưu tiên tràng hạt trước quy trình/review; active run một dòng. Tự nhóm buổi
   theo nhắc hoặc quy trình liên kết, đổi được trong Advanced. Danh sách dài mở
   “Xem tất cả N” tại chỗ; check-in không đổi vị trí dòng. Motion theo kit, tắt theo máy
@@ -146,6 +146,9 @@ Known limits: [KNOWN_ISSUES](../KNOWN_ISSUES.md). Screenshots: [UI_REVIEW](UI_RE
   JSON/ZIP/CSV mang cả live/deleted; merge từ chối bản ghi khác nhau cùng ngày trước khi ghi.
   Ghi chú ở cục bộ và bản xuất người dùng chọn; không vào thông báo/widget. Không correlation
   hay khẳng định sức khỏe. Source/host/widget tested; chưa kiểm mới trên thiết bị/browser.
+
+- R15/R16/run9: Free causal sync giữ đồng thời check-in/incidents/mood; tổng tuyệt đối/bỏ qua/tâm trạng xung đột giữ lựa chọn Cần xem lại; Undo/tombstones/routines/sessions hợp nhất tất định. Schema7/physical2 đọc1–6.
+- Android Google Drive appdata tùy chọn, chỉ hiện với HANDY_DRIVE_SYNC=true; Settings › Data › Sync riêng Backup, có tài khoản/lần thành công/chờ/hoạt động/lỗi/Sync now/tắt/ngắt kết nối. Chạy khi mở/quay lại/sau sửa lúc mở; không hứa chạy khi đóng. Tắt không xóa bản nào. [Owner OAuth setup](handy_habit/RELEASE.md); OAuth thật/hai Android chưa kiểm chứng. iOS/Windows/Web dùng backup để chuyển dữ liệu; không hứa Android ↔ iOS sync.
 
 ## Handy Spend
 

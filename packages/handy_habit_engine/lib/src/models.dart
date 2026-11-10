@@ -566,7 +566,7 @@ class HabitState {
 
   factory HabitState.fromJson(Json j) {
     if (j['app'] != 'handy-habit' ||
-        ![1, 2, 3, 4, 5, 6].contains(j['schema']) ||
+        ![1, 2, 3, 4, 5, 6, 7].contains(j['schema']) ||
         j['schema'] == 1 && j['pauses'] != null) {
       throw const FormatException('Unsupported Habit backup/schema');
     }
@@ -699,13 +699,26 @@ class HabitState {
       (e) => e.value > maxValue || skips.contains(e.key) && e.value != 0,
     ))
       throw const FormatException('Invalid day total');
+    // Binary contributions keep their independent IDs across devices. The
+    // index caps their projection at one completion, preserving provenance.
     for (final h in habits.where((h) => h.type == 'binary')) {
-      if (totals.entries.any(
-        (e) => e.key.substring(0, e.key.length - 11) == h.id && e.value > 1000,
-      ))
-        throw const FormatException(
-          'Binary progress cannot exceed one completion',
-        );
+      for (final d
+          in events.where((e) => e.habit == h.id).map((e) => e.day).toSet()) {
+        final entries = events.where((e) => e.habit == h.id && e.day == d);
+        if (entries.fold(0, (n, e) => n + e.value) > 1000 &&
+            entries.any(
+              (e) => !operations.any(
+                (o) =>
+                    o.kind == 'events' &&
+                    o.entity == e.id &&
+                    _same(o.after, e.toJson()),
+              ),
+            )) {
+          throw const FormatException(
+            'Binary progress requires independent causal contributions',
+          );
+        }
+      }
     }
     if (pauses.length > maxPauses)
       throw const FormatException('At most 1000 pauses');
