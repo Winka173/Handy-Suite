@@ -488,6 +488,7 @@ class HabitState {
   final List<Routine> routines;
   final List<RoutineSession> sessions;
   final List<Pause> pauses;
+  final List<MoodEntry> moods;
   final Map<String, dynamic> settings;
   HabitState({
     this.revision = 0,
@@ -501,6 +502,7 @@ class HabitState {
     List<Routine> routines = const [],
     List<RoutineSession> sessions = const [],
     List<Pause> pauses = const [],
+    List<MoodEntry> moods = const [],
     Json settings = const {},
   }) : clockPolicies = List.unmodifiable(
          (clockPolicies ??
@@ -521,6 +523,7 @@ class HabitState {
        ),
        habits = List.unmodifiable(habits),
        pauses = List.unmodifiable(pauses),
+       moods = List.unmodifiable(moods),
        events = List.unmodifiable(events),
        routines = List.unmodifiable(routines),
        sessions = List.unmodifiable(sessions),
@@ -547,6 +550,7 @@ class HabitState {
     'routines': routines.map((e) => e.toJson()).toList(),
     'sessions': sessions.map((e) => e.toJson()).toList(),
     'pauses': pauses.map((e) => e.toJson()).toList(),
+    'moods': moods.map((e) => e.toJson()).toList(),
     'settings': settings,
   };
   HabitState copy(Json c) {
@@ -562,7 +566,7 @@ class HabitState {
 
   factory HabitState.fromJson(Json j) {
     if (j['app'] != 'handy-habit' ||
-        ![1, 2, 3, 4, 5].contains(j['schema']) ||
+        ![1, 2, 3, 4, 5, 6].contains(j['schema']) ||
         j['schema'] == 1 && j['pauses'] != null) {
       throw const FormatException('Unsupported Habit backup/schema');
     }
@@ -583,6 +587,7 @@ class HabitState {
       routines: orderedHabitRows(j, 'routines').map(Routine.fromJson).toList(),
       sessions: objects(j['sessions']).map(RoutineSession.fromJson).toList(),
       pauses: objects(j['pauses'] ?? []).map(Pause.fromJson).toList(),
+      moods: objects(j['moods'] ?? []).map(MoodEntry.fromJson).toList(),
       settings: Map<String, dynamic>.from(j['settings'] as Map),
     );
     s.validate();
@@ -592,6 +597,14 @@ class HabitState {
     location(zone);
     integer(dayBoundaryMinutes, max: 1439);
     validateOperations(operations);
+    if (moods.length > 100000 ||
+        moods.map((m) => m.day).toSet().length != moods.length) {
+      throw const FormatException('Duplicate mood day or too many moods');
+    }
+    if (settings['showMoodToday'] != null &&
+        settings['showMoodToday'] is! bool) {
+      throw const FormatException('Invalid mood preference');
+    }
     if (clockPolicies.isEmpty || clockPolicies.length > 1000)
       throw const FormatException('Invalid clock policies');
     final policyIds = <String>{};
@@ -647,6 +660,7 @@ class HabitState {
       routines.map((e) => e.id),
       sessions.map((e) => e.id),
       pauses.map((e) => e.id),
+      moods.map((e) => e.id),
       trash.map((e) => e.id),
       tombstones.map((e) => text(e['id'])),
     ]) {

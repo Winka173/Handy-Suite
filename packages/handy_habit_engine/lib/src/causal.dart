@@ -6,6 +6,7 @@ const causalKinds = [
   'routines',
   'sessions',
   'pauses',
+  'moods',
   'trash',
   'tombstones',
   'settings',

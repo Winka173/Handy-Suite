@@ -34,9 +34,10 @@ Future<String?> exportHabits(
   final s = scope.state, today = scope.today, vi = isVi(context);
   final first =
       from ??
-      s.habits
-          .map((h) => h.created)
-          .fold<String>(today, (a, b) => a.compareTo(b) < 0 ? a : b);
+      [
+        ...s.habits.map((h) => h.created),
+        ...s.moods.map((m) => m.day),
+      ].fold<String>(today, (a, b) => a.compareTo(b) < 0 ? a : b);
   final last = until ?? today;
   late Uint8List bytes;
   late String mime;
@@ -186,7 +187,8 @@ Future<String?> importHabits(BuildContext context, HabitScope scope) async {
   if (name.toLowerCase().endsWith('.csv')) {
     final imported = importCsvLogs(s, opened);
     final count = imported.events.length - s.events.length,
-        pauses = imported.pauses.length - s.pauses.length;
+        pauses = imported.pauses.length - s.pauses.length,
+        moods = imported.moods.length - s.moods.length;
     final ok = await confirmHandy(
       context,
       title: pauses == 0
@@ -198,8 +200,8 @@ Future<String?> importHabits(BuildContext context, HabitScope scope) async {
             ),
       message: tr(
         context,
-        'Their habits must already exist here. Repeated records are left out; conflicting ones stop the import.',
-        'Thói quen tương ứng phải có sẵn. Lần ghi trùng được bỏ qua; lần ghi xung đột sẽ dừng việc nhập.',
+        '$moods mood entries included. Their habits must already exist here. Repeated records are left out; conflicting ones stop the import.',
+        'Gồm $moods bản ghi tâm trạng. Thói quen tương ứng phải có sẵn. Lần ghi trùng được bỏ qua; lần ghi xung đột sẽ dừng việc nhập.',
       ),
       confirmLabel: tr(context, 'Add', 'Thêm'),
     );
@@ -210,6 +212,7 @@ Future<String?> importHabits(BuildContext context, HabitScope scope) async {
       return current.copy({
         'events': imported.events.map((e) => e.toJson()).toList(),
         'pauses': imported.pauses.map((p) => p.toJson()).toList(),
+        'moods': imported.moods.map((m) => m.toJson()).toList(),
       });
     });
     return context.mounted
@@ -243,8 +246,8 @@ Future<String?> importHabits(BuildContext context, HabitScope scope) async {
       content: Text(
         tr(
           context,
-          '${formatFigure(context, '${file.bytes.length}')} bytes · Schema ${preview.schema}\n$backupDate\n${imported.trash.length} items in Trash\n${imported.habits.length} habits, ${imported.events.length} records, ${imported.routines.length} routines, ${imported.sessions.length} runs, ${imported.pauses.length} pauses.\n\nMerge adds them beside yours with new IDs. Replace puts the backup in place of everything here. Reminders in it stay off until you turn them on.',
-          '${formatFigure(context, '${file.bytes.length}')} byte · Schema ${preview.schema}\n$backupDate\n${imported.trash.length} mục trong Thùng rác\n${imported.habits.length} thói quen, ${imported.events.length} lần ghi, ${imported.routines.length} quy trình, ${imported.sessions.length} phiên, ${imported.pauses.length} kỳ nghỉ.\n\nHợp nhất thêm chúng cạnh dữ liệu của bạn với ID mới. Thay thế đặt bản sao lưu vào chỗ toàn bộ dữ liệu ở đây. Nhắc trong đó vẫn tắt cho tới khi bạn bật.',
+          '${formatFigure(context, '${file.bytes.length}')} bytes · Schema ${preview.schema}\n$backupDate\n${imported.trash.length} items in Trash\n${imported.habits.length} habits, ${imported.events.length} records, ${imported.routines.length} routines, ${imported.sessions.length} runs, ${imported.pauses.length} pauses, ${imported.moods.length} mood entries (including deleted).\n\nMerge adds them beside yours with new IDs. Mood dates stay fixed: identical entries are left out; different entries for the same date stop the merge. Replace puts the backup in place of everything here. Reminders in it stay off until you turn them on.',
+          '${formatFigure(context, '${file.bytes.length}')} byte · Schema ${preview.schema}\n$backupDate\n${imported.trash.length} mục trong Thùng rác\n${imported.habits.length} thói quen, ${imported.events.length} lần ghi, ${imported.routines.length} quy trình, ${imported.sessions.length} phiên, ${imported.pauses.length} kỳ nghỉ, ${imported.moods.length} bản ghi tâm trạng (gồm đã xóa).\n\nHợp nhất thêm chúng cạnh dữ liệu của bạn với ID mới. Ngày tâm trạng giữ nguyên: bỏ bản ghi giống nhau; khác nhau cùng ngày thì dừng gộp. Thay thế đặt bản sao lưu vào chỗ toàn bộ dữ liệu ở đây. Nhắc trong đó vẫn tắt cho tới khi bạn bật.',
         ),
       ),
       actions: [

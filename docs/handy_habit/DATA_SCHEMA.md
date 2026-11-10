@@ -1,6 +1,6 @@
 # Data schema and portability
 
-Data schema 5 (2026-11-10; negative goals/observations; custom day boundaries and schema3 causal revisions/trash retained); physical SQLite/IndexedDB version 2; isolated native `handy-habit.sqlite` / browser IndexedDB `handy-habit`.
+Data schema 6 (2026-11-10; optional mood; negative goals/observations; custom day boundaries and schema3 causal revisions/trash retained); physical SQLite/IndexedDB version 2; isolated native `handy-habit.sqlite` / browser IndexedDB `handy-habit`.
 No other app database is opened. Native tables: habits, events, routines, sessions,
 operations (unique actor/sequence, entity index), singleton state metadata, and a device-local recovery table. Validated entity JSON plus indexed event habit/date/source,
 habit foreign key, unique linked (session,step), and session status index.
@@ -41,7 +41,7 @@ only requested by the two settings switches.
 `reason` (<= 200 chars, may be empty), `habits` (IDs; empty = every habit). At most
 1000 pauses; every named habit must exist. Overlapping pauses are allowed and read as
 their union. Migration: data written as schema 1 has no `pauses` and reads as an empty
-list; current reads normalize schemas 1/2/3/4 to5 and the next save writes5. Schema 1 carrying `pauses`, or an unsupported future schema, is refused without reset. Older apps refuse schema5; keep a backup before upgrading.
+list; current reads normalize schemas 1–5 to6 and the next save writes6. Schema 1 carrying `pauses`, or an unsupported future schema, is refused without reset. Older apps refuse schema6; keep a backup before upgrading.
 
 Counting rule. A paused day for a habit is a scheduled day inside a pause that covers
 it. Status order is future, not scheduled, skipped, completed, partial, **paused**,
@@ -142,3 +142,22 @@ Routine plans and pending session mappings reject negative links; negative event
 Full JSON/ZIP backups carry goals, all observations, notes, operations, trash and history. CSV keeps its visible header and positive schema-1 records; negative record_b64 uses schema 5, with `negativeHabit` metadata on the first exported row per habit and plain entries thereafter. Import validates the full batch, recreates missing negative habits from that metadata, deduplicates entries, and refuses mismatching existing habit configuration atomically. Empty negative habits without logs travel in JSON/ZIP. Markdown/PDF stats use the same closed-period metrics; reports are not full backups.
 
 Host evidence: incident/none/unknown, open/closed day/week, pause/skip, fresh recovery, retraction, backfill, goal history, conflict resolution, JSON/ZIP/CSV, v1–v4 JSON+ZIP, DST spring/fall north/south, SQLite reopen and durable Undo. IndexedDB real-browser upgrade/quota/tab behavior and device checks remain unverified.
+
+
+## Schema 6 — optional mood (R14)
+
+One `MoodEntry` per local `day`, identity `mood:YYYY-MM-DD`. Required mood is an integer 1–5; optional energy is 1–5 or null. Note is a string up to4096 characters (empty allowed); tags are up to8 distinct trimmed nonempty strings, each up to40 characters. No inferred entries, no averages/correlation/medical claims. At most100000 entries; duplicate dates/IDs and invalid dates/timestamps/scales are refused.
+
+`recordedAt`, `updatedAt`, optional `deletedAt` are strict UTC timestamps; updatedAt cannot precede recordedAt. Revision starts at1; save/edit/delete/restore require the observed revision and increase it. Backward/equal device time advances the timestamp by a microsecond. Day identity never changes with the device timezone/day boundary. Today uses the current clock policy; explicit history dates stay fixed. The UI refuses future dates.
+
+Deletion is recoverable in mood history, independent of habit Trash and its30-day expiry. It retains the payload with `deletedAt == updatedAt`; Progress exposes Restore and immediate guarded Undo. Re-logging a deleted day starts with blank optional fields; explicit Restore keeps the old note/energy/tags. There is no individual permanent-mood-delete control in R14. Delete-all includes moods; external backup copies remain the user's responsibility.
+
+`moods` lives beside pauses in SQLite state.payload / IndexedDB state/snapshot; physical version remains2, with no new tables/stores. Immutable lists and causal row operations (`kind: moods`, stable entity/date ID, observed parents, before/after, batch and undoOf) carry create/edit/delete/restore. Guarded Undo cannot overwrite a newer edit. Transport and cross-device conflict UI remain R15/R16; this is not a sync-completion claim.
+
+Readers accept JSON/ZIP schemas1–6, writers emit6. Missing moods in old data become[]; habits/events/routines/sessions and existing operation payloads/hashes stay unchanged. All five old ZIP manifest versions remain accepted. Old apps refuse6: keep a backup before upgrade. `settings.showMoodToday` is an optional bool, defaults true; turning it off keeps data/history, reset preferences removes the override.
+
+JSON/ZIP/plain/encrypted/auto backups and durable recovery carry live/deleted moods and operations. Copy-merge imports missing dates, deduplicates byte-equivalent canonical payloads, and refuses differing same-date entries before any write; no latest-clock-wins or ID remapping of mood dates. Preview discloses this rule and includes mood counts, including deleted entries.
+
+CSV adds an optional table headed mood_id/local_date/mood/energy/note/tags/revision/recorded_at/updated_at/deleted_at/record_b64 after the existing log and optional pause tables. Visible cells and portable schema6 payload must match; notes/tags retain Unicode/newlines and formula-like cells are escaped. All entries in range, including deleted, travel. Import validates the entire batch, deduplicates identical entries and stops on conflicting dates. Existing positive schema1 / negative schema5 / pause schemas2–5 remain readable. Markdown/PDF remain habit summaries, not complete mood backups; use JSON/ZIP/CSV for mood.
+
+Notes stay in local app data (not encrypted at rest) and exports/backups explicitly chosen by the user. Notification, paused-run and home-widget builders never receive mood fields. No mood reminders, permission requests or Pro gate are introduced. Host evidence covers validation, stale revisions, causal Undo, all formats, v1–v5 migrations, two-tap/skip/optional details, history/edit/delete/restore, preference hiding and real SQLite reopen. Browser/device/lock-screen delivery checks remain supervisor work.

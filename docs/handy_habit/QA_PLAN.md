@@ -1,5 +1,13 @@
 # QA evidence and reproduction
 
+## Current R14 host pass · run 8 · 2026-11-10
+
+- App156 / engine129 tests pass; both `dart analyze` clean and changed Dart files formatted. Schema6, physical SQLite/IndexedDB2; old schemas1–5 and CSV formats preserved.
+- Two-tap/optional/skip/edit/delete/Undo/Restore, preference hiding/unaffected habits, failure/busy/retry, privacy payloads, glyph cmap and real SQLite reopen are host tested. [R14 review](R14_REVIEW.md) records decisions and limits.
+- `tool/mood_screens_test.dart`:25 cases,145 PNGs, EN/VI × light/dark ×320/390/1440 × text1/1.5, after critique fixes. Six surfaces per combination: unlogged/logged/hidden Today, quick sheet, details, Progress; plus day2 glyph capture. Folder/index/contact sheets: `C:/Users/Winka/AppData/Local/Temp/habit-run8-shots/`.
+- Logs: Temp `habit-run8-app-tests.log`, `habit-run8-engine-tests.log`, `habit-run8-shots.log`. Export-test QA evidence restored byte-for-byte; no new evidence retained there.
+- No devices, emulator, browser runtime, build or store tests in this run. Supervisor: upgrade/restart/IME/back/SR, native backup/provider restore, lock screen and IndexedDB/quota/tab checks.
+
 ## Current R10/R11 host pass · run 6 · 2026-11-10
 
 - App `flutter test --no-pub`: **138 passed** (9 R11 widget tests + 1 SQLite negative persistence/Undo test added). Engine: **103 passed** (21 negative tests added).

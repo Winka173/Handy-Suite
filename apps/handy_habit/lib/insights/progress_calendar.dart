@@ -113,22 +113,32 @@ class ProgressCalendar extends StatelessWidget {
                                     : null,
                               ),
                         ),
-                        Text(
-                          d.eligible > 0
-                              ? '${d.kept}/${d.eligible}'
-                              : d.unknown > 0
-                              ? '○'
-                              : '–',
-                          style: Theme.of(context).textTheme.bodySmall
-                              ?.copyWith(
-                                fontSize: 11,
-                                color: d.kept > 0 && d.ratio > .5
-                                    ? (hue.computeLuminance() > .4
-                                          ? Colors.black
-                                          : Colors.white)
-                                    : null,
+                        if (d.eligible == 0 && d.unknown > 0)
+                          Container(
+                            key: const Key('calendar-unknown-mark'),
+                            width: 10,
+                            height: 10,
+                            margin: const EdgeInsets.symmetric(vertical: 3),
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              border: Border.all(
+                                color: HabitPalette.of(context).control,
                               ),
-                        ),
+                            ),
+                          )
+                        else
+                          Text(
+                            d.eligible > 0 ? '${d.kept}/${d.eligible}' : '–',
+                            style: Theme.of(context).textTheme.bodySmall
+                                ?.copyWith(
+                                  fontSize: 11,
+                                  color: d.kept > 0 && d.ratio > .5
+                                      ? (hue.computeLuminance() > .4
+                                            ? Colors.black
+                                            : Colors.white)
+                                      : null,
+                                ),
+                          ),
                       ],
                     ),
                   ),

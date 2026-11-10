@@ -89,7 +89,7 @@ tối đa 30MB.
     đã có thư viện44 habit/11 routine và Progress tuần/tháng/năm/heatmap/lịch/chuỗi;
     tuần giảm đã qua suy ra ngày trống là không có, ngày trống giới hạn ngày được
     loại khỏi độ đều đặn. Ảnh và test host không thay kiểm SR/native/browser thật;
-    heatmap năm cuộn ngang trong khung ở màn hẹp. Không có comparison/correlation Pro mới.
+    heatmap năm cuộn ngang trong khung ở màn hẹp. Không có comparison/correlation Pro mới. R14 run8 đã source/host tested: tâm trạng tùy chọn, schema6/physical2, history/sửa/xóa có khôi phục/Undo, CSV/JSON/ZIP và migration1–5; hiển thị Today bật/tắt không xóa dữ liệu. Xóa tâm trạng giữ bản ghi để khôi phục, không theo hạn30 ngày của habit Trash; chưa có nút xóa vĩnh viễn riêng. Nâng cấp/restore/IME/SR/lock screen và IndexedDB thật vẫn cần supervisor.
     Chưa xác minh policy URL công khai; cần supervisor kiểm trước release. Tour và `native_test` mới chạy
     trên BlueStacks (máy giả lập); ảnh `habit-ui-review.pdf` và bằng chứng UI cũ thuộc bản
     trước. Run 2 (10/11): backup preview/sealed lỗi-mật-khẩu/hỏng/hủy, durable recovery trước Replace, migration schema3/physical2, domain Undo và trash30 ngày đã source/host tested. Provider SAF/iOS Files, nâng cấp/kill/thiếu chỗ thật và IndexedDB/quota/tab-blocked chưa runtime verified; checkpoint/recovery và plain export vẫn không mã hóa, `.hseal` có mã hóa xác thực. Không claim sync hoàn chỉnh (R15/R16). R10/R11 run6: negative incidents/zero/unknown và giới hạn ngày/tuần schema5/physical2, help16 chủ đề đã source/host tested; tuần đang mở/nghỉ không cộng chuỗi, chưa rõ nằm trong mẫu số. Nâng cấp/ranh giới ngày-tuần trên thiết bị và IndexedDB thật vẫn chờ supervisor; giữ backup trước nâng schema.

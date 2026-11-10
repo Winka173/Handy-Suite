@@ -250,6 +250,24 @@ const habitHelpTopics = [
       'Mở ngày trong lịch sử để sửa số lần, thêm ghi chú, xác nhận không có hoặc đưa về chưa rõ. Không liên kết thói quen giảm bớt với bước quy trình.',
     ),
   ]),
+  HabitHelpTopic('mood', 'Mood', 'Tâm trạng', [
+    (
+      'After your habits on Today, tap How’s today?, then tap one of five feelings. That is all: no note or energy is required. Skip or Back saves nothing.',
+      'Sau thói quen ở Hôm nay, chạm Hôm nay bạn thấy sao?, rồi chọn một trong năm cảm nhận. Vậy là xong: không cần ghi chú hay năng lượng. Bỏ qua hoặc Quay lại không lưu gì.',
+    ),
+    (
+      'Add or edit details lets you choose optional energy (1–5), a note and up to 8 tags. Save commits the whole draft. Cancel keeps the old entry.',
+      'Thêm hoặc sửa chi tiết cho phép chọn năng lượng tùy chọn (1–5), ghi chú và tối đa 8 nhãn. Lưu ghi toàn bộ bản nháp. Hủy giữ bản ghi cũ.',
+    ),
+    (
+      'In Progress, mood history follows the selected week, month or year. Tap a dated entry to edit or delete. Undo reverses the last change; Deleted entries lets you restore later. Missing days are never filled in.',
+      'Ở Tiến trình, lịch sử tâm trạng theo tuần, tháng hoặc năm đã chọn. Chạm bản ghi để sửa hoặc xóa. Hoàn tác đảo thay đổi cuối; Bản ghi đã xóa cho khôi phục sau. Không tự điền ngày trống.',
+    ),
+    (
+      'Settings → Show mood on Today hides the prompt without deleting history. Notes stay in local data and backups/exports you choose. Mood never appears in notifications or home-screen widgets. This is a personal record, with no health claims or correlations.',
+      'Cài đặt → Hiện tâm trạng ở Hôm nay ẩn lời nhắc mà không xóa lịch sử. Ghi chú nằm trong dữ liệu cục bộ và bản sao lưu/xuất bạn chọn. Tâm trạng không xuất hiện ở thông báo hay tiện ích màn hình chính. Đây là ghi chép cá nhân, không có khẳng định sức khỏe hay tương quan.',
+    ),
+  ]),
 ];
 
 String foldHabitHelp(String value) {

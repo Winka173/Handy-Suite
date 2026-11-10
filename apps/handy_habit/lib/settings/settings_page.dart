@@ -483,6 +483,30 @@ class HabitSettingsPage extends StatelessWidget {
             ],
           ),
           HandySettingsSection(
+            title: tr(context, 'Mood', 'Tâm trạng'),
+            description: tr(
+              context,
+              'Optional reflections. Notes stay local and in backups you export.',
+              'Cảm nhận tùy chọn. Ghi chú ở cục bộ và bản sao lưu bạn xuất.',
+            ),
+            children: [
+              HabitSettingToggle(
+                id: 'settings-show-mood',
+                title: tr(
+                  context,
+                  'Show mood on Today',
+                  'Hiện tâm trạng ở Hôm nay',
+                ),
+                value: s.settings['showMoodToday'] != false,
+                onChanged: (v) => _set(context, {'showMoodToday': v}),
+              ),
+              HandyTile(
+                title: tr(context, 'How to use mood', 'Cách ghi tâm trạng'),
+                onTap: () => Navigator.pushNamed(context, '/help/mood'),
+              ),
+            ],
+          ),
+          HandySettingsSection(
             title: tr(context, 'Notifications', 'Thông báo'),
             description: scope.reminders.supported
                 ? tr(

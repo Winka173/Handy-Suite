@@ -7,6 +7,7 @@ import 'package:handy_habit_engine/handy_habit_engine.dart';
 import 'package:handy_home_widget/handy_home_widget.dart';
 import 'package:handy_ui/kit.dart';
 import 'controller.dart';
+import 'mood/mood_sheet.dart';
 import 'habits/habit_view.dart';
 import 'habits/habit_editor.dart';
 import 'habits/habits_page.dart';
@@ -326,6 +327,10 @@ class _HabitAppState extends State<HabitApp> with WidgetsBindingObserver {
       ),
       ['', 'settings', 'trash'] => () => HabitTrashPage(scope: scope),
       ['', 'settings'] => () => HabitSettingsPage(scope: scope),
+      ['', 'mood', final day] =>
+        () => _validMoodDay(day)
+            ? MoodSheet(scope: scope, day: day)
+            : _missing('/progress'),
       ['', 'settings', _] => () => HabitSettingsPage(scope: scope),
       ['', 'habit', final id] =>
         () => scope.habit(id) != null
@@ -367,7 +372,38 @@ class _HabitAppState extends State<HabitApp> with WidgetsBindingObserver {
         builder: (_) => _ready(page),
       );
     }
+    if (parts.length == 3 && parts[1] == 'mood') {
+      final context = navigator.currentContext;
+      if (context != null &&
+          MediaQuery.sizeOf(context).width >= HandySpace.wide) {
+        return DialogRoute<bool>(
+          context: context,
+          settings: s,
+          barrierDismissible: false,
+          builder: (context) => Dialog(
+            clipBehavior: Clip.antiAlias,
+            child: ConstrainedBox(
+              constraints: BoxConstraints(
+                maxWidth: 560,
+                maxHeight: MediaQuery.sizeOf(context).height * .88,
+              ),
+              child: _ready(page),
+            ),
+          ),
+        );
+      }
+      return MaterialPageRoute<bool>(settings: s, builder: (_) => _ready(page));
+    }
     return MaterialPageRoute<void>(settings: s, builder: (_) => _ready(page));
+  }
+
+  bool _validMoodDay(String value) {
+    try {
+      date(value);
+      return value.compareTo(scope.today) <= 0;
+    } catch (_) {
+      return false;
+    }
   }
 
   Widget _missing(String parent) => Builder(

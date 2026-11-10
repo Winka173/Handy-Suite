@@ -24,6 +24,51 @@ void main() {
     schedules: [Schedule(id: 'v', from: '2024-01-01')],
   );
   test(
+    'schema6 mood edit delete Undo and preference survive SQLite reopening',
+    () async {
+      final c = HabitController(open: () async => store);
+      await c.load();
+      final now = DateTime.utc(2026, 11, 10);
+      await c.change(
+        (s) => saveMood(
+          s,
+          '2026-11-10',
+          2,
+          energy: 4,
+          note: 'Private note',
+          tags: ['home'],
+          now: now,
+          expectedRevision: 0,
+        ),
+      );
+      await c.change(
+        (s) => s.copy({
+          'settings': {...s.settings, 'showMoodToday': false},
+        }),
+        remember: false,
+      );
+      await c.change(
+        (s) => deleteMood(s, '2026-11-10', now: now, expectedRevision: 1),
+      );
+      final read = await NativeHabitStore(path).read();
+      expect(read.moods.single.deleted, true);
+      expect(read.moods.single.note, 'Private note');
+      c.dispose();
+      final reopened = HabitController(
+        open: () async => NativeHabitStore(path),
+      );
+      await reopened.load();
+      await reopened.undo();
+      final restored = await NativeHabitStore(path).read();
+      expect(restored.moods.single.deleted, false);
+      expect(restored.moods.single.energy, 4);
+      expect(restored.moods.single.tags, ['home']);
+      expect(restored.settings['showMoodToday'], false);
+      expect(restored.operations.where((o) => o.kind == 'moods'), hasLength(3));
+      reopened.dispose();
+    },
+  );
+  test(
     'schema5 negative observations and causal Undo survive SQLite reopening',
     () async {
       final c = HabitController(open: () async => store);

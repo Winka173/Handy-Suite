@@ -11,6 +11,17 @@ class HabitHelpMock extends StatelessWidget {
   Widget build(BuildContext context) {
     final p = HabitPalette.of(context);
     final rows = switch (topic) {
+      'mood' => [
+        ('How’s today? → Okay', 'Hôm nay bạn thấy sao? → Bình thường'),
+        (
+          'Energy · Note · Tags (optional)',
+          'Năng lượng · Ghi chú · Nhãn (tùy chọn)',
+        ),
+        (
+          'Progress · Mood · Edit · Undo',
+          'Tiến trình · Tâm trạng · Sửa · Hoàn tác',
+        ),
+      ],
       'negative' => [
         ('Break a habit · Sugary drinks', 'Giảm thói quen · Nước ngọt'),
         ('2 of 3 allowed today', '2/3 lần cho phép hôm nay'),

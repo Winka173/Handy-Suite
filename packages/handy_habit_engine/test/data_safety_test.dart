@@ -242,7 +242,7 @@ void main() {
         old.remove('tombstones');
         if (version == 1) old.remove('pauses');
         final a = HabitState.fromJson(old), b = HabitState.fromJson(old);
-        expect(habitSchema, 5);
+        expect(habitSchema, 6);
         expect(a.events.single.toJson(), (old['events'] as List).single);
         expect(a.operations, isNotEmpty);
         expect(a.toJson(), b.toJson());

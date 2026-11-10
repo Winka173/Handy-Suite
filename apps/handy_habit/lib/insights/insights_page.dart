@@ -9,6 +9,7 @@ import '../ui/capped.dart';
 import '../ui/words.dart';
 import 'progress_calendar.dart';
 import 'week_review.dart';
+import '../mood/mood_history.dart';
 
 class InsightsPage extends StatefulWidget {
   final HabitScope scope;
@@ -451,7 +452,15 @@ class _InsightsPageState extends State<InsightsPage> {
                   Row(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Expanded(child: calendar),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            calendar,
+                            MoodHistory(scope: scope, from: from, until: until),
+                          ],
+                        ),
+                      ),
                       const SizedBox(width: 24),
                       Expanded(
                         child: Column(
@@ -465,6 +474,7 @@ class _InsightsPageState extends State<InsightsPage> {
                   calendar,
                   habitRows,
                   routineRows,
+                  MoodHistory(scope: scope, from: from, until: until),
                 ],
                 HandyLabel(tr(context, 'Export this range', 'Xuất khoảng này')),
                 Wrap(

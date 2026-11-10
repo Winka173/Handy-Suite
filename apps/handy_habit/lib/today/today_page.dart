@@ -11,6 +11,7 @@ import 'day_parts.dart';
 import '../ui/capped.dart';
 import '../design/palette.dart';
 import 'beads.dart';
+import '../mood/mood_history.dart';
 
 /// Today: what is left to do, each habit as a string of beads with today's
 /// bead to tap, and the routines to start.
@@ -47,6 +48,7 @@ class TodayPage extends StatelessWidget {
         _Greeting(scope: scope, due: due, routines: routines, index: index),
         if (scope.activeSession != null) _Resume(scope: scope),
         _Habits(scope: scope, due: due, index: index, notToday: notToday),
+        if (s.settings['showMoodToday'] != false) TodayMood(scope: scope),
       ];
       final right = [
         _Routines(scope: scope, routines: routines),

@@ -414,7 +414,7 @@ void main() {
   );
   for (final version in [1, 2, 3, 4]) {
     test(
-      'old v$version positive backups preserve payload and roundtrip as v5',
+      'old v$version positive backups preserve payload and roundtrip as v6',
       () {
         final h = Habit(
           id: 'p',
@@ -451,7 +451,7 @@ void main() {
         );
         expect(read.habits.single.direction, 'build');
         expect(read.habits.single.toJson(), h.toJson());
-        expect(read.toJson()['schema'], 5);
+        expect(read.toJson()['schema'], 6);
         expect(restore(backup(read)).toJson(), read.toJson());
       },
     );

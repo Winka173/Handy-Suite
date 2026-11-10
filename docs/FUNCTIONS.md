@@ -106,8 +106,8 @@ Keep, Spend hoặc timer đa dụng. [Trạng thái kiểm chứng](handy_habit/
   preview, hủy khi tắt/xóa. Windows/Web dùng danh sách đến hạn trong app.
 - SQLite native/IndexedDB Web, integrity check, schema version, bảo vệ ghi đồng
   thời. JSON/ZIP full backup miễn phí, preview merge/replace, đổi ID khi merge,
-  checksum và rollback. Replace lưu bản phục hồi bền trên máy trước khi commit; Cài đặt có khôi phục trước lần thay thế cuối. `.hseal` dùng mã hóa xác thực chung, sai mật khẩu/hỏng/hủy giữ dữ liệu. CSV log nhập/xuất (kèm bảng kỳ nghỉ thứ hai khi có);
-  Markdown/PDF báo cáo EN/VI có khoảng ngày, liệt kê kỳ nghỉ. Schema dữ liệu4/physical2, đọc backup/schema1–3; causal operations có ID/ancestry và delta/tổng tuyệt đối, chưa phải sync (R15/R16).
+  checksum và rollback. Replace lưu bản phục hồi bền trên máy trước khi commit; Cài đặt có khôi phục trước lần thay thế cuối. `.hseal` dùng mã hóa xác thực chung, sai mật khẩu/hỏng/hủy giữ dữ liệu. CSV log nhập/xuất (kèm bảng kỳ nghỉ và tâm trạng khi có);
+  Markdown/PDF báo cáo EN/VI có khoảng ngày, liệt kê kỳ nghỉ. Schema dữ liệu6/physical2, đọc backup/schema1–5; causal operations có ID/ancestry và delta/tổng tuyệt đối, chưa phải sync (R15/R16).
 - EN/VI, sáng/tối; ba khu Hôm nay / Quy trình / Tiến bộ, gear Cài đặt ở trên phone,
   sidebar224 từ840px gập thành rail64 và nhớ trạng thái. Named routes `/today`,
   `/routines`, `/progress`, `/habits`, editor và các route cũ; Ctrl/Cmd N/F/comma/1–3,
@@ -137,6 +137,15 @@ Giới hạn nền tảng: [PLATFORM_CAPABILITIES](handy_habit/PLATFORM_CAPABILI
 
 Fourteen independent local-first Flutter apps. Current code/test status: [FEATURE_MATRIX](../FEATURE_MATRIX.md).
 Known limits: [KNOWN_ISSUES](../KNOWN_ISSUES.md). Screenshots: [UI_REVIEW](UI_REVIEW.md).
+
+- R14 tâm trạng (Free, tùy chọn): sau habits ở Hôm nay, chạm lời hỏi rồi chọn một
+  trong5 nhãn để lưu ngay; không yêu cầu ghi chú. Chi tiết có năng lượng1–5/ghi chú/nhãn
+  tùy chọn. Progress có lịch sử theo khoảng, sửa/xóa/Hoàn tác/khôi phục; ngày trống không
+  suy ra cảm nhận. Cài đặt Hiện tâm trạng ở Hôm nay ẩn lời hỏi, giữ dữ liệu; help Tâm trạng
+  là chủ đề thứ17. Xóa giữ payload để khôi phục, không theo hạn30 ngày của habit Trash.
+  JSON/ZIP/CSV mang cả live/deleted; merge từ chối bản ghi khác nhau cùng ngày trước khi ghi.
+  Ghi chú ở cục bộ và bản xuất người dùng chọn; không vào thông báo/widget. Không correlation
+  hay khẳng định sức khỏe. Source/host/widget tested; chưa kiểm mới trên thiết bị/browser.
 
 ## Handy Spend
 

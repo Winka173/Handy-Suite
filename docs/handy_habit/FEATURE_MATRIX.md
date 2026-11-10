@@ -1,8 +1,17 @@
 # Handy Habit feature matrix
 
-Updated 2026-11-10 (R12/R13 run 7; earlier evidence below is historical).
+Updated 2026-11-10 (R14 run 8; earlier evidence below is historical).
 Source and tests exist; release certification is separate.
 No row below claims physical-device or real-store verification.
+
+| R14 feature | Status | Host evidence | Remaining |
+| --- | --- | --- | --- |
+| Optional two-tap mood, energy/note/tags, edit/delete/Undo/Restore | IMPLEMENTED / UNIT + WIDGET TESTED | App156 / engine129; validation/revision/causal Undo, optional fields, skip/failure/retry, unaffected habits, SQLite reopen | Native upgrade/restart/IME/back/SR |
+| Range-based Progress mood history, Today preference, bilingual Mood help | IMPLEMENTED / WIDGET TESTED | Show all/range/restore, preference hiding keeps data, reminder/widget payload independence;25 render cases /145 PNGs | Native lock-screen delivery and real browser runtime |
+| Schema6/physical2, all old JSON/ZIP formats and mood CSV table | IMPLEMENTED / HOST TESTED | v1–v5 migration, roundtrip/live/deleted/optional data, CSV validation, duplicate/conflicting-date refusal | Real provider backup/restore and IndexedDB upgrade |
+| Month calendar unknown mark uses drawing instead of missing Nunito glyph | IMPLEMENTED / WIDGET TESTED | EN/VI rendered text checked against all bundled cmaps; corrected day2 screenshot | Device font/render follow-up |
+
+See [R14 review](R14_REVIEW.md). Deletion is recoverable, without habit Trash's expiry; no individual permanent-mood-delete control. Correlation and sync transport remain later work.
 
 | R12/R13 feature | Status | Host evidence | Remaining |
 | --- | --- | --- | --- |

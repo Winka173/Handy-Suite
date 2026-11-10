@@ -32,6 +32,7 @@ class SheetFrame extends StatelessWidget {
   final Widget primary;
   final String error;
   final bool busy;
+  final bool showCancel;
   final List<Widget> actions;
   const SheetFrame({
     super.key,
@@ -40,6 +41,7 @@ class SheetFrame extends StatelessWidget {
     required this.primary,
     this.error = '',
     this.busy = false,
+    this.showCancel = true,
     this.actions = const [],
   });
 
@@ -71,8 +73,9 @@ class SheetFrame extends StatelessWidget {
           ),
         Row(
           children: [
-            if (dialog) ...[const Spacer(), cancel] else cancel,
-            const SizedBox(width: HandySpace.s),
+            if (dialog) const Spacer(),
+            if (showCancel) cancel,
+            if (showCancel) const SizedBox(width: HandySpace.s),
             if (dialog) primary else Expanded(child: primary),
           ],
         ),

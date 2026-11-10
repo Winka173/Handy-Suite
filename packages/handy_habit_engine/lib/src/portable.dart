@@ -55,7 +55,7 @@ HabitBackupPreview inspectBackup(Uint8List bytes, {bool zip = true}) {
     if (files.length != 2) throw const FormatException('Missing backup files');
     final manifest = jsonDecode(utf8.decode(files['manifest.json']!)) as Map;
     if (manifest['app'] != 'handy-habit' ||
-        ![1, 2, 3, 4, habitSchema].contains(manifest['schema']) ||
+        ![1, 2, 3, 4, 5, habitSchema].contains(manifest['schema']) ||
         (manifest['files'] as Map)['data.json'] !=
             sha256.convert(files['data.json']!).toString())
       throw const FormatException('Backup checksum mismatch');
@@ -74,6 +74,17 @@ HabitBackupPreview inspectBackup(Uint8List bytes, {bool zip = true}) {
 }
 
 HabitState merge(HabitState current, HabitState imported) {
+  // Date identities cannot be remapped. Refuse conflicting reflections rather
+  // than silently replacing either person's text (including deleted entries).
+  final moods = {for (final m in current.moods) m.day: m};
+  for (final m in imported.moods) {
+    if (moods[m.day] != null && !_same(moods[m.day]!.toJson(), m.toJson())) {
+      throw const FormatException(
+        'Conflicting mood date; existing data preserved / Tâm trạng cùng ngày khác nhau; giữ nguyên dữ liệu',
+      );
+    }
+    moods[m.day] = m;
+  }
   // All imported identities are remapped: never overwrite a live event/session.
   final existingBatches = List<String>.from(
         current.settings['imports'] as List? ?? [],
@@ -175,6 +186,7 @@ HabitState merge(HabitState current, HabitState imported) {
       )
       .toList();
   return current.copy({
+    'moods': moods.values.map((m) => m.toJson()).toList(),
     'trash': [
       ...current.trash.map((t) => t.toJson()),
       for (final t in imported.trash)
@@ -246,6 +258,32 @@ HabitState merge(HabitState current, HabitState imported) {
 String _csvCell(String v) => '"${_csvSafe(v).replaceAll('"', '""')}"';
 String _csvSafe(String v) => RegExp(r'^[\s]*[=+@\-]').hasMatch(v) ? "'$v" : v;
 
+const _moodHeader = [
+  'mood_id',
+  'local_date',
+  'mood',
+  'energy',
+  'note',
+  'tags',
+  'revision',
+  'recorded_at',
+  'updated_at',
+  'deleted_at',
+  'record_b64',
+];
+List<String> _moodCells(MoodEntry m) => [
+  m.id,
+  m.day,
+  '${m.mood}',
+  m.energy == null ? '' : '${m.energy}',
+  m.note,
+  jsonEncode(m.tags),
+  '${m.revision}',
+  m.recordedAt,
+  m.updatedAt,
+  m.deletedAt ?? '',
+];
+
 const _pauseHeader = [
   'pause_id',
   'from',
@@ -310,7 +348,7 @@ String csvLogs(HabitState s, String from, String until) {
         base64Encode(
           utf8.encode(
             jsonEncode({
-              'schema': byId[e.habit]!.isNegative ? habitSchema : 1,
+              'schema': byId[e.habit]!.isNegative ? 5 : 1,
               'entry': e.toJson(),
               if (byId[e.habit]!.isNegative && metadataSent.add(e.habit))
                 'negativeHabit': byId[e.habit]!.toJson(),
@@ -319,7 +357,19 @@ String csvLogs(HabitState s, String from, String until) {
         ),
       ],
   ].map((row) => row.map(_csvCell).join(',')).join('\r\n');
-  if (pauses.isEmpty) return logs;
+  final moods = s.moods.where(
+    (m) => m.day.compareTo(from) >= 0 && m.day.compareTo(until) <= 0,
+  );
+  final moodTable = moods.isEmpty
+      ? ''
+      : '\r\n\r\n${[
+          _moodHeader,
+          for (final m in moods) [
+              ..._moodCells(m),
+              base64Encode(utf8.encode(jsonEncode({'schema': habitSchema, 'mood': m.toJson()}))),
+            ],
+        ].map((r) => r.map(_csvCell).join(',')).join('\r\n')}';
+  if (pauses.isEmpty) return '$logs$moodTable';
   final table = [
     _pauseHeader,
     for (final p in pauses)
@@ -330,7 +380,7 @@ String csvLogs(HabitState s, String from, String until) {
         ),
       ],
   ].map((row) => row.map(_csvCell).join(',')).join('\r\n');
-  return '$logs\r\n\r\n$table';
+  return '$logs\r\n\r\n$table$moodTable';
 }
 
 /// Adds the records (and pauses) of a Habit CSV. Every row is checked
@@ -338,6 +388,36 @@ String csvLogs(HabitState s, String from, String until) {
 HabitState importCsvLogs(HabitState current, Uint8List bytes) {
   if (bytes.length > backupLimit) throw const FormatException('CSV limit');
   final rows = csvParse(utf8.decode(bytes));
+  final moodSplit = rows.indexWhere(
+    (r) => jsonEncode(r) == jsonEncode(_moodHeader),
+  );
+  final moodRows = moodSplit < 0
+      ? <List<String>>[]
+      : rows.sublist(moodSplit + 1);
+  if (moodSplit >= 0) rows.removeRange(moodSplit, rows.length);
+  final moods = {for (final m in current.moods) m.day: m};
+  for (final row in moodRows) {
+    if (row.length != _moodHeader.length)
+      throw const FormatException('Wrong mood CSV column count');
+    final record = jsonDecode(utf8.decode(base64Decode(row.last))) as Map;
+    if (record['schema'] != 6)
+      throw const FormatException('Unknown mood record schema');
+    final m = MoodEntry.fromJson(
+      Map<String, dynamic>.from(record['mood'] as Map),
+    );
+    if (jsonEncode(row.take(row.length - 1).toList()) !=
+        jsonEncode(_moodCells(m).map(_csvSafe).toList())) {
+      throw const FormatException(
+        'Mood CSV visible values differ from portable record',
+      );
+    }
+    if (moods[m.day] != null && !_same(moods[m.day]!.toJson(), m.toJson())) {
+      throw const FormatException(
+        'Conflicting mood date; existing data preserved / Tâm trạng cùng ngày khác nhau; giữ nguyên dữ liệu',
+      );
+    }
+    moods[m.day] = m;
+  }
   final expected = csvParse(
     csvLogs(HabitState(), '1900-01-01', '2200-12-31'),
   ).first;
@@ -405,7 +485,7 @@ HabitState importCsvLogs(HabitState current, Uint8List bytes) {
     if (row.length != _pauseHeader.length)
       throw const FormatException('Wrong CSV column count');
     final record = jsonDecode(utf8.decode(base64Decode(row.last))) as Map;
-    if (![2, 3, 4, habitSchema].contains(record['schema']))
+    if (![2, 3, 4, 5, habitSchema].contains(record['schema']))
       throw const FormatException('Unknown pause record schema');
     final p = Pause.fromJson(Map<String, dynamic>.from(record['pause'] as Map));
     // Habit names (column 5) may differ between devices; IDs may not.
@@ -424,6 +504,7 @@ HabitState importCsvLogs(HabitState current, Uint8List bytes) {
     pauses[p.id] = p;
   }
   return current.copy({
+    'moods': moods.values.map((m) => m.toJson()).toList(),
     'habits': habits.values.map((h) => h.toJson()).toList(),
     'events': entries.values.map((e) => e.toJson()).toList(),
     'pauses': pauses.values.map((p) => p.toJson()).toList(),
