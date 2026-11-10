@@ -36,15 +36,14 @@ Bất biến: validate toàn bộ→CAS transaction→publish; cancel/error gi�
 
 ### Version và migration
 
-Baseline data schema2, SQLite/IDB physical1. Read chain tường minh1→2→3→4→5→6→7; writer theo slice, không parser chỉ nhận1/latest bỏ schema giữa. Backup manifest/data phải tương thích sau normalize.
+Baseline data schema2, SQLite/IDB physical1. Run 2 ships data3/physical2, including R4 trash in v3 as required by the combined brief. Read chain shipped: 1→2→3; planned next versions: 4→5→6; writer theo slice, không parser chỉ nhận1/latest bỏ schema giữa. Backup manifest/data phải tương thích sau normalize.
 
 | Schema | Thêm | Migration/roundtrip |
 | --- | --- | --- |
-| 3/R3 | Causal operations/revisions, versioned clock policy | Mỗi v2 event→legacy op ID tất định từ eventId/payload hash, actor legacy ổn định; entityId giữ logical eventId để phát hiện cùng event khác payload; số/ngày/provenance giữ, cùng ancestry không double count |
-| 4/R4 | Trash/tombstones/references | Records cũ live, archive không thành deleted; backup trash/restore links |
-| 5/R10 | Negative GoalRevision/IncidentOp/Observation | Habits cũ positive, unit/target history giữ, zero/unknown riêng, CSV cũ đọc được |
-| 6/R14 | MoodEntry/revision/delete | Mood rỗng, không suy từ notes; time/tags/note roundtrip |
-| 7/R17 | Advanced graph/plan snapshots/trace | List cũ→linear path tương đương; active/closed sessions giữ snapshot |
+| 3/R3+R4 (IMPLEMENTED, host tested) | Causal operations/revisions, versioned clock policy, trash/tombstones | Mỗi v2 event→legacy op ID tất định từ eventId/payload hash, actor legacy ổn định; entityId giữ logical eventId để phát hiện cùng event khác payload; số/ngày/provenance giữ, cùng ancestry không double count |
+| 4/R10 (planned) | Negative GoalRevision/IncidentOp/Observation | Habits cũ positive, unit/target history giữ, zero/unknown riêng, CSV cũ đọc được |
+| 5/R14 (planned) | MoodEntry/revision/delete | Mood rỗng, không suy từ notes; time/tags/note roundtrip |
+| 6/R17 (planned) | Advanced graph/plan snapshots/trace | List cũ→linear path tương đương; active/closed sessions giữ snapshot |
 
 R3 tạo operations table/index và IDB store→physical2. Slice sau ưu tiên payload; cần thêm table/index thì bump physical tiếp. Không đổi DB name/format app ID. Migration transaction + durable recovery trước migrate, future/corrupt/quota giữ bản gốc, IDB onblocked/versionchange xử lý tab cũ.
 
@@ -61,23 +60,23 @@ Operation{id,actorId,actorSeq,lamport,parents,entityKind,entityId,intent,payload
 - Payload bounded, không full snapshot mỗi op; compact chỉ sau checkpoint/ack mọi replica biết đến và recovery snapshot. Tombstone không expire theo30 ngày UI, máy offline lâu join có deletion knowledge.
 - ClockPolicy{zone,dayBoundaryMinutes,effectiveFrom} versioned, chỉ áp recording tương lai; ngày cũ không tính lại từ timestamp. Duration dùng milli phút như baseline.
 
-### Trash (v4)
+### Trash (v3, bundled with R3)
 
 TrashEntry{id,kind,entityId,deletedAtUtc,expiresAtUtc,deletionRevision,payloadRef,referenceSnapshot}. Giữ30 ngày, days-left=ceil(remaining/24h) clamp0..30. Habit ẩn Today/reminders ngay, history còn khi trong trash, future eligibility chốt ngày xóa. Routine giữ session snapshots. Restore nguyên ID/links còn hợp lệ; đã purge habit thì nói không còn, không tạo habit mới. Active session dùng entity phải pause/đóng/xác nhận xử lý trước xóa. Purge payload/history sau30 ngày theo lời báo trước, idempotent, giữ tombstone nhẹ cho sync. Archive cất lâu dài, không expire.
 
-### Negative (v5)
+### Negative (planned v4)
 
 Habit.direction=build|reduce, không reversed binary. GoalRevision{id,effectiveFrom,measure=count|quantity|duration,unit,window=day|week,maxIncidentsMilli,weekStart,baselineMilli?}; positive weekly quota giữ riêng. IncidentOp có habit/day/amount/source/note/instant/revision, edit/retract qua ledger. Observation{habitId,localDay,confirmedThrough}: observed+no incidents=zero, thiếu ghi=unknown. Optional xác nhận0 cho cả nhóm, không bắt nhiều việc mỗi ngày.
 
 Today1/2 lần trong giới hạn, primary Ghi lần, zero action riêng. Kỳ mở provisional, không cộng streak trước đóng; closed observed≤threshold đạt, vượt phản hồi trung tính/không đỏ. Weekly là tổng incidents, không số ngày tốt. Nghỉ không thành zero; kỳ thiếu observation/đang nghỉ không đủ tuyên bố đạt, hiển thị known+unknown. Không auto-prorate threshold âm làm mục tiêu chặt hơn, sửa từ kỳ sau. Không routine completion→incident; reduction% chỉ baseline người dùng xác nhận và cùng đơn vị/kỳ, không y tế.
 
-### Mood (v6)
+### Mood (planned v5)
 
 MoodEntry{id,day,recordedAtUtc,mood1..5?,energy1..5?,note≤4096,tags≤8,revision,deletedAt?}; ít nhất mood hoặc energy, một entry hiệu lực/ngày, edit có revision; concurrent không ngầm average. Skip không tạo entry, không suy mood từ habit. Correlation local cần≥14 paired observed days, nêu N/missing, chỉ liên hệ không nguyên nhân/chẩn đoán. Thiếu mẫu nói thiếu, không upsell che data.
 
 Basic routine library chính là các plan tái sử dụng. Save as template tạo bản Routine độc lập bằng model hiện có, không chỉnh plan gốc hoặc session snapshot; bản này đi trong full backup. Nếu cần metadata mới ngoài model phải có schema bump/roundtrip trước, không giấu fields mới trong UI.
 
-### Advanced routines (v7)
+### Advanced routines (planned v6)
 
 RoutinePlanRevision{id,from,graphVersion,nodes,edges,blocksSnapshot,presets}; node ID stable. Rules hữu hạn: condition theo dữ liệu ngày/session đã có, prior-node dependency, choice branch, stack-after; không expression/code tùy ý. DAG≤200 expanded steps, không cycle/recursive blocks, mọi path có exit/required reachable. Block snapshot/version lúc thêm, sửa không rewrite session. Seconds theo weekday, foreground timer policy/auto-transition opt-in, không background alarm giả.
 
@@ -139,22 +138,22 @@ Mỗi run một feature area, supervisor review rồi chuyển. A/E/AT/ET theo A
 
 | Run | Files/phạm vi | Tests thêm + acceptance | Supervisor device check |
 | --- | --- | --- | --- |
-| R2 P0 data safety | A settings/data, backup/recovery helpers, kit integration | AT backup_restore: hseal wrong password/tamper/cancel, metadata/schema/size preview, stale CAS/rollback, durable pre-replace recovery; giữ v1/v2 | SAF local/cloud provider, iOS Files, Windows retention/sealed, Web upload/download |
-| R3 P0 causal storage | E operations/migration/models/portable/calendar/routines; A stores/controller; schema3/physical2 | ET legacy migration/union/retract/absolute-conflict; AT transaction/CAS/restart; số/ngày/provenance giữ, domain Undo | Upgrade years data/kill migration/commit/low storage; browser blocked tab/quota |
-| R4 P0 trash | E trash/models/portable; A delete menus/settings trash; schema4 | ET restore/purge/day/refs/backup; AT restart→restore/Ndays/active guard/archive riêng | Ngày29/30/restore links/permanent delete/backup |
+| R2 P0 data safety — IMPLEMENTED / HOST TESTED | A settings/data, backup/recovery helpers, kit integration | AT backup_restore: hseal wrong password/tamper/cancel, metadata/schema/size preview, stale CAS/rollback, durable pre-replace recovery; giữ v1/v2 | SAF local/cloud provider, iOS Files, Windows retention/sealed, Web upload/download |
+| R3 P0 causal storage — IMPLEMENTED / HOST TESTED | E operations/migration/models/portable/calendar/routines; A stores/controller; schema3/physical2 | ET legacy migration/union/retract/absolute-conflict; AT transaction/CAS/restart; số/ngày/provenance giữ, domain Undo | Upgrade years data/kill migration/commit/low storage; browser blocked tab/quota |
+| R4 P0 trash — IMPLEMENTED / HOST TESTED | E trash/models/portable; A delete menus/settings trash; bundled schema3 | ET restore/purge/day/refs/backup; AT restart→restore/Ndays/active guard/archive riêng | Ngày29/30/restore links/permanent delete/backup |
 | R5 P1 shell/Today | A shell/app/today/habits list/kit motion | AT routes/URL/one-tap/Undo/reduced motion/scale; bead top60%; cap→Show all; films ensureVisible+state assert | Rapid tap/back/rotation/SR, fold/keyboard, browser refresh/back |
 | R6 P1 habit editor/history | A editor/appearance/view/month_grid/form; E clock policy | AT cancel/fail/legacy Advanced/effective targets/history Show all; ET custom day-boundary/DST giữ ngày cũ |320keyboard/VI dài/swipe dirty/midnight/appearance giữ log |
 | R7 P1 Basic routines | A draft builder/list/detail/runner UI | AT draft add/reorder/link/cancel/fail/required/skip/time/summary; ET exactly-once regressions; save toàn draft | Drag+nút up/down/linked count/background/kill/reopen/exit |
 | R8 P1 onboarding | A welcome/page/story/practice + routes | AT2beats/no-question/Back-Skip-Esc-Enter/practice check-in-Undo-goal-run-done/Do it for me/final1Start/replay no writes/upgrade no force | First launch/update/replay/OS back/large text/dark/VI/no permissions |
 | R9 P1 help/Settings | A how_to_page/how_to_mocks/groups/parts/routes | AT search không dấu/EN-VI/no-match/context/replay, badge non-Pro, persist/error/reset-only-prefs; topics theo enabled features | Làm theo ảnh/SR/reset giữ data-purchase/support/privacy |
-| R10 P1 negative engine | E negative/goal/ops/calendar/portable/migration; schema5 | ET incident/zero/unknown/day-week/open-close/skip/pause/retract/DST/history/conflict; full formats/old positives | Upgrade/reopen/restore mixed/check day-week boundaries |
+| R10 P1 negative engine | E negative/goal/ops/calendar/portable/migration; schema4 | ET incident/zero/unknown/day-week/open-close/skip/pause/retract/DST/history/conflict; full formats/old positives | Upgrade/reopen/restore mixed/check day-week boundaries |
 | R11 P1 negative UX | A editor/today/check_in/history/help | AT incident/Undo/zero optional/unknown≠success/budget/backfill/neutral/no routine incident |2/day,3/week/EN-VI/SR/zero-vs-unknown |
 | R12 P1 templates | E presets/catalog/routines; A templates/create/help | ET IDs/content/EN-VI/defaults; AT search/category/preview/customize/cancel/save once; giữ32/8, report counts mới | Offline/back/no duplicate/previews khớp UI |
 | R13 P1 core Progress | E review/heatmap; A insights/progress/week | ET denominator/leap/DST/quota/unknown/conflict; AT range/filter/Show all/export/zero; month-year Free | Years data/text scale/SR table/cell backfill |
-| R14 P2 mood | E mood/model/portable/migration; A optional sheet/calendar; schema6 | ET validation/revision/delete/roundtrip; AT2tap/skip/no forced note/privacy, core không phụ thuộc | Offline/edit/delete/restart/restore/export privacy |
+| R14 P2 mood | E mood/model/portable/migration; A optional sheet/calendar; schema5 | ET validation/revision/delete/roundtrip; AT2tap/skip/no forced note/privacy, core không phụ thuộc | Offline/edit/delete/restart/restore/export privacy |
 | R15 P0 sync engine | E sync/protocol/merge/reducer; A base abstraction | ET full conflict suite ở §3/convergence/closed union/active local/corrupt/local edits in flight |2 states/2 processes/conflict values/manual+linked không mất |
 | R16 P1 Android Drive | A sync/provider/controller/section/lifecycle/pubspec | AT fake auth/offline/quota/CAS/retry/disable/rejoin/flag-off/no delete/token export; appdata only | Owner OAuth/signing/2Android/deny-revoke/offline/interruption/Sync now |
-| R17 P2 Advanced engine | E routine_rules/plans/portable/migration; schema7 | ET DAG/cycle/refs/path cap/inputs snapshot/Undo/linked/weekday/all-schema roundtrip | Active basic upgrade/branch restart/restore no automation |
+| R17 P2 Advanced engine | E routine_rules/plans/portable/migration; schema6 | ET DAG/cycle/refs/path cap/inputs snapshot/Undo/linked/weekday/all-schema roundtrip | Active basic upgrade/branch restart/restore no automation |
 | R18 P2 Advanced UX | A builder/blocks/presets/trace/runner/gates | AT Basic-Advanced/readable preview/draft/validation/fail/existing run-safe/summary | Branch/dependency/skip/Undo/recovery/motion, no terminated timer |
 | R19 P2 insights | E correlation/comparison/suggestions; A advanced progress/report | ET≥14 pairs/missing/no-cause/segments; AT explain-why/free core/report preview | Check against independent export/data ít-nhiều/no medical |
 | R20 P2 studio | A design/theme/dashboard/widget preview | AT AA light-dark/preview cancel-apply/entitlement loss/Nunito VI/widths/no data rewrite | OS theme/text scale/contrast/stable dots/appearance giữ lịch |
@@ -175,3 +174,17 @@ Một quyết định sản phẩm mở: giá cơ sở/thị trường giá Pro 
 Inputs phát hành khác: OAuth clients/signing cho Drive, store product IDs/publisher/consent, Mac/Xcode/Apple entitlement/device. Không đọc secret để đoán. Đã chốt guide3stages đúng sibling/no-question đầu/no-picker cuối,3 destinations/Library trong create, trash30 ngày, ownership Free, mood optional, negative unknown trung thực/missed không đỏ. Không cần hỏi lại.
 
 Run1 không shared change. Slice sau ưu tiên app-owned wrapper; nếu buộc sửa handy_ui/files/core phải compatible và report từng thay đổi.
+
+
+### Run 2 implementation notes (2026-11-10)
+
+R2–R4 are source implemented and host tested, not device/browser verified. R4 is bundled into data schema 3 (the combined-run brief overrides its earlier proposed v4); later proposed schemas move down one. SQLite/IDB physical version is 2; store names and format IDs stay unchanged.
+- R2: signature-based sealed ZIP restore, recorded date/size/original schema/counts, copy-merge, durable device-local pre-replace checkpoint, atomic commit rollback, CAS both at checkpoint and commit, Settings recovery after restart. Old JSON/ZIP v1/v2 still read. Missing old backup dates are explicit. Imported reminder rules are off; merge preserves current preferences.
+- R3: deterministic legacy event revision IDs, immutable operation headers/content hashes, row parents, writer-incarnation actors with monotonic sequence/Lamport clocks, semantic addDelta/setManualTotal with observed IDs, operation union/collision checks, absolute-edit/skip conflict candidates, persisted guarded inverse Undo/retraction. Versioned midnight clock policy records future timezone changes; custom boundaries remain R6. This foundation does not enable sync or claim a full materialized cross-device reducer (R15).
+- R4: 30-day UTC retention with ceil days-left, deleted records hidden from active reads/reminders while history/links remain, original-ID restoration, neutral retained gaps, active linked session guard, permanent-delete confirmation, idempotent purge on open, tombstones and redacted erased-item inverse payloads retained for later sync. Archive remains independent. Backup merge remaps trashed links as copies; only ordinary backups contain trash, not device recovery checkpoints.
+- Native upgrade takes a flushed pre-v2 SQLite recovery file and migrates in a transaction; injected interruption rolls back and retries. Browser physical upgrade only adds missing stores atomically, preserving old rows; normalization occurs on read and v3 writes at the next commit. Browser quota/blocked-tab/runtime migration still needs real browser verification.
+- Core history/calendar values and provenance are preserved in v1/v2 migration and ZIP/JSON roundtrips. All tests, including pre-existing uncommitted advanced-form/appearance tests, are part of the final run. See the run-2 report for exact final counts and file manifest.
+
+Run 2 final host checks: engine74/74, app70/70 (`flutter test --no-pub`); both `dart analyze` clean and `dart format --output=none --set-exit-if-changed lib test` report0 changed. Fixture verifier PASS21 files/39 documented tools; no fixture/registry changes. No device/browser/store tests.
+
+R3 regression guard: manual habit/routine order is stored as validated entityOrder IDs, separate from database key/row order; guarded order revisions preserve reorder Undo across restart and backup roundtrip without snapshotting the whole state.

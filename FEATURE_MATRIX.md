@@ -10,7 +10,7 @@ P1 đã code và có kiểm thử host/Android emulator: stamp, Memory Book, EXI
 replay, so sánh và recipe. Khả năng phát hành store chưa hoàn tất.
 
 Handy Habit là app độc lập thứ chín: thói quen, lịch/streak, routine runner,
-Routine Lite, insights, nhắc cục bộ và backup. Trạng thái từng chức năng và bằng
+insights, nhắc cục bộ và backup. Run 2 (10/11): schema3/physical2, Undo domain bền, preview/khôi phục có bản phục hồi trước thay thế và Thùng rác30 ngày; source/host tested, chưa device/browser. Trạng thái từng chức năng và bằng
 chứng nằm tại [Habit matrix](docs/handy_habit/FEATURE_MATRIX.md). Kiểm thử host,
 emulator, thiết bị thật và store được ghi riêng.
 

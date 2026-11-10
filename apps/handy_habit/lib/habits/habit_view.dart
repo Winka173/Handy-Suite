@@ -286,8 +286,8 @@ class HabitMenu extends StatelessWidget {
       title: tr(context, 'Delete ${habit.title}?', 'Xóa ${habit.title}?'),
       message: tr(
         context,
-        'Its records go too. Past routine sessions keep their steps; routine steps and reminders lose the link.',
-        'Các lần ghi cũng bị xóa. Phiên quy trình đã chạy giữ nguyên; bước quy trình và lịch nhắc bỏ liên kết.',
+        'It stays in Trash for 30 days with its records and links. Then its records are removed and routine links are cleared.',
+        'Giữ trong Thùng rác 30 ngày cùng các lần ghi và liên kết. Sau đó xóa các lần ghi và bỏ liên kết quy trình.',
       ),
       confirmLabel: tr(context, 'Delete', 'Xóa'),
       destructive: true,
@@ -297,34 +297,12 @@ class HabitMenu extends StatelessWidget {
     final h = habit;
     final done = await scope.write(
       context,
-      (s) => dropHabitFromPauses(s, h.id).copy({
-        'habits': [
-          for (final x in s.habits)
-            if (x.id != h.id) x.toJson(),
-        ],
-        'events': [
-          for (final e in s.events)
-            if (e.habit != h.id) e.toJson(),
-        ],
-        'routines': [
-          for (final r in s.routines)
-            r.copy({
-              'steps': [
-                for (final step in r.steps)
-                  step.copy({
-                    'habit': step.habit == h.id ? null : step.habit,
-                  }).toJson(),
-              ],
-            }).toJson(),
-        ],
-        'settings': {
-          ...s.settings,
-          'reminders': objects(s.settings['reminders'] ?? [])
-              .where((r) => !(r['type'] == 'habit' && r['target'] == h.id))
-              .toList(),
-        },
-      }),
-      done: (c) => tr(c, '${h.title} deleted.', 'Đã xóa ${h.title}.'),
+      (s) => trashEntity(s, 'habit', h.id, scope.clock()),
+      done: (c) => tr(
+        c,
+        '${h.title} moved to Trash.',
+        'Đã chuyển ${h.title} vào Thùng rác.',
+      ),
     );
     if (done && navigator.canPop()) navigator.maybePop();
   }

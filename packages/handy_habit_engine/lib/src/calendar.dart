@@ -62,6 +62,7 @@ class HabitIndex {
   final Map<String, int> totals = {};
   final Set<String> skipped = {};
   final List<Pause> pauses;
+  Map<String, String> deletedAfter = {};
   HabitIndex(Iterable<HabitEvent> events, [Iterable<Pause> pauses = const []])
     : pauses = List.unmodifiable(pauses) {
     for (final e in events) {
@@ -72,10 +73,16 @@ class HabitIndex {
   }
 
   /// Records and pauses of [s]: what statuses and metrics read.
-  factory HabitIndex.of(HabitState s) => HabitIndex(s.events, s.pauses);
+  factory HabitIndex.of(HabitState s) => HabitIndex(s.events, s.pauses)
+    ..deletedAfter = {
+      for (final t in s.trash.where((t) => t.kind == 'habit'))
+        t.entity: t.localDay,
+    };
   int value(String habit, String d) => totals['$habit:$d'] ?? 0;
   bool skip(String habit, String d) => skipped.contains('$habit:$d');
-  bool paused(String habit, String d) => pauses.any((p) => p.covers(habit, d));
+  bool paused(String habit, String d) =>
+      deletedAfter[habit] != null && d.compareTo(deletedAfter[habit]!) > 0 ||
+      pauses.any((p) => p.covers(habit, d));
 }
 
 Habit archiveHabit(Habit h, String today, bool archived) {
@@ -215,6 +222,8 @@ HabitState record(
   required String today,
   bool allowExtra = false,
 }) {
+  if (state.isTrashed('habit', event.habit))
+    throw StateError('Habit is in Trash');
   final existing = state.events.where((e) => e.id == event.id).firstOrNull;
   if (existing != null) {
     if (jsonEncode(existing.toJson()) != jsonEncode(event.toJson()))
@@ -231,9 +240,18 @@ HabitState record(
       index.value(h.id, event.day) >=
           (scheduleOn(h, event.day)?.target ?? 1000))
     return state;
-  return state.copy({
-    'events': [...state.events.map((e) => e.toJson()), event.toJson()],
-  });
+  return recordDayIntent(
+    state,
+    state.copy({
+      'events': [...state.events.map((e) => e.toJson()), event.toJson()],
+    }),
+    event.habit,
+    event.day,
+    'addDelta',
+    event.value,
+    event: event.id,
+    skipped: event.skipped,
+  );
 }
 
 HabitState setManualTotal(
@@ -246,7 +264,8 @@ HabitState setManualTotal(
   bool skipped = false,
 }) {
   final h = s.habits.firstWhere((h) => h.id == habit);
-  if (h.archived ||
+  if (s.isTrashed('habit', h.id) ||
+      h.archived ||
       d.compareTo(today) > 0 ||
       date(today).difference(date(d)).inDays > s.backfill ||
       d.compareTo(h.created) < 0)
@@ -273,7 +292,15 @@ HabitState setManualTotal(
         note: note,
       ).toJson(),
     );
-  return s.copy({'events': entries});
+  return recordDayIntent(
+    s,
+    s.copy({'events': entries}),
+    habit,
+    d,
+    'setManualTotal',
+    total,
+    skipped: skipped,
+  );
 }
 
 int minuteOfDay(String s) {
@@ -349,14 +376,24 @@ List<DueReminder> dueReminders(HabitState s, DateTime now) {
       if (!r.weekdays.contains(date(d).weekday)) return false;
       if (r.type == 'habit') {
         final h = s.habits
-            .where((h) => h.id == r.target && !h.archived)
+            .where(
+              (h) =>
+                  h.id == r.target &&
+                  !h.archived &&
+                  !s.isTrashed('habit', h.id),
+            )
             .firstOrNull;
         return h != null &&
             isScheduledOn(h, d) &&
             !s.pauses.any((p) => p.covers(h.id, d));
       }
       final routine = s.routines
-          .where((v) => v.id == r.target && !v.archived)
+          .where(
+            (v) =>
+                v.id == r.target &&
+                !v.archived &&
+                !s.isTrashed('routine', v.id),
+          )
           .firstOrNull;
       return routine != null &&
           routine.weekdays.contains(date(d).weekday) &&

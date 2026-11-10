@@ -22,7 +22,7 @@ class _HabitsPageState extends State<HabitsPage> {
 
   List<Habit> get shown {
     final q = foldAccents(search.trim());
-    final list = scope.state.habits
+    final list = scope.state.liveHabits
         .where(
           (h) =>
               h.archived == archived &&

@@ -13,6 +13,7 @@ import 'run_notice.dart';
 import 'runner.dart';
 import 'scope.dart';
 import 'settings/settings_page.dart';
+import 'settings/trash_page.dart';
 import 'shell/habit_shell.dart';
 import 'today/check_in.dart';
 
@@ -44,7 +45,7 @@ class HabitApp extends StatefulWidget {
 }
 
 class _HabitAppState extends State<HabitApp> with WidgetsBindingObserver {
-  late final c = widget.controller ?? HabitController();
+  late final c = widget.controller ?? HabitController(clock: widget.clock);
   late final reminders = widget.reminders ?? HabitReminders();
   late final scope = HabitScope(
     controller: c,
@@ -210,6 +211,7 @@ class _HabitAppState extends State<HabitApp> with WidgetsBindingObserver {
 
   Route<dynamic>? route(RouteSettings s) {
     final Widget Function()? page = switch ((s.name ?? '/').split('/')) {
+      ['', 'settings', 'trash'] => () => HabitTrashPage(scope: scope),
       ['', 'settings'] => () => HabitSettingsPage(scope: scope),
       ['', 'habit', final id] => () => HabitPage(scope: scope, id: id),
       ['', 'routine', final id] => () => RoutinePage(scope: scope, id: id),

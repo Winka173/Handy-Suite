@@ -381,19 +381,19 @@ void main() {
         pause('2024-01-06', '2024-01-07', id: 'q', habits: ['k']),
       ],
     );
-    test('schema 1 data reads with no pauses and is written as schema 2', () {
+    test('schema 1 data reads with no pauses and is written as schema 3', () {
       final old = s.toJson()
         ..['schema'] = 1
         ..remove('pauses');
       final read = HabitState.fromJson(old);
       expect(read.pauses, isEmpty);
-      expect(read.toJson()['schema'], 2);
+      expect(read.toJson()['schema'], 3);
       expect(
         () => HabitState.fromJson({...old, 'pauses': []}),
         throwsFormatException,
       );
       expect(
-        () => HabitState.fromJson({...s.toJson(), 'schema': 3}),
+        () => HabitState.fromJson({...s.toJson(), 'schema': 99}),
         throwsFormatException,
       );
     });

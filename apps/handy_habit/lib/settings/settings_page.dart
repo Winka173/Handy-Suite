@@ -138,9 +138,9 @@ class HabitSettingsPage extends StatelessWidget {
   Future<void> _reminder(BuildContext context, [Reminder? old]) {
     final s = scope.state;
     final targets = {
-      for (final h in s.habits.where((h) => !h.archived))
+      for (final h in s.liveHabits.where((h) => !h.archived))
         'habit:${h.id}': h.title,
-      for (final r in s.routines.where((r) => !r.archived))
+      for (final r in s.liveRoutines.where((r) => !r.archived))
         'routine:${r.id}': r.title,
     };
     return showHabitForm(
@@ -236,9 +236,10 @@ class HabitSettingsPage extends StatelessWidget {
       final s = scope.state;
       final c = HandyColors.of(context);
       Widget value(String text) => Text(text, style: TextStyle(color: c.muted));
-      final rules = objects(
-        s.settings['reminders'] ?? [],
-      ).map(Reminder.fromJson).toList();
+      final rules = objects(s.settings['reminders'] ?? [])
+          .map(Reminder.fromJson)
+          .where((r) => !s.isTrashed(r.type, r.target))
+          .toList();
       String targetName(Reminder r) =>
           (r.type == 'habit'
               ? scope.habit(r.target)?.title
@@ -267,23 +268,21 @@ class HabitSettingsPage extends StatelessWidget {
             children: [
               HandyTile(
                 title: tr(context, 'Time zone', 'Múi giờ'),
-                trailing: value(s.zone),
+                subtitle: s.zone,
                 onTap: () => _calendar(context),
               ),
               HandyTile(
                 title: tr(context, 'Weeks start on', 'Tuần bắt đầu vào'),
-                trailing: value(weekdayLong(context, s.weekStart)),
+                subtitle: weekdayLong(context, s.weekStart),
                 onTap: () => _calendar(context),
               ),
               HandyTile(
                 key: const Key('set-backfill'),
                 title: tr(context, 'Fill in days up to', 'Cho ghi bù tối đa'),
-                trailing: value(
-                  tr(
-                    context,
-                    '${s.backfill} days back',
-                    '${s.backfill} ngày trước',
-                  ),
+                subtitle: tr(
+                  context,
+                  '${s.backfill} days back',
+                  '${s.backfill} ngày trước',
                 ),
                 onTap: () => _calendar(context),
               ),
@@ -359,9 +358,8 @@ class HabitSettingsPage extends StatelessWidget {
               HandyTile(
                 key: const Key('set-quiet'),
                 title: tr(context, 'Quiet hours', 'Giờ yên lặng'),
-                trailing: value(
-                  '${s.settings['quietStart'] ?? '22:00'} – ${s.settings['quietEnd'] ?? '07:00'}',
-                ),
+                subtitle:
+                    '${s.settings['quietStart'] ?? '22:00'} – ${s.settings['quietEnd'] ?? '07:00'}',
                 onTap: () => _quiet(context),
               ),
               for (final r in rules)
@@ -419,8 +417,8 @@ class HabitSettingsPage extends StatelessWidget {
                 icon: Icons.add,
                 title: tr(context, 'Add a reminder', 'Thêm lịch nhắc'),
                 onTap:
-                    s.habits.any((h) => !h.archived) ||
-                        s.routines.any((r) => !r.archived)
+                    s.liveHabits.any((h) => !h.archived) ||
+                        s.liveRoutines.any((r) => !r.archived)
                     ? () => _reminder(context)
                     : null,
               ),
@@ -467,6 +465,44 @@ class HabitSettingsPage extends StatelessWidget {
               'Mọi thứ ở trên máy này, không mã hóa. Không tài khoản, cloud hay theo dõi; tên thói quen không bao giờ vào quảng cáo. Hãy giữ bản sao lưu ở nơi khác, nhất là trên web.',
             ),
             children: [
+              HandyTile(
+                key: const Key('habit-trash'),
+                icon: Icons.delete_outline,
+                title: tr(context, 'Trash', 'Thùng rác'),
+                trailing: value(formatFigure(context, '${s.trash.length}')),
+                onTap: () => Navigator.of(context).pushNamed('/settings/trash'),
+              ),
+              if (scope.controller.hasRecovery)
+                HandyTile(
+                  key: const Key('habit-recovery'),
+                  icon: Icons.restore,
+                  title: tr(
+                    context,
+                    'Recover before last replace',
+                    'Khôi phục trước lần thay thế cuối',
+                  ),
+                  onTap: () => _guard(context, () async {
+                    final ok = await confirmHandy(
+                      context,
+                      title: tr(
+                        context,
+                        'Recover before last replace?',
+                        'Khôi phục trước lần thay thế cuối?',
+                      ),
+                      message: tr(
+                        context,
+                        'This replaces current data with the recovery copy kept on this device. Export current data first if needed.',
+                        'Thay dữ liệu hiện tại bằng bản khôi phục trên máy này. Hãy xuất dữ liệu hiện tại trước nếu cần.',
+                      ),
+                      confirmLabel: tr(context, 'Recover', 'Khôi phục'),
+                    );
+                    if (!ok) return null;
+                    await scope.controller.recoverBeforeReplace();
+                    return context.mounted
+                        ? tr(context, 'Recovery restored.', 'Đã khôi phục.')
+                        : null;
+                  }),
+                ),
               HandyTile(
                 key: const Key('habit-backup'),
                 icon: Icons.archive_outlined,

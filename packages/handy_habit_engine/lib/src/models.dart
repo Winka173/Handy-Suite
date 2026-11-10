@@ -433,6 +433,17 @@ class RoutineSession {
 
 class HabitState {
   final int revision;
+  final List<HabitOperation> operations;
+  final List<HabitTrash> trash;
+  final List<Json> tombstones;
+  final List<Json> clockPolicies;
+  final String? undoBatch;
+  bool isTrashed(String kind, String id) =>
+      trash.any((t) => t.kind == kind && t.entity == id);
+  Iterable<Habit> get liveHabits =>
+      habits.where((h) => !isTrashed('habit', h.id));
+  Iterable<Routine> get liveRoutines =>
+      routines.where((r) => !isTrashed('routine', r.id));
   final List<Habit> habits;
   final List<HabitEvent> events;
   final List<Routine> routines;
@@ -441,13 +452,35 @@ class HabitState {
   final Map<String, dynamic> settings;
   HabitState({
     this.revision = 0,
+    List<HabitOperation> operations = const [],
+    List<HabitTrash> trash = const [],
+    List<Json> tombstones = const [],
+    List<Json>? clockPolicies,
+    this.undoBatch,
     List<Habit> habits = const [],
     List<HabitEvent> events = const [],
     List<Routine> routines = const [],
     List<RoutineSession> sessions = const [],
     List<Pause> pauses = const [],
     Json settings = const {},
-  }) : habits = List.unmodifiable(habits),
+  }) : clockPolicies = List.unmodifiable(
+         (clockPolicies ??
+                 [
+                   {
+                     'id': 'legacy-clock',
+                     'zone': settings['zone'] ?? 'Asia/Ho_Chi_Minh',
+                     'dayBoundaryMinutes': 0,
+                     'effectiveFrom': '1900-01-01T00:00:00.000Z',
+                   },
+                 ])
+             .map((v) => freezeJson(v) as Json),
+       ),
+       operations = List.unmodifiable(operations),
+       trash = List.unmodifiable(trash),
+       tombstones = List.unmodifiable(
+         tombstones.map((t) => freezeJson(t) as Json),
+       ),
+       habits = List.unmodifiable(habits),
        pauses = List.unmodifiable(pauses),
        events = List.unmodifiable(events),
        routines = List.unmodifiable(routines),
@@ -460,6 +493,15 @@ class HabitState {
     'app': 'handy-habit',
     'schema': habitSchema,
     'revision': revision,
+    'operations': operations.map((o) => o.toJson()).toList(),
+    'trash': trash.map((t) => t.toJson()).toList(),
+    'tombstones': tombstones,
+    'clockPolicies': clockPolicies,
+    'undoBatch': undoBatch,
+    'entityOrder': {
+      'habits': habits.map((h) => h.id).toList(),
+      'routines': routines.map((r) => r.id).toList(),
+    },
     'habits': habits.map((e) => e.toJson()).toList(),
     'events': events.map((e) => e.toJson()).toList(),
     'routines': routines.map((e) => e.toJson()).toList(),
@@ -467,18 +509,38 @@ class HabitState {
     'pauses': pauses.map((e) => e.toJson()).toList(),
     'settings': settings,
   };
-  HabitState copy(Json c) => HabitState.fromJson({...toJson(), ...c});
+  HabitState copy(Json c) {
+    final j = {...toJson(), ...c};
+    j['entityOrder'] = {
+      ...toJson()['entityOrder'] as Map,
+      for (final kind in ['habits', 'routines'])
+        if (c.containsKey(kind))
+          kind: [for (final row in objects(c[kind])) row['id']],
+    };
+    return HabitState.fromJson(j);
+  }
+
   factory HabitState.fromJson(Json j) {
-    // Schema 1 had no pauses; it reads as an empty list (migration).
     if (j['app'] != 'handy-habit' ||
-        !(j['schema'] == 1 && j['pauses'] == null ||
-            j['schema'] == habitSchema))
+        ![1, 2, 3].contains(j['schema']) ||
+        j['schema'] == 1 && j['pauses'] != null) {
       throw const FormatException('Unsupported Habit backup/schema');
+    }
+    final old = j['schema'] != 3;
     final s = HabitState(
       revision: integer(j['revision']),
-      habits: objects(j['habits']).map(Habit.fromJson).toList(),
+      operations: objects(
+        old ? legacyOperations(j) : j['operations'] ?? [],
+      ).map(HabitOperation.fromJson).toList(),
+      trash: objects(j['trash'] ?? []).map(HabitTrash.fromJson).toList(),
+      tombstones: objects(j['tombstones'] ?? []),
+      clockPolicies: j['clockPolicies'] == null
+          ? null
+          : objects(j['clockPolicies']),
+      undoBatch: j['undoBatch'] as String?,
+      habits: orderedHabitRows(j, 'habits').map(Habit.fromJson).toList(),
       events: objects(j['events']).map(HabitEvent.fromJson).toList(),
-      routines: objects(j['routines']).map(Routine.fromJson).toList(),
+      routines: orderedHabitRows(j, 'routines').map(Routine.fromJson).toList(),
       sessions: objects(j['sessions']).map(RoutineSession.fromJson).toList(),
       pauses: objects(j['pauses'] ?? []).map(Pause.fromJson).toList(),
       settings: Map<String, dynamic>.from(j['settings'] as Map),
@@ -488,6 +550,37 @@ class HabitState {
   }
   void validate() {
     location(zone);
+    validateOperations(operations);
+    if (clockPolicies.isEmpty || clockPolicies.length > 1000)
+      throw const FormatException('Invalid clock policies');
+    final policyIds = <String>{};
+    for (final p in clockPolicies) {
+      if (!policyIds.add(text(p['id'])))
+        throw const FormatException('Duplicate clock policy');
+      location(text(p['zone']));
+      integer(p['dayBoundaryMinutes'], max: 0);
+      timestamp(p['effectiveFrom']);
+    }
+    for (final t in tombstones) {
+      text(t['id']);
+      text(t['entity']);
+      timestamp(t['deletedAt']);
+      if (t['kind'] == 'habit' && habits.any((h) => h.id == t['entity']) ||
+          t['kind'] == 'routine' && routines.any((r) => r.id == t['entity'])) {
+        throw const FormatException('Deleted identity cannot be reused');
+      }
+      if (!['habit', 'routine'].contains(t['kind']))
+        throw const FormatException('Invalid tombstone');
+    }
+    final trashKeys = <String>{};
+    for (final t in trash) {
+      if (!trashKeys.add('${t.kind}:${t.entity}') ||
+          !(t.kind == 'habit'
+              ? habits.any((h) => h.id == t.entity)
+              : routines.any((r) => r.id == t.entity))) {
+        throw const FormatException('Invalid trash reference');
+      }
+    }
     if (!['system', 'en', 'vi'].contains(settings['locale'] ?? 'system') ||
         !['system', 'light', 'dark'].contains(settings['theme'] ?? 'system'))
       throw const FormatException('Invalid preferences');
@@ -507,6 +600,8 @@ class HabitState {
       routines.map((e) => e.id),
       sessions.map((e) => e.id),
       pauses.map((e) => e.id),
+      trash.map((e) => e.id),
+      tombstones.map((e) => text(e['id'])),
     ]) {
       if (list.any((id) => id.isEmpty) || list.toSet().length != list.length)
         throw const FormatException('Duplicate/empty ID');

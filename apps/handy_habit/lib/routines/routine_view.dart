@@ -341,8 +341,8 @@ class RoutineMenu extends StatelessWidget {
       title: tr(context, 'Delete ${r.title}?', 'Xóa ${r.title}?'),
       message: tr(
         context,
-        'Its past runs stay in history.',
-        'Các phiên đã chạy vẫn giữ trong lịch sử.',
+        'It stays in Trash for 30 days. Past runs stay in history.',
+        'Giữ trong Thùng rác 30 ngày. Các phiên đã chạy vẫn giữ trong lịch sử.',
       ),
       confirmLabel: tr(context, 'Delete', 'Xóa'),
       destructive: true,
@@ -351,19 +351,12 @@ class RoutineMenu extends StatelessWidget {
     final navigator = Navigator.of(context);
     final done = await scope.write(
       context,
-      (s) => s.copy({
-        'routines': [
-          for (final x in s.routines)
-            if (x.id != r.id) x.toJson(),
-        ],
-        'settings': {
-          ...s.settings,
-          'reminders': objects(s.settings['reminders'] ?? [])
-              .where((x) => !(x['type'] == 'routine' && x['target'] == r.id))
-              .toList(),
-        },
-      }),
-      done: (c) => tr(c, '${r.title} deleted.', 'Đã xóa ${r.title}.'),
+      (s) => trashEntity(s, 'routine', r.id, scope.clock()),
+      done: (c) => tr(
+        c,
+        '${r.title} moved to Trash.',
+        'Đã chuyển ${r.title} vào Thùng rác.',
+      ),
     );
     if (done && navigator.canPop()) navigator.maybePop();
   }

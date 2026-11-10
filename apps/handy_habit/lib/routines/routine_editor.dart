@@ -104,7 +104,7 @@ Future<void> openStepEditor(
   RoutineStep? old,
 ]) async {
   final habits = {
-    for (final h in scope.state.habits.where(
+    for (final h in scope.state.liveHabits.where(
       (h) => !h.archived || h.id == old?.habit,
     ))
       h.id: h.title,

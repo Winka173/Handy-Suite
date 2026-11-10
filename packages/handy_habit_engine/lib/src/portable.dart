@@ -3,7 +3,14 @@ part of '../handy_habit_engine.dart';
 const backupLimit = 30000000;
 Uint8List backup(HabitState s, {bool zip = true}) {
   s.validate();
-  final data = Uint8List.fromList(utf8.encode(jsonEncode(s.toJson())));
+  final data = Uint8List.fromList(
+    utf8.encode(
+      jsonEncode({
+        ...s.toJson(),
+        'backupCreatedAt': DateTime.now().toUtc().toIso8601String(),
+      }),
+    ),
+  );
   if (data.length > backupLimit - 4096)
     throw const FormatException('Backup exceeds 30MB');
   if (!zip) return data;
@@ -24,10 +31,20 @@ Uint8List backup(HabitState s, {bool zip = true}) {
   );
 }
 
-HabitState restore(Uint8List bytes, {bool zip = true}) {
+class HabitBackupPreview {
+  final HabitState state;
+  final int size, schema;
+  final String? createdAt;
+  HabitBackupPreview(this.state, this.size, this.schema, this.createdAt);
+}
+
+HabitState restore(Uint8List bytes, {bool zip = true}) =>
+    inspectBackup(bytes, zip: zip).state;
+HabitBackupPreview inspectBackup(Uint8List bytes, {bool zip = true}) {
   if (bytes.length > backupLimit)
     throw const FormatException('Backup exceeds 30MB');
   var data = bytes;
+  int? manifestSchema;
   if (zip) {
     final files = decodePortableZip(
       bytes,
@@ -38,14 +55,21 @@ HabitState restore(Uint8List bytes, {bool zip = true}) {
     if (files.length != 2) throw const FormatException('Missing backup files');
     final manifest = jsonDecode(utf8.decode(files['manifest.json']!)) as Map;
     if (manifest['app'] != 'handy-habit' ||
-        !(manifest['schema'] == 1 || manifest['schema'] == habitSchema) ||
+        ![1, 2, habitSchema].contains(manifest['schema']) ||
         (manifest['files'] as Map)['data.json'] !=
             sha256.convert(files['data.json']!).toString())
       throw const FormatException('Backup checksum mismatch');
     data = files['data.json']!;
+    manifestSchema = manifest['schema'] as int;
   }
-  return HabitState.fromJson(
-    Map<String, dynamic>.from(jsonDecode(utf8.decode(data)) as Map),
+  final raw = Map<String, dynamic>.from(jsonDecode(utf8.decode(data)) as Map);
+  if (manifestSchema != null && manifestSchema != raw['schema'])
+    throw const FormatException('Backup schema mismatch');
+  return HabitBackupPreview(
+    HabitState.fromJson(raw),
+    bytes.length,
+    integer(raw['schema'], min: 1),
+    raw['backupCreatedAt'] == null ? null : timestamp(raw['backupCreatedAt']),
   );
 }
 
@@ -54,7 +78,9 @@ HabitState merge(HabitState current, HabitState imported) {
   final existingBatches = List<String>.from(
         current.settings['imports'] as List? ?? [],
       ),
-      digest = sha256.convert(backup(imported, zip: false)).toString();
+      digest = sha256
+          .convert(utf8.encode(_canonical(imported.toJson())))
+          .toString();
   if (existingBatches.contains(digest))
     throw const FormatException('This backup was already merged');
   if (imported.sessions.any((s) => s.status == 'active') &&
@@ -149,6 +175,25 @@ HabitState merge(HabitState current, HabitState imported) {
       )
       .toList();
   return current.copy({
+    'trash': [
+      ...current.trash.map((t) => t.toJson()),
+      for (final t in imported.trash)
+        {
+          ...t.toJson(),
+          'id': uid(),
+          'entity': t.kind == 'habit' ? habits[t.entity] : routines[t.entity],
+        },
+    ],
+    'tombstones': [
+      ...current.tombstones,
+      for (final t in imported.tombstones) {...t, 'id': uid(), 'entity': uid()},
+    ],
+    'operations': [
+      ...current.operations.map((o) => o.toJson()),
+      ...legacyOperations({
+        'events': incomingEvents.map((e) => e.toJson()).toList(),
+      }),
+    ],
     'habits': [
       ...current.habits.map((e) => e.toJson()),
       ...incomingHabits.map((e) => e.toJson()),
@@ -325,7 +370,7 @@ HabitState importCsvLogs(HabitState current, Uint8List bytes) {
     if (row.length != _pauseHeader.length)
       throw const FormatException('Wrong CSV column count');
     final record = jsonDecode(utf8.decode(base64Decode(row.last))) as Map;
-    if (record['schema'] != habitSchema)
+    if (![2, habitSchema].contains(record['schema']))
       throw const FormatException('Unknown pause record schema');
     final p = Pause.fromJson(Map<String, dynamic>.from(record['pause'] as Map));
     // Habit names (column 5) may differ between devices; IDs may not.

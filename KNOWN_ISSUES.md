@@ -80,7 +80,7 @@ tối đa 30MB.
     theo thứ tự tạo. Xong một bước thì bước kế tự chạy (tạm dừng vẫn do bạn bấm; ra nền vẫn
     dừng). Bốn khu không có URL web riêng; trang con thì có. Tour và `native_test` mới chạy
     trên BlueStacks (máy giả lập); ảnh `habit-ui-review.pdf` và bằng chứng UI cũ thuộc bản
-    trước.
+    trước. Run 2 (10/11): backup preview/sealed lỗi-mật-khẩu/hỏng/hủy, durable recovery trước Replace, migration schema3/physical2, domain Undo và trash30 ngày đã source/host tested. Provider SAF/iOS Files, nâng cấp/kill/thiếu chỗ thật và IndexedDB/quota/tab-blocked chưa runtime verified; checkpoint/recovery và plain export vẫn không mã hóa, `.hseal` có mã hóa xác thực. Không claim sync hoàn chỉnh (R15/R16).
 
 19. Tự sao lưu (2026-11-02) ghi bản sao lưu của Keep, Recall, Bookmark, Spend, Habit, Docs
     (tệp đã giữ) và Media vào thư mục người dùng chọn, khi mở hoặc rời app, không chạy nền khi

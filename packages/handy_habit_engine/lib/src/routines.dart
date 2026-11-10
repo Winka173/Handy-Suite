@@ -67,7 +67,12 @@ HabitState completeStep(
   String? eventHash;
   if (!skip && step.plan.habit != null) {
     final h = state.habits
-        .where((h) => h.id == step.plan.habit && !h.archived)
+        .where(
+          (h) =>
+              h.id == step.plan.habit &&
+              !h.archived &&
+              !state.isTrashed('habit', h.id),
+        )
         .firstOrNull;
     if (h != null) {
       final index = HabitIndex(events),

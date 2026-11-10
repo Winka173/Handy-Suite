@@ -10,4 +10,10 @@ abstract interface class HabitStore {
   Future<String> integrity();
 }
 
+/// Recovery is device-local, excluded from ordinary backups and imports.
+abstract interface class RecoverableHabitStore implements HabitStore {
+  Future<void> saveRecovery({required int expectedRevision});
+  Future<HabitState?> readRecovery();
+}
+
 Future<HabitStore> openHabitStore() => platform.openStore();

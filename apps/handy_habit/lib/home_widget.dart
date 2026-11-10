@@ -22,7 +22,7 @@ HomeWidgetView habitWidgetView(HabitState s, String today, {required bool vi}) {
     );
   }
   final open =
-      s.habits
+      s.liveHabits
           .where(
             (h) =>
                 !h.archived &&
@@ -35,7 +35,7 @@ HomeWidgetView habitWidgetView(HabitState s, String today, {required bool vi}) {
           )
           .toList()
         ..sort((a, b) => b.priority.compareTo(a.priority));
-  if (s.habits.where((h) => !h.archived).isEmpty)
+  if (s.liveHabits.where((h) => !h.archived).isEmpty)
     return HomeWidgetView(
       title: title,
       value: vi ? 'Chưa có thói quen' : 'No habits yet',

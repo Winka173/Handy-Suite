@@ -322,7 +322,7 @@ class _RunnerState extends State<RoutineRunner> with WidgetsBindingObserver {
   Widget build(BuildContext context) {
     final current = session.steps[session.cursor],
         elapsed = current.elapsed + watch.elapsed.inSeconds;
-    final habit = c.state!.habits
+    final habit = c.state!.liveHabits
         .where((h) => h.id == current.plan.habit)
         .firstOrNull;
     if (indexedRevision != c.state!.revision) {

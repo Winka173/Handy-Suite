@@ -136,7 +136,8 @@ void main() {
     expect(find.textContaining('Paused until'), findsOneWidget);
     // The other habit is still to do; the greeting is not resting.
     expect(find.textContaining('1 left to do'), findsOneWidget);
-    // Deleting the habit leaves no pause naming it. (The page now has a
+    // Trash retains the pause; permanent deletion cleans its reference.
+    // (The page now has a
     // menu on its pause too; the habit's own is in the app bar.)
     await tapKey(tester, 'habit-h');
     await tester.tap(
@@ -148,6 +149,9 @@ void main() {
     await tester.pumpAndSettle();
     await tapKey(tester, 'habit-delete');
     await tapKey(tester, 'confirm-action');
+    expect(c.state!.liveHabits.any((h) => h.id == 'h'), isFalse);
+    expect(c.state!.pauses.single.habits, ['h']);
+    await c.change((s) => deleteTrash(s, s.trash.single.id), remember: false);
     expect(c.state!.pauses, isEmpty);
     await tester.pumpWidget(const SizedBox());
     c.dispose();

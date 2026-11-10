@@ -29,7 +29,7 @@ void main() {
       final first = await store.read();
       expect(first.revision, 0);
       final db = sqlite3.open(path);
-      expect(db.userVersion, 1);
+      expect(db.userVersion, 2);
       expect(db.select('PRAGMA journal_mode').single.values.first, 'wal');
       expect(
         db.select("SELECT name FROM sqlite_master WHERE type='index'").length,
@@ -86,7 +86,7 @@ void main() {
     },
   );
   test(
-    'schema 1 data on disk reads, takes a pause and is written as schema 2',
+    'schema 1 data on disk reads, takes a pause and is written as schema 3',
     () async {
       await store.read();
       // A database written before pauses: its state row says schema 1.
@@ -125,7 +125,7 @@ void main() {
               )
               as Map;
       raw.close();
-      expect(payload['schema'], 2);
+      expect(payload['schema'], 3);
       expect((payload['pauses'] as List).single['reason'], 'Huế');
     },
   );

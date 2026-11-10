@@ -19,7 +19,9 @@ class TodayPage extends StatelessWidget {
     builder: (context, size) {
       final s = scope.state, today = scope.today, index = scope.index;
       final due =
-          s.habits.where((h) => !h.archived && isScheduledOn(h, today)).toList()
+          s.liveHabits
+              .where((h) => !h.archived && isScheduledOn(h, today))
+              .toList()
             ..sort((a, b) {
               int rank(Habit h) =>
                   switch (habitStatus(h, today, today, index)) {
@@ -30,7 +32,7 @@ class TodayPage extends StatelessWidget {
               return r != 0 ? r : b.priority.compareTo(a.priority);
             });
       final routines =
-          s.routines
+          s.liveRoutines
               .where(
                 (r) =>
                     !r.archived &&
@@ -39,7 +41,7 @@ class TodayPage extends StatelessWidget {
               )
               .toList()
             ..sort((a, b) => a.time.compareTo(b.time));
-      final notToday = s.habits
+      final notToday = s.liveHabits
           .where((h) => !h.archived && !isScheduledOn(h, today))
           .length;
       final wide = size.maxWidth >= 1000;

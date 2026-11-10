@@ -211,17 +211,29 @@ Future<String?> importHabits(BuildContext context, HabitScope scope) async {
                 ))
         : null;
   }
-  final imported = restore(opened, zip: name.toLowerCase().endsWith('.zip'));
+  final preview = inspectBackup(
+    opened,
+    zip: opened.length >= 2 && opened[0] == 0x50 && opened[1] == 0x4b,
+  );
+  final imported = preview.state;
   if (!context.mounted) return null;
+  final created = preview.createdAt == null
+      ? null
+      : DateTime.parse(preview.createdAt!).toLocal();
+  final backupDate = created == null
+      ? tr(context, 'Date not recorded', 'Chưa ghi ngày sao lưu')
+      : '${formatDay(context, day(created))} · ${TimeOfDay.fromDateTime(created).format(context)}';
   final choice = await showAdaptiveDialog<String>(
     context: context,
     builder: (context) => AlertDialog.adaptive(
       title: Text(tr(context, 'What the backup holds', 'Bản sao lưu có gì')),
+      constraints: const BoxConstraints(maxWidth: 720),
+      scrollable: true,
       content: Text(
         tr(
           context,
-          '${imported.habits.length} habits, ${imported.events.length} records, ${imported.routines.length} routines, ${imported.sessions.length} runs, ${imported.pauses.length} pauses.\n\nMerge adds them beside yours with new IDs. Replace puts the backup in place of everything here. Reminders in it stay off until you turn them on.',
-          '${imported.habits.length} thói quen, ${imported.events.length} lần ghi, ${imported.routines.length} quy trình, ${imported.sessions.length} phiên, ${imported.pauses.length} kỳ nghỉ.\n\nHợp nhất thêm chúng cạnh dữ liệu của bạn với ID mới. Thay thế đặt bản sao lưu vào chỗ toàn bộ dữ liệu ở đây. Nhắc trong đó vẫn tắt cho tới khi bạn bật.',
+          '${formatFigure(context, '${file.bytes.length}')} bytes · Schema ${preview.schema}\n$backupDate\n${imported.trash.length} items in Trash\n${imported.habits.length} habits, ${imported.events.length} records, ${imported.routines.length} routines, ${imported.sessions.length} runs, ${imported.pauses.length} pauses.\n\nMerge adds them beside yours with new IDs. Replace puts the backup in place of everything here. Reminders in it stay off until you turn them on.',
+          '${formatFigure(context, '${file.bytes.length}')} byte · Schema ${preview.schema}\n$backupDate\n${imported.trash.length} mục trong Thùng rác\n${imported.habits.length} thói quen, ${imported.events.length} lần ghi, ${imported.routines.length} quy trình, ${imported.sessions.length} phiên, ${imported.pauses.length} kỳ nghỉ.\n\nHợp nhất thêm chúng cạnh dữ liệu của bạn với ID mới. Thay thế đặt bản sao lưu vào chỗ toàn bộ dữ liệu ở đây. Nhắc trong đó vẫn tắt cho tới khi bạn bật.',
         ),
       ),
       actions: [
@@ -230,7 +242,7 @@ Future<String?> importHabits(BuildContext context, HabitScope scope) async {
           onPressed: () => Navigator.pop(context),
           child: Text(tr(context, 'Cancel', 'Hủy')),
         ),
-        TextButton(
+        FilledButton(
           key: const Key('import-merge'),
           onPressed: () => Navigator.pop(context, 'merge'),
           child: Text(tr(context, 'Merge', 'Hợp nhất')),
@@ -254,21 +266,32 @@ Future<String?> importHabits(BuildContext context, HabitScope scope) async {
         ),
         message: tr(
           context,
-          'Export a backup of this device first if you may need it.',
-          'Hãy xuất bản sao lưu của máy này trước nếu còn cần.',
+          'A recovery copy of current data will be saved on this device before replacement. You can recover it in Settings. If saving fails, replacement stops.',
+          'Lưu bản khôi phục dữ liệu hiện tại trên máy này trước khi thay thế. Bạn có thể khôi phục từ Cài đặt. Nếu lưu thất bại, dừng thay thế.',
         ),
         confirmLabel: tr(context, 'Replace', 'Thay thế'),
         destructive: true,
       ))
     return null;
-  await scope.controller.change((current) {
-    if (current.revision != revision)
-      throw StateError('Data changed while previewing import');
-    final next = choice == 'merge' ? merge(current, imported) : imported;
-    return next.copy({
-      'settings': {...next.settings, 'notifications': false},
+  if (choice == 'replace') {
+    final next = imported.copy({
+      'settings': {
+        ...imported.settings,
+        'notifications': false,
+        'reminders': [
+          for (final r in objects(imported.settings['reminders'] ?? []))
+            {...r, 'enabled': false},
+        ],
+      },
     });
-  });
+    await scope.controller.replaceFromBackup(next, expectedRevision: revision);
+  } else {
+    await scope.controller.change((current) {
+      if (current.revision != revision)
+        throw StateError('Data changed while previewing import');
+      return merge(current, imported);
+    });
+  }
   return context.mounted
       ? (choice == 'merge'
             ? tr(context, 'Backup merged.', 'Đã hợp nhất.')

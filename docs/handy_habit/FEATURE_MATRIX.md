@@ -49,3 +49,17 @@ Creation/check-in/cancel/Lite/recovery and main-area accessibility are automated
 archive semantics, mapping validation, reorder preservation and import safety have
 engine coverage. Physical drag/keyboard/assistive-tech/file-provider QA remains in
 the release checklist. Source uses real adapters; test file sinks are test-only.
+
+
+### Run 2 data-safety update (2026-11-10)
+
+| Habit feature | Status | New evidence | Still needs verification |
+| --- | --- | --- | --- |
+| Restore preview and sealed errors/cancel | IMPLEMENTED | Host widget tests: size/date/original schema/counts, wrong password, tamper, cancel, stale preview; decrypted ZIP signature | Real OS document provider and file-picker lifecycle |
+| Durable pre-replace recovery / atomic rollback | IMPLEMENTED | Real SQLite tests: checkpoint failure stops replace, failed commit rolls back, restart recovery, CAS; recovery excluded from backups | Storage pressure/process interruption on devices; browser quota |
+| Schema3 causal operations / physical2 migration | IMPLEMENTED FOUNDATION | v1/v2 JSON+ZIP migration/roundtrip, deterministic IDs, operation union/collisions/absolute candidates, native interrupted-migration retry | Full sync reduction/conflict UI/provider in R15/R16; real IndexedDB upgrade |
+| Domain Undo across restart | IMPLEMENTED | Persisted inverse batch and exact retractions, refuses changed rows, preserves unrelated rows, existing appearance/check-in regressions | Real process kill/reopen and assistive tech |
+| Habit/routine trash (30 days) | IMPLEMENTED | Host engine/widget/native: restore IDs/links, days-left, neutral retained gap, active-run guard, purge/restart/idempotence, backup/merge, permanent cleanup | Device clock/expiry29–30 days, real screen reader |
+| Trash / preview responsive presentation | HOST WIDGET TESTED | EN/VI, light/dark,320/1440,150%text; trash reduced motion; real-font host screenshots inspected | Device/browser input/focus and iOS adaptive dialog |
+
+The original schema2 pause row above describes its introduction; current data writers use3 and physical stores use2. Copy-merge remaps incoming event revisions as independent copies, not sync. No shared-package changes in run2.

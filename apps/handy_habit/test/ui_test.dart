@@ -311,7 +311,7 @@ void main() {
     c.dispose();
   });
 
-  testWidgets('deleting a habit takes its records and the routine link', (
+  testWidgets('trash retains records and links; permanent delete cleans them', (
     tester,
   ) async {
     final c = await start(
@@ -331,9 +331,15 @@ void main() {
     await tapKey(tester, 'more-menu');
     await tapKey(tester, 'habit-delete');
     await tapKey(tester, 'confirm-action');
+    expect(c.state!.liveHabits, isEmpty);
+    expect(c.state!.events.single.id, 'e');
+    expect(c.state!.routines.single.steps.first.habit, 'h');
+    expect(c.state!.trash.single.entity, 'h');
+    await c.change((s) => deleteTrash(s, s.trash.single.id), remember: false);
     expect(c.state!.habits, isEmpty);
     expect(c.state!.events, isEmpty);
     expect(c.state!.routines.single.steps.first.habit, isNull);
+    expect(c.state!.tombstones.single['entity'], 'h');
     expect(c.state!.routines.single.steps, hasLength(2));
     await tester.pumpWidget(const SizedBox());
     c.dispose();

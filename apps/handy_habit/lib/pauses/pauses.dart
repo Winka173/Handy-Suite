@@ -14,7 +14,7 @@ Future<bool> openPauseEditor(
 }) {
   final s = scope.state, today = scope.today;
   final habits = {
-    for (final h in s.habits.where((h) => !h.archived || h.id == habit))
+    for (final h in s.liveHabits.where((h) => !h.archived || h.id == habit))
       h.id: h.title,
     // A habit archived since keeps its place in an old pause.
     for (final id in old?.habits ?? const <String>[])

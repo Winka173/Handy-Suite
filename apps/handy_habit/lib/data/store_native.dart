@@ -14,11 +14,11 @@ Future<HabitStore> openStore() async {
   );
 }
 
-const entities = ['habits', 'events', 'routines', 'sessions'];
+const entities = ['habits', 'events', 'routines', 'sessions', 'operations'];
 Database database(String path) {
   final db = sqlite3.open(path);
   try {
-    if (db.userVersion > 1)
+    if (db.userVersion > 2)
       throw const FormatException('Newer database schema; preserved');
     db.execute(
       'PRAGMA foreign_keys=ON; PRAGMA busy_timeout=10000; PRAGMA journal_mode=WAL; PRAGMA synchronous=FULL;',
@@ -40,6 +40,72 @@ Database database(String path) {
         rethrow;
       }
     }
+    if (db.userVersion == 1) {
+      // VACUUM includes committed WAL pages. Preserve the first pre-migration copy.
+      final recoveryFile = File('$path.pre-v2.sqlite');
+      if (!recoveryFile.existsSync()) {
+        final temporary = '$path.pre-v2.tmp-${uid()}';
+        try {
+          db.execute('VACUUM INTO ?', [temporary]);
+          final handle = File(temporary).openSync(mode: FileMode.append);
+          try {
+            handle.flushSync();
+          } finally {
+            handle.closeSync();
+          }
+          File(temporary).renameSync(recoveryFile.path);
+        } finally {
+          if (File(temporary).existsSync()) File(temporary).deleteSync();
+        }
+      }
+      db.execute('BEGIN IMMEDIATE');
+      try {
+        // Recheck after obtaining the write lock (another opener may have migrated).
+        if (db.userVersion == 1) {
+          final raw = Map<String, dynamic>.from(
+            jsonDecode(
+                  db
+                          .select('SELECT payload FROM state WHERE id=1')
+                          .single['payload']
+                      as String,
+                )
+                as Map,
+          );
+          for (final kind in ['habits', 'events', 'routines', 'sessions']) {
+            raw[kind] = db
+                .select('SELECT payload FROM $kind ORDER BY rowid')
+                .map((r) => jsonDecode(r['payload'] as String))
+                .toList();
+          }
+          final migrated = HabitState.fromJson(raw);
+          db.execute(
+            'CREATE TABLE operations(id TEXT PRIMARY KEY,actor TEXT NOT NULL,sequence INTEGER NOT NULL,kind TEXT NOT NULL,entity TEXT NOT NULL,payload TEXT NOT NULL,UNIQUE(actor,sequence)); CREATE INDEX operation_entity ON operations(kind,entity); CREATE TABLE recovery(id INTEGER PRIMARY KEY CHECK(id=1),payload TEXT NOT NULL);',
+          );
+          for (final op in migrated.operations) {
+            db.execute('INSERT INTO operations VALUES(?,?,?,?,?,?)', [
+              op.id,
+              op.actor,
+              op.sequence,
+              op.kind,
+              op.entity,
+              jsonEncode(op.toJson()),
+            ]);
+          }
+          final metadata = migrated.toJson();
+          for (final kind in entities) {
+            metadata.remove(kind);
+          }
+          db.execute('UPDATE state SET payload=? WHERE id=1', [
+            jsonEncode(metadata),
+          ]);
+          db.execute('PRAGMA user_version=2');
+        }
+        db.execute('COMMIT');
+      } catch (_) {
+        db.execute('ROLLBACK');
+        rethrow;
+      }
+    }
     return db;
   } catch (_) {
     db.close();
@@ -47,7 +113,7 @@ Database database(String path) {
   }
 }
 
-class NativeHabitStore implements HabitStore {
+class NativeHabitStore implements RecoverableHabitStore {
   final String path;
   NativeHabitStore(this.path);
   @override
@@ -103,7 +169,13 @@ class NativeHabitStore implements HabitStore {
             };
           }
           // Remove dependent events before habits; insertion order reverses that dependency.
-          for (final kind in ['events', 'sessions', 'routines', 'habits']) {
+          for (final kind in [
+            'operations',
+            'events',
+            'sessions',
+            'routines',
+            'habits',
+          ]) {
             final ids = (json[kind] as List)
                 .map((e) => (e as Map)['id'])
                 .toSet();
@@ -117,7 +189,19 @@ class NativeHabitStore implements HabitStore {
                   id = row['id'] as String,
                   payload = jsonEncode(row);
               if (old[kind]![id] == payload) continue;
-              if (kind == 'events') {
+              if (kind == 'operations') {
+                db.execute(
+                  'INSERT INTO operations VALUES(?,?,?,?,?,?) ON CONFLICT(id) DO UPDATE SET payload=excluded.payload',
+                  [
+                    id,
+                    row['actor'],
+                    row['sequence'],
+                    row['kind'],
+                    row['entity'],
+                    payload,
+                  ],
+                );
+              } else if (kind == 'events') {
                 db.execute(
                   'INSERT INTO events VALUES(?,?,?,?,?,?,?) ON CONFLICT(id) DO UPDATE SET habit=excluded.habit,day=excluded.day,source=excluded.source,session=excluded.session,step=excluded.step,payload=excluded.payload',
                   [
@@ -153,6 +237,64 @@ class NativeHabitStore implements HabitStore {
           db.execute('ROLLBACK');
           rethrow;
         }
+      } finally {
+        db.close();
+      }
+    });
+  }
+
+  @override
+  Future<void> saveRecovery({required int expectedRevision}) {
+    final file = path;
+    return Isolate.run(() {
+      final db = database(file);
+      try {
+        db.execute('BEGIN IMMEDIATE');
+        try {
+          final row = db
+              .select('SELECT revision,payload FROM state WHERE id=1')
+              .single;
+          if (row['revision'] != expectedRevision)
+            throw StateError('Data changed during preview');
+          final raw = Map<String, dynamic>.from(
+            jsonDecode(row['payload'] as String) as Map,
+          );
+          for (final kind in entities) {
+            raw[kind] = db
+                .select('SELECT payload FROM $kind ORDER BY rowid')
+                .map((r) => jsonDecode(r['payload'] as String))
+                .toList();
+          }
+          final snapshot = HabitState.fromJson(raw);
+          db.execute(
+            'INSERT INTO recovery VALUES(1,?) ON CONFLICT(id) DO UPDATE SET payload=excluded.payload',
+            [jsonEncode(snapshot.toJson())],
+          );
+          db.execute('COMMIT');
+        } catch (_) {
+          db.execute('ROLLBACK');
+          rethrow;
+        }
+      } finally {
+        db.close();
+      }
+    });
+  }
+
+  @override
+  Future<HabitState?> readRecovery() {
+    final file = path;
+    return Isolate.run(() {
+      final db = database(file);
+      try {
+        final rows = db.select('SELECT payload FROM recovery WHERE id=1');
+        return rows.isEmpty
+            ? null
+            : HabitState.fromJson(
+                Map<String, dynamic>.from(
+                  jsonDecode(rows.single['payload'] as String) as Map,
+                ),
+              );
       } finally {
         db.close();
       }

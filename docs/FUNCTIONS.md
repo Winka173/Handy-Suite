@@ -63,10 +63,10 @@ Keep, Spend hoặc timer đa dụng. [Trạng thái kiểm chứng](handy_habit/
   học, ngủ, chăm da, màn hình, việc nhà) hoặc tự đặt; gợi ý chỉ điền sẵn trình sửa. Mẫu
   quy trình: 8.
 - Thói quen: tạo/sửa, sắp xếp, tìm/lọc/nhóm, nhân bản, archive/unarchive, xác nhận
-  xóa. Binary, count, thời lượng và lượng có đơn vị; mục tiêu, ghi chú, icon/màu/ưu tiên.
+  xóa vào Thùng rác30 ngày (khôi phục ID/lịch sử/liên kết, số ngày còn lại, xóa vĩnh viễn có xác nhận và tự dọn khi mở). Archive riêng không hết hạn. Binary, count, thời lượng và lượng có đơn vị; mục tiêu, ghi chú, icon/màu/ưu tiên.
 - Lịch hằng ngày, chọn thứ, số ngày/tuần, mỗi N ngày; ngày bắt đầu/kết thúc, phiên
   bản lịch có ngày hiệu lực. Đổi lịch không xóa hoặc dời check-in cũ.
-- Check-in nhanh, sửa tổng ngày và backfill có giới hạn, ghi chú/bỏ qua, Undo.
+- Check-in nhanh, sửa tổng ngày và backfill có giới hạn, ghi chú/bỏ qua, Undo domain bền qua lần mở lại; từ chối khi row đã đổi.
   Streak hiện tại/dài nhất theo ngày có lịch hoặc tuần đạt quota; không tính ngày
   bỏ qua thành thành công hoặc coi kỳ còn mở là thất bại. Lịch sử, calendar, xu
   hướng tuần/tháng và ngày có lịch tiếp theo.
@@ -96,8 +96,8 @@ Keep, Spend hoặc timer đa dụng. [Trạng thái kiểm chứng](handy_habit/
   preview, hủy khi tắt/xóa. Windows/Web dùng danh sách đến hạn trong app.
 - SQLite native/IndexedDB Web, integrity check, schema version, bảo vệ ghi đồng
   thời. JSON/ZIP full backup miễn phí, preview merge/replace, đổi ID khi merge,
-  checksum và rollback. CSV log nhập/xuất (kèm bảng kỳ nghỉ thứ hai khi có);
-  Markdown/PDF báo cáo EN/VI có khoảng ngày, liệt kê kỳ nghỉ. Schema dữ liệu 2.
+  checksum và rollback. Replace lưu bản phục hồi bền trên máy trước khi commit; Cài đặt có khôi phục trước lần thay thế cuối. `.hseal` dùng mã hóa xác thực chung, sai mật khẩu/hỏng/hủy giữ dữ liệu. CSV log nhập/xuất (kèm bảng kỳ nghỉ thứ hai khi có);
+  Markdown/PDF báo cáo EN/VI có khoảng ngày, liệt kê kỳ nghỉ. Schema dữ liệu3/physical2, đọc backup/schema1 và2; causal operations có ID/ancestry và delta/tổng tuyệt đối, chưa phải sync (R15/R16).
 - EN/VI, sáng/tối, bốn tab mobile/rail màn hình rộng, bàn phím và UI kit dùng chung.
   Ads + Pro Lifetime dùng adapter thật; Pro bỏ ads được hỗ trợ.
 

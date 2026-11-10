@@ -1,6 +1,6 @@
 # Handy Habit — audit run 1
 
-Ngày 10/11/2026. Chỉ audit/kiến trúc/UX contract, chưa triển khai. Đọc working tree kể cả thay đổi chưa commit; không dùng HEAD thay cho source hiện tại. Xem [PLAN](HANDY_HABIT_PLAN.md) và phần Habit run 1 trong [UX_REDESIGN](UX_REDESIGN.md).
+Ngày 10/11/2026. Run 1 là baseline audit; run 2 cập nhật các finding R2–R4 bên dưới (source/host, chưa device/browser). Đọc working tree kể cả thay đổi chưa commit; không dùng HEAD thay cho source hiện tại. Xem [PLAN](HANDY_HABIT_PLAN.md) và phần Habit run 1 trong [UX_REDESIGN](UX_REDESIGN.md).
 
 ## Phạm vi và bằng chứng
 
@@ -30,11 +30,11 @@ Evidence tại thư mục report: C:/Users/Winka/AppData/Local/Temp/claude/da01c
 | IANA zone/DST/local day/week-start | COMPLETE | E calendar/models; A settings | ET DST/offset/week boundary; default Asia/Ho_Chi_Minh; OS clock change thật chưa kiểm |
 | Custom day boundary | MISSING | localDay hiện nửa đêm | Cần versioned policy, không dời ngày cũ |
 | One-tap bead, count+1, duration/quantity quick-add | COMPLETE | A today/beads/check_in/rows | AT ui_test binary once/count cap/duration; vị trí trên fold còn cần sửa |
-| Undo/CAS/save trước publish/cancel/fail | COMPLETE | A controller/scope/ui/form | AT store_test/ui_test/advanced_form_test; Undo snapshot RAM, mất sau restart, chưa sync-safe |
+| Undo/CAS/save trước publish/cancel/fail | COMPLETE | A controller/scope/ui/form | AT store_test/ui_test/advanced_form_test; Run 2: persisted guarded domain inverse/retraction, giữ row không liên quan; restart/commit failure/CAS tests, không whole-state snapshot |
 | Backfill/manual total/note/skip | COMPLETE | E calendar; A check_in/month_grid | ET future/backfill/linked protection; AT past-day |
 | Current/best streak, quota, eligible denominator | COMPLETE | E calendar/pauses | ET daily/weekly/partial/open/skip; chưa negative threshold |
 | Archive/unarchive theo kỳ | COMPLETE | E archiveHabit; A habit/routine views | ET archive giữ quá khứ; archive không phải trash |
-| Delete/cleanup/Undo | PARTIAL | A habit_view:284, routine_view:338 | AT delete cleanup; habit hard-delete events và links/reminders, không giữ30 ngày; session snapshots còn |
+| Delete/trash/restore/purge | COMPLETE (source/host) | E trash/causal; A delete menus/settings/trash_page/controller | Run 2: giữ30 ngày + days-left, restore ID/links, active-run guard, purge on open, tombstones; permanent cleanup/backup/restart tests; session snapshots giữ |
 | Vacation all/chosen/edit/end/delete | COMPLETE | E pauses; A pauses/today/settings | ET pause_test; AT pause_ui_test; prorate ceil, done khi nghỉ vẫn tính; không còn thiếu |
 | Negative incidents/thresholds/reduction | MISSING | E type chưa có direction/incident model | Tên preset giảm màn hình không chứng minh negative engine |
 | Mood/energy/reflection/tags | MISSING | Không model/view | Habit/step note không phải mood |
@@ -55,8 +55,8 @@ Evidence tại thư mục report: C:/Users/Winka/AppData/Local/Temp/claude/da01c
 | Paused-run notice/tap/reboot | NOT VERIFIED | A run_notice/app; Android boot receiver | Fake-port tests pass; source integration chưa chạy lại; OS delivery/lockscreen/tap chưa kiểm |
 | SQLite WAL/FULL/FK/CAS/transaction/integrity | COMPLETE | A data/store_native/controller | AT store_test thật: stale/rollback/corrupt/future/v1/100 habits/100 routines/10k events/1k sessions |
 | IndexedDB atomic/stale-tab/quota/offline | NOT VERIFIED | A data/store_web | Host app test không chạy browser; source rewrite mọi store mỗi commit |
-| Full JSON/ZIP/preview copy-merge/replace/checksum/limit | COMPLETE | E portable; A settings/data | ET roundtrip/path/checksum/size/future; AT export; chưa durable pre-restore recovery tự động |
-| Auto folder backup/sealed restore | PARTIAL | A app:62, settings:461, settings/data:169; kit backup.dart | ĐÃ HandyAutoBackupSection/openSealedBackup; thiếu Habit-level password/tamper/lifecycle/retention tests; SAF/iOS provider chưa verified |
+| Full JSON/ZIP/preview copy-merge/replace/checksum/limit | COMPLETE | E portable; A settings/data | ET roundtrip/path/checksum/size/future; AT export; Run 2: durable device-local pre-replace recovery + Settings restore, checkpoint/commit CAS and injected SQL rollback |
+| Auto folder backup/sealed restore | PARTIAL | A app:62, settings:461, settings/data:169; kit backup.dart | ĐÃ HandyAutoBackupSection/openSealedBackup; Run 2: Habit-level wrong-password/tamper/cancel and preview tests PASS; automatic sealed filename sniffing fixed; SAF/iOS provider/lifecycle/retention chưa device verified |
 | CSV logs import/export; MD/PDF EN/VI | COMPLETE | E portable; A settings/data/insights | ET IDs/provenance/conflicts/pauses; AT bytes/cancel; CSV cần habit IDs sẵn, PDF >10k events chặn |
 | Optional sync/provider/conflict merge/status | MISSING | Không Habit sync source | merge() đổi IDs là copy-import, không dùng làm sync; không LWW check-ins |
 | First launch/Skip | PARTIAL | A shell/habit_shell:185 | AT first-open; một màn3 choices, ví dụ ghi data thật; thiếu story/practice/progress/Back/replay |
@@ -121,3 +121,16 @@ Không sửa registry/matrix nguồn trong run chỉ audit; bảng là đính ch
 6. Chưa soát toàn EN/dark/320/error/permission bằng ảnh hoặc browser/SR thật. draw.mjs thử chạy bị EPERM lstat user-root; Node PATH20.19.2<skill22. Giữ editorial-greeting/Nunito/seed lịch sử973037815, không bịa seed hoặc inspector PASS.
 
 Không sửa shared packages/lib/test/other apps, không secrets/devices/git writes. Các quyết định KEEP/IMPROVE/ADD/HIDE và slices trong PLAN.
+
+
+## Run 2 delta — R2/R3/R4 (2026-11-10)
+
+- Data schema 2→3 (trash bundled into v3 per combined-run brief), physical SQLite/IDB 1→2. Readers support old data/backup 1 and 2; logical event IDs, amounts/dates/provenance stay unchanged. Native migration checkpoint + transactional retry tested; browser upgrade code preserves old stores but has no browser runtime evidence.
+- `E causal.dart`: immutable revision identities/content hashes, row ancestry, semantic delta/absolute intents with observed IDs, deterministic union, collision checks, concurrent absolute/skip candidates, retractions and guarded inverse Undo persisted across restart. Full cross-device reducer/provider/conflict UI still belongs to R15/R16, not claimed implemented here.
+- Restore preview now has source size/date/schema/counts and clear missing-date fallback; copy-merge and replace stay separate. Replacement is gated on durable recovery, both transactions use CAS, failures preserve live state, recovery is available after restart. Sealed files without a `.zip` suffix are recognized by decrypted signature.
+- Trash is separate from archive: original rows/history/links retained30 days, inactive list/reminder filters, neutral retained gap, restore valid links, guarded permanent deletion and on-open purge with tombstones. Backup includes trash and remaps its references on copy-merge.
+- Host evidence: final engine/app suites include the other session's uncommitted tests; EN/VI light/dark 320/1440 preview/trash at150% text + reduced-motion trash pass. Real Nunito/icon screenshots inspected; existing Habit Settings wide trailing values changed to subtitles to make the restore entry path fit. Missing physical-device/OS-provider/browser/real screen-reader evidence remains explicit; no QA artifacts from other sessions were adopted as this run's evidence.
+
+Run 2 final host checks: engine74/74, app70/70 (`flutter test --no-pub`); both `dart analyze` clean and `dart format --output=none --set-exit-if-changed lib test` report0 changed. Fixture verifier PASS21 files/39 documented tools; no fixture/registry changes. No device/browser/store tests.
+
+R3 regression guard: manual habit/routine order is stored as validated entityOrder IDs, separate from database key/row order; guarded order revisions preserve reorder Undo across restart and backup roundtrip without snapshotting the whole state.

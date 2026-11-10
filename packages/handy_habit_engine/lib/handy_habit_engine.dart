@@ -10,6 +10,8 @@ import 'package:handy_core/csv.dart';
 import 'package:timezone/data/latest.dart' as zones;
 import 'package:timezone/timezone.dart' as tz;
 part 'src/models.dart';
+part 'src/causal.dart';
+part 'src/trash.dart';
 part 'src/calendar.dart';
 part 'src/routines.dart';
 part 'src/portable.dart';

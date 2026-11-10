@@ -38,9 +38,10 @@ class HabitScope {
   int get hour => tz.TZDateTime.from(clock(), location(state.zone)).hour;
 
   Habit? habit(String? id) =>
-      id == null ? null : state.habits.where((h) => h.id == id).firstOrNull;
-  Routine? routine(String? id) =>
-      id == null ? null : state.routines.where((r) => r.id == id).firstOrNull;
+      id == null ? null : state.liveHabits.where((h) => h.id == id).firstOrNull;
+  Routine? routine(String? id) => id == null
+      ? null
+      : state.liveRoutines.where((r) => r.id == id).firstOrNull;
   RoutineSession? get activeSession =>
       state.sessions.where((s) => s.status == 'active').firstOrNull;
 

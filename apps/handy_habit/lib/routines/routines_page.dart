@@ -24,7 +24,7 @@ class _RoutinesPageState extends State<RoutinesPage> {
     builder: (context, size) {
       final wide = size.maxWidth >= 1000;
       final s = scope.state;
-      final routines = [...s.routines]
+      final routines = [...s.liveRoutines]
         ..sort(
           (a, b) => a.archived == b.archived
               ? a.time.compareTo(b.time)

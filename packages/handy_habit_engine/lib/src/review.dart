@@ -68,7 +68,7 @@ WeekReview weekReview(
   String today,
 ) {
   final end = addDays(start, 6), before = addDays(start, -7);
-  final live = s.habits
+  final live = s.liveHabits
       .where(
         (h) =>
             !h.archived &&
