@@ -383,7 +383,9 @@ void main() {
       expect(find.text('Compact'), findsOneWidget);
       expect(find.text('Dark'), findsOneWidget);
       expect(find.text('Pro Lifetime'), findsNothing);
-      expect(find.text('Pro'), findsNothing);
+      // Only the studio applies a paid appearance; basic preferences stay free.
+      expect(find.byKey(const Key('pro-badge-studio')), findsOneWidget);
+      expect(find.text('Pro'), findsOneWidget);
       await route(t, '/habit/new');
       await t.enterText(
         find.byKey(const Key('field-title')),

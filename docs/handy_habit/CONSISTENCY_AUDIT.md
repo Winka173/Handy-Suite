@@ -1,4 +1,12 @@
-# Handy Habit — consistency audit, runs 11–12
+# Handy Habit — consistency audit, runs 11–13
+
+## Run13 Pro correction
+
+| Area | Sibling structure | Habit correction | Evidence / status |
+| --- | --- | --- | --- |
+| Pro page | Large headline + sentence, top live selected demo/replay, illustrated section rows with play, pinned Restore/Get Pro | Same order/store states, Habit Nunito/beads/vermilion; Routines / Understand / Make it yours; store price, honest unsupported/unconfigured copy | Host tests +24-case EN/VI/light-dark/320-390-1440/text1-1.5; saved run12 sibling rasters beside new states in build/run13/sheets; no real billing claim |
+
+R19/R20 are now source/host tested; [review](R19_R20_REVIEW.md). Run11 shared K1–K4 follow-ups remain. Shared source read: handy_ui/kit/app.dart wrap/theme placement, unavoidable for live entitlement styling. No shared edits or sibling source reads.
 
 ## Run12 corrections and R21
 
@@ -18,7 +26,7 @@ Evidence: `apps/handy_habit/build/run12/` has round1/final 24-case Habit rasters
 fresh sibling captures from each app's own directory (correct asset bundles), six
 priority sheets and per-matrix sheets. All prices/ownership in host shots are synthetic
 test responses, never proof of billing. [Detailed critique and limits](R21_REVIEW.md).
-R19 and R20 remain open. Run11 shared K1–K4 follow-ups below remain unchanged.
+Historical run12 status: R19/R20 were open then; run13 above supersedes this. Shared K1–K4 below remain.
 
 ## Historical run11 audit
 

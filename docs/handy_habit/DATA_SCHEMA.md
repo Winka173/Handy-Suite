@@ -257,3 +257,7 @@ Habit → delete hidden app data, after turning sync off on all devices. Switchi
 sync off or disconnecting itself deletes neither local nor remote data. Long
 history growth, initial-sync latency, true network interruption and actual Google
 authorization require the scale/device follow-up in [RELEASE](RELEASE.md).
+
+## R19/R20 settings extension (run13; no schema bump)
+
+Existing open `settings` stores `studio:{palette,layout,spacing,runner,icons:{habitId:iconName}}` and `goalDecisions:{suggestionId:accepted|dismissed}`. Reading sanitizes unknown studio options; Pro remains external to settings/backups. Apply/Accept check current entitlement. Loss never clears choices. Goal acceptance appends an effective-dated schedule from tomorrow, preserving old schedules/events. Suggestion IDs bind habit fingerprint, kept count and target/proposal; stale decisions refuse. Existing JSON/ZIP roundtrip covers settings. Physical/protocol/schema stay 2/1/8.

@@ -87,6 +87,7 @@ Future<(HabitController, LifetimeController, FakeHabitStore)> bootPro(
   String locale = 'en',
   String theme = 'light',
   bool configured = true,
+  f.MemoryStore? memoryStore,
 }) async {
   t.view.physicalSize = Size(width, 1000);
   t.view.devicePixelRatio = 1;
@@ -94,7 +95,7 @@ Future<(HabitController, LifetimeController, FakeHabitStore)> bootPro(
   addTearDown(t.view.resetPhysicalSize);
   addTearDown(t.view.resetDevicePixelRatio);
   addTearDown(t.platformDispatcher.clearTextScaleFactorTestValue);
-  final memory = f.MemoryStore()
+  final memory = (memoryStore ?? f.MemoryStore())
     ..value = (state ?? f.seeded()).copy({
       'settings': {
         ...(state ?? f.seeded()).settings,
@@ -299,7 +300,7 @@ void main() {
     'live price, pending duplicate prevention, confirmed purchase then refund',
     (t) async {
       final (_, store, fake) = await bootPro(t);
-      expect(find.text('Buy Pro · 99.000 đ'), findsOneWidget);
+      expect(find.text('Get Pro · 99.000 đ'), findsOneWidget);
       fake.value = FakeHabitStore.snapshot('pending', price: '99.000 đ');
       await tap(t, 'pro-buy');
       expect(fake.buys, 1);
@@ -349,7 +350,7 @@ void main() {
       );
       fake.value = FakeHabitStore.snapshot('ready', price: '99.000 đ');
       await tap(t, 'pro-retry');
-      expect(find.text('Buy Pro · 99.000 đ'), findsOneWidget);
+      expect(find.text('Get Pro · 99.000 đ'), findsOneWidget);
     });
   }
 
@@ -510,7 +511,10 @@ void main() {
     await tap(t, 'draft-edit-a');
     await tap(t, 'step-advanced');
     for (final f in HabitProFeature.values.where(
-      (f) => f != HabitProFeature.blocks && f != HabitProFeature.presets,
+      (f) =>
+          f.index < 9 &&
+          f != HabitProFeature.blocks &&
+          f != HabitProFeature.presets,
     )) {
       await tap(t, 'pro-badge-${f.name}');
       expect(find.byKey(Key('pro-demo-${f.name}')), findsOneWidget);

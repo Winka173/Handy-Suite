@@ -4,7 +4,8 @@ import 'entitlements.dart';
 
 /// All purchase authority stays in the shared native adapter, not user data.
 class HabitProPurchase extends StatefulWidget {
-  const HabitProPurchase({super.key});
+  final bool footer;
+  const HabitProPurchase({super.key, this.footer = false});
   @override
   State<HabitProPurchase> createState() => _HabitProPurchaseState();
 }
@@ -86,11 +87,16 @@ class _HabitProPurchaseState extends State<HabitProPurchase> {
     final price = snap?.price;
     return Column(
       key: const Key('pro-purchase'),
+      mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         Semantics(
           liveRegion: true,
-          child: Text(status, key: const Key('pro-status')),
+          child: Text(
+            status,
+            key: const Key('pro-status'),
+            style: widget.footer ? Theme.of(context).textTheme.bodySmall : null,
+          ),
         ),
         if (configured && pro && snap?.status == 'unavailable')
           Text(
@@ -101,39 +107,49 @@ class _HabitProPurchaseState extends State<HabitProPurchase> {
           ),
         const SizedBox(height: 12),
         if (busy) const LinearProgressIndicator(),
-        if (configured && !pro) ...[
-          FilledButton(
-            key: const Key('pro-buy'),
-            onPressed:
-                !busy &&
-                    !pending &&
-                    price != null &&
-                    price.isNotEmpty &&
-                    snap?.status != 'unavailable' &&
-                    snap?.status != 'error'
-                ? () => act(store!, 'buy')
-                : null,
-            child: Text(
-              price == null
-                  ? t('Buy Pro Lifetime', 'Mua Pro Lifetime')
-                  : t('Buy Pro · $price', 'Mua Pro · $price'),
-              textAlign: TextAlign.center,
-            ),
-          ),
-          const SizedBox(height: 8),
-        ],
         if (configured)
           Wrap(
             spacing: 12,
             runSpacing: 8,
+            alignment: widget.footer
+                ? WrapAlignment.spaceBetween
+                : WrapAlignment.start,
             children: [
-              OutlinedButton(
-                key: const Key('pro-restore'),
-                onPressed: busy || pending
-                    ? null
-                    : () => act(store!, 'restore'),
-                child: Text(t('Restore purchases', 'Khôi phục giao dịch')),
-              ),
+              if (widget.footer)
+                OutlinedButton(
+                  key: const Key('pro-restore'),
+                  onPressed: busy || pending
+                      ? null
+                      : () => act(store!, 'restore'),
+                  child: Text(t('Restore', 'Khôi phục')),
+                ),
+              if (!pro)
+                FilledButton(
+                  key: const Key('pro-buy'),
+                  onPressed:
+                      !busy &&
+                          !pending &&
+                          price != null &&
+                          price.isNotEmpty &&
+                          snap?.status != 'unavailable' &&
+                          snap?.status != 'error'
+                      ? () => act(store!, 'buy')
+                      : null,
+                  child: Text(
+                    price == null
+                        ? t('Get Pro', 'Mở Pro')
+                        : t('Get Pro · $price', 'Mở Pro · $price'),
+                    textAlign: TextAlign.center,
+                  ),
+                ),
+              if (!widget.footer)
+                OutlinedButton(
+                  key: const Key('pro-restore'),
+                  onPressed: busy || pending
+                      ? null
+                      : () => act(store!, 'restore'),
+                  child: Text(t('Restore purchases', 'Khôi phục giao dịch')),
+                ),
               if (!busy &&
                   !pending &&
                   ((!pro && price == null) ||
@@ -148,12 +164,13 @@ class _HabitProPurchaseState extends State<HabitProPurchase> {
             ],
           ),
         const SizedBox(height: 8),
-        Text(
-          t(
-            'One-time purchase. No subscription. Ownership belongs to this Google Play account and does not transfer between stores.',
-            'Mua một lần. Không thuê bao. Quyền mua thuộc tài khoản Google Play này, không chuyển giữa các cửa hàng.',
+        if (!widget.footer)
+          Text(
+            t(
+              'One-time purchase. No subscription. Ownership belongs to this Google Play account and does not transfer between stores.',
+              'Mua một lần. Không thuê bao. Quyền mua thuộc tài khoản Google Play này, không chuyển giữa các cửa hàng.',
+            ),
           ),
-        ),
       ],
     );
   }

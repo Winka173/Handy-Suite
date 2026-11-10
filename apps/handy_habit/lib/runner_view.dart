@@ -2,6 +2,7 @@ import 'package:handy_habit_engine/handy_habit_engine.dart';
 import 'package:handy_ui/kit.dart';
 import 'ui/words.dart';
 import 'routines/decision_text.dart';
+import 'design/studio_style.dart';
 
 /// Asks for a step's note; null when the person backed out.
 Future<String?> askStepNote(BuildContext context, String note) async {
@@ -189,7 +190,11 @@ class RunnerView extends StatelessWidget {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
-                        _Track(session: session),
+                        if (StudioStyle.of(context).runner == 'beads')
+                          _Track(
+                            key: const Key('runner-track'),
+                            session: session,
+                          ),
                         const SizedBox(height: HandySpace.s),
                         Text(
                           tr(
@@ -497,7 +502,7 @@ class RunnerView extends StatelessWidget {
 /// hue, skipped struck through in grey, the rest pale.
 class _Track extends StatelessWidget {
   final RoutineSession session;
-  const _Track({required this.session});
+  const _Track({super.key, required this.session});
   @override
   Widget build(BuildContext context) {
     final c = HandyColors.of(context);

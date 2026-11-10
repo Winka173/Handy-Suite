@@ -1,10 +1,14 @@
 import 'package:handy_ui/kit.dart';
 import 'palette.dart';
+import 'studio_style.dart';
 
 /// Keep kit mechanics; set every material text role to the bundled Nunito.
-ThemeData habitTheme(ThemeData base) {
+ThemeData habitTheme(
+  ThemeData base, {
+  StudioStyle style = const StudioStyle(),
+}) {
   final dark = base.brightness == Brightness.dark;
-  final p = dark ? HabitPalette.dark : HabitPalette.light;
+  final p = studioPalette(style.palette, dark);
   final text = base.textTheme.apply(
     fontFamily: handyFontFamily('Nunito'),
     bodyColor: p.ink,
@@ -94,9 +98,12 @@ ThemeData habitTheme(ThemeData base) {
     colorScheme: scheme,
     textTheme: type,
     extensions: [
-      ...base.extensions.values.where((e) => e is! HandyColors),
+      ...base.extensions.values.where(
+        (e) => e is! HandyColors && e is! HabitPalette && e is! StudioStyle,
+      ),
       colors,
       p,
+      style,
     ],
     scaffoldBackgroundColor: p.canvas,
     canvasColor: p.canvas,

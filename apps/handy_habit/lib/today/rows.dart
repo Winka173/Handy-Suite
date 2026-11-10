@@ -9,6 +9,8 @@ import '../ui/words.dart';
 import 'beads.dart';
 import 'check_in.dart';
 import '../habits/habit_appearance.dart';
+import '../design/studio_style.dart';
+import '../design/palette.dart';
 
 /// Days done this week out of the quota, for a days-a-week habit.
 int doneThisWeek(Habit h, String today, HabitIndex index, int weekStart) {
@@ -100,20 +102,39 @@ class HabitRow extends StatelessWidget {
     final theme = Theme.of(context);
     final c = HandyColors.of(context);
     final h = habit;
+    final studio = StudioStyle.of(context);
     final scheduled = isScheduledOn(h, scope.today);
     return HabitContextMenu(
       items: HabitMenu(scope: scope, habit: h).items(context),
       child: Material(
-        color: selected ? c.select : Colors.transparent,
+        color: selected
+            ? c.select
+            : studio.layout == 'cards'
+            ? HabitPalette.of(context).surface
+            : Colors.transparent,
+        shape: studio.layout == 'cards'
+            ? RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+                side: BorderSide(color: HabitPalette.of(context).line),
+              )
+            : null,
         child: InkWell(
           key: Key('habit-${h.id}'),
           onTap: onOpen,
           child: Padding(
             padding: EdgeInsets.fromLTRB(
               HandySpace.l,
-              scope.state.settings['density'] == 'compact' ? 6 : 10,
+              studio.spacing == 'airy'
+                  ? 20
+                  : scope.state.settings['density'] == 'compact'
+                  ? 6
+                  : 10,
               HandySpace.s,
-              scope.state.settings['density'] == 'compact' ? 6 : 10,
+              studio.spacing == 'airy'
+                  ? 20
+                  : scope.state.settings['density'] == 'compact'
+                  ? 6
+                  : 10,
             ),
             child: Row(
               children: [
@@ -123,9 +144,10 @@ class HabitRow extends StatelessWidget {
                     children: [
                       Row(
                         children: [
-                          if (hasHabitIcon(h))
+                          if (hasHabitIcon(h) || studio.icons.containsKey(h.id))
                             Icon(
-                              habitIcon(h.icon),
+                              studioExtraIcons[studio.icons[h.id]] ??
+                                  habitIcon(h.icon),
                               size: 22,
                               color: habitMark(context, h),
                             )

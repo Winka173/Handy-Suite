@@ -1,7 +1,7 @@
 import 'package:handy_monetization/handy_monetization.dart';
 import 'package:handy_ui/kit.dart';
 
-/// Only capabilities shipped in the Advanced routine builder.
+/// Only capabilities shipped in Habit.
 enum HabitProFeature {
   days,
   unfinished,
@@ -12,9 +12,47 @@ enum HabitProFeature {
   durations,
   blocks,
   presets,
+  comparisons,
+  patterns,
+  goals,
+  mood,
+  heatmap,
+  reports,
+  studio,
 }
 
 String proTitle(BuildContext c, HabitProFeature feature) => switch (feature) {
+  HabitProFeature.comparisons => tr(
+    c,
+    'Compare your rhythms',
+    'So sánh nhịp sống',
+  ),
+  HabitProFeature.patterns => tr(
+    c,
+    'Difficulty & missed days',
+    'Độ khó & ngày hay lỡ',
+  ),
+  HabitProFeature.goals => tr(
+    c,
+    'Small goal adjustments',
+    'Điều chỉnh mục tiêu nhỏ',
+  ),
+  HabitProFeature.mood => tr(
+    c,
+    'Mood alongside habits',
+    'Tâm trạng cùng thói quen',
+  ),
+  HabitProFeature.heatmap => tr(
+    c,
+    'Focused heatmaps',
+    'Biểu đồ nhiệt có bộ lọc',
+  ),
+  HabitProFeature.reports => tr(
+    c,
+    'Your review on paper',
+    'Bản nhìn lại trên giấy',
+  ),
+  HabitProFeature.studio => tr(c, 'Personalization studio', 'Xưởng giao diện'),
   HabitProFeature.days => tr(c, 'Days to run', 'Ngày thực hiện'),
   HabitProFeature.unfinished => tr(
     c,
@@ -31,6 +69,41 @@ String proTitle(BuildContext c, HabitProFeature feature) => switch (feature) {
 };
 
 String proLine(BuildContext c, HabitProFeature feature) => switch (feature) {
+  HabitProFeature.comparisons => tr(
+    c,
+    'Months, quarters and groups, with the counts behind them.',
+    'Tháng, quý và nhóm, kèm số liệu rõ ràng.',
+  ),
+  HabitProFeature.patterns => tr(
+    c,
+    'See which daily goals and weekdays need room.',
+    'Biết mục tiêu và thứ nào cần nhẹ nhàng hơn.',
+  ),
+  HabitProFeature.goals => tr(
+    c,
+    'Accept or dismiss a suggestion from your own history.',
+    'Nhận hoặc bỏ qua gợi ý từ lịch sử của bạn.',
+  ),
+  HabitProFeature.mood => tr(
+    c,
+    'Compare recorded mood on known habit days.',
+    'So sánh tâm trạng vào ngày thói quen đã rõ.',
+  ),
+  HabitProFeature.heatmap => tr(
+    c,
+    'Combine collection, time, direction and day filters.',
+    'Kết hợp bộ lọc nhóm, buổi, hướng và ngày.',
+  ),
+  HabitProFeature.reports => tr(
+    c,
+    'Preview a designed PDF with explained figures.',
+    'Xem trước PDF được dàn trang, giải thích số liệu.',
+  ),
+  HabitProFeature.studio => tr(
+    c,
+    'Habit palettes, Today layouts, extra icons and runner looks.',
+    'Bảng màu Habit, bố cục Hôm nay, biểu tượng và màn chạy.',
+  ),
   HabitProFeature.days => tr(
     c,
     'Run a step on selected weekdays.',

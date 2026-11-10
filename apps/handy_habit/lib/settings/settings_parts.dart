@@ -75,6 +75,7 @@ class HabitSettingToggle extends StatelessWidget {
 }
 
 const habitPreferenceKeys = {
+  'studio',
   'showMoodToday',
   'theme',
   'locale',

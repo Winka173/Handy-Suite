@@ -10,6 +10,7 @@ import '../ui/words.dart';
 import 'progress_calendar.dart';
 import 'week_review.dart';
 import '../mood/mood_history.dart';
+import '../pro/entitlements.dart';
 
 class InsightsPage extends StatefulWidget {
   final HabitScope scope;
@@ -151,6 +152,22 @@ class _InsightsPageState extends State<InsightsPage> {
     final summary = Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
+        ListTile(
+          key: const Key('progress-smart'),
+          contentPadding: EdgeInsets.zero,
+          title: Text(tr(context, 'Smart insights', 'Phân tích chuyên sâu')),
+          subtitle: Text(
+            tr(
+              context,
+              'Compare rhythms and find one small adjustment',
+              'So sánh nhịp sống, tìm một điều chỉnh nhỏ',
+            ),
+          ),
+          trailing: scope.pro(context)
+              ? const Icon(Icons.chevron_right)
+              : const HabitProBadge(feature: HabitProFeature.comparisons),
+          onTap: () => Navigator.pushNamed(context, '/progress/smart'),
+        ),
         Text(
           tr(
             context,

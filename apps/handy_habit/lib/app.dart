@@ -1,5 +1,8 @@
 import 'design/identity.dart';
 import 'design/theme.dart';
+import 'design/studio_style.dart';
+import 'design/studio_page.dart';
+import 'insights/smart_page.dart';
 import 'dart:async';
 import 'package:flutter/services.dart';
 import 'package:handy_files/handy_files.dart';
@@ -287,6 +290,8 @@ class _HabitAppState extends State<HabitApp> with WidgetsBindingObserver {
       ['', 'routines'] => () => HabitShell(scope: scope, area: 2),
       ['', 'progress'] ||
       ['', 'insights'] => () => HabitShell(scope: scope, area: 3),
+      ['', 'progress', 'smart'] => () => HabitSmartPage(scope: scope),
+      ['', 'settings', 'studio'] => () => HabitStudioPage(scope: scope),
       ['', 'progress', 'week'] || ['', 'review'] => () => WeekReviewPage(
         scope: scope,
         from: uri.queryParameters['from'],
@@ -527,13 +532,23 @@ class _HabitAppState extends State<HabitApp> with WidgetsBindingObserver {
               c.state?.settings['reducedMotion'] == true,
         ),
         child: widget.lifetime == null
-            ? Focus(onKeyEvent: _key, child: child)
-            : LifetimeScope(
-                notifier: widget.lifetime!,
-                child: Focus(onKeyEvent: _key, child: child),
-              ),
+            ? _styled(child)
+            : LifetimeScope(notifier: widget.lifetime!, child: _styled(child)),
       ),
       home: _ready(() => HabitShell(scope: scope)),
+    ),
+  );
+
+  Widget _styled(Widget child) => Builder(
+    builder: (context) => Theme(
+      data: habitTheme(
+        Theme.of(context),
+        style: StudioStyle.read(
+          c.state?.settings ?? {},
+          pro: LifetimeScope.maybeOf(context)?.pro == true,
+        ),
+      ),
+      child: Focus(onKeyEvent: _key, child: child),
     ),
   );
 }

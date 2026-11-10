@@ -1,5 +1,8 @@
 # R21 / run12 review — 2026-11-10
 
+Historical run12 review. R19/R20 and the Pro structure are superseded by [run13](R19_R20_REVIEW.md).
+
+
 The contract was added to Habit's `UX_REDESIGN.md` section before code. The two
 mandatory UI skills guided the screen inventory, questions, responsive states and
 critique. Habit keeps Nunito, its editorial greeting and bead signature, vermilion,

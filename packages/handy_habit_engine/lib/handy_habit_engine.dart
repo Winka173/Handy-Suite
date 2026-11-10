@@ -23,6 +23,7 @@ part 'src/pauses.dart';
 part 'src/review.dart';
 part 'src/presets.dart';
 part 'src/progress.dart';
+part 'src/smart.dart';
 part 'src/template_catalog.dart';
 
 typedef Json = Map<String, dynamic>;

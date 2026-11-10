@@ -329,6 +329,19 @@ class HabitSettingsPage extends StatelessWidget {
           HandySettingsSection(
             title: tr(context, 'Appearance', 'Giao diện'),
             children: [
+              HandyTile(
+                key: const Key('settings-studio'),
+                title: tr(context, 'Personalization studio', 'Xưởng giao diện'),
+                trailing: scope.pro(context)
+                    ? null
+                    : const HabitProBadge(feature: HabitProFeature.studio),
+                subtitle: tr(
+                  context,
+                  'Preview palettes, cards, icons and runner looks',
+                  'Xem thử bảng màu, thẻ, biểu tượng và màn chạy',
+                ),
+                onTap: () => Navigator.pushNamed(context, '/settings/studio'),
+              ),
               HabitSettingChoice(
                 id: 'settings-theme',
                 title: tr(context, 'Theme', 'Sáng hay tối'),
@@ -937,7 +950,7 @@ class HabitSettingsPage extends StatelessWidget {
                 subtitle: tr(
                   context,
                   'Advanced routines · pay once',
-                  'Quy trình nâng cao · trả một lần',
+                  'Quy trình, phân tích và giao diện riêng · trả một lần',
                 ),
                 onTap: () => openHabitPro(context),
               ),

@@ -1,7 +1,9 @@
 import 'package:handy_ui/kit.dart';
+import '../design/palette.dart';
 import 'entitlements.dart';
 import 'pro_demos.dart';
 import 'purchase.dart';
+import 'thumbnail.dart';
 
 class HabitProPage extends StatefulWidget {
   final HabitProFeature feature;
@@ -13,8 +15,12 @@ class HabitProPage extends StatefulWidget {
 class _HabitProPageState extends State<HabitProPage> {
   late HabitProFeature shown = widget.feature;
   final stage = GlobalKey();
+  int replay = 0;
   void show(HabitProFeature f) {
-    setState(() => shown = f);
+    setState(() {
+      shown = f;
+      replay++;
+    });
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted && stage.currentContext != null)
         Scrollable.ensureVisible(
@@ -30,117 +36,131 @@ class _HabitProPageState extends State<HabitProPage> {
     final theme = Theme.of(context);
     return Scaffold(
       appBar: AppBar(title: Text(t('Pro Lifetime', 'Pro trọn đời'))),
+      bottomNavigationBar: Container(
+        decoration: BoxDecoration(
+          color: HabitPalette.of(context).surface,
+          border: Border(top: BorderSide(color: HabitPalette.of(context).line)),
+        ),
+        child: SafeArea(
+          top: false,
+          child: ConstrainedBox(
+            constraints: BoxConstraints(
+              maxHeight: MediaQuery.sizeOf(context).height * .45,
+            ),
+            child: SingleChildScrollView(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 8,
+                ),
+                child: HandyContent(
+                  maxWidth: 920,
+                  child: const HabitProPurchase(footer: true),
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
       body: SafeArea(
         child: SingleChildScrollView(
           key: const Key('pro-scroll'),
-          padding: EdgeInsets.all(
-            MediaQuery.sizeOf(context).width >= 840 ? 24 : 16,
-          ),
+          padding: const EdgeInsets.all(16),
           child: HandyContent(
-            maxWidth: 720,
+            maxWidth: 920,
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                Semantics(
-                  header: true,
-                  child: Text(
-                    t('Advanced routines', 'Quy trình nâng cao'),
-                    style: theme.textTheme.headlineSmall,
-                  ),
+                Text(
+                  t('Pay once. Your pace.', 'Một lần. Nhịp riêng.'),
+                  style: theme.textTheme.headlineMedium,
                 ),
                 const SizedBox(height: 8),
                 Text(
                   t(
-                    'A routine that adapts to your day. Try each part before deciding.',
-                    'Quy trình linh hoạt theo ngày của bạn. Thử từng phần trước khi quyết định.',
+                    'More ways to plan, reflect and make Habit yours.',
+                    'Thêm cách lên nhịp, nhìn lại và tạo diện mạo riêng.',
                   ),
                 ),
-                const SizedBox(height: 20),
+                const SizedBox(height: 24),
+                KeyedSubtree(
+                  key: stage,
+                  child: HabitProDemo(
+                    key: ValueKey('$shown-$replay'),
+                    feature: shown,
+                  ),
+                ),
+                const SizedBox(height: 12),
                 Semantics(
                   header: true,
                   child: Text(
                     proTitle(context, shown),
-                    key: stage,
                     style: theme.textTheme.titleLarge,
                   ),
                 ),
-                const SizedBox(height: 6),
                 Text(proLine(context, shown)),
-                const SizedBox(height: 12),
-                HabitProDemo(key: ValueKey(shown), feature: shown),
-                const SizedBox(height: 20),
-                const HabitProPurchase(),
-                const SizedBox(height: 24),
-                Semantics(
-                  header: true,
-                  child: Text(
-                    t('Explore every part', 'Khám phá từng phần'),
-                    style: theme.textTheme.titleMedium,
+                for (final (en, vi, features) in [
+                  ('Routines', 'Quy trình', HabitProFeature.values.take(9)),
+                  (
+                    'Understand',
+                    'Hiểu nhịp sống',
+                    HabitProFeature.values.skip(9).take(6),
                   ),
-                ),
-                for (final f in HabitProFeature.values)
-                  ListTile(
-                    key: Key('pro-part-${f.name}'),
-                    contentPadding: EdgeInsets.zero,
-                    title: Text(proTitle(context, f)),
-                    subtitle: Text(proLine(context, f)),
-                    trailing: Icon(
-                      shown == f
-                          ? Icons.play_circle
-                          : Icons.play_circle_outline,
+                  ('Make it yours', 'Theo ý bạn', [HabitProFeature.studio]),
+                ]) ...[
+                  const SizedBox(height: 24),
+                  Semantics(
+                    header: true,
+                    child: Text(t(en, vi), style: theme.textTheme.titleLarge),
+                  ),
+                  for (final f in features)
+                    ListTile(
+                      key: Key('pro-part-${f.name}'),
+                      contentPadding: const EdgeInsets.symmetric(vertical: 4),
+                      selected: shown == f,
+                      leading: ExcludeSemantics(
+                        child: SizedBox(
+                          width: 56,
+                          height: 48,
+                          child: CustomPaint(
+                            painter: ProThumbnail(f, HabitPalette.of(context)),
+                          ),
+                        ),
+                      ),
+                      title: Text(proTitle(context, f)),
+                      subtitle: Text(proLine(context, f)),
+                      trailing: Icon(
+                        shown == f
+                            ? Icons.play_circle
+                            : Icons.play_circle_outline,
+                      ),
+                      onTap: () => show(f),
                     ),
-                    selected: shown == f,
-                    onTap: () => show(f),
-                  ),
+                ],
                 const SizedBox(height: 24),
-                Semantics(
-                  header: true,
-                  child: Text(
-                    t('Always free', 'Luôn miễn phí'),
-                    style: theme.textTheme.titleLarge,
-                  ),
+                Text(
+                  t('Always free', 'Luôn miễn phí'),
+                  style: theme.textTheme.titleLarge,
                 ),
-                const SizedBox(height: 8),
-                for (final pair in [
-                  (
-                    'Unlimited tracking, negative habits and history',
-                    'Ghi nhận không giới hạn, thói quen cần giảm và lịch sử',
-                  ),
-                  (
-                    'Routines, runner and templates',
-                    'Quy trình, màn chạy và mẫu',
-                  ),
-                  (
-                    'Progress, heatmap and weekly review',
-                    'Tiến bộ, biểu đồ nhiệt và nhìn lại tuần',
-                  ),
-                  (
-                    'Mood, reminders and basic appearance',
-                    'Tâm trạng, nhắc nhở và giao diện cơ bản',
-                  ),
-                  (
-                    'Export, backup, restore and supported sync',
-                    'Xuất, sao lưu, khôi phục và đồng bộ được hỗ trợ',
-                  ),
-                ])
-                  Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 6),
-                    child: Text('• ${t(pair.$1, pair.$2)}'),
-                  ),
-                const SizedBox(height: 16),
                 Text(
                   t(
-                    'Pro adds the Advanced routine parts above and removes supported ads. If Pro goes away, your data stays; saved routines still run. Creating or editing advanced rules needs Pro.',
-                    'Pro thêm các phần quy trình nâng cao ở trên và bỏ quảng cáo được hỗ trợ. Nếu không còn Pro, dữ liệu vẫn còn; quy trình đã lưu vẫn chạy. Cần Pro để tạo hoặc sửa quy tắc nâng cao.',
+                    'Unlimited tracking, basic routines, core Progress, mood, reminders and widgets. Export, backup, restore and supported sync stay free.',
+                    'Ghi nhận không giới hạn, quy trình cơ bản, Tiến bộ cốt lõi, tâm trạng, nhắc nhở và tiện ích. Xuất, sao lưu, khôi phục và đồng bộ được hỗ trợ luôn miễn phí.',
                   ),
                 ),
-                const SizedBox(height: 16),
+                const SizedBox(height: 12),
                 Text(
                   t(
-                    'Planned later: smart insights and personalization studio. They are not available in this version.',
-                    'Dự kiến sau: phân tích chuyên sâu và tùy chỉnh giao diện. Bản này chưa có các phần đó.',
+                    'One-time purchase. No subscription. Ownership belongs to this Google Play account and does not transfer between stores.',
+                    'Mua một lần. Không thuê bao. Quyền mua thuộc tài khoản Google Play này, không chuyển giữa các cửa hàng.',
                   ),
-                  style: theme.textTheme.bodySmall,
+                ),
+                const SizedBox(height: 12),
+                Text(
+                  t(
+                    'Pro also removes supported ads. Your history stays if Pro ends; saved advanced routines still run. Studio choices are kept and use the free look until Pro returns.',
+                    'Pro cũng bỏ quảng cáo được hỗ trợ. Lịch sử vẫn còn khi hết Pro; quy trình nâng cao đã lưu vẫn chạy. Lựa chọn giao diện được giữ và dùng diện mạo miễn phí đến khi có Pro lại.',
+                  ),
                 ),
               ],
             ),

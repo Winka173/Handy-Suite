@@ -3546,6 +3546,42 @@ At narrow/enlarged widths bead/More and routine heading/actions stack; today's f
 still meets its existing visibility check. Shared HandyPage gutters, HandyLabel wrapping,
 HandyMenuButton sizing and shared confirm/message motion remain supervisor follow-ups.
 
+## Handy Habit · run 13 · R19/R20 and Pro contract · 2026-11-10
+
+- Inventory: civil habit days, dated daily/weekly goals, pauses, unknown/conflicted
+  records, collections, inferred/explicit day parts, optional mood, verified store
+  ownership, Nunito, vermilion, bead strings. No external inference service.
+- Pro question: what changes in my daily use? Large pay-once headline and one plain
+  sentence, selected disposable live demo first, Replay, drawn row thumbnails under
+  Routines / Understand / Make it yours. Footer pins Restore + Get Pro with live
+  store price, status/retry and honest unsupported/unconfigured text. Preserve every
+  run12 billing state. Sibling evidence: Boards Pro structure and run12 sibling PNGs.
+- Insights question: what small adjustment does my history support? Finding first,
+  month/quarter comparisons with explicit elapsed windows and denominators; groups
+  by day part/collection; explained difficulty and weekday slips; accept/dismiss
+  suggestions effective tomorrow; mood co-occurrence with paired-day counts, minimum
+  14 paired days, never causal language. Empty/insufficient data say why. Free core
+  Progress stays intact; short pretend preview and Pro badge lead to real upgrade.
+  Advanced heatmap filters compose habit/collection/day-part/direction/weekday/status.
+  Designed PDF preview shares the same engine figures and explains exclusions.
+- Studio question: how will Today feel? Disposable live preview of Habit palettes,
+  Today spacing/layout, Material icon extras and runner look. Free previews; verified
+  Pro checked again at apply. Cancel/Back writes nothing. Persisted choices survive
+  entitlement loss, with default rendering until verified Pro returns. Existing free
+  light/dark, density, colours/icons remain free. Widget appearance only if native
+  adapter supports it; otherwise explain its current fixed system appearance.
+- Responsive: 320/390 single scrolling column, wrap controls and footer actions;
+  1440 centred max920 content, optional side-by-side preview/details. Text1/1.5 never
+  clips; 48px targets, labelled replay/filter controls, keyboard Tab/Enter/Esc,
+  native Back and named /pro, /progress/smart, /settings/studio routes on all targets.
+  Reduced motion shows final demo immediately; no endless timers. Light/dark text
+  contrast >=4.5:1. Signature remains the bead string, never a second chart gimmick.
+- Reject: top Buy interrupting demo, text-only benefit list, causal/medical claims,
+  invented real-user figures, unknown-as-miss, changing historical targets, themed
+  identity colours rewriting habits, locked backup/export/core Progress, fake price.
+- Evidence gate: host EN/VI × light/dark ×320/390/1440 ×text1/1.5; critique, fix and
+  re-render against sibling Pro images; separate host/build from device/store QA.
+
 ## Handy Habit · run 12 · R21 contract · 2026-11-10
 
 Contract before code. References: run11 sheets 01/02, Boards home/how-to/pro and
@@ -3842,3 +3878,14 @@ Historical R11 Progress contract (counting superseded by R12/R13 below): “What
 - Calendar fix: unknown day is a drawn hollow ring, never unsupported Nunito U+25CB. Rendered calendar Text is checked against bundled font cmap. Host matrix render → app-screens §2.7 critique → fix → re-render; no device claim.
 
 - Critique fixes: short Mood/Tâm trạng sheet title avoids 320px/150% AppBar truncation; desktop mood history follows the calendar in the left column to use the space beside habit/routine details. Quick choice labels remain words, all the same neutral/anchor treatment, with48px targets. Deletion explains Restore; re-logging a deleted day starts with blank optional details. These changes are re-rendered across the matrix.
+
+### Handy Habit R19/R20 + Pro contract · run 13 · 2026-11-11
+
+- Inventory: local habits, versioned goals, daily/weekly opportunities, pauses/skips/unknowns, optional mood 1–5; typical 1–20 habits and 28–90 closed days. Demo figures derive from disposable engine history. Studio choices are preferences, never changes to habit identity/history.
+- Pro question: what will I keep with one purchase? Finding: selected capability playing in the top panel. Large Habit headline plus one sentence; drawn thumbnails in Routines / Understand / Make it yours sections; replay returns to top. Pinned Restore/Get Pro with localized price and honest unavailable/loading/pending/owned/cancel/error states. Purchase only when real store permits. References: saved run12 sibling Pro rasters; keep Nunito, beads, oxblood/vermilion.
+- Insights question: which small change would help this week? Finding: kept/eligible for equal elapsed month/quarter windows with exact dates and exclusions. Group comparisons, explained difficulty, weekday misses with denominators, accept/dismiss goal rules effective tomorrow, mood co-occurrence with minimum evidence and no causal language. Advanced insights/report/filtering need Pro; core Progress/exports/mood stay free. Free screen shows labelled demo and badges. PDF preview then explicit save.
+- Studio question: how will my daily screen feel? Finding: live preview of palette/layout/spacing/icons/runner. Everyone previews; Apply checks current Pro at write time. Cancel/back writes nothing. Pro loss uses free appearance and retains choices. Three Habit palettes in light/dark, AA text; licence-safe Material outlines. Widget choices only if native renderer supports them.
+- Responsive/platform: 320/390 stacked, 1440 bounded 1000px and paired sections; text1/1.5 wraps, scrollable controls/footer, >=48px targets. Routes /progress/smart and /settings/studio; Back/Esc, Tab/Enter, live status and labelled chart cells. Kit reduced motion. Existing load retry; failed writes retain draft; empty insights explain insufficient data.
+- Reject: fabricated prices, red misses, inferred mood, weekly quotas attributed to weekdays, percentages without baselines, causation, automatic goals, preview writes, generic KPI tiles. Render EN/VI × light/dark ×320/390/1440 ×text1/1.5; critique, fix, render again beside saved sibling Pro references.
+
+- Run13 critique/fixes: selected panel now precedes its description, matching sibling order; footer wraps Restore/Get Pro without clipping at320/text1.5. Thumbnails distinguish calendars, branches, clock, blocks and analytics. Unsupported Nunito arrow replaced with words and glyph regression tests. Studio preview targets the selected habit, retains its identity hue and shows the chosen icon. Failed/stale Apply keeps draft and inline recovery copy. Final matrix re-rendered; PDFs inspected as actual A4 pages. Final insights fixture has morning Reading and evening Walking to make group counts visible; all figures come from engine history. No device/browser/store claim.

@@ -1,17 +1,26 @@
 # Handy Habit feature matrix
 
-Updated 2026-11-10 (R21 run12; earlier evidence below is historical).
+Updated 2026-11-11 (run13; earlier evidence below is historical).
 Source and tests exist; release certification is separate.
 No row below claims physical-device or real-store verification.
+
+| R19/R20 / run13 feature | Status | Evidence / limit |
+| --- | --- | --- |
+| Pro top live/replayable demo, drawn thumbnails, grouped rows, pinned Restore/Get Pro | IMPLEMENTED / HOST TESTED / RENDERED | Existing25 Pro tests retained; synthetic store states beside saved sibling rasters; real store unverified |
+| Month/quarter and current-group comparisons, difficulty, missed weekdays, mood co-occurrence | IMPLEMENTED / UNIT + WIDGET TESTED | Exact windows, weighted counts, exclusions, ≥14 pairs/≥3 each group, no causation; engine191 total |
+| Accept/dismiss goals, combined heatmap filters, EN/VI designed PDF preview/export | IMPLEMENTED / UNIT + WIDGET TESTED / RENDERED | Ten daily opportunities, changes tomorrow, stale/entitlement checks; core Progress/export free |
+| Three light/dark palettes, Today rows/cards/spacing, six Material icons, runner looks | IMPLEMENTED / WIDGET TESTED / RENDERED | App247 total; six AA cases, glyph coverage, failed/stale save, preview/cancel/no-write/refund/regrant; widget fixed |
+
+Current review: [R19/R20 and Pro run13](R19_R20_REVIEW.md). Schema8/physical2/protocol1 retained. No device/browser/store certification.
 
 | R21 / run12 feature | Status | Host evidence | Remaining |
 | --- | --- | --- | --- |
 | Help replay card, icon/summary/chevron topic rows, no numbering; shell mark and contextual labelled creation | IMPLEMENTED / WIDGET TESTED / RENDERED | Search/detail/replay/back retained; 24-case matrix; sibling contact sheets | Device/SR follow-along |
-| Nine Advanced routine demos, exact badge destinations, builder Learn about Pro, Free/Pro comparison and Settings group | IMPLEMENTED / WIDGET TESTED / RENDERED | Engine-evaluated pretend routines; no writes, draft survives purchase/back, reduced motion | R19 insights and R20 studio remain OPEN; explicitly planned later |
-| Google Play lifetime store, localized price before Buy, Restore, pending/cancel/error/offline/refund handling, ads removal | SOURCE + FAKE-STORE HOST TESTED / ANDROID COMPILED | Same shared NativeLifetimeStore/LifetimeController as Boards; config habit/android; real plugin is a normal dependency; merged debug manifest includes BILLING | Product creation, release bundle and Play licence-test buy/restore/refund/cache-restart by supervisor; fake results are not verified billing |
+| Nine Advanced routine demos, exact badge destinations, builder Learn about Pro, Free/Pro comparison and Settings group | IMPLEMENTED / WIDGET TESTED / RENDERED | Engine-evaluated pretend routines; no writes, draft survives purchase/back, reduced motion | Superseded by run13 R19/R20 implementation above |
+| Google Play lifetime store, localized price before Buy, Restore, pending/cancel/error/offline/refund handling, ads removal | SOURCE + FAKE-STORE HOST TESTED / ANDROID COMPILED | Same shared NativeLifetimeStore/LifetimeController as Boards; config habit/android; real plugin is a normal dependency; merged debug manifest includes BILLING | Supervisor reports product active (99,000 VND); release bundle and Play licence-test buy/restore/refund/cache-restart remain; fake results are not verified billing |
 | iOS/Windows/Web Pro page | IMPLEMENTED / HOST TESTED (native platform branches) | Honest unsupported copy; no buy/restore checkout controls; Web source uses the same unsupported branch | No non-Android store offered; no browser/iOS runtime claim |
 
-Current review: [R21 run12](R21_REVIEW.md). Schema remains 8/physical2/protocol1.
+Historical review: [R21 run12](R21_REVIEW.md). Schema remains 8/physical2/protocol1.
 
 | R17/R18 feature | Status | Host evidence | Remaining |
 | --- | --- | --- | --- |

@@ -68,7 +68,7 @@ Color habitMark(BuildContext context, Habit h) {
   // Cover the row and the surrounding page, whichever requires more contrast.
   final theme = Theme.of(context);
   if (!legacy && h.color == 0xffb42318 && theme.brightness == Brightness.dark) {
-    return HabitPalette.of(context).vermilion;
+    return HabitPalette.dark.vermilion;
   }
   final surface = theme.brightness == Brightness.dark
       ? theme.colorScheme.surface

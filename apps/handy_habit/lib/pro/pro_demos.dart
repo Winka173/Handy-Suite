@@ -3,6 +3,7 @@ import 'package:handy_habit_engine/handy_habit_engine.dart';
 import 'package:handy_ui/kit.dart';
 import '../design/palette.dart';
 import 'entitlements.dart';
+import 'feature_demo.dart';
 
 /// A disposable plan, evaluated by the real engine; no controller or repository.
 (String, List<RoutineStep>) demoPlan(
@@ -147,6 +148,10 @@ class _HabitProDemoState extends State<HabitProDemo> {
     if (!initialized) {
       after = MediaQuery.disableAnimationsOf(context);
       initialized = true;
+      if (!MediaQuery.disableAnimationsOf(context))
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (mounted) play();
+        });
     }
   }
 
@@ -176,7 +181,8 @@ class _HabitProDemoState extends State<HabitProDemo> {
   @override
   Widget build(BuildContext context) {
     final p = HabitPalette.of(context);
-    final frame = demoPlan(context, widget.feature, after);
+    final advanced = widget.feature.index < 9;
+    final frame = advanced ? demoPlan(context, widget.feature, after) : null;
     return Container(
       key: Key('pro-demo-${widget.feature.name}'),
       padding: const EdgeInsets.all(16),
@@ -188,48 +194,47 @@ class _HabitProDemoState extends State<HabitProDemo> {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Text(
-            tr(
-              context,
-              'Example routine · nothing is saved',
-              'Quy trình ví dụ · không lưu gì',
-            ),
+            tr(context, 'Example · nothing is saved', 'Ví dụ · không lưu gì'),
             style: Theme.of(context).textTheme.bodySmall,
           ),
           const SizedBox(height: 12),
-          Semantics(
-            liveRegion: true,
-            child: Text(
-              frame.$1,
-              key: const Key('pro-demo-input'),
-              style: Theme.of(context).textTheme.titleMedium,
+          if (!advanced) featureDemo(context, widget.feature, after),
+          if (advanced)
+            Semantics(
+              liveRegion: true,
+              child: Text(
+                frame!.$1,
+                key: const Key('pro-demo-input'),
+                style: Theme.of(context).textTheme.titleMedium,
+              ),
             ),
-          ),
           const SizedBox(height: 8),
-          HandySwap(
-            child: Column(
-              key: ValueKey(frame.$1),
-              children: [
-                for (final s in frame.$2)
-                  Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 6),
-                    child: Row(
-                      children: [
-                        const Icon(Icons.drag_handle, size: 18),
-                        const SizedBox(width: 8),
-                        Expanded(child: Text(s.title)),
-                        const SizedBox(width: 8),
-                        Flexible(
-                          child: Text(
-                            '${s.seconds ~/ 60} ${tr(context, 'min', 'phút')}${s.note.isEmpty ? '' : ' · ${s.note}'}',
-                            textAlign: TextAlign.end,
+          if (advanced)
+            HandySwap(
+              child: Column(
+                key: ValueKey(frame!.$1),
+                children: [
+                  for (final s in frame.$2)
+                    Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 6),
+                      child: Row(
+                        children: [
+                          const Icon(Icons.drag_handle, size: 18),
+                          const SizedBox(width: 8),
+                          Expanded(child: Text(s.title)),
+                          const SizedBox(width: 8),
+                          Flexible(
+                            child: Text(
+                              '${s.seconds ~/ 60} ${tr(context, 'min', 'phút')}${s.note.isEmpty ? '' : ' · ${s.note}'}',
+                              textAlign: TextAlign.end,
+                            ),
                           ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
-                  ),
-              ],
+                ],
+              ),
             ),
-          ),
           const SizedBox(height: 12),
           Wrap(
             spacing: 8,

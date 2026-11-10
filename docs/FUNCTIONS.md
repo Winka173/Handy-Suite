@@ -54,6 +54,9 @@ build Android/Windows/Web hay ảnh widget là bằng chứng thiết bị thậ
 
 ## Handy Habit
 
+- **Pro R19/run13**: so sánh cùng phần đã qua của tháng/quý, nhóm theo buổi/collection, độ khó có công thức, thứ hay lỡ kèm mẫu số, gợi ý tăng/giảm mục tiêu nhận hoặc bỏ qua (từ ngày mai), tâm trạng cùng xuất hiện với tối thiểu14 ngày ghép, bộ lọc heatmap kết hợp và PDF EN/VI xem trước rồi lưu. Chỉ tính trên máy, không suy ra nguyên nhân. Progress/xuất/backup/sync cốt lõi vẫn miễn phí.
+- **Studio R20**: ba bảng màu Habit sáng/tối đạt AA, Today hàng/thẻ và khoảng cách, sáu icon Material outline và hai diện mạo runner. Ai cũng xem trước; Pro áp dụng. Mất Pro dùng mặc định an toàn, giữ lựa chọn, không sửa lịch sử. Widget Android giữ giao diện hệ thống hiện có, chưa có tùy chỉnh riêng. Pro có demo trên cùng, thumbnail, các nhóm và footer Restore/Get Pro với giá store; host tested, chưa giao dịch thật.
+
 - **Quy trình nâng cao (R17/R18, Pro để tạo/sửa)**: điều kiện theo thứ/thói quen chưa xong/thời gian còn lại, nhánh A/B, nhóm bước dùng lại, bước cần xong trước, nối sau thói quen, thời lượng theo thứ và cấu hình đã lưu. Cơ bản là mặc định; Nâng cao mở dần, có giải thích và demo/nhãn Pro cho người chưa có Pro. Mọi người vẫn chạy quy trình đã lưu. Phiên giữ bản chụp và quyết định bất biến, giải thích bước bỏ qua; không tính giờ khi app đóng. Schema8/physical2/protocol1; host tested, chưa kiểm trên thiết bị.
 
 - **Nhìn lại tuần**: từ ngày cuối tuần tới hai ngày sau, Hôm nay có một dòng mở trang nhìn lại (Thống kê có nút mở bất cứ lúc nào). Trang nêu số lần giữ được trên số lần đến hạn, so với tuần trước nữa, ngày trong tuần hay bị lỡ nhất (khi lỡ từ 2 lần trở lên), và chuỗi hạt 7 ngày của từng thói quen; thói quen giữ chưa được một nửa có nút "Làm nhỏ lại" mở trình sửa. Không lưu thêm dữ liệu.
@@ -109,7 +112,7 @@ Keep, Spend hoặc timer đa dụng. [Trạng thái kiểm chứng](handy_habit/
 - SQLite native/IndexedDB Web, integrity check, schema version, bảo vệ ghi đồng
   thời. JSON/ZIP full backup miễn phí, preview merge/replace, đổi ID khi merge,
   checksum và rollback. Replace lưu bản phục hồi bền trên máy trước khi commit; Cài đặt có khôi phục trước lần thay thế cuối. `.hseal` dùng mã hóa xác thực chung, sai mật khẩu/hỏng/hủy giữ dữ liệu. CSV log nhập/xuất (kèm bảng kỳ nghỉ và tâm trạng khi có);
-  Markdown/PDF báo cáo EN/VI có khoảng ngày, liệt kê kỳ nghỉ. Schema dữ liệu7/physical2, đọc backup/schema1–6; causal operations có ID/ancestry, delta/tổng tuyệt đối và giao thức sync R15/R16.
+  Markdown/PDF báo cáo EN/VI có khoảng ngày, liệt kê kỳ nghỉ. Schema dữ liệu8/physical2, đọc backup/schema1–6; causal operations có ID/ancestry, delta/tổng tuyệt đối và giao thức sync R15/R16.
 - EN/VI, sáng/tối; ba khu Hôm nay / Quy trình / Tiến bộ, gear Cài đặt ở trên phone,
   sidebar224 từ840px gập thành rail64 và nhớ trạng thái. Named routes `/today`,
   `/routines`, `/progress`, `/habits`, editor và các route cũ; Ctrl/Cmd N/F/comma/1–3,
