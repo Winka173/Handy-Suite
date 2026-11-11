@@ -1,0 +1,4 @@
+• Icon mới: hạt hôm nay đã tick nằm giữa vòng.
+• Chia sẻ quy trình cho bạn bè dưới dạng một trang; nhập quy trình người khác gửi.
+• Widget: chạm một hạt là ghi nhận, không cần mở app.
+• Thói quen, quy trình mới chỉ hai chạm; màn chạy có vòng đếm giờ; tâm trạng một chạm.
