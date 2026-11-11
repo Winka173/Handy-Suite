@@ -225,8 +225,12 @@ class _InsightsPageState extends State<InsightsPage> {
         Text(
           tr(
             context,
-            '$kept of $due ${due == 1 ? 'goal' : 'goals'} kept',
-            'Giữ được $kept trên $due mục tiêu.',
+            due == 0
+                ? 'Nothing to count yet in this range'
+                : '$kept of $due ${due == 1 ? 'goal' : 'goals'} kept',
+            due == 0
+                ? 'Chưa có gì để tính trong khoảng này'
+                : 'Giữ được $kept trên $due mục tiêu.',
           ),
           key: const Key('progress-finding'),
           style: theme.textTheme.headlineSmall?.copyWith(
