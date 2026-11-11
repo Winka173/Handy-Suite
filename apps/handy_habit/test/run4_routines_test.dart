@@ -229,6 +229,13 @@ void main() {
       expect(c.state!.sessions.single.running, false);
       expect(c.state!.sessions.single.recoveryWarning, true);
       expect(c.state!.sessions.single.steps.first.elapsed, 0);
+      // The away note shows while the run waits, and goes once resumed.
+      const away =
+          'Paused while the app was away. Only saved foreground time is counted.';
+      expect(find.text(away), findsOneWidget);
+      await tap(t, 'routine-pause');
+      expect(find.text(away), findsNothing);
+      await tap(t, 'routine-pause');
       await tap(t, 'routine-complete-step');
       await c.change(
         (s) => completeStep(

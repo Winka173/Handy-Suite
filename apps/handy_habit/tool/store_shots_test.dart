@@ -202,6 +202,8 @@ void main() {
           await t.pumpWidget(const SizedBox());
           c.dispose();
         });
+        // The app is on screen, so the runner keeps running for its shot.
+        t.binding.handleAppLifecycleStateChanged(AppLifecycleState.resumed);
         await t.pumpWidget(
           RepaintBoundary(
             key: root,
@@ -220,12 +222,28 @@ void main() {
           await t.pumpAndSettle();
         }
 
+        // Let the mark image decode before the first shot.
+        await t.runAsync(
+          () => Future<void>.delayed(const Duration(seconds: 1)),
+        );
+        await t.pump();
         await capture(t, '$locale-01-today');
         await open('/habit/read');
         await capture(t, '$locale-02-history');
         await close();
         await open('/routine/morning');
         await tapKey(t, 'routine-start');
+        // The sample's run waits paused: resume it.
+        if (find
+            .text(locale == 'vi' ? 'Tiếp tục' : 'Resume')
+            .evaluate()
+            .isNotEmpty)
+          await tapKey(t, 'routine-pause');
+        // A few real seconds so the step's clock shows it running.
+        await t.runAsync(
+          () => Future<void>.delayed(const Duration(seconds: 7)),
+        );
+        await t.pump(const Duration(milliseconds: 300));
         await capture(t, '$locale-03-runner');
         // Leave via navigation so the runner retains its normal exit behavior.
         await open('/progress');

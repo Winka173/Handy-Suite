@@ -322,7 +322,8 @@ class RunnerView extends StatelessWidget {
                               color: c.muted,
                             ),
                           ),
-                          if (session.recoveryWarning)
+                          // Only while it still waits: once resumed it is old news.
+                          if (session.recoveryWarning && !running)
                             Padding(
                               padding: const EdgeInsets.only(top: HandySpace.l),
                               child: HandyNotice(
