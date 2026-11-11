@@ -161,7 +161,6 @@ class _HabitWeekRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final ink = theme.colorScheme.onSurface;
     final h = week.habit;
     return Padding(
       key: Key('week-review-${h.id}'),
@@ -208,9 +207,8 @@ class _HabitWeekRow extends StatelessWidget {
                       status: week.days[i],
                       fill: dayFill(h, addDays(start, i), scope.index),
                       size: 14,
-                      color: h.isNegative
-                          ? habitMark(context, h)
-                          : ink.withValues(alpha: .78),
+                      // The habit's own colour, as on Today.
+                      color: habitMark(context, h),
                     ),
                   ),
               ],

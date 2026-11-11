@@ -28,17 +28,10 @@ class MonthGrid extends StatefulWidget {
 
 class _MonthGridState extends State<MonthGrid> {
   bool? asList;
-  // Early in a month the one before says more, if the habit was there.
+  // Always this month first; the arrows go back.
   late DateTime month = () {
     final t = date(widget.today);
-    final previous = DateTime.utc(t.year, t.month - 1);
-    return t.day <= 10 &&
-            day(previous)
-                    .substring(0, 7)
-                    .compareTo(widget.habit.created.substring(0, 7)) >=
-                0
-        ? previous
-        : DateTime.utc(t.year, t.month);
+    return DateTime.utc(t.year, t.month);
   }();
 
   @override

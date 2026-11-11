@@ -215,6 +215,7 @@ void main() {
   testWidgets('saved Habits and Progress views are Pro gated', (t) async {
     await p.bootPro(t, open: false, state: f.run14Seed());
     await host.go(t, '/habits');
+    await tap(t, 'habit-archived');
     await tap(t, 'save-filter-habits');
     expect(host.route(t), '/pro?feature=convenience');
   });

@@ -191,32 +191,38 @@ class _InsightsPageState extends State<InsightsPage> {
     final summary = Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Text(
-          tr(
-            context,
-            due == 0
-                ? 'Nothing to count yet in this range'
-                : '$kept of $due ${due == 1 ? 'goal' : 'goals'} kept',
-            due == 0
-                ? 'Chưa có gì để tính trong khoảng này'
-                : 'Giữ được $kept trên $due mục tiêu.',
-          ),
-          key: const Key('progress-finding'),
-          style: theme.textTheme.headlineSmall?.copyWith(
-            color: p.anchor,
-            fontWeight: FontWeight.w400,
-          ),
-        ),
-        const SizedBox(height: 8),
-        Align(
-          alignment: AlignmentDirectional.centerStart,
-          child: TextButton(
-            key: const Key('progress-method'),
-            onPressed: method,
-            child: Text(
-              tr(context, 'How is this counted?', 'Số này được tính thế nào?'),
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Expanded(
+              child: Text(
+                tr(
+                  context,
+                  due == 0
+                      ? 'Nothing to count yet in this range'
+                      : '$kept of $due ${due == 1 ? 'goal' : 'goals'} kept',
+                  due == 0
+                      ? 'Chưa có gì để tính trong khoảng này'
+                      : 'Giữ được $kept trên $due mục tiêu.',
+                ),
+                key: const Key('progress-finding'),
+                style: theme.textTheme.headlineSmall?.copyWith(
+                  color: p.anchor,
+                  fontWeight: FontWeight.w800,
+                ),
+              ),
             ),
-          ),
+            IconButton(
+              key: const Key('progress-method'),
+              tooltip: tr(
+                context,
+                'How is this counted?',
+                'Số này được tính thế nào?',
+              ),
+              onPressed: method,
+              icon: const Icon(Icons.info_outline),
+            ),
+          ],
         ),
         if (habits.any((h) => h.negativeGoals.any((g) => g.window == 'week')))
           Padding(
@@ -255,13 +261,27 @@ class _InsightsPageState extends State<InsightsPage> {
             ),
           ),
         ],
-        Align(
-          alignment: AlignmentDirectional.centerStart,
-          child: TextButton.icon(
+      ],
+    );
+    // After what the days say: the week's look back, then the Pro tools.
+    final extras = Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Card(
+          margin: const EdgeInsets.only(top: 16),
+          child: ListTile(
             key: const Key('insights-week-review'),
-            onPressed: () => openWeekReview(context, scope),
-            icon: const Icon(Icons.event_note_outlined, size: 18),
-            label: Text(tr(context, 'Look back at the week', 'Nhìn lại tuần')),
+            leading: Icon(Icons.event_note_outlined, color: p.vermilion),
+            title: Text(tr(context, 'Look back at the week', 'Nhìn lại tuần')),
+            subtitle: Text(
+              tr(
+                context,
+                'Each habit’s last seven days, and one small step',
+                'Bảy ngày qua của từng thói quen, và một bước nhỏ',
+              ),
+            ),
+            trailing: const Icon(Icons.chevron_right),
+            onTap: () => openWeekReview(context, scope),
           ),
         ),
         // Pro tools come after what the person's own days say.
@@ -563,6 +583,7 @@ class _InsightsPageState extends State<InsightsPage> {
                   routineRows,
                   MoodHistory(scope: scope, from: from, until: until),
                 ],
+                extras,
                 HandyLabel(tr(context, 'Export this range', 'Xuất khoảng này')),
                 Wrap(
                   spacing: 8,

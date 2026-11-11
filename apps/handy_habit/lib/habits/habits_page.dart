@@ -149,29 +149,38 @@ class _HabitsPageState extends State<HabitsPage> {
                   }),
                 ),
               ),
+              IconButton(
+                key: const Key('habits-batch'),
+                tooltip: tr(context, 'Batch changes', 'Thay đổi hàng loạt'),
+                onPressed: () => Navigator.pushNamed(context, '/habits/batch'),
+                icon: const Icon(Icons.checklist),
+              ),
             ],
           ),
-          SavedFilters(
-            scope: scope,
-            area: 'habits',
-            values: {
-              'search': searchController.text,
-              'archived': archived,
-              'order': order,
-            },
-            onApply: (v) => setState(() {
-              debounce?.cancel();
-              search = v['search'] as String? ?? '';
-              searchController.text = search;
-              archived = v['archived'] == true;
-              order = v['order'] as String? ?? 'manual';
-            }),
-          ),
-          TextButton(
-            key: const Key('habits-batch'),
-            onPressed: () => Navigator.pushNamed(context, '/habits/batch'),
-            child: Text(tr(context, 'Batch changes', 'Thay đổi hàng loạt')),
-          ),
+          // Only a view that differs from the plain list can be saved;
+          // saved ones always show.
+          if (search.isNotEmpty ||
+              archived ||
+              order != 'manual' ||
+              objects(
+                scope.state.settings['savedFilters'] ?? [],
+              ).any((f) => f['area'] == 'habits'))
+            SavedFilters(
+              scope: scope,
+              area: 'habits',
+              values: {
+                'search': searchController.text,
+                'archived': archived,
+                'order': order,
+              },
+              onApply: (v) => setState(() {
+                debounce?.cancel();
+                search = v['search'] as String? ?? '';
+                searchController.text = search;
+                archived = v['archived'] == true;
+                order = v['order'] as String? ?? 'manual';
+              }),
+            ),
           if (habits.isEmpty)
             Padding(
               padding: const EdgeInsets.only(top: HandySpace.xl),
