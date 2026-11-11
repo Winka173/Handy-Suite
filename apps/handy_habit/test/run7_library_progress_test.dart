@@ -34,9 +34,7 @@ void main() {
       final count = c.state!.habits.length;
       await host.go(t, '/templates?collection=reduce');
       await tap(t, 'preset-sugary-drinks');
-      expect(find.byKey(const Key('template-preview-title')), findsOneWidget);
       expect(c.state!.habits.length, count);
-      await tap(t, 'template-customise');
       expect(
         t
             .widget<TextField>(find.byKey(const Key('field-title')))
@@ -47,7 +45,7 @@ void main() {
       host.nav(t).pop();
       await t.pumpAndSettle();
       expect(c.state!.habits.length, count);
-      await tap(t, 'template-customise');
+      await tap(t, 'preset-sugary-drinks');
       await t.enterText(find.byKey(const Key('field-title')), 'Weekend drinks');
       await t.ensureVisible(find.byKey(const Key('editor-save')));
       await t.pumpAndSettle();

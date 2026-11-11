@@ -99,6 +99,9 @@ void main() {
           count == 0 ? findsNothing : findsOneWidget,
         );
         await tap(t, count == 0 ? 'today-add-habit' : 'today-new');
+        // One way in: the quick sheet, with the gallery one tap further.
+        expect(find.byKey(const Key('quick-add')), findsOneWidget);
+        await tap(t, 'quick-add-templates');
         expect(find.byKey(const Key('template-search')), findsOneWidget);
       });
     }
@@ -129,8 +132,8 @@ void main() {
         findsOneWidget,
       );
       await tap(t, 'preset-$id');
+      // The editor shows the template's icon in its colour.
       expect(find.byIcon(Icons.water_drop_outlined), findsOneWidget);
-      await tap(t, 'template-customise');
       await tap(t, 'editor-save');
       expect(c.state!.habits.single.icon, Icons.water_drop_outlined.codePoint);
     });

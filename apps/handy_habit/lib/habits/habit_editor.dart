@@ -1,6 +1,7 @@
 import 'package:handy_habit_engine/handy_habit_engine.dart';
 import 'package:handy_ui/kit.dart';
 import '../scope.dart';
+import '../settings/settings_page.dart' show habitAllowNotifications;
 import '../ui/form.dart';
 import '../ui/words.dart';
 
@@ -25,6 +26,7 @@ Widget buildHabitEditor(
   HabitScope scope, [
   Habit? old,
   HabitPreset? preset,
+  String? name,
 ]) {
   final s = scope.state, today = scope.today;
   final current = old == null
@@ -56,6 +58,13 @@ Widget buildHabitEditor(
                 v.status == 'active' &&
                 v.steps.any((step) => step.plan.habit == old.id),
           ));
+  // The habit's own reminder (the first one, when there are several).
+  final reminder = old == null
+      ? null
+      : objects(s.settings['reminders'] ?? [])
+            .map(Reminder.fromJson)
+            .where((r) => r.type == 'habit' && r.target == old.id)
+            .firstOrNull;
   return HabitForm(
     title: old == null
         ? tr(context, 'New habit', 'Thói quen mới')
@@ -85,6 +94,13 @@ Widget buildHabitEditor(
         'Tên',
         helpEn: 'Small and concrete: Read 10 pages, Walk after lunch.',
         helpVi: 'Nhỏ và cụ thể: Đọc 10 trang, Đi bộ sau bữa trưa.',
+      ),
+      const HabitField(
+        'look',
+        'Icon and colour',
+        'Biểu tượng và màu',
+        kind: FieldKind.look,
+        required: false,
       ),
       HabitField(
         'ceilingMode',
@@ -152,8 +168,6 @@ Widget buildHabitEditor(
         'Mỗi ngày tối thiểu',
         kind: FieldKind.amount,
         when: (v) => v['direction'] != 'reduce' && v['type'] != 'binary',
-        helpEn: 'Up to three decimals; times must be whole.',
-        helpVi: 'Tối đa ba số lẻ; số lần phải là số nguyên.',
       ),
       HabitField(
         'schedule',
@@ -193,6 +207,25 @@ Widget buildHabitEditor(
         when: (v) => v['direction'] != 'reduce' && v['schedule'] == 'interval',
         helpEn: '1 to 366.',
         helpVi: 'Từ 1 đến 366.',
+      ),
+      HabitField(
+        'remind',
+        'Remind me',
+        'Nhắc tôi',
+        kind: FieldKind.toggle,
+        helpEn: scope.reminders.supported
+            ? 'A notice at the time you choose, on the days it is planned.'
+            : 'This platform shows the next reminder on Today instead.',
+        helpVi: scope.reminders.supported
+            ? 'Một thông báo vào giờ bạn chọn, những ngày có lịch.'
+            : 'Nền tảng này hiện lần nhắc tiếp theo ở Hôm nay.',
+      ),
+      HabitField(
+        'remindAt',
+        'At',
+        'Lúc',
+        kind: FieldKind.time,
+        when: (v) => v['remind'] == true,
       ),
       HabitField(
         'effective',
@@ -266,7 +299,7 @@ Widget buildHabitEditor(
       'window': negativeGoal?.window ?? preset?.window ?? 'day',
       'title':
           old?.title ??
-          (preset == null ? '' : tr(context, preset.en, preset.vi)),
+          (preset == null ? name ?? '' : tr(context, preset.en, preset.vi)),
       'type': old?.type ?? preset?.type ?? 'binary',
       'unit':
           old?.unit ??
@@ -299,6 +332,12 @@ Widget buildHabitEditor(
       'dayPart': (s.settings['habitDayParts'] as Map?)?[old?.id] ?? 'auto',
       'priority': '${old?.priority ?? 1}',
       'note': old?.note ?? '',
+      'look': {
+        'icon': old?.icon ?? preset?.icon ?? 0xe876,
+        'color': old?.color ?? preset?.color ?? 0xffb42318,
+      },
+      'remind': reminder != null,
+      'remindAt': reminder?.time ?? '08:00',
     },
     save: (v) async {
       final negative = v['direction'] == 'reduce';
@@ -378,17 +417,37 @@ Widget buildHabitEditor(
         unit: unit,
         category: v['category'] as String,
         priority: int.parse('${v['priority']}'),
-        icon: old?.icon ?? preset?.icon ?? 0xe876,
-        color: old?.color ?? preset?.color ?? 0xffb42318,
+        icon: (v['look'] as Map?)?['icon'] as int? ?? old?.icon ?? 0xe876,
+        color:
+            (v['look'] as Map?)?['color'] as int? ?? old?.color ?? 0xffb42318,
         archived: old?.archived ?? false,
         archivedFrom: old?.archivedFrom,
         archivedPeriods: old?.archivedPeriods ?? [],
         end: end.isEmpty ? null : end,
       );
+      final remind = v['remind'] == true;
+      final notify = remind && s.settings['notifications'] != true
+          ? await habitAllowNotifications(context, scope)
+          : s.settings['notifications'] == true;
+      final rule = remind
+          ? Reminder(
+              id: reminder?.id ?? uid(),
+              target: next.id,
+              type: 'habit',
+              time: v['remindAt'] as String,
+              weekdays: reminder?.weekdays ?? const [1, 2, 3, 4, 5, 6, 7],
+            )
+          : null;
       await scope.controller.change(
         (s) => s.copy({
           'settings': {
             ...s.settings,
+            if (remind) 'notifications': notify,
+            'reminders': [
+              for (final x in objects(s.settings['reminders'] ?? []))
+                if (x['id'] != reminder?.id) x,
+              ?rule?.toJson(),
+            ],
             'habitDayParts': <String, dynamic>{
               ...Map<String, dynamic>.from(
                 s.settings['habitDayParts'] as Map? ?? {},

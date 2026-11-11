@@ -1,3 +1,4 @@
+import '../habits/habit_appearance.dart';
 import 'dart:convert';
 import 'package:flutter/services.dart';
 import 'package:handy_habit_engine/handy_habit_engine.dart';
@@ -18,6 +19,9 @@ enum FieldKind {
 
   /// Several of [HabitField.options], as a list of their keys.
   many,
+
+  /// A habit's icon and colour, as `{icon, color}`; changed in place.
+  look,
 }
 
 /// One input of a [HabitForm]. Labels sit above their field; [help] says
@@ -241,6 +245,8 @@ class _HabitFormState extends State<HabitForm> {
             out[f.id] ??= '';
           case FieldKind.toggle:
             out[f.id] = out[f.id] == true;
+          case FieldKind.look:
+            break;
         }
       } catch (_) {
         errors[f.id] =
@@ -494,6 +500,7 @@ class _HabitFormState extends State<HabitForm> {
         },
         clear: !f.required && (values[f.id] as String? ?? '').isNotEmpty,
       ),
+      FieldKind.look => _look(f),
       FieldKind.time => _picker(
         f,
         Icons.schedule,
@@ -563,6 +570,51 @@ class _HabitFormState extends State<HabitForm> {
             ),
         ],
       ),
+    );
+  }
+
+  /// The icon in its colour, then Change: the habit's own picker.
+  Widget _look(HabitField f) {
+    final look = Map<String, dynamic>.from(values[f.id] as Map? ?? const {});
+    final icon = look['icon'] as int? ?? 0xe876;
+    final color = Color(look['color'] as int? ?? 0xffb42318);
+    return Wrap(
+      spacing: HandySpace.m,
+      runSpacing: HandySpace.s,
+      crossAxisAlignment: WrapCrossAlignment.center,
+      children: [
+        Container(
+          width: 48,
+          height: 48,
+          decoration: BoxDecoration(
+            color: color.withValues(alpha: .14),
+            shape: BoxShape.circle,
+          ),
+          child: Icon(habitIcon(icon), color: color),
+        ),
+        OutlinedButton.icon(
+          key: Key('field-${f.id}'),
+          onPressed: busy
+              ? null
+              : () async {
+                  final picked = await pickHabitAppearance(
+                    context,
+                    title: text['title']?.text ?? '',
+                    initialIcon: icon,
+                    initialColor: color.toARGB32(),
+                  );
+                  if (picked != null)
+                    setState(
+                      () => values[f.id] = {
+                        'icon': picked.icon,
+                        'color': picked.color,
+                      },
+                    );
+                },
+          icon: const Icon(Icons.palette_outlined, size: 18),
+          label: Text(tr(context, 'Icon and colour', 'Biểu tượng và màu')),
+        ),
+      ],
     );
   }
 

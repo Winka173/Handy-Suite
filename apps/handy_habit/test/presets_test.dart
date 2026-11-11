@@ -17,10 +17,11 @@ void main() {
   testWidgets('a preset fills the editor; the person saves it', (tester) async {
     final c = await start(tester);
     await tapKey(tester, 'today-add-habit');
+    await tapKey(tester, 'quick-add-templates');
     await tester.enterText(find.byKey(const Key('template-search')), 'read');
     await tester.pumpAndSettle();
+    // A habit template opens the editor at once, filled in.
     await tapKey(tester, 'preset-read');
-    await tapKey(tester, 'template-customise');
     expect(find.text('Read'), findsWidgets);
     await tapKey(tester, 'editor-save');
     final h = c.state!.habits.single;
@@ -31,6 +32,7 @@ void main() {
     expect(h.category, 'Reading');
     // A used template can create a separate copy; preview itself never saves.
     await tapKey(tester, 'today-new');
+    await tapKey(tester, 'quick-add-templates');
     await tester.enterText(find.byKey(const Key('template-search')), 'read');
     await tester.pumpAndSettle();
     expect(find.byKey(const Key('preset-read')), findsOneWidget);

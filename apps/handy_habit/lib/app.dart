@@ -426,6 +426,7 @@ class _HabitAppState extends State<HabitApp> with WidgetsBindingObserver {
           scope,
           null,
           s.arguments is HabitPreset ? s.arguments as HabitPreset : null,
+          s.arguments is String ? s.arguments as String : null,
         ),
       ),
       ['', 'habit', final id, 'edit'] => () => Builder(

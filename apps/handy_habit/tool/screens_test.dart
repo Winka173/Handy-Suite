@@ -618,7 +618,6 @@ void main() {
     );
     await t.pumpAndSettle();
     await fixtures.tapKey(t, 'preset-journal');
-    await fixtures.tapKey(t, 'template-customise');
     await fixtures.tapKey(t, 'field-schedule-weekdays');
     await shot(t, 'phone-7-editor');
   });

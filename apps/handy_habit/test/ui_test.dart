@@ -216,7 +216,12 @@ void main() {
     (tester) async {
       final c = await start(tester);
       await tapKey(tester, 'today-add-habit');
-      await tapKey(tester, 'preset-blank');
+      await tester.enterText(
+        find.byKey(const Key('quick-add-name')),
+        'Read a few pages',
+      );
+      await tester.pump();
+      await tapKey(tester, 'quick-add-next');
       await tester.enterText(
         find.byKey(const Key('field-title')),
         'Read a few pages',

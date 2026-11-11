@@ -44,34 +44,8 @@ class HabitSettingsPage extends StatelessWidget {
     }
   }
 
-  Future<bool> _allowNotifications(BuildContext context) async {
-    if (!scope.reminders.supported) return false;
-    final ok = await confirmHandy(
-      context,
-      title: tr(context, 'Allow reminders?', 'Cho phép nhắc?'),
-      message: tr(
-        context,
-        'Habit uses notifications to remind you at the times you choose. Names are hidden by default. Tracking works without permission.',
-        'Habit dùng thông báo để nhắc vào giờ bạn chọn. Mặc định ẩn tên. Không cấp quyền vẫn ghi nhận được.',
-      ),
-      confirmLabel: tr(context, 'Continue', 'Tiếp tục'),
-    );
-    if (!ok) return false;
-    try {
-      return await scope.reminders.request();
-    } catch (_) {
-      if (context.mounted)
-        showHandyMessage(
-          context,
-          tr(
-            context,
-            'Could not check notification permission. Try again.',
-            'Chưa kiểm tra được quyền thông báo. Hãy thử lại.',
-          ),
-        );
-      return false;
-    }
-  }
+  Future<bool> _allowNotifications(BuildContext context) =>
+      habitAllowNotifications(context, scope);
 
   Future<void> _reset(BuildContext context) async {
     final ok = await confirmHandy(
@@ -1017,6 +991,40 @@ class HabitDataToolsPage extends StatelessWidget {
     listenable: scope.controller,
     children: (context) => HabitSettingsPage(scope: scope).dataTools(context),
   );
+}
+
+/// Asks for notification permission after saying why; false when the
+/// platform cannot remind or the person declines.
+Future<bool> habitAllowNotifications(
+  BuildContext context,
+  HabitScope scope,
+) async {
+  if (!scope.reminders.supported) return false;
+  final ok = await confirmHandy(
+    context,
+    title: tr(context, 'Allow reminders?', 'Cho phép nhắc?'),
+    message: tr(
+      context,
+      'Habit uses notifications to remind you at the times you choose. Names are hidden by default. Tracking works without permission.',
+      'Habit dùng thông báo để nhắc vào giờ bạn chọn. Mặc định ẩn tên. Không cấp quyền vẫn ghi nhận được.',
+    ),
+    confirmLabel: tr(context, 'Continue', 'Tiếp tục'),
+  );
+  if (!ok) return false;
+  try {
+    return await scope.reminders.request();
+  } catch (_) {
+    if (context.mounted)
+      showHandyMessage(
+        context,
+        tr(
+          context,
+          'Could not check notification permission. Try again.',
+          'Chưa kiểm tra được quyền thông báo. Hãy thử lại.',
+        ),
+      );
+    return false;
+  }
 }
 
 /// Notifications, under Settings.
