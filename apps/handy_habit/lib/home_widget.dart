@@ -2,10 +2,13 @@ import 'package:handy_habit_engine/handy_habit_engine.dart';
 import 'package:handy_home_widget/handy_home_widget.dart';
 import 'design/studio_style.dart';
 import 'insights/insight_dates.dart';
+import 'widget_data.dart';
 
 const habitWidgetClass = 'com.example.handysuite.habit.HandyWidget';
 const singleHabitWidgetClass = 'com.example.handysuite.habit.SingleHabitWidget';
 const routineWidgetClass = 'com.example.handysuite.habit.RoutineWidget';
+const weekWidgetClass = 'com.example.handysuite.habit.WeekWidget';
+const yearWidgetClass = 'com.example.handysuite.habit.YearWidget';
 
 List<Habit> widgetHabits(HabitState s) =>
     s.liveHabits.where((h) => !h.archived).toList();
@@ -40,10 +43,10 @@ HomeWidgetView habitWidgetView(HabitState s, String today, {required bool vi}) {
   final open =
       due
           .where(
+            // Within its limit counts as kept (as below), never as left.
             (h) => const {
               'unknown',
               'overLimit',
-              'withinLimit',
               'conflict',
               'open',
               'partial',
@@ -181,6 +184,76 @@ Map<String, HomeWidgetView> habitWidgetViews(
     };
   }
 
+  final index = HabitIndex.of(s);
+  final neutral = vi ? 'Thói quen' : 'Habit';
+  // Today's habits, the ones still open first, as bead rows.
+  final due =
+      habits
+          .where((x) => isScheduledOn(x, today) && !index.paused(x.id, today))
+          .toList()
+        ..sort((a, b) {
+          int done(Habit x) =>
+              beadLetter(habitStatus(x, today, today, index)) == 'c' ? 1 : 0;
+          final byDone = done(a).compareTo(done(b));
+          return byDone != 0 ? byDone : b.priority.compareTo(a.priority);
+        });
+  final rows = due.take(5).toList();
+  final metric = h == null ? null : metrics(h, today, s.weekStart, index);
+  final more = <String, Map<String, String>>{
+    'today': {
+      'day': today,
+      'hcount': '${rows.length}',
+      for (final (i, x) in rows.indexed)
+        ...habitBeadData(
+          'h${i}_',
+          x,
+          today,
+          index,
+          names: names,
+          neutral: '$neutral ${i + 1}',
+        ),
+    },
+    'habit': {
+      'day': today,
+      if (h != null)
+        ...habitBeadData(
+          '',
+          h,
+          today,
+          index,
+          names: names,
+          neutral: neutral,
+          earlier: 13,
+        ),
+      if (h != null) 'name': views['habit']!.value,
+      if (metric != null)
+        'streak': metric.unit == 'weeks'
+            ? (vi
+                  ? '${metric.current} tuần liền'
+                  : '${metric.current}-week run')
+            : (vi
+                  ? '${metric.current} ngày liền'
+                  : '${metric.current}-day run'),
+    },
+    'routine': {
+      'button': active != null
+          ? (vi ? 'Tiếp tục' : 'Resume')
+          : (vi ? 'Bắt đầu' : 'Start'),
+    },
+    'week': weekData(s, today, vi: vi, names: names, pro: pro),
+    'year': yearData(s, h, today, vi: vi, names: names, pro: pro),
+  };
+  views['week'] = HomeWidgetView(
+    title: more['week']!['title']!,
+    value: '',
+    uri: more['week']!['uri']!,
+  );
+  views['year'] = HomeWidgetView(
+    title: more['year']!['title']!,
+    value: more['year']!['name']!,
+    detail: more['year']!['detail']!,
+    uri: more['year']!['uri']!,
+  );
   final light = colours(false), night = colours(true);
   return {
     for (final e in views.entries)
@@ -196,6 +269,7 @@ Map<String, HomeWidgetView> habitWidgetViews(
           'palette': style.palette,
           for (final c in light.entries) 'light_${c.key}': c.value,
           for (final c in night.entries) 'dark_${c.key}': c.value,
+          ...?more[e.key],
         },
       ),
   };

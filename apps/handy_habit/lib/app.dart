@@ -23,6 +23,8 @@ import 'habits/preset_sheet.dart';
 import 'habits/template_preview.dart';
 import 'insights/week_review.dart';
 import 'home_widget.dart';
+import 'widget_background.dart';
+import 'package:home_widget/home_widget.dart' show HomeWidget;
 import 'reminders.dart';
 import 'routines/routine_view.dart';
 import 'routines/routine_editor.dart';
@@ -113,14 +115,6 @@ class _HabitAppState extends State<HabitApp> with WidgetsBindingObserver {
         : null,
   );
   final widgetFeed = HomeWidgetFeed(habitWidgetClass);
-  final singleWidgetFeed = HomeWidgetFeed(
-    singleHabitWidgetClass,
-    prefix: 'habit_',
-  );
-  final routineWidgetFeed = HomeWidgetFeed(
-    routineWidgetClass,
-    prefix: 'routine_',
-  );
   Future<void> _widgetQueue = Future.value();
   bool _widgetPro = false;
   StreamSubscription<Uri>? _links;
@@ -147,7 +141,16 @@ class _HabitAppState extends State<HabitApp> with WidgetsBindingObserver {
       (_) => _refreshClock(),
     );
     _ads();
-    if (widget.device) _links = widgetFeed.links().listen(_widgetLink);
+    if (widget.device) {
+      _links = widgetFeed.links().listen(_widgetLink);
+      // A bead tapped on the home screen is recorded in the background.
+      if (homeWidgetsSupported)
+        unawaited(
+          HomeWidget.registerInteractivityCallback(
+            habitWidgetTapped,
+          ).catchError((Object _) => null),
+        );
+    }
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) _sync();
     });
@@ -252,6 +255,8 @@ class _HabitAppState extends State<HabitApp> with WidgetsBindingObserver {
   void didChangeAppLifecycleState(AppLifecycleState state) {
     c.automationForeground = state == AppLifecycleState.resumed;
     if (state == AppLifecycleState.resumed) {
+      // A check-in from a widget may have been saved while away.
+      unawaited(c.reloadIfChanged());
       _refreshClock();
       _sync();
       drive?.resumed();
@@ -338,26 +343,10 @@ class _HabitAppState extends State<HabitApp> with WidgetsBindingObserver {
           ),
     );
     if (widget.device) {
-      final locale = s.settings['locale'] as String? ?? 'system';
-      final vi =
-          locale == 'vi' ||
-          locale == 'system' &&
-              WidgetsBinding.instance.platformDispatcher.locale.languageCode ==
-                  'vi';
-      final views = habitWidgetViews(
-        s,
-        scope.today,
-        vi: vi,
-        pro: _widgetPro,
-        dark:
-            WidgetsBinding.instance.platformDispatcher.platformBrightness ==
-            Brightness.dark,
-      );
+      final pro = _widgetPro;
       _widgetQueue = _widgetQueue.catchError((Object _) {}).then((_) async {
         if (!mounted) return;
-        await widgetFeed.publish(views['today']!);
-        await singleWidgetFeed.publish(views['habit']!);
-        await routineWidgetFeed.publish(views['routine']!);
+        await publishHabitWidgets(s, pro: pro, now: scope.clock());
       });
     }
   }

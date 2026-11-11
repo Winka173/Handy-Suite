@@ -4,4 +4,9 @@
          to allow setting breakpoints, to provide hot reload, etc.
     -->
     <uses-permission android:name="android.permission.INTERNET"/>
+    <application>
+        <!-- Debug only: a plain host for checking the widgets on an emulator. -->
+        <activity android:name="com.example.handysuite.habit.WidgetHostActivity" android:exported="true"
+            android:theme="@android:style/Theme.Material.NoActionBar" />
+    </application>
 </manifest>

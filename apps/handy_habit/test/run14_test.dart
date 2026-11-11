@@ -460,7 +460,7 @@ void main() {
     final (c, _, _) = await bootRun14(t);
     await host.go(t, '/settings/widgets');
     final before = jsonEncode(c.state!.toJson());
-    await tap(t, 'widget-size-large');
+    expect(find.byKey(const Key('widget-preview-today')), findsOneWidget);
     expect(jsonEncode(c.state!.toJson()), before);
     await tap(t, 'widget-habit-choice');
     await tap(t, 'widget-habit-choice-walk');

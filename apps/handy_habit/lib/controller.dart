@@ -32,6 +32,22 @@ class HabitController extends ChangeNotifier {
   }) : open = open ?? openHabitStore,
        clock = clock ?? DateTime.now;
   bool get canUndo => state?.undoBatch != null;
+
+  /// Reads the saved data again when something else (a widget tapped in
+  /// the background) saved a newer revision; nothing happens otherwise.
+  Future<void> reloadIfChanged() async {
+    final storage = store, current = state;
+    if (storage == null || current == null || busy) return;
+    try {
+      final saved = await storage.read();
+      if (saved.revision > current.revision && !busy) {
+        state = saved;
+        _appearance();
+        if (!disposed) notifyListeners();
+      }
+    } catch (_) {}
+  }
+
   Future<void> load() async {
     try {
       error = null;

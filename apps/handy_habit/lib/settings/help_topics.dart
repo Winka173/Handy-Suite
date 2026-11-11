@@ -337,14 +337,18 @@ const habitHelpTopics = [
       'Dùng lịch của thói quen để xem ngày cụ thể. Đây là ghi chép việc bạn làm, không phải tư vấn y tế hay dự đoán.',
     ),
   ]),
-  HabitHelpTopic('widgets', 'Home-screen widget', 'Tiện ích màn hình chính', [
+  HabitHelpTopic('widgets', 'Home-screen widgets', 'Widget màn hình chính', [
     (
-      'Open Settings → Widgets to preview Today’s progress, One habit and Routine launcher. Choose the habit and routine there; the selection applies to every widget of the same type. Turn names off for counts and neutral labels only. Mood and notes are never included.',
-      'Mở Cài đặt → Tiện ích để xem Tiến độ hôm nay, Một thói quen và Mở quy trình. Chọn thói quen và quy trình tại đây; áp dụng cho mọi tiện ích cùng loại. Tắt tên để chỉ hiện số và nhãn chung. Không bao giờ có tâm trạng hay ghi chú.',
+      'Settings → Home-screen widgets shows each widget as it will look: Today, One habit and Routine are free; This week and 16 weeks come with Pro. Add to home screen puts one there; or touch and hold an empty spot on the home screen → Widgets → Handy Habit.',
+      'Cài đặt → Widget màn hình chính cho xem từng widget trông thế nào: Hôm nay, Một thói quen và Quy trình miễn phí; Tuần này và 16 tuần đi kèm Pro. Thêm vào màn hình chính để đặt ra ngoài; hoặc giữ chỗ trống trên màn hình chính → Widget → Handy Habit.',
     ),
     (
-      'On Android, hold an empty home-screen spot → Widgets → Handy Habit and drag out a widget. Resize for compact or large. Taps open Habit for quick check-in with Undo, amount entry, or Start/Resume of a routine. Light/dark follows the system; Pro adds the studio palette. Refresh happens after changes and on app open, not at midnight while closed. The launcher controls placement and timing; this is not an installation confirmation. iOS, Windows and Web show previews only.',
-      'Trên Android, giữ chỗ trống màn hình chính → Tiện ích → Handy Habit rồi kéo ra. Đổi kích thước để dùng bản gọn hoặc lớn. Chạm mở Habit để ghi nhận kèm Hoàn tác, nhập lượng hoặc Bắt đầu/Tiếp tục quy trình. Sáng/tối theo hệ thống; Pro thêm bảng màu xưởng. Làm mới sau thay đổi và khi mở app, không tự đổi lúc nửa đêm khi app đóng. Launcher quyết định vị trí và thời điểm; đây không phải xác nhận đã cài. iOS, Windows và Web chỉ xem trước.',
+      'Tap a bead on the widget to check in without opening Habit: it fills at once and the day is saved a moment later. Counted habits add one per tap; minutes and amounts, a full day or a skipped day open Habit instead. Undo it in Habit if a tap was a mistake.',
+      'Chạm một hạt trên widget để ghi nhận mà không cần mở Habit: hạt lấp ngay, ngày được lưu ngay sau đó. Thói quen đếm cộng một mỗi chạm; số phút và lượng, ngày đã đủ hay đã bỏ qua thì mở Habit. Chạm nhầm thì Hoàn tác trong Habit.',
+    ),
+    (
+      'Widgets start a new day on their own after midnight. Choose the habit for One habit and 16 weeks, the routine, and whether names show, on the same Settings page. Mood and notes never appear on a widget. iOS, Windows and Web show previews only.',
+      'Widget tự sang ngày mới sau nửa đêm. Chọn thói quen cho Một thói quen và 16 tuần, quy trình, và có hiện tên hay không ở cùng trang Cài đặt. Tâm trạng và ghi chú không bao giờ hiện trên widget. iOS, Windows và Web chỉ xem trước.',
     ),
   ]),
   HabitHelpTopic(

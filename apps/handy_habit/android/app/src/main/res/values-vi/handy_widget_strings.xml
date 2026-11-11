@@ -1,7 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-<string name="handy_widget_description">Tiến độ hôm nay</string>
+<string name="handy_widget_description">Hôm nay: chạm hạt để ghi nhận</string>
 <string name="handy_widget_habit">Một thói quen</string>
-<string name="handy_widget_routine">Mở quy trình</string>
+<string name="handy_widget_routine">Quy trình</string>
+<string name="handy_widget_week">Tuần này (Pro)</string>
+<string name="handy_widget_year">16 tuần (Pro)</string>
 <string name="handy_widget_open">Chạm để mở Handy Habit</string>
+<string name="handy_widget_empty">Hôm nay không có lịch</string>
 </resources>

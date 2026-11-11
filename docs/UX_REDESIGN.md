@@ -3459,6 +3459,14 @@ Chủ app thấy Habit lệch hai app anh em ở ba chỗ: Cài đặt, giới t
 
 **Nền tảng.** Android/iOS: back hệ thống lùi một bước trong giới thiệu và đóng trang con; Windows/Web: Esc lùi, Enter bấm nút, trang con có URL riêng (`/settings/...`). 320–1440 px: một cột trên điện thoại, nhóm hai cột từ 640 px.
 
+## Handy Habit · widget, luồng thêm thói quen, Pro và Cách dùng · 2026-11-11
+
+**Widget** (tham khảo Loop, Progressio, Dots: ghi nhận ngay trên màn hình chính, lưới/bản đồ nhiệt). Câu hỏi: "hôm nay còn gì, chạm là xong". Năm widget: Hôm nay (vòng giữ được dạng thanh, tối đa 5 thói quen, mỗi dòng chuỗi 6 hạt và hạt hôm nay chạm được), Một thói quen (hạt lớn chạm được, 13 hạt, chuỗi ngày), Quy trình (tên, nút Bắt đầu/Tiếp tục), Tuần (Pro, 7 ngày × 6 thói quen), 16 tuần (Pro, lưới hạt). Chạm hạt: widget tô ngay (CheckInReceiver ghi trước vào dữ liệu widget), rồi app ghi nền (home_widget interactivity, cùng HabitController) và viết lại số liệu thật; app đọc lại khi mở. Đếm cộng một mỗi chạm; số phút, lượng, ngày đã đủ hay bỏ qua thì mở app. Sang ngày mới tự vẽ lại (lịch cập nhật sau nửa đêm). Không bao giờ có tâm trạng hay ghi chú; tắt tên thì chỉ nhãn chung. Chưa có Pro: Tuần và 16 tuần hiện mờ nội dung thật với một dòng chạm để xem Pro. Màu: hạt theo màu thói quen, nền theo sáng/tối máy, Pro theo bảng màu xưởng. Trang Cài đặt › Widget xem trước đúng hình widget và có nút Thêm vào màn hình chính khi launcher hỗ trợ.
+
+**Thêm thói quen.** Nút + mở bảng nhanh: gõ tên (Tiếp) hoặc chạm một trong sáu khởi đầu; mở thẳng màn sửa đã điền. Mẫu thói quen vào thẳng màn sửa (quy trình giữ trang xem trước). Màn sửa hiện biểu tượng và màu, Nhắc tôi kèm giờ ngay màn đầu.
+
+**Pro và Cách dùng** theo khuôn Boards: Pro có sân khấu, chín phần trong ba nhóm, bảng Miễn phí và Pro, thanh mua gọn; Cách dùng có thẻ Xem lại phần giới thiệu và mười một chủ đề mở thành bảng các bước.
+
 ## Handy Habit · run 17 device follow-up contract · 2026-11-11
 
 - Data/jobs: existing local habits, 44 habit / 11 routine templates, free goal counts, settings and verified store state. No schema changes. Keep Nunito, vermilion/oxblood and the check-in bead signature.

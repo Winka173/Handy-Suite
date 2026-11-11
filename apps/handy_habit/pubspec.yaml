@@ -18,6 +18,7 @@ dependencies:
   handy_store: any
   handy_ads: any
   handy_home_widget: any
+  home_widget: 0.10.0
   sqlite3: 3.5.2
   path_provider: 2.1.6
   google_sign_in: 7.2.0
