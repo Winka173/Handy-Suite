@@ -433,18 +433,23 @@ class _RoutinePreview extends StatelessWidget {
           data['detail'] ?? '',
           style: TextStyle(color: p.muted, fontSize: 12),
         ),
-        const SizedBox(height: 10),
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 9),
-          decoration: BoxDecoration(
-            color: p.vermilion,
-            borderRadius: BorderRadius.circular(20),
+        if ((data['button'] ?? '').isNotEmpty) ...[
+          const SizedBox(height: 10),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 9),
+            decoration: BoxDecoration(
+              color: p.vermilion,
+              borderRadius: BorderRadius.circular(20),
+            ),
+            child: Text(
+              data['button'] ?? '',
+              style: TextStyle(
+                color: p.onVermilion,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
           ),
-          child: Text(
-            data['button'] ?? '',
-            style: TextStyle(color: p.onVermilion, fontWeight: FontWeight.w600),
-          ),
-        ),
+        ],
       ],
     );
   }

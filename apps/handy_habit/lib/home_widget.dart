@@ -156,12 +156,18 @@ Map<String, HomeWidgetView> habitWidgetViews(
     'routine': HomeWidgetView(
       title: vi ? 'Handy Habit · Quy trình' : 'Handy Habit · Routine',
       value: r == null
-          ? (vi ? 'Chọn một quy trình' : 'Choose a routine')
+          ? (routines.isEmpty
+                ? (vi ? 'Chưa có quy trình' : 'No routine yet')
+                : (vi ? 'Chọn một quy trình' : 'Choose a routine'))
           : names
           ? r.title
           : (vi ? 'Quy trình của bạn' : 'Your routine'),
       detail: r == null
-          ? (vi ? 'Mở Cài đặt › Tiện ích' : 'Open Settings › Widgets')
+          ? (routines.isEmpty
+                ? (vi
+                      ? 'Một chuỗi bước nhỏ, như buổi sáng'
+                      : 'A few steps in order, like a morning')
+                : (vi ? 'Mở Cài đặt › Widget' : 'Open Settings › Widgets'))
           : active != null
           ? (vi ? 'Chạm để tiếp tục trong app' : 'Tap to resume in the app')
           : (vi
@@ -236,7 +242,9 @@ Map<String, HomeWidgetView> habitWidgetViews(
                   : '${metric.current}-day run'),
     },
     'routine': {
-      'button': active != null
+      'button': r == null
+          ? ''
+          : active != null
           ? (vi ? 'Tiếp tục' : 'Resume')
           : (vi ? 'Bắt đầu' : 'Start'),
     },
