@@ -30,9 +30,9 @@ revision. Pro/credentials/device backup destinations do not migrate in library
 files. CSV record versions are separate, not full schema-9 library. R27 introduces
 no schema change.
 
-CSV caveat: current schema-9 mood/pause record allowlists omit8, although previous
-writers emitted8. Such old CSV records refuse safely; use JSON/ZIP8 for complete
-migration. This source-reviewed compatibility gap is tracked in [KNOWN_ISSUES](KNOWN_ISSUES.md).
+CSV: mood records from schema 6 and pause records from schema 2, up to the
+current schema, import; newer schemas are refused (fixed 2026-11-11, regression
+test in `packages/handy_habit_engine/test/mood_test.dart`).
 
 Evidence: engine `data_safety_test.dart`, `negative_test.dart`, `mood_test.dart`,
 `routine_rules_test.dart`, `convenience_test.dart`, `sync_test.dart`; app

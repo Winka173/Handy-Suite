@@ -70,8 +70,7 @@ No devices/Gradle/other app source/secrets/git writes; no daemon started.
 ## H. Limitations: code versus external
 
 [Known issues](KNOWN_ISSUES.md). Code: R26 segmentation/compaction and large-state
-main-isolate work;30MB/200k guards; schema-8 mood/pause CSV import allowlist gap
-(JSON/ZIP8 supported); Android-only native widgets/checkout; foreground timers/
+main-isolate work;30MB/200k guards; Android-only native widgets/checkout; foreground timers/
 sync; no health/OS-shortcut/non-Android-widget adapters. External: privacy URL
 pending owner, Play forms/licence key/testers, real OAuth/billing, providers,
 device/SR/browser/Windows cloud/iOS hardware verification. Keep these distinct.
@@ -92,9 +91,9 @@ device/SR/browser/Windows cloud/iOS hardware verification. Keep these distinct.
    supervisor builds final binary and verifies actual billing/provider/device flows.
 2. High: R26 capacity/compaction/segmentation and reference-device performance;
    installed upgrade/recovery and concurrent two-device/two-PC sync validation.
-3. Medium: fix schema-8 mood/pause CSV allowlists with regression coverage, or
-   explicitly accept/document JSON/ZIP migration workaround; complete browser,
-   iOS/Windows delivery and assistive-technology checks.
+3. Medium: complete browser, iOS/Windows delivery and assistive-technology checks.
+   (The schema-8 mood/pause CSV import gap was fixed on 2026-11-11 with a
+   regression test for schemas 6-9 and refusal of 10.)
 4. Low/deferred: broader help topic coverage, individual mood purge, optional
    health/native widgets/shortcuts where genuine platform adapters can be verified.
 
