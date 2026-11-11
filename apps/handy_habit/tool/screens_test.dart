@@ -786,4 +786,22 @@ void main() {
       await fixtures.tapKey(t, 'welcome-next');
       await shot(t, '$name-welcome-6-missed');
     });
+
+  for (final (name, size) in [
+    ('phone', const Size(390, 844)),
+    ('desktop', const Size(1440, 900)),
+  ])
+    testWidgets('$name pro page', (t) async {
+      await boot(t, size);
+      t.state<NavigatorState>(find.byType(Navigator).first).pushNamed('/pro');
+      await t.pump(const Duration(seconds: 2));
+      await t.pumpAndSettle();
+      await shot(t, '$name-pro-1');
+      await t.drag(find.byKey(const Key('pro-scroll')), const Offset(0, -900));
+      await t.pumpAndSettle();
+      await shot(t, '$name-pro-2');
+      await t.drag(find.byKey(const Key('pro-scroll')), const Offset(0, -900));
+      await t.pumpAndSettle();
+      await shot(t, '$name-pro-3');
+    });
 }

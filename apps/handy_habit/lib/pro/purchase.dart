@@ -126,9 +126,42 @@ class _HabitProPurchaseState extends State<HabitProPurchase> {
               'Ngoại tuyến · dùng quyền mua đã xác minh lưu trên máy.',
             ),
           ),
-        const SizedBox(height: 12),
+        SizedBox(height: widget.footer ? 6 : 12),
         if (busy) const LinearProgressIndicator(),
-        if (configured)
+        // The footer: Restore beside one wide Get Pro, as Handy Boards.
+        if (configured && widget.footer)
+          _footer(
+            context,
+            restore: TextButton(
+              key: const Key('pro-restore'),
+              onPressed: busy || pending ? null : () => act(store!, 'restore'),
+              child: Text(t('Restore', 'Khôi phục')),
+            ),
+            buy: pro
+                ? null
+                : FilledButton(
+                    key: const Key('pro-buy'),
+                    style: FilledButton.styleFrom(
+                      minimumSize: const Size.fromHeight(48),
+                    ),
+                    onPressed:
+                        !busy &&
+                            !pending &&
+                            price != null &&
+                            price.isNotEmpty &&
+                            snap?.status != 'unavailable' &&
+                            snap?.status != 'error'
+                        ? () => act(store!, 'buy')
+                        : null,
+                    child: Text(
+                      price == null
+                          ? t('Get Pro', 'Mở Pro')
+                          : t('Get Pro · $price', 'Mở Pro · $price'),
+                      textAlign: TextAlign.center,
+                    ),
+                  ),
+          )
+        else if (configured)
           Wrap(
             spacing: 12,
             runSpacing: 8,
@@ -181,6 +214,29 @@ class _HabitProPurchaseState extends State<HabitProPurchase> {
               'Mua một lần. Không thuê bao. Quyền mua thuộc tài khoản Google Play này, không chuyển giữa các cửa hàng.',
             ),
           ),
+      ],
+    );
+  }
+
+  /// The footer: Restore beside one wide Get Pro, as Handy Boards; on a
+  /// narrow screen with large text, Get Pro on its own line above Restore.
+  Widget _footer(BuildContext context, {required Widget restore, Widget? buy}) {
+    final narrow =
+        MediaQuery.sizeOf(context).width < 400 &&
+        MediaQuery.textScalerOf(context).scale(16) > 20;
+    if (buy == null)
+      return Align(alignment: Alignment.centerLeft, child: restore);
+    if (narrow)
+      return Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [buy, restore],
+      );
+    return Row(
+      children: [
+        restore,
+        const SizedBox(width: 12),
+        Expanded(child: buy),
       ],
     );
   }

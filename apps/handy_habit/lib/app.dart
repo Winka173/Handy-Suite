@@ -484,6 +484,8 @@ class _HabitAppState extends State<HabitApp> with WidgetsBindingObserver {
             drive == null ? _missing('/settings') : HabitSyncPage(scope: scope),
       ['', 'settings'] => () => HabitSettingsPage(scope: scope),
       ['', 'pro'] => () => HabitProPage(
+        // Opened from a locked feature: that feature leads the page.
+        focused: uri.queryParameters.containsKey('feature'),
         feature:
             HabitProFeature.values
                 .where((f) => f.name == uri.queryParameters['feature'])

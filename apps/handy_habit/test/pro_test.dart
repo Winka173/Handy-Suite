@@ -310,9 +310,7 @@ void main() {
         isNull,
       );
       expect(
-        t
-            .widget<OutlinedButton>(find.byKey(const Key('pro-restore')))
-            .onPressed,
+        t.widget<TextButton>(find.byKey(const Key('pro-restore'))).onPressed,
         isNull,
       );
       fake.emit(FakeHabitStore.snapshot('owned', pro: true));
@@ -365,7 +363,7 @@ void main() {
     expect(find.text('Restoring purchases…'), findsOneWidget);
     expect(store.pro, false);
     expect(
-      t.widget<OutlinedButton>(find.byKey(const Key('pro-restore'))).onPressed,
+      t.widget<TextButton>(find.byKey(const Key('pro-restore'))).onPressed,
       isNull,
     );
     fake.gate!.complete(fake.value);
@@ -451,7 +449,18 @@ void main() {
   ) async {
     final (c, _, _) = await bootPro(t);
     final before = c.state!.toJson();
-    for (final f in HabitProFeature.values) {
+    // The page lists nine parts; each plays its own demo.
+    for (final f in [
+      HabitProFeature.days,
+      HabitProFeature.choices,
+      HabitProFeature.blocks,
+      HabitProFeature.comparisons,
+      HabitProFeature.goals,
+      HabitProFeature.mood,
+      HabitProFeature.heatmap,
+      HabitProFeature.studio,
+      HabitProFeature.convenience,
+    ]) {
       await tap(t, 'pro-part-${f.name}');
       expect(find.byKey(Key('pro-demo-${f.name}')), findsOneWidget);
       await tap(t, 'pro-demo-play');
@@ -460,7 +469,7 @@ void main() {
       expect(t.takeException(), isNull);
     }
     expect(c.state!.toJson(), before);
-    final context = t.element(find.byKey(const Key('pro-demo-input')));
+    final context = t.element(find.byKey(const Key('pro-demo-input')).first);
     expect(
       demoPlan(context, HabitProFeature.days, true).$2.single.note,
       'Skipped',

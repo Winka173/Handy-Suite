@@ -254,15 +254,16 @@ void main() {
     await t.pump(const Duration(seconds: 1));
     await t.pumpAndSettle();
     expect(find.byType(HabitProDemo), findsOneWidget);
-    expect(find.text('After morning: Water +1'), findsOneWidget);
+    // On the stage and in its own row's still frame.
+    expect(find.text('After morning: Water +1'), findsWidgets);
     expect(find.text('Handy Habit'), findsNothing);
     final purchase = find.byKey(const Key('pro-purchase'));
-    final wraps = find.descendant(of: purchase, matching: find.byType(Wrap));
-    final footer = t.widget<Wrap>(wraps.last);
-    expect(footer.children.map((w) => w.key), [
-      const Key('pro-restore'),
-      const Key('pro-buy'),
-    ]);
+    // Restore on the left, Get Pro to its right, in one bar.
+    expect(purchase, findsOneWidget);
+    expect(
+      t.getRect(find.byKey(const Key('pro-restore'))).right,
+      lessThan(t.getRect(find.byKey(const Key('pro-buy'))).left),
+    );
     expect(find.byKey(const Key('pro-retry')), findsOneWidget);
   });
 
@@ -270,9 +271,10 @@ void main() {
     t,
   ) async {
     await p.bootPro(t);
-    await tap(t, 'pro-part-reports');
+    await tap(t, 'pro-part-heatmap');
     await t.pump(const Duration(seconds: 1));
     await t.ensureVisible(find.byKey(const Key('pro-part-convenience')));
+    await t.pumpAndSettle();
     await t.tap(find.byKey(const Key('pro-part-convenience')));
     await t.pump();
     await t.pump(const Duration(milliseconds: 80));
