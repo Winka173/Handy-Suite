@@ -223,8 +223,12 @@ const habitHelpTopics = [
     'Giao diện và khả năng tiếp cận',
     [
       (
-        'Settings → Appearance changes theme, language, density and reduced motion. System follows the device; reduced motion also respects the operating system.',
-        'Cài đặt → Giao diện đổi sáng tối, ngôn ngữ, độ gọn và giảm chuyển động. Hệ thống theo thiết bị; giảm chuyển động cũng tôn trọng hệ điều hành.',
+        'Settings → General changes language and light or dark; System follows the device. Density is under Settings → Defaults and calendar. Motion follows the device’s own reduce-motion setting.',
+        'Cài đặt → Chung đổi ngôn ngữ và sáng hay tối; Hệ thống theo thiết bị. Độ gọn nằm ở Cài đặt → Mặc định và lịch. Chuyển động theo cài đặt giảm chuyển động của máy.',
+      ),
+      (
+        'Pro is one payment, no subscription: routines that adapt, deeper Progress, the personalization studio, rules and batch changes. Settings → Upgrade to Pro shows each part playing before you buy, and Restore brings it back on a new phone.',
+        'Pro trả một lần, không thuê bao: quy trình linh hoạt, Tiến bộ sâu hơn, xưởng giao diện, quy tắc và thay đổi hàng loạt. Cài đặt → Nâng cấp Pro cho xem từng phần trước khi mua, và Khôi phục để lấy lại trên máy mới.',
       ),
       (
         'Edit a habit’s colour and icon in its appearance controls. Missed days stay neutral. Larger system text wraps; keyboard users can press Ctrl/Cmd+, for Settings and Esc to go back.',

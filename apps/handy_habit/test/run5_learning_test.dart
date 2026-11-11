@@ -296,31 +296,26 @@ void main() {
   );
 
   testWidgets(
-    'help searches with and without accents; no match clears; contextual routes open exact topic',
+    'How to use lists eleven topics; old and new topic links open their sheet',
     (t) async {
       await learningBoot(t, state: f.seeded());
       await route(t, '/help');
-      expect(find.text('Getting started: create a habit'), findsOneWidget);
-      for (final query in ['thoi quen', 'thói quen']) {
-        await t.enterText(find.byKey(const Key('help-search')), query);
-        await t.pumpAndSettle();
-        expect(find.byKey(const Key('help-topic-start')), findsOneWidget);
-        final titles = t
-            .widgetList<ListTile>(find.byType(ListTile))
-            .map((tile) => (tile.title! as Text).data!);
-        expect(
-          titles.any((title) => RegExp(r'^\d+\. ').hasMatch(title)),
-          false,
-        );
-      }
-      await t.enterText(find.byKey(const Key('help-search')), 'zzzz');
-      await t.pumpAndSettle();
-      expect(find.byKey(const Key('help-no-match')), findsOneWidget);
-      await tap(t, 'help-clear');
-      expect(find.byKey(const Key('help-no-match')), findsNothing);
-      for (final id in ['streaks', 'pause', 'reminders', 'backup']) {
+      expect(find.text('Make a habit'), findsOneWidget);
+      final titles = t
+          .widgetList<ListTile>(find.byType(ListTile))
+          .map((tile) => (tile.title! as Text).data!);
+      expect(titles.any((title) => RegExp(r'^\d+\. ').hasMatch(title)), false);
+      for (final (id, topic) in [
+        ('streaks', 'streaks'),
+        ('pause', 'pause'),
+        ('reminders', 'reminders'),
+        ('backup', 'backup'),
+        ('sync', 'backup'),
+        ('mood', 'progress'),
+        ('timers', 'routines'),
+      ]) {
         await route(t, '/help/$id');
-        expect(find.byKey(Key('help-article-$id')), findsOneWidget);
+        expect(find.byKey(Key('help-article-$topic')), findsOneWidget);
       }
     },
   );

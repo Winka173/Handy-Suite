@@ -157,6 +157,11 @@ void main() {
     expect(find.byKey(const Key('field-habit-h')), findsOneWidget);
     expect(find.byKey(const Key('field-habit-negative')), findsNothing);
     await host.go(t, '/help/negative');
+    await t.scrollUntilVisible(
+      find.textContaining('no record means unknown, never success'),
+      300,
+      scrollable: find.byType(Scrollable).last,
+    );
     expect(
       find.textContaining('no record means unknown, never success'),
       findsOneWidget,

@@ -206,6 +206,11 @@ void main() {
       await t.ensureVisible(find.byKey(const Key('mood-row-2024-01-08')));
       expect(find.byKey(const Key('mood-row-2024-01-08')), findsOneWidget);
       await host.go(t, '/help/mood');
+      await t.scrollUntilVisible(
+        find.textContaining('no health claims'),
+        300,
+        scrollable: find.byType(Scrollable).last,
+      );
       expect(find.textContaining('no health claims'), findsOneWidget);
     },
   );

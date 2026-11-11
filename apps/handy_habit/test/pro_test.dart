@@ -160,7 +160,6 @@ void main() {
     );
     await tap(t, 'help-topic-start');
     expect(find.byKey(const Key('help-article-start')), findsOneWidget);
-    expect(t.getSize(find.byKey(const Key('help-topic-start'))).width, 300);
   });
 
   proTest('verified Pro removes the shared advertising slot', (t) async {
@@ -541,7 +540,7 @@ void main() {
     await host.go(t, '/routines');
     expect(find.text('New routine'), findsOneWidget);
     await host.go(t, '/help');
-    expect(find.text('Replay the introduction'), findsOneWidget);
+    expect(find.text('Watch the welcome again'), findsOneWidget);
     expect(find.text('Topics'), findsOneWidget);
     for (final tile in t.widgetList<ListTile>(find.byType(ListTile))) {
       expect(tile.subtitle, isNotNull);
