@@ -303,13 +303,22 @@ class _HabitWelcomePageState extends State<HabitWelcomePage> {
                           );
                         }
                         final heading = stage == 1
-                            ? Text(
-                                tr(
-                                  context,
-                                  'Practice · nothing is saved',
-                                  'Bản tập · không lưu gì thật',
+                            ? Semantics(
+                                header: true,
+                                child: Text(
+                                  title,
+                                  key: const Key('welcome-practice-title'),
+                                  style: Theme.of(context)
+                                      .textTheme
+                                      .headlineMedium
+                                      ?.copyWith(
+                                        fontSize: 30,
+                                        height: 1.12,
+                                        fontWeight: FontWeight.w800,
+                                        color: palette.anchor,
+                                        letterSpacing: -.6,
+                                      ),
                                 ),
-                                style: Theme.of(context).textTheme.titleMedium,
                               )
                             : words;
                         final roomy =

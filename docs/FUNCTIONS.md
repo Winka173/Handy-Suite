@@ -54,110 +54,49 @@ build Android/Windows/Web hay ảnh widget là bằng chứng thiết bị thậ
 
 ## Handy Habit
 
-- **R23–R26/run15**: Pro lưu bộ lọc Habits/Progress; chọn nhiều thói quen, xem trước từng thay đổi, áp dụng và một Undo; quy tắc cục bộ sau routine +1 hoặc nghỉ theo collection, có tên/lịch sử/Undo riêng. Windows có “Sync through a folder” Free, mặc định tắt, dùng causal generations R15 và tách Backup; không nhận vendor delivery là đồng bộ xong sang máy khác. Schema9; health chưa có adapter, không dựng UI giả. Host287/engine201 và216 ảnh; R26 còn partial: guard30MB/200k giữ nguyên,500×3years không lưu/backup/sync được,100-history ledger cũng vượt30MB. [Review](handy_habit/R23_R26_REVIEW.md), [số đo host](handy_habit/PERFORMANCE.md). APK debug run15 bị chặn ở debug signing lock; chưa có binary thành công của run này.
+Independent local-first habit and routine product: Today / Routines / Progress,
+with habit library reached from Today. Nunito, vermilion, today's bead as the
+one-tap action; missed days never red. EN/VI, light/dark, collapsible wide sidebar,
+named routes, keyboard, reduced motion and Show all in place.
 
-- **R22/run14**: insights nêu một kết luận lớn/mục, số hỗ trợ, phương pháp trong sheet; ngày ngắn EN/VI cả PDF, preview dùng tên múi giờ thân thiện, PDF bỏ zone. Filter chip có số đếm/Clear; heatmap màu habit, lịch tuần/48px và chạm xem chi tiết. Diagnostics có quyền, exact/battery Android, liên kết hệ thống, lần đặt lịch thành công và Test/Retry. Android dùng inexact không cần quyền exact; Windows toast dùng kit identity (quyền bật/tắt không đọc được); iOS local source, Web chỉ danh sách trong app. Ba widget Android: Today/One habit/Routine, compact/large, ẩn tên, chọn mục dùng chung theo loại, system light/dark + bảng màu Pro. Tap mở app và Undo/nhập lượng/Start/Resume; cập nhật sau thay đổi/mở app, không hứa refresh nửa đêm khi đóng. Không lộ mood/notes; iOS/Windows/Web chỉ xem preview. Host265/engine191, APK debug biên dịch; thiết bị/launcher chưa kiểm. [R22](handy_habit/R22_REVIEW.md).
+- Free positive binary/count/quantity/duration and reduction habits; explicit
+  zero versus unknown; effective goals, daily/weekday/every-N-day/days-per-week
+  schedules, time zones/day boundaries, totals/backfill/skip/durable guarded Undo,
+  icon/color/category/order. Pauses, archive and30-day habit/routine Trash.
+- Basic routine draft builder, positive habit links, step runner/timer/pause/
+  resume/skip/Undo/session summary; only saved foreground elapsed counts.
+  Nine Advanced capabilities require Pro to author/edit; saved plans run Free.
+- Optional mood/energy/notes/tags, edit/delete/restore/history, no medical claims
+  or mood/notes in notifications/widgets. Week/month/year Progress, calendars/
+  heatmaps/streaks/consistency/review/session history Free. Pro comparisons,
+  difficulty/missed days, noncausal mood co-occurrence, tomorrow-only goal
+  suggestions, focused heatmaps and designed insight PDF.
+-44 habit templates/11 routine templates/13 collections, accent-folded search,
+  preview/customize/save. Three-stage guide with isolated practice/replay;
+  19 searchable bilingual help topics, real settings and reminder diagnostics.
+- JSON/ZIP/sealed backup, validated preview/copy-merge/replace with durable
+  recovery; CSV log import/export, Markdown/basic PDF Free. Schema9 reads JSON/
+  ZIP1–9, physical2. Automatic folder copies on lifecycle opportunities, no
+  terminated-app promise. Separate causal sync: Android Drive appdata only with
+  HANDY_DRIVE_SYNC=true; Windows chosen folder, conflict review/Undo/tombstones;
+  local merge does not confirm vendor delivery. No iCloud/Web sync adapter.
+- Reminder source for Android/iOS/Windows, Web in-app plan only; delivery pending.
+  Three Android widget types with compact/large/privacy/Studio palettes; taps
+  open app, shared selection per type, no closed-app midnight refresh.
+- Android native Pro Lifetime source/restore/price states; Free demos/Studio
+  preview, Pro apply/saved views/batch/local foreground rules/ads removal.
+  No other-platform checkout or health integration is claimed.
 
-- **Pro R19/run13**: so sánh cùng phần đã qua của tháng/quý, nhóm theo buổi/collection, độ khó có công thức, thứ hay lỡ kèm mẫu số, gợi ý tăng/giảm mục tiêu nhận hoặc bỏ qua (từ ngày mai), tâm trạng cùng xuất hiện với tối thiểu14 ngày ghép, bộ lọc heatmap kết hợp và PDF EN/VI xem trước rồi lưu. Chỉ tính trên máy, không suy ra nguyên nhân. Progress/xuất/backup/sync cốt lõi vẫn miễn phí.
-- **Studio R20**: ba bảng màu Habit sáng/tối đạt AA, Today hàng/thẻ và khoảng cách, sáu icon Material outline và hai diện mạo runner. Ai cũng xem trước; Pro áp dụng. Mất Pro dùng mặc định an toàn, giữ lựa chọn, không sửa lịch sử. Run14/R22 đưa bảng màu studio vào widget Android và giữ fallback miễn phí khi mất Pro. Pro có demo trên cùng, thumbnail, các nhóm và footer Restore/Get Pro với giá store; host tested, chưa giao dịch thật.
-
-- **Quy trình nâng cao (R17/R18, Pro để tạo/sửa)**: điều kiện theo thứ/thói quen chưa xong/thời gian còn lại, nhánh A/B, nhóm bước dùng lại, bước cần xong trước, nối sau thói quen, thời lượng theo thứ và cấu hình đã lưu. Cơ bản là mặc định; Nâng cao mở dần, có giải thích và demo/nhãn Pro cho người chưa có Pro. Mọi người vẫn chạy quy trình đã lưu. Phiên giữ bản chụp và quyết định bất biến, giải thích bước bỏ qua; không tính giờ khi app đóng. Schema8/physical2/protocol1; host tested, chưa kiểm trên thiết bị.
-
-- **Nhìn lại tuần**: từ ngày cuối tuần tới hai ngày sau, Hôm nay có một dòng mở trang nhìn lại (Thống kê có nút mở bất cứ lúc nào). Trang nêu số lần giữ được trên số lần đến hạn, so với tuần trước nữa, ngày trong tuần hay bị lỡ nhất (khi lỡ từ 2 lần trở lên), và chuỗi hạt 7 ngày của từng thói quen; thói quen giữ chưa được một nửa có nút "Làm nhỏ lại" mở trình sửa. Không lưu thêm dữ liệu.
-
-Theo dõi hành vi lặp lại và chạy quy trình cá nhân nhiều bước; không thay Recall,
-Keep, Spend hoặc timer đa dụng. [Trạng thái kiểm chứng](handy_habit/FEATURE_MATRIX.md).
-
-- **Giảm thói quen (R10/R11, cập nhật run7)**: giới hạn ngày hoặc tuần; +1/Undo, ghi rõ0 và lịch sử có phiên bản. Tuần trọn đã qua tính từ số lần đã ghi; ngày trống hiểu là không có, không cần ghi mỗi ngày. Giới hạn ngày vẫn phân biệt0 với chưa rõ; ngày cũ chưa ghi hiện rỗng và không giảm độ đều đặn. Không tính khoảng nghỉ/bỏ qua/xung đột/tuần chưa hết hoặc không trọn; không chia nhỏ giới hạn tuần. Không liên kết routine với thói quen giảm. Schema5/physical2 giữ nguyên.
-- **Thư viện mẫu (R12)**: 44 thói quen (giữ32 cũ, thêm6 giảm bớt) / 11 quy trình, 13 nhóm, hàng gợi ý, tìm EN/VI không dấu, lọc nhóm. Hôm nay trống mở đúng nhóm; tạo thói quen/quy trình qua thư viện → xem trước mục tiêu/lịch/các bước → tùy chỉnh → lưu một lần. Hủy không ghi; mẫu đã dùng vẫn có thể tạo bản riêng. Mọi mẫu Cơ bản miễn phí, nhắc mặc định tắt.
-- **Tiến bộ (R13)**: tuần/tháng/năm theo lịch và đi khoảng trước/sau; lịch tháng, heatmap năm tổng hoặc từng thói quen với màu riêng (lỡ luôn trung tính), độ đều đặn có mẫu số giải thích, chuỗi hiện tại/dài nhất, số lần quy trình hoàn tất/bắt đầu; danh sách dài mở đủ tại chỗ. Giữ Nhìn lại tuần và xuất CSV/Markdown/PDF miễn phí; Markdown/PDF đếm cùng khoảng đã qua như UI. Host/unit/widget/render EN/VI/sáng/tối/320–1440/text1–1.5; chưa kiểm mới thiết bị/browser/store.
-- Thói quen: tạo/sửa, sắp xếp, tìm/lọc/nhóm, nhân bản, archive/unarchive, xác nhận
-  xóa vào Thùng rác30 ngày (khôi phục ID/lịch sử/liên kết, số ngày còn lại, xóa vĩnh viễn có xác nhận và tự dọn khi mở). Archive riêng không hết hạn. Binary, count, thời lượng và lượng có đơn vị; mục tiêu, ghi chú, icon/màu/ưu tiên.
-- Lịch hằng ngày, chọn thứ, số ngày/tuần, mỗi N ngày; ngày bắt đầu/kết thúc, phiên
-  bản lịch có ngày hiệu lực. Đổi lịch không xóa hoặc dời check-in cũ.
-- Check-in nhanh, sửa tổng ngày và backfill có giới hạn, ghi chú/bỏ qua, Undo domain bền qua lần mở lại; từ chối khi row đã đổi.
-  Streak hiện tại/dài nhất theo ngày có lịch hoặc tuần đạt quota; không tính ngày
-  bỏ qua thành thành công hoặc coi kỳ còn mở là thất bại. Lịch sử, calendar, xu
-  hướng tuần/tháng và ngày có lịch tiếp theo.
-- Kỳ nghỉ: khoảng ngày (tối đa 366 ngày, bắt đầu không sớm hơn khoảng ghi bù) với
-  lý do tùy chọn, cho mọi thói quen hoặc vài thói quen; thêm từ menu Thêm hoặc menu
-  thói quen, sửa/kết thúc sớm/xóa trong Cài đặt. Ngày nghỉ chưa làm không là lỡ,
-  không đứt chuỗi, không vào mẫu số; ngày nghỉ vẫn làm thì vẫn tính. Quota tuần =
-  làm tròn lên quota × (7 − ngày nghỉ)/7, tuần nghỉ trọn thì bỏ qua. Không nhắc trong
-  kỳ nghỉ (kỳ nghỉ cho mọi thói quen tắt cả nhắc quy trình). Hôm nay hiện "Đang nghỉ
-  đến …" và Kết thúc sớm; hạt ngày nghỉ là đĩa nhạt.
-- Quy trình (R7): thư viện có Start/Resume, phiên gần nhất, thời lượng dự kiến;
-  danh sách dài và lịch sử phiên mở đủ tại chỗ. Chi tiết mở một builder bản nháp:
-  thêm/sửa/xóa/kéo bước hoặc nút lên/xuống, thời lượng/tối thiểu/ưu tiên,
-  bắt buộc/được bỏ qua, liên kết lượng vào habit. Lưu toàn bản nháp một lần;
-  Hủy/Back/Esc hỏi khi chưa lưu, lỗi giữ nháp, từ chối ghi đè routine đã đổi.
-  Phiên giữ kế hoạch riêng; sửa quy trình không đổi lịch sử.
-- Diện mạo thói quen (05/11): menu chọn icon/màu, preview, Hủy và Undo; chỉ sửa
-  trường diện mạo, không tạo phiên bản lịch hoặc đổi check-in. Màu hiển thị điều
-  chỉnh tương phản sáng/tối, không viết lại màu gốc trong dữ liệu.
-- Runner: timer tiền cảnh, hoàn thành thủ công, pause/resume, bước trước/sau,
-  skip, thêm thời gian, ghi chú, auto-next tùy chọn, kết thúc/dừng và tổng kết.
-  R7: fullscreen, tên bước lớn/tiến độ/các bước còn lại; Space tạm dừng/tiếp tục,
-  Enter xong bước ngoài ô nhập, Esc/Back xác nhận tạm dừng và thoát. Tổng kết
-  ghi tên những habit thực sự được check-in, bước bỏ qua, thời gian dự kiến/thực tế;
-  motion theo kit, reduced motion về 0, không trì hoãn check-in.
-  Mở lại phiên sẽ khôi phục ở trạng thái tạm dừng; không hứa timer chính xác khi tắt app.
-  Android/iOS: rời app khi đang ở màn chạy thì phiên vẫn tạm dừng và một thông báo im
-  lặng nói "Bước 3/5 · Đã tạm dừng · còn 2:00" (không đếm ngược); chạm mở `/run/<id>`,
-  vào lại/xong/dừng thì gỡ. Chỉ khi công tắc riêng bật, đã có quyền và ngoài giờ yên lặng.
-- Hoàn thành bước liên kết ghi tiến độ cùng transaction, không ghi hai lần do
-  thao tác cũ. Undo chỉ gỡ event còn nguyên của bước; dừng phiên giữ check-in đã hoàn thành.
-- Routine Lite (rút gọn quy trình theo số phút) đã bỏ ngày 2026-11-03: Runner đã
-  cho bỏ qua hay hoàn thành từng bước. Biến thể Lite đã lưu là quy trình bình thường.
-- Insights: khoảng ngày, habit, nhóm, routine; mẫu số cơ hội hợp lệ, phiên hoàn
-  thành và thời gian dự kiến/thực tế, không chấm điểm năng suất tùy tiện.
-- Nhắc cục bộ Android/iOS: quyền chỉ xin khi bật, giờ yên lặng, chọn thứ, snooze,
-  preview, hủy khi tắt/xóa. Windows có toast cục bộ ở source từ R22; Web dùng danh sách đến hạn trong app.
-- SQLite native/IndexedDB Web, integrity check, schema version, bảo vệ ghi đồng
-  thời. JSON/ZIP full backup miễn phí, preview merge/replace, đổi ID khi merge,
-  checksum và rollback. Replace lưu bản phục hồi bền trên máy trước khi commit; Cài đặt có khôi phục trước lần thay thế cuối. `.hseal` dùng mã hóa xác thực chung, sai mật khẩu/hỏng/hủy giữ dữ liệu. CSV log nhập/xuất (kèm bảng kỳ nghỉ và tâm trạng khi có);
-  Markdown/PDF báo cáo EN/VI có khoảng ngày, liệt kê kỳ nghỉ. Schema dữ liệu8/physical2, đọc backup/schema1–6; causal operations có ID/ancestry, delta/tổng tuyệt đối và giao thức sync R15/R16.
-- EN/VI, sáng/tối; ba khu Hôm nay / Quy trình / Tiến bộ, gear Cài đặt ở trên phone,
-  sidebar224 từ840px gập thành rail64 và nhớ trạng thái. Named routes `/today`,
-  `/routines`, `/progress`, `/habits`, editor và các route cũ; Ctrl/Cmd N/F/comma/1–3,
-  không chiếm lúc gõ, Back/Esc một cấp. Help ở chân sidebar và Cài đặt.
-- R8/R9 (10/11): hướng dẫn ba giai đoạn, hai beat ý định→chuỗi hạt, thực hành Hôm nay
-  độc lập dữ liệu (ghi/Hoàn tác/đổi mục tiêu/chạy bước), cuối chỉ Bắt đầu; Back/Skip/Esc/Enter,
-  xem lại không ghi dữ liệu, người đã có thư viện không bị ép xem. Mục tiêu gợi ý tùy chọn
-  ở Hôm nay trống. Cách dùng có 15 chủ đề EN/VI, tìm không dấu, số kết quả và hình đúng UI;
-  khi lọc bỏ số thứ tự chủ đề. Cài đặt nhóm, giá trị thân thiện (múi giờ kèm GMT),
-  mật độ/giảm chuyển động/mặc định thói quen/quy trình, quyền nhắc có giải thích trước,
-  ẩn tên thông báo, kiểm tra nhắc, đặt lại tùy chọn giữ dữ liệu. Pro có trạng thái/Mua/Khôi phục; Sync Android có build gate riêng.
-- Hôm nay ưu tiên tràng hạt trước quy trình/review; active run một dòng. Tự nhóm buổi
-  theo nhắc hoặc quy trình liên kết, đổi được trong Advanced. Danh sách dài mở
-  “Xem tất cả N” tại chỗ; check-in không đổi vị trí dòng. Motion theo kit, tắt theo máy
-  hoặc tùy chọn Giảm chuyển động. Basic/Advanced và menu Diện mạo hiện có được giữ.
-- Trình sửa hỏi trước khi bỏ thay đổi chưa lưu; đang lưu chặn thoát/lưu hai lần, lỗi giữ
-  draft. Lịch sử mở đủ bản ghi tại chỗ (ban đầu30), hiển thị mục tiêu đúng ngày;
-  màn hẹp/chữ lớn dùng danh sách ngày48px và số liệu căn hàng, vẫn chọn được lịch tháng.
-- Schema4/physical2: giờ bắt đầu ngày00:00–23:59 có phiên bản hiệu lực theo thời điểm;
-  ghi mới/nhắc/trash dùng cùng ngày, lịch sử đã lưu không dời. Đọc schema1–3. Ngày mới
-  hiện khi mở lại app hoặc trong vòng một phút khi đang mở. DST: giờ trùng lấy lần đầu,
-  giờ không tồn tại dời theo khoảng nhảy giờ. Không có thay đổi package hạ tầng dùng chung.
-- Ads + Pro Lifetime dùng adapter thật; Pro bỏ ads được hỗ trợ.
-
-Schema/CSV và chính sách dữ liệu: [DATA_SCHEMA](handy_habit/DATA_SCHEMA.md).
-Giới hạn nền tảng: [PLATFORM_CAPABILITIES](handy_habit/PLATFORM_CAPABILITIES.md).
+[Features/evidence](handy_habit/FEATURE_MATRIX.md), [Free/Pro](handy_habit/FREE_PRO.md),
+[settings](handy_habit/SETTINGS_INVENTORY.md), [backup](handy_habit/BACKUP_ARCHITECTURE.md),
+[sync](handy_habit/SYNC_ARCHITECTURE.md), [migration](handy_habit/MIGRATION_NOTES.md),
+[host QA](handy_habit/TEST_RESULTS.md), [issues](handy_habit/KNOWN_ISSUES.md),
+[release](handy_habit/RELEASE_CHECKLIST.md). Host app293/engine201 and store rasters
+are not device/provider/OAuth/billing proof. Privacy URL pending owner; large
+histories remain bounded30MB/200k and need compaction.
 
 Fourteen independent local-first Flutter apps. Current code/test status: [FEATURE_MATRIX](../FEATURE_MATRIX.md).
 Known limits: [KNOWN_ISSUES](../KNOWN_ISSUES.md). Screenshots: [UI_REVIEW](UI_REVIEW.md).
-
-- R14 tâm trạng (Free, tùy chọn): sau habits ở Hôm nay, chạm lời hỏi rồi chọn một
-  trong5 nhãn để lưu ngay; không yêu cầu ghi chú. Chi tiết có năng lượng1–5/ghi chú/nhãn
-  tùy chọn. Progress có lịch sử theo khoảng, sửa/xóa/Hoàn tác/khôi phục; ngày trống không
-  suy ra cảm nhận. Cài đặt Hiện tâm trạng ở Hôm nay ẩn lời hỏi, giữ dữ liệu; help Tâm trạng
-  là chủ đề thứ17. Xóa giữ payload để khôi phục, không theo hạn30 ngày của habit Trash.
-  JSON/ZIP/CSV mang cả live/deleted; merge từ chối bản ghi khác nhau cùng ngày trước khi ghi.
-  Ghi chú ở cục bộ và bản xuất người dùng chọn; không vào thông báo/widget. Không correlation
-  hay khẳng định sức khỏe. Source/host/widget tested; chưa kiểm mới trên thiết bị/browser.
-
-- R15/R16/run9: Free causal sync giữ đồng thời check-in/incidents/mood; tổng tuyệt đối/bỏ qua/tâm trạng xung đột giữ lựa chọn Cần xem lại; Undo/tombstones/routines/sessions hợp nhất tất định. Schema7/physical2 đọc1–6.
-- Android Google Drive appdata tùy chọn, chỉ hiện với HANDY_DRIVE_SYNC=true; Settings › Data › Sync riêng Backup, có tài khoản/lần thành công/chờ/hoạt động/lỗi/Sync now/tắt/ngắt kết nối. Chạy khi mở/quay lại/sau sửa lúc mở; không hứa chạy khi đóng. Tắt không xóa bản nào. [Owner OAuth setup](handy_habit/RELEASE.md); OAuth thật/hai Android chưa kiểm chứng. iOS/Windows/Web dùng backup để chuyển dữ liệu; không hứa Android ↔ iOS sync.
 
 ## Handy Spend
 

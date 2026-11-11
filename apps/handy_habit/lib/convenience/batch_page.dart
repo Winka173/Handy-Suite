@@ -4,6 +4,7 @@ import '../scope.dart';
 import '../ui/form.dart';
 import '../ui/sheet.dart';
 import '../pro/entitlements.dart';
+import '../insights/insight_dates.dart';
 
 class HabitBatchPage extends StatefulWidget {
   final HabitScope scope;
@@ -210,19 +211,35 @@ class _BatchPreviewState extends State<_BatchPreview> {
   String changes(BuildContext c, Habit h) => switch (widget.action) {
     'collection' => tr(
       c,
-      '${h.category.isEmpty ? 'No collection' : h.category} to ${widget.value}',
-      '${h.category.isEmpty ? 'Chưa có nhóm' : h.category} sang ${widget.value}',
+      h.category.isEmpty && widget.value.trim().isEmpty
+          ? 'Still without a collection'
+          : h.category == widget.value.trim()
+          ? 'Already in ${widget.value.trim()}'
+          : widget.value.trim().isEmpty
+          ? 'Will leave ${h.category}'
+          : 'Moves to ${widget.value.trim()}',
+      h.category.isEmpty && widget.value.trim().isEmpty
+          ? 'Vẫn chưa có nhóm'
+          : h.category == widget.value.trim()
+          ? 'Đã ở nhóm ${widget.value.trim()}'
+          : widget.value.trim().isEmpty
+          ? 'Sẽ rời nhóm ${h.category}'
+          : 'Chuyển sang nhóm ${widget.value.trim()}',
     ),
     'pause' => tr(
       c,
-      'Holiday: ${formatDay(c, widget.value)} through ${formatDay(c, widget.until)}',
-      'Nghỉ: ${formatDay(c, widget.value)} đến ${formatDay(c, widget.until)}',
+      'Paused ${insightDates(c, widget.value, widget.until)}',
+      'Tạm nghỉ ${insightDates(c, widget.value, widget.until)}',
     ),
     'reminder' =>
       [
             for (final r in objects(widget.before.settings['reminders'] ?? []))
               if (r['type'] == 'habit' && r['target'] == h.id)
-                '${r['time']} to ${widget.value}',
+                tr(
+                  c,
+                  'Reminder moves from ${r['time']} to ${widget.value}',
+                  'Đổi giờ nhắc từ ${r['time']} sang ${widget.value}',
+                ),
           ].join(', ').isEmpty
           ? tr(c, 'No reminder to change', 'Không có lịch nhắc để đổi')
           : [
@@ -230,12 +247,16 @@ class _BatchPreviewState extends State<_BatchPreview> {
                 widget.before.settings['reminders'] ?? [],
               ))
                 if (r['type'] == 'habit' && r['target'] == h.id)
-                  '${r['time']} to ${widget.value}',
+                  tr(
+                    c,
+                    'Reminder moves from ${r['time']} to ${widget.value}',
+                    'Đổi giờ nhắc từ ${r['time']} sang ${widget.value}',
+                  ),
             ].join(', '),
     _ =>
       h.archived
           ? tr(c, 'Already archived', 'Đã lưu trữ')
-          : tr(c, 'Active to Archived', 'Đang dùng sang Lưu trữ'),
+          : tr(c, 'Will be archived', 'Sẽ lưu trữ'),
   };
   @override
   Widget build(BuildContext c) => SheetFrame(

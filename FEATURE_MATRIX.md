@@ -1,5 +1,13 @@
 # Handy Suite — trạng thái chức năng
 
+Checkpoint Codex 05/11: cấu hình nhận diện đã thuộc `lib/design/identity.dart` của
+từng app (14 app); renderer tương thích chung vẫn còn, chưa chứng nhận tách UI hoàn
+toàn. Bookmark schema SQLite/IndexedDB 3 giữ bản đọc bị xóa để Undo; Forms phân trang
+100+1 và nhãn phạm vi; Habit editor icon/màu không đổi lịch; Media duyệt PNG và cảnh
+báo project giữ ảnh gốc. Bằng chứng riêng của đợt này ở
+[product review](docs/product-review/CHANGES_AND_NEXT_STEPS.md); không nâng cấp bằng
+chứng thiết bị/store cũ.
+
 Cập nhật **2026-11-02**. Danh mục chi tiết: [FUNCTIONS](docs/FUNCTIONS.md).
 Đã code, đã test và đã kiểm thử thiết bị thật là các trạng thái riêng biệt.
 
@@ -9,22 +17,21 @@ Các kiểm thử và giới hạn riêng được ghi ở [Trip matrix](docs/ha
 P1 đã code và có kiểm thử host/Android emulator: stamp, Memory Book, EXIF xác nhận,
 replay, so sánh và recipe. Khả năng phát hành store chưa hoàn tất.
 
-Handy Habit là app độc lập thứ chín: thói quen, lịch/streak, routine runner,
-insights, nhắc cục bộ và backup. R17/R18/run10: quy trình nâng cao/schema8/physical2 đã source/host tested; Basic mặc định, Pro để tạo/sửa, chạy bản đã lưu miễn phí, trace bất biến. R15/R16/run9: protocol1, causal sync và Android Drive appdata Free tùy chọn đã source/host tested; chỉ hiện với build define, còn owner OAuth và kiểm tra hai Android ([setup](docs/handy_habit/RELEASE.md)). Run 2 (10/11): schema3/physical2, Undo domain bền, preview/khôi phục có bản phục hồi trước thay thế và Thùng rác30 ngày; source/host tested, chưa device/browser. Trạng thái từng chức năng và bằng
-chứng nằm tại [Habit matrix](docs/handy_habit/FEATURE_MATRIX.md). Kiểm thử host,
-emulator, thiết bị thật và store được ghi riêng. Run3 (10/11), R5/R6: ba khu
-Today/Routines/Progress, sidebar gập/nhớ, routes/shortcuts, check-in + Undo, nhóm buổi,
-Show all tại chỗ, dirty-exit guard và lịch sử theo mục tiêu hiệu lực. Schema4 giữ ngày
-lịch sử, thêm giờ bắt đầu ngày có phiên bản; physical2. Host/widget/screenshots đã kiểm;
-browser URL/back-forward và thiết bị thật vẫn cần supervisor. R7 (run4): thư viện
-Start/Resume/phiên gần nhất, builder bản nháp lưu một lần/dirty guard, runner xác nhận
-thoát + shortcuts + tổng kết habit được ghi; host/widget và ma trận ảnh EN/VI/sáng/tối/
-320–1440/text1–1.5; kill/background/keyboard/SR thật chờ supervisor.
-R8/R9 (run5/5b): guide ba giai đoạn/hai beat, practice Today không ghi dữ liệu,
-15 chủ đề tìm không dấu/hình minh họa/context help, Settings nhóm/persist/reset giữ data,
-múi giờ thân thiện có GMT/DST. Source/host widget tested; native OS back/permission,
-screen reader và link policy/support thật vẫn chờ supervisor.
-R10/R11 (run6): schema5/physical2, giảm thói quen bằng số lần/ghi rõ0/chưa rõ, giới hạn ngày/tuần có lịch sử; Today +1/Undo/Không có, history/review mẫu số trung thực, không liên kết routine; help hiện16 chủ đề EN/VI. Host engine/widget/render matrix; thiết bị/browser chưa kiểm mới. R12/R13 (run7):44 mẫu habit/11 routine/13 nhóm, tìm không dấu → preview → tùy chỉnh → lưu một lần; Progress tuần/tháng/năm, lịch tháng, heatmap tổng/từng habit, streak/độ đều đặn/quy trình và Show all đều Free. Tuần giảm đã qua suy ra ngày trống là không có; ngày cũ trống theo giới hạn ngày không vào mẫu số. Schema5 giữ nguyên; host unit/widget/render, chưa device/browser/store mới. R14 (run8): tâm trạng tùy chọn hai chạm, năng lượng/ghi chú/nhãn tùy chọn, lịch sử theo khoảng ở Progress, sửa/xóa/Hoàn tác/khôi phục, ẩn lời nhắc ở Today và help17 chủ đề. Schema6/physical2, JSON/ZIP/CSV + migration1–5 + SQLite reopen đã host tested; không đưa tâm trạng vào thông báo/widget. Chưa kiểm thiết bị/browser mới; chưa có correlation/sync transport.
+Handy Habit is an independent local-first app with Nunito, vermilion and one-tap
+bead strings. Free: positive/reduction habits, effective schedules, durable Undo,
+pauses/30-day Trash, basic routines/runner, optional mood, week/month/year Progress,
+44 habit/11 routine templates/13 collections,19 help topics, backup/restore/export
+and supported sync. Pro Lifetime: Advanced routine authoring (saved plans run
+Free), explainable insights/designed PDF, Studio, saved views, batch/local rules,
+and ads removal. Schema9/physical2/protocol1; Android Drive is build-gated, Windows
+folder sync is separate from Backup, iOS/Web use manual backup migration.
+Host app293/engine201;12 EN/VI store rasters1080×2160. Supervisor reports prior
+binary startup/guide on two BlueStacks Android11 instances; final physical-device,
+OAuth/provider/billing checks remain. R26 capacity stays partial at30MB/200k;
+privacy policy URL pending owner publication. Current
+[feature/evidence matrix](docs/handy_habit/FEATURE_MATRIX.md),
+[Free/Pro](docs/handy_habit/FREE_PRO.md), [issues](docs/handy_habit/KNOWN_ISSUES.md)
+and [release checklist](docs/handy_habit/RELEASE_CHECKLIST.md).
 
 | App / nhóm            | Chức năng đã code                                                                                                                                                                                                                                            | Kiểm thử có bằng chứng                                                                                                                                                                                                     | Còn thiếu                                                                                                                          |
 | --------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------- |

@@ -3903,6 +3903,23 @@ Historical R11 Progress contract (counting superseded by R12/R13 below): “What
 - Reject: method paragraphs on overview, ISO/raw IANA dates, five stacked filter fields, pink date tiles, fake exact/battery switches, unsupported pin buttons, mood/notes in external surfaces, device-delivery claims from host tests.
 - Validation: EN/VI × light/dark ×320/390/1440 ×text1/1.5 rasters of insights sections/filter sheet/report preview+actual PDF first page/notification settings/diagnostics/widgets; critique/fix/re-render. Unit/widget privacy, dates/count/clear/diagnostics/payload tests, app+engine analyze/tests, debug APK only; supervisor owns OS/device verification.
 
+### Habit run 16 — release polish contract (R27)
+
+Inventory/jobs: existing selected habits, before/after batch values and three disposable guide stages.
+Batch asks “What will change?”; each named habit states “Will be archived”, “Moves to …”,
+“Paused …” or an explicit reminder-time change, with unchanged/no-reminder states retained.
+Guide asks “How do I use today’s bead?”; its stage headline leads at 30 logical pixels on
+phones and 44 on wide screens, including practice. Nunito’s visible glyph ink is smaller
+than its em size; device density must never divide these logical sizes. Body text scales
+with accessibility settings. Practice remains disposable; Skip/Back/Next/Start retain their jobs.
+Preserve Habit’s editorial face, oxblood/vermilion and signature bead strings. At 320–1440,
+headlines wrap, compact practice scrolls and footer actions stay reachable; no fitted/shrunk
+headline, red missed days, new panels or preview writes. Loading/save errors and reduced
+motion retain existing behavior; semantic heading, keyboard and OS back remain supported.
+Verify EN/VI typography at density 2.6 and 3 plus text scaling; inspect host guide/batch rasters.
+Store renderer uses the real app, bilingual sample habits/history/routine, 360×720 at 3x;
+sample history is explicitly a fixture, never evidence of device or store execution.
+
 ### Habit run 15 — convenience contracts (R24)
 
 Data/jobs: named Habits search/archive/order and Progress range/habit filters; explicit selected habit IDs;

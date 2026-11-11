@@ -74,25 +74,18 @@ tối đa 30MB.
     còn sửa màu/icon. Bốn khu không có URL web riêng; trang con thì có. Bản sửa nhập
     sao kê, tour và `native_test` mới chạy trên BlueStacks, chưa trên điện thoại thật
     hay emulator QA; bằng chứng trong `docs/qa/evidence` thuộc giao diện cũ.
-18. Giao diện mới của Handy Habit (2026-11-02): màu đổi từ teal sang đỏ son `#B42318`,
-    nên ngày lỡ luôn là vòng rỗng xám có chữ, không bao giờ tô đỏ. Màu và icon riêng của
-    quy trình vẫn giữ trong dữ liệu nhưng chưa có editor riêng. Thói quen đã có lại
-    menu Diện mạo (05/11) chọn icon/màu, Undo và Hủy, không sửa lịch/check-in; màu hiển
-    thị được điều chỉnh tương phản, giá trị lưu giữ nguyên. Xong một bước thì bước kế tự chạy (tạm dừng vẫn do bạn bấm; ra nền vẫn
-    dừng). Run3 đổi thành ba khu có named routes `/today`, `/routines`, `/progress`,
-    sidebar gập/nhớ và editor/history/clock policy schema4 đã host/widget tested;
-    URL refresh/back-forward thật, keyboard/OS back trên máy, day-boundary/DST trên máy
-    và screen reader còn cần supervisor. History mở đủ tại chỗ; Advanced và appearance
-    giữ nguyên. R8/R9 run5/5b đã có guide/practice độc lập, help tìm kiếm 15 chủ đề và
-    Settings theo nhóm; không còn là phần chưa xây. Ảnh host không chứng minh OS back,
-    screen reader, quyền/nhắc thật, haptics, liên kết policy/support hay file provider. R12/R13 run7
-    đã có thư viện44 habit/11 routine và Progress tuần/tháng/năm/heatmap/lịch/chuỗi;
-    tuần giảm đã qua suy ra ngày trống là không có, ngày trống giới hạn ngày được
-    loại khỏi độ đều đặn. Ảnh và test host không thay kiểm SR/native/browser thật;
-    heatmap năm cuộn ngang trong khung ở màn hẹp. Không có comparison/correlation Pro mới. R14 run8 đã source/host tested: tâm trạng tùy chọn, schema6/physical2, history/sửa/xóa có khôi phục/Undo, CSV/JSON/ZIP và migration1–5; hiển thị Today bật/tắt không xóa dữ liệu. Xóa tâm trạng giữ bản ghi để khôi phục, không theo hạn30 ngày của habit Trash; chưa có nút xóa vĩnh viễn riêng. Nâng cấp/restore/IME/SR/lock screen và IndexedDB thật vẫn cần supervisor.
-    Chưa xác minh policy URL công khai; cần supervisor kiểm trước release. Tour và `native_test` mới chạy
-    trên BlueStacks (máy giả lập); ảnh `habit-ui-review.pdf` và bằng chứng UI cũ thuộc bản
-    trước. Run 2 (10/11): backup preview/sealed lỗi-mật-khẩu/hỏng/hủy, durable recovery trước Replace, migration schema3/physical2, domain Undo và trash30 ngày đã source/host tested. Provider SAF/iOS Files, nâng cấp/kill/thiếu chỗ thật và IndexedDB/quota/tab-blocked chưa runtime verified; checkpoint/recovery và plain export vẫn không mã hóa, `.hseal` có mã hóa xác thực. Không claim sync hoàn chỉnh (R15/R16). R10/R11 run6: negative incidents/zero/unknown và giới hạn ngày/tuần schema5/physical2, help16 chủ đề đã source/host tested; tuần đang mở/nghỉ không cộng chuỗi, chưa rõ nằm trong mẫu số. Nâng cấp/ranh giới ngày-tuần trên thiết bị và IndexedDB thật vẫn chờ supervisor; giữ backup trước nâng schema.
+18. Handy Habit: source/host tested, schema9/physical2/protocol1; app293/engine201.
+    R26 remains partial:30MB/200k guards safely refuse large ledgers; segmentation/
+    compaction outstanding. Runner foreground only; native widgets Android only,
+    no closed-app midnight refresh. Android Drive build gate and Windows folder
+    sync exist; real OAuth/two-device/two-PC cloud delivery unverified. Checkout
+    Android only; actual Billing/consent unverified. Supervisor reports prior debug
+    startup/guide on two BlueStacks Android11 instances, not final R27 or physical
+    phone proof. Policy URL pending owner; iOS build, browser storage/providers,
+    reminder reboot/battery/accessibility and final binary acceptance remain.
+    [Code versus external limits](docs/handy_habit/KNOWN_ISSUES.md),
+    [release checklist](docs/handy_habit/RELEASE_CHECKLIST.md),
+    [host QA](docs/handy_habit/TEST_RESULTS.md).
 
 19. Tự sao lưu (2026-11-02) ghi bản sao lưu của Keep, Recall, Bookmark, Spend, Habit, Docs
     (tệp đã giữ) và Media vào thư mục người dùng chọn, khi mở hoặc rời app, không chạy nền khi
@@ -129,12 +122,6 @@ tối đa 30MB.
 26. Handy Keep: giá là số người dùng nhập, không quy đổi giữa các loại tiền; tổng tách theo
     từng loại tiền. Thêm hàng loạt tối đa 20 ảnh mỗi lần và phải vừa thư viện 16 MB. CSV, thêm
     hàng loạt và chụp liên tiếp mới kiểm thử trên host.
-27. Handy Habit: màn chạy quy trình vẫn tạm dừng khi app rời màn hình; trên Android/iOS một
-    thông báo im lặng nói đang dừng ở đâu và còn bao lâu (không đếm ngược). Chế độ nghỉ và
-    thông báo này mới kiểm thử trên host. R7/run4: builder lưu cả bản nháp,
-    kéo/nút lên-xuống, dirty guard, runner exit-confirm/shortcuts/recovery/summary
-    đã source/widget/host-render tested; kill/reopen, IME, keyboard/SR, drag và
-    back/swipe trên thiết bị chưa kiểm chứng. Không hứa timer chạy khi app bị tắt. R17/R18/run10: quy trình nâng cao/schema8 đã source/host tested, tạo/sửa cần Pro, chạy bản đã lưu miễn phí. Timer chỉ tính thời gian foreground đã lưu; branch/stacking/Undo và nâng cấp trên thiết bị vẫn chờ supervisor. R15/R16/run9: Drive appdata đã source/host tested nhưng chưa OAuth thật/hai thiết bị. Cần project Handy Habit và Android clients/SHA-1; không cần Web client/serverClientId; [setup](docs/handy_habit/RELEASE.md). Không hứa sync tự động ngoài Android; remote generations chưa compact, có thể giữ payload đã xóa đến khi người dùng xóa app data trong Drive.
 28. Handy Spend (schema 2): ảnh hóa đơn, chia tiền, gợi ý khoản định kỳ, mẫu sao kê và "Dự báo
     nếu…" mới kiểm thử trên host; camera, chia sẻ/mở hóa đơn, lưu hóa đơn trong IndexedDB và
     bản sao lưu ZIP 85 MB chưa chạy trên thiết bị hay trình duyệt.
@@ -151,12 +138,6 @@ tối đa 30MB.
 
 Chi tiết chức năng và giới hạn: [FUNCTIONS](docs/FUNCTIONS.md).
 
-Handy Habit: xem [QA riêng](docs/handy_habit/QA_PLAN.md). iOS cần Mac/Xcode; chưa
-kiểm chứng thiết bị thật, screen reader, browser eviction/quota/offline runtime,
-OS file provider, nhắc sau reboot hoặc giao dịch/consent trên store thật.
-Windows/Web dùng danh sách đến hạn trong app, không hứa nhắc nền. SQLite/backup
-không mã hóa. Timer chỉ auto-next ở tiền cảnh; khôi phục sẽ tạm dừng và cảnh báo
-ước tính thời gian. P1 vacation/widget/challenge chưa triển khai.
 Trạng thái kiểm thử: [FEATURE_MATRIX](FEATURE_MATRIX.md).
 
 Chức năng thêm ngày 2026-11-02 (đợt 2): Media nối ảnh cần các ảnh cùng chiều

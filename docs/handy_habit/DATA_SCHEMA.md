@@ -1,5 +1,9 @@
 # Data schema and portability
 
+Current reader/writer summary: [MIGRATION_NOTES](MIGRATION_NOTES.md), schemas1–9
+accepted, writer9. Version-specific sections below record historical field
+introductions; their contemporary reader/writer statements are not current gates.
+
 Data schema 9 (2026-11-11; local convenience settings; schemas1–8 migrate); sync protocol 1 and physical SQLite/IndexedDB version 2; isolated native `handy-habit.sqlite` / browser IndexedDB `handy-habit`.
 No other app database is opened. Native tables: habits, events, routines, sessions,
 operations (unique actor/sequence, entity index), singleton state metadata, and a device-local recovery table. Validated entity JSON plus indexed event habit/date/source,
@@ -51,7 +55,9 @@ only requested by the two settings switches.
 `reason` (<= 200 chars, may be empty), `habits` (IDs; empty = every habit). At most
 1000 pauses; every named habit must exist. Overlapping pauses are allowed and read as
 their union. Migration: data written as schema 1 has no `pauses` and reads as an empty
-list; current reads normalize schemas 1–7 to8 and the next save writes8. Schema 1 carrying `pauses`, or an unsupported future schema, is refused without reset. Older apps refuse schema8; keep a backup before upgrading.
+list; current reads normalize schemas1–8 to9 and next save writes9. Schema1 carrying
+`pauses`, or a future schema, refuses without reset. Older apps refuse schema9;
+keep a backup before upgrading.
 
 Counting rule. A paused day for a habit is a scheduled day inside a pause that covers
 it. Status order is future, not scheduled, skipped, completed, partial, **paused**,

@@ -1,8 +1,14 @@
-﻿# Platform capabilities — run 15
+﻿# Platform capabilities — R27 release inventory
 
 Matrix describes shipped source and gates. Host tests and Android compilation are
 separate from OS delivery, real billing, cloud transport and release readiness.
 Data schema9; SQLite/IndexedDB physical2; immutable sync protocol1.
+
+Re-verified against current source on 2026-11-11 for R27. Current commands/counts:
+[TEST_RESULTS](TEST_RESULTS.md). Supervisor reports the previous debug binary
+starts/shows the guide on two BlueStacks Android11 instances; no final physical
+phone, OAuth, native-delivery or store certification follows. No R27 Gradle/iOS/
+release build was run. Policy publication is pending owner.
 
 | Capability | Android | iOS | Windows | Web |
 | --- | --- | --- | --- | --- |
@@ -31,7 +37,7 @@ Data schema9; SQLite/IndexedDB physical2; immutable sync protocol1.
 | Health Connect / Apple Health completion | Not implemented; no dependency | Not implemented; no dependency | Not applicable | Not applicable |
 | Lifetime purchase/restore | Native Play Billing; verified device cache; real transactions unverified | Unavailable | Unavailable | Unavailable |
 | Ads/removal | Configured Android host; Pro removes ads | No supported checkout/ad host | No supported checkout/ad host | No checkout |
-| Guide/searchable help/EN-VI/theme/keyboard/reduced motion | App source / host renders | Same source | Same source | Same source |
+| Guide/19-topic help/EN-VI/theme/keyboard/reduced motion | App source / host renders; phone guide30 logical px, wide44 | Same source | Same source | Same source |
 
 Rules do not chain, scan old finished sessions, or use a background scheduler.
 They can be turned off without Pro. Replacement restore imports rules disabled;
