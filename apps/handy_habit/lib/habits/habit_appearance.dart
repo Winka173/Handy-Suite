@@ -155,93 +155,111 @@ Future<({int icon, int color})?> pickHabitAppearance(
   required int initialColor,
 }) async {
   var icon = initialIcon, color = initialColor;
-  final chosen = await showDialog<({int icon, int color})>(
+  // A sheet from below, as the siblings pick a look.
+  final chosen = await showModalBottomSheet<({int icon, int color})>(
     context: context,
-    animationStyle: AnimationStyle(
+    isScrollControlled: true,
+    showDragHandle: true,
+    useSafeArea: true,
+    constraints: const BoxConstraints(maxWidth: 560),
+    sheetAnimationStyle: AnimationStyle(
       duration: HandyMotion.of(context),
       reverseDuration: HandyMotion.of(context),
     ),
     builder: (ctx) => StatefulBuilder(
-      builder: (ctx, update) => AlertDialog(
-        title: Text(tr(ctx, 'Appearance', 'Diện mạo thói quen')),
-        content: SizedBox(
-          width: 360,
-          child: SingleChildScrollView(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                ListTile(
-                  leading: Icon(
-                    habitIcon(icon),
-                    color: habitInk(color, Theme.of(ctx).colorScheme.surface),
+      builder: (ctx, update) => Padding(
+        padding: const EdgeInsets.fromLTRB(20, 0, 20, 16),
+        child: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                tr(ctx, 'Icon and colour', 'Biểu tượng và màu'),
+                style: Theme.of(ctx).textTheme.headlineSmall?.copyWith(
+                  fontWeight: FontWeight.w800,
+                ),
+              ),
+              ListTile(
+                leading: Icon(
+                  habitIcon(icon),
+                  color: habitInk(color, Theme.of(ctx).colorScheme.surface),
+                ),
+                title: Text(title),
+              ),
+              Text(tr(ctx, 'Icon', 'Biểu tượng')),
+              Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                children: [
+                  for (var i = 0; i < habitIcons.length; i++)
+                    Semantics(
+                      selected: icon == habitIcons[i].codePoint,
+                      child: IconButton.outlined(
+                        key: Key('habit-icon-$i'),
+                        tooltip: tr(
+                          ctx,
+                          habitIconLabels[i].$1,
+                          habitIconLabels[i].$2,
+                        ),
+                        isSelected: icon == habitIcons[i].codePoint,
+                        onPressed: () =>
+                            update(() => icon = habitIcons[i].codePoint),
+                        icon: Icon(habitIcons[i]),
+                      ),
+                    ),
+                ],
+              ),
+              const SizedBox(height: 16),
+              Text(tr(ctx, 'Color', 'Màu')),
+              Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                children: [
+                  for (var i = 0; i < habitColors.length; i++)
+                    ChoiceChip(
+                      key: Key('habit-color-$i'),
+                      label: Text(
+                        tr(ctx, habitColors[i].$2, habitColors[i].$3),
+                      ),
+                      avatar: Icon(
+                        Icons.circle,
+                        size: 16,
+                        color: habitInk(
+                          habitColors[i].$1,
+                          Theme.of(ctx).colorScheme.surface,
+                        ),
+                      ),
+                      selected: color == habitColors[i].$1,
+                      onSelected: (_) =>
+                          update(() => color = habitColors[i].$1),
+                    ),
+                ],
+              ),
+              const SizedBox(height: 20),
+              Row(
+                children: [
+                  TextButton(
+                    onPressed: () => Navigator.pop(ctx),
+                    child: Text(tr(ctx, 'Cancel', 'Hủy')),
                   ),
-                  title: Text(title),
-                ),
-                Text(tr(ctx, 'Icon', 'Biểu tượng')),
-                Wrap(
-                  spacing: 8,
-                  runSpacing: 8,
-                  children: [
-                    for (var i = 0; i < habitIcons.length; i++)
-                      Semantics(
-                        selected: icon == habitIcons[i].codePoint,
-                        child: IconButton.outlined(
-                          key: Key('habit-icon-$i'),
-                          tooltip: tr(
-                            ctx,
-                            habitIconLabels[i].$1,
-                            habitIconLabels[i].$2,
-                          ),
-                          isSelected: icon == habitIcons[i].codePoint,
-                          onPressed: () =>
-                              update(() => icon = habitIcons[i].codePoint),
-                          icon: Icon(habitIcons[i]),
-                        ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: FilledButton(
+                      key: const Key('habit-appearance-save'),
+                      style: FilledButton.styleFrom(
+                        minimumSize: const Size.fromHeight(52),
                       ),
-                  ],
-                ),
-                const SizedBox(height: 16),
-                Text(tr(ctx, 'Color', 'Màu')),
-                Wrap(
-                  spacing: 8,
-                  runSpacing: 8,
-                  children: [
-                    for (var i = 0; i < habitColors.length; i++)
-                      ChoiceChip(
-                        key: Key('habit-color-$i'),
-                        label: Text(
-                          tr(ctx, habitColors[i].$2, habitColors[i].$3),
-                        ),
-                        avatar: Icon(
-                          Icons.circle,
-                          size: 16,
-                          color: habitInk(
-                            habitColors[i].$1,
-                            Theme.of(ctx).colorScheme.surface,
-                          ),
-                        ),
-                        selected: color == habitColors[i].$1,
-                        onSelected: (_) =>
-                            update(() => color = habitColors[i].$1),
-                      ),
-                  ],
-                ),
-              ],
-            ),
+                      onPressed: () =>
+                          Navigator.pop(ctx, (icon: icon, color: color)),
+                      child: Text(tr(ctx, 'Save', 'Lưu')),
+                    ),
+                  ),
+                ],
+              ),
+            ],
           ),
         ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx),
-            child: Text(tr(ctx, 'Cancel', 'Hủy')),
-          ),
-          FilledButton(
-            key: const Key('habit-appearance-save'),
-            onPressed: () => Navigator.pop(ctx, (icon: icon, color: color)),
-            child: Text(tr(ctx, 'Save', 'Lưu')),
-          ),
-        ],
       ),
     ),
   );

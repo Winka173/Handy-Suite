@@ -4,6 +4,7 @@ import '../convenience/saved_filters.dart';
 import 'preset_sheet.dart';
 import 'package:handy_ui/kit.dart';
 import '../scope.dart';
+import '../today/beads.dart' show RowIn;
 import '../today/rows.dart';
 import '../ui/capped.dart';
 import 'habit_view.dart';
@@ -210,15 +211,20 @@ class _HabitsPageState extends State<HabitsPage> {
                   builder: (context, shown) => Column(
                     children: [
                       for (final h in groups[name]!.take(shown))
-                        HabitRow(
+                        RowIn(
                           key: ValueKey(h.id),
-                          scope: scope,
-                          habit: h,
-                          index: index,
-                          selected: open?.id == h.id,
-                          onOpen: () => wide
-                              ? setState(() => selected = h.id)
-                              : Navigator.pushNamed(context, '/habit/${h.id}'),
+                          child: HabitRow(
+                            scope: scope,
+                            habit: h,
+                            index: index,
+                            selected: open?.id == h.id,
+                            onOpen: () => wide
+                                ? setState(() => selected = h.id)
+                                : Navigator.pushNamed(
+                                    context,
+                                    '/habit/${h.id}',
+                                  ),
+                          ),
                         ),
                     ],
                   ),

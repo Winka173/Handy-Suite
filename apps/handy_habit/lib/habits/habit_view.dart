@@ -218,6 +218,7 @@ class HabitView extends StatelessWidget {
                           index: index,
                           onTap: () => checkIn(context, scope, h),
                           onLongPress: () => editDay(context, scope, h, today),
+                          hero: !showTitle,
                         ),
                       ],
                     ),

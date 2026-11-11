@@ -208,6 +208,9 @@ class TodayBead extends StatelessWidget {
   final Habit habit;
   final HabitIndex index;
   final VoidCallback onTap, onLongPress;
+
+  /// Flies between Today and the habit's page (one per habit per route).
+  final bool hero;
   const TodayBead({
     super.key,
     required this.scope,
@@ -215,6 +218,7 @@ class TodayBead extends StatelessWidget {
     required this.index,
     required this.onTap,
     required this.onLongPress,
+    this.hero = false,
   });
   @override
   Widget build(BuildContext context) {
@@ -275,47 +279,51 @@ class TodayBead extends StatelessWidget {
           },
           onLongPress: onLongPress,
           radius: 28,
-          child: SizedBox(
-            width: 48,
-            height: 48,
-            child: Stack(
-              alignment: Alignment.center,
-              children: [
-                TweenAnimationBuilder<double>(
-                  tween: Tween(end: dayFill(habit, today, index)),
-                  duration: HandyMotion.of(
-                    context,
-                    const Duration(milliseconds: 320),
+          child: _maybeHero(
+            hero ? 'habit-bead-${habit.id}' : null,
+            SizedBox(
+              width: 48,
+              height: 48,
+              child: Stack(
+                alignment: Alignment.center,
+                children: [
+                  TweenAnimationBuilder<double>(
+                    tween: Tween(end: dayFill(habit, today, index)),
+                    duration: HandyMotion.of(
+                      context,
+                      const Duration(milliseconds: 320),
+                    ),
+                    curve: Curves.easeOutCubic,
+                    builder: (context, fill, _) => Bead(
+                      status: switch (status) {
+                        'partial' => 'progress',
+                        'open' || 'missed' => fill > 0 ? 'progress' : 'open',
+                        'completed'
+                            when fill < .999 && habit.type != 'binary' =>
+                          'progress',
+                        _ => status,
+                      },
+                      fill: fill,
+                      size: 40,
+                      color: color,
+                    ),
                   ),
-                  curve: Curves.easeOutCubic,
-                  builder: (context, fill, _) => Bead(
-                    status: switch (status) {
-                      'partial' => 'progress',
-                      'open' || 'missed' => fill > 0 ? 'progress' : 'open',
-                      'completed' when fill < .999 && habit.type != 'binary' =>
-                        'progress',
-                      _ => status,
-                    },
-                    fill: fill,
-                    size: 40,
-                    color: color,
-                  ),
-                ),
-                if (done)
-                  _Pop(child: Icon(Icons.check, size: 22, color: checkInk))
-                else if (paused)
-                  Icon(Icons.pause, size: 18, color: c.muted)
-                else if (habit.type != 'binary' && status != 'skipped')
-                  Icon(
-                    Icons.add,
-                    size: 20,
-                    color: status == 'withinLimit'
-                        ? checkInk
-                        : status == 'overLimit'
-                        ? c.muted
-                        : color,
-                  ),
-              ],
+                  if (done)
+                    _Pop(child: Icon(Icons.check, size: 22, color: checkInk))
+                  else if (paused)
+                    Icon(Icons.pause, size: 18, color: c.muted)
+                  else if (habit.type != 'binary' && status != 'skipped')
+                    Icon(
+                      Icons.add,
+                      size: 20,
+                      color: status == 'withinLimit'
+                          ? checkInk
+                          : status == 'overLimit'
+                          ? c.muted
+                          : color,
+                    ),
+                ],
+              ),
             ),
           ),
         ),
@@ -339,3 +347,36 @@ class _Pop extends StatelessWidget {
     child: child,
   );
 }
+
+/// A row arriving in a list: it opens to its height and fades in, so the
+/// rows below move aside instead of jumping. Rows keyed by id only play it
+/// once, when they are new. Still when motion is reduced.
+class RowIn extends StatelessWidget {
+  final Widget child;
+  const RowIn({super.key, required this.child});
+  @override
+  Widget build(BuildContext context) {
+    final d = HandyMotion.of(context, const Duration(milliseconds: 300));
+    if (d == Duration.zero) return child;
+    return TweenAnimationBuilder<double>(
+      tween: Tween(begin: 0, end: 1),
+      duration: d,
+      curve: Curves.easeOutCubic,
+      builder: (context, t, child) => ClipRect(
+        child: Align(
+          alignment: Alignment.topCenter,
+          heightFactor: t,
+          child: Opacity(opacity: t, child: child),
+        ),
+      ),
+      child: child,
+    );
+  }
+}
+
+Widget _maybeHero(String? tag, Widget child) => tag == null
+    ? child
+    : Hero(
+        tag: tag,
+        child: Material(type: MaterialType.transparency, child: child),
+      );

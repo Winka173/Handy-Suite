@@ -228,6 +228,7 @@ class HabitRow extends StatelessWidget {
                         onTap: () => checkIn(context, scope, h),
                         onLongPress: () =>
                             editDay(context, scope, h, scope.today),
+                        hero: true,
                       )
                     else
                       Padding(
