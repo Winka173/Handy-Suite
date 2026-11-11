@@ -3,6 +3,7 @@ import '../habits/habit_view.dart' show HabitMenu;
 import '../routines/routine_view.dart' show RoutineMenu;
 import 'package:handy_habit_engine/handy_habit_engine.dart';
 import 'package:handy_ui/kit.dart';
+import '../routines/routine_editor.dart' show DurationStrip;
 import '../routines/run.dart';
 import '../scope.dart';
 import '../ui/words.dart';
@@ -335,6 +336,14 @@ class RoutineRow extends StatelessWidget {
         ),
         const SizedBox(height: 2),
         Text(meta, style: theme.textTheme.bodySmall?.copyWith(color: c.muted)),
+        if (r.steps.isNotEmpty) ...[
+          const SizedBox(height: 6),
+          // Its steps as one bar, each as long as its time.
+          SizedBox(
+            height: 6,
+            child: DurationStrip(steps: r.steps, color: c.accent),
+          ),
+        ],
       ],
     );
     final label = Text(

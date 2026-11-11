@@ -31,6 +31,8 @@ class _RoutinesPageState extends State<RoutinesPage> {
               ? a.time.compareTo(b.time)
               : (a.archived ? 1 : -1),
         );
+      final weekday = date(scope.today).weekday;
+      bool planned(Routine r) => !r.archived && r.weekdays.contains(weekday);
       final open = wide
           ? scope.routine(selected) ?? routines.firstOrNull
           : null;
@@ -105,35 +107,55 @@ class _RoutinesPageState extends State<RoutinesPage> {
                 ),
               ),
             ),
-          if (routines.isNotEmpty)
-            HandySection(
-              children: [
-                Capped(
-                  count: routines.length,
-                  max: 4,
-                  name: 'routines',
-                  open:
-                      selected != null && routines.any((r) => r.id == selected),
-                  builder: (context, shown) => Column(
-                    children: [
-                      for (final r in routines.take(shown))
-                        RoutineRow(
-                          key: ValueKey(r.id),
-                          scope: scope,
-                          routine: r,
-                          selected: open?.id == r.id,
-                          onOpen: () => wide
-                              ? setState(() => selected = r.id)
-                              : Navigator.pushNamed(
-                                  context,
-                                  '/routine/${r.id}',
-                                ),
-                        ),
-                    ],
-                  ),
-                ),
+          // Today's first, then the rest.
+          for (final (id, name, group) in [
+            (
+              'routines',
+              tr(context, 'Today', 'Hôm nay'),
+              [
+                for (final r in routines)
+                  if (planned(r)) r,
               ],
             ),
+            (
+              'routines-other',
+              tr(context, 'Other days', 'Ngày khác'),
+              [
+                for (final r in routines)
+                  if (!planned(r)) r,
+              ],
+            ),
+          ])
+            if (group.isNotEmpty)
+              HandySection(
+                title: name,
+                children: [
+                  Capped(
+                    count: group.length,
+                    max: 4,
+                    name: id,
+                    open:
+                        selected != null && group.any((r) => r.id == selected),
+                    builder: (context, shown) => Column(
+                      children: [
+                        for (final r in group.take(shown))
+                          RoutineRow(
+                            key: ValueKey(r.id),
+                            scope: scope,
+                            routine: r,
+                            selected: open?.id == r.id,
+                            onOpen: () => wide
+                                ? setState(() => selected = r.id)
+                                : Navigator.pushNamed(
+                                    context,
+                                    '/routine/${r.id}',
+                                  ),
+                          ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
         ],
       );
       if (open == null) return list;

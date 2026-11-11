@@ -1,6 +1,7 @@
 import '../ui/row_menu.dart';
 import 'package:handy_habit_engine/handy_habit_engine.dart';
 import 'package:handy_ui/kit.dart';
+import '../today/beads.dart' show Bead;
 import '../scope.dart';
 import '../ui/words.dart';
 import 'routine_editor.dart';
@@ -108,24 +109,22 @@ class RoutineView extends StatelessWidget {
                 const SizedBox(height: HandySpace.l),
                 DurationStrip(steps: r.steps, color: c.accent),
                 const SizedBox(height: HandySpace.l),
-                Wrap(
-                  spacing: HandySpace.s,
-                  runSpacing: HandySpace.s,
-                  children: [
-                    FilledButton.icon(
-                      key: const Key('routine-start'),
-                      onPressed: ready
-                          ? () => startRoutine(context, scope, r)
-                          : null,
-                      icon: const Icon(Icons.play_arrow),
-                      label: Text(
-                        scope.activeSession?.routine == r.id
-                            ? tr(context, 'Resume', 'Tiếp tục')
-                            : tr(context, 'Start', 'Bắt đầu'),
-                      ),
-                    ),
-                  ],
+                FilledButton.icon(
+                  key: const Key('routine-start'),
+                  style: FilledButton.styleFrom(
+                    minimumSize: const Size.fromHeight(56),
+                  ),
+                  onPressed: ready
+                      ? () => startRoutine(context, scope, r)
+                      : null,
+                  icon: const Icon(Icons.play_arrow),
+                  label: Text(
+                    scope.activeSession?.routine == r.id
+                        ? tr(context, 'Resume', 'Tiếp tục')
+                        : tr(context, 'Start', 'Bắt đầu'),
+                  ),
                 ),
+                const SizedBox(height: HandySpace.l),
                 LayoutBuilder(
                   builder: (context, box) {
                     final edit = TextButton.icon(
@@ -166,12 +165,32 @@ class RoutineView extends StatelessWidget {
                     name: 'routine-steps',
                     builder: (context, shown) => Column(
                       children: [
-                        for (final step in r.steps.take(shown))
+                        for (final (i, step) in r.steps.take(shown).indexed)
                           ListTile(
+                            key: Key('routine-step-$i'),
+                            contentPadding: const EdgeInsets.symmetric(
+                              horizontal: 4,
+                            ),
+                            leading: CircleAvatar(
+                              radius: 16,
+                              backgroundColor: c.accent.withValues(alpha: .14),
+                              child: Text(
+                                '${i + 1}',
+                                style: theme.textTheme.labelLarge?.copyWith(
+                                  color: c.accent,
+                                  fontWeight: FontWeight.w800,
+                                ),
+                              ),
+                            ),
                             title: Text(step.title),
+                            trailing: Text(
+                              minutesText(context, step.seconds),
+                              style: theme.textTheme.bodyMedium?.copyWith(
+                                color: c.muted,
+                              ),
+                            ),
                             subtitle: Text(
                               [
-                                minutesText(context, step.seconds),
                                 if (scope.habit(step.habit) case final h?)
                                   tr(
                                     context,
@@ -195,6 +214,27 @@ class RoutineView extends StatelessWidget {
                   HandySection(
                     title: tr(context, 'Recent runs', 'Các lần chạy gần đây'),
                     children: [
+                      Padding(
+                        key: const Key('routine-run-beads'),
+                        padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
+                        child: Wrap(
+                          spacing: 6,
+                          runSpacing: 6,
+                          children: [
+                            for (final s in runs.take(14).toList().reversed)
+                              Bead(
+                                status: s.status == 'finished'
+                                    ? 'completed'
+                                    : s.status == 'active'
+                                    ? 'partial'
+                                    : 'open',
+                                fill: .5,
+                                size: 16,
+                                color: c.accent,
+                              ),
+                          ],
+                        ),
+                      ),
                       Capped(
                         count: runs.length,
                         max: 4,

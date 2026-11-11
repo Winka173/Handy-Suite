@@ -259,10 +259,14 @@ class RunnerView extends StatelessWidget {
                             header: true,
                             child: HandySwap(
                               duration: HandyMotion.short,
+                              alignment: Alignment.center,
                               child: Text(
                                 step.plan.title,
                                 key: ValueKey(step.plan.id),
-                                style: theme.textTheme.headlineMedium,
+                                textAlign: TextAlign.center,
+                                style: theme.textTheme.headlineMedium?.copyWith(
+                                  fontWeight: FontWeight.w800,
+                                ),
                               ),
                             ),
                           ),
@@ -271,28 +275,48 @@ class RunnerView extends StatelessWidget {
                               padding: const EdgeInsets.only(top: HandySpace.s),
                               child: Text(
                                 step.plan.note,
+                                textAlign: TextAlign.center,
                                 style: theme.textTheme.bodyLarge,
                               ),
                             ),
-                          const SizedBox(height: HandySpace.xl),
-                          Semantics(
-                            liveRegion: false,
-                            label: tr(
-                              context,
-                              '${clockText(elapsed)} so far',
-                              'Đã chạy ${clockText(elapsed)}',
-                            ),
-                            excludeSemantics: true,
-                            child: Text(
-                              clockText(elapsed),
-                              key: const Key('runner-clock'),
-                              style: theme.textTheme.displayLarge?.copyWith(
-                                fontFeatures: tabular,
-                                color: running ? c.accent : null,
+                          const SizedBox(height: HandySpace.l),
+                          Center(
+                            child: _TimerRing(
+                              key: ValueKey('ring-${step.plan.id}'),
+                              elapsed: elapsed,
+                              planned: planned,
+                              running: running,
+                              done: !pending,
+                              colour: c.accent,
+                              track: c.accent.withValues(alpha: .16),
+                              child: Semantics(
+                                liveRegion: false,
+                                label: tr(
+                                  context,
+                                  '${clockText(elapsed)} so far',
+                                  'Đã chạy ${clockText(elapsed)}',
+                                ),
+                                excludeSemantics: true,
+                                child: Text(
+                                  clockText(elapsed),
+                                  key: const Key('runner-clock'),
+                                  style: theme.textTheme.displayMedium
+                                      ?.copyWith(
+                                        fontFeatures: tabular,
+                                        fontWeight: FontWeight.w700,
+                                        color: over
+                                            ? theme.colorScheme.error
+                                            : running
+                                            ? c.accent
+                                            : null,
+                                      ),
+                                ),
                               ),
                             ),
                           ),
+                          const SizedBox(height: HandySpace.s),
                           Text(
+                            textAlign: TextAlign.center,
                             [
                               planned == 0
                                   ? tr(
@@ -369,6 +393,49 @@ class RunnerView extends StatelessWidget {
                               ),
                             ),
                           ),
+                          if (session.steps
+                                  .skip(session.cursor + 1)
+                                  .where((x) => x.status == 'pending')
+                                  .firstOrNull
+                              case final next?)
+                            Container(
+                              key: const Key('runner-up-next'),
+                              margin: const EdgeInsets.only(top: HandySpace.m),
+                              padding: const EdgeInsets.all(HandySpace.m),
+                              decoration: BoxDecoration(
+                                color: c.raised,
+                                borderRadius: BorderRadius.circular(16),
+                              ),
+                              child: Row(
+                                children: [
+                                  Icon(Icons.arrow_forward, color: c.muted),
+                                  const SizedBox(width: HandySpace.m),
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          tr(context, 'Up next', 'Tiếp theo'),
+                                          style: theme.textTheme.bodySmall
+                                              ?.copyWith(color: c.muted),
+                                        ),
+                                        Text(
+                                          next.plan.title,
+                                          style: theme.textTheme.titleMedium,
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                  Text(
+                                    minutesText(context, next.plan.seconds),
+                                    style: theme.textTheme.bodyMedium?.copyWith(
+                                      color: c.muted,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
                           ExpansionTile(
                             tilePadding: EdgeInsets.zero,
                             title: Text(
@@ -464,19 +531,19 @@ class RunnerView extends StatelessWidget {
                         ),
                       ),
                     )
-                  : Wrap(
-                      spacing: HandySpace.s,
-                      runSpacing: HandySpace.s,
-                      crossAxisAlignment: WrapCrossAlignment.center,
+                  : Row(
                       children: [
-                        OutlinedButton(
+                        IconButton.outlined(
                           key: const Key('routine-pause'),
+                          tooltip: running
+                              ? tr(context, 'Pause', 'Tạm dừng')
+                              : tr(context, 'Resume', 'Tiếp tục'),
                           onPressed: acting || !pending ? null : onToggle,
-                          child: Text(
-                            running
-                                ? tr(context, 'Pause', 'Tạm dừng')
-                                : tr(context, 'Resume', 'Tiếp tục'),
+                          iconSize: 28,
+                          style: IconButton.styleFrom(
+                            minimumSize: const Size(56, 56),
                           ),
+                          icon: Icon(running ? Icons.pause : Icons.play_arrow),
                         ),
                         if (step.plan.canSkip) ...[
                           const SizedBox(width: HandySpace.s),
@@ -487,10 +554,16 @@ class RunnerView extends StatelessWidget {
                           ),
                         ],
                         const SizedBox(width: HandySpace.s),
-                        FilledButton(
-                          key: const Key('routine-complete-step'),
-                          onPressed: acting || !pending ? null : onComplete,
-                          child: Text(tr(context, 'Done', 'Xong bước')),
+                        Expanded(
+                          child: FilledButton.icon(
+                            key: const Key('routine-complete-step'),
+                            style: FilledButton.styleFrom(
+                              minimumSize: const Size.fromHeight(56),
+                            ),
+                            onPressed: acting || !pending ? null : onComplete,
+                            icon: const Icon(Icons.check),
+                            label: Text(tr(context, 'Done', 'Xong bước')),
+                          ),
                         ),
                       ],
                     ),
@@ -596,4 +669,88 @@ class _Linked extends StatelessWidget {
       ],
     );
   }
+}
+
+/// The step's clock in a ring that fills over its planned time, smoothly
+/// between the seconds; full and calm once the step is done, a plain track
+/// for a step with no timer. Still when the OS asks for less motion.
+class _TimerRing extends StatelessWidget {
+  final int elapsed, planned;
+  final bool running, done;
+  final Color colour, track;
+  final Widget child;
+  const _TimerRing({
+    super.key,
+    required this.elapsed,
+    required this.planned,
+    required this.running,
+    required this.done,
+    required this.colour,
+    required this.track,
+    required this.child,
+  });
+  @override
+  Widget build(BuildContext context) {
+    final side = (MediaQuery.sizeOf(context).width * .62).clamp(180.0, 260.0);
+    final target = done
+        ? 1.0
+        : planned == 0
+        ? 0.0
+        : (elapsed / planned).clamp(0.0, 1.0);
+    return TweenAnimationBuilder<double>(
+      tween: Tween(end: target),
+      duration: running
+          ? HandyMotion.of(context, const Duration(milliseconds: 1000))
+          : HandyMotion.of(context, HandyMotion.medium),
+      curve: Curves.linear,
+      builder: (context, v, inner) => SizedBox.square(
+        dimension: side,
+        child: CustomPaint(
+          painter: _RingPainter(v, colour, track),
+          child: Center(child: inner),
+        ),
+      ),
+      child: child,
+    );
+  }
+}
+
+class _RingPainter extends CustomPainter {
+  final double value;
+  final Color colour, track;
+  const _RingPainter(this.value, this.colour, this.track);
+  @override
+  void paint(Canvas canvas, Size size) {
+    final stroke = size.width * .055;
+    final rect = Rect.fromCircle(
+      center: size.center(Offset.zero),
+      radius: size.width / 2 - stroke,
+    );
+    canvas.drawArc(
+      rect,
+      0,
+      6.2832,
+      false,
+      Paint()
+        ..color = track
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = stroke,
+    );
+    if (value <= 0) return;
+    canvas.drawArc(
+      rect,
+      -1.5708,
+      6.2832 * value,
+      false,
+      Paint()
+        ..color = colour
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = stroke
+        ..strokeCap = StrokeCap.round,
+    );
+  }
+
+  @override
+  bool shouldRepaint(_RingPainter old) =>
+      old.value != value || old.colour != colour || old.track != track;
 }
