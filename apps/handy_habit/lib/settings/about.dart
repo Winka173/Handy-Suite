@@ -1,5 +1,6 @@
 import 'package:handy_ui/kit.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'legal.dart';
 import 'settings_parts.dart';
 
 Future<void> openHabitLink(BuildContext context, Uri uri) async {
@@ -35,12 +36,12 @@ List<Widget> habitAboutRows(BuildContext context) => [
     key: const Key('settings-feedback'),
     icon: Icons.mail_outline,
     title: tr(context, 'Send feedback', 'Gửi góp ý'),
-    subtitle: 'apps.winka.studio@gmail.com',
+    subtitle: habitFeedbackEmail,
     onTap: () => openHabitLink(
       context,
       Uri(
         scheme: 'mailto',
-        path: 'apps.winka.studio@gmail.com',
+        path: habitFeedbackEmail,
         queryParameters: {'subject': 'Handy Habit'},
       ),
     ),
@@ -55,32 +56,15 @@ List<Widget> habitAboutRows(BuildContext context) => [
       'Không tài khoản, không theo dõi; chỉ dùng Drive khi bạn bật đồng bộ',
     ),
     navigates: true,
-    onTap: () => openHabitLink(
-      context,
-      Uri.parse(
-        tr(
-          context,
-          'https://winka.top/en/apps/handy-habit/privacy/',
-          'https://winka.top/vi/apps/handy-habit/privacy/',
-        ),
-      ),
-    ),
+    onTap: () =>
+        openHabitLink(context, habitLegalUri(context, habitPrivacyUrl)),
   ),
   SettingsRow(
     key: const Key('settings-terms'),
     icon: Icons.gavel_outlined,
     title: tr(context, 'Terms of service', 'Điều khoản sử dụng'),
     navigates: true,
-    onTap: () => openHabitLink(
-      context,
-      Uri.parse(
-        tr(
-          context,
-          'https://winka.top/en/apps/handy-habit/terms/',
-          'https://winka.top/vi/apps/handy-habit/terms/',
-        ),
-      ),
-    ),
+    onTap: () => openHabitLink(context, habitLegalUri(context, habitTermsUrl)),
   ),
   SettingsRow(
     key: const Key('settings-licenses'),

@@ -239,12 +239,6 @@ class HabitShell extends StatelessWidget {
                       ),
                     ),
                     foot(
-                      'side-help',
-                      Icons.help_outline,
-                      tr(context, 'Help', 'Trợ giúp'),
-                      '/help',
-                    ),
-                    foot(
                       'open-settings',
                       Icons.settings_outlined,
                       tr(context, 'Settings', 'Cài đặt'),

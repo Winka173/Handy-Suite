@@ -5,11 +5,14 @@ From the repo root:
     python tooling/app-icons.py habit
 
 Writes tool/icon/art.png (the area launchers show) and
-tool/icon/maskable.png (the whole adaptive canvas, the mark scaled into the
+tool/icon/maskable.png (the whole adaptive canvas, the mark kept inside the
 centred 66 percent safe circle); tooling/app-icons.py cuts every platform
 size from them. Vermilion #B42318 field, cream ring, today's bead checked.
+
+Today's bead sits in the middle of the ring, so the mark is symmetric and
+reads at small sizes; it is sized to fill the visible area: [ART_EXTENT]
+and [MASK_EXTENT] are its half-width as a share of the canvas.
 """
-import math
 from pathlib import Path
 
 from PIL import Image, ImageDraw
@@ -20,6 +23,13 @@ TRACK = (208, 98, 82)
 CREAM = (255, 245, 237)
 SIZE = 1024
 SUPER = 4  # drawn large, then scaled down for smooth edges
+
+# The mark in its own units: ring radius 1.
+STROKE = 0.26          # ring width
+BEAD = 0.52            # today's bead radius, in the middle
+END = 180              # degrees: the kept arc runs from the top to here
+ART_EXTENT = 0.38      # launcher area: the ring spans 76% of the icon
+MASK_EXTENT = 0.30     # adaptive canvas: inside the 33% safe radius
 
 
 def check(d, cx, cy, r, color, w):
@@ -33,25 +43,35 @@ def check(d, cx, cy, r, color, w):
         d.ellipse((x - w / 2, y - w / 2, x + w / 2, y + w / 2), fill=color)
 
 
-def mark(scale: float) -> Image.Image:
+def outline():
+    """The mark's bounding box in ring units, centre (0, 0)."""
+    outer = 1 + STROKE / 2
+    return -outer, outer, -outer, outer
+
+
+def mark(extent: float) -> Image.Image:
     s = SIZE * SUPER
     im = Image.new('RGB', (s, s), VERMILION)
     d = ImageDraw.Draw(im)
-    c = s / 2
-    ring = s * 0.30 * scale
-    width = round(s * 0.068 * scale)
-    box = (c - ring, c - ring, c + ring, c + ring)
-    d.arc(box, 0, 360, fill=TRACK, width=width)       # what is still due
-    d.arc(box, -90, 200, fill=CREAM, width=width)      # what is kept
-    a = math.radians(200)
-    x, y = c + ring * math.cos(a), c + ring * math.sin(a)
-    bead = s * 0.076 * scale                           # today's bead
+    x0, x1, y0, y1 = outline()
+    half = max(x1 - x0, y1 - y0) / 2
+    unit = s * extent / half                      # px per ring unit
+    # Centre the whole outline, not the ring.
+    cx = s / 2 - (x0 + x1) / 2 * unit
+    cy = s / 2 - (y0 + y1) / 2 * unit
+    ring = unit
+    width = round(STROKE * unit)
+    box = (cx - ring, cy - ring, cx + ring, cy + ring)
+    d.arc(box, 0, 360, fill=TRACK, width=width)          # what is still due
+    d.arc(box, -90, END, fill=CREAM, width=width)        # what is kept
+    x, y = cx, cy
+    bead = BEAD * unit                                    # today's bead
     d.ellipse((x - bead, y - bead, x + bead, y + bead), fill=CREAM)
-    check(d, x, y, bead, VERMILION, round(s * 0.0235 * scale))
+    check(d, x, y, bead, VERMILION, round(bead * 0.30))
     return im.resize((SIZE, SIZE), Image.LANCZOS)
 
 
 if __name__ == '__main__':
-    mark(1.0).save(HERE / 'art.png')
-    mark(0.85).save(HERE / 'maskable.png')
+    mark(ART_EXTENT).save(HERE / 'art.png')
+    mark(MASK_EXTENT).save(HERE / 'maskable.png')
     print('art.png, maskable.png')

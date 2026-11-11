@@ -1,5 +1,6 @@
 import 'package:handy_ui/kit.dart';
 import '../design/palette.dart';
+import '../settings/legal.dart';
 import 'entitlements.dart';
 import 'feature_demo.dart';
 import 'pro_demos.dart';
@@ -311,6 +312,8 @@ class _HabitProPageState extends State<HabitProPage> {
               ),
               style: theme.textTheme.bodyMedium?.copyWith(color: p.muted),
             ),
+            const SizedBox(height: 8),
+            const HabitLegalLinks(),
           ]),
         ],
       ),
