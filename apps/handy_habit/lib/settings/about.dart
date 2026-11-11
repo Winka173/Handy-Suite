@@ -1,5 +1,4 @@
 import 'package:handy_ui/kit.dart';
-import 'package:package_info_plus/package_info_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'settings_parts.dart';
 
@@ -30,9 +29,10 @@ Future<void> openHabitLink(BuildContext context, Uri uri) async {
     );
 }
 
-/// About: feedback, privacy, licences and the version, as the siblings.
+/// About: feedback, privacy, terms and licences, as Handy Boards.
 List<Widget> habitAboutRows(BuildContext context) => [
   SettingsRow(
+    key: const Key('settings-feedback'),
     icon: Icons.mail_outline,
     title: tr(context, 'Send feedback', 'Gửi góp ý'),
     subtitle: 'apps.winka.studio@gmail.com',
@@ -46,13 +46,15 @@ List<Widget> habitAboutRows(BuildContext context) => [
     ),
   ),
   SettingsRow(
+    key: const Key('settings-privacy'),
     icon: Icons.policy_outlined,
     title: tr(context, 'Privacy policy', 'Chính sách riêng tư'),
     subtitle: tr(
       context,
-      'Saved on this device. No account needed.',
-      'Lưu trên máy này. Không cần tài khoản.',
+      'No account, no tracking; Drive only if you turn sync on',
+      'Không tài khoản, không theo dõi; chỉ dùng Drive khi bạn bật đồng bộ',
     ),
+    navigates: true,
     onTap: () => openHabitLink(
       context,
       Uri.parse(
@@ -65,41 +67,32 @@ List<Widget> habitAboutRows(BuildContext context) => [
     ),
   ),
   SettingsRow(
+    key: const Key('settings-terms'),
     icon: Icons.gavel_outlined,
-    title: tr(context, 'Open-source licenses', 'Giấy phép mã nguồn mở'),
+    title: tr(context, 'Terms of service', 'Điều khoản sử dụng'),
+    navigates: true,
+    onTap: () => openHabitLink(
+      context,
+      Uri.parse(
+        tr(
+          context,
+          'https://winka.top/en/apps/handy-habit/terms/',
+          'https://winka.top/vi/apps/handy-habit/terms/',
+        ),
+      ),
+    ),
+  ),
+  SettingsRow(
+    key: const Key('settings-licenses'),
+    icon: Icons.info_outline,
+    title: tr(context, 'Licenses', 'Giấy phép'),
+    subtitle: tr(
+      context,
+      'Open-source licenses and fonts',
+      'Giấy phép mã nguồn mở và phông chữ',
+    ),
     navigates: true,
     onTap: () =>
         showLicensePage(context: context, applicationName: 'Handy Habit'),
   ),
-  const _Version(),
 ];
-
-class _Version extends StatefulWidget {
-  const _Version();
-  @override
-  State<_Version> createState() => _VersionState();
-}
-
-class _VersionState extends State<_Version> {
-  late Future<PackageInfo> info = PackageInfo.fromPlatform();
-  @override
-  Widget build(BuildContext context) => FutureBuilder<PackageInfo>(
-    future: info,
-    builder: (context, s) => SettingsRow(
-      icon: Icons.info_outline,
-      title: tr(context, 'Version', 'Phiên bản'),
-      subtitle: s.hasData
-          ? '${s.data!.version} (${s.data!.buildNumber})'
-          : s.hasError
-          ? tr(
-              context,
-              'Unavailable · tap to retry',
-              'Chưa đọc được · chạm để thử lại',
-            )
-          : tr(context, 'Loading…', 'Đang tải…'),
-      onTap: s.hasError
-          ? () => setState(() => info = PackageInfo.fromPlatform())
-          : null,
-    ),
-  );
-}

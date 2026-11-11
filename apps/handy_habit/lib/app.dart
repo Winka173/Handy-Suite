@@ -7,6 +7,8 @@ import 'design/studio_page.dart';
 import 'insights/smart_page.dart';
 import 'dart:async';
 import 'package:flutter/services.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:handy_files/backup_folder.dart' show privateBackupFolders;
 import 'package:handy_files/handy_files.dart';
 import 'package:handy_habit_engine/handy_habit_engine.dart';
 import 'package:handy_home_widget/handy_home_widget.dart';
@@ -98,10 +100,13 @@ class _HabitAppState extends State<HabitApp> with WidgetsBindingObserver {
         widget.notices ??
         HabitRunNotices(port: DeviceRunNoticePort(reminders.port)),
     clock: widget.clock ?? DateTime.now,
-    autoBackup: widget.device
+    // On a device only: a copy a day when something changed, kept in the
+    // app's own storage (as Handy Boards); nothing to choose.
+    autoBackup: widget.device && !kIsWeb
         ? HandyAutoBackup.local(
             app: 'habit',
             extension: 'zip',
+            folders: privateBackupFolders(),
             build: () async => backup(c.state!, zip: true),
             revision: () => c.state?.revision.toString(),
           )
@@ -472,6 +477,7 @@ class _HabitAppState extends State<HabitApp> with WidgetsBindingObserver {
         scope: scope,
       ),
       ['', 'settings', 'pauses'] => () => HabitPausesPage(scope: scope),
+      ['', 'settings', 'data-tools'] => () => HabitDataToolsPage(scope: scope),
       ['', 'settings', 'trash'] => () => HabitTrashPage(scope: scope),
       ['', 'settings', 'sync'] =>
         () =>
@@ -642,6 +648,8 @@ class _HabitAppState extends State<HabitApp> with WidgetsBindingObserver {
       onGenerateRoute: route,
       wrap: (context, child) => MediaQuery(
         data: MediaQuery.of(context).copyWith(
+          // The system setting, or an older app-level choice (cleared by
+          // Reset preferences).
           disableAnimations:
               MediaQuery.disableAnimationsOf(context) ||
               c.state?.settings['reducedMotion'] == true,

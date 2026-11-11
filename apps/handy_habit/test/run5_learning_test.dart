@@ -263,8 +263,8 @@ void main() {
       );
       expect(find.byType(HabitWelcomePage), findsNothing);
       final before = backupContents(c.state!);
-      await route(t, '/settings');
-      await tap(t, 'settings-replay');
+      await route(t, '/help');
+      await tap(t, 'help-replay');
       await practiceStart(t);
       for (var i = 0; i < 4; i++) await tap(t, 'welcome-do-it');
       await tap(t, 'welcome-next');
@@ -335,7 +335,6 @@ void main() {
       for (final (page, entry, topic) in [
         ('/settings/pauses', 'pause-help', 'pause'),
         ('/settings/notifications', 'reminder-help', 'reminders'),
-        ('/settings', 'backup-help', 'backup'),
       ]) {
         await route(t, page);
         await tap(t, entry);
@@ -367,11 +366,10 @@ void main() {
       final (c, store, _) = await learningBoot(t, state: f.seeded());
       final habits = c.state!.habits.map((h) => h.toJson()).toList();
       await route(t, '/settings');
+      await tap(t, 'settings-theme-dark');
+      await route(t, '/settings/preferences');
       await tap(t, 'settings-density');
       await tap(t, 'settings-density-compact');
-      await tap(t, 'settings-theme-dark');
-      await tap(t, 'set-reduced-motion');
-      await route(t, '/settings/preferences');
       for (final (id, value) in [
         ('settings-default-schedule', 'weekdays'),
         ('settings-default-goal', '8000'),
@@ -386,24 +384,15 @@ void main() {
       ])
         await tap(t, id);
       await c.load();
-      await route(t, '/settings');
+      await route(t, '/settings/preferences');
       expect(c.state!.settings, containsPair('density', 'compact'));
       expect(c.state!.settings, containsPair('defaultGoal', 8000));
       t.state<ScrollableState>(find.byType(Scrollable).last).position.jumpTo(0);
       await t.pumpAndSettle();
       expect(find.text('Compact'), findsOneWidget);
+      await route(t, '/settings');
       expect(find.text('Dark'), findsOneWidget);
       expect(find.text('Pro Lifetime'), findsNothing);
-      // Only the studio applies a paid appearance; basic preferences stay free.
-      expect(
-        find.descendant(
-          of: find.byKey(const Key('settings-studio')),
-          matching: find.text('Pro'),
-        ),
-        findsOneWidget,
-      );
-      // The studio and the Convenience group: the two paid places.
-      expect(find.text('Pro'), findsWidgets);
       await route(t, '/habit/new');
       await t.enterText(
         find.byKey(const Key('field-title')),
@@ -414,7 +403,7 @@ void main() {
       final newHabit = c.state!.habits.last;
       expect(newHabit.schedules.single.target, 8000);
       expect(newHabit.schedules.single.kind, 'weekdays');
-      await route(t, '/settings');
+      await route(t, '/settings/data-tools');
       await tap(t, 'settings-reset');
       await t.tap(find.widgetWithText(FilledButton, 'Reset preferences'));
       await t.pumpAndSettle();
@@ -433,7 +422,7 @@ void main() {
     'Settings failed persistence keeps value and library; retry succeeds',
     (t) async {
       final (c, store, _) = await learningBoot(t, state: f.seeded());
-      await route(t, '/settings');
+      await route(t, '/settings/preferences');
       store.fail = true;
       await tap(t, 'settings-density');
       await tap(t, 'settings-density-compact');
@@ -660,6 +649,7 @@ void main() {
         );
         await t.ensureVisible(proEntry);
         expect(proEntry, findsOneWidget);
+        await route(t, '/settings/data-tools');
         await tap(t, 'settings-reset');
         await tap(t, 'confirm-action');
         expect(c.state!.events.single.toJson(), event.toJson());

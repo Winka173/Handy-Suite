@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:typed_data';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/services.dart' show rootBundle;
+import 'package:handy_files/handy_files.dart' show ImportedBytes;
 import 'package:handy_habit_engine/handy_habit_engine.dart';
 import 'package:handy_ui/kit.dart';
 import 'package:pdf/pdf.dart';
@@ -171,11 +172,17 @@ Future<Uint8List> _pdf(
 
 /// Reads a backup or a CSV log in full, shows what it holds, then merges
 /// (new IDs, nothing overwritten) or replaces after a second question.
-Future<String?> importHabits(BuildContext context, HabitScope scope) async {
-  final file = await scope.files.importBytes(
-    extensions: ['json', 'zip', 'csv', 'hseal'],
-    maxBytes: backupLimit,
-  );
+Future<String?> importHabits(
+  BuildContext context,
+  HabitScope scope, {
+  ImportedBytes? given,
+}) async {
+  final file =
+      given ??
+      await scope.files.importBytes(
+        extensions: ['json', 'zip', 'csv', 'hseal'],
+        maxBytes: backupLimit,
+      );
   if (file == null || !context.mounted) return null;
   // A password-locked automatic backup: open it, then read the ZIP inside.
   final opened = await openSealedBackup(context, file.bytes);

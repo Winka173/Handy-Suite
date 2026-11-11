@@ -9,6 +9,7 @@ import 'data.dart';
 import '../sync/folder_sync.dart';
 import 'settings_parts.dart';
 import 'about.dart';
+import 'data_rows.dart';
 import 'notification_status.dart';
 import 'preferences_page.dart';
 import '../pro/entitlements.dart';
@@ -518,12 +519,108 @@ class HabitSettingsPage extends StatelessWidget {
     );
   }
 
+  /// Settings › Data › Data tools: the rarely needed ones, out of the way.
+  List<Widget> dataTools(BuildContext context) {
+    return [
+      SettingsGroup(
+        first: true,
+        title: tr(context, 'Data tools', 'Công cụ dữ liệu'),
+        note: tr(
+          context,
+          'Rarely needed. Each one says what it changes before it does.',
+          'Ít khi cần. Mỗi mục nói rõ sẽ đổi gì trước khi làm.',
+        ),
+        children: [
+          SettingsPanel(
+            gap: false,
+            rows: [
+              SettingsRow(
+                key: const Key('habit-backup-json'),
+                icon: Icons.data_object,
+                title: tr(context, 'Back up as JSON', 'Sao lưu dạng JSON'),
+                subtitle: tr(
+                  context,
+                  'One readable file. Restore also takes CSV.',
+                  'Một tệp đọc được. Khôi phục nhận cả CSV.',
+                ),
+                onTap: () =>
+                    _guard(context, () => exportHabits(context, scope, 'json')),
+              ),
+              if (scope.controller.hasRecovery)
+                SettingsRow(
+                  key: const Key('habit-recovery'),
+                  icon: Icons.restore,
+                  title: tr(
+                    context,
+                    'Recover before last replace',
+                    'Khôi phục trước lần thay thế cuối',
+                  ),
+                  onTap: () => _guard(context, () async {
+                    final ok = await confirmHandy(
+                      context,
+                      title: tr(
+                        context,
+                        'Recover before last replace?',
+                        'Khôi phục trước lần thay thế cuối?',
+                      ),
+                      message: tr(
+                        context,
+                        'This replaces current data with the recovery copy kept on this device. Export current data first if needed.',
+                        'Thay dữ liệu hiện tại bằng bản khôi phục trên máy này. Hãy xuất dữ liệu hiện tại trước nếu cần.',
+                      ),
+                      confirmLabel: tr(context, 'Recover', 'Khôi phục'),
+                    );
+                    if (!ok) return null;
+                    await scope.controller.recoverBeforeReplace();
+                    return context.mounted
+                        ? tr(context, 'Recovery restored.', 'Đã khôi phục.')
+                        : null;
+                  }),
+                ),
+              SettingsRow(
+                key: const Key('habit-integrity'),
+                icon: Icons.verified_outlined,
+                title: tr(context, 'Check stored data', 'Kiểm tra dữ liệu'),
+                onTap: () => _guard(context, () async {
+                  final result = await scope.controller.store!.integrity();
+                  if (!context.mounted) return null;
+                  return result == 'ok'
+                      ? tr(
+                          context,
+                          'Stored data is intact.',
+                          'Dữ liệu còn nguyên vẹn.',
+                        )
+                      : tr(
+                          context,
+                          'The check found a problem: $result. Export a backup.',
+                          'Kiểm tra thấy lỗi: $result. Hãy xuất bản sao lưu.',
+                        );
+                }),
+              ),
+              SettingsRow(
+                key: const Key('settings-reset'),
+                icon: Icons.settings_backup_restore,
+                title: tr(context, 'Reset preferences', 'Đặt lại cài đặt'),
+                subtitle: tr(
+                  context,
+                  'Keeps habits, history, routines, reminders and purchases',
+                  'Giữ thói quen, lịch sử, quy trình, lịch nhắc và quyền mua',
+                ),
+                onTap: () => _reset(context),
+              ),
+            ],
+          ),
+        ],
+      ),
+    ];
+  }
+
   @override
   Widget build(BuildContext context) => ListenableBuilder(
     listenable: Listenable.merge([scope.controller, scope.reminderError]),
     builder: (context, _) {
       final s = scope.state;
-      final pro = scope.pro(context);
+      final pro = LifetimeScope.maybeOf(context)?.pro == true;
       final reminders = objects(s.settings['reminders'] ?? [])
           .map(Reminder.fromJson)
           .where((r) => r.enabled && !s.isTrashed(r.type, r.target))
@@ -577,8 +674,8 @@ class HabitSettingsPage extends StatelessWidget {
                     subtitle: s.settings['notifications'] != true
                         ? tr(
                             context,
-                            'Off. Turn on to be reminded at your times.',
-                            'Đang tắt. Bật để được nhắc vào giờ bạn chọn.',
+                            'Off. Set a reminder on a habit or routine.',
+                            'Đang tắt. Đặt nhắc trên từng thói quen hay quy trình.',
                           )
                         : tr(
                             context,
@@ -601,8 +698,8 @@ class HabitSettingsPage extends StatelessWidget {
                     ),
                     subtitle: tr(
                       context,
-                      'Today, one habit, or a routine',
-                      'Hôm nay, một thói quen hoặc quy trình',
+                      'Check in from the home screen; Week and Year with Pro.',
+                      'Ghi nhận ngay ngoài màn hình chính; Tuần và Năm với Pro.',
                     ),
                     navigates: true,
                     onTap: () =>
@@ -610,57 +707,12 @@ class HabitSettingsPage extends StatelessWidget {
                   ),
                 ],
               ),
-              SettingsPanel(
-                title: tr(context, 'Look', 'Diện mạo'),
-                rows: [
-                  HabitProSettingTile(
-                    key: const Key('settings-studio'),
-                    icon: Icons.palette_outlined,
-                    title: tr(
-                      context,
-                      'Personalization studio',
-                      'Xưởng giao diện',
-                    ),
-                    pro: pro,
-                    subtitle: tr(
-                      context,
-                      'Palettes, cards, icons and runner looks',
-                      'Bảng màu, thẻ, biểu tượng và màn chạy',
-                    ),
-                    onTap: () =>
-                        Navigator.pushNamed(context, '/settings/studio'),
-                  ),
-                  HabitSettingChoice(
-                    id: 'settings-density',
-                    icon: Icons.density_medium,
-                    title: tr(context, 'Density', 'Độ gọn'),
-                    value: s.settings['density'] as String? ?? 'comfortable',
-                    options: {
-                      'comfortable': tr(context, 'Comfortable', 'Thoải mái'),
-                      'compact': tr(context, 'Compact', 'Gọn'),
-                    },
-                    onChanged: (v) => _set(context, {'density': v}),
-                  ),
-                  HabitSettingToggle(
-                    id: 'set-reduced-motion',
-                    icon: Icons.motion_photos_off_outlined,
-                    title: tr(context, 'Reduce motion', 'Giảm chuyển động'),
-                    subtitle: tr(
-                      context,
-                      'Changes appear at once. The system setting is respected too.',
-                      'Thay đổi hiện ngay. Cài đặt của máy cũng được tôn trọng.',
-                    ),
-                    value: s.settings['reducedMotion'] == true,
-                    onChanged: (v) => _set(context, {'reducedMotion': v}),
-                  ),
-                ],
-              ),
             ],
           ),
 
-          // Habits and routines.
+          // Habits.
           SettingsGroup(
-            title: tr(context, 'Habits and routines', 'Thói quen và quy trình'),
+            title: tr(context, 'Habits', 'Thói quen'),
             children: [
               SettingsPanel(
                 gap: false,
@@ -674,7 +726,7 @@ class HabitSettingsPage extends StatelessWidget {
                       'Mặc định và lịch',
                     ),
                     subtitle:
-                        '$schedule · ${tr(context, 'week starts', 'tuần bắt đầu')} ${weekdayLong(context, s.weekStart).toLowerCase()} · ${habitZoneLabel(context, s.zone, scope.clock())}',
+                        '$schedule · ${tr(context, 'week starts', 'tuần bắt đầu')} ${weekdayLong(context, s.weekStart).toLowerCase()}',
                     navigates: true,
                     onTap: () =>
                         Navigator.pushNamed(context, '/settings/preferences'),
@@ -703,13 +755,13 @@ class HabitSettingsPage extends StatelessWidget {
                     icon: Icons.sentiment_satisfied_outlined,
                     title: tr(
                       context,
-                      'Show mood on Today',
-                      'Hiện tâm trạng ở Hôm nay',
+                      'Ask how the day felt',
+                      'Hỏi hôm nay thấy thế nào',
                     ),
                     subtitle: tr(
                       context,
-                      'Optional. Notes stay on this device and in your backups.',
-                      'Tùy chọn. Ghi chú ở trên máy và trong bản sao lưu.',
+                      'A mood line on Today; skip it any day.',
+                      'Một dòng tâm trạng ở Hôm nay; bỏ qua lúc nào cũng được.',
                     ),
                     value: s.settings['showMoodToday'] != false,
                     onChanged: (v) => _set(context, {'showMoodToday': v}),
@@ -719,27 +771,44 @@ class HabitSettingsPage extends StatelessWidget {
             ],
           ),
 
-          // Convenience (Pro).
+          // Pro tools.
           SettingsGroup(
-            title: tr(context, 'Convenience', 'Tiện ích'),
+            title: tr(context, 'Make it yours', 'Theo ý bạn'),
             badge: pro ? null : const HabitProPill(),
             note: tr(
               context,
-              'Each one changes only what you choose; Undo always works.',
-              'Mỗi cái chỉ đổi đúng thứ bạn chọn; luôn hoàn tác được.',
+              'Pro. Each one changes only what you choose; Undo always works.',
+              'Pro. Mỗi mục chỉ đổi đúng thứ bạn chọn; luôn hoàn tác được.',
             ),
             children: [
               SettingsPanel(
                 gap: false,
                 rows: [
                   SettingsRow(
-                    key: const Key('settings-rules'),
-                    icon: Icons.auto_mode,
-                    title: tr(context, 'Local rules', 'Quy tắc cục bộ'),
+                    key: const Key('settings-studio'),
+                    icon: Icons.palette_outlined,
+                    title: tr(
+                      context,
+                      'Personalization studio',
+                      'Xưởng giao diện',
+                    ),
                     subtitle: tr(
                       context,
-                      'Clear automatic changes, with history and Undo',
-                      'Thay đổi tự động rõ ràng, có lịch sử và hoàn tác',
+                      'Palettes, Today layouts, icons and runner looks',
+                      'Bảng màu, bố cục Hôm nay, biểu tượng và màn chạy',
+                    ),
+                    navigates: true,
+                    onTap: () =>
+                        Navigator.pushNamed(context, '/settings/studio'),
+                  ),
+                  SettingsRow(
+                    key: const Key('settings-rules'),
+                    icon: Icons.auto_mode,
+                    title: tr(context, 'Local rules', 'Quy tắc tự động'),
+                    subtitle: tr(
+                      context,
+                      'When one thing happens, do the next',
+                      'Khi một việc xảy ra, tự làm việc kế',
                     ),
                     navigates: true,
                     onTap: () =>
@@ -767,8 +836,8 @@ class HabitSettingsPage extends StatelessWidget {
             title: tr(context, 'Data', 'Dữ liệu'),
             note: tr(
               context,
-              'Kept on this device, unencrypted. It leaves only when you back it up, sync or export it. Habit names never reach ads.',
-              'Lưu trên máy này, không mã hóa. Chỉ rời máy khi bạn sao lưu, đồng bộ hay xuất. Tên thói quen không vào quảng cáo.',
+              'Kept on this device. It leaves only when you back it up, sync or export it.',
+              'Lưu trên máy này. Chỉ rời máy khi bạn sao lưu, đồng bộ hay xuất.',
             ),
             children: [
               if (scope.drive != null || folderSyncOffered)
@@ -843,37 +912,10 @@ class HabitSettingsPage extends StatelessWidget {
                       ],
                     ),
                   ),
-                  SettingsRow(
-                    key: const Key('habit-backup-json'),
-                    icon: Icons.data_object,
-                    title: tr(context, 'Back up as JSON', 'Sao lưu dạng JSON'),
-                    subtitle: tr(
-                      context,
-                      'One readable file. Restore also takes CSV.',
-                      'Một tệp đọc được. Khôi phục nhận cả CSV.',
-                    ),
-                    onTap: () => _guard(
-                      context,
-                      () => exportHabits(context, scope, 'json'),
-                    ),
-                  ),
-                  SettingsRow(
-                    key: const Key('backup-help'),
-                    icon: Icons.help_outline,
-                    title: tr(
-                      context,
-                      'Backup and moving to a new device',
-                      'Cách sao lưu và chuyển máy',
-                    ),
-                    navigates: true,
-                    onTap: () => Navigator.pushNamed(context, '/help/backup'),
-                  ),
+                  if (scope.autoBackup?.folders.supported ?? false)
+                    HabitAutoBackupRow(scope: scope),
                 ],
               ),
-              if (scope.autoBackup != null)
-                KitSection(
-                  child: HandyAutoBackupSection(backup: scope.autoBackup!),
-                ),
               SettingsPanel(
                 rows: [
                   SettingsRow(
@@ -893,67 +935,18 @@ class HabitSettingsPage extends StatelessWidget {
                     onTap: () =>
                         Navigator.of(context).pushNamed('/settings/trash'),
                   ),
-                  if (scope.controller.hasRecovery)
-                    SettingsRow(
-                      key: const Key('habit-recovery'),
-                      icon: Icons.restore,
-                      title: tr(
-                        context,
-                        'Recover before last replace',
-                        'Khôi phục trước lần thay thế cuối',
-                      ),
-                      onTap: () => _guard(context, () async {
-                        final ok = await confirmHandy(
-                          context,
-                          title: tr(
-                            context,
-                            'Recover before last replace?',
-                            'Khôi phục trước lần thay thế cuối?',
-                          ),
-                          message: tr(
-                            context,
-                            'This replaces current data with the recovery copy kept on this device. Export current data first if needed.',
-                            'Thay dữ liệu hiện tại bằng bản khôi phục trên máy này. Hãy xuất dữ liệu hiện tại trước nếu cần.',
-                          ),
-                          confirmLabel: tr(context, 'Recover', 'Khôi phục'),
-                        );
-                        if (!ok) return null;
-                        await scope.controller.recoverBeforeReplace();
-                        return context.mounted
-                            ? tr(context, 'Recovery restored.', 'Đã khôi phục.')
-                            : null;
-                      }),
-                    ),
                   SettingsRow(
-                    key: const Key('habit-integrity'),
-                    icon: Icons.verified_outlined,
-                    title: tr(context, 'Check stored data', 'Kiểm tra dữ liệu'),
-                    onTap: () => _guard(context, () async {
-                      final result = await scope.controller.store!.integrity();
-                      if (!context.mounted) return null;
-                      return result == 'ok'
-                          ? tr(
-                              context,
-                              'Stored data is intact.',
-                              'Dữ liệu còn nguyên vẹn.',
-                            )
-                          : tr(
-                              context,
-                              'The check found a problem: $result. Export a backup.',
-                              'Kiểm tra thấy lỗi: $result. Hãy xuất bản sao lưu.',
-                            );
-                    }),
-                  ),
-                  SettingsRow(
-                    key: const Key('settings-reset'),
-                    icon: Icons.settings_backup_restore,
-                    title: tr(context, 'Reset preferences', 'Đặt lại cài đặt'),
+                    key: const Key('settings-data-tools'),
+                    icon: Icons.build_outlined,
+                    title: tr(context, 'Data tools', 'Công cụ dữ liệu'),
                     subtitle: tr(
                       context,
-                      'Keeps habits, history, routines, reminders and purchases',
-                      'Giữ thói quen, lịch sử, quy trình, lịch nhắc và quyền mua',
+                      'JSON backup, check, reset preferences',
+                      'Sao lưu JSON, kiểm tra, đặt lại cài đặt',
                     ),
-                    onTap: () => _reset(context),
+                    navigates: true,
+                    onTap: () =>
+                        Navigator.pushNamed(context, '/settings/data-tools'),
                   ),
                   SettingsRow(
                     key: const Key('habit-clear'),
@@ -961,13 +954,13 @@ class HabitSettingsPage extends StatelessWidget {
                     destructive: true,
                     title: tr(
                       context,
-                      'Delete all Habit data',
-                      'Xóa toàn bộ dữ liệu Habit',
+                      'Delete all data',
+                      'Xóa toàn bộ dữ liệu',
                     ),
                     subtitle: tr(
                       context,
-                      'Habits, records and routines on this device',
-                      'Thói quen, lần ghi và quy trình trên máy này',
+                      'Everything this app keeps on this device. Cannot be undone.',
+                      'Mọi thứ app này lưu trên máy. Không hoàn tác được.',
                     ),
                     onTap: () => _clearAll(context),
                   ),
@@ -989,23 +982,11 @@ class HabitSettingsPage extends StatelessWidget {
                     title: tr(context, 'How to use', 'Cách dùng'),
                     subtitle: tr(
                       context,
-                      'Check-ins, routines, pauses, mood and backups',
-                      'Ghi nhận, quy trình, kỳ nghỉ, tâm trạng và sao lưu',
+                      'The welcome again, and each thing step by step',
+                      'Xem lại phần giới thiệu, và từng việc một',
                     ),
                     navigates: true,
                     onTap: () => Navigator.pushNamed(context, '/help'),
-                  ),
-                  SettingsRow(
-                    key: const Key('settings-replay'),
-                    icon: Icons.replay,
-                    title: tr(context, 'Replay the guide', 'Xem lại hướng dẫn'),
-                    subtitle: tr(
-                      context,
-                      'The first-run tour. It changes nothing.',
-                      'Phần giới thiệu lần đầu. Không đổi gì.',
-                    ),
-                    navigates: true,
-                    onTap: () => Navigator.pushNamed(context, '/welcome'),
                   ),
                 ],
               ),
@@ -1017,13 +998,24 @@ class HabitSettingsPage extends StatelessWidget {
             title: tr(context, 'About', 'Giới thiệu'),
             children: [
               SettingsPanel(gap: false, rows: habitAboutRows(context)),
-              const KitSection(child: HandyMoreApps(app: 'habit')),
             ],
           ),
           const SizedBox(height: HandySpace.xxl),
         ],
       );
     },
+  );
+}
+
+/// Data tools, under Settings › Data.
+class HabitDataToolsPage extends StatelessWidget {
+  final HabitScope scope;
+  const HabitDataToolsPage({super.key, required this.scope});
+  @override
+  Widget build(BuildContext context) => HabitSettingsView(
+    title: tr(context, 'Data tools', 'Công cụ dữ liệu'),
+    listenable: scope.controller,
+    children: (context) => HabitSettingsPage(scope: scope).dataTools(context),
   );
 }
 

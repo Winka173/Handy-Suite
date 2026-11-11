@@ -126,13 +126,11 @@ void main() {
         // Full backups from settings.
         await fixtures.tapKey(tester, 'nav-0');
         await fixtures.tapKey(tester, 'open-settings');
-        for (final (key, format) in [
-          ('habit-backup', 'zip'),
-          ('habit-backup-json', 'json'),
-        ]) {
-          await fixtures.tapKey(tester, key);
-          await confirmAndWait(format);
-        }
+        await fixtures.tapKey(tester, 'habit-backup');
+        await confirmAndWait('zip');
+        await fixtures.tapKey(tester, 'settings-data-tools');
+        await fixtures.tapKey(tester, 'habit-backup-json');
+        await confirmAndWait('json');
         expect(
           restore(files.output['zip']!, zip: true).habits.single.title,
           store.value.habits.single.title,

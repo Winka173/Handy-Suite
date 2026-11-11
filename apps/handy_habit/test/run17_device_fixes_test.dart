@@ -217,22 +217,14 @@ void main() {
             .whereType<SettingsGroup>();
         expect(groups.map((g) => g.title), [
           'General',
-          'Habits and routines',
-          'Convenience',
+          'Habits',
+          'Make it yours',
           'Data',
           'Help',
           'About',
         ]);
-        final studio = find.byKey(const Key('settings-studio'));
-        expect(
-          find.descendant(
-            of: studio,
-            matching: find.byIcon(Icons.chevron_right),
-          ),
-          findsOneWidget,
-        );
-        final badge = find.descendant(of: studio, matching: find.text('Pro'));
-        expect(badge, owned ? findsNothing : findsOneWidget);
+        final group = groups.firstWhere((g) => g.title == 'Make it yours');
+        expect(group.badge == null, owned);
         await tap(t, 'settings-pro');
         expect(host.route(t), '/pro');
       },
@@ -250,27 +242,6 @@ void main() {
     expect(find.text('Upgrade to Pro'), findsOneWidget);
     await tap(t, 'settings-pro');
     expect(host.route(t), '/pro');
-  });
-
-  p.proTest('phone Pro pill follows the final title word at 150 percent', (
-    t,
-  ) async {
-    await p.bootPro(t, open: false, scale: 1.5);
-    await host.go(t, '/settings');
-    final studio = find.byKey(const Key('settings-studio'));
-    final word = find.descendant(
-      of: studio,
-      matching: find.text('Personalization studio'),
-    );
-    final pill = find.descendant(of: studio, matching: find.text('Pro'));
-    final w = t.getRect(word), pr = t.getRect(pill);
-    // Beside the name when it fits, else first on the next line.
-    expect(
-      (pr.left - w.right >= 8 && pr.left - w.right <= 16) ||
-          (pr.top >= w.bottom - 1 && (pr.left - w.left).abs() < 12),
-      isTrue,
-    );
-    expect(t.takeException(), isNull);
   });
 
   p.proTest('Pro convenience has one demo and Retry belongs with status', (

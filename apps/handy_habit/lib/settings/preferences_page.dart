@@ -83,6 +83,27 @@ class HabitPreferencesPage extends StatelessWidget {
           ],
         ),
         SettingsGroup(
+          title: tr(context, 'Today', 'Hôm nay'),
+          children: [
+            SettingsPanel(
+              gap: false,
+              rows: [
+                HabitSettingChoice(
+                  id: 'settings-density',
+                  icon: Icons.density_medium,
+                  title: tr(context, 'Density', 'Độ gọn'),
+                  value: s.settings['density'] as String? ?? 'comfortable',
+                  options: {
+                    'comfortable': tr(context, 'Comfortable', 'Thoải mái'),
+                    'compact': tr(context, 'Compact', 'Gọn'),
+                  },
+                  onChanged: (v) => set({'density': v}),
+                ),
+              ],
+            ),
+          ],
+        ),
+        SettingsGroup(
           title: tr(context, 'Calendar', 'Lịch'),
           note: tr(
             context,
