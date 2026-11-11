@@ -344,12 +344,12 @@ class RoutineRow extends StatelessWidget {
     );
     final action = primary && !ranToday
         ? FilledButton(
-            key: Key('start-${r.id}'),
+            key: resume ? const Key('resume-session') : Key('start-${r.id}'),
             onPressed: start,
             child: label,
           )
         : OutlinedButton(
-            key: Key('start-${r.id}'),
+            key: resume ? const Key('resume-session') : Key('start-${r.id}'),
             onPressed: start,
             child: label,
           );

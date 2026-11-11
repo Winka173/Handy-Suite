@@ -253,8 +253,8 @@ class _HabitTemplatesPageState extends State<HabitTemplatesPage> {
                 Text(
                   tr(
                     context,
-                    'Something you can come back to.',
-                    'Một điều bạn muốn duy trì.',
+                    'Pick one to start; you can change everything after.',
+                    'Chọn một mẫu để bắt đầu; sau đó đổi gì cũng được.',
                   ),
                   style: Theme.of(context).textTheme.bodyLarge,
                 ),

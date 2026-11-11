@@ -191,37 +191,6 @@ class _InsightsPageState extends State<InsightsPage> {
     final summary = Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        SavedFilters(
-          scope: scope,
-          area: 'progress',
-          values: {'kind': kind, 'anchor': anchor, 'habit': habit},
-          onApply: (v) => setState(() {
-            kind = v['kind'] as String? ?? 'month';
-            anchor = v['anchor'] as String? ?? scope.today;
-            habit = v['habit'] as String?;
-          }),
-        ),
-        ListTile(
-          key: const Key('progress-smart'),
-          contentPadding: EdgeInsets.zero,
-          title: Wrap(
-            spacing: 8,
-            crossAxisAlignment: WrapCrossAlignment.center,
-            children: [
-              Text(tr(context, 'Smart insights', 'Phân tích chuyên sâu')),
-              if (!scope.pro(context)) const HabitProPill(),
-            ],
-          ),
-          subtitle: Text(
-            tr(
-              context,
-              'Compare rhythms and find one small adjustment',
-              'So sánh nhịp sống, tìm một điều chỉnh nhỏ',
-            ),
-          ),
-          trailing: const Icon(Icons.chevron_right),
-          onTap: () => Navigator.pushNamed(context, '/progress/smart'),
-        ),
         Text(
           tr(
             context,
@@ -294,6 +263,38 @@ class _InsightsPageState extends State<InsightsPage> {
             icon: const Icon(Icons.event_note_outlined, size: 18),
             label: Text(tr(context, 'Look back at the week', 'Nhìn lại tuần')),
           ),
+        ),
+        // Pro tools come after what the person's own days say.
+        SavedFilters(
+          scope: scope,
+          area: 'progress',
+          values: {'kind': kind, 'anchor': anchor, 'habit': habit},
+          onApply: (v) => setState(() {
+            kind = v['kind'] as String? ?? 'month';
+            anchor = v['anchor'] as String? ?? scope.today;
+            habit = v['habit'] as String?;
+          }),
+        ),
+        ListTile(
+          key: const Key('progress-smart'),
+          contentPadding: EdgeInsets.zero,
+          title: Wrap(
+            spacing: 8,
+            crossAxisAlignment: WrapCrossAlignment.center,
+            children: [
+              Text(tr(context, 'Smart insights', 'Phân tích chuyên sâu')),
+              if (!scope.pro(context)) const HabitProPill(),
+            ],
+          ),
+          subtitle: Text(
+            tr(
+              context,
+              'Compare rhythms and find one small adjustment',
+              'So sánh nhịp sống, tìm một điều chỉnh nhỏ',
+            ),
+          ),
+          trailing: const Icon(Icons.chevron_right),
+          onTap: () => Navigator.pushNamed(context, '/progress/smart'),
         ),
       ],
     );

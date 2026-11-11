@@ -47,7 +47,9 @@ class TodayPage extends StatelessWidget {
       final left = [
         _Greeting(scope: scope, due: due, routines: routines, index: index),
         if (s.settings['showMoodToday'] != false) TodayMood(scope: scope),
-        if (scope.activeSession != null) _Resume(scope: scope),
+        if (scope.activeSession case final run?
+            when !routines.any((r) => r.id == run.routine))
+          _Resume(scope: scope),
         _Habits(scope: scope, due: due, index: index, notToday: notToday),
       ];
       final right = [
@@ -261,7 +263,9 @@ class _Greeting extends StatelessWidget {
                         ),
                         Text(
                           [
-                            if (reductionText.isNotEmpty && buildDue.isNotEmpty)
+                            if (reductionText.isNotEmpty &&
+                                buildDue.isNotEmpty &&
+                                left > 0)
                               reductionText,
                             '${facts.join(' · ')}.',
                           ].join(' '),
