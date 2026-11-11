@@ -340,12 +340,12 @@ void main() {
       await route(t, '/habit/h');
       await tap(t, 'streak-help');
       expect(find.byKey(const Key('help-article-streaks')), findsOneWidget);
-      await route(t, '/settings');
-      for (final (entry, topic) in [
-        ('pause-help', 'pause'),
-        ('reminder-help', 'reminders'),
-        ('backup-help', 'backup'),
+      for (final (page, entry, topic) in [
+        ('/settings/pauses', 'pause-help', 'pause'),
+        ('/settings/notifications', 'reminder-help', 'reminders'),
+        ('/settings', 'backup-help', 'backup'),
       ]) {
+        await route(t, page);
         await tap(t, entry);
         if (entry == 'reminder-help') {
           expect(
@@ -362,6 +362,7 @@ void main() {
           await t.pumpAndSettle();
         }
       }
+      await route(t, '/settings/pauses');
       await tap(t, 'pause-add');
       await tap(t, 'context-help-pause');
       expect(find.byKey(const Key('help-article-pause')), findsOneWidget);
@@ -374,24 +375,26 @@ void main() {
       final (c, store, _) = await learningBoot(t, state: f.seeded());
       final habits = c.state!.habits.map((h) => h.toJson()).toList();
       await route(t, '/settings');
+      await tap(t, 'settings-density');
+      await tap(t, 'settings-density-compact');
+      await tap(t, 'settings-theme-dark');
+      await tap(t, 'set-reduced-motion');
+      await route(t, '/settings/preferences');
       for (final (id, value) in [
-        ('settings-density', 'compact'),
         ('settings-default-schedule', 'weekdays'),
         ('settings-default-goal', '8000'),
-        ('settings-theme', 'dark'),
       ]) {
         await tap(t, id);
         await tap(t, '$id-$value');
       }
       for (final id in [
-        'set-reduced-motion',
         'settings-routine-timer',
         'settings-routine-haptics',
         'settings-routine-confirm',
       ])
         await tap(t, id);
       await c.load();
-      await t.pumpAndSettle();
+      await route(t, '/settings');
       expect(c.state!.settings, containsPair('density', 'compact'));
       expect(c.state!.settings, containsPair('defaultGoal', 8000));
       t.state<ScrollableState>(find.byType(Scrollable).last).position.jumpTo(0);
@@ -407,7 +410,8 @@ void main() {
         ),
         findsOneWidget,
       );
-      expect(find.text('Pro'), findsOneWidget);
+      // The studio and the Convenience group: the two paid places.
+      expect(find.text('Pro'), findsWidgets);
       await route(t, '/habit/new');
       await t.enterText(
         find.byKey(const Key('field-title')),
@@ -455,7 +459,7 @@ void main() {
     (t) async {
       final (c, _, r) = await learningBoot(t, state: f.seeded());
       expect(r.requests, 0);
-      await route(t, '/settings');
+      await route(t, '/settings/notifications');
       expect(r.requests, 0);
       await tap(t, 'set-notifications');
       expect(r.requests, 0);
@@ -663,7 +667,7 @@ void main() {
           scrollable: find.byType(Scrollable).last,
         );
         await t.ensureVisible(proEntry);
-        expect(find.text('Pro Lifetime'), findsOneWidget);
+        expect(proEntry, findsOneWidget);
         await tap(t, 'settings-reset');
         await tap(t, 'confirm-action');
         expect(c.state!.events.single.toJson(), event.toJson());

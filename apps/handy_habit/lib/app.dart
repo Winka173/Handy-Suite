@@ -28,6 +28,7 @@ import 'routines/session_view.dart';
 import 'run_notice.dart';
 import 'runner.dart';
 import 'scope.dart';
+import 'settings/preferences_page.dart';
 import 'settings/settings_page.dart';
 import 'settings/trash_page.dart';
 import 'settings/help_page.dart';
@@ -466,6 +467,10 @@ class _HabitAppState extends State<HabitApp> with WidgetsBindingObserver {
         topic: topic,
         query: uri.queryParameters['q'] ?? '',
       ),
+      ['', 'settings', 'preferences'] => () => HabitPreferencesPage(
+        scope: scope,
+      ),
+      ['', 'settings', 'pauses'] => () => HabitPausesPage(scope: scope),
       ['', 'settings', 'trash'] => () => HabitTrashPage(scope: scope),
       ['', 'settings', 'sync'] =>
         () =>

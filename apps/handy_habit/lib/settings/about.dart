@@ -1,6 +1,7 @@
 import 'package:handy_ui/kit.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'settings_parts.dart';
 
 Future<void> openHabitLink(BuildContext context, Uri uri) async {
   try {
@@ -29,45 +30,49 @@ Future<void> openHabitLink(BuildContext context, Uri uri) async {
     );
 }
 
-class HabitAboutRows extends StatelessWidget {
-  const HabitAboutRows({super.key});
-  @override
-  Widget build(BuildContext context) => Column(
-    children: [
-      const _Version(),
-      HandyTile(
-        title: tr(context, 'Privacy policy', 'Chính sách riêng tư'),
-        onTap: () => openHabitLink(
+/// About: feedback, privacy, licences and the version, as the siblings.
+List<Widget> habitAboutRows(BuildContext context) => [
+  SettingsRow(
+    icon: Icons.mail_outline,
+    title: tr(context, 'Send feedback', 'Gửi góp ý'),
+    subtitle: 'apps.winka.studio@gmail.com',
+    onTap: () => openHabitLink(
+      context,
+      Uri(
+        scheme: 'mailto',
+        path: 'apps.winka.studio@gmail.com',
+        queryParameters: {'subject': 'Handy Habit'},
+      ),
+    ),
+  ),
+  SettingsRow(
+    icon: Icons.policy_outlined,
+    title: tr(context, 'Privacy policy', 'Chính sách riêng tư'),
+    subtitle: tr(
+      context,
+      'Saved on this device. No account needed.',
+      'Lưu trên máy này. Không cần tài khoản.',
+    ),
+    onTap: () => openHabitLink(
+      context,
+      Uri.parse(
+        tr(
           context,
-          Uri.parse(
-            tr(
-              context,
-              'https://winka.top/en/apps/handy-habit/privacy/',
-              'https://winka.top/vi/apps/handy-habit/privacy/',
-            ),
-          ),
+          'https://winka.top/en/apps/handy-habit/privacy/',
+          'https://winka.top/vi/apps/handy-habit/privacy/',
         ),
       ),
-      HandyTile(
-        title: tr(context, 'Open-source licenses', 'Giấy phép mã nguồn mở'),
-        onTap: () =>
-            showLicensePage(context: context, applicationName: 'Handy Habit'),
-      ),
-      HandyTile(
-        title: tr(context, 'Support', 'Hỗ trợ'),
-        subtitle: 'apps.winka.studio@gmail.com',
-        onTap: () => openHabitLink(
-          context,
-          Uri(
-            scheme: 'mailto',
-            path: 'apps.winka.studio@gmail.com',
-            queryParameters: {'subject': 'Handy Habit support'},
-          ),
-        ),
-      ),
-    ],
-  );
-}
+    ),
+  ),
+  SettingsRow(
+    icon: Icons.gavel_outlined,
+    title: tr(context, 'Open-source licenses', 'Giấy phép mã nguồn mở'),
+    navigates: true,
+    onTap: () =>
+        showLicensePage(context: context, applicationName: 'Handy Habit'),
+  ),
+  const _Version(),
+];
 
 class _Version extends StatefulWidget {
   const _Version();
@@ -80,7 +85,8 @@ class _VersionState extends State<_Version> {
   @override
   Widget build(BuildContext context) => FutureBuilder<PackageInfo>(
     future: info,
-    builder: (context, s) => HandyTile(
+    builder: (context, s) => SettingsRow(
+      icon: Icons.info_outline,
       title: tr(context, 'Version', 'Phiên bản'),
       subtitle: s.hasData
           ? '${s.data!.version} (${s.data!.buildNumber})'

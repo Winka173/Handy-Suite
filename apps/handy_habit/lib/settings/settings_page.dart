@@ -1,7 +1,7 @@
-import 'package:flutter/foundation.dart';
 import 'package:handy_habit_engine/handy_habit_engine.dart';
+import 'package:handy_monetization/handy_monetization.dart';
 import 'package:handy_ui/kit.dart';
-import '../pauses/pauses.dart';
+import '../design/palette.dart';
 import '../scope.dart';
 import '../ui/form.dart';
 import '../ui/words.dart';
@@ -10,8 +10,8 @@ import '../sync/folder_sync.dart';
 import 'settings_parts.dart';
 import 'about.dart';
 import 'notification_status.dart';
+import 'preferences_page.dart';
 import '../pro/entitlements.dart';
-import '../pro/purchase.dart';
 
 /// Habit's settings: the shared page with the calendar, reminders and the
 /// data added. Language and look live in the habit data, as before.
@@ -20,13 +20,7 @@ class HabitSettingsPage extends StatelessWidget {
   const HabitSettingsPage({super.key, required this.scope});
 
   Future<void> _set(BuildContext context, Map<String, dynamic> changes) =>
-      scope.write(
-        context,
-        (s) => s.copy({
-          'settings': {...s.settings, ...changes},
-        }),
-        remember: false,
-      );
+      habitSetPrefs(context, scope, changes);
 
   Future<void> _guard(
     BuildContext context,
@@ -99,76 +93,6 @@ class HabitSettingsPage extends StatelessWidget {
         },
       }),
       remember: false,
-    );
-  }
-
-  Future<void> _calendar(BuildContext context) {
-    final s = scope.state;
-    return showHabitForm(
-      context,
-      title: tr(context, 'Calendar', 'Lịch'),
-      fields: [
-        const HabitField(
-          'zone',
-          'Time zone',
-          'Múi giờ',
-          helpEn:
-              'Decides which day a check-in belongs to, e.g. Asia/Ho_Chi_Minh. Past days stay as they are.',
-          helpVi:
-              'Quyết định lần ghi thuộc ngày nào, ví dụ Asia/Ho_Chi_Minh. Ngày đã qua giữ nguyên.',
-        ),
-        HabitField(
-          'weekStart',
-          'Weeks start on',
-          'Tuần bắt đầu vào',
-          kind: FieldKind.choice,
-          options: {'1': weekdayLong(context, 1), '7': weekdayLong(context, 7)},
-          helpEn: 'For new days-a-week schedules.',
-          helpVi: 'Cho các lịch theo số ngày mỗi tuần tạo sau này.',
-        ),
-        const HabitField(
-          'dayBoundary',
-          'Day starts at',
-          'Ngày bắt đầu lúc',
-          kind: FieldKind.time,
-          helpEn:
-              'Applies to future check-ins only. Saved history days never move.',
-          helpVi: 'Chỉ áp dụng cho lần ghi mới. Ngày trong lịch sử không đổi.',
-        ),
-        const HabitField(
-          'backfill',
-          'Fill in days up to',
-          'Cho ghi bù tối đa',
-          kind: FieldKind.count,
-          helpEn: 'Days back, 1 to 3660.',
-          helpVi: 'Số ngày trước, từ 1 đến 3660.',
-        ),
-      ],
-      initial: {
-        'zone': s.zone,
-        'weekStart': '${s.weekStart}',
-        'backfill': '${s.backfill}',
-        'dayBoundary':
-            '${(s.dayBoundaryMinutes ~/ 60).toString().padLeft(2, '0')}:${(s.dayBoundaryMinutes % 60).toString().padLeft(2, '0')}',
-      },
-      save: (v) async {
-        location(v['zone'] as String);
-        final backfill = int.parse('${v['backfill']}');
-        if (backfill < 1 || backfill > 3660)
-          throw const FormatException('1 to 3660 / Từ 1 đến 3660');
-        await scope.controller.change(
-          (s) => s.copy({
-            'settings': {
-              ...s.settings,
-              'zone': v['zone'],
-              'weekStart': int.parse(v['weekStart'] as String),
-              'backfill': backfill,
-              'dayBoundaryMinutes': minuteOfDay(v['dayBoundary'] as String),
-            },
-          }),
-          remember: false,
-        );
-      },
     );
   }
 
@@ -276,8 +200,9 @@ class HabitSettingsPage extends StatelessWidget {
     );
   }
 
-  Widget notifications(BuildContext context) {
-    final s = scope.state, c = HandyColors.of(context);
+  /// Notifications: whether Habit may remind, the reminders, quiet hours.
+  List<Widget> notifications(BuildContext context) {
+    final s = scope.state;
     final rules = objects(s.settings['reminders'] ?? [])
         .map(Reminder.fromJson)
         .where((r) => !s.isTrashed(r.type, r.target))
@@ -288,248 +213,277 @@ class HabitSettingsPage extends StatelessWidget {
             : scope.routine(r.target)?.title) ??
         tr(context, 'deleted', 'đã xóa');
     final next = dueReminders(s, scope.clock()).take(3).toList();
-    return HandySettingsSection(
-      title: tr(context, 'Notifications', 'Thông báo'),
-      description: scope.reminders.supported
-          ? tr(
-              context,
-              'Permission is asked only when you turn this on. The earliest 50 within 400 days are set; opening the app refreshes them.',
-              'Chỉ hỏi quyền khi bạn bật. Đặt 50 lần nhắc sớm nhất trong 400 ngày; mở app sẽ làm mới.',
-            )
-          : tr(
-              context,
-              'This platform cannot remind in the background. Today shows the next reminder instead.',
-              'Nền tảng này không nhắc nền được. Hôm nay sẽ hiện lần nhắc tiếp theo.',
-            ),
-      children: [
-        if (scope.reminderError.value != null)
-          Padding(
-            padding: const EdgeInsets.all(16),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                HandyNotice(
-                  tr(
-                    context,
-                    'Could not update scheduled reminders. Your rules are saved. Try again or check notification settings.',
-                    'Chưa cập nhật được lịch thông báo. Lịch nhắc đã lưu. Hãy thử lại hoặc kiểm tra cài đặt thông báo.',
-                  ),
-                  tone: HandyTone.error,
-                ),
-                TextButton(
-                  key: const Key('reminder-retry'),
-                  onPressed: () async {
-                    try {
-                      await scope.reminders.sync(scope.state);
-                      scope.reminderError.value = null;
-                    } catch (e) {
-                      scope.reminderError.value = e;
-                    }
-                  },
-                  child: Text(tr(context, 'Retry', 'Thử lại')),
-                ),
-              ],
-            ),
-          ),
-        HabitNotificationStatus(
-          reminders: scope.reminders,
-          revision: s.revision,
-        ),
-        HandyTile(
-          key: const Key('reminder-help'),
-          title: tr(
-            context,
-            'Why didn’t my reminder appear?',
-            'Vì sao không thấy thông báo?',
-          ),
-          onTap: () => Navigator.pushNamed(
-            context,
-            '/settings/notifications/diagnostics',
-          ),
-        ),
-        if (scope.reminders.supported)
-          HabitSettingToggle(
-            id: 'settings-private-notifications',
-            title: tr(
-              context,
-              'Private lock-screen text',
-              'Ẩn tên trên màn hình khóa',
-            ),
-            value: s.settings['privateNotifications'] != false,
-            onChanged: (v) => _set(context, {'privateNotifications': v}),
-          ),
-        if (scope.reminders.supported)
-          HandyTile(
-            key: const Key('notification-test'),
-            title: tr(context, 'Test notification', 'Thử thông báo'),
-            onTap: () => _guard(context, () async {
-              await scope.reminders.test(s);
-              return context.mounted
-                  ? tr(
+    final supported = scope.reminders.supported;
+    return [
+      SettingsGroup(
+        first: true,
+        title: tr(context, 'Notifications', 'Thông báo'),
+        note: supported
+            ? tr(
+                context,
+                'Permission is asked only when you turn this on. The earliest 50 within 400 days are set; opening the app refreshes them.',
+                'Chỉ hỏi quyền khi bạn bật. Đặt 50 lần nhắc sớm nhất trong 400 ngày; mở app sẽ làm mới.',
+              )
+            : tr(
+                context,
+                'This platform cannot remind in the background. Today shows the next reminder instead.',
+                'Nền tảng này không nhắc nền được. Hôm nay sẽ hiện lần nhắc tiếp theo.',
+              ),
+        children: [
+          if (scope.reminderError.value != null)
+            Padding(
+              padding: const EdgeInsets.only(bottom: HandySpace.m),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  HandyNotice(
+                    tr(
                       context,
-                      'Test sent. If it is hidden, check system notification settings.',
-                      'Đã gửi thử. Nếu chưa thấy, kiểm tra thông báo trong cài đặt hệ thống.',
-                    )
-                  : null;
-            }),
-          ),
-        if (scope.reminders.supported)
-          SwitchListTile.adaptive(
-            key: const Key('set-notifications'),
-            title: Text(tr(context, 'Send reminders', 'Gửi nhắc')),
-            subtitle: Text(
-              s.settings['notifications'] == true
-                  ? tr(context, 'On', 'Bật')
-                  : tr(context, 'Off', 'Tắt'),
-            ),
-            value: s.settings['notifications'] == true,
-            onChanged: (on) async {
-              final allowed = on && await _allowNotifications(context);
-              if (on && !allowed && context.mounted)
-                showHandyMessage(
-                  context,
-                  tr(
-                    context,
-                    'Notifications are off for Handy Habit in the system settings; tracking still works.',
-                    'Thông báo của Handy Habit đang tắt trong cài đặt hệ thống; ghi nhận vẫn dùng bình thường.',
+                      'Could not update scheduled reminders. Your rules are saved. Try again or check notification settings.',
+                      'Chưa cập nhật được lịch thông báo. Lịch nhắc đã lưu. Hãy thử lại hoặc kiểm tra cài đặt thông báo.',
+                    ),
+                    tone: HandyTone.error,
                   ),
-                );
-              if (context.mounted)
-                await _set(context, {
-                  'notifications': allowed,
-                  if (!allowed) 'runNotice': false,
-                });
-            },
-          ),
-        if (scope.reminders.supported)
-          SwitchListTile.adaptive(
-            key: const Key('set-run-notice'),
-            title: Text(
-              tr(
-                context,
-                'Show a paused routine in notifications',
-                'Báo quy trình đang dở trong thông báo',
+                  TextButton(
+                    key: const Key('reminder-retry'),
+                    onPressed: () async {
+                      try {
+                        await scope.reminders.sync(scope.state);
+                        scope.reminderError.value = null;
+                      } catch (e) {
+                        scope.reminderError.value = e;
+                      }
+                    },
+                    child: Text(tr(context, 'Retry', 'Thử lại')),
+                  ),
+                ],
               ),
             ),
-            subtitle: Text(
-              tr(
-                context,
-                'When you leave a run, it pauses; the notice says where you stopped and opens it again.',
-                'Rời màn chạy thì phiên tạm dừng; thông báo nói bạn dừng ở đâu và mở lại phiên.',
+          SettingsPanel(
+            gap: false,
+            rows: [
+              if (supported)
+                SettingsSwitch(
+                  key: const Key('set-notifications'),
+                  icon: Icons.notifications_none,
+                  title: tr(context, 'Send reminders', 'Gửi nhắc'),
+                  subtitle: s.settings['notifications'] == true
+                      ? tr(context, 'On', 'Bật')
+                      : tr(context, 'Off', 'Tắt'),
+                  value: s.settings['notifications'] == true,
+                  onChanged: (on) async {
+                    final allowed = on && await _allowNotifications(context);
+                    if (on && !allowed && context.mounted)
+                      showHandyMessage(
+                        context,
+                        tr(
+                          context,
+                          'Notifications are off for Handy Habit in the system settings; tracking still works.',
+                          'Thông báo của Handy Habit đang tắt trong cài đặt hệ thống; ghi nhận vẫn dùng bình thường.',
+                        ),
+                      );
+                    if (context.mounted)
+                      await _set(context, {
+                        'notifications': allowed,
+                        if (!allowed) 'runNotice': false,
+                      });
+                  },
+                ),
+              HabitNotificationStatus(
+                reminders: scope.reminders,
+                revision: s.revision,
               ),
-            ),
-            value: runNoticeOn(s),
-            onChanged: (on) async {
-              final allowed = on && await _allowNotifications(context);
-              if (on && !allowed && context.mounted)
-                showHandyMessage(
+              SettingsRow(
+                key: const Key('reminder-help'),
+                icon: Icons.help_outline,
+                title: tr(
                   context,
-                  tr(
-                    context,
-                    'Notifications are off for Handy Habit in the system settings; routines still run.',
-                    'Thông báo của Handy Habit đang tắt trong cài đặt hệ thống; quy trình vẫn chạy bình thường.',
-                  ),
-                );
-              if (context.mounted)
-                await _set(context, {
-                  'runNotice': allowed,
-                  if (allowed) 'notifications': true,
-                });
-            },
-          ),
-        HandyTile(
-          key: const Key('set-quiet'),
-          title: tr(context, 'Quiet hours', 'Giờ yên lặng'),
-          subtitle:
-              '${s.settings['quietStart'] ?? '22:00'} – ${s.settings['quietEnd'] ?? '07:00'}',
-          onTap: () => _quiet(context),
-        ),
-        for (final r in rules)
-          ListTile(
-            key: Key('reminder-${r.id}'),
-            title: Text('${r.time} · ${targetName(r)}'),
-            subtitle: Text(
-              '${weekdaysText(context, r.weekdays)}${r.enabled ? '' : ' · ${tr(context, 'off', 'tắt')}'}${r.snooze == null ? '' : ' · ${tr(context, 'snoozed', 'đã hoãn')}'}',
-            ),
-            onTap: () => _reminder(context, r),
-            trailing: HandyMenuButton(
-              items: [
-                HandyMenuItem(
-                  Icons.snooze,
-                  tr(context, 'Again in 10 minutes', 'Nhắc lại sau 10 phút'),
-                  () => _set(context, {
-                    'reminders': [
-                      for (final x in objects(s.settings['reminders'] ?? []))
-                        if (x['id'] != r.id) x,
-                      {
-                        ...r.toJson(),
-                        'snooze': scope
-                            .clock()
-                            .add(const Duration(minutes: 10))
-                            .toUtc()
-                            .toIso8601String(),
-                      },
-                    ],
+                  'Why didn’t my reminder appear?',
+                  'Vì sao không thấy thông báo?',
+                ),
+                navigates: true,
+                onTap: () => Navigator.pushNamed(
+                  context,
+                  '/settings/notifications/diagnostics',
+                ),
+              ),
+              if (supported)
+                SettingsRow(
+                  key: const Key('notification-test'),
+                  icon: Icons.notification_add_outlined,
+                  title: tr(context, 'Test notification', 'Thử thông báo'),
+                  onTap: () => _guard(context, () async {
+                    await scope.reminders.test(s);
+                    return context.mounted
+                        ? tr(
+                            context,
+                            'Test sent. If it is hidden, check system notification settings.',
+                            'Đã gửi thử. Nếu chưa thấy, kiểm tra thông báo trong cài đặt hệ thống.',
+                          )
+                        : null;
                   }),
                 ),
-                HandyMenuItem(
-                  Icons.delete_outline,
-                  tr(context, 'Delete', 'Xóa'),
-                  () async {
-                    if (!await confirmHandy(
+            ],
+          ),
+          SettingsPanel(
+            title: tr(context, 'Reminders', 'Lịch nhắc'),
+            rows: [
+              for (final r in rules)
+                SettingsRow(
+                  key: Key('reminder-${r.id}'),
+                  icon: Icons.alarm,
+                  title: '${r.time} · ${targetName(r)}',
+                  subtitle:
+                      '${weekdaysText(context, r.weekdays)}${r.enabled ? '' : ' · ${tr(context, 'off', 'tắt')}'}${r.snooze == null ? '' : ' · ${tr(context, 'snoozed', 'đã hoãn')}'}',
+                  onTap: () => _reminder(context, r),
+                  trailing: HandyMenuButton(
+                    items: [
+                      HandyMenuItem(
+                        Icons.snooze,
+                        tr(
                           context,
-                          title: tr(
-                            context,
-                            'Delete this reminder?',
-                            'Xóa lịch nhắc này?',
-                          ),
-                          message: tr(
-                            context,
-                            'The habit and its history are kept.',
-                            'Giữ nguyên thói quen và lịch sử.',
-                          ),
-                          confirmLabel: tr(context, 'Delete', 'Xóa'),
-                        ) ||
-                        !context.mounted)
-                      return;
-                    await _set(context, {
-                      'reminders': [
-                        for (final x in objects(s.settings['reminders'] ?? []))
-                          if (x['id'] != r.id) x,
-                      ],
-                    });
-                  },
-                  destructive: true,
+                          'Again in 10 minutes',
+                          'Nhắc lại sau 10 phút',
+                        ),
+                        () => _set(context, {
+                          'reminders': [
+                            for (final x in objects(
+                              s.settings['reminders'] ?? [],
+                            ))
+                              if (x['id'] != r.id) x,
+                            {
+                              ...r.toJson(),
+                              'snooze': scope
+                                  .clock()
+                                  .add(const Duration(minutes: 10))
+                                  .toUtc()
+                                  .toIso8601String(),
+                            },
+                          ],
+                        }),
+                      ),
+                      HandyMenuItem(
+                        Icons.delete_outline,
+                        tr(context, 'Delete', 'Xóa'),
+                        () async {
+                          if (!await confirmHandy(
+                                context,
+                                title: tr(
+                                  context,
+                                  'Delete this reminder?',
+                                  'Xóa lịch nhắc này?',
+                                ),
+                                message: tr(
+                                  context,
+                                  'The habit and its history are kept.',
+                                  'Giữ nguyên thói quen và lịch sử.',
+                                ),
+                                confirmLabel: tr(context, 'Delete', 'Xóa'),
+                              ) ||
+                              !context.mounted)
+                            return;
+                          await _set(context, {
+                            'reminders': [
+                              for (final x in objects(
+                                s.settings['reminders'] ?? [],
+                              ))
+                                if (x['id'] != r.id) x,
+                            ],
+                          });
+                        },
+                        destructive: true,
+                      ),
+                    ],
+                  ),
                 ),
-              ],
-            ),
+              SettingsRow(
+                key: const Key('reminder-add'),
+                icon: Icons.add,
+                title: tr(context, 'Add a reminder', 'Thêm lịch nhắc'),
+                subtitle: next.isEmpty
+                    ? null
+                    : tr(context, 'Next: ', 'Sắp tới: ') +
+                          next
+                              .map(
+                                (d) =>
+                                    '${dayText(context, day(d.when), scope.today).toLowerCase()} ${d.when.hour.toString().padLeft(2, '0')}:${d.when.minute.toString().padLeft(2, '0')}',
+                              )
+                              .join(', '),
+                onTap:
+                    s.liveHabits.any((h) => !h.archived) ||
+                        s.liveRoutines.any((r) => !r.archived)
+                    ? () => _reminder(context)
+                    : null,
+              ),
+            ],
           ),
-        HandyTile(
-          key: const Key('reminder-add'),
-          icon: Icons.add,
-          title: tr(context, 'Add a reminder', 'Thêm lịch nhắc'),
-          onTap:
-              s.liveHabits.any((h) => !h.archived) ||
-                  s.liveRoutines.any((r) => !r.archived)
-              ? () => _reminder(context)
-              : null,
-        ),
-        if (next.isNotEmpty)
-          Padding(
-            padding: const EdgeInsets.all(HandySpace.l),
-            child: Text(
-              tr(context, 'Next: ', 'Sắp tới: ') +
-                  next
-                      .map(
-                        (d) =>
-                            '${dayText(context, day(d.when), scope.today).toLowerCase()} ${d.when.hour.toString().padLeft(2, '0')}:${d.when.minute.toString().padLeft(2, '0')}',
-                      )
-                      .join(', '),
-              style: TextStyle(color: c.muted),
-            ),
+          SettingsPanel(
+            title: tr(context, 'How they arrive', 'Cách nhắc hiện ra'),
+            rows: [
+              SettingsRow(
+                key: const Key('set-quiet'),
+                icon: Icons.bedtime_outlined,
+                title: tr(context, 'Quiet hours', 'Giờ yên lặng'),
+                subtitle:
+                    '${s.settings['quietStart'] ?? '22:00'} – ${s.settings['quietEnd'] ?? '07:00'}',
+                navigates: true,
+                onTap: () => _quiet(context),
+              ),
+              if (supported)
+                HabitSettingToggle(
+                  id: 'settings-private-notifications',
+                  icon: Icons.lock_outline,
+                  title: tr(
+                    context,
+                    'Private lock-screen text',
+                    'Ẩn tên trên màn hình khóa',
+                  ),
+                  subtitle: tr(
+                    context,
+                    'The notice says only that it is time.',
+                    'Thông báo chỉ báo đến giờ, không ghi tên.',
+                  ),
+                  value: s.settings['privateNotifications'] != false,
+                  onChanged: (v) => _set(context, {'privateNotifications': v}),
+                ),
+              if (supported)
+                SettingsSwitch(
+                  key: const Key('set-run-notice'),
+                  icon: Icons.pause_circle_outline,
+                  title: tr(
+                    context,
+                    'Show a paused routine in notifications',
+                    'Báo quy trình đang dở trong thông báo',
+                  ),
+                  subtitle: tr(
+                    context,
+                    'When you leave a run, it pauses; the notice says where you stopped and opens it again.',
+                    'Rời màn chạy thì phiên tạm dừng; thông báo nói bạn dừng ở đâu và mở lại phiên.',
+                  ),
+                  value: runNoticeOn(s),
+                  onChanged: (on) async {
+                    final allowed = on && await _allowNotifications(context);
+                    if (on && !allowed && context.mounted)
+                      showHandyMessage(
+                        context,
+                        tr(
+                          context,
+                          'Notifications are off for Handy Habit in the system settings; routines still run.',
+                          'Thông báo của Handy Habit đang tắt trong cài đặt hệ thống; quy trình vẫn chạy bình thường.',
+                        ),
+                      );
+                    if (context.mounted)
+                      await _set(context, {
+                        'runNotice': allowed,
+                        if (allowed) 'notifications': true,
+                      });
+                  },
+                ),
+            ],
           ),
-      ],
-    );
+        ],
+      ),
+    ];
   }
 
   Future<void> _clearAll(BuildContext context) async {
@@ -569,539 +523,585 @@ class HabitSettingsPage extends StatelessWidget {
     listenable: Listenable.merge([scope.controller, scope.reminderError]),
     builder: (context, _) {
       final s = scope.state;
+      final pro = scope.pro(context);
+      final reminders = objects(s.settings['reminders'] ?? [])
+          .map(Reminder.fromJson)
+          .where((r) => r.enabled && !s.isTrashed(r.type, r.target))
+          .length;
+      final pauses = s.pauses.length;
+      final system = tr(context, 'System', 'Hệ thống');
+      final schedule = s.settings['defaultSchedule'] == 'weekdays'
+          ? tr(context, 'Weekdays', 'Ngày thường')
+          : tr(context, 'Every day', 'Mỗi ngày');
       return HandyPage(
         title: tr(context, 'Settings', 'Cài đặt'),
         children: [
-          HandySettingsSection(
-            title: tr(context, 'Appearance', 'Giao diện'),
-            children: [
-              HabitProSettingTile(
-                key: const Key('settings-studio'),
-                title: tr(context, 'Personalization studio', 'Xưởng giao diện'),
-                pro: scope.pro(context),
-                subtitle: tr(
-                  context,
-                  'Preview palettes, cards, icons and runner looks',
-                  'Xem thử bảng màu, thẻ, biểu tượng và màn chạy',
-                ),
-                onTap: () => Navigator.pushNamed(context, '/settings/studio'),
-              ),
-              HabitSettingChoice(
-                id: 'settings-theme',
-                title: tr(context, 'Theme', 'Sáng hay tối'),
-                value: s.settings['theme'] as String? ?? 'system',
-                options: {
-                  'system': tr(context, 'System', 'Hệ thống'),
-                  'light': tr(context, 'Light', 'Sáng'),
-                  'dark': tr(context, 'Dark', 'Tối'),
-                },
-                onChanged: (v) => _set(context, {'theme': v}),
-              ),
-              HabitSettingChoice(
-                id: 'settings-locale',
-                title: tr(context, 'Language', 'Ngôn ngữ'),
-                value: s.settings['locale'] as String? ?? 'system',
-                options: {
-                  'system': tr(context, 'System', 'Hệ thống'),
-                  'en': 'English',
-                  'vi': 'Tiếng Việt',
-                },
-                onChanged: (v) => _set(context, {'locale': v}),
-              ),
-              HabitSettingChoice(
-                id: 'settings-density',
-                title: tr(context, 'Density', 'Độ gọn'),
-                value: s.settings['density'] as String? ?? 'comfortable',
-                options: {
-                  'comfortable': tr(context, 'Comfortable', 'Thoải mái'),
-                  'compact': tr(context, 'Compact', 'Gọn'),
-                },
-                onChanged: (v) => _set(context, {'density': v}),
-              ),
+          const SizedBox(height: HandySpace.s),
+          const HabitProCard(),
 
-              SwitchListTile.adaptive(
-                key: const Key('set-reduced-motion'),
-                title: Text(tr(context, 'Reduce motion', 'Giảm chuyển động')),
-                subtitle: Text(
-                  tr(
-                    context,
-                    'Keep changes immediate. The system preference is also respected.',
-                    'Hiện thay đổi ngay. Luôn tôn trọng tùy chọn giảm chuyển động của máy.',
-                  ),
-                ),
-                value: s.settings['reducedMotion'] == true,
-                onChanged: (v) => _set(context, {'reducedMotion': v}),
-              ),
-            ],
-          ),
-          HandySettingsSection(
-            title: tr(context, 'Habit preferences', 'Tùy chọn thói quen'),
+          // General.
+          SettingsGroup(
+            title: tr(context, 'General', 'Chung'),
             children: [
-              HabitSettingChoice(
-                id: 'settings-default-schedule',
-                title: tr(context, 'Default schedule', 'Lịch mặc định'),
-                value: s.settings['defaultSchedule'] as String? ?? 'daily',
-                options: {
-                  'daily': tr(context, 'Every day', 'Mỗi ngày'),
-                  'weekdays': tr(context, 'Weekdays', 'Ngày thường'),
-                },
-                onChanged: (v) => _set(context, {'defaultSchedule': v}),
-              ),
-              HabitSettingChoice(
-                id: 'settings-default-goal',
-                title: tr(
-                  context,
-                  'Default goal for counts and amounts',
-                  'Mục tiêu mặc định cho số lần và lượng',
-                ),
-                value: '${s.settings['defaultGoal'] ?? 1000}',
-                options: {'1000': '1', '3000': '3', '8000': '8', '10000': '10'},
-                onChanged: (v) => _set(context, {'defaultGoal': int.parse(v)}),
-              ),
-              HandyTile(
-                title: tr(context, 'Time zone', 'Múi giờ'),
-                subtitle: habitZoneLabel(context, s.zone, scope.clock()),
-                onTap: () => _calendar(context),
-              ),
-              HandyTile(
-                title: tr(context, 'Weeks start on', 'Tuần bắt đầu vào'),
-                subtitle: weekdayLong(context, s.weekStart),
-                onTap: () => _calendar(context),
-              ),
-              HandyTile(
-                key: const Key('set-day-boundary'),
-                title: tr(context, 'Day starts at', 'Ngày bắt đầu lúc'),
-                subtitle:
-                    '${(s.dayBoundaryMinutes ~/ 60).toString().padLeft(2, '0')}:${(s.dayBoundaryMinutes % 60).toString().padLeft(2, '0')}',
-                onTap: () => _calendar(context),
-              ),
-              HandyTile(
-                key: const Key('set-backfill'),
-                title: tr(context, 'Fill in days up to', 'Cho ghi bù tối đa'),
-                subtitle: tr(
-                  context,
-                  '${s.backfill} ${s.backfill == 1 ? 'day' : 'days'} back',
-                  '${s.backfill} ngày trước',
-                ),
-                onTap: () => _calendar(context),
-              ),
-            ],
-          ),
-          HandySettingsSection(
-            title: tr(context, 'Routines', 'Quy trình'),
-            children: [
-              HabitSettingToggle(
-                id: 'settings-routine-timer',
-                title: tr(
-                  context,
-                  'Start timers automatically',
-                  'Tự bắt đầu bộ đếm giờ',
-                ),
-                value: s.settings['routineAutoTimer'] != false,
-                onChanged: (v) => _set(context, {'routineAutoTimer': v}),
-              ),
-              if (!kIsWeb &&
-                  [
-                    TargetPlatform.android,
-                    TargetPlatform.iOS,
-                  ].contains(defaultTargetPlatform))
-                HabitSettingToggle(
-                  id: 'settings-routine-haptics',
-                  title: tr(
-                    context,
-                    'Haptic feedback on completed steps',
-                    'Rung khi xong bước',
+              SettingsPanel(
+                gap: false,
+                rows: [
+                  SettingsChoice(
+                    id: 'settings-locale',
+                    icon: Icons.translate,
+                    title: tr(context, 'Language', 'Ngôn ngữ'),
+                    value: s.settings['locale'] as String? ?? 'system',
+                    options: [
+                      ('en', 'English'),
+                      ('vi', 'Tiếng Việt'),
+                      ('system', system),
+                    ],
+                    onChanged: (v) => _set(context, {'locale': v}),
                   ),
-                  value: s.settings['routineHaptics'] == true,
-                  onChanged: (v) => _set(context, {'routineHaptics': v}),
-                ),
-              if (kIsWeb ||
-                  ![
-                    TargetPlatform.android,
-                    TargetPlatform.iOS,
-                  ].contains(defaultTargetPlatform))
-                Padding(
-                  padding: const EdgeInsets.all(16),
-                  child: Text(
-                    tr(
+                  SettingsChoice(
+                    id: 'settings-theme',
+                    icon: Icons.contrast,
+                    title: tr(context, 'Light or dark', 'Sáng hay tối'),
+                    value: s.settings['theme'] as String? ?? 'system',
+                    options: [
+                      ('light', tr(context, 'Light', 'Sáng')),
+                      ('dark', tr(context, 'Dark', 'Tối')),
+                      ('system', system),
+                    ],
+                    onChanged: (v) => _set(context, {'theme': v}),
+                  ),
+                  SettingsRow(
+                    key: const Key('settings-notifications'),
+                    icon: Icons.notifications_none,
+                    title: tr(context, 'Notifications', 'Thông báo'),
+                    subtitle: s.settings['notifications'] != true
+                        ? tr(
+                            context,
+                            'Off. Turn on to be reminded at your times.',
+                            'Đang tắt. Bật để được nhắc vào giờ bạn chọn.',
+                          )
+                        : tr(
+                            context,
+                            reminders == 1
+                                ? '1 reminder on'
+                                : '$reminders reminders on',
+                            'Đang bật $reminders lịch nhắc',
+                          ),
+                    navigates: true,
+                    onTap: () =>
+                        Navigator.pushNamed(context, '/settings/notifications'),
+                  ),
+                  SettingsRow(
+                    key: const Key('settings-widgets'),
+                    icon: Icons.widgets_outlined,
+                    title: tr(
                       context,
-                      'Haptic feedback is available on supported Android and iOS phones.',
-                      'Rung phản hồi có trên điện thoại Android và iOS hỗ trợ.',
+                      'Home-screen widgets',
+                      'Widget màn hình chính',
                     ),
+                    subtitle: tr(
+                      context,
+                      'Today, one habit, or a routine',
+                      'Hôm nay, một thói quen hoặc quy trình',
+                    ),
+                    navigates: true,
+                    onTap: () =>
+                        Navigator.pushNamed(context, '/settings/widgets'),
                   ),
-                ),
-              HabitSettingToggle(
-                id: 'settings-routine-confirm',
-                title: tr(
-                  context,
-                  'Confirm before leaving a run',
-                  'Xác nhận trước khi rời phiên',
-                ),
-                value: s.settings['confirmRoutineExit'] != false,
-                onChanged: (v) => _set(context, {'confirmRoutineExit': v}),
+                ],
+              ),
+              SettingsPanel(
+                title: tr(context, 'Look', 'Diện mạo'),
+                rows: [
+                  HabitProSettingTile(
+                    key: const Key('settings-studio'),
+                    icon: Icons.palette_outlined,
+                    title: tr(
+                      context,
+                      'Personalization studio',
+                      'Xưởng giao diện',
+                    ),
+                    pro: pro,
+                    subtitle: tr(
+                      context,
+                      'Palettes, cards, icons and runner looks',
+                      'Bảng màu, thẻ, biểu tượng và màn chạy',
+                    ),
+                    onTap: () =>
+                        Navigator.pushNamed(context, '/settings/studio'),
+                  ),
+                  HabitSettingChoice(
+                    id: 'settings-density',
+                    icon: Icons.density_medium,
+                    title: tr(context, 'Density', 'Độ gọn'),
+                    value: s.settings['density'] as String? ?? 'comfortable',
+                    options: {
+                      'comfortable': tr(context, 'Comfortable', 'Thoải mái'),
+                      'compact': tr(context, 'Compact', 'Gọn'),
+                    },
+                    onChanged: (v) => _set(context, {'density': v}),
+                  ),
+                  HabitSettingToggle(
+                    id: 'set-reduced-motion',
+                    icon: Icons.motion_photos_off_outlined,
+                    title: tr(context, 'Reduce motion', 'Giảm chuyển động'),
+                    subtitle: tr(
+                      context,
+                      'Changes appear at once. The system setting is respected too.',
+                      'Thay đổi hiện ngay. Cài đặt của máy cũng được tôn trọng.',
+                    ),
+                    value: s.settings['reducedMotion'] == true,
+                    onChanged: (v) => _set(context, {'reducedMotion': v}),
+                  ),
+                ],
               ),
             ],
           ),
-          notifications(context),
-          HandySettingsSection(
-            title: tr(context, 'Data', 'Dữ liệu'),
-            description: tr(
+
+          // Habits and routines.
+          SettingsGroup(
+            title: tr(context, 'Habits and routines', 'Thói quen và quy trình'),
+            children: [
+              SettingsPanel(
+                gap: false,
+                rows: [
+                  SettingsRow(
+                    key: const Key('settings-preferences'),
+                    icon: Icons.tune,
+                    title: tr(
+                      context,
+                      'Defaults and calendar',
+                      'Mặc định và lịch',
+                    ),
+                    subtitle:
+                        '$schedule · ${tr(context, 'week starts', 'tuần bắt đầu')} ${weekdayLong(context, s.weekStart).toLowerCase()} · ${habitZoneLabel(context, s.zone, scope.clock())}',
+                    navigates: true,
+                    onTap: () =>
+                        Navigator.pushNamed(context, '/settings/preferences'),
+                  ),
+                  SettingsRow(
+                    key: const Key('settings-pauses'),
+                    icon: Icons.beach_access_outlined,
+                    title: tr(context, 'Pauses', 'Kỳ nghỉ'),
+                    subtitle: pauses == 0
+                        ? tr(
+                            context,
+                            'Days off that are not missed',
+                            'Ngày nghỉ không tính là lỡ',
+                          )
+                        : tr(
+                            context,
+                            pauses == 1 ? '1 pause' : '$pauses pauses',
+                            '$pauses kỳ nghỉ',
+                          ),
+                    navigates: true,
+                    onTap: () =>
+                        Navigator.pushNamed(context, '/settings/pauses'),
+                  ),
+                  HabitSettingToggle(
+                    id: 'settings-show-mood',
+                    icon: Icons.sentiment_satisfied_outlined,
+                    title: tr(
+                      context,
+                      'Show mood on Today',
+                      'Hiện tâm trạng ở Hôm nay',
+                    ),
+                    subtitle: tr(
+                      context,
+                      'Optional. Notes stay on this device and in your backups.',
+                      'Tùy chọn. Ghi chú ở trên máy và trong bản sao lưu.',
+                    ),
+                    value: s.settings['showMoodToday'] != false,
+                    onChanged: (v) => _set(context, {'showMoodToday': v}),
+                  ),
+                ],
+              ),
+            ],
+          ),
+
+          // Convenience (Pro).
+          SettingsGroup(
+            title: tr(context, 'Convenience', 'Tiện ích'),
+            badge: pro ? null : const HabitProPill(),
+            note: tr(
               context,
-              'Your data is saved on this device, unencrypted. Habit names never reach ads. Keep a separate backup. Use backup to move data between platforms.',
-              'Dữ liệu được lưu trên máy này, không mã hóa. Tên thói quen không vào quảng cáo. Hãy giữ bản sao lưu riêng. Dùng sao lưu để chuyển dữ liệu giữa các nền tảng.',
+              'Each one changes only what you choose; Undo always works.',
+              'Mỗi cái chỉ đổi đúng thứ bạn chọn; luôn hoàn tác được.',
             ),
             children: [
-              HandyTile(
-                key: const Key('backup-help'),
-                title: tr(
-                  context,
-                  'Backup and device migration help',
-                  'Cách sao lưu và chuyển máy',
-                ),
-                onTap: () => Navigator.pushNamed(context, '/help/backup'),
-              ),
-              HandyTile(
-                key: const Key('habit-trash'),
-                icon: Icons.delete_outline,
-                title: tr(context, 'Trash', 'Thùng rác'),
-                subtitle: tr(
-                  context,
-                  s.trash.length == 1 ? '1 item' : '${s.trash.length} items',
-                  '${s.trash.length} mục',
-                ),
-                onTap: () => Navigator.of(context).pushNamed('/settings/trash'),
-              ),
-              if (scope.controller.hasRecovery)
-                HandyTile(
-                  key: const Key('habit-recovery'),
-                  icon: Icons.restore,
-                  title: tr(
-                    context,
-                    'Recover before last replace',
-                    'Khôi phục trước lần thay thế cuối',
-                  ),
-                  onTap: () => _guard(context, () async {
-                    final ok = await confirmHandy(
+              SettingsPanel(
+                gap: false,
+                rows: [
+                  SettingsRow(
+                    key: const Key('settings-rules'),
+                    icon: Icons.auto_mode,
+                    title: tr(context, 'Local rules', 'Quy tắc cục bộ'),
+                    subtitle: tr(
                       context,
+                      'Clear automatic changes, with history and Undo',
+                      'Thay đổi tự động rõ ràng, có lịch sử và hoàn tác',
+                    ),
+                    navigates: true,
+                    onTap: () =>
+                        Navigator.pushNamed(context, '/settings/rules'),
+                  ),
+                  SettingsRow(
+                    key: const Key('settings-batch'),
+                    icon: Icons.checklist,
+                    title: tr(context, 'Batch changes', 'Thay đổi hàng loạt'),
+                    subtitle: tr(
+                      context,
+                      'Select, preview and apply once',
+                      'Chọn, xem trước và áp dụng một lần',
+                    ),
+                    navigates: true,
+                    onTap: () => Navigator.pushNamed(context, '/habits/batch'),
+                  ),
+                ],
+              ),
+            ],
+          ),
+
+          // Data.
+          SettingsGroup(
+            title: tr(context, 'Data', 'Dữ liệu'),
+            note: tr(
+              context,
+              'Kept on this device, unencrypted. It leaves only when you back it up, sync or export it. Habit names never reach ads.',
+              'Lưu trên máy này, không mã hóa. Chỉ rời máy khi bạn sao lưu, đồng bộ hay xuất. Tên thói quen không vào quảng cáo.',
+            ),
+            children: [
+              if (scope.drive != null || folderSyncOffered)
+                SettingsPanel(
+                  gap: false,
+                  rows: [
+                    if (scope.drive != null)
+                      SettingsRow(
+                        key: const Key('habit-sync'),
+                        icon: Icons.sync,
+                        title: tr(context, 'Sync', 'Đồng bộ'),
+                        subtitle: 'Google Drive',
+                        navigates: true,
+                        onTap: () =>
+                            Navigator.pushNamed(context, '/settings/sync'),
+                      ),
+                    if (folderSyncOffered)
+                      SettingsRow(
+                        icon: Icons.folder_shared_outlined,
+                        title: tr(
+                          context,
+                          'Sync through a folder',
+                          'Đồng bộ qua thư mục',
+                        ),
+                        subtitle: tr(
+                          context,
+                          'Free · separate from backups',
+                          'Miễn phí · tách biệt với sao lưu',
+                        ),
+                        navigates: true,
+                        onTap: () => Navigator.pushNamed(
+                          context,
+                          '/settings/folder-sync',
+                        ),
+                      ),
+                  ],
+                ),
+              SettingsPanel(
+                gap: scope.drive != null || folderSyncOffered,
+                title: tr(context, 'Backup and restore', 'Sao lưu & khôi phục'),
+                rows: [
+                  Padding(
+                    padding: const EdgeInsets.all(HandySpace.m),
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: FilledButton.icon(
+                            key: const Key('habit-backup'),
+                            onPressed: () => _guard(
+                              context,
+                              () => exportHabits(context, scope, 'zip'),
+                            ),
+                            icon: const Icon(Icons.backup_outlined, size: 20),
+                            label: Text(tr(context, 'Back up', 'Sao lưu')),
+                          ),
+                        ),
+                        const SizedBox(width: HandySpace.m),
+                        Expanded(
+                          child: OutlinedButton.icon(
+                            key: const Key('habit-import'),
+                            onPressed: () => _guard(
+                              context,
+                              () => importHabits(context, scope),
+                            ),
+                            icon: const Icon(
+                              Icons.settings_backup_restore,
+                              size: 20,
+                            ),
+                            label: Text(tr(context, 'Restore', 'Khôi phục')),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  SettingsRow(
+                    key: const Key('habit-backup-json'),
+                    icon: Icons.data_object,
+                    title: tr(context, 'Back up as JSON', 'Sao lưu dạng JSON'),
+                    subtitle: tr(
+                      context,
+                      'One readable file. Restore also takes CSV.',
+                      'Một tệp đọc được. Khôi phục nhận cả CSV.',
+                    ),
+                    onTap: () => _guard(
+                      context,
+                      () => exportHabits(context, scope, 'json'),
+                    ),
+                  ),
+                  SettingsRow(
+                    key: const Key('backup-help'),
+                    icon: Icons.help_outline,
+                    title: tr(
+                      context,
+                      'Backup and moving to a new device',
+                      'Cách sao lưu và chuyển máy',
+                    ),
+                    navigates: true,
+                    onTap: () => Navigator.pushNamed(context, '/help/backup'),
+                  ),
+                ],
+              ),
+              if (scope.autoBackup != null)
+                KitSection(
+                  child: HandyAutoBackupSection(backup: scope.autoBackup!),
+                ),
+              SettingsPanel(
+                rows: [
+                  SettingsRow(
+                    key: const Key('habit-trash'),
+                    icon: Icons.delete_outline,
+                    title: tr(context, 'Trash', 'Thùng rác'),
+                    subtitle: s.trash.isEmpty
+                        ? tr(context, 'Empty', 'Trống')
+                        : tr(
+                            context,
+                            s.trash.length == 1
+                                ? '1 item, kept 30 days'
+                                : '${s.trash.length} items, kept 30 days',
+                            '${s.trash.length} mục, giữ 30 ngày',
+                          ),
+                    navigates: true,
+                    onTap: () =>
+                        Navigator.of(context).pushNamed('/settings/trash'),
+                  ),
+                  if (scope.controller.hasRecovery)
+                    SettingsRow(
+                      key: const Key('habit-recovery'),
+                      icon: Icons.restore,
                       title: tr(
                         context,
-                        'Recover before last replace?',
-                        'Khôi phục trước lần thay thế cuối?',
+                        'Recover before last replace',
+                        'Khôi phục trước lần thay thế cuối',
                       ),
-                      message: tr(
-                        context,
-                        'This replaces current data with the recovery copy kept on this device. Export current data first if needed.',
-                        'Thay dữ liệu hiện tại bằng bản khôi phục trên máy này. Hãy xuất dữ liệu hiện tại trước nếu cần.',
-                      ),
-                      confirmLabel: tr(context, 'Recover', 'Khôi phục'),
-                    );
-                    if (!ok) return null;
-                    await scope.controller.recoverBeforeReplace();
-                    return context.mounted
-                        ? tr(context, 'Recovery restored.', 'Đã khôi phục.')
-                        : null;
-                  }),
-                ),
-              HandyTile(
-                key: const Key('habit-backup'),
-                icon: Icons.archive_outlined,
-                title: tr(context, 'Back up as ZIP', 'Sao lưu ZIP'),
-                onTap: () =>
-                    _guard(context, () => exportHabits(context, scope, 'zip')),
-              ),
-              HandyTile(
-                key: const Key('habit-backup-json'),
-                icon: Icons.data_object,
-                title: tr(context, 'Back up as JSON', 'Sao lưu JSON'),
-                onTap: () =>
-                    _guard(context, () => exportHabits(context, scope, 'json')),
-              ),
-              HandyTile(
-                key: const Key('habit-import'),
-                icon: Icons.unarchive_outlined,
-                title: tr(
-                  context,
-                  'Bring in a backup or CSV',
-                  'Nhập bản sao lưu hoặc CSV',
-                ),
-                onTap: () =>
-                    _guard(context, () => importHabits(context, scope)),
-              ),
-              HandyTile(
-                key: const Key('habit-integrity'),
-                icon: Icons.verified_outlined,
-                title: tr(
-                  context,
-                  'Check stored data',
-                  'Kiểm tra dữ liệu đã lưu',
-                ),
-                onTap: () => _guard(context, () async {
-                  final result = await scope.controller.store!.integrity();
-                  if (!context.mounted) return null;
-                  return result == 'ok'
-                      ? tr(
+                      onTap: () => _guard(context, () async {
+                        final ok = await confirmHandy(
                           context,
-                          'Stored data is intact.',
-                          'Dữ liệu còn nguyên vẹn.',
-                        )
-                      : tr(
-                          context,
-                          'The check found a problem: $result. Export a backup.',
-                          'Kiểm tra thấy lỗi: $result. Hãy xuất bản sao lưu.',
+                          title: tr(
+                            context,
+                            'Recover before last replace?',
+                            'Khôi phục trước lần thay thế cuối?',
+                          ),
+                          message: tr(
+                            context,
+                            'This replaces current data with the recovery copy kept on this device. Export current data first if needed.',
+                            'Thay dữ liệu hiện tại bằng bản khôi phục trên máy này. Hãy xuất dữ liệu hiện tại trước nếu cần.',
+                          ),
+                          confirmLabel: tr(context, 'Recover', 'Khôi phục'),
                         );
-                }),
-              ),
-            ],
-          ),
-          if (scope.drive != null)
-            HandySettingsSection(
-              title: tr(context, 'Sync', '??ng b?'),
-              children: [
-                HandyTile(
-                  key: const Key('habit-sync'),
-                  icon: Icons.sync,
-                  title: tr(context, 'Sync', 'Đồng bộ'),
-                  subtitle: 'Google Drive · Android',
-                  onTap: () => Navigator.pushNamed(context, '/settings/sync'),
-                ),
-              ],
-            ),
-          if (folderSyncOffered)
-            HandySettingsSection(
-              title: tr(context, 'Sync', 'Đồng bộ'),
-              children: [
-                HandyTile(
-                  title: tr(
-                    context,
-                    'Sync through a folder',
-                    'Đồng bộ qua thư mục',
-                  ),
-                  subtitle: tr(
-                    context,
-                    'Free · Windows · separate from Backup',
-                    'Miễn phí · Windows · tách biệt với Sao lưu',
-                  ),
-                  onTap: () =>
-                      Navigator.pushNamed(context, '/settings/folder-sync'),
-                ),
-              ],
-            ),
-          HandySettingsSection(
-            title: tr(context, 'Convenience', 'Tiện ích'),
-            children: [
-              HabitProSettingTile(
-                key: const Key('settings-rules'),
-                title: tr(context, 'Local rules', 'Quy tắc cục bộ'),
-                subtitle: tr(
-                  context,
-                  'Clear automatic changes, with history and Undo',
-                  'Thay đổi tự động rõ ràng, có lịch sử và hoàn tác',
-                ),
-                pro: scope.pro(context),
-                onTap: () => Navigator.pushNamed(context, '/settings/rules'),
-              ),
-              HabitProSettingTile(
-                key: const Key('settings-batch'),
-                title: tr(context, 'Batch changes', 'Thay đổi hàng loạt'),
-                subtitle: tr(
-                  context,
-                  'Select, preview and apply once',
-                  'Chọn, xem trước và áp dụng một lần',
-                ),
-                pro: scope.pro(context),
-                onTap: () => Navigator.pushNamed(context, '/habits/batch'),
-              ),
-            ],
-          ),
-          HandySettingsSection(
-            title: tr(context, 'Mood', 'Tâm trạng'),
-            description: tr(
-              context,
-              'Optional reflections. Notes stay local and in backups you export.',
-              'Cảm nhận tùy chọn. Ghi chú ở cục bộ và bản sao lưu bạn xuất.',
-            ),
-            children: [
-              HabitSettingToggle(
-                id: 'settings-show-mood',
-                title: tr(
-                  context,
-                  'Show mood on Today',
-                  'Hiện tâm trạng ở Hôm nay',
-                ),
-                value: s.settings['showMoodToday'] != false,
-                onChanged: (v) => _set(context, {'showMoodToday': v}),
-              ),
-              HandyTile(
-                title: tr(context, 'How to use mood', 'Cách ghi tâm trạng'),
-                onTap: () => Navigator.pushNamed(context, '/help/mood'),
-              ),
-            ],
-          ),
-          HandySettingsSection(
-            title: tr(context, 'Home screen', 'Màn hình chính'),
-            children: [
-              HandyTile(
-                key: const Key('settings-widgets'),
-                title: tr(context, 'Widgets', 'Tiện ích'),
-                subtitle: tr(
-                  context,
-                  'Today, one habit, or a routine',
-                  'Hôm nay, một thói quen hoặc quy trình',
-                ),
-                onTap: () => Navigator.pushNamed(context, '/settings/widgets'),
-              ),
-            ],
-          ),
-          HandySettingsSection(
-            title: tr(context, 'Pauses', 'Kỳ nghỉ'),
-            description: tr(
-              context,
-              'Days off for every habit or a few. They are not missed, keep your runs and get no reminders.',
-              'Những ngày nghỉ cho mọi thói quen hoặc vài thói quen. Không tính là lỡ, không đứt chuỗi, không nhắc.',
-            ),
-            children: [
-              HandyTile(
-                key: const Key('pause-help'),
-                title: tr(
-                  context,
-                  'What happens when I pause?',
-                  'Kỳ nghỉ ảnh hưởng thế nào?',
-                ),
-                onTap: () => Navigator.pushNamed(context, '/help/pause'),
-              ),
-              PauseList(scope: scope),
-              HandyTile(
-                key: const Key('pause-add'),
-                icon: Icons.add,
-                title: tr(context, 'Add a pause', 'Thêm kỳ nghỉ'),
-                onTap: () => openPauseEditor(context, scope),
-              ),
-            ],
-          ),
-          if (scope.autoBackup != null)
-            HandyAutoBackupSection(backup: scope.autoBackup!),
-          HandySettingsSection(
-            title: tr(context, 'Reset', 'Đặt lại'),
-            children: [
-              HandyTile(
-                key: const Key('settings-reset'),
-                title: tr(context, 'Reset preferences', 'Đặt lại cài đặt'),
-                subtitle: tr(
-                  context,
-                  'Keeps habits, history, routines, reminders and purchases',
-                  'Giữ thói quen, lịch sử, quy trình, lịch nhắc và quyền mua',
-                ),
-                onTap: () => _reset(context),
-              ),
-              HandyTile(
-                key: const Key('habit-clear'),
-                icon: Icons.delete_forever_outlined,
-                title: tr(
-                  context,
-                  'Delete all Habit data',
-                  'Xóa toàn bộ dữ liệu Habit',
-                ),
-                destructive: true,
-                onTap: () => _clearAll(context),
-              ),
-            ],
-          ),
-          HandySettingsSection(
-            title: 'Pro',
-            children: [
-              HandyTile(
-                key: const Key('settings-pro'),
-                navigates: true,
-                title: 'Pro Lifetime',
-                subtitleLines: 3,
-                subtitle: tr(
-                  context,
-                  'Advanced routines, insights, looks and convenience · pay once',
-                  'Quy trình nâng cao, phân tích, giao diện và tiện ích · trả một lần',
-                ),
-                onTap: () => openHabitPro(context),
-              ),
-              const HabitProPurchase(),
-            ],
-          ),
-          HandySettingsSection(
-            title: tr(context, 'Help & Learning', 'Trợ giúp & Hướng dẫn'),
-            children: [
-              HandyTile(
-                key: const Key('settings-help'),
-                title: tr(context, 'How to use', 'Cách dùng'),
-                onTap: () => Navigator.pushNamed(context, '/help'),
-              ),
-              HandyTile(
-                key: const Key('settings-replay'),
-                title: tr(context, 'Replay guide', 'Xem lại hướng dẫn'),
-                onTap: () => Navigator.pushNamed(context, '/welcome'),
-              ),
-              HandyTile(
-                key: const Key('settings-whats-new'),
-                title: tr(context, 'What’s New', 'Có gì mới'),
-                subtitle: tr(
-                  context,
-                  'Guided practice, searchable help and personal preferences',
-                  'Bản tập, tìm cách dùng và tùy chọn cá nhân',
-                ),
-                onTap: () => showDialog<void>(
-                  context: context,
-                  animationStyle: AnimationStyle(
-                    duration: HandyMotion.of(context),
-                    reverseDuration: HandyMotion.of(context),
-                  ),
-                  builder: (context) => AlertDialog(
-                    title: Text(tr(context, 'What’s New', 'Có gì mới')),
-                    content: Text(
-                      tr(
-                        context,
-                        'Try the three-stage guide without changing your library. Search help with or without accents. Customize your daily defaults in Settings.',
-                        'Thử hướng dẫn ba giai đoạn, không đổi thư viện. Tìm cách dùng có dấu hoặc không dấu. Đổi mặc định hằng ngày trong Cài đặt.',
-                      ),
+                        if (!ok) return null;
+                        await scope.controller.recoverBeforeReplace();
+                        return context.mounted
+                            ? tr(context, 'Recovery restored.', 'Đã khôi phục.')
+                            : null;
+                      }),
                     ),
-                    actions: [
-                      TextButton(
-                        onPressed: () => Navigator.pop(context),
-                        child: Text(tr(context, 'Done', 'Xong')),
-                      ),
-                    ],
+                  SettingsRow(
+                    key: const Key('habit-integrity'),
+                    icon: Icons.verified_outlined,
+                    title: tr(context, 'Check stored data', 'Kiểm tra dữ liệu'),
+                    onTap: () => _guard(context, () async {
+                      final result = await scope.controller.store!.integrity();
+                      if (!context.mounted) return null;
+                      return result == 'ok'
+                          ? tr(
+                              context,
+                              'Stored data is intact.',
+                              'Dữ liệu còn nguyên vẹn.',
+                            )
+                          : tr(
+                              context,
+                              'The check found a problem: $result. Export a backup.',
+                              'Kiểm tra thấy lỗi: $result. Hãy xuất bản sao lưu.',
+                            );
+                    }),
                   ),
-                ),
+                  SettingsRow(
+                    key: const Key('settings-reset'),
+                    icon: Icons.settings_backup_restore,
+                    title: tr(context, 'Reset preferences', 'Đặt lại cài đặt'),
+                    subtitle: tr(
+                      context,
+                      'Keeps habits, history, routines, reminders and purchases',
+                      'Giữ thói quen, lịch sử, quy trình, lịch nhắc và quyền mua',
+                    ),
+                    onTap: () => _reset(context),
+                  ),
+                  SettingsRow(
+                    key: const Key('habit-clear'),
+                    icon: Icons.delete_forever_outlined,
+                    destructive: true,
+                    title: tr(
+                      context,
+                      'Delete all Habit data',
+                      'Xóa toàn bộ dữ liệu Habit',
+                    ),
+                    subtitle: tr(
+                      context,
+                      'Habits, records and routines on this device',
+                      'Thói quen, lần ghi và quy trình trên máy này',
+                    ),
+                    onTap: () => _clearAll(context),
+                  ),
+                ],
               ),
             ],
           ),
-          HandySettingsSection(
-            title: tr(context, 'Privacy & About', 'Riêng tư & Giới thiệu'),
-            description: tr(
-              context,
-              'Saved on this device. No account needed. Exported backups contain your personal data.',
-              'Dữ liệu trên máy, không cần tài khoản. File sao lưu chứa dữ liệu cá nhân.',
-            ),
-            children: const [HabitAboutRows()],
+
+          // Help.
+          SettingsGroup(
+            title: tr(context, 'Help', 'Trợ giúp'),
+            children: [
+              SettingsPanel(
+                gap: false,
+                rows: [
+                  SettingsRow(
+                    key: const Key('settings-help'),
+                    icon: Icons.school_outlined,
+                    title: tr(context, 'How to use', 'Cách dùng'),
+                    subtitle: tr(
+                      context,
+                      'Check-ins, routines, pauses, mood and backups',
+                      'Ghi nhận, quy trình, kỳ nghỉ, tâm trạng và sao lưu',
+                    ),
+                    navigates: true,
+                    onTap: () => Navigator.pushNamed(context, '/help'),
+                  ),
+                  SettingsRow(
+                    key: const Key('settings-replay'),
+                    icon: Icons.replay,
+                    title: tr(context, 'Replay the guide', 'Xem lại hướng dẫn'),
+                    subtitle: tr(
+                      context,
+                      'The first-run tour. It changes nothing.',
+                      'Phần giới thiệu lần đầu. Không đổi gì.',
+                    ),
+                    navigates: true,
+                    onTap: () => Navigator.pushNamed(context, '/welcome'),
+                  ),
+                ],
+              ),
+            ],
           ),
-          const HandyMoreApps(app: 'habit'),
+
+          // About.
+          SettingsGroup(
+            title: tr(context, 'About', 'Giới thiệu'),
+            children: [
+              SettingsPanel(gap: false, rows: habitAboutRows(context)),
+              const KitSection(child: HandyMoreApps(app: 'habit')),
+            ],
+          ),
+          const SizedBox(height: HandySpace.xxl),
         ],
       );
     },
   );
 }
 
+/// Notifications, under Settings.
 class HabitNotificationSettingsPage extends StatelessWidget {
   final HabitScope scope;
   const HabitNotificationSettingsPage({super.key, required this.scope});
   @override
-  Widget build(BuildContext context) => Scaffold(
-    appBar: AppBar(title: Text(tr(context, 'Notifications', 'Thông báo'))),
-    body: ListView(
-      key: const Key('notifications-scroll'),
-      padding: const EdgeInsets.all(16),
-      children: [
-        HandyContent(
-          maxWidth: 720,
-          child: HabitSettingsPage(scope: scope).notifications(context),
-        ),
-      ],
-    ),
+  Widget build(BuildContext context) => HabitSettingsView(
+    key: const Key('notifications-scroll'),
+    title: tr(context, 'Notifications', 'Thông báo'),
+    listenable: Listenable.merge([scope.controller, scope.reminderError]),
+    children: (context) =>
+        HabitSettingsPage(scope: scope).notifications(context),
   );
+}
+
+/// The first thing in Settings: Pro on a soft card in the app's tint; a
+/// thank-you once it is owned.
+class HabitProCard extends StatelessWidget {
+  const HabitProCard({super.key});
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final p = HabitPalette.of(context);
+    final pro = LifetimeScope.maybeOf(context)?.pro == true;
+    return Material(
+      color: p.tint,
+      borderRadius: BorderRadius.circular(16),
+      child: InkWell(
+        key: const Key('settings-pro'),
+        borderRadius: BorderRadius.circular(16),
+        onTap: () => openHabitPro(context),
+        child: Padding(
+          padding: const EdgeInsets.all(HandySpace.l),
+          child: Row(
+            children: [
+              Icon(Icons.workspace_premium_outlined, size: 32, color: p.anchor),
+              const SizedBox(width: HandySpace.m),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      pro
+                          ? tr(context, 'Pro is yours', 'Bạn đã có Pro')
+                          : tr(context, 'Upgrade to Pro', 'Nâng cấp Pro'),
+                      style: theme.textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.w700,
+                        color: p.anchor,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      pro
+                          ? tr(
+                              context,
+                              'Thank you. Everything Pro adds is on.',
+                              'Cảm ơn bạn. Mọi thứ của Pro đã mở.',
+                            )
+                          : tr(
+                              context,
+                              'Advanced routines, smart insights, looks and rules. One payment; buy or restore inside.',
+                              'Quy trình nâng cao, phân tích chuyên sâu, giao diện và quy tắc. Trả một lần; mua hoặc khôi phục ở trong.',
+                            ),
+                      style: theme.textTheme.bodyMedium?.copyWith(color: p.ink),
+                    ),
+                  ],
+                ),
+              ),
+              Icon(
+                pro ? Icons.check_circle : Icons.chevron_right,
+                color: p.anchor,
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
 }

@@ -91,6 +91,8 @@ void main() {
         await tester.pumpAndSettle();
         await tester.tap(find.byKey(const Key('open-settings')));
         await tester.pumpAndSettle();
+        await tester.tap(find.byKey(const Key('settings-notifications')));
+        await tester.pumpAndSettle();
         final revision = c.state!.revision;
         await tester.tap(find.byKey(const Key('set-notifications')));
         for (var i = 0; i < 100 && c.state!.revision == revision; i++) {

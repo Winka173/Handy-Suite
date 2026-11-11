@@ -162,6 +162,31 @@ ThemeData habitTheme(
         type.labelSmall?.copyWith(color: p.ink),
       ),
     ),
+    // Switches and segmented choices in the vermilion, as the siblings use
+    // their own hue (the oxblood anchor read as black at switch size).
+    switchTheme: SwitchThemeData(
+      thumbColor: WidgetStateProperty.resolveWith(
+        (s) => s.contains(WidgetState.selected) ? p.onVermilion : p.control,
+      ),
+      trackColor: WidgetStateProperty.resolveWith(
+        (s) => s.contains(WidgetState.selected) ? p.vermilion : p.raised,
+      ),
+      trackOutlineColor: WidgetStateProperty.resolveWith(
+        (s) => s.contains(WidgetState.selected) ? p.vermilion : p.control,
+      ),
+    ),
+    segmentedButtonTheme: SegmentedButtonThemeData(
+      style: ButtonStyle(
+        backgroundColor: WidgetStateProperty.resolveWith(
+          (s) => s.contains(WidgetState.selected) ? p.tint : null,
+        ),
+        foregroundColor: WidgetStateProperty.resolveWith(
+          (s) => s.contains(WidgetState.selected) ? p.anchor : p.ink,
+        ),
+        side: WidgetStatePropertyAll(BorderSide(color: p.line)),
+        textStyle: WidgetStatePropertyAll(type.labelLarge),
+      ),
+    ),
     iconTheme: base.iconTheme.copyWith(color: p.muted),
     floatingActionButtonTheme: base.floatingActionButtonTheme.copyWith(
       backgroundColor: p.anchor,

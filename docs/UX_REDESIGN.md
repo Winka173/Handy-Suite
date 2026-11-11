@@ -3441,6 +3441,24 @@ Kit sửa chung (`HandyPalette`): ở bản sáng, màu nhận diện được l
 - **Bookmark, bước tìm app trong bảng chia sẻ của máy:** trên hàng app có ngón tay vuốt từ phải sang trái kèm vệt và mũi tên ‹ (4 lần rồi nghỉ; giảm chuyển động thì đứng yên giữa đường). Cuối hàng có vùng mờ dần và nút › màu mực: bấm để dời hàng (chuột không vuốt được), tự ẩn khi đã tới cuối.
 
 
+## Handy Habit · đồng bộ với Boards và Bookmark · 2026-11-11
+
+Chủ app thấy Habit lệch hai app anh em ở ba chỗ: Cài đặt, giới thiệu lần đầu, và cảm giác chung (không chuyển động, chuỗi hạt không hiện). Hợp đồng này sửa cả ba theo cùng khung của Boards/Bookmark, giữ bản sắc Habit (vermilion `#B42318`, oxblood, Nunito, chuỗi hạt).
+
+**Cài đặt.** Câu hỏi của màn: "chỉnh nhanh thứ tôi cần, dữ liệu của tôi có an toàn không?". Việc chính: đổi ngôn ngữ/giao diện, bật nhắc, sao lưu.
+- Khung y như Boards: thẻ Pro (tint) ở đầu; nhóm lớn 22/700 (Chung, Thói quen và quy trình, Tiện ích + pill Pro, Dữ liệu, Trợ giúp, Giới thiệu); mỗi nhóm là panel trắng bo 16, hàng 60 px với icon 24 px, chữ thẳng một mép, chevron khi mở trang con. Từ 640 px tên nhóm bên trái, panel bên phải.
+- Ngôn ngữ và Sáng/tối là nút chọn ngay trên dòng (xếp dọc khi chữ không vừa). Công tắc và nút chọn dùng vermilion, không còn màu oxblood trông như đen.
+- Trang con thay cho danh sách dài: Thông báo (`/settings/notifications`), Mặc định và lịch (`/settings/preferences`: thói quen mới, lịch, quy trình), Kỳ nghỉ (`/settings/pauses`). Dữ liệu: Đồng bộ, rồi hai nút Sao lưu / Khôi phục, tự sao lưu, Thùng rác, kiểm tra, đặt lại, xoá hết (đỏ, cuối).
+- Mua/khôi phục Pro chỉ ở trang Pro (thẻ Pro dẫn tới đó).
+
+**Giới thiệu lần đầu.** Ba bước như Boards: câu chuyện (mẩu nhắc rời rạc bay về thành chuỗi hạt), tập trên Hôm nay cỡ thật, trang cuối "ngày lỡ vẫn có chỗ" với một nút Bắt đầu. Thanh 3 đoạn; trang đầu không có Quay lại; chữ và nút hiện dần (`Reveal`) theo một đồng hồ 1,5 s; không phủ tối khi tập; hạt mang màu thói quen. Bỏ qua và Esc ở mọi bước; Enter bấm nút; giảm chuyển động thì mọi thứ hiện ngay.
+
+**Hôm nay và chuyển động.** Chuỗi hạt luôn có 7 hạt; ngày trước khi tạo thói quen là hạt mờ, không phải hạt lỡ. Check-in: hạt hôm nay lấp đầy (scale + fill 220 ms), vòng giữ được chạy tới số mới, rung nhẹ; xong cả ngày thì vòng nảy một lần. Chuyển động chỉ là phản hồi, 0 khi máy hoặc app bật giảm chuyển động.
+
+**Từ chối.** Danh sách cài đặt phẳng 14 nhóm; hộp thoại cho lựa chọn 2–3 giá trị; lớp phủ tối khi tập; hạt màu ngoài bảng màu Habit; hiệu ứng vào màn cho nội dung đang làm việc.
+
+**Nền tảng.** Android/iOS: back hệ thống lùi một bước trong giới thiệu và đóng trang con; Windows/Web: Esc lùi, Enter bấm nút, trang con có URL riêng (`/settings/...`). 320–1440 px: một cột trên điện thoại, nhóm hai cột từ 640 px.
+
 ## Handy Habit · run 17 device follow-up contract · 2026-11-11
 
 - Data/jobs: existing local habits, 44 habit / 11 routine templates, free goal counts, settings and verified store state. No schema changes. Keep Nunito, vermilion/oxblood and the check-in bead signature.

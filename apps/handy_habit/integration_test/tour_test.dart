@@ -156,7 +156,7 @@ void main() {
     // Settings: calendar, reminders, data.
     await tap(t, 'open-settings');
     await pause(t, 1500);
-    await show(t, 'set-quiet', 1500);
+    await show(t, 'settings-notifications', 1500);
     await show(t, 'habit-backup', 2000);
     await back(t);
     await area(0);

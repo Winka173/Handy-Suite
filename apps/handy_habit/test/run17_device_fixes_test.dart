@@ -1,4 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:handy_habit/settings/settings_parts.dart';
 import 'package:handy_habit/pro/pro_demos.dart';
 import 'package:handy_habit/habits/habit_appearance.dart';
 import 'package:handy_habit_engine/handy_habit_engine.dart';
@@ -210,33 +211,28 @@ void main() {
           ..value = p.FakeHabitStore.snapshot('unavailable', pro: owned);
         await p.bootPro(t, fake: fake, open: false, width: 1440);
         await host.go(t, '/settings');
-        final sections = t
+        final groups = t
             .widget<HandyPage>(find.byType(HandyPage))
             .children
-            .whereType<HandySettingsSection>();
-        expect(sections.take(5).map((s) => s.title), [
-          'Appearance',
-          'Habit preferences',
-          'Routines',
-          'Notifications',
+            .whereType<SettingsGroup>();
+        expect(groups.map((g) => g.title), [
+          'General',
+          'Habits and routines',
+          'Convenience',
           'Data',
+          'Help',
+          'About',
         ]);
         final studio = find.byKey(const Key('settings-studio'));
-        final tile = t.widget<ListTile>(
-          find.descendant(of: studio, matching: find.byType(ListTile)),
+        expect(
+          find.descendant(
+            of: studio,
+            matching: find.byIcon(Icons.chevron_right),
+          ),
+          findsOneWidget,
         );
-        expect(tile.trailing, isA<Icon>());
         final badge = find.descendant(of: studio, matching: find.text('Pro'));
         expect(badge, owned ? findsNothing : findsOneWidget);
-        if (!owned) {
-          expect(
-            find.descendant(
-              of: find.byWidget(tile.title!),
-              matching: find.text('Pro'),
-            ),
-            findsOneWidget,
-          );
-        }
         await tap(t, 'settings-pro');
         expect(host.route(t), '/pro');
       },
@@ -251,9 +247,7 @@ void main() {
       300,
       scrollable: find.byType(Scrollable).last,
     );
-    final proRow = t.widget<HandyTile>(find.byKey(const Key('settings-pro')));
-    expect(proRow.navigates, isTrue);
-    expect(proRow.subtitle, contains('insights, looks and convenience'));
+    expect(find.text('Upgrade to Pro'), findsOneWidget);
     await tap(t, 'settings-pro');
     expect(host.route(t), '/pro');
   });
@@ -264,15 +258,17 @@ void main() {
     await p.bootPro(t, open: false, scale: 1.5);
     await host.go(t, '/settings');
     final studio = find.byKey(const Key('settings-studio'));
-    final word = find.descendant(of: studio, matching: find.text('studio'));
-    final pill = find.descendant(of: studio, matching: find.text('Pro'));
-    expect(
-      t.getRect(pill).left - t.getRect(word).right,
-      inInclusiveRange(8, 16),
+    final word = find.descendant(
+      of: studio,
+      matching: find.text('Personalization studio'),
     );
+    final pill = find.descendant(of: studio, matching: find.text('Pro'));
+    final w = t.getRect(word), pr = t.getRect(pill);
+    // Beside the name when it fits, else first on the next line.
     expect(
-      (t.getRect(pill).center.dy - t.getRect(word).center.dy).abs(),
-      lessThan(2),
+      (pr.left - w.right >= 8 && pr.left - w.right <= 16) ||
+          (pr.top >= w.bottom - 1 && (pr.left - w.left).abs() < 12),
+      isTrue,
     );
     expect(t.takeException(), isNull);
   });

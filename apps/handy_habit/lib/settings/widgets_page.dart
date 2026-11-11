@@ -188,6 +188,7 @@ class _HabitWidgetsPageState extends State<HabitWidgetsPage> {
                   if (habits.isNotEmpty)
                     HabitSettingChoice(
                       id: 'widget-habit-choice',
+                      icon: Icons.check_circle_outline,
                       title: t(
                         'Habit for quick check-in',
                         'Thói quen để ghi nhận nhanh',
@@ -204,6 +205,7 @@ class _HabitWidgetsPageState extends State<HabitWidgetsPage> {
                   if (routines.isNotEmpty)
                     HabitSettingChoice(
                       id: 'widget-routine-choice',
+                      icon: Icons.format_list_numbered,
                       title: t('Routine to open', 'Quy trình để mở'),
                       value:
                           s.settings['widgetRoutine'] as String? ??

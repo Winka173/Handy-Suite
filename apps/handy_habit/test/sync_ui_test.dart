@@ -31,7 +31,7 @@ void main() {
       expect(find.byKey(const Key('habit-sync')), findsNothing);
       await t.scrollUntilVisible(find.byKey(const Key('habit-backup')), 500);
       expect(
-        find.textContaining('Use backup to move data between platforms.'),
+        find.textContaining('back it up, sync or export it'),
         findsOneWidget,
       );
     },

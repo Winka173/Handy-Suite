@@ -76,6 +76,7 @@ void main() {
     final c = await start(tester, state: seeded());
     await tester.tap(find.byTooltip('Settings'));
     await tester.pumpAndSettle();
+    await tapKey(tester, 'settings-pauses');
     await tapKey(tester, 'pause-add');
     // The end is picked on the calendar, never typed.
     await tapKey(tester, 'field-until');
@@ -86,6 +87,10 @@ void main() {
     await tester.enterText(find.byKey(const Key('field-reason')), 'Đà Lạt');
     await tapKey(tester, 'editor-save');
     Navigator.of(tester.element(find.byKey(const Key('pause-add')))).pop();
+    await tester.pumpAndSettle();
+    Navigator.of(
+      tester.element(find.byKey(const Key('settings-pauses'))),
+    ).pop();
     await tester.pumpAndSettle();
     final p = c.state!.pauses.single;
     expect((p.from, p.until, p.everything), ('2024-01-08', '2024-01-10', true));
@@ -178,6 +183,7 @@ void main() {
     );
     await tapKey(tester, 'open-settings');
     await tester.pumpAndSettle();
+    await tapKey(tester, 'settings-pauses');
     await tapKey(tester, 'pause-p');
     expect(find.byKey(const Key('editor-save')), findsOneWidget);
     await tapKey(tester, 'sheet-cancel');

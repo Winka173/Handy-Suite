@@ -693,6 +693,7 @@ void main() {
   testWidgets('phone settings pauses', (t) async {
     await boot(t, const Size(390, 844), state: resting());
     await fixtures.tapKey(t, 'open-settings');
+    await fixtures.tapKey(t, 'settings-pauses');
     await t.scrollUntilVisible(
       find.byKey(const Key('pause-add')),
       300,
