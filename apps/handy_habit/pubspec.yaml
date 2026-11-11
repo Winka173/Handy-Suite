@@ -1,6 +1,6 @@
 name: handy_habit
 description: Offline habits and ordered personal routines.
-version: 1.0.0+3
+version: 1.0.0+4
 publish_to: none
 resolution: workspace
 environment:

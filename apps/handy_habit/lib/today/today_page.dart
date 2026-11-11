@@ -49,7 +49,9 @@ class TodayPage extends StatelessWidget {
       final large =
           MediaQuery.textScalerOf(context).scale(16) > 20 ||
           size.maxWidth < 360;
-      final mood = s.settings['showMoodToday'] != false;
+      // Mood joins once there is a first habit to keep.
+      final mood =
+          s.settings['showMoodToday'] != false && s.liveHabits.isNotEmpty;
       final left = [
         _Greeting(scope: scope, due: due, routines: routines, index: index),
         if (mood && !large) TodayMood(scope: scope),

@@ -41,6 +41,9 @@ class _MonthGridState extends State<MonthGrid> {
     final first = day(month);
     final lead = (month.weekday - widget.weekStart + 7) % 7;
     final days = DateTime.utc(month.year, month.month + 1, 0).day;
+    final last = widget.today.substring(0, 7) == first.substring(0, 7)
+        ? int.parse(widget.today.substring(8))
+        : days;
     final earliest = addDays(widget.today, -widget.backfill);
     final created = widget.habit.created;
     final canBack =
@@ -114,12 +117,13 @@ class _MonthGridState extends State<MonthGrid> {
         if (list)
           Capped(
             key: ValueKey(first),
-            count: days,
+            count: last,
             max: 7,
             name: 'month-days',
             builder: (context, shown) => Column(
               children: [
-                for (var i = days; i > days - shown; i--)
+                // Newest first, from today: days to come are not listed.
+                for (var i = last; i > last - shown; i--)
                   Builder(
                     builder: (context) {
                       final d = day(DateTime.utc(month.year, month.month, i));

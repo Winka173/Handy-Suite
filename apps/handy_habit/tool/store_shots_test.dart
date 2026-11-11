@@ -234,10 +234,7 @@ void main() {
         await open('/routine/morning');
         await tapKey(t, 'routine-start');
         // The sample's run waits paused: resume it.
-        if (find
-            .text(locale == 'vi' ? 'Tiếp tục' : 'Resume')
-            .evaluate()
-            .isNotEmpty)
+        if (find.byIcon(Icons.play_arrow).evaluate().isNotEmpty)
           await tapKey(t, 'routine-pause');
         // A few real seconds so the step's clock shows it running.
         await t.runAsync(
@@ -262,6 +259,8 @@ void main() {
         await capture(t, '$locale-05-templates');
         await open('/habit/reduce');
         await capture(t, '$locale-06-reduce');
+        await open('/settings/widgets');
+        await capture(t, '$locale-07-widgets');
       } finally {
         debugDefaultTargetPlatformOverride = null;
       }
