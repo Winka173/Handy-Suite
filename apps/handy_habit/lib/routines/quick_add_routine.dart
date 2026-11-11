@@ -4,6 +4,7 @@ import '../design/palette.dart';
 import '../habits/habit_appearance.dart';
 import '../scope.dart';
 import '../ui/words.dart';
+import 'share_routine.dart';
 
 /// New routine, the same quick way as a new habit: a name, or one of four
 /// starters, opens the editor filled in; All templates opens the gallery.
@@ -17,6 +18,7 @@ Future<bool> addRoutine(BuildContext context, HabitScope scope) async {
     builder: (_) => const _QuickRoutine(),
   );
   if (picked == null || !context.mounted) return false;
+  if (picked == 'import') return importSharedRoutine(context, scope);
   if (picked == 'templates')
     return await Navigator.pushNamed<bool>(
           context,
@@ -127,6 +129,23 @@ class _QuickRoutineState extends State<_QuickRoutine> {
               trailing: const Icon(Icons.chevron_right),
               onTap: () => Navigator.pop(context, t),
             ),
+          Wrap(
+            spacing: 4,
+            children: [
+              TextButton.icon(
+                key: const Key('quick-routine-import'),
+                onPressed: () => Navigator.pop(context, 'import'),
+                icon: const Icon(Icons.file_open_outlined, size: 18),
+                label: Text(
+                  tr(
+                    context,
+                    'Import a shared routine',
+                    'Nhập quy trình được chia sẻ',
+                  ),
+                ),
+              ),
+            ],
+          ),
           Align(
             alignment: AlignmentDirectional.centerStart,
             child: TextButton.icon(

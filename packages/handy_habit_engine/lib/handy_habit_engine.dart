@@ -26,6 +26,7 @@ part 'src/presets.dart';
 part 'src/progress.dart';
 part 'src/smart.dart';
 part 'src/template_catalog.dart';
+part 'src/shared_routine.dart';
 
 typedef Json = Map<String, dynamic>;
 dynamic freezeJson(dynamic value) {

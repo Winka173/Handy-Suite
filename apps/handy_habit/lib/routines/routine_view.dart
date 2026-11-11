@@ -6,6 +6,7 @@ import '../scope.dart';
 import '../ui/words.dart';
 import 'routine_editor.dart';
 import 'run.dart';
+import 'share_routine.dart';
 import '../habits/habit_appearance.dart';
 import '../ui/capped.dart';
 
@@ -356,6 +357,12 @@ class RoutineMenu extends StatelessWidget {
         tr(context, 'Edit', 'Sửa'),
         () => openRoutineEditor(context, scope, r),
         key: const Key('routine-edit'),
+      ),
+      HandyMenuItem(
+        Icons.ios_share,
+        tr(context, 'Share', 'Chia sẻ'),
+        () => shareRoutine(context, scope, r),
+        key: const Key('routine-share'),
       ),
       HandyMenuItem(
         r.archived ? Icons.unarchive_outlined : Icons.archive_outlined,

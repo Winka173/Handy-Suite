@@ -186,6 +186,10 @@ const habitHelpTopics = [
       'Pause and exit saves your place. Resume from Today or Routines. Finish opens a summary and saved session; changing the routine later does not rewrite that session.',
       'Tạm dừng và thoát lưu chỗ đang làm. Tiếp tục từ Hôm nay hoặc Quy trình. Kết thúc mở tổng kết và phiên đã lưu; sửa quy trình sau đó không đổi phiên cũ.',
     ),
+    (
+      'Share a routine: open it › ⋯ › Share. It goes as one page any browser can read; habits, records and notes stay with you. To add one shared with you, save the file, then Routines › New routine › Import a shared routine. It opens in the editor so you can look it over before Save.',
+      'Chia sẻ quy trình: mở quy trình › ⋯ › Chia sẻ. Quy trình đi dưới dạng một trang mở bằng trình duyệt nào cũng đọc được; thói quen, lần ghi và ghi chú vẫn ở lại máy bạn. Để thêm quy trình người khác gửi, lưu tệp, rồi vào Quy trình › Quy trình mới › Nhập quy trình được chia sẻ. Quy trình mở trong màn sửa để bạn xem lại trước khi Lưu.',
+    ),
   ]),
   HabitHelpTopic(
     'timers',
