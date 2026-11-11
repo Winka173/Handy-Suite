@@ -1,5 +1,8 @@
+import 'package:handy_habit_engine/handy_habit_engine.dart';
 import 'package:handy_ui/kit.dart';
+import '../habits/habit_appearance.dart';
 import '../scope.dart';
+import '../ui/words.dart';
 import '../today/rows.dart';
 import '../ui/capped.dart';
 import 'routine_view.dart';
@@ -60,6 +63,45 @@ class _RoutinesPageState extends State<RoutinesPage> {
                   context,
                   'A routine is a few steps in order, each with its own time. Start from one below, or make your own.',
                   'Quy trình là vài bước theo thứ tự, mỗi bước có thời gian riêng. Bắt đầu từ một mẫu dưới đây, hoặc tự tạo.',
+                ),
+              ),
+            ),
+          // The starters the sentence above points to: open one to preview
+          // and customise it before anything is saved.
+          if (routines.isEmpty)
+            HandySection(
+              children: [
+                for (final t in routineTemplateCatalog.take(4))
+                  ListTile(
+                    key: Key('routine-starter-${t.id}'),
+                    leading: Icon(habitIcon(t.icon)),
+                    title: Text(isVi(context) ? t.vi : t.en),
+                    subtitle: Text(
+                      tr(
+                        context,
+                        '${t.steps.length} steps · ${(t.seconds / 60).round()} min',
+                        '${t.steps.length} bước · ${(t.seconds / 60).round()} phút',
+                      ),
+                    ),
+                    trailing: const Icon(Icons.chevron_right),
+                    onTap: () =>
+                        Navigator.pushNamed(context, '/templates/${t.id}'),
+                  ),
+              ],
+            ),
+          if (routines.isEmpty)
+            Align(
+              alignment: AlignmentDirectional.centerStart,
+              child: TextButton(
+                key: const Key('routine-starters-all'),
+                onPressed: () =>
+                    Navigator.pushNamed(context, '/templates?kind=routine'),
+                child: Text(
+                  tr(
+                    context,
+                    'See all ${routineTemplateCatalog.length} routines',
+                    'Xem cả ${routineTemplateCatalog.length} quy trình mẫu',
+                  ),
                 ),
               ),
             ),

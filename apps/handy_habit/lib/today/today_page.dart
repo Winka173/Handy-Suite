@@ -166,16 +166,18 @@ class _Greeting extends StatelessWidget {
                 context,
                 reductions.isEmpty
                     ? 'All ${due.length} done'
-                    : 'Today’s records are up to date',
+                    : 'All done for today',
                 reductions.isEmpty
                     ? 'Xong cả ${due.length} việc'
-                    : 'Đã cập nhật ghi nhận hôm nay',
+                    : 'Hôm nay đã xong',
               )
             else
               tr(
                 context,
                 reductions.isEmpty
                     ? '$left left to do'
+                    : left == 1
+                    ? '1 habit still needs a check-in'
                     : '$left habits still need a check-in',
                 reductions.isEmpty
                     ? 'Còn $left việc'
@@ -201,8 +203,8 @@ class _Greeting extends StatelessWidget {
         ? ''
         : tr(
             context,
-            'Checked in on $observedReductions of ${reductions.length} habits you’re cutting back on.',
-            'Đã ghi hôm nay cho $observedReductions/${reductions.length} thói quen muốn bớt.',
+            'Cutting back: $observedReductions of ${reductions.length} recorded today.',
+            'Đang bớt: đã ghi $observedReductions/${reductions.length} hôm nay.',
           );
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
