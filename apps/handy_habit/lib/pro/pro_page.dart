@@ -85,9 +85,9 @@ class _HabitProPageState extends State<HabitProPage> {
                 const SizedBox(height: 24),
                 KeyedSubtree(
                   key: stage,
-                  child: HabitProDemo(
+                  child: HandyAppear(
                     key: ValueKey('$shown-$replay'),
-                    feature: shown,
+                    child: HabitProDemo(feature: shown),
                   ),
                 ),
                 const SizedBox(height: 12),

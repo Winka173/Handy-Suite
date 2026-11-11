@@ -25,6 +25,44 @@ class _InsightsPageState extends State<InsightsPage> {
   String kind = 'month';
   late String anchor = scope.today;
   String? habit;
+  Future<void> method() => showModalBottomSheet<void>(
+    context: context,
+    isScrollControlled: true,
+    useSafeArea: true,
+    showDragHandle: true,
+    constraints: const BoxConstraints(maxWidth: 560),
+    sheetAnimationStyle: AnimationStyle(
+      duration: HandyMotion.of(context),
+      reverseDuration: HandyMotion.of(context),
+    ),
+    builder: (c) => SingleChildScrollView(
+      padding: const EdgeInsets.fromLTRB(24, 0, 24, 24),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            tr(c, 'How is this counted?', 'Số này được tính thế nào?'),
+            style: Theme.of(c).textTheme.titleLarge,
+          ),
+          const SizedBox(height: 16),
+          Text(
+            tr(
+              c,
+              'Each day or whole week counts once. Pauses, skips, unknown days, conflicts and unfinished periods are left out; only full weeks inside this range count. A daily goal counts today once it is reached. Weekly limits use the incidents you recorded.',
+              'Mỗi ngày hoặc tuần trọn tính một lần. Bỏ qua ngày nghỉ, ngày bỏ qua, ngày chưa rõ, xung đột và khoảng chưa hết; chỉ tính tuần trọn trong khoảng đã chọn. Mục tiêu ngày hôm nay được tính khi đã đạt. Giới hạn tuần dùng số lần bạn đã ghi.',
+            ),
+          ),
+          const SizedBox(height: 16),
+          TextButton(
+            key: const Key('progress-method-done'),
+            onPressed: () => Navigator.pop(c),
+            child: Text(tr(c, 'Done', 'Xong')),
+          ),
+        ],
+      ),
+    ),
+  );
   (String, String) get range =>
       progressRange(kind, anchor, scope.state.weekStart);
   void move(int direction) {
@@ -166,7 +204,14 @@ class _InsightsPageState extends State<InsightsPage> {
         ListTile(
           key: const Key('progress-smart'),
           contentPadding: EdgeInsets.zero,
-          title: Text(tr(context, 'Smart insights', 'Phân tích chuyên sâu')),
+          title: Wrap(
+            spacing: 8,
+            crossAxisAlignment: WrapCrossAlignment.center,
+            children: [
+              Text(tr(context, 'Smart insights', 'Phân tích chuyên sâu')),
+              if (!scope.pro(context)) const HabitProPill(),
+            ],
+          ),
           subtitle: Text(
             tr(
               context,
@@ -174,15 +219,13 @@ class _InsightsPageState extends State<InsightsPage> {
               'So sánh nhịp sống, tìm một điều chỉnh nhỏ',
             ),
           ),
-          trailing: scope.pro(context)
-              ? const Icon(Icons.chevron_right)
-              : const HabitProBadge(feature: HabitProFeature.comparisons),
+          trailing: const Icon(Icons.chevron_right),
           onTap: () => Navigator.pushNamed(context, '/progress/smart'),
         ),
         Text(
           tr(
             context,
-            'Kept $kept of $due goals.',
+            '$kept of $due ${due == 1 ? 'goal' : 'goals'} kept',
             'Giữ được $kept trên $due mục tiêu.',
           ),
           key: const Key('progress-finding'),
@@ -192,13 +235,15 @@ class _InsightsPageState extends State<InsightsPage> {
           ),
         ),
         const SizedBox(height: 8),
-        Text(
-          tr(
-            context,
-            'Each day or whole week counts once. Pauses, unknown days and unfinished periods are left out; only full weeks inside this range count.',
-            'Mỗi ngày hoặc tuần trọn tính một lần. Bỏ qua ngày nghỉ, ngày chưa rõ và khoảng chưa hết; chỉ tính tuần trọn trong khoảng đã chọn.',
+        Align(
+          alignment: AlignmentDirectional.centerStart,
+          child: TextButton(
+            key: const Key('progress-method'),
+            onPressed: method,
+            child: Text(
+              tr(context, 'How is this counted?', 'Số này được tính thế nào?'),
+            ),
           ),
-          style: theme.textTheme.bodyMedium,
         ),
         if (habits.any((h) => h.negativeGoals.any((g) => g.window == 'week')))
           Padding(

@@ -247,12 +247,7 @@ class _HabitTemplatesPageState extends State<HabitTemplatesPage> {
                           ListTile(
                             key: Key('preset-${p.id}'),
                             contentPadding: EdgeInsets.zero,
-                            leading: Icon(
-                              habitIcon(
-                                templateCollections[p.collection]!.icon,
-                              ),
-                              size: 22,
-                            ),
+                            leading: Icon(habitIcon(p.icon), size: 22),
                             title: Text(tr(context, p.en, p.vi)),
                             subtitle: Text(
                               '${p.steps.length} ${tr(context, 'steps', 'bước')} · ${minutesText(context, p.seconds)} · ${weekdaysText(context, p.weekdays)}',
@@ -288,28 +283,9 @@ class _HabitTemplatesPageState extends State<HabitTemplatesPage> {
     final title = h != null
         ? tr(context, h.en, h.vi)
         : tr(context, r!.en, r.vi);
-    final hue = h?.color ?? templateCollections[r!.collection]!.color;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Row(
-          children: [
-            Container(
-              width: 8,
-              height: 8,
-              decoration: BoxDecoration(
-                color: habitInk(hue, Theme.of(context).scaffoldBackgroundColor),
-                shape: BoxShape.circle,
-              ),
-            ),
-            const SizedBox(width: 8),
-            Text(
-              tr(context, 'Free', 'Miễn phí'),
-              style: Theme.of(context).textTheme.bodySmall,
-            ),
-          ],
-        ),
-        const SizedBox(height: 8),
         Text(title, style: Theme.of(context).textTheme.titleMedium),
         const SizedBox(height: 4),
         Text(

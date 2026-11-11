@@ -23,6 +23,8 @@ class _PracticeTodayState extends State<PracticeToday> {
     var value = '3';
     final picked = await showDialog<bool>(
       context: context,
+      barrierColor:
+          Theme.of(context).dialogTheme.barrierColor ?? Colors.black54,
       animationStyle: AnimationStyle(
         duration: HandyMotion.of(context),
         reverseDuration: HandyMotion.of(context),

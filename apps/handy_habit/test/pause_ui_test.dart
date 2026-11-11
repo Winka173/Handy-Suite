@@ -74,8 +74,9 @@ void main() {
     tester,
   ) async {
     final c = await start(tester, state: seeded());
-    await tapKey(tester, 'habit-add');
-    await tapKey(tester, 'add-pause');
+    await tester.tap(find.byTooltip('Settings'));
+    await tester.pumpAndSettle();
+    await tapKey(tester, 'pause-add');
     // The end is picked on the calendar, never typed.
     await tapKey(tester, 'field-until');
     await tester.tap(find.text('10'));
@@ -84,6 +85,8 @@ void main() {
     await tester.pumpAndSettle();
     await tester.enterText(find.byKey(const Key('field-reason')), 'Đà Lạt');
     await tapKey(tester, 'editor-save');
+    Navigator.of(tester.element(find.byKey(const Key('pause-add')))).pop();
+    await tester.pumpAndSettle();
     final p = c.state!.pauses.single;
     expect((p.from, p.until, p.everything), ('2024-01-08', '2024-01-10', true));
     expect(find.textContaining('Paused until Wednesday'), findsOneWidget);

@@ -1,7 +1,6 @@
 import 'package:handy_ui/kit.dart';
 import '../habits/preset_sheet.dart';
 import '../insights/insights_page.dart';
-import '../pauses/pauses.dart';
 import '../scope.dart';
 import '../routines/routines_page.dart';
 import '../today/today_page.dart';
@@ -101,31 +100,6 @@ class HabitShell extends StatelessWidget {
                 ],
               ),
         actions: [
-          PopupMenuButton<String>(
-            key: const Key('habit-add'),
-            tooltip: tr(context, 'Add', 'Thêm'),
-            icon: const Icon(Icons.add),
-            onSelected: (v) => switch (v) {
-              'habit' => addHabit(context, scope),
-              'pause' => openPauseEditor(context, scope),
-              _ => Navigator.pushNamed(context, '/templates?kind=routine'),
-            },
-            itemBuilder: (context) => [
-              for (final v
-                  in area == 2
-                      ? ['routine', 'habit', 'pause']
-                      : ['habit', 'routine', 'pause'])
-                PopupMenuItem(
-                  key: Key('add-$v'),
-                  value: v,
-                  child: Text(switch (v) {
-                    'habit' => tr(context, 'New habit', 'Thói quen mới'),
-                    'routine' => tr(context, 'New routine', 'Quy trình mới'),
-                    _ => tr(context, 'Pause', 'Kỳ nghỉ'),
-                  }),
-                ),
-            ],
-          ),
           if (!wide)
             IconButton(
               key: const Key('open-settings'),
@@ -148,7 +122,8 @@ class HabitShell extends StatelessWidget {
           ),
         ),
       ),
-      floatingActionButton: area == 3
+      floatingActionButton:
+          area == 3 || (area == 0 && scope.state.liveHabits.isEmpty)
           ? null
           : FloatingActionButton.extended(
               key: Key(area == 2 ? 'routine-new' : 'today-new'),

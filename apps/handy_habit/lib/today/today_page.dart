@@ -363,7 +363,7 @@ class _Habits extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final c = HandyColors.of(context);
-    if (scope.state.habits.isEmpty) {
+    if (scope.state.liveHabits.isEmpty) {
       return Padding(
         padding: const EdgeInsets.only(top: HandySpace.xl),
         child: HandyEmpty(

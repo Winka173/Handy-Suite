@@ -121,6 +121,55 @@ const templateCollections = <String, TemplateCollection>{
   ),
 };
 
+/// Audited against each template's action; collections still own category icons.
+/// Material code points are data here; the app keeps static IconData references.
+const habitTemplateIcons = <String, int>{
+  'water-morning': 0xf0695, // water_drop_outlined
+  'make-bed': 0xeec7, // bed_outlined
+  'stretch': 0xe56f, // self_improvement
+  'plan-day': 0xf00d, // edit_outlined
+  'tidy-desk': 0xf06ea, // desk_outlined
+  'journal': 0xf00d, // edit_outlined
+  'prep-tomorrow': 0xf02c, // event_available_outlined
+  'gratitude': 0xe25c, // favorite_outline
+  'walk': 0xe1e1, // directions_walk
+  'steps': 0xe1e1, // directions_walk
+  'workout': 0xe28d, // fitness_center
+  'pushups': 0xe28d, // fitness_center
+  'read': 0xf1c2, // menu_book_outlined
+  'language': 0xe67b, // translate
+  'review-cards': 0xf3f6, // style_outlined
+  'deep-work': 0xf44a, // timer_outlined
+  'bed-time': 0xeecb, // bedtime_outlined
+  'no-caffeine': 0xef68, // coffee_outlined
+  'wind-down': 0xeecb, // bedtime_outlined
+  'same-wake': 0xe072, // alarm
+  'cleanse': 0xf3bb, // spa_outlined
+  'sunscreen': 0xf4bc, // wb_sunny_outlined
+  'moisturise': 0xf3bb, // spa_outlined
+  'water': 0xf0695, // water_drop_outlined
+  'phone-free-meal': 0xf316, // restaurant_outlined
+  'social-cap': 0xf286, // phone_android_outlined
+  'inbox-zero': 0xe3c4, // mail_outline
+  'screen-off': 0xf286, // phone_android_outlined
+  'dishes': 0xf149, // kitchen_outlined
+  'ten-minute-tidy': 0xf107, // home_outlined
+  'laundry': 0xf180, // local_laundry_service_outlined
+  'plants': 0xf4da, // yard_outlined
+  'vegetables': 0xf316, // restaurant_outlined
+  'breathe': 0xe56f, // self_improvement
+  'call-family': 0xe488, // people_outline
+  'kind-message': 0xe155, // chat_bubble_outline
+  'money-check': 0xf336, // savings_outlined
+  'save-small': 0xf336, // savings_outlined
+  'sugary-drinks': 0xf179, // local_drink_outlined
+  'smoking': 0xf3ab, // smoking_rooms_outlined
+  'late-snacks': 0xf316, // restaurant_outlined
+  'social-checks': 0xf286, // phone_android_outlined
+  'impulse-buys': 0xf37d, // shopping_bag_outlined
+  'phone-bed': 0xf286, // phone_android_outlined
+};
+
 String presetCollection(String id, String group) => switch (id) {
   'water' || 'water-morning' => 'nutrition',
   'read' => 'reading',
@@ -178,6 +227,8 @@ class RoutineTemplateInfo {
     this.steps, {
     this.weekdays = const [1, 2, 3, 4, 5, 6, 7],
   });
+  int get icon =>
+      id == 'morning' ? 0xf4bc : templateCollections[collection]!.icon;
   int get seconds => steps.fold(0, (n, s) => n + s.$3);
   Routine instantiate({bool vietnamese = false}) => Routine(
     id: uid(),
@@ -187,7 +238,7 @@ class RoutineTemplateInfo {
         : templateCollections[collection]!.en,
     weekdays: weekdays,
     color: templateCollections[collection]!.color,
-    icon: templateCollections[collection]!.icon,
+    icon: icon,
     steps: [
       for (final step in steps)
         RoutineStep(

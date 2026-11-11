@@ -118,8 +118,11 @@ class HabitScope {
       ..showSnackBar(
         SnackBar(
           content: Text(message),
-          // With an action Flutter keeps it until tapped; this one goes away.
-          persist: false,
+          // Match showHandyMessage's default four seconds, but keep Undo
+          // reachable while assistive navigation is reading the announcement.
+          duration: const Duration(seconds: 4),
+          persist:
+              controller.canUndo && MediaQuery.accessibleNavigationOf(context),
           action: controller.canUndo
               ? SnackBarAction(
                   key: const Key('snack-undo'),

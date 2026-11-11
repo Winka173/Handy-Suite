@@ -1,5 +1,52 @@
+import '../pro/entitlements.dart';
 import 'package:handy_ui/kit.dart';
 import 'package:handy_habit_engine/handy_habit_engine.dart';
+
+/// The row owns navigation; its tier label belongs beside the feature name.
+class HabitProSettingTile extends StatelessWidget {
+  final String title, subtitle;
+  final bool pro;
+  final VoidCallback onTap;
+  const HabitProSettingTile({
+    super.key,
+    required this.title,
+    required this.subtitle,
+    required this.pro,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final split = title.lastIndexOf(' ');
+    return ListTile(
+      title: pro
+          ? Text(title)
+          : Semantics(
+              label: '$title, Pro',
+              excludeSemantics: true,
+              child: Wrap(
+                spacing: 4,
+                crossAxisAlignment: WrapCrossAlignment.center,
+                children: [
+                  if (split >= 0) Text(title.substring(0, split)),
+                  // The last word and pill wrap as one unit at enlarged text sizes.
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Flexible(child: Text(title.substring(split + 1))),
+                      const SizedBox(width: 8),
+                      const HabitProPill(),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+      subtitle: Text(subtitle),
+      trailing: const Icon(Icons.chevron_right),
+      onTap: onTap,
+    );
+  }
+}
 
 /// Values stay below their labels, including on narrow enlarged-text screens.
 class HabitSettingChoice extends StatelessWidget {

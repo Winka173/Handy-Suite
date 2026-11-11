@@ -40,7 +40,8 @@ class HabitPreset {
 
   String get collection => collectionId ?? presetCollection(id, group);
   int get color => templateCollections[collection]!.color;
-  int get icon => templateCollections[collection]!.icon;
+  int get icon =>
+      habitTemplateIcons[id] ?? templateCollections[collection]!.icon;
   String get descriptionEn => templateCollections[collection]!.descriptionEn;
   String get descriptionVi => templateCollections[collection]!.descriptionVi;
 

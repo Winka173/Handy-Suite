@@ -3441,6 +3441,20 @@ Kit sửa chung (`HandyPalette`): ở bản sáng, màu nhận diện được l
 - **Bookmark, bước tìm app trong bảng chia sẻ của máy:** trên hàng app có ngón tay vuốt từ phải sang trái kèm vệt và mũi tên ‹ (4 lần rồi nghỉ; giảm chuyển động thì đứng yên giữa đường). Cuối hàng có vùng mờ dần và nút › màu mực: bấm để dời hàng (chuột không vuốt được), tự ẩn khi đã tới cuối.
 
 
+## Handy Habit · run 17 device follow-up contract · 2026-11-11
+
+- Data/jobs: existing local habits, 44 habit / 11 routine templates, free goal counts, settings and verified store state. No schema changes. Keep Nunito, vermilion/oxblood and the check-in bead signature.
+- Today asks what to do next: one creation action, empty card when no live habits and labelled FAB otherwise; no duplicate top-bar add on phone or wide. Existing sidebar/rail and keyboard creation stay.
+- Templates ask what fits: meaningful per-template icons in list, preview and saved draft; free items have no tier badge (current catalog is entirely free).
+- Check-in confirms the saved action: kit-equivalent four-second Undo, live announcement and persistent action under accessible navigation, with keyboard/screen-reader reachability.
+- Progress asks how many goals were kept: one grammatical count finding, with counting details in a dismissible, scrolling “How is this counted?” sheet rather than a paragraph under the finding.
+- Settings asks what to change: Appearance / Habit preferences / Routines / Notifications / Data / Sync first, supporting groups and Pro convenience later. A small tinted Pro pill follows each locked title; the whole row navigates. Pro Lifetime always opens its page, including unconfigured/unavailable/offline states; subtitle names routines, insights, looks and convenience.
+- Pro asks what the purchase adds: exactly one feature demo, no cross-fade of unrelated content; local short dates and plain report copy. Restore/Get Pro are the purchase actions; Retry belongs beside the store-status finding. Loading, unavailable, error, pending and owned states retain truthful adapter status.
+- Practice asks how to change a goal: normal dim modal barrier, focus-contained field/actions, Back/Escape and cancel preserve practice; saving 8 advances the disposable exercise only.
+- Responsive/a11y: 320–1440 widths, wrap titles/badges and store status, capped wide content, scrolling sheets/footer at 150% text, labelled 48px targets, live feedback, reduced-motion instant changes. Native/web navigation conventions remain.
+- Reject: duplicate creation chrome, Free badge noise, category cutlery for water, distant Pro text, two demo subjects, ISO dates in prose, un-dimmed modal. No sibling source read per run 17 constraint; supervisor references and shared kit are the evidence.
+- Finish gate: host-render touched states EN/VI · light/dark · 390/1440 · text 1/1.5, critique sheets, fix and re-render. This does not claim device/store verification.
+
 ## Handy Habit · run 3b visual contract · 2026-11-10
 
 This refines R5/R6 presentation before code. Jobs, routing, persistence and tracking stay as specified below.

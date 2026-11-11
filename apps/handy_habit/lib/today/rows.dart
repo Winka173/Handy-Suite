@@ -306,9 +306,10 @@ class RoutineRow extends StatelessWidget {
     final start = r.steps.isEmpty || r.archived
         ? null
         : () => startRoutine(context, scope, r);
-    final hasIcon = habitIcons.any(
-      (i) => i.codePoint == r.icon && i != Icons.check,
-    );
+    final hasIcon = [
+      ...habitIcons,
+      ...templateIcons,
+    ].any((i) => i.codePoint == r.icon && i != Icons.check);
     final details = Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [

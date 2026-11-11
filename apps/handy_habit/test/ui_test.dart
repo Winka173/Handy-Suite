@@ -215,8 +215,7 @@ void main() {
     'new habit, one tap marks it once, a full bead opens the day and cancel keeps it',
     (tester) async {
       final c = await start(tester);
-      await tapKey(tester, 'habit-add');
-      await tapKey(tester, 'add-habit');
+      await tapKey(tester, 'today-add-habit');
       await tapKey(tester, 'preset-blank');
       await tester.enterText(
         find.byKey(const Key('field-title')),

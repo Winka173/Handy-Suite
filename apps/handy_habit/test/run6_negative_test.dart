@@ -62,12 +62,12 @@ void main() {
       await host.boot(t, state: state);
       await host.go(t, '/progress');
       expect(find.byKey(const Key('progress-calendar')), findsOneWidget);
+      await tap(t, 'progress-method');
       expect(
-        find.textContaining(
-          'Pauses, unknown days and unfinished periods are left out',
-        ),
+        find.textContaining('Pauses, skips, unknown days, conflicts'),
         findsOneWidget,
       );
+      await tap(t, 'progress-method-done');
       expect(
         find.textContaining('No finished days to count yet'),
         findsOneWidget,

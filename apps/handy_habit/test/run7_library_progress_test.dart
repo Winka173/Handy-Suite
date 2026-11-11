@@ -121,7 +121,7 @@ void main() {
   ) async {
     await host.boot(t, state: HabitState(settings: {'onboarded': true}));
     await host.go(t, '/progress');
-    expect(find.text('Kept 0 of 0 goals.'), findsOneWidget);
+    expect(find.text('0 of 0 goals kept'), findsOneWidget);
     expect(find.byKey(const Key('progress-create')), findsOneWidget);
     await tap(t, 'range-year');
     expect(find.byKey(const Key('year-heatmap')), findsOneWidget);

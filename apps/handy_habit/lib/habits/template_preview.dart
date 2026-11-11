@@ -99,7 +99,7 @@ class _TemplatePreviewPageState extends State<TemplatePreviewPage> {
               children: [
                 Row(
                   children: [
-                    Icon(habitIcon(c.icon), size: 22),
+                    Icon(habitIcon(h?.icon ?? r!.icon), size: 22),
                     const SizedBox(width: 8),
                     Expanded(
                       child: Text(

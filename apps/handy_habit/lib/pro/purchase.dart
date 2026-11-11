@@ -90,13 +90,34 @@ class _HabitProPurchaseState extends State<HabitProPurchase> {
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Semantics(
-          liveRegion: true,
-          child: Text(
-            status,
-            key: const Key('pro-status'),
-            style: widget.footer ? Theme.of(context).textTheme.bodySmall : null,
-          ),
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Expanded(
+              child: Semantics(
+                liveRegion: true,
+                child: Text(
+                  status,
+                  key: const Key('pro-status'),
+                  style: widget.footer
+                      ? Theme.of(context).textTheme.bodySmall
+                      : null,
+                ),
+              ),
+            ),
+            if (configured &&
+                !busy &&
+                !pending &&
+                ((!pro && price == null) ||
+                    snap?.status == 'error' ||
+                    snap?.status == 'unavailable' ||
+                    snap?.status == 'canceled'))
+              TextButton(
+                key: const Key('pro-retry'),
+                onPressed: () => act(store!, 'read'),
+                child: Text(t('Retry', 'Thử lại')),
+              ),
+          ],
         ),
         if (configured && pro && snap?.status == 'unavailable')
           Text(
@@ -149,17 +170,6 @@ class _HabitProPurchaseState extends State<HabitProPurchase> {
                       ? null
                       : () => act(store!, 'restore'),
                   child: Text(t('Restore purchases', 'Khôi phục giao dịch')),
-                ),
-              if (!busy &&
-                  !pending &&
-                  ((!pro && price == null) ||
-                      snap?.status == 'error' ||
-                      snap?.status == 'unavailable' ||
-                      snap?.status == 'canceled'))
-                TextButton(
-                  key: const Key('pro-retry'),
-                  onPressed: () => act(store!, 'read'),
-                  child: Text(t('Retry', 'Thử lại')),
                 ),
             ],
           ),

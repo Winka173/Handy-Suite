@@ -1,6 +1,7 @@
 import 'package:handy_habit_engine/handy_habit_engine.dart';
 import 'package:handy_ui/kit.dart';
 import '../insights/smart_demo.dart';
+import '../insights/insight_dates.dart';
 import '../design/palette.dart';
 import '../design/studio_style.dart';
 import '../design/studio_preview.dart';
@@ -174,7 +175,16 @@ Widget featureDemo(BuildContext c, HabitProFeature f, bool after) {
               ),
           ],
         )
-      else
+      else if (f == HabitProFeature.convenience)
+        Row(
+          children: [
+            const Icon(Icons.water_drop_outlined),
+            const SizedBox(width: 8),
+            Expanded(child: Text(t('Water', 'Uống nước'))),
+            Text(after ? '+1' : '0'),
+          ],
+        )
+      else if (f == HabitProFeature.reports)
         Container(
           color: p.surface,
           padding: const EdgeInsets.all(16),
@@ -183,13 +193,13 @@ Widget featureDemo(BuildContext c, HabitProFeature f, bool after) {
             children: [
               Text('Handy Habit', style: Theme.of(c).textTheme.titleLarge),
               const Divider(),
-              Text('2026-11-01 – 2026-11-10'),
+              Text(insightDates(c, '2026-11-01', '2026-11-10')),
               Text('${count.kept}/${count.eligible} · ${count.percent}%'),
               if (after)
                 Text(
                   t(
-                    'Counts, methods and mood pair sizes on paper.',
-                    'Số liệu, cách tính và số ngày ghép tâm trạng trên giấy.',
+                    'Your PDF includes goal totals, how they are counted and the number of days with mood records.',
+                    'PDF có tổng mục tiêu, cách tính và số ngày có ghi tâm trạng.',
                   ),
                 ),
             ],

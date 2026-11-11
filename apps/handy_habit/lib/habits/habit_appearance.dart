@@ -35,6 +35,24 @@ const habitColors = [
 ];
 
 const templateIcons = [
+  Icons.alarm,
+  Icons.bed_outlined,
+  Icons.chat_bubble_outline,
+  Icons.coffee_outlined,
+  Icons.desk_outlined,
+  Icons.event_available_outlined,
+  Icons.favorite_outline,
+  Icons.kitchen_outlined,
+  Icons.local_drink_outlined,
+  Icons.local_laundry_service_outlined,
+  Icons.mail_outline,
+  Icons.shopping_bag_outlined,
+  Icons.smoking_rooms_outlined,
+  Icons.style_outlined,
+  Icons.translate,
+  Icons.wb_sunny_outlined,
+  Icons.yard_outlined,
+
   Icons.restaurant_outlined,
   Icons.school_outlined,
   Icons.timer_outlined,

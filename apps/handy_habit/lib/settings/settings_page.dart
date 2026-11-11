@@ -572,64 +572,13 @@ class HabitSettingsPage extends StatelessWidget {
       return HandyPage(
         title: tr(context, 'Settings', 'Cài đặt'),
         children: [
-          if (folderSyncOffered)
-            HandySettingsSection(
-              title: tr(context, 'Sync', 'Đồng bộ'),
-              children: [
-                HandyTile(
-                  title: tr(
-                    context,
-                    'Sync through a folder',
-                    'Đồng bộ qua thư mục',
-                  ),
-                  subtitle: tr(
-                    context,
-                    'Free · Windows · separate from Backup',
-                    'Miễn phí · Windows · tách biệt với Sao lưu',
-                  ),
-                  onTap: () =>
-                      Navigator.pushNamed(context, '/settings/folder-sync'),
-                ),
-              ],
-            ),
-          HandySettingsSection(
-            title: tr(context, 'Convenience', 'Tiện ích'),
-            children: [
-              HandyTile(
-                title: tr(context, 'Local rules', 'Quy tắc cục bộ'),
-                subtitle: tr(
-                  context,
-                  'Clear automatic changes, with history and Undo',
-                  'Thay đổi tự động rõ ràng, có lịch sử và hoàn tác',
-                ),
-                trailing: scope.pro(context)
-                    ? null
-                    : const HabitProBadge(feature: HabitProFeature.convenience),
-                onTap: () => Navigator.pushNamed(context, '/settings/rules'),
-              ),
-              HandyTile(
-                title: tr(context, 'Batch changes', 'Thay đổi hàng loạt'),
-                subtitle: tr(
-                  context,
-                  'Select, preview and apply once',
-                  'Chọn, xem trước và áp dụng một lần',
-                ),
-                trailing: scope.pro(context)
-                    ? null
-                    : const HabitProBadge(feature: HabitProFeature.convenience),
-                onTap: () => Navigator.pushNamed(context, '/habits/batch'),
-              ),
-            ],
-          ),
           HandySettingsSection(
             title: tr(context, 'Appearance', 'Giao diện'),
             children: [
-              HandyTile(
+              HabitProSettingTile(
                 key: const Key('settings-studio'),
                 title: tr(context, 'Personalization studio', 'Xưởng giao diện'),
-                trailing: scope.pro(context)
-                    ? null
-                    : const HabitProBadge(feature: HabitProFeature.studio),
+                pro: scope.pro(context),
                 subtitle: tr(
                   context,
                   'Preview palettes, cards, icons and runner looks',
@@ -793,74 +742,7 @@ class HabitSettingsPage extends StatelessWidget {
               ),
             ],
           ),
-          HandySettingsSection(
-            title: tr(context, 'Mood', 'Tâm trạng'),
-            description: tr(
-              context,
-              'Optional reflections. Notes stay local and in backups you export.',
-              'Cảm nhận tùy chọn. Ghi chú ở cục bộ và bản sao lưu bạn xuất.',
-            ),
-            children: [
-              HabitSettingToggle(
-                id: 'settings-show-mood',
-                title: tr(
-                  context,
-                  'Show mood on Today',
-                  'Hiện tâm trạng ở Hôm nay',
-                ),
-                value: s.settings['showMoodToday'] != false,
-                onChanged: (v) => _set(context, {'showMoodToday': v}),
-              ),
-              HandyTile(
-                title: tr(context, 'How to use mood', 'Cách ghi tâm trạng'),
-                onTap: () => Navigator.pushNamed(context, '/help/mood'),
-              ),
-            ],
-          ),
           notifications(context),
-          HandySettingsSection(
-            title: tr(context, 'Home screen', 'Màn hình chính'),
-            children: [
-              HandyTile(
-                key: const Key('settings-widgets'),
-                title: tr(context, 'Widgets', 'Tiện ích'),
-                subtitle: tr(
-                  context,
-                  'Today, one habit, or a routine',
-                  'Hôm nay, một thói quen hoặc quy trình',
-                ),
-                onTap: () => Navigator.pushNamed(context, '/settings/widgets'),
-              ),
-            ],
-          ),
-          HandySettingsSection(
-            title: tr(context, 'Pauses', 'Kỳ nghỉ'),
-            description: tr(
-              context,
-              'Days off for every habit or a few. They are not missed, keep your runs and get no reminders.',
-              'Những ngày nghỉ cho mọi thói quen hoặc vài thói quen. Không tính là lỡ, không đứt chuỗi, không nhắc.',
-            ),
-            children: [
-              HandyTile(
-                key: const Key('pause-help'),
-                title: tr(
-                  context,
-                  'What happens when I pause?',
-                  'Kỳ nghỉ ảnh hưởng thế nào?',
-                ),
-                onTap: () => Navigator.pushNamed(context, '/help/pause'),
-              ),
-              PauseList(scope: scope),
-              HandyTile(
-                key: const Key('pause-add'),
-                icon: Icons.add,
-                title: tr(context, 'Add a pause', 'Thêm kỳ nghỉ'),
-                onTap: () => openPauseEditor(context, scope),
-              ),
-            ],
-          ),
-          if (scope.autoBackup != null)
-            HandyAutoBackupSection(backup: scope.autoBackup!),
           HandySettingsSection(
             title: tr(context, 'Data', 'Dữ liệu'),
             description: tr(
@@ -869,14 +751,6 @@ class HabitSettingsPage extends StatelessWidget {
               'Dữ liệu được lưu trên máy này, không mã hóa. Tên thói quen không vào quảng cáo. Hãy giữ bản sao lưu riêng. Dùng sao lưu để chuyển dữ liệu giữa các nền tảng.',
             ),
             children: [
-              if (scope.drive != null)
-                HandyTile(
-                  key: const Key('habit-sync'),
-                  icon: Icons.sync,
-                  title: tr(context, 'Sync', 'Đồng bộ'),
-                  subtitle: 'Google Drive · Android',
-                  onTap: () => Navigator.pushNamed(context, '/settings/sync'),
-                ),
               HandyTile(
                 key: const Key('backup-help'),
                 title: tr(
@@ -979,6 +853,133 @@ class HabitSettingsPage extends StatelessWidget {
               ),
             ],
           ),
+          if (scope.drive != null)
+            HandySettingsSection(
+              title: tr(context, 'Sync', '??ng b?'),
+              children: [
+                HandyTile(
+                  key: const Key('habit-sync'),
+                  icon: Icons.sync,
+                  title: tr(context, 'Sync', 'Đồng bộ'),
+                  subtitle: 'Google Drive · Android',
+                  onTap: () => Navigator.pushNamed(context, '/settings/sync'),
+                ),
+              ],
+            ),
+          if (folderSyncOffered)
+            HandySettingsSection(
+              title: tr(context, 'Sync', 'Đồng bộ'),
+              children: [
+                HandyTile(
+                  title: tr(
+                    context,
+                    'Sync through a folder',
+                    'Đồng bộ qua thư mục',
+                  ),
+                  subtitle: tr(
+                    context,
+                    'Free · Windows · separate from Backup',
+                    'Miễn phí · Windows · tách biệt với Sao lưu',
+                  ),
+                  onTap: () =>
+                      Navigator.pushNamed(context, '/settings/folder-sync'),
+                ),
+              ],
+            ),
+          HandySettingsSection(
+            title: tr(context, 'Convenience', 'Tiện ích'),
+            children: [
+              HabitProSettingTile(
+                key: const Key('settings-rules'),
+                title: tr(context, 'Local rules', 'Quy tắc cục bộ'),
+                subtitle: tr(
+                  context,
+                  'Clear automatic changes, with history and Undo',
+                  'Thay đổi tự động rõ ràng, có lịch sử và hoàn tác',
+                ),
+                pro: scope.pro(context),
+                onTap: () => Navigator.pushNamed(context, '/settings/rules'),
+              ),
+              HabitProSettingTile(
+                key: const Key('settings-batch'),
+                title: tr(context, 'Batch changes', 'Thay đổi hàng loạt'),
+                subtitle: tr(
+                  context,
+                  'Select, preview and apply once',
+                  'Chọn, xem trước và áp dụng một lần',
+                ),
+                pro: scope.pro(context),
+                onTap: () => Navigator.pushNamed(context, '/habits/batch'),
+              ),
+            ],
+          ),
+          HandySettingsSection(
+            title: tr(context, 'Mood', 'Tâm trạng'),
+            description: tr(
+              context,
+              'Optional reflections. Notes stay local and in backups you export.',
+              'Cảm nhận tùy chọn. Ghi chú ở cục bộ và bản sao lưu bạn xuất.',
+            ),
+            children: [
+              HabitSettingToggle(
+                id: 'settings-show-mood',
+                title: tr(
+                  context,
+                  'Show mood on Today',
+                  'Hiện tâm trạng ở Hôm nay',
+                ),
+                value: s.settings['showMoodToday'] != false,
+                onChanged: (v) => _set(context, {'showMoodToday': v}),
+              ),
+              HandyTile(
+                title: tr(context, 'How to use mood', 'Cách ghi tâm trạng'),
+                onTap: () => Navigator.pushNamed(context, '/help/mood'),
+              ),
+            ],
+          ),
+          HandySettingsSection(
+            title: tr(context, 'Home screen', 'Màn hình chính'),
+            children: [
+              HandyTile(
+                key: const Key('settings-widgets'),
+                title: tr(context, 'Widgets', 'Tiện ích'),
+                subtitle: tr(
+                  context,
+                  'Today, one habit, or a routine',
+                  'Hôm nay, một thói quen hoặc quy trình',
+                ),
+                onTap: () => Navigator.pushNamed(context, '/settings/widgets'),
+              ),
+            ],
+          ),
+          HandySettingsSection(
+            title: tr(context, 'Pauses', 'Kỳ nghỉ'),
+            description: tr(
+              context,
+              'Days off for every habit or a few. They are not missed, keep your runs and get no reminders.',
+              'Những ngày nghỉ cho mọi thói quen hoặc vài thói quen. Không tính là lỡ, không đứt chuỗi, không nhắc.',
+            ),
+            children: [
+              HandyTile(
+                key: const Key('pause-help'),
+                title: tr(
+                  context,
+                  'What happens when I pause?',
+                  'Kỳ nghỉ ảnh hưởng thế nào?',
+                ),
+                onTap: () => Navigator.pushNamed(context, '/help/pause'),
+              ),
+              PauseList(scope: scope),
+              HandyTile(
+                key: const Key('pause-add'),
+                icon: Icons.add,
+                title: tr(context, 'Add a pause', 'Thêm kỳ nghỉ'),
+                onTap: () => openPauseEditor(context, scope),
+              ),
+            ],
+          ),
+          if (scope.autoBackup != null)
+            HandyAutoBackupSection(backup: scope.autoBackup!),
           HandySettingsSection(
             title: tr(context, 'Reset', 'Đặt lại'),
             children: [
@@ -1010,11 +1011,13 @@ class HabitSettingsPage extends StatelessWidget {
             children: [
               HandyTile(
                 key: const Key('settings-pro'),
+                navigates: true,
                 title: 'Pro Lifetime',
+                subtitleLines: 3,
                 subtitle: tr(
                   context,
-                  'Advanced routines · pay once',
-                  'Quy trình, phân tích và giao diện riêng · trả một lần',
+                  'Advanced routines, insights, looks and convenience · pay once',
+                  'Quy trình nâng cao, phân tích, giao diện và tiện ích · trả một lần',
                 ),
                 onTap: () => openHabitPro(context),
               ),

@@ -170,15 +170,49 @@ Future<void> openHabitPro(BuildContext context, [HabitProFeature? feature]) =>
       feature == null ? '/pro' : '/pro?feature=${feature.name}',
     );
 
-/// A badge is a destination, never an entitlement toggle.
+/// The small tinted 'Pro' pill, as Settings and the siblings draw it
+/// beside a feature's name.
+class HabitProPill extends StatelessWidget {
+  const HabitProPill({super.key});
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+      decoration: BoxDecoration(
+        color: scheme.primaryContainer,
+        borderRadius: BorderRadius.circular(6),
+      ),
+      child: Text(
+        'Pro',
+        style: Theme.of(context).textTheme.labelSmall?.copyWith(
+          color: scheme.onPrimaryContainer,
+          fontWeight: FontWeight.w700,
+        ),
+      ),
+    );
+  }
+}
+
+/// A badge is a destination, never an entitlement toggle: the pill, with a
+/// 48 px target that opens Pro at [feature].
 class HabitProBadge extends StatelessWidget {
   final HabitProFeature feature;
   const HabitProBadge({super.key, required this.feature});
   @override
-  Widget build(BuildContext context) => TextButton(
-    key: Key('pro-badge-${feature.name}'),
-    style: TextButton.styleFrom(minimumSize: const Size(48, 48)),
-    onPressed: () => openHabitPro(context, feature),
-    child: const Text('Pro'),
+  Widget build(BuildContext context) => Semantics(
+    button: true,
+    label: tr(context, 'Pro: learn more', 'Pro: tìm hiểu thêm'),
+    excludeSemantics: true,
+    child: InkWell(
+      key: Key('pro-badge-${feature.name}'),
+      borderRadius: BorderRadius.circular(8),
+      onTap: () => openHabitPro(context, feature),
+      child: const SizedBox(
+        width: 48,
+        height: 48,
+        child: Center(child: HabitProPill()),
+      ),
+    ),
   );
 }
