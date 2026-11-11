@@ -126,3 +126,4 @@ Publish from `apps/handy_habit/android/` as Boards does (`docs/HANDY_BOARDS_RELE
 |---|---|---|---|
 | 1.0.0 (1) | closed testing (alpha), **draft** | 2026-11-10 | First upload by the API (store forms not filled yet, so Play keeps it a draft). Built with `HANDY_DRIVE_SYNC=true`. Gives the Play app-signing SHA-1 for the OAuth client |
 | 1.0.0 (2) | closed testing (alpha), **draft** | 2026-11-10 | Adds Pro Lifetime with the real Play store (`handy_store`, billing permission), Advanced routines, consistency pass. Built with `HANDY_DRIVE_SYNC=true` |
+| 1.0.0 (3) | closed testing (alpha), **draft** | 2026-11-11 | New icon (kept/due ring with today's bead), fixes from the BlueStacks walk-through, store graphics uploaded: 512 icon, feature graphic EN + VI (`tool/store_graphics.py`), 6 phone screenshots EN + VI (`tool/store_shots_test.dart`). Release APK smoke-tested on BlueStacks (guide, templates, routines; icons intact after tree shaking) |

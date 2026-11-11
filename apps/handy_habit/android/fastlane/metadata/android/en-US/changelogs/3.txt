@@ -1,0 +1,6 @@
+• A new icon: Today's ring with today's bead.
+• Habits to cut down, with daily or weekly limits and no shaming.
+• Routines step by step, advanced routines and smart insights with Pro.
+• Progress with a yearly heatmap, an optional mood log, templates.
+• Backups, a 30-day Trash and Google Drive sync on Android.
+• Many fixes from testing on Android.
