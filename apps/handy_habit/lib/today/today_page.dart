@@ -46,9 +46,9 @@ class TodayPage extends StatelessWidget {
       final wide = size.maxWidth >= 900;
       final left = [
         _Greeting(scope: scope, due: due, routines: routines, index: index),
+        if (s.settings['showMoodToday'] != false) TodayMood(scope: scope),
         if (scope.activeSession != null) _Resume(scope: scope),
         _Habits(scope: scope, due: due, index: index, notToday: notToday),
-        if (s.settings['showMoodToday'] != false) TodayMood(scope: scope),
       ];
       final right = [
         _Routines(scope: scope, routines: routines),
@@ -220,11 +220,12 @@ class _Greeting extends StatelessWidget {
                   MediaQuery.sizeOf(context).width /
                           MediaQuery.textScalerOf(context).scale(1) <
                       240
-                  ? 24
+                  ? 26
                   : MediaQuery.sizeOf(context).width < 400
-                  ? 28
-                  : 30,
-              fontWeight: FontWeight.w700,
+                  ? 34
+                  : 40,
+              fontWeight: FontWeight.w800,
+              letterSpacing: -.5,
               color: p.anchor,
               height: 1.1,
             ),
@@ -238,18 +239,13 @@ class _Greeting extends StatelessWidget {
               excludeSemantics: true,
               child: Row(
                 children: [
-                  SizedBox.square(
-                    dimension: 44,
-                    child: Bead(
-                      status: 'progress',
-                      fill: buildDue.isEmpty
-                          ? (reductions.isEmpty
-                                ? 0
-                                : observedReductions / reductions.length)
-                          : kept / buildDue.length,
-                      size: 44,
-                      color: p.vermilion,
-                    ),
+                  DayRing(
+                    fill: buildDue.isEmpty
+                        ? (reductions.isEmpty
+                              ? 0
+                              : observedReductions / reductions.length)
+                        : kept / buildDue.length,
+                    color: p.vermilion,
                   ),
                   const SizedBox(width: 12),
                   Flexible(
@@ -657,4 +653,53 @@ class _NextReminder extends StatelessWidget {
       ),
     );
   }
+}
+
+/// Today's kept/due ring: it runs to each new value, and when the day is
+/// full it swells once. Still when motion is reduced.
+class DayRing extends StatefulWidget {
+  final double fill;
+  final Color color;
+  const DayRing({super.key, required this.fill, required this.color});
+  @override
+  State<DayRing> createState() => _DayRingState();
+}
+
+class _DayRingState extends State<DayRing> with SingleTickerProviderStateMixin {
+  late final AnimationController pop = AnimationController(
+    vsync: this,
+    duration: const Duration(milliseconds: 520),
+  );
+
+  @override
+  void didUpdateWidget(DayRing old) {
+    super.didUpdateWidget(old);
+    if (old.fill < .999 &&
+        widget.fill >= .999 &&
+        MediaQuery.maybeDisableAnimationsOf(context) != true) {
+      pop.forward(from: 0);
+    }
+  }
+
+  @override
+  void dispose() {
+    pop.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) => AnimatedBuilder(
+    animation: pop,
+    builder: (context, child) => Transform.scale(
+      scale: 1 + .14 * Curves.easeOut.transform(1 - (2 * pop.value - 1).abs()),
+      child: child,
+    ),
+    child: TweenAnimationBuilder<double>(
+      tween: Tween(end: widget.fill),
+      duration: HandyMotion.of(context, const Duration(milliseconds: 480)),
+      curve: Curves.easeOutCubic,
+      builder: (context, v, _) =>
+          Bead(status: 'progress', fill: v, size: 52, color: widget.color),
+    ),
+  );
 }

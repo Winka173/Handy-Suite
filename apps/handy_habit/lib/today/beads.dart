@@ -1,4 +1,5 @@
 import 'dart:math' as math;
+import 'package:flutter/services.dart';
 import 'package:handy_habit_engine/handy_habit_engine.dart';
 import 'package:handy_ui/kit.dart';
 import '../scope.dart';
@@ -100,6 +101,16 @@ class _BeadPainter extends CustomPainter {
           r * .82,
           Paint()..color = ring.withValues(alpha: ring.a * .45),
         );
+      // A day before the habit began: a faint thin ring, never "missed".
+      case 'before':
+        canvas.drawCircle(
+          c,
+          r - stroke / 2,
+          Paint()
+            ..color = ring.withValues(alpha: ring.a * .35)
+            ..style = PaintingStyle.stroke
+            ..strokeWidth = math.max(1, stroke * .6),
+        );
       // A day with no plan (a days-a-week habit not done that day).
       case 'notScheduled':
         canvas.drawCircle(c, r * .22, Paint()..color = ring);
@@ -142,6 +153,9 @@ class EarlierBeads extends StatelessWidget {
   Widget build(BuildContext context) {
     final ink = habitMark(context, data.habit);
     final days = earlierDays(data.habit, data.today);
+    // A new habit still shows a string of six: the days before it began
+    // are faint rings, so the string is the same length from day one.
+    final before = 6 - days.length;
     return Semantics(
       label: [
         for (final d in days)
@@ -151,6 +165,8 @@ class EarlierBeads extends StatelessWidget {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
+          for (var i = 0; i < before; i++)
+            const Padding(padding: EdgeInsets.only(right: 6), child: _Before()),
           for (final d in days)
             Padding(
               padding: const EdgeInsets.only(right: 6),
@@ -165,6 +181,17 @@ class EarlierBeads extends StatelessWidget {
       ),
     );
   }
+}
+
+class _Before extends StatelessWidget {
+  const _Before();
+  @override
+  Widget build(BuildContext context) => Bead(
+    status: 'before',
+    fill: 0,
+    size: 18,
+    color: HandyColors.of(context).muted,
+  );
 }
 
 /// A habit seen on one day: what the bead strings need.
@@ -240,7 +267,12 @@ class TodayBead extends StatelessWidget {
         message: label,
         child: InkResponse(
           key: Key('bead-${habit.id}'),
-          onTap: onTap,
+          onTap: () {
+            if (MediaQuery.maybeDisableAnimationsOf(context) != true) {
+              HapticFeedback.lightImpact();
+            }
+            onTap();
+          },
           onLongPress: onLongPress,
           radius: 28,
           child: SizedBox(
@@ -249,23 +281,28 @@ class TodayBead extends StatelessWidget {
             child: Stack(
               alignment: Alignment.center,
               children: [
-                HandySwap(
-                  child: KeyedSubtree(
-                    key: ValueKey('$status:$value'),
-                    child: Bead(
-                      status: switch (status) {
-                        'partial' => 'progress',
-                        'open' || 'missed' => 'open',
-                        _ => status,
-                      },
-                      fill: dayFill(habit, today, index),
-                      size: 40,
-                      color: color,
-                    ),
+                TweenAnimationBuilder<double>(
+                  tween: Tween(end: dayFill(habit, today, index)),
+                  duration: HandyMotion.of(
+                    context,
+                    const Duration(milliseconds: 320),
+                  ),
+                  curve: Curves.easeOutCubic,
+                  builder: (context, fill, _) => Bead(
+                    status: switch (status) {
+                      'partial' => 'progress',
+                      'open' || 'missed' => fill > 0 ? 'progress' : 'open',
+                      'completed' when fill < .999 && habit.type != 'binary' =>
+                        'progress',
+                      _ => status,
+                    },
+                    fill: fill,
+                    size: 40,
+                    color: color,
                   ),
                 ),
                 if (done)
-                  Icon(Icons.check, size: 22, color: checkInk)
+                  _Pop(child: Icon(Icons.check, size: 22, color: checkInk))
                 else if (paused)
                   Icon(Icons.pause, size: 18, color: c.muted)
                 else if (habit.type != 'binary' && status != 'skipped')
@@ -285,4 +322,20 @@ class TodayBead extends StatelessWidget {
       ),
     );
   }
+}
+
+/// Grows in from nothing with a little overshoot when it first appears
+/// (the tick of a bead just filled); still with reduced motion.
+class _Pop extends StatelessWidget {
+  final Widget child;
+  const _Pop({required this.child});
+  @override
+  Widget build(BuildContext context) => TweenAnimationBuilder<double>(
+    tween: Tween(begin: 0, end: 1),
+    duration: HandyMotion.of(context, const Duration(milliseconds: 280)),
+    curve: Curves.easeOutBack,
+    builder: (context, k, child) =>
+        Transform.scale(scale: math.max(0, k), child: child),
+    child: child,
+  );
 }
