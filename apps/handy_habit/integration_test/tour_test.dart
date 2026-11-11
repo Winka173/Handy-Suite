@@ -81,6 +81,10 @@ Future<void> back(WidgetTester t) async {
   } else {
     await t.binding.handlePopRoute();
   }
+  await t.pumpAndSettle();
+  // Leaving a running routine asks first (pause and leave).
+  final confirm = find.byKey(const Key('confirm-action')).hitTestable();
+  if (confirm.evaluate().isNotEmpty) await t.tap(confirm.first);
   await pause(t, 700);
 }
 
@@ -94,7 +98,15 @@ void main() {
     addTearDown(c.dispose);
     final width = t.view.physicalSize.width / t.view.devicePixelRatio;
     final wide = width >= HandySpace.wide;
-    Future<void> area(int i) => tap(t, wide ? 'area-$i' : 'nav-$i');
+    Future<void> area(int i) async {
+      // Back out of pushed pages (the runner can need more than one Back)
+      // until the area navigation shows again.
+      final key = wide ? 'area-$i' : 'nav-$i';
+      for (var n = 0; n < 4 && find.byKey(Key(key)).evaluate().isEmpty; n++) {
+        await back(t);
+      }
+      await tap(t, key);
+    }
 
     await t.pumpWidget(
       HabitApp(controller: c, clock: () => now.add(const Duration(minutes: 1))),
