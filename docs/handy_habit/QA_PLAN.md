@@ -1,5 +1,7 @@
 # QA evidence and reproduction
 
+> 2026-11-11: the per-round screen tools (`tool/run5…run17_*`) were removed once Settings and the guide moved to the Boards/Bookmark frame. The rows below are history; `tool/screens_test.dart` (and `tool/store_shots_test.dart`) render the current review shots.
+
 ## Current R17/R18 host pass · run10 · 2026- 11-10
 
 - App 187/187 and engine 175/175: `flutter test --no-pub --reporter expanded` in each package. Logs: root `build/habit-run10-app-tests.log` and `build/habit-run10-engine-tests.log`.

@@ -1,150 +1,435 @@
+import 'dart:math' as math;
+import 'package:flutter/services.dart';
 import 'package:handy_ui/kit.dart';
-import '../design/palette.dart';
 import '../today/beads.dart';
-import 'practice.dart';
+import 'motion.dart';
+import 'story_scene.dart';
 
+enum PracticeStep { read, water, start, finish, done }
+
+/// A pretend Today at a phone's real size: two habits and a tiny routine.
+/// Everything is dark except the one thing to do next, in a lit window
+/// with a word beside it (the Spotlight of Boards and Bookmark). The beads
+/// really fill and the ring really closes. Nothing is written anywhere.
 class PracticeToday extends StatefulWidget {
-  final HabitPractice practice;
-  final VoidCallback onAdvance;
-  const PracticeToday({
-    super.key,
-    required this.practice,
-    required this.onAdvance,
-  });
+  final ValueChanged<PracticeStep> onStep;
+  const PracticeToday({super.key, required this.onStep});
   @override
-  State<PracticeToday> createState() => _PracticeTodayState();
+  State<PracticeToday> createState() => PracticeTodayState();
 }
 
-class _PracticeTodayState extends State<PracticeToday> {
-  final canvas = GlobalKey(), target = GlobalKey();
-  Rect? window;
-  double phoneHeight = 0;
-  Future<void> adjustGoal() async {
-    var value = '3';
-    final picked = await showDialog<bool>(
-      context: context,
-      barrierColor:
-          Theme.of(context).dialogTheme.barrierColor ?? Colors.black54,
-      animationStyle: AnimationStyle(
-        duration: HandyMotion.of(context),
-        reverseDuration: HandyMotion.of(context),
-      ),
-      builder: (context) => AlertDialog(
-        scrollable: true,
-        title: Text(tr(context, 'Daily goal', 'Mục tiêu mỗi ngày')),
-        content: TextFormField(
-          key: const Key('practice-goal-value'),
-          initialValue: value,
-          onChanged: (text) => value = text,
-          keyboardType: TextInputType.number,
-          decoration: InputDecoration(
-            labelText: tr(context, 'Each day, at least', 'Mỗi ngày tối thiểu'),
-            helperText: tr(context, 'Try 8 times', 'Thử 8 lần'),
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: Text(tr(context, 'Cancel', 'Hủy')),
-          ),
-          FilledButton(
-            key: const Key('practice-goal-save'),
-            onPressed: () {
-              if (value.trim() == '8') Navigator.pop(context, true);
-            },
-            child: Text(tr(context, 'Save', 'Lưu')),
-          ),
-        ],
-      ),
-    );
-    if (picked == true && mounted) widget.onAdvance();
+class PracticeTodayState extends State<PracticeToday> {
+  static const goal = 3;
+  PracticeStep step = PracticeStep.read;
+  bool read = false, running = false, finished = false;
+  int water = 0;
+  final readBead = GlobalKey(),
+      waterBead = GlobalKey(),
+      start = GlobalKey(),
+      done = GlobalKey();
+
+  void _to(PracticeStep next) {
+    setState(() => step = next);
+    widget.onStep(next);
+  }
+
+  void _haptic() {
+    if (moves(context)) HapticFeedback.lightImpact();
+  }
+
+  void _read() {
+    if (step != PracticeStep.read) return;
+    _haptic();
+    setState(() => read = true);
+    _to(PracticeStep.water);
+  }
+
+  void _drink() {
+    if (step != PracticeStep.water) return;
+    _haptic();
+    setState(() => water++);
+    if (water >= goal) _to(PracticeStep.start);
+  }
+
+  void _start() {
+    if (step != PracticeStep.start) return;
+    setState(() => running = true);
+    _to(PracticeStep.finish);
+  }
+
+  void _finish() {
+    if (step != PracticeStep.finish) return;
+    _haptic();
+    setState(() {
+      running = false;
+      finished = true;
+    });
+    _to(PracticeStep.done);
+  }
+
+  /// The guide's "Do it for me": the current step, all at once.
+  void advance() {
+    switch (step) {
+      case PracticeStep.read:
+        _read();
+      case PracticeStep.water:
+        setState(() => water = goal - 1);
+        _drink();
+      case PracticeStep.start:
+        _start();
+      case PracticeStep.finish:
+        _finish();
+      case PracticeStep.done:
+        break;
+    }
   }
 
   @override
   Widget build(BuildContext context) {
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (!mounted) return;
-      final box = target.currentContext?.findRenderObject() as RenderBox?;
-      final parent = canvas.currentContext?.findRenderObject() as RenderBox?;
-      if (box == null || parent == null || !box.hasSize) return;
-      final next = box.localToGlobal(Offset.zero, ancestor: parent) & box.size;
-      if (window != next || phoneHeight != parent.size.height)
-        setState(() {
-          window = next;
-          phoneHeight = parent.size.height;
-        });
-    });
-    final m = widget.practice, p = HabitPalette.of(context);
-    Widget focus(bool active, Widget child) =>
-        KeyedSubtree(key: active ? target : null, child: child);
-    final words = tr(
-      context,
-      [
-        'Tap today’s bead.',
-        'Undo takes that check-in back.',
-        'Adjust the daily goal from 3 to 8 times.',
-        'Start a tiny routine.',
-        'Complete its reading step.',
-        'See the ring and reading bead fill.',
-        'Practice complete. Nothing was saved.',
-      ][m.step],
-      [
-        'Chạm hạt hôm nay.',
-        'Hoàn tác lần vừa ghi.',
-        'Đổi mục tiêu mỗi ngày từ 3 lên 8 lần.',
-        'Bắt đầu quy trình nhỏ.',
-        'Hoàn thành bước đọc sách.',
-        'Xem vòng và hạt đọc sách đầy lên.',
-        'Đã tập xong. Không lưu gì thật.',
-      ][m.step],
+    final target = switch (step) {
+      PracticeStep.read => readBead,
+      PracticeStep.water => waterBead,
+      PracticeStep.start => start,
+      PracticeStep.finish => done,
+      PracticeStep.done => null,
+    };
+    final label = switch (step) {
+      PracticeStep.read => tr(context, 'Tap today’s bead', 'Chạm hạt hôm nay'),
+      PracticeStep.water => tr(
+        context,
+        'Tap + until 3 of 3',
+        'Chạm + tới đủ 3/3',
+      ),
+      PracticeStep.start => tr(
+        context,
+        'Start the routine',
+        'Bắt đầu quy trình',
+      ),
+      PracticeStep.finish => tr(context, 'Finish the step', 'Xong bước này'),
+      PracticeStep.done => null,
+    };
+    return Stack(
+      fit: StackFit.expand,
+      children: [
+        Spotlight(
+          target: target,
+          label: label,
+          radius: 16,
+          child: _Screen(state: this),
+        ),
+        // A marker for tests and screen shots: which step is showing.
+        Positioned(
+          left: 0,
+          top: 0,
+          child: SizedBox.shrink(
+            key: Key('practice-instruction-${step.index}'),
+          ),
+        ),
+      ],
     );
-    final theme = Theme.of(context);
-    final waterColor = Theme.of(context).brightness == Brightness.dark
-        ? const Color(0xFF86B5FF)
-        : const Color(0xFF2563EB);
-    Widget habitRow(
-      String title,
-      String subtitle,
-      Color color, {
-      bool water = false,
-    }) => Padding(
-      padding: const EdgeInsets.symmetric(vertical: 12),
+  }
+}
+
+class _Screen extends StatelessWidget {
+  final PracticeTodayState state;
+  const _Screen({required this.state});
+  @override
+  Widget build(BuildContext context) {
+    final s = state;
+    final kept =
+        (s.read ? 1 : 0) + (s.water >= PracticeTodayState.goal ? 1 : 0);
+    final time = HandyMotion.of(context, HandyMotion.long);
+    return ColoredBox(
+      color: GuideColors.paper,
+      // Very large text shrinks the pretend screen instead of cutting it.
+      child: LayoutBuilder(
+        builder: (context, box) => FittedBox(
+          fit: BoxFit.scaleDown,
+          alignment: Alignment.topCenter,
+          child: SizedBox(
+            width: box.maxWidth,
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(18, 28, 18, 18),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Text(
+                    tr(context, 'Good morning.', 'Chào buổi sáng.'),
+                    style: const TextStyle(
+                      fontSize: 30,
+                      fontWeight: FontWeight.w800,
+                      height: 1.1,
+                      color: GuideColors.deep,
+                    ),
+                  ),
+                  const SizedBox(height: 14),
+                  Row(
+                    children: [
+                      TweenAnimationBuilder<double>(
+                        tween: Tween(end: kept / 2),
+                        duration: time,
+                        curve: Curves.easeOutCubic,
+                        builder: (context, v, _) => SizedBox.square(
+                          dimension: 52,
+                          child: CustomPaint(painter: KeptRingPainter(v)),
+                        ),
+                      ),
+                      const SizedBox(width: 14),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            HandySwap(
+                              child: Text(
+                                tr(
+                                  context,
+                                  kept == 2
+                                      ? 'All done for today'
+                                      : '$kept of 2 kept',
+                                  kept == 2
+                                      ? 'Hôm nay đã xong'
+                                      : 'Đã giữ $kept/2',
+                                ),
+                                key: ValueKey(kept),
+                                style: const TextStyle(
+                                  fontSize: 20,
+                                  fontWeight: FontWeight.w800,
+                                  color: GuideColors.hue,
+                                ),
+                              ),
+                            ),
+                            Text(
+                              tr(
+                                context,
+                                'Monday, 2 November',
+                                'Thứ Hai, 2 tháng 11',
+                              ),
+                              style: const TextStyle(color: GuideColors.muted),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 24),
+                  Text(
+                    tr(context, 'Habits', 'Thói quen'),
+                    style: const TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.w700,
+                      color: GuideColors.ink,
+                    ),
+                  ),
+                  const SizedBox(height: 10),
+                  _HabitRow(
+                    title: tr(context, 'Read a little', 'Đọc một chút'),
+                    line: s.read
+                        ? tr(context, 'Done today', 'Hôm nay đã xong')
+                        : tr(context, 'Every day', 'Mỗi ngày'),
+                    color: GuideColors.hue,
+                    kept: 5,
+                    fill: s.read ? 1 : 0,
+                    plus: false,
+                    beadKey: s.readBead,
+                    beadId: 'practice-bead',
+                    onTap: s._read,
+                  ),
+                  const SizedBox(height: 10),
+                  _HabitRow(
+                    title: tr(context, 'Drink water', 'Uống nước'),
+                    line: tr(
+                      context,
+                      '${s.water} / ${PracticeTodayState.goal} glasses',
+                      '${s.water} / ${PracticeTodayState.goal} cốc',
+                    ),
+                    color: GuideColors.ochre,
+                    kept: 4,
+                    fill: s.water / PracticeTodayState.goal,
+                    plus: true,
+                    beadKey: s.waterBead,
+                    beadId: 'practice-water',
+                    onTap: s._drink,
+                  ),
+                  const SizedBox(height: 24),
+                  Text(
+                    tr(context, 'Routines', 'Quy trình'),
+                    style: const TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.w700,
+                      color: GuideColors.ink,
+                    ),
+                  ),
+                  const SizedBox(height: 10),
+                  Container(
+                    padding: const EdgeInsets.all(14),
+                    decoration: BoxDecoration(
+                      color: GuideColors.card,
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    child: HandySwap(
+                      child: s.running
+                          ? Row(
+                              key: const ValueKey('running'),
+                              children: [
+                                const Expanded(child: _Step()),
+                                FilledButton(
+                                  key: s.done,
+                                  style: _button,
+                                  onPressed: s._finish,
+                                  child: Text(tr(context, 'Done', 'Xong')),
+                                ),
+                              ],
+                            )
+                          : Row(
+                              key: ValueKey(s.finished),
+                              children: [
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        tr(
+                                          context,
+                                          'A small morning',
+                                          'Buổi sáng nhỏ',
+                                        ),
+                                        style: const TextStyle(
+                                          fontSize: 16,
+                                          fontWeight: FontWeight.w700,
+                                          color: GuideColors.ink,
+                                        ),
+                                      ),
+                                      Text(
+                                        s.finished
+                                            ? tr(context, 'Finished', 'Đã xong')
+                                            : tr(
+                                                context,
+                                                '1 step · 2 min',
+                                                '1 bước · 2 phút',
+                                              ),
+                                        style: const TextStyle(
+                                          color: GuideColors.muted,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                if (s.finished)
+                                  const Icon(
+                                    Icons.check_circle,
+                                    color: GuideColors.hue,
+                                    size: 32,
+                                  )
+                                else
+                                  OutlinedButton(
+                                    key: s.start,
+                                    onPressed: s._start,
+                                    child: Text(
+                                      tr(context, 'Start', 'Bắt đầu'),
+                                    ),
+                                  ),
+                              ],
+                            ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+final _button = FilledButton.styleFrom(
+  backgroundColor: GuideColors.hue,
+  foregroundColor: Colors.white,
+);
+
+class _Step extends StatelessWidget {
+  const _Step();
+  @override
+  Widget build(BuildContext context) => Column(
+    crossAxisAlignment: CrossAxisAlignment.start,
+    children: [
+      Text(
+        tr(context, 'Step 1 of 1', 'Bước 1/1'),
+        style: const TextStyle(color: GuideColors.muted),
+      ),
+      Text(
+        tr(context, 'Open the window', 'Mở cửa sổ'),
+        style: const TextStyle(
+          fontSize: 16,
+          fontWeight: FontWeight.w700,
+          color: GuideColors.ink,
+        ),
+      ),
+    ],
+  );
+}
+
+class _HabitRow extends StatelessWidget {
+  final String title, line, beadId;
+  final Color color;
+  final int kept;
+  final double fill;
+  final bool plus;
+  final GlobalKey beadKey;
+  final VoidCallback onTap;
+  const _HabitRow({
+    required this.title,
+    required this.line,
+    required this.color,
+    required this.kept,
+    required this.fill,
+    required this.plus,
+    required this.beadKey,
+    required this.beadId,
+    required this.onTap,
+  });
+  @override
+  Widget build(BuildContext context) {
+    final full = fill >= 1;
+    return Container(
+      padding: const EdgeInsets.fromLTRB(14, 12, 8, 12),
+      decoration: BoxDecoration(
+        color: GuideColors.card,
+        borderRadius: BorderRadius.circular(16),
+      ),
       child: Row(
         children: [
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Row(
-                  children: [
-                    Container(
-                      width: 12,
-                      height: 12,
-                      decoration: BoxDecoration(
-                        color: color,
-                        shape: BoxShape.circle,
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    Flexible(
-                      child: Text(title, style: theme.textTheme.titleMedium),
-                    ),
-                  ],
-                ),
                 Text(
-                  subtitle,
-                  style: theme.textTheme.bodySmall?.copyWith(color: p.muted),
+                  title,
+                  style: const TextStyle(
+                    fontSize: 17,
+                    fontWeight: FontWeight.w700,
+                    color: GuideColors.ink,
+                  ),
+                ),
+                HandySwap(
+                  child: Text(
+                    line,
+                    key: ValueKey(line),
+                    style: const TextStyle(color: GuideColors.muted),
+                  ),
                 ),
                 const SizedBox(height: 8),
                 Row(
                   children: [
-                    for (var i = 0; i < 6; i++)
+                    for (var d = 0; d < 6; d++)
                       Padding(
-                        padding: const EdgeInsets.only(right: 8),
+                        padding: const EdgeInsets.only(right: 7),
                         child: Bead(
-                          status: i == 3 ? 'missed' : 'completed',
+                          status: d < kept ? 'completed' : 'missed',
                           fill: 1,
-                          size: 18,
+                          size: 16,
                           color: color,
                         ),
                       ),
@@ -153,329 +438,75 @@ class _PracticeTodayState extends State<PracticeToday> {
               ],
             ),
           ),
-          const SizedBox(width: 8),
-          SizedBox.square(
-            dimension: 48,
-            child: water
-                ? IconButton(
-                    key: const Key('practice-bead'),
-                    tooltip: tr(context, 'Check in', 'Ghi nhận'),
-                    onPressed: m.step == 0 ? widget.onAdvance : null,
-                    icon: Stack(
-                      alignment: Alignment.center,
-                      children: [
-                        Bead(
-                          status: 'progress',
-                          fill: m.water / m.goal,
-                          size: 40,
-                          color: color,
-                        ),
-                        Icon(Icons.add, size: 20, color: color),
-                      ],
-                    ),
-                  )
-                : Stack(
-                    alignment: Alignment.center,
-                    children: [
-                      Bead(
-                        status: m.finished ? 'completed' : 'open',
-                        fill: 1,
-                        size: 40,
-                        color: color,
-                      ),
-                      if (m.finished)
-                        Icon(
-                          Icons.check,
-                          size: 20,
-                          color: color.computeLuminance() > .179
-                              ? Colors.black
-                              : Colors.white,
-                        ),
-                    ],
-                  ),
+          Semantics(
+            button: true,
+            label: title,
+            child: InkResponse(
+              key: Key(beadId),
+              radius: 30,
+              onTap: onTap,
+              child: SizedBox.square(
+                key: beadKey,
+                dimension: 56,
+                child: TodayBeadPicture(
+                  fill: fill,
+                  color: color,
+                  plus: plus && !full,
+                ),
+              ),
+            ),
           ),
         ],
       ),
     );
-    final phone = Stack(
-      key: canvas,
-      children: [
-        Container(
-          padding: const EdgeInsets.fromLTRB(16, 24, 16, 24),
-          decoration: BoxDecoration(
-            color: p.canvas,
-            borderRadius: BorderRadius.circular(28),
-            border: MediaQuery.sizeOf(context).width >= 900
-                ? Border.all(color: p.control, width: 2)
-                : null,
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Text(
-                tr(context, 'Good morning.', 'Chào buổi sáng.'),
-                style: theme.textTheme.headlineSmall?.copyWith(
-                  fontSize: 28,
-                  fontWeight: FontWeight.w700,
-                  height: 1.1,
-                  color: p.anchor,
-                ),
-              ),
-              const SizedBox(height: 12),
-              focus(
-                m.step == 5,
-                Row(
-                  children: [
-                    TweenAnimationBuilder<double>(
-                      tween: Tween(end: m.finished ? .5 : 0),
-                      duration: HandyMotion.of(context, HandyMotion.long),
-                      builder: (context, value, _) => Bead(
-                        status: 'progress',
-                        fill: value,
-                        size: 44,
-                        color: p.vermilion,
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            tr(
-                              context,
-                              m.finished
-                                  ? '1 of 2 kept today'
-                                  : '0 of 2 kept today',
-                              m.finished
-                                  ? 'Hôm nay giữ được 1/2'
-                                  : 'Hôm nay giữ được 0/2',
-                            ),
-                            style: theme.textTheme.titleLarge?.copyWith(
-                              color: p.vermilion,
-                            ),
-                          ),
-                          Text(
-                            tr(
-                              context,
-                              m.finished ? '1 left to do.' : '2 left to do.',
-                              m.finished ? 'Còn 1 việc.' : 'Còn 2 việc.',
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 4),
-              Text(
-                tr(context, 'Monday, 2 November', 'Thứ Hai, 2 tháng 11'),
-                style: TextStyle(color: p.ochre),
-              ),
-              const SizedBox(height: 20),
-              Text(
-                tr(context, 'Habits', 'Thói quen'),
-                style: theme.textTheme.titleMedium,
-              ),
-              focus(
-                m.step == 0,
-                habitRow(
-                  tr(context, 'Drink water', 'Uống nước'),
-                  tr(
-                    context,
-                    '${m.water} / ${m.goal} times',
-                    '${m.water} / ${m.goal} lần',
-                  ),
-                  waterColor,
-                  water: true,
-                ),
-              ),
-              Align(
-                alignment: AlignmentDirectional.centerStart,
-                child: focus(
-                  m.step == 1,
-                  TextButton(
-                    key: const Key('practice-undo'),
-                    onPressed: m.step == 1 ? widget.onAdvance : null,
-                    child: Text(tr(context, 'Undo', 'Hoàn tác')),
-                  ),
-                ),
-              ),
-              Align(
-                alignment: AlignmentDirectional.centerStart,
-                child: focus(
-                  m.step == 2,
-                  OutlinedButton(
-                    key: const Key('practice-goal'),
-                    onPressed: m.step == 2 ? adjustGoal : null,
-                    child: Text(
-                      tr(
-                        context,
-                        'Daily goal: ${m.goal} times · Edit',
-                        'Mục tiêu: ${m.goal} lần · Sửa',
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-              habitRow(
-                tr(context, 'Read a little', 'Đọc một chút'),
-                tr(context, 'Every day', 'Mỗi ngày'),
-                p.ochre,
-              ),
-              const Divider(height: 24),
-              Text(
-                tr(context, 'A small morning', 'Buổi sáng nhỏ'),
-                style: theme.textTheme.titleMedium,
-              ),
-              Text(
-                tr(
-                  context,
-                  m.finished
-                      ? '1 of 1 steps complete'
-                      : 'Read a little · 1 step',
-                  m.finished ? 'Đã xong 1/1 bước' : 'Đọc một chút · 1 bước',
-                ),
-              ),
-              const SizedBox(height: 12),
-              focus(
-                m.step == 3 || m.step == 4,
-                FilledButton(
-                  key: Key(m.running ? 'practice-complete' : 'practice-start'),
-                  onPressed: m.step == 3 || m.step == 4
-                      ? widget.onAdvance
-                      : null,
-                  child: Text(
-                    tr(
-                      context,
-                      m.running
-                          ? 'Done step'
-                          : m.finished
-                          ? 'Completed'
-                          : 'Start routine',
-                      m.running
-                          ? 'Xong bước'
-                          : m.finished
-                          ? 'Đã hoàn thành'
-                          : 'Bắt đầu quy trình',
-                    ),
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-        if (window != null && !m.done)
-          Positioned.fill(
-            child: IgnorePointer(
-              child: CustomPaint(painter: _Spotlight(window!, p.ochre)),
-            ),
-          ),
-        if (window != null && !m.done)
-          Positioned(
-            left: 12,
-            right: 12,
-            top: m.step != 0 && window!.center.dy <= phoneHeight / 2
-                ? window!.bottom + 16
-                : null,
-            bottom: (m.step == 0 || window!.center.dy > phoneHeight / 2)
-                ? phoneHeight - window!.top + 16
-                : null,
-            child: IgnorePointer(
-              child: Semantics(
-                key: Key('practice-instruction-${m.step}'),
-                liveRegion: true,
-                child: Container(
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    color: p.surface,
-                    border: Border.all(color: p.ochre),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Text(
-                    words,
-                    style: TextStyle(
-                      color: p.ink,
-                      fontWeight: FontWeight.w700,
-                      fontSize: 16,
-                    ),
-                  ),
-                ),
-              ),
-            ),
-          ),
-      ],
-    );
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        DecoratedBox(
-          decoration: BoxDecoration(
-            color: p.ink,
-            borderRadius: BorderRadius.circular(32),
-          ),
-          child: Padding(
-            padding: EdgeInsets.all(
-              MediaQuery.sizeOf(context).width >= 900 ? 6 : 0,
-            ),
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(26),
-              child: phone,
-            ),
-          ),
-        ),
-        if (m.done)
-          Padding(
-            padding: const EdgeInsets.only(top: 16),
-            child: Semantics(
-              liveRegion: true,
-              child: Text(
-                words,
-                key: Key('practice-instruction-${m.step}'),
-                style: TextStyle(fontWeight: FontWeight.w700, color: p.anchor),
-              ),
-            ),
-          ),
-      ],
-    );
   }
 }
 
-class _Spotlight extends CustomPainter {
-  final Rect window;
-  final Color highlight;
-  _Spotlight(this.window, this.highlight);
+/// Today's bead as the real app draws it: a ring that fills, then a full
+/// bead with a tick that pops in. Each change animates; none with reduced
+/// motion.
+class TodayBeadPicture extends StatelessWidget {
+  final double fill;
+  final Color color;
+  final bool plus;
+  const TodayBeadPicture({
+    super.key,
+    required this.fill,
+    required this.color,
+    this.plus = false,
+  });
   @override
-  void paint(Canvas canvas, Size size) {
-    final hole = RRect.fromRectAndRadius(
-      window.inflate(4),
-      const Radius.circular(12),
-    );
-    final path = Path()
-      ..fillType = PathFillType.evenOdd
-      ..addRect(Offset.zero & size)
-      ..addRRect(hole);
-    canvas.drawPath(path, Paint()..color = Colors.black.withValues(alpha: .64));
-    canvas.drawRRect(
-      hole,
-      Paint()
-        ..color = highlight.withValues(alpha: .65)
-        ..style = PaintingStyle.stroke
-        ..strokeWidth = 6
-        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 5),
-    );
-    canvas.drawRRect(
-      hole,
-      Paint()
-        ..color = highlight
-        ..style = PaintingStyle.stroke
-        ..strokeWidth = 2,
-    );
-  }
-
-  @override
-  bool shouldRepaint(_Spotlight old) =>
-      old.window != window || old.highlight != highlight;
+  Widget build(BuildContext context) => TweenAnimationBuilder<double>(
+    tween: Tween(end: fill),
+    duration: HandyMotion.of(context, const Duration(milliseconds: 320)),
+    curve: Curves.easeOutCubic,
+    builder: (context, v, _) {
+      final full = v >= .999;
+      return Stack(
+        alignment: Alignment.center,
+        children: [
+          Bead(
+            status: full ? 'completed' : 'progress',
+            fill: v,
+            size: 44,
+            color: color,
+          ),
+          if (full)
+            TweenAnimationBuilder<double>(
+              tween: Tween(begin: 0, end: 1),
+              duration: HandyMotion.of(
+                context,
+                const Duration(milliseconds: 260),
+              ),
+              curve: Curves.easeOutBack,
+              builder: (context, k, child) =>
+                  Transform.scale(scale: math.max(0, k), child: child),
+              child: const Icon(Icons.check, size: 24, color: Colors.white),
+            )
+          else if (plus)
+            Icon(Icons.add, size: 20, color: color),
+        ],
+      );
+    },
+  );
 }

@@ -143,28 +143,27 @@ void main() {
   });
 
   testWidgets(
-    'two story beats no questions; Enter, Back, Esc, system back undo beats and steps',
+    'two story beats no questions; Enter, Back, Esc, system back undo beats and stages',
     (t) async {
       final (c, store, reminders) = await learningBoot(t);
       expect(find.textContaining('?'), findsNothing);
       expect(find.byType(TextField), findsNothing);
-      expect(find.byKey(const Key('welcome-back')), findsOneWidget);
+      // The first beat has nothing behind it: Skip only.
+      expect(find.byKey(const Key('welcome-back')), findsNothing);
       await t.sendKeyEvent(LogicalKeyboardKey.enter);
       await t.pumpAndSettle();
-      expect(find.text('Small actions. Visible days.'), findsOneWidget);
+      expect(find.byKey(const Key('welcome-title-0-true')), findsOneWidget);
       await t.sendKeyEvent(LogicalKeyboardKey.escape);
       await t.pumpAndSettle();
-      expect(find.text('Good intentions drift away.'), findsOneWidget);
+      expect(find.byKey(const Key('welcome-title-0-false')), findsOneWidget);
       await practiceStart(t);
       await tap(t, 'practice-bead');
-      expect(find.text('1 / 3 times'), findsOneWidget);
+      expect(find.text('Done today'), findsOneWidget);
       await t.binding.handlePopRoute();
       await t.pumpAndSettle();
-      expect(find.text('0 / 3 times'), findsOneWidget);
+      expect(find.byKey(const Key('welcome-title-0-true')), findsOneWidget);
       await tap(t, 'welcome-back');
-      expect(find.text('Small actions. Visible days.'), findsOneWidget);
-      await tap(t, 'welcome-back');
-      expect(find.text('Good intentions drift away.'), findsOneWidget);
+      expect(find.byKey(const Key('welcome-title-0-false')), findsOneWidget);
       expect(store.writes, 0);
       expect(reminders.requests, 0);
       expect(c.state!.habits, isEmpty);
@@ -172,21 +171,20 @@ void main() {
   );
 
   testWidgets(
-    'every real practice step, goal edit, ring, one Start; practice writes no state or backup',
+    'every real practice step, counted bead, routine, ring, one Start; practice writes no state or backup',
     (t) async {
       final (c, store, reminders) = await learningBoot(t);
       final before = backupContents(c.state!);
       await practiceStart(t);
-      for (final key in ['practice-bead', 'practice-undo']) await tap(t, key);
-      await tap(t, 'practice-goal');
-      await t.enterText(find.byKey(const Key('practice-goal-value')), '8');
-      await tap(t, 'practice-goal-save');
-      expect(find.text('0 / 8 times'), findsOneWidget);
-      await tap(t, 'practice-start');
-      await tap(t, 'practice-complete');
-      expect(find.text('1 of 2 kept today'), findsOneWidget);
-      await tap(t, 'welcome-do-it');
-      expect(find.byKey(const Key('practice-instruction-6')), findsOneWidget);
+      await tap(t, 'practice-bead');
+      for (var i = 0; i < 3; i++) await tap(t, 'practice-water');
+      expect(find.text('3 / 3 glasses'), findsOneWidget);
+      await t.tap(find.widgetWithText(OutlinedButton, 'Start'));
+      await t.pumpAndSettle();
+      await t.tap(find.widgetWithText(FilledButton, 'Done'));
+      await t.pumpAndSettle();
+      expect(find.text('All done for today'), findsOneWidget);
+      expect(find.byKey(const Key('practice-instruction-4')), findsOneWidget);
       expect(backupContents(c.state!), before);
       expect(store.writes, 0);
       await tap(t, 'welcome-next');
@@ -205,23 +203,17 @@ void main() {
   );
 
   testWidgets(
-    'Do it for me advances every practice microstep and Back reverses them',
+    'Do it for me advances every practice step; Back from the last stage starts the practice again',
     (t) async {
       final (_, store, _) = await learningBoot(t);
       await practiceStart(t);
-      for (var i = 1; i <= 6; i++) {
+      for (var i = 1; i <= 4; i++) {
         await tap(t, 'welcome-do-it');
         expect(find.byKey(Key('practice-instruction-$i')), findsOneWidget);
-        await tap(t, 'welcome-back');
-        expect(
-          find.byKey(Key('practice-instruction-${i - 1}')),
-          findsOneWidget,
-        );
-        await tap(t, 'welcome-do-it');
       }
       await tap(t, 'welcome-next');
       await tap(t, 'welcome-back');
-      expect(find.byKey(const Key('practice-instruction-6')), findsOneWidget);
+      expect(find.byKey(const Key('practice-instruction-0')), findsOneWidget);
       expect(store.writes, 0);
     },
   );
@@ -231,7 +223,7 @@ void main() {
       final (c, store, r) = await learningBoot(t);
       if (stage > 0) await practiceStart(t);
       if (stage == 2) {
-        for (var i = 0; i < 6; i++) await tap(t, 'welcome-do-it');
+        for (var i = 0; i < 4; i++) await tap(t, 'welcome-do-it');
         await tap(t, 'welcome-next');
       }
       await tap(t, 'welcome-skip');
@@ -274,7 +266,7 @@ void main() {
       await route(t, '/settings');
       await tap(t, 'settings-replay');
       await practiceStart(t);
-      for (var i = 0; i < 6; i++) await tap(t, 'welcome-do-it');
+      for (var i = 0; i < 4; i++) await tap(t, 'welcome-do-it');
       await tap(t, 'welcome-next');
       await tap(t, 'welcome-next');
       expect(find.byType(HabitWelcomePage), findsNothing);
@@ -677,18 +669,19 @@ void main() {
     );
 
   testWidgets(
-    'Enter advances every practice step and Back on first beat exits like Skip',
+    'Enter advances every practice step and Esc on the first beat exits like Skip',
     (t) async {
       final (c, _, _) = await learningBoot(t);
       await practiceStart(t);
-      for (var i = 1; i <= 6; i++) {
+      for (var i = 1; i <= 4; i++) {
         await t.sendKeyEvent(LogicalKeyboardKey.enter);
         await t.pumpAndSettle();
         expect(find.byKey(Key('practice-instruction-$i')), findsOneWidget);
       }
-      for (var i = 0; i < 8; i++) await tap(t, 'welcome-back');
-      expect(find.text('Good intentions drift away.'), findsOneWidget);
-      await tap(t, 'welcome-back');
+      for (var i = 0; i < 2; i++) await tap(t, 'welcome-back');
+      expect(find.byKey(const Key('welcome-title-0-false')), findsOneWidget);
+      await t.sendKeyEvent(LogicalKeyboardKey.escape);
+      await t.pumpAndSettle();
       expect(c.state!.settings['onboarded'], true);
     },
   );

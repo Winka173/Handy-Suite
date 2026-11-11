@@ -328,24 +328,4 @@ void main() {
       expect(text, isNot(contains('pair sizes on paper')));
     });
   }
-
-  testWidgets('practice goal uses dim modal barrier; cancel preserves step', (
-    t,
-  ) async {
-    await f.bootRun14(t);
-    await host.go(t, '/welcome');
-    await tap(t, 'welcome-next');
-    await tap(t, 'welcome-next');
-    await tap(t, 'welcome-do-it');
-    await tap(t, 'welcome-do-it');
-    await tap(t, 'practice-goal');
-    final context = t.element(find.byType(AlertDialog));
-    final route = ModalRoute.of(context)! as DialogRoute;
-    expect(route.barrierColor, Colors.black54);
-    final barrier = t.widgetList<ModalBarrier>(find.byType(ModalBarrier)).last;
-    expect(barrier.color!.a, greaterThan(.5));
-    host.nav(t).pop();
-    await t.pumpAndSettle();
-    expect(find.byKey(const Key('practice-goal')), findsOneWidget);
-  });
 }

@@ -766,4 +766,24 @@ void main() {
     await fixtures.tapKey(t, 'habit-form-advanced');
     await shot(t, 'phone-habit-advanced');
   });
+
+  for (final (name, size) in [
+    ('phone', const Size(390, 844)),
+    ('desktop', const Size(1440, 900)),
+  ])
+    testWidgets('$name welcome', (t) async {
+      await boot(t, size, state: HabitState(settings: {'locale': 'vi'}));
+      await shot(t, '$name-welcome-1-story');
+      await fixtures.tapKey(t, 'welcome-next');
+      await shot(t, '$name-welcome-2-gathered');
+      await fixtures.tapKey(t, 'welcome-next');
+      await shot(t, '$name-welcome-3-practice');
+      await fixtures.tapKey(t, 'practice-bead');
+      await fixtures.tapKey(t, 'practice-water');
+      await shot(t, '$name-welcome-4-water');
+      for (var i = 0; i < 3; i++) await fixtures.tapKey(t, 'welcome-do-it');
+      await shot(t, '$name-welcome-5-done');
+      await fixtures.tapKey(t, 'welcome-next');
+      await shot(t, '$name-welcome-6-missed');
+    });
 }

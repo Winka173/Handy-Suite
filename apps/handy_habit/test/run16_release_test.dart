@@ -19,7 +19,7 @@ void main() {
         void headline(String key, double size) {
           final text = find.byKey(Key(key));
           final paragraph = t.renderObject<RenderParagraph>(
-            find.descendant(of: text, matching: find.byType(RichText)),
+            find.descendant(of: text, matching: find.byType(RichText)).last,
           );
           expect(paragraph.text.style!.fontSize, size);
           expect(paragraph.textScaler.scale(size), greaterThanOrEqualTo(size));
@@ -30,7 +30,7 @@ void main() {
         await tap(t, 'welcome-next');
         headline('welcome-title-0-true', 30);
         await tap(t, 'welcome-next');
-        headline('welcome-practice-title', 30);
+        headline('welcome-title-1-true', 30);
         expect(t.takeException(), isNull);
       });
     }

@@ -2,7 +2,7 @@ import 'package:handy_ui/kit.dart';
 import '../design/palette.dart';
 import '../mood/mood_faces.dart';
 import '../today/beads.dart';
-import '../welcome/scenes.dart';
+import '../welcome/story_scene.dart';
 
 /// Decorative screen fragments; instructions carry the full-size semantics.
 class HabitHelpMock extends StatelessWidget {

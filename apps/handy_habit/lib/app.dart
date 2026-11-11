@@ -456,6 +456,7 @@ class _HabitAppState extends State<HabitApp> with WidgetsBindingObserver {
             : TemplatePreviewPage(scope: scope, habit: h, routine: r);
       },
       ['', 'welcome'] => () => HabitWelcomePage(
+        replay: true,
         onDone: () async {
           navigator.currentState?.pop();
         },

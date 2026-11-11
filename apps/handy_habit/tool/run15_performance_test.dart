@@ -7,7 +7,31 @@ import 'package:handy_habit/data/store.dart';
 import 'package:handy_habit_engine/handy_habit_engine.dart';
 import 'package:handy_ui/kit.dart';
 import '../../../packages/handy_habit_engine/tool/scale.dart' show scaleFixture;
-import 'run10_screens_test.dart' show fonts;
+import 'package:flutter/services.dart';
+
+/// The app's faces and the icon font, so frames are drawn as shipped.
+Future<void> fonts() async {
+  Future<void> load(String family, Iterable<String> files) async {
+    final font = FontLoader(family);
+    for (final p in files)
+      font.addFont(
+        Future.value(ByteData.view(File(p).readAsBytesSync().buffer)),
+      );
+    await font.load();
+  }
+
+  await load(
+    'Nunito',
+    Directory('fonts')
+        .listSync()
+        .whereType<File>()
+        .where((f) => f.path.endsWith('.ttf'))
+        .map((f) => f.path),
+  );
+  await load('MaterialIcons', [
+    'C:/Users/Winka/flutter/bin/cache/artifacts/material_fonts/materialicons-regular.otf',
+  ]);
+}
 
 class Memory implements HabitStore {
   HabitState value;
