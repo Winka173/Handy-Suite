@@ -1,0 +1,45 @@
+# Google Play listing: English (as in `apps/handy_habit/android/fastlane/metadata/android/en-US/`)
+
+**Title:** Handy Habit
+**Short description:** Habits as bead strings, routines step by step. No account, works offline.
+
+**Full description:**
+
+Good intentions fade: a sticky note to drink water, a reading streak dropped, a calendar left empty. Handy Habit turns them into bead strings that fill day by day. Today's bead is one tap away.
+
+ONE TAP A DAY
+• Today shows your habits grouped into morning, afternoon and evening. Tap today's bead to check in; Undo is always there.
+• Count things too: glasses of water, pages, minutes. A ring shows how far today has gone.
+• A missed day is a hollow bead, never a red mark. Your best streak and consistency still tell the story.
+
+BUILD OR CUT DOWN
+• Build a habit, or cut one down: fewer sugary drinks, less late-night snacking, less social media.
+• Set a limit per day or per week. One tap logs a time, another says "none today". Going over is a fresh start tomorrow, not a failure.
+
+ROUTINES, STEP BY STEP
+• Morning, study, workout, bedtime: put steps in order with a time for each.
+• Run them full screen with a timer, pause, skip and a summary at the end. Steps linked to habits check them in for you.
+• Share a routine as one page; import one a friend sends.
+
+SEE YOUR PROGRESS
+• Week, month and year views, a yearly heatmap in each habit's colour, current and best streaks, honest consistency figures, a weekly look back.
+• An optional two-tap mood log, private to you.
+
+START IN A MINUTE
+• A short guide with a practice day that changes nothing.
+• 44 habit and 11 routine templates in collections: sleep, move, focus, reading, water, finance, less phone and more.
+• Home-screen widgets: tap a bead to check in without opening the app.
+• A step-by-step How to use.
+
+YOURS, ON YOUR DEVICE
+• No account. Your habits stay on your device.
+• Backups you control, automatic copies to a folder you choose, a 30-day Trash, export to CSV, Markdown or PDF.
+• English and Vietnamese, light and dark.
+
+HANDY HABIT PRO (ONE PAYMENT)
+Extra insights, looks and routine tools for those who want more. No subscription. Tracking, backup and your data are always free.
+
+Privacy policy: https://winka.top/en/apps/handy-habit/privacy/
+Terms of service: https://winka.top/en/apps/handy-habit/terms/
+
+Updated 2026-11-11 for build 5: the description now mentions widgets and routine sharing. Play shows what was last uploaded; the next `fastlane android metadata` upload publishes this text.

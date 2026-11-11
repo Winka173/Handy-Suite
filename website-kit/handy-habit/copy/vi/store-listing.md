@@ -1,0 +1,45 @@
+# Trang cửa hàng Google Play: Tiếng Việt (như trong `apps/handy_habit/android/fastlane/metadata/android/vi/`)
+
+**Tiêu đề:** Handy Habit
+**Mô tả ngắn:** Thói quen thành chuỗi hạt, quy trình từng bước. Không tài khoản, không cần mạng.
+
+**Mô tả đầy đủ:**
+
+Ý định tốt rồi nhạt dần: tờ nhắc uống nước, chuỗi đọc sách bỏ dở, lịch còn trống. Handy Habit biến chúng thành chuỗi hạt đầy dần mỗi ngày. Hạt hôm nay chỉ cách một chạm.
+
+MỘT CHẠM MỖI NGÀY
+• Hôm nay xếp thói quen theo sáng, chiều, tối. Chạm hạt hôm nay để ghi nhận; luôn có Hoàn tác.
+• Đếm cả số lượng: ly nước, trang sách, phút. Vòng tròn cho thấy hôm nay đã tới đâu.
+• Ngày lỡ là một hạt rỗng, không bao giờ là dấu đỏ. Chuỗi tốt nhất và độ đều đặn vẫn kể đúng hành trình.
+
+XÂY DỰNG HAY BỚT DẦN
+• Tạo thói quen mới, hoặc bớt dần một thói quen: ít nước ngọt, bớt ăn khuya, bớt mạng xã hội.
+• Đặt giới hạn theo ngày hoặc theo tuần. Một chạm để ghi một lần, một chạm để báo "hôm nay không có". Lỡ quá giới hạn thì mai là ngày mới.
+
+QUY TRÌNH TỪNG BƯỚC
+• Buổi sáng, học bài, tập luyện, trước khi ngủ: sắp các bước theo thứ tự, mỗi bước một thời lượng.
+• Chạy toàn màn hình với đồng hồ, tạm dừng, bỏ qua và tổng kết cuối phiên. Bước gắn với thói quen sẽ tự ghi nhận.
+• Chia sẻ quy trình dưới dạng một trang; nhập quy trình bạn bè gửi.
+
+THẤY RÕ TIẾN BỘ
+• Xem theo tuần, tháng, năm; bản đồ nhiệt cả năm theo màu từng thói quen; chuỗi hiện tại và tốt nhất; độ đều đặn tính trung thực; nhìn lại tuần.
+• Ghi tâm trạng hai chạm, tùy chọn và chỉ của riêng bạn.
+
+BẮT ĐẦU TRONG MỘT PHÚT
+• Hướng dẫn ngắn có một ngày tập dượt không ghi gì thật.
+• 44 mẫu thói quen và 11 quy trình theo nhóm: ngủ, vận động, tập trung, đọc, uống nước, tài chính, bớt điện thoại…
+• Widget màn hình chính: chạm một hạt là ghi nhận, không cần mở app.
+• Cách dùng từng bước.
+
+CỦA BẠN, TRÊN MÁY BẠN
+• Không cần tài khoản. Thói quen nằm trên máy của bạn.
+• Sao lưu do bạn giữ, tự sao lưu vào thư mục bạn chọn, Thùng rác 30 ngày, xuất CSV, Markdown hoặc PDF.
+• Tiếng Việt và tiếng Anh, giao diện sáng và tối.
+
+HANDY HABIT PRO (TRẢ MỘT LẦN)
+Thêm phân tích, giao diện và công cụ quy trình cho ai muốn nhiều hơn. Không thuê bao. Ghi nhận, sao lưu và dữ liệu của bạn luôn miễn phí.
+
+Chính sách riêng tư: https://winka.top/vi/apps/handy-habit/privacy/
+Điều khoản sử dụng: https://winka.top/vi/apps/handy-habit/terms/
+
+Cập nhật 11/11/2026 cho bản 5: mô tả đã nhắc widget và chia sẻ quy trình. Play hiện bản tải lên gần nhất; lần tải siêu dữ liệu kế tiếp sẽ đăng đoạn này.

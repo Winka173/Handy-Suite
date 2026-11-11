@@ -1,0 +1,191 @@
+{
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "inLanguage": "en",
+  "mainEntity": [
+    {
+      "@type": "Question",
+      "name": "Is Handy Habit free?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Yes. Tracking, routines, Progress, mood, reminders, widgets (Today, One habit, Routine), backups and sync are free. Pro is one optional payment for extras."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Do I need an account?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "No. There are no accounts and no servers of our own. Your habits stay on your phone."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Does it work offline?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Yes, fully. Only buying or restoring Pro, and Google Drive sync if you switch it on, use the internet."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "What is a bead string?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Each habit shows its last six days as beads and, at the end, today's bead. A full bead is a day kept; a hollow bead is a day not recorded. It is never a red mark."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "What happens if I miss a day?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Nothing bad. The bead stays hollow, your current streak may restart, and your longest streak and consistency still tell your story. Pauses let you take days off without missing them."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Can I track amounts, not just done or not?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Yes: times, minutes or an amount such as pages or glasses. The bead fills as a ring toward the day's goal."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Can I cut a habit down instead of building one?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Yes. Choose Break a habit and set a limit per day or week, or none at all. One tap logs a time; \"None today\" records a zero."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "How do the home-screen widgets work?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Add Today, One habit or Routine from Settings › Home-screen widgets or your launcher. Tap a bead on the widget to check in: it fills at once and the day is saved a moment later. Minutes, amounts and full days open the app. Widgets are Android only. This week and 16 weeks are Pro."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Do widgets show my notes or mood?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Never. They show counts, bead strings and, if you allow it, habit names. You can hide the names."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "What are routines?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "A few steps in order, each with a time: morning, study, workout, bedtime. Run them full screen with a timer ring, pause, skip, and see a summary. A step can check a habit in."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Can I share a routine?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Yes. Open a routine › ⋯ › Share. It goes as one page any browser can read. The other person saves the file and uses Routines › New routine › Import a shared routine. Only the routine travels; never habits, records or mood."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Does it have reminders?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Yes, per habit or routine, on the days it is planned, with quiet hours. By default the lock screen does not show the habit's name. The app asks for notification permission only when you set your first reminder."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "How do I back up my habits?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Settings › Data › Back up saves a ZIP; JSON and password-locked copies are in Data tools. Back up automatically keeps a copy a day on the device. Restore shows a preview and keeps a recovery copy."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Can I move to a new phone?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Yes: restore a backup file, or switch on Google Drive sync on both phones (it uses your own Drive's hidden app folder)."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "How does Google Drive sync protect my data?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "It copies your data to your own Drive, from your phone straight to Google. The developer has no server in between and receives nothing. It is not end-to-end encrypted. To delete the copy: Google Drive › Settings › Manage apps › Handy Habit › Delete hidden app data."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "What does Pro add?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Advanced routine steps (weekdays, A or B, dependencies), deeper Progress (comparisons, patterns, goal suggestions, mood beside habits), the personalization studio, rules and batch changes, and the This week and 16 weeks widgets. One payment, no subscription."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "What if I stop having Pro?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Nothing you made is deleted. Your habits and history stay, saved routines still run, and Pro looks return with Pro."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "How do I restore Pro on a new phone?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Settings › Upgrade to Pro › Restore, with the Google account that bought it."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Which languages and themes are there?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "English and Vietnamese; light, dark or follow the phone."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Is it available on iPhone, Windows or the web?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Not yet. Handy Habit is Android only today, in Google Play closed testing."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Does it show ads?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "This version shows no ads. If ads are ever added, the privacy policy will say so first."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "How do I delete my data?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Delete habits (Trash keeps them 30 days), use Settings › Data › Delete all data, or uninstall the app. Backups you made stay where you put them. If you used Drive sync, delete the hidden app data in Google Drive."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Who makes it, and how do I get help?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Winka Studio. Write to apps.winka.studio@gmail.com, or see How to use in the app."
+      }
+    }
+  ]
+}

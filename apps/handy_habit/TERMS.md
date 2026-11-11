@@ -1,0 +1,132 @@
+# Terms of Service · Điều khoản dịch vụ
+
+**Handy Habit** — last updated 11 November 2026 · cập nhật 11/11/2026
+
+---
+
+## English
+
+These terms apply to the Handy Habit app, made by Winka Studio. By using the
+app you accept them.
+
+### The app
+
+- Handy Habit keeps your habits, check-ins, routines and notes on your device
+  and helps you keep small habits going. It has no accounts and no servers of
+  its own.
+- The free features can be used without paying.
+- What the app keeps and sends is described in the
+  [Privacy Policy](https://winka.top/en/apps/handy-habit/privacy/).
+- Handy Habit is a personal record. It is not medical, health or therapy
+  advice, and its figures (streaks, consistency, mood) are counted only from
+  what you recorded; they do not predict or diagnose anything.
+
+### Handy Habit Pro
+
+- Pro is a one-time in-app purchase through Google Play. It is not a
+  subscription; there is nothing to renew or cancel.
+- The price is the one Google Play shows before you buy, in your currency.
+- Pro is tied to the Google account that bought it. Reinstalling the app, or
+  using it on another device with the same account, restores it (Settings ›
+  Upgrade to Pro › Restore).
+- If Pro ever ends, nothing you made is deleted: your habits and history stay,
+  saved routines still run, and Pro looks return when Pro does.
+- Payments and refunds are handled by Google Play under its terms and refund
+  policy. Where the law of your country gives you further rights, they apply.
+
+### Your content
+
+- What you write and add is yours. You are responsible for it and for
+  respecting the rights of others in the routines you share or import.
+- A routine someone shares with you is only a list of steps; look it over in the
+  editor before you save it.
+- Your habits live on your device. Keep backups (Settings › Data): if the
+  device is lost or the app is removed, data without a backup cannot be
+  recovered, because we hold no copy.
+
+### Fair use
+
+Do not use the app to break the law, to infringe others' rights, or to harm
+others.
+
+### No warranty
+
+The app is provided as it is. We work to keep it correct and safe but cannot
+promise it will always work or that it is free of errors. To the extent the law
+allows, we are not liable for lost data or indirect damage arising from its use.
+Nothing here limits rights you have under consumer law that cannot be excluded.
+
+### Changes
+
+These terms may change with the app. The new version is published at the same
+address with the date above updated.
+
+### Contact
+
+Questions: write to apps.winka.studio@gmail.com or open an issue at
+<https://github.com/Winka173/Handy-Suite/issues>.
+
+---
+
+## Tiếng Việt
+
+Các điều khoản này áp dụng cho ứng dụng Handy Habit của Winka Studio. Khi dùng
+app, bạn đồng ý với chúng.
+
+### Ứng dụng
+
+- Handy Habit giữ thói quen, lần ghi nhận, quy trình và ghi chú trên máy của
+  bạn, giúp bạn giữ đều những thói quen nhỏ. App không có tài khoản và không
+  có máy chủ riêng.
+- Các tính năng miễn phí dùng được mà không phải trả tiền.
+- Những gì app giữ và gửi đi được nêu trong
+  [Chính sách quyền riêng tư](https://winka.top/vi/apps/handy-habit/privacy/).
+- Handy Habit là sổ ghi chép cá nhân. Đây không phải lời khuyên y tế, sức khoẻ
+  hay trị liệu, và các con số (chuỗi ngày, độ đều đặn, tâm trạng) chỉ được đếm
+  từ những gì bạn đã ghi; chúng không dự đoán hay chẩn đoán điều gì.
+
+### Handy Habit Pro
+
+- Pro là gói mua một lần trong app qua Google Play. Không phải gói thuê bao;
+  không có gì phải gia hạn hay huỷ.
+- Giá là giá Google Play hiện trước khi bạn mua, theo đơn vị tiền của bạn.
+- Pro gắn với tài khoản Google đã mua. Cài lại app, hoặc dùng trên máy khác
+  với cùng tài khoản, sẽ khôi phục được (Cài đặt › Nâng cấp Pro › Khôi phục).
+- Nếu Pro chấm dứt, không gì bạn đã tạo bị xoá: thói quen và lịch sử vẫn còn,
+  quy trình đã lưu vẫn chạy, và giao diện Pro trở lại khi có Pro.
+- Thanh toán và hoàn tiền do Google Play xử lý theo điều khoản và chính sách
+  hoàn tiền của Google Play. Nếu luật nước bạn cho bạn thêm quyền, các quyền
+  đó vẫn được áp dụng.
+
+### Nội dung của bạn
+
+- Những gì bạn viết và thêm vào là của bạn. Bạn chịu trách nhiệm về chúng và
+  tôn trọng quyền của người khác với các quy trình bạn chia sẻ hoặc nhập.
+- Quy trình người khác chia sẻ cho bạn chỉ là một danh sách các bước; hãy xem
+  lại trong màn sửa trước khi lưu.
+- Thói quen nằm trên máy của bạn. Hãy sao lưu (Cài đặt › Dữ liệu): nếu mất máy
+  hoặc gỡ app, dữ liệu chưa sao lưu không khôi phục được, vì chúng tôi không
+  giữ bản nào.
+
+### Sử dụng đúng mực
+
+Không dùng app để vi phạm pháp luật, xâm phạm quyền của người khác, hoặc gây
+hại cho người khác.
+
+### Không bảo đảm
+
+App được cung cấp như hiện có. Chúng tôi cố gắng để app đúng và an toàn nhưng
+không thể hứa app luôn chạy, hoặc không có lỗi. Trong phạm vi pháp luật cho
+phép, chúng tôi không chịu trách nhiệm về dữ liệu bị mất hay thiệt hại gián
+tiếp do việc sử dụng app. Không điều nào ở đây hạn chế các quyền của bạn theo
+luật bảo vệ người tiêu dùng mà không thể loại trừ.
+
+### Thay đổi
+
+Các điều khoản này có thể thay đổi cùng app. Bản mới sẽ được đăng tại cùng địa
+chỉ và ngày cập nhật ở trên sẽ đổi theo.
+
+### Liên hệ
+
+Câu hỏi: viết thư tới apps.winka.studio@gmail.com hoặc mở một issue tại
+<https://github.com/Winka173/Handy-Suite/issues>.

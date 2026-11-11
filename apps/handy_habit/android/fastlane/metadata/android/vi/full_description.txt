@@ -12,6 +12,7 @@ XÂY DỰNG HAY BỚT DẦN
 QUY TRÌNH TỪNG BƯỚC
 • Buổi sáng, học bài, tập luyện, trước khi ngủ: sắp các bước theo thứ tự, mỗi bước một thời lượng.
 • Chạy toàn màn hình với đồng hồ, tạm dừng, bỏ qua và tổng kết cuối phiên. Bước gắn với thói quen sẽ tự ghi nhận.
+• Chia sẻ quy trình dưới dạng một trang; nhập quy trình bạn bè gửi.
 
 THẤY RÕ TIẾN BỘ
 • Xem theo tuần, tháng, năm; bản đồ nhiệt cả năm theo màu từng thói quen; chuỗi hiện tại và tốt nhất; độ đều đặn tính trung thực; nhìn lại tuần.
@@ -20,7 +21,8 @@ THẤY RÕ TIẾN BỘ
 BẮT ĐẦU TRONG MỘT PHÚT
 • Hướng dẫn ngắn có một ngày tập dượt không ghi gì thật.
 • 44 mẫu thói quen và 11 quy trình theo nhóm: ngủ, vận động, tập trung, đọc, uống nước, tài chính, bớt điện thoại…
-• Cách dùng có ô tìm kiếm.
+• Widget màn hình chính: chạm một hạt là ghi nhận, không cần mở app.
+• Cách dùng từng bước.
 
 CỦA BẠN, TRÊN MÁY BẠN
 • Không cần tài khoản. Thói quen nằm trên máy của bạn.

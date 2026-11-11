@@ -1,0 +1,32 @@
+{
+  "light": {
+    "paper": "#FAF7F2",
+    "surface": "#FFFFFF",
+    "raised": "#F1E9DF",
+    "ink": "#291C19",
+    "muted": "#66534C",
+    "line": "#E4D8CD",
+    "anchor": "#54261F",
+    "vermilion": "#B42318",
+    "tint": "#F9E4DC",
+    "ochre": "#805500"
+  },
+  "dark": {
+    "ground": "#151312",
+    "surface": "#211D1B",
+    "raised": "#302824",
+    "ink": "#FFF5ED",
+    "muted": "#CCB9AC",
+    "line": "#483B34",
+    "anchor": "#F1C5AF",
+    "vermilion": "#F07755",
+    "tint": "#42271F",
+    "ochre": "#E6BE70"
+  },
+  "icon": {
+    "field": "#B42318",
+    "cream": "#FFF5ED",
+    "track": "#D06252"
+  },
+  "font": "Nunito"
+}

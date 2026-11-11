@@ -1,0 +1,191 @@
+{
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "inLanguage": "vi",
+  "mainEntity": [
+    {
+      "@type": "Question",
+      "name": "Handy Habit có miễn phí không?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Có. Ghi nhận, quy trình, Tiến bộ, tâm trạng, nhắc nhở, widget (Hôm nay, Một thói quen, Quy trình), sao lưu và đồng bộ đều miễn phí. Pro là một lần trả tuỳ chọn cho phần nâng cao."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Tôi có cần tài khoản không?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Không. App không có tài khoản và không có máy chủ riêng. Thói quen của bạn ở trên máy."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "App có chạy khi không có mạng không?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Có, hoàn toàn. Chỉ việc mua hoặc khôi phục Pro, và đồng bộ Google Drive nếu bạn bật, mới dùng internet."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Chuỗi hạt là gì?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Mỗi thói quen hiện sáu ngày gần nhất bằng hạt và cuối chuỗi là hạt hôm nay. Hạt đầy là ngày đã giữ; hạt rỗng là ngày chưa ghi. Không bao giờ là dấu đỏ."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Nếu tôi lỡ một ngày thì sao?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Không có gì xấu. Hạt vẫn rỗng, chuỗi hiện tại có thể bắt đầu lại, còn chuỗi dài nhất và độ đều đặn vẫn kể đúng hành trình. Kỳ nghỉ cho phép nghỉ mà không bị tính là lỡ."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Có ghi được số lượng, không chỉ làm hay chưa?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Có: số lần, số phút hoặc số lượng như trang, ly. Hạt đầy dần như một vòng tới mục tiêu của ngày."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Tôi có bớt dần một thói quen thay vì xây dựng được không?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Được. Chọn Giảm thói quen và đặt giới hạn theo ngày hoặc tuần, hoặc không lần nào. Một chạm ghi một lần; \"Hôm nay không có\" ghi số 0."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Widget màn hình chính hoạt động thế nào?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Thêm Hôm nay, Một thói quen hoặc Quy trình từ Cài đặt › Widget màn hình chính hoặc từ launcher. Chạm một hạt trên widget để ghi nhận: hạt lấp ngay và ngày được lưu ngay sau đó. Số phút, số lượng và ngày đã đủ thì mở app. Widget chỉ có trên Android. Tuần này và 16 tuần là Pro."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Widget có hiện ghi chú hay tâm trạng của tôi không?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Không bao giờ. Widget chỉ hiện số đếm, chuỗi hạt và, nếu bạn cho phép, tên thói quen. Bạn có thể ẩn tên."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Quy trình là gì?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Vài bước theo thứ tự, mỗi bước một thời lượng: buổi sáng, học bài, tập luyện, trước khi ngủ. Chạy toàn màn hình với vòng đếm giờ, tạm dừng, bỏ qua và xem tổng kết. Một bước có thể ghi nhận một thói quen."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Tôi có chia sẻ quy trình được không?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Được. Mở quy trình › ⋯ › Chia sẻ. Quy trình đi dưới dạng một trang mở bằng trình duyệt nào cũng đọc được. Người nhận lưu tệp rồi vào Quy trình › Quy trình mới › Nhập quy trình được chia sẻ. Chỉ quy trình đi theo; không bao giờ có thói quen, lần ghi hay tâm trạng."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "App có nhắc nhở không?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Có, theo từng thói quen hay quy trình, vào những ngày có lịch, kèm giờ yên lặng. Mặc định màn hình khoá không hiện tên thói quen. App chỉ hỏi quyền thông báo khi bạn đặt lời nhắc đầu tiên."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Làm sao sao lưu thói quen?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Cài đặt › Dữ liệu › Sao lưu lưu một tệp ZIP; bản JSON và bản khoá mật khẩu ở Công cụ dữ liệu. Tự sao lưu giữ mỗi ngày một bản trên máy. Khôi phục có xem trước và giữ bản dự phòng."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Tôi có chuyển sang máy mới được không?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Được: khôi phục tệp sao lưu, hoặc bật đồng bộ Google Drive trên cả hai máy (dùng thư mục ẩn của app trong Drive của chính bạn)."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Đồng bộ Google Drive bảo vệ dữ liệu của tôi thế nào?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Dữ liệu được chép vào Drive của chính bạn, đi thẳng từ máy tới Google. Nhà phát triển không có máy chủ ở giữa và không nhận gì. Không mã hoá đầu-cuối. Muốn xoá bản đó: Google Drive › Cài đặt › Quản lý ứng dụng › Handy Habit › Xoá dữ liệu ẩn của ứng dụng."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Pro có gì thêm?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Bước quy trình nâng cao (theo thứ, A hoặc B, phụ thuộc), Tiến bộ sâu hơn (so sánh, nhịp, gợi ý mục tiêu, tâm trạng cạnh thói quen), xưởng giao diện, quy tắc và thay đổi hàng loạt, cùng widget Tuần này và 16 tuần. Trả một lần, không thuê bao."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Nếu tôi không còn Pro thì sao?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Không gì bạn đã tạo bị xoá. Thói quen và lịch sử vẫn còn, quy trình đã lưu vẫn chạy, và giao diện Pro trở lại khi có Pro."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Khôi phục Pro trên máy mới thế nào?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Cài đặt › Nâng cấp Pro › Khôi phục, với tài khoản Google đã mua."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "App có những ngôn ngữ và giao diện nào?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Tiếng Việt và tiếng Anh; sáng, tối hoặc theo điện thoại."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Có trên iPhone, Windows hay web không?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Chưa. Hiện Handy Habit chỉ có Android, đang trong thử nghiệm kín trên Google Play."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "App có quảng cáo không?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Phiên bản này không có quảng cáo. Nếu sau này có, chính sách quyền riêng tư sẽ nói rõ trước."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Làm sao xoá dữ liệu của tôi?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Xoá thói quen (Thùng rác giữ 30 ngày), dùng Cài đặt › Dữ liệu › Xoá toàn bộ dữ liệu, hoặc gỡ app. Tệp sao lưu bạn tạo vẫn nằm nguyên chỗ bạn đặt. Nếu dùng đồng bộ Drive, hãy xoá dữ liệu ẩn của app trong Google Drive."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Ai làm ra app, và tôi nhờ trợ giúp ở đâu?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Winka Studio. Viết thư tới apps.winka.studio@gmail.com, hoặc xem Cách dùng trong app."
+      }
+    }
+  ]
+}
