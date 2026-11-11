@@ -1,6 +1,7 @@
 import '../ui/row_menu.dart';
 import 'package:handy_habit_engine/handy_habit_engine.dart';
 import 'package:handy_ui/kit.dart';
+import '../today/beads.dart';
 import '../pauses/pauses.dart';
 import '../scope.dart';
 import '../today/check_in.dart';
@@ -68,9 +69,17 @@ class HabitView extends StatelessWidget {
       next = nextDueDate(h, addDays(next, 1));
     final events = s.events.where((e) => e.habit == h.id).toList()
       ..sort((a, b) => b.day.compareTo(a.day));
-    final unit = m.unit == 'weeks'
-        ? tr(context, 'weeks', 'tuần')
-        : tr(context, 'days', 'ngày');
+    String units(int n) => m.unit == 'weeks'
+        ? tr(context, n == 1 ? 'week' : 'weeks', 'tuần')
+        : tr(context, n == 1 ? 'day' : 'days', 'ngày');
+    final unit = units(2);
+    // One row per recorded day: a counted habit's taps add up to the day.
+    final days = <String, List<HabitEvent>>{};
+    for (final e in events) {
+      (days[e.day] ??= []).add(e);
+    }
+    final today0 = habitStatus(h, today, today, index);
+    final value = index.value(h.id, today);
     final compact =
         MediaQuery.sizeOf(context).width < 360 ||
         MediaQuery.sizeOf(context).width < 600 &&
@@ -164,6 +173,55 @@ class HabitView extends StatelessWidget {
                     padding: const EdgeInsets.only(top: HandySpace.s),
                     child: Text(h.note),
                   ),
+                if (isScheduledOn(h, today) && !h.archived)
+                  Container(
+                    key: const Key('habit-today'),
+                    margin: const EdgeInsets.only(top: HandySpace.l),
+                    padding: const EdgeInsets.fromLTRB(16, 14, 8, 14),
+                    decoration: BoxDecoration(
+                      color: habitMark(context, h).withValues(alpha: .10),
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                tr(context, 'Today', 'Hôm nay'),
+                                style: theme.textTheme.titleMedium?.copyWith(
+                                  fontWeight: FontWeight.w800,
+                                ),
+                              ),
+                              Text(
+                                h.isNegative || h.type == 'binary'
+                                    ? statusLabel(context, today0)
+                                    : progressText(
+                                        context,
+                                        h,
+                                        value,
+                                        current.target,
+                                      ),
+                                style: theme.textTheme.bodyMedium?.copyWith(
+                                  color: c.muted,
+                                ),
+                              ),
+                              const SizedBox(height: HandySpace.s),
+                              EarlierBeads(data: HabitDay(h, today, index)),
+                            ],
+                          ),
+                        ),
+                        TodayBead(
+                          scope: scope,
+                          habit: h,
+                          index: index,
+                          onTap: () => checkIn(context, scope, h),
+                          onLongPress: () => editDay(context, scope, h, today),
+                        ),
+                      ],
+                    ),
+                  ),
                 Align(
                   alignment: AlignmentDirectional.centerStart,
                   child: TextButton.icon(
@@ -189,12 +247,12 @@ class HabitView extends StatelessWidget {
                   children: [
                     figureCell(
                       tr(context, 'Running now', 'Chuỗi hiện tại'),
-                      '${m.current} $unit',
+                      '${m.current} ${units(m.current)}',
                       key: const Key('habit-current'),
                     ),
                     figureCell(
                       tr(context, 'Longest', 'Dài nhất'),
-                      '${m.longest} $unit',
+                      '${m.longest} ${units(m.longest)}',
                     ),
                     figureCell(
                       h.isNegative
@@ -309,50 +367,69 @@ class HabitView extends StatelessWidget {
                       ),
                     Capped(
                       key: ValueKey('history-${h.id}'),
-                      count: events.length,
+                      count: days.length,
                       max: 30,
                       name: 'history',
                       builder: (context, shown) => Column(
                         children: [
-                          for (final e in events.take(shown))
-                            ListTile(
-                              title: Text(
-                                e.skipped
-                                    ? statusLabel(context, 'skipped')
-                                    : h.isNegative && e.value == 0
-                                    ? tr(
+                          for (final day in days.entries.take(shown))
+                            for (final e in [
+                              day.value.reduce(
+                                (a, b) => HabitEvent.fromJson({
+                                  ...a.toJson(),
+                                  'value': a.value + b.value,
+                                  'skipped': a.skipped && b.skipped,
+                                  'note': [
+                                    a.note,
+                                    b.note,
+                                  ].where((n) => n.isNotEmpty).join(' · '),
+                                  'source':
+                                      a.source == 'routine' ||
+                                          b.source == 'routine'
+                                      ? 'routine'
+                                      : a.source,
+                                }),
+                              ),
+                            ])
+                              ListTile(
+                                key: Key('history-day-${day.key}'),
+                                title: Text(
+                                  e.skipped
+                                      ? statusLabel(context, 'skipped')
+                                      : h.isNegative && e.value == 0
+                                      ? tr(
+                                          context,
+                                          'None that day',
+                                          'Hôm đó không có',
+                                        )
+                                      : h.type == 'binary'
+                                      ? tr(context, 'Done', 'Đã xong')
+                                      : '${figure(context, e.value)} ${unitOf(context, h, value: e.value)}',
+                                ),
+                                subtitle: Text(
+                                  [
+                                    dayText(context, e.day, today),
+                                    if (h.isNegative)
+                                      negativeLimitText(
                                         context,
-                                        'None today',
-                                        'Hôm nay không có',
-                                      )
-                                    : h.type == 'binary'
-                                    ? tr(context, 'Done', 'Đã xong')
-                                    : '${figure(context, e.value)} ${unitOf(context, h, value: e.value)}',
+                                        negativeGoalOn(h, e.day)!,
+                                      ),
+                                    if (!h.isNegative && h.type != 'binary')
+                                      tr(
+                                        context,
+                                        'Goal ${figure(context, scheduleOn(h, e.day)?.target ?? 1000)} ${unitOf(context, h, value: scheduleOn(h, e.day)?.target ?? 1000)}',
+                                        'Mục tiêu ${figure(context, scheduleOn(h, e.day)?.target ?? 1000)} ${unitOf(context, h, value: scheduleOn(h, e.day)?.target ?? 1000)}',
+                                      ),
+                                    if (e.source == 'routine')
+                                      tr(
+                                        context,
+                                        'from a routine',
+                                        'từ quy trình',
+                                      ),
+                                    if (e.note.isNotEmpty) e.note,
+                                  ].join(' · '),
+                                ),
                               ),
-                              subtitle: Text(
-                                [
-                                  dayText(context, e.day, today),
-                                  if (h.isNegative)
-                                    negativeLimitText(
-                                      context,
-                                      negativeGoalOn(h, e.day)!,
-                                    ),
-                                  if (!h.isNegative && h.type != 'binary')
-                                    tr(
-                                      context,
-                                      'Goal ${figure(context, scheduleOn(h, e.day)?.target ?? 1000)} ${unitOf(context, h, value: scheduleOn(h, e.day)?.target ?? 1000)}',
-                                      'Mục tiêu ${figure(context, scheduleOn(h, e.day)?.target ?? 1000)} ${unitOf(context, h, value: scheduleOn(h, e.day)?.target ?? 1000)}',
-                                    ),
-                                  if (e.source == 'routine')
-                                    tr(
-                                      context,
-                                      'from a routine',
-                                      'từ quy trình',
-                                    ),
-                                  if (e.note.isNotEmpty) e.note,
-                                ].join(' · '),
-                              ),
-                            ),
                         ],
                       ),
                     ),

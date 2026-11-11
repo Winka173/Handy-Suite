@@ -278,26 +278,31 @@ class _Day extends StatelessWidget {
           alignment: Alignment.center,
           children: [
             if (planned)
+              // The habit's own colour; a part-done day is a ring that
+              // fills, so its number stays readable.
               Bead(
-                status: status,
+                status: status == 'partial' ? 'progress' : status,
                 fill: dayFill(habit, day, index),
                 size: 30,
-                color: habit.isNegative
-                    ? habitMark(context, habit)
-                    : isToday
-                    ? c.accent
-                    : theme.colorScheme.onSurface.withValues(alpha: .78),
+                color: habitMark(context, habit),
+              ),
+            if (isToday && status != 'completed')
+              Container(
+                width: 36,
+                height: 36,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  border: Border.all(color: c.accent, width: 2),
+                ),
               ),
             Text(
               '${int.parse(day.substring(8))}',
               style: theme.textTheme.labelSmall?.copyWith(
                 fontWeight: isToday ? FontWeight.w700 : null,
-                color: status == 'withinLimit'
+                color: status == 'withinLimit' || status == 'completed'
                     ? (habitMark(context, habit).computeLuminance() > .179
                           ? Colors.black
                           : Colors.white)
-                    : status == 'completed'
-                    ? theme.colorScheme.surface
                     : planned
                     ? null
                     : c.muted,
