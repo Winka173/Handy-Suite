@@ -5,6 +5,7 @@ import '../scope.dart';
 import '../routines/routines_page.dart';
 import '../today/today_page.dart';
 import '../design/palette.dart';
+import '../routines/quick_add_routine.dart';
 import '../welcome/welcome_page.dart';
 
 /// The three daily jobs. Legacy internal area IDs stay stable for notices.
@@ -128,7 +129,7 @@ class HabitShell extends StatelessWidget {
           : FloatingActionButton.extended(
               key: Key(area == 2 ? 'routine-new' : 'today-new'),
               onPressed: () => area == 2
-                  ? Navigator.pushNamed(context, '/templates?kind=routine')
+                  ? addRoutine(context, scope)
                   : addHabit(context, scope),
               icon: const Icon(Icons.add),
               label: Text(

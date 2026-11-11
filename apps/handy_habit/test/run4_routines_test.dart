@@ -420,6 +420,9 @@ void main() {
       await tap(t, 'routines-more');
       expect(find.byKey(const Key('routine-r6')), findsOneWidget);
       await tap(t, 'routine-new');
+      // The quick sheet first; the gallery is one tap further.
+      expect(find.byKey(const Key('quick-routine')), findsOneWidget);
+      await tap(t, 'quick-routine-templates');
       await t.enterText(
         find.byKey(const Key('template-search')),
         'gentle morning',

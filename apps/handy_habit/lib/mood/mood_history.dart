@@ -2,30 +2,110 @@ import 'package:handy_habit_engine/handy_habit_engine.dart';
 import 'package:handy_ui/kit.dart';
 import '../scope.dart';
 import '../ui/capped.dart';
+import 'package:flutter/services.dart';
+import '../design/palette.dart';
+import 'mood_faces.dart';
 import 'mood_sheet.dart';
 
+/// How today felt, on Today itself: five faces, one tap saves (Undo in
+/// the message), the chosen one marked; Details opens the full sheet for
+/// energy, a note and tags.
 class TodayMood extends StatelessWidget {
   final HabitScope scope;
   const TodayMood({super.key, required this.scope});
+
+  Future<void> _pick(BuildContext context, int value) async {
+    final entry = moodOn(scope.state, scope.today, includeDeleted: true);
+    final live = entry?.deleted == false ? entry : null;
+    if (live?.mood == value) return;
+    if (MediaQuery.maybeDisableAnimationsOf(context) != true)
+      HapticFeedback.selectionClick();
+    await scope.write(
+      context,
+      (s) => saveMood(
+        s,
+        scope.today,
+        value,
+        energy: live?.energy,
+        note: live?.note ?? '',
+        tags: live?.tags ?? [],
+        now: scope.clock(),
+        expectedRevision: entry?.revision ?? 0,
+      ),
+      done: (c) => tr(
+        c,
+        'Today: ${moodLabel(c, value)}.',
+        'Hôm nay: ${moodLabel(c, value)}.',
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final p = HabitPalette.of(context);
     final entry = moodOn(scope.state, scope.today);
-    return Align(
-      alignment: AlignmentDirectional.centerStart,
-      child: TextButton(
-        key: const Key('today-mood'),
-        onPressed: scope.controller.busy
-            ? null
-            : () => openMood(context, scope, scope.today),
-        child: Text(
-          entry == null
-              ? tr(context, 'How’s today?', 'Hôm nay bạn thấy sao?')
-              : tr(
-                  context,
-                  'Today: ${moodLabel(context, entry.mood)}',
-                  'Hôm nay: ${moodLabel(context, entry.mood)}',
+    final busy = scope.controller.busy;
+    return Padding(
+      key: const Key('today-mood-row'),
+      padding: const EdgeInsets.only(top: HandySpace.s),
+      child: Wrap(
+        spacing: 2,
+        runSpacing: 4,
+        crossAxisAlignment: WrapCrossAlignment.center,
+        children: [
+          Padding(
+            padding: const EdgeInsetsDirectional.only(end: 6),
+            child: Text(
+              entry == null
+                  ? tr(context, 'How’s today?', 'Hôm nay thấy sao?')
+                  : tr(context, 'Today', 'Hôm nay'),
+              style: theme.textTheme.titleSmall,
+            ),
+          ),
+          for (var n = 1; n <= 5; n++)
+            Semantics(
+              button: true,
+              selected: entry?.mood == n,
+              label: moodLabel(context, n),
+              excludeSemantics: true,
+              child: InkResponse(
+                key: Key('today-mood-$n'),
+                radius: 24,
+                onTap: busy ? null : () => _pick(context, n),
+                child: AnimatedContainer(
+                  duration: HandyMotion.of(context, HandyMotion.short),
+                  width: 42,
+                  height: 42,
+                  alignment: Alignment.center,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: entry?.mood == n ? p.ochreField : null,
+                    border: Border.all(
+                      color: entry?.mood == n ? p.anchor : Colors.transparent,
+                      width: 2,
+                    ),
+                  ),
+                  child: Opacity(
+                    opacity: entry == null || entry.mood == n ? 1 : .45,
+                    child: MoodFace(value: n, size: 30),
+                  ),
                 ),
-        ),
+              ),
+            ),
+          IconButton(
+            key: const Key('today-mood'),
+            tooltip: tr(
+              context,
+              'Energy, a note, tags',
+              'Năng lượng, ghi chú, nhãn',
+            ),
+            onPressed: busy
+                ? null
+                : () => openMood(context, scope, scope.today),
+            icon: const Icon(Icons.edit_note),
+          ),
+        ],
       ),
     );
   }

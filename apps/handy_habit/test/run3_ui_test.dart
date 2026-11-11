@@ -314,6 +314,9 @@ void main() {
     'one tap commits once, keeps row position, and durable Undo restores',
     (t) async {
       final c = await boot(t);
+      // Measured once the bead is fully on screen, as a person would tap it.
+      await t.ensureVisible(find.byKey(const Key('bead-h')));
+      await t.pumpAndSettle();
       final before = t.getTopLeft(find.byKey(const Key('bead-h')));
       await f.tapKey(t, 'bead-h');
       expect(c.state!.events, hasLength(1));
