@@ -109,6 +109,49 @@ void main() {
     expect(undoChange(saved, saved.undoBatch!, actor: 'a').moods, isEmpty);
   });
   test(
+    'CSV mood records from every older schema import; newer ones refuse',
+    () {
+      final s = log(HabitState());
+      final csv = csvLogs(s, '2026-11-01', '2026-11-30');
+      // Rewrites the schema inside each base64 record cell.
+      String withSchema(int schema) => csv
+          .split('\n')
+          .map((line) {
+            final at = line.lastIndexOf(',"');
+            if (at < 0 || !line.endsWith('"')) return line;
+            final cell = line.substring(at + 2, line.length - 1);
+            try {
+              final record = jsonDecode(utf8.decode(base64Decode(cell))) as Map;
+              if (!record.containsKey('mood')) return line;
+              record['schema'] = schema;
+              final again = base64Encode(utf8.encode(jsonEncode(record)));
+              return '${line.substring(0, at)},"$again"';
+            } on FormatException {
+              return line;
+            }
+          })
+          .join('\n');
+      for (final schema in [6, 7, 8, habitSchema]) {
+        final restored = importCsvLogs(
+          HabitState(),
+          Uint8List.fromList(utf8.encode(withSchema(schema))),
+        );
+        expect(
+          restored.moods.single.day,
+          '2026-11-10',
+          reason: 'schema $schema',
+        );
+      }
+      expect(
+        () => importCsvLogs(
+          HabitState(),
+          Uint8List.fromList(utf8.encode(withSchema(habitSchema + 1))),
+        ),
+        throwsFormatException,
+      );
+    },
+  );
+  test(
     'JSON ZIP CSV roundtrip retain live and deleted moods and optional fields',
     () {
       var s = log(HabitState());

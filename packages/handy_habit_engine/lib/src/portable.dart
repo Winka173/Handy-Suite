@@ -451,7 +451,7 @@ HabitState importCsvLogs(HabitState current, Uint8List bytes) {
     if (row.length != _moodHeader.length)
       throw const FormatException('Wrong mood CSV column count');
     final record = jsonDecode(utf8.decode(base64Decode(row.last))) as Map;
-    if (![6, 7, habitSchema].contains(record['schema']))
+    if (!_knownSince(record['schema'], 6))
       throw const FormatException('Unknown mood record schema');
     final m = MoodEntry.fromJson(
       Map<String, dynamic>.from(record['mood'] as Map),
@@ -536,7 +536,7 @@ HabitState importCsvLogs(HabitState current, Uint8List bytes) {
     if (row.length != _pauseHeader.length)
       throw const FormatException('Wrong CSV column count');
     final record = jsonDecode(utf8.decode(base64Decode(row.last))) as Map;
-    if (![2, 3, 4, 5, 6, 7, habitSchema].contains(record['schema']))
+    if (!_knownSince(record['schema'], 2))
       throw const FormatException('Unknown pause record schema');
     final p = Pause.fromJson(Map<String, dynamic>.from(record['pause'] as Map));
     // Habit names (column 5) may differ between devices; IDs may not.
@@ -606,3 +606,8 @@ String markdownReport(
     return '| ${escape(h.title)} | ${c.kept} | ${c.eligible} | ${m.current} $unit |';
   }).join('\n')}\n\n$note\n$pauseSection';
 }
+
+/// A record written by any schema from [first] (when the record kind
+/// appeared) up to the current one; newer schemas are refused.
+bool _knownSince(Object? schema, int first) =>
+    schema is int && schema >= first && schema <= habitSchema;

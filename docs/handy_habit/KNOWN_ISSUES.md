@@ -6,7 +6,6 @@ actual OAuth, purchase or production certification.
 | Severity | Code limitation | Consequence / next work |
 | --- | --- | --- |
 | High | R26 partial: ledger growth, no segmentation/compaction; initial merge/validation on main isolate | 30 MB/200k guards safely refuse; 100-habit/3-year causal fixture ~81.6 MB cannot sync, 500×1095 exceeds row guard; [measurements](PERFORMANCE.md) |
-| Medium | Legacy schema-8 CSV mood/pause records omitted from schema-9 import allowlists in `src/portable.dart` | Source-reviewed gap: current mood accepts6/7/9 and pause2–7/9, so those schema-8 records refuse safely. Use schema-8 JSON/ZIP, which is accepted; add8 and regression coverage before promising all old CSV compatibility |
 | Medium | Android widgets only, shared selection per type, app-open action, no closed-app midnight refresh | Other platforms preview-only; no per-instance/background-completion claim |
 | Medium | Foreground sync, no generation GC, no iCloud/Web adapter | Manual cross-platform transfer; Windows remote delivery needs vendor client |
 | Medium | Android checkout only | Other platforms show demos and unsupported explanation |
