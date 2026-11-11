@@ -609,8 +609,9 @@ void main() {
   });
   testWidgets('phone editor', (t) async {
     await boot(t, const Size(390, 844));
-    await fixtures.tapKey(t, 'habit-add');
-    await fixtures.tapKey(t, 'add-habit');
+    await fixtures.tapKey(t, 'today-new');
+    await shot(t, 'phone-6-quick-add');
+    await fixtures.tapKey(t, 'quick-add-templates');
     await shot(t, 'phone-6-presets');
     await t.enterText(
       find.byKey(const Key('template-search')),
@@ -672,8 +673,11 @@ void main() {
   });
   testWidgets('phone pause editor', (t) async {
     await boot(t, const Size(390, 844));
-    await fixtures.tapKey(t, 'habit-add');
-    await fixtures.tapKey(t, 'add-pause');
+    t
+        .state<NavigatorState>(find.byType(Navigator).first)
+        .pushNamed('/settings/pauses');
+    await t.pumpAndSettle();
+    await fixtures.tapKey(t, 'pause-add');
     await fixtures.tapKey(t, 'field-scope-some');
     await fixtures.tapKey(t, 'field-habits-gym');
     await t.enterText(find.byKey(const Key('field-reason')), 'Đau gối');
@@ -715,8 +719,11 @@ void main() {
   });
   testWidgets('desktop pause editor', (t) async {
     await boot(t, const Size(1440, 900), state: resting());
-    await fixtures.tapKey(t, 'habit-add');
-    await fixtures.tapKey(t, 'add-pause');
+    t
+        .state<NavigatorState>(find.byType(Navigator).first)
+        .pushNamed('/settings/pauses');
+    await t.pumpAndSettle();
+    await fixtures.tapKey(t, 'pause-add');
     await shot(t, 'desktop-8-pause-editor');
   });
   testWidgets('films', (t) async {
@@ -753,13 +760,13 @@ void main() {
   });
   testWidgets('phone short habit editor', (t) async {
     await boot(t, const Size(390, 844));
-    await fixtures.tapKey(t, 'habit-add');
-    await fixtures.tapKey(t, 'add-habit');
-    await fixtures.tapKey(t, 'preset-blank');
+    await fixtures.tapKey(t, 'today-new');
     await t.enterText(
-      find.byKey(const Key('field-title')),
+      find.byKey(const Key('quick-add-name')),
       'Đọc sách mỗi ngày',
     );
+    await t.pump();
+    await fixtures.tapKey(t, 'quick-add-next');
     await t.pumpAndSettle();
     await shot(t, 'phone-short-habit-editor');
     await fixtures.tapKey(t, 'habit-form-advanced');

@@ -44,13 +44,17 @@ class TodayPage extends StatelessWidget {
       // 1440 - 224 sidebar - 32 gutters = 1184; 1024 content gives
       // (1024 - 24) * 3/5 = 600px habits and 400px secondary column.
       final wide = size.maxWidth >= 900;
+      // With large text the habits come first; mood waits below them.
+      final large = MediaQuery.textScalerOf(context).scale(16) > 20;
+      final mood = s.settings['showMoodToday'] != false;
       final left = [
         _Greeting(scope: scope, due: due, routines: routines, index: index),
-        if (s.settings['showMoodToday'] != false) TodayMood(scope: scope),
+        if (mood && !large) TodayMood(scope: scope),
         if (scope.activeSession case final run?
             when !routines.any((r) => r.id == run.routine))
           _Resume(scope: scope),
         _Habits(scope: scope, due: due, index: index, notToday: notToday),
+        if (mood && large) TodayMood(scope: scope),
       ];
       final right = [
         _Routines(scope: scope, routines: routines),
@@ -222,6 +226,8 @@ class _Greeting extends StatelessWidget {
                   MediaQuery.sizeOf(context).width /
                           MediaQuery.textScalerOf(context).scale(1) <
                       240
+                  ? 26
+                  : MediaQuery.textScalerOf(context).scale(16) > 20
                   ? 26
                   : MediaQuery.sizeOf(context).width < 400
                   ? 34
