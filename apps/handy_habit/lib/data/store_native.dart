@@ -5,6 +5,7 @@ import 'package:path_provider/path_provider.dart';
 import 'package:sqlite3/sqlite3.dart';
 import 'package:handy_habit_engine/handy_habit_engine.dart';
 import 'store.dart';
+import 'delta.dart';
 
 Future<HabitStore> openStore() async {
   final directory = await getApplicationSupportDirectory();
@@ -113,7 +114,7 @@ Database database(String path) {
   }
 }
 
-class NativeHabitStore implements RecoverableHabitStore {
+class NativeHabitStore implements RecoverableHabitStore, IncrementalHabitStore {
   final String path;
   NativeHabitStore(this.path);
   @override
@@ -147,10 +148,25 @@ class NativeHabitStore implements RecoverableHabitStore {
   }
 
   @override
-  Future<void> commit(HabitState next, {required int expectedRevision}) {
+  Future<void> commit(HabitState next, {required int expectedRevision}) =>
+      _commit(next, expectedRevision: expectedRevision);
+  @override
+  Future<void> commitDelta(
+    HabitState previous,
+    HabitState next, {
+    required int expectedRevision,
+  }) => _commit(next, expectedRevision: expectedRevision, previous: previous);
+  Future<void> _commit(
+    HabitState next, {
+    required int expectedRevision,
+    HabitState? previous,
+  }) async {
+    // Validate in the originating isolate, where an immutable controller snapshot
+    // is already cached. Sending it to the writer cannot mutate its contents.
+    validateStoredCounts(next);
+    next.validate();
     final file = path;
-    return Isolate.run(() {
-      next.validate();
+    await Isolate.run(() {
       final db = database(file);
       try {
         db.execute('BEGIN IMMEDIATE');
@@ -161,12 +177,24 @@ class NativeHabitStore implements RecoverableHabitStore {
                   expectedRevision ||
               next.revision != expectedRevision + 1)
             throw StateError('Stale revision; reload');
-          final json = next.toJson(), old = <String, Map<String, String>>{};
+          final delta = previous == null ? null : HabitDelta(previous, next);
+          if (previous != null && previous.revision != expectedRevision)
+            throw StateError('Invalid delta base');
+          final json = delta == null
+                  ? next.toJson()
+                  : {...next.metadataJson(), ...delta.changed},
+              old = <String, Map<String, String>>{};
           for (final kind in entities) {
-            old[kind] = {
-              for (final row in db.select('SELECT id,payload FROM $kind'))
-                row['id'] as String: row['payload'] as String,
-            };
+            old[kind] = delta == null
+                ? {
+                    for (final row in db.select('SELECT id,payload FROM $kind'))
+                      row['id'] as String: row['payload'] as String,
+                  }
+                : {
+                    for (final id in delta.removed[kind]!) id: '',
+                    for (final row in delta.changed[kind]!)
+                      row['id'] as String: '',
+                  };
           }
           // Remove dependent events before habits; insertion order reverses that dependency.
           for (final kind in [

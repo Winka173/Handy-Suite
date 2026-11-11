@@ -13,4 +13,6 @@ class MemorySyncMetadata implements SyncMetadataStore {
   }
 }
 
-class FileSyncMetadata extends MemorySyncMetadata {}
+class FileSyncMetadata extends MemorySyncMetadata {
+  FileSyncMetadata({String name = 'habit-drive-device.json'});
+}

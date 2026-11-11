@@ -19,6 +19,7 @@ enum HabitProFeature {
   heatmap,
   reports,
   studio,
+  convenience,
 }
 
 String proTitle(BuildContext c, HabitProFeature feature) => switch (feature) {
@@ -51,6 +52,11 @@ String proTitle(BuildContext c, HabitProFeature feature) => switch (feature) {
     c,
     'Your review on paper',
     'Bản nhìn lại trên giấy',
+  ),
+  HabitProFeature.convenience => tr(
+    c,
+    'Everyday convenience',
+    'Tiện ích hằng ngày',
   ),
   HabitProFeature.studio => tr(c, 'Personalization studio', 'Xưởng giao diện'),
   HabitProFeature.days => tr(c, 'Days to run', 'Ngày thực hiện'),
@@ -98,6 +104,11 @@ String proLine(BuildContext c, HabitProFeature feature) => switch (feature) {
     c,
     'Preview a designed PDF with explained figures.',
     'Xem trước PDF được dàn trang, giải thích số liệu.',
+  ),
+  HabitProFeature.convenience => tr(
+    c,
+    'Saved views, batch changes and clear local rules.',
+    'Lưu bộ lọc, sửa hàng loạt và quy tắc cục bộ rõ ràng.',
   ),
   HabitProFeature.studio => tr(
     c,

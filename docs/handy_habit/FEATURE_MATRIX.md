@@ -155,3 +155,16 @@ The original schema2 pause row above describes its introduction; run2 writers us
 | Complete in-place history and dated targets | IMPLEMENTED / WIDGET TESTED | Records past30 visible, old target survives schedule edit, narrow/large-text day-list mode | Screen reader/calendar input and large real libraries |
 | Versioned day-boundary policy, schema4 / physical2 | IMPLEMENTED / UNIT + WIDGET TESTED |0–1439minutes, v1–v3 reads, JSON/ZIP, north/south DST gaps/folds, old dates fixed, shared reminder/trash day, foreground rollover | Real midnight/travel/clock changes and device upgrade |
 | Host visual review | RENDERED / INSPECTED | EN/VI, light/dark,320/390/1440, text1.0/1.5, sidebar/dirty/history extras; film asserts durable check-in | No device/browser/store claim; full illustrated help is R9 |
+
+### Run15 R23–R26 update (2026-11-11)
+
+| Habit feature | Status | Host evidence | Remaining |
+| --- | --- | --- | --- |
+| Saved Habits/Progress views, batch previews/one Undo, named local rules | IMPLEMENTED / HOST TESTED | Schema9, Pro gates, stale/error/atomic/replay/individual-rule Undo;216 renders | Native accessibility/lifecycle checks |
+| Free Windows folder sync, separate from Backup | SOURCE IMPLEMENTED / HOST TESTED | R15 immutable generations, process lock/flush/rename, two-process writers and causal convergence | Real Windows picker, two PCs/cloud client delivery |
+| Health, iCloud, independent OS shortcuts, iOS native widgets | NOT OFFERED / PLATFORM GATED | Exact capability matrix, no fake integration UI | Adapters/toolchain/entitlements/native verification |
+| Large histories and incremental persistence | PARTIAL | App287/engine201; delta SQLite/IDB, grouped validation/cache, bounded Today, debounced search, killed WAL/staging tests | Retained30MB/200k limits;500 full-history persistence/backup/sync unavailable,100-history causal generation too large; safe checkpoint protocol and main-isolate work |
+| Current Android APK | BUILD BLOCKED | Debug compile attempted with Drive define; signing lock access denied | Current APK required; prior binaries do not prove this source |
+
+See [run15 review](R23_R26_REVIEW.md), [host measurements](PERFORMANCE.md) and
+[platform matrix](PLATFORM_CAPABILITIES.md). No devices or stores checked in run15.

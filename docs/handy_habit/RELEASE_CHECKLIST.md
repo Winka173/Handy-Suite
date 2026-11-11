@@ -1,6 +1,13 @@
 # Release checklist
 
-Current R15/R16/run9: schema7/physical2; app178 / engine158 host tests and analysis/format clean; Android debug APK with Drive define built. [Owner OAuth setup and two-device checks](RELEASE.md) remain mandatory before claiming real Drive verification. [Visual review](R15_R16_REVIEW.md).
+Current run15 (R23–R26): schema9/physical2/protocol1; app287/engine201 host
+tests pass, format/analyze clean,216 host renders reviewed. R23/R24 source/host
+tested; R25 native features gated; R26 partial at retained30MB/200k limits.
+The current Android debug APK is blocked at signing lock-file access; prior
+binaries do not verify this source. [Run15 review](R23_R26_REVIEW.md) and
+[performance/capacity](PERFORMANCE.md). No device, browser or store certification.
+
+Earlier R15/R16/run9: schema7/physical2; app178 / engine158 host tests and analysis/format clean; Android debug APK with Drive define built. [Owner OAuth setup and two-device checks](RELEASE.md) remain mandatory before claiming real Drive verification. [Visual review](R15_R16_REVIEW.md).
 
 Historical R8/R9 run 5b (2026-11-10): app128/engine82 host tests, analysis/format
 and 24 screenshot combinations plus a motion check pass. Guide/practice/help and

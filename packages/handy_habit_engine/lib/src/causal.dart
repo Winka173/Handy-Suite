@@ -12,6 +12,7 @@ const causalKinds = [
   'settings',
   'clockPolicies',
 ];
+final _validOperationHashes = Expando<bool>();
 
 /// Immutable row revision. Parents describe observed ancestry, never wall time.
 class HabitOperation {
@@ -160,9 +161,7 @@ HabitState recordDayIntent(
       if (observed != null) 'observed': observed,
     },
   );
-  return next.copy({
-    'operations': [...next.operations.map((o) => o.toJson()), op.toJson()],
-  });
+  return next.withLedger([...next.operations, op], next.undoBatch);
 }
 
 String _canonical(dynamic value) {
@@ -179,6 +178,30 @@ String _canonical(dynamic value) {
 }
 
 bool _same(dynamic a, dynamic b) => _canonical(a) == _canonical(b);
+
+Map<String, dynamic> _entityObjects(HabitState s, String kind) =>
+    switch (kind) {
+      'habits' => {for (final x in s.habits) x.id: x},
+      'events' => {for (final x in s.events) x.id: x},
+      'routines' => {for (final x in s.routines) x.id: x},
+      'sessions' => {for (final x in s.sessions) x.id: x},
+      'pauses' => {for (final x in s.pauses) x.id: x},
+      'moods' => {for (final x in s.moods) x.id: x},
+      'trash' => {for (final x in s.trash) x.id: x},
+      'tombstones' => {for (final x in s.tombstones) x['id'] as String: x},
+      'clockPolicies' => {
+        for (final x in s.clockPolicies) x['id'] as String: x,
+      },
+      'settings' => {
+        for (final x in s.settings.entries) x.key: {'value': x.value},
+      },
+      _ => throw ArgumentError(kind),
+    };
+Json? _entityJson(dynamic row) => row == null
+    ? null
+    : row is Map
+    ? Map<String, dynamic>.from(row)
+    : Map<String, dynamic>.from(row.toJson() as Map);
 
 /// Storage key/row order is not presentation order (notably IndexedDB getAll).
 List<Json> orderedHabitRows(Json state, String kind) {
@@ -261,11 +284,13 @@ void validateOperations(List<HabitOperation> operations) {
       }
     }
     if (!op.redacted &&
+        _validOperationHashes[op] != true &&
         (op.beforeHash !=
                 sha256.convert(utf8.encode(_canonical(op.before))).toString() ||
             op.afterHash !=
                 sha256.convert(utf8.encode(_canonical(op.after))).toString()))
       throw const FormatException('Operation payload hash mismatch');
+    _validOperationHashes[op] = true;
     if (ids.containsKey(op.id) ||
         !sequences.add('${op.actor}:${op.sequence}')) {
       throw const FormatException('Duplicate operation or actor sequence');
@@ -406,14 +431,15 @@ HabitState recordChange(
       ],
     });
   }
-  final a = before.toJson(), b = proposed.toJson();
   final purging = proposed.tombstones.length > before.tombstones.length;
   final ops = (purging ? proposed.operations : before.operations).toList(),
       batch = uid();
   // Imported ledgers retain their stable IDs. Same IDs with changed payload fail.
   final byId = {for (final op in ops) op.id: op};
   for (final op in proposed.operations) {
-    if (byId[op.id] != null && !_same(byId[op.id]!.toJson(), op.toJson())) {
+    if (byId[op.id] != null &&
+        !identical(byId[op.id], op) &&
+        !_same(byId[op.id]!.toJson(), op.toJson())) {
       throw const FormatException('Operation ID collision');
     }
     if (!byId.containsKey(op.id)) {
@@ -430,9 +456,23 @@ HabitState recordChange(
   var lamport = ops.fold(0, (n, o) => max(n, o.lamport));
   final removedParents = {for (final o in ops) ...o.parents};
   for (final kind in purging ? ['tombstones'] : causalKinds) {
-    final old = _rows(a, kind), next = _rows(b, kind);
+    final appendOnly =
+        kind == 'events' &&
+        proposed.events.length >= before.events.length &&
+        before.events.indexed.every(
+          (e) => identical(e.$2, proposed.events[e.$1]),
+        );
+    final old = appendOnly ? <String, dynamic>{} : _entityObjects(before, kind),
+        next = appendOnly
+            ? {
+                for (final e in proposed.events.skip(before.events.length))
+                  e.id: e,
+              }
+            : _entityObjects(proposed, kind);
     for (final id in {...old.keys, ...next.keys}) {
-      if (_same(old[id], next[id])) continue;
+      if (identical(old[id], next[id])) continue;
+      final oldRow = _entityJson(old[id]), nextRow = _entityJson(next[id]);
+      if (_same(oldRow, nextRow)) continue;
       final parents = ops
           .where(
             (o) =>
@@ -465,8 +505,8 @@ HabitState recordChange(
               : next[id] == null
               ? 'remove'
               : 'put',
-          before: old[id],
-          after: next[id],
+          before: oldRow,
+          after: nextRow,
           undoOf: target?.id,
         ),
       );
@@ -474,8 +514,8 @@ HabitState recordChange(
   }
   if (!purging) {
     for (final kind in ['habits', 'routines']) {
-      final oldIds = _rows(a, kind).keys.toList(),
-          nextIds = _rows(b, kind).keys.toList();
+      final oldIds = _entityObjects(before, kind).keys.toList(),
+          nextIds = _entityObjects(proposed, kind).keys.toList();
       if (oldIds.length != nextIds.length ||
           !oldIds.toSet().containsAll(nextIds) ||
           _same(oldIds, nextIds))
@@ -516,12 +556,12 @@ HabitState recordChange(
       );
     }
   }
-  final result = proposed.copy({
-    'operations': ops.map((o) => o.toJson()).toList(),
-    'undoBatch': !purging && undoable && ops.length > before.operations.length
+  final result = proposed.withLedger(
+    ops,
+    !purging && undoable && ops.length > before.operations.length
         ? batch
         : null,
-  });
+  );
   return result;
 }
 

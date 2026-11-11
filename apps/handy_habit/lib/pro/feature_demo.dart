@@ -25,6 +25,13 @@ Widget featureDemo(BuildContext c, HabitProFeature f, bool after) {
     smartDemoToday,
   );
   final label = switch (f) {
+    HabitProFeature.convenience =>
+      after
+          ? t('After morning: Water +1', 'Sau buổi sáng: Nước +1')
+          : t(
+              'Save your view · preview a batch',
+              'Lưu bộ lọc · xem trước thay đổi',
+            ),
     HabitProFeature.comparisons => t(
       '${after ? 'This' : 'Last'} month · ${count.kept}/${count.eligible} goals kept',
       'Tháng ${after ? 'này' : 'trước'} · giữ ${count.kept}/${count.eligible} mục tiêu',

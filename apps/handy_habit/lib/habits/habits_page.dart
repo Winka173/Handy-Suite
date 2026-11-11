@@ -1,4 +1,6 @@
 import 'package:handy_habit_engine/handy_habit_engine.dart';
+import 'dart:async';
+import '../convenience/saved_filters.dart';
 import 'preset_sheet.dart';
 import 'package:handy_ui/kit.dart';
 import '../scope.dart';
@@ -19,6 +21,15 @@ class HabitsPage extends StatefulWidget {
 class _HabitsPageState extends State<HabitsPage> {
   HabitScope get scope => widget.scope;
   String search = '', order = 'manual';
+  final searchController = TextEditingController();
+  Timer? debounce;
+  @override
+  void dispose() {
+    debounce?.cancel();
+    searchController.dispose();
+    super.dispose();
+  }
+
   bool archived = false;
   String? selected;
 
@@ -86,6 +97,7 @@ class _HabitsPageState extends State<HabitsPage> {
           ),
           const SizedBox(height: HandySpace.m),
           TextField(
+            controller: searchController,
             autofocus: widget.autofocus,
             key: const Key('habit-search'),
             decoration: InputDecoration(
@@ -93,7 +105,13 @@ class _HabitsPageState extends State<HabitsPage> {
               prefixIcon: const Icon(Icons.search, size: 20),
               isDense: true,
             ),
-            onChanged: (v) => setState(() => search = v),
+            onChanged: (v) {
+              debounce?.cancel();
+              debounce = Timer(
+                const Duration(milliseconds: 180),
+                () => setState(() => search = v),
+              );
+            },
           ),
           const SizedBox(height: HandySpace.s),
           Wrap(
@@ -132,6 +150,27 @@ class _HabitsPageState extends State<HabitsPage> {
                 ),
               ),
             ],
+          ),
+          SavedFilters(
+            scope: scope,
+            area: 'habits',
+            values: {
+              'search': searchController.text,
+              'archived': archived,
+              'order': order,
+            },
+            onApply: (v) => setState(() {
+              debounce?.cancel();
+              search = v['search'] as String? ?? '';
+              searchController.text = search;
+              archived = v['archived'] == true;
+              order = v['order'] as String? ?? 'manual';
+            }),
+          ),
+          TextButton(
+            key: const Key('habits-batch'),
+            onPressed: () => Navigator.pushNamed(context, '/habits/batch'),
+            child: Text(tr(context, 'Batch changes', 'Thay đổi hàng loạt')),
           ),
           if (habits.isEmpty)
             Padding(

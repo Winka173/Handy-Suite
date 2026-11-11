@@ -3902,3 +3902,33 @@ Historical R11 Progress contract (counting superseded by R12/R13 below): “What
 - Responsive/platform: 320/390 single scroll column, 1440 centered <=1000 insights/<=720 settings; text1/1.5 wraps; sheets scroll; targets >=48px; Tab/Enter, Back/Esc return one level; tooltip/semantics name chart days; reduced motion uses kit. Native widget compact size may truncate long names, with full app on tap.
 - Reject: method paragraphs on overview, ISO/raw IANA dates, five stacked filter fields, pink date tiles, fake exact/battery switches, unsupported pin buttons, mood/notes in external surfaces, device-delivery claims from host tests.
 - Validation: EN/VI × light/dark ×320/390/1440 ×text1/1.5 rasters of insights sections/filter sheet/report preview+actual PDF first page/notification settings/diagnostics/widgets; critique/fix/re-render. Unit/widget privacy, dates/count/clear/diagnostics/payload tests, app+engine analyze/tests, debug APK only; supervisor owns OS/device verification.
+
+### Habit run 15 — convenience contracts (R24)
+
+Data/jobs: named Habits search/archive/order and Progress range/habit filters; explicit selected habit IDs;
+existing collections, pauses and reminder rules; local routine-finish/holiday rules and their history.
+Face: existing Nunito editorial Habit, vermilion actions, oxblood headings; today's bead remains the sole signature.
+- Saved filters question: "Which view do I want again?" Finding: current filter values and named saved views.
+  Save current view is primary; apply/remove are explicit. Empty explains Save; non-Pro opens Pro with badge.
+  Saved Progress dates are fixed, labelled; applying a view never writes habit data.
+- Batch question: "Exactly what will change?" Finding: selected names and each before → after value.
+  Select habits, choose archive / collection / holiday dates / reminder time, Preview, then Apply once.
+  Reminder edits affect existing rules only (no permission or reminders silently enabled). No selection disables Preview.
+  Preview revision is checked at commit; stale/failure keeps choices and says nothing changed. One durable Undo for all rows.
+- Rules question: "What will Habit do for me?" Finding: readable rule, enabled switch, named recent effects with Undo.
+  Add routine finished → positive count habit +1, or holiday date range → collection pause. Both explicit, local and
+  foreground only, no chains or arbitrary conditions; finite ≤50 rules. Never retrospectively completes old sessions.
+  Show disabled/empty/history/error and non-Pro badge; a failed write changes nothing. Removing Pro stops evaluation.
+- All new screens: scrollable 320/390, bounded 800px content at1440, wrapping action rows, ≥48px controls;
+  EN/VI, independently styled light/dark, text1/1.5, semantic labels, focus/keyboard, Esc/back cancel, kit reduced motion.
+  Reject icon-only actions, overflowing dropdown rows, technical rule syntax, duplicate nav or KPI cards.
+- Native/web named routes share the same local forms. No health/platform toggle until an adapter exists.
+  Host widget renders cover the24 locale/theme/width/scale combinations; critique and re-render required.
+  Review refinement: use the short Vietnamese title “Sửa nhiều” so the batch job remains readable at320/text1.5;
+  each named automatic effect has its own Undo even when several rules fire in one atomic save.
+
+Habit R23 folder setting contract: asks "Where should these Windows copies meet?"; finding is
+chosen path, local merge status, last merge and local-data-safe error. Primary Choose folder,
+then explicit Sync now/Turn off. Empty/off, unavailable folder, incomplete cloud download,
+future schema and damaged/conflict-copy states remain honest. A merged local folder never
+claims another computer received it. Same 320–1440 scroll/wrap/a11y/reduced-motion rules as R24.

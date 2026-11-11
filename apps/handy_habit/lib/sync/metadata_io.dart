@@ -5,9 +5,10 @@ import 'metadata_stub.dart';
 export 'metadata_stub.dart' show SyncMetadataStore, MemorySyncMetadata;
 
 class FileSyncMetadata implements SyncMetadataStore {
-  Future<File> _file() async => File(
-    '${(await getApplicationSupportDirectory()).path}/habit-drive-device.json',
-  );
+  final String name;
+  FileSyncMetadata({this.name = 'habit-drive-device.json'});
+  Future<File> _file() async =>
+      File('${(await getApplicationSupportDirectory()).path}/$name');
   @override
   Future<Map<String, dynamic>> read() async {
     final file = await _file();

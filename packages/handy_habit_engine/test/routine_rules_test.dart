@@ -450,10 +450,10 @@ void main() {
       old.toJson(),
     );
   });
-  test('schemas 1–7 migrate linear sessions; schema 8 JSON/ZIP roundtrip', () {
+  test('schemas 1–8 migrate linear sessions; schema 9 JSON/ZIP roundtrip', () {
     final r = routine([step('a')]);
     final raw = run(r).toJson();
-    for (var v = 1; v <= 7; v++) {
+    for (var v = 1; v <= 8; v++) {
       final j = jsonDecode(jsonEncode(raw)) as Map<String, dynamic>;
       j['schema'] = v;
       if (v == 1) j.remove('pauses');
@@ -478,7 +478,7 @@ void main() {
       }
       final s = HabitState.fromJson(j);
       expect(s.sessions.single.steps.single.plan.title, 'a');
-      expect(s.toJson()['schema'], 8);
+      expect(s.toJson()['schema'], 9);
       final data = utf8.encode(jsonEncode(j));
       final manifest = utf8.encode(
         jsonEncode({

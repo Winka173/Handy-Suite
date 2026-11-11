@@ -7,6 +7,7 @@ import '../habits/habit_appearance.dart';
 import '../design/palette.dart';
 import '../ui/capped.dart';
 import '../ui/words.dart';
+import '../convenience/saved_filters.dart';
 import 'progress_calendar.dart';
 import 'week_review.dart';
 import '../mood/mood_history.dart';
@@ -152,6 +153,16 @@ class _InsightsPageState extends State<InsightsPage> {
     final summary = Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
+        SavedFilters(
+          scope: scope,
+          area: 'progress',
+          values: {'kind': kind, 'anchor': anchor, 'habit': habit},
+          onApply: (v) => setState(() {
+            kind = v['kind'] as String? ?? 'month';
+            anchor = v['anchor'] as String? ?? scope.today;
+            habit = v['habit'] as String?;
+          }),
+        ),
         ListTile(
           key: const Key('progress-smart'),
           contentPadding: EdgeInsets.zero,

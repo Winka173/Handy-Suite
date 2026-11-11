@@ -17,6 +17,11 @@ String syncStateText(BuildContext c, DriveSyncState state) => switch (state) {
   ),
 };
 String syncErrorText(BuildContext c, String? error) => switch (error) {
+  'capacity' => tr(
+    c,
+    'Sync is unavailable at this history size. Local data is safe; you can keep tracking offline.',
+    'Lịch sử này vượt khả năng đồng bộ hiện tại. Dữ liệu cục bộ vẫn an toàn; bạn có thể tiếp tục ghi ngoại tuyến.',
+  ),
   'configuration' => tr(
     c,
     'Allow Google Drive access again to reconnect. Your local data is preserved.',

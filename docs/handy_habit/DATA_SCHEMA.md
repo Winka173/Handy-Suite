@@ -1,12 +1,12 @@
 # Data schema and portability
 
-Data schema 8 (2026-11-10; Advanced routine rules, reusable snapshots and execution traces; schemas1–7 migrate); sync protocol 1 and physical SQLite/IndexedDB version 2; isolated native `handy-habit.sqlite` / browser IndexedDB `handy-habit`.
+Data schema 9 (2026-11-11; local convenience settings; schemas1–8 migrate); sync protocol 1 and physical SQLite/IndexedDB version 2; isolated native `handy-habit.sqlite` / browser IndexedDB `handy-habit`.
 No other app database is opened. Native tables: habits, events, routines, sessions,
 operations (unique actor/sequence, entity index), singleton state metadata, and a device-local recovery table. Validated entity JSON plus indexed event habit/date/source,
 habit foreign key, unique linked (session,step), and session status index.
 SQLite WAL/FULL/FK, revision compare-and-swap, worker isolates and one transaction
 for event + session updates. IndexedDB commits six data stores atomically; its seventh store holds device-local recovery; browser
-commits currently rewrite stores. Future schemas/corruption refuse without blank reset.
+ordinary commits apply per-record deltas; replacement commits retain a complete validated transaction. Future schemas/corruption refuse without blank reset.
 
 Values are integer thousandths of displayed units, bounded to 1e12; count is whole
 units, binary displayed daily total <=1000 (independent causal contributions retained), duration in minutes. Events are deltas. Daily-total
@@ -261,3 +261,20 @@ authorization require the scale/device follow-up in [RELEASE](RELEASE.md).
 ## R19/R20 settings extension (run13; no schema bump)
 
 Existing open `settings` stores `studio:{palette,layout,spacing,runner,icons:{habitId:iconName}}` and `goalDecisions:{suggestionId:accepted|dismissed}`. Reading sanitizes unknown studio options; Pro remains external to settings/backups. Apply/Accept check current entitlement. Loss never clears choices. Goal acceptance appends an effective-dated schedule from tomorrow, preserving old schedules/events. Suggestion IDs bind habit fingerprint, kept count and target/proposal; stale decisions refuse. Existing JSON/ZIP roundtrip covers settings. Physical/protocol/schema stay 2/1/8.
+
+## R24 settings extension (run15; schema9)
+
+`savedFilters` contains at most100 distinct IDs/names: `area:habits` stores
+search/archive/order; `area:progress` stores kind/fixed anchor/habit ID.
+`convenienceRules` has at most50 named routine/holiday definitions with enabled
+switches and explicit targets/dates. These settings and `rule:<rule>:<trigger>`
+history markers are local/backed up, excluded from protocol1. Ordinary check-in
+and pause effects use the existing causal ledger and do sync within capacity.
+Each rule has a separate Undo batch; all source/effects commit atomically.
+Markers survive Undo in the ledger to prevent retry/reopen replay. UI replacement
+restore disables imported rules; copy-merge keeps receiver settings. Pro is never
+included in the data. Schema8 ZIPs remain readable; unsupported schemas refuse.
+
+Typed writes retain immutable rows but must obey the same200k per-list parser
+guard before persistence. Backup/sync still cap30MB; a large causal ledger can
+hit this before the row guard. No compaction or silent omission; see PERFORMANCE.

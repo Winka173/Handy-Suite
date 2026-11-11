@@ -107,6 +107,7 @@ class _HabitProPageState extends State<HabitProPage> {
                     HabitProFeature.values.skip(9).take(6),
                   ),
                   ('Make it yours', 'Theo ý bạn', [HabitProFeature.studio]),
+                  ('Convenience', 'Tiện ích', [HabitProFeature.convenience]),
                 ]) ...[
                   const SizedBox(height: 24),
                   Semantics(

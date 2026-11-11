@@ -6,6 +6,7 @@ import '../scope.dart';
 import '../ui/form.dart';
 import '../ui/words.dart';
 import 'data.dart';
+import '../sync/folder_sync.dart';
 import 'settings_parts.dart';
 import 'about.dart';
 import 'notification_status.dart';
@@ -571,6 +572,55 @@ class HabitSettingsPage extends StatelessWidget {
       return HandyPage(
         title: tr(context, 'Settings', 'Cài đặt'),
         children: [
+          if (folderSyncOffered)
+            HandySettingsSection(
+              title: tr(context, 'Sync', 'Đồng bộ'),
+              children: [
+                HandyTile(
+                  title: tr(
+                    context,
+                    'Sync through a folder',
+                    'Đồng bộ qua thư mục',
+                  ),
+                  subtitle: tr(
+                    context,
+                    'Free · Windows · separate from Backup',
+                    'Miễn phí · Windows · tách biệt với Sao lưu',
+                  ),
+                  onTap: () =>
+                      Navigator.pushNamed(context, '/settings/folder-sync'),
+                ),
+              ],
+            ),
+          HandySettingsSection(
+            title: tr(context, 'Convenience', 'Tiện ích'),
+            children: [
+              HandyTile(
+                title: tr(context, 'Local rules', 'Quy tắc cục bộ'),
+                subtitle: tr(
+                  context,
+                  'Clear automatic changes, with history and Undo',
+                  'Thay đổi tự động rõ ràng, có lịch sử và hoàn tác',
+                ),
+                trailing: scope.pro(context)
+                    ? null
+                    : const HabitProBadge(feature: HabitProFeature.convenience),
+                onTap: () => Navigator.pushNamed(context, '/settings/rules'),
+              ),
+              HandyTile(
+                title: tr(context, 'Batch changes', 'Thay đổi hàng loạt'),
+                subtitle: tr(
+                  context,
+                  'Select, preview and apply once',
+                  'Chọn, xem trước và áp dụng một lần',
+                ),
+                trailing: scope.pro(context)
+                    ? null
+                    : const HabitProBadge(feature: HabitProFeature.convenience),
+                onTap: () => Navigator.pushNamed(context, '/habits/batch'),
+              ),
+            ],
+          ),
           HandySettingsSection(
             title: tr(context, 'Appearance', 'Giao diện'),
             children: [

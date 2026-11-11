@@ -4,6 +4,7 @@ import 'dart:js_interop';
 import 'package:web/web.dart' as web;
 import 'package:handy_habit_engine/handy_habit_engine.dart';
 import 'store.dart';
+import 'delta.dart';
 
 const names = [
   'habits',
@@ -46,7 +47,8 @@ Future<HabitStore> openStore() async {
   return done.future;
 }
 
-class BrowserHabitStore implements RecoverableHabitStore {
+class BrowserHabitStore
+    implements RecoverableHabitStore, IncrementalHabitStore {
   final web.IDBDatabase db;
   BrowserHabitStore(this.db);
   web.IDBTransaction transaction(String mode) => db.transaction(
@@ -94,7 +96,20 @@ class BrowserHabitStore implements RecoverableHabitStore {
   }
 
   @override
-  Future<void> commit(HabitState next, {required int expectedRevision}) async {
+  Future<void> commit(HabitState next, {required int expectedRevision}) =>
+      _commit(next, expectedRevision: expectedRevision);
+  @override
+  Future<void> commitDelta(
+    HabitState previous,
+    HabitState next, {
+    required int expectedRevision,
+  }) => _commit(next, expectedRevision: expectedRevision, previous: previous);
+  Future<void> _commit(
+    HabitState next, {
+    required int expectedRevision,
+    HabitState? previous,
+  }) async {
+    validateStoredCounts(next);
     next.validate();
     final done = Completer<void>(),
         tx = transaction('readwrite'),
@@ -113,10 +128,21 @@ class BrowserHabitStore implements RecoverableHabitStore {
         if (revision != expectedRevision ||
             next.revision != expectedRevision + 1)
           throw StateError('Another tab changed data; reload');
-        final json = next.toJson();
+        if (previous != null && previous.revision != expectedRevision)
+          throw StateError('Invalid delta base');
+        final delta = previous == null ? null : HabitDelta(previous, next);
+        final json = delta == null
+            ? next.toJson()
+            : {...next.metadataJson(), ...delta.changed};
         for (final name in names.where((s) => s != 'state')) {
           final store = tx.objectStore(name);
-          store.clear();
+          if (delta == null) {
+            store.clear();
+          } else {
+            for (final id in delta.removed[name]!) {
+              store.delete(id.toJS);
+            }
+          }
           for (final value in json[name] as List) {
             store.put(jsonEncode(value).toJS, (value['id'] as String).toJS);
           }

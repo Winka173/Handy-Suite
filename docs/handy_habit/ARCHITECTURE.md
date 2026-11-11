@@ -26,3 +26,15 @@ controller publishes only after commit. App-specific fingerprints include all sh
 packages/root config and exclude other app edits, preserving honest build evidence
 while a separate session edits existing apps. Test-only file sinks are not production
 implementations or proof of OS provider access.
+
+Run15/schema9: convenience rules remain pure Dart, with local configuration and
+named markers backed up in settings; effects use normal causal data rows. The
+controller records each rule's Undo batch and commits source/effects atomically.
+SQLite computes row deltas in a worker; IndexedDB queues deltas inside CAS.
+Validation/hash caches are weak and keyed by immutable snapshots/operations;
+replacements/redactions revalidate. Appearance notifications are independent of
+domain changes, keeping the app wrapper stable. A scope caches each state's index.
+Windows folder sync reuses the R15 driver/protocol over a separate local metadata
+file and immutable folder provider. Vendor clients only carry the files.
+Capacity/main-isolate limitations and unfinished checkpoint design are documented
+in [PERFORMANCE](PERFORMANCE.md); R26 is not complete.

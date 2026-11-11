@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:handy_habit_engine/handy_habit_engine.dart';
 import 'data/store.dart';
@@ -11,6 +12,16 @@ class HabitController extends ChangeNotifier {
   Object? error;
   bool busy = false, disposed = false;
   final adsVisible = ValueNotifier(false);
+  final appearance = ValueNotifier('');
+  bool automationAllowed = false;
+  bool automationForeground = true;
+  void _appearance() {
+    final p = state?.settings ?? {};
+    appearance.value = jsonEncode({
+      for (final k in ['locale', 'theme', 'studio', 'reducedMotion']) k: p[k],
+    });
+  }
+
   final String actor = uid();
   bool hasRecovery = false;
   Future<void> Function()? beforeReplace;
@@ -26,6 +37,7 @@ class HabitController extends ChangeNotifier {
       error = null;
       store ??= await open();
       state = await store!.read();
+      _appearance();
       if (store case final RecoverableHabitStore recoverable) {
         hasRecovery = await recoverable.readRecovery() != null;
       }
@@ -53,6 +65,7 @@ class HabitController extends ChangeNotifier {
     bool remember = true,
     bool recorded = false,
     bool recovery = false,
+    bool automation = true,
   }) {
     final result = Completer<void>();
     busy = true;
@@ -62,7 +75,7 @@ class HabitController extends ChangeNotifier {
         final before = state ?? (throw StateError('Data unavailable')),
             proposed = action(before);
         proposed.validate();
-        final tracked = recorded
+        var tracked = recorded || identical(proposed, before)
             ? proposed
             : recordChange(
                 before,
@@ -71,6 +84,34 @@ class HabitController extends ChangeNotifier {
                 undoable: remember,
                 now: clock(),
               );
+        if (automation &&
+            automationAllowed &&
+            automationForeground &&
+            !recorded &&
+            remember) {
+          for (final rule in convenienceRules(
+            tracked,
+          ).where((r) => r.enabled)) {
+            final effects = evaluateConvenience(
+              before,
+              tracked,
+              habitDayAt(tracked, clock()),
+              ruleId: rule.id,
+            );
+            if (!identical(effects, tracked)) {
+              tracked = recordChange(
+                tracked,
+                effects,
+                actor: actor,
+                now: clock(),
+              );
+            }
+          }
+        }
+        if (identical(tracked, before)) {
+          result.complete();
+          return;
+        }
         final next = tracked.copy({'revision': before.revision + 1});
         if (recovery) {
           final recoverable = store;
@@ -81,8 +122,18 @@ class HabitController extends ChangeNotifier {
           await recoverable.saveRecovery(expectedRevision: before.revision);
           hasRecovery = true;
         }
-        await store!.commit(next, expectedRevision: before.revision);
+        final storage = store!;
+        if (storage is IncrementalHabitStore) {
+          await storage.commitDelta(
+            before,
+            next,
+            expectedRevision: before.revision,
+          );
+        } else {
+          await storage.commit(next, expectedRevision: before.revision);
+        }
         state = next;
+        _appearance();
         error = null;
         result.complete();
       } catch (e, st) {
@@ -146,6 +197,7 @@ class HabitController extends ChangeNotifier {
   void dispose() {
     disposed = true;
     adsVisible.dispose();
+    appearance.dispose();
     super.dispose();
   }
 }

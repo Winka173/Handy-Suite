@@ -2,7 +2,7 @@ part of '../handy_habit_engine.dart';
 
 /// The data schema written by this version. Schema 1 (no pauses) still
 /// reads; it is upgraded on the next save.
-const habitSchema = 8;
+const habitSchema = 9;
 const maxPauseDays = 366;
 const maxPauses = 1000;
 

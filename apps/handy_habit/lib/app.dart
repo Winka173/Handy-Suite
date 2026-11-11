@@ -1,3 +1,5 @@
+import 'convenience/batch_page.dart';
+import 'convenience/rules_page.dart';
 import 'design/identity.dart';
 import 'design/theme.dart';
 import 'design/studio_style.dart';
@@ -35,6 +37,8 @@ import 'welcome/welcome_page.dart';
 import 'shell/habit_shell.dart';
 import 'today/check_in.dart';
 import 'sync/drive_sync.dart';
+import 'sync/folder_sync.dart';
+import 'sync/folder_page.dart';
 import 'sync/sync_page.dart';
 import 'pro/entitlements.dart';
 import 'pro/pro_page.dart';
@@ -79,11 +83,15 @@ class _HabitAppState extends State<HabitApp> with WidgetsBindingObserver {
   late final drive =
       widget.driveSync ??
       (driveSyncOffered && widget.device ? HabitDriveSync(c) : null);
+  late final folder = folderSyncOffered && widget.device
+      ? HabitFolderSync(c)
+      : null;
   late final scope = HabitScope(
     controller: c,
     files: widget.files,
     reminders: reminders,
     drive: drive,
+    folder: folder,
     // One plugin set-up for both, so the tap handler is not reset.
     notices:
         widget.notices ??
@@ -122,6 +130,7 @@ class _HabitAppState extends State<HabitApp> with WidgetsBindingObserver {
     WidgetsBinding.instance.addObserver(this);
     c.addListener(_changed);
     scope.area.addListener(_ads);
+    if (folder != null) unawaited(folder!.start());
     if (c.state == null) unawaited(c.load());
     if (drive != null && c.state != null) {
       _driveStarted = true;
@@ -227,6 +236,7 @@ class _HabitAppState extends State<HabitApp> with WidgetsBindingObserver {
     WidgetsBinding.instance.removeObserver(this);
     c.removeListener(_changed);
     scope.area.removeListener(_ads);
+    folder?.dispose();
     scope.dispose();
     if (widget.controller == null) c.dispose();
     super.dispose();
@@ -234,15 +244,37 @@ class _HabitAppState extends State<HabitApp> with WidgetsBindingObserver {
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
+    c.automationForeground = state == AppLifecycleState.resumed;
     if (state == AppLifecycleState.resumed) {
       _refreshClock();
       _sync();
       drive?.resumed();
+      folder?.driver.resumed();
+      _evaluateRules();
     }
   }
 
   @override
   void didChangePlatformBrightness() => _sync();
+  void _evaluateRules() {
+    if (!c.automationAllowed || c.state == null) return;
+    unawaited(
+      c.change((s) => s).catchError((Object _) {
+        final context = navigator.currentContext;
+        if (mounted && context != null && context.mounted) {
+          showHandyMessage(
+            context,
+            tr(
+              context,
+              'Automatic change not saved. Nothing changed. Review Local rules in Settings.',
+              'Chưa lưu thay đổi tự động. Không có gì thay đổi. Xem Quy tắc cục bộ trong Cài đặt.',
+            ),
+          );
+        }
+      }),
+    );
+  }
+
   @override
   void didChangeLocales(List<Locale>? locales) => _sync();
 
@@ -253,6 +285,7 @@ class _HabitAppState extends State<HabitApp> with WidgetsBindingObserver {
     _clockStamp = next;
     scope.clockTick.value++;
     _sync();
+    _evaluateRules();
   }
 
   bool _driveStarted = false;
@@ -358,6 +391,9 @@ class _HabitAppState extends State<HabitApp> with WidgetsBindingObserver {
       ['', 'progress'] ||
       ['', 'insights'] => () => HabitShell(scope: scope, area: 3),
       ['', 'progress', 'smart'] => () => HabitSmartPage(scope: scope),
+      ['', 'settings', 'folder-sync'] => () => HabitFolderPage(scope: scope),
+      ['', 'settings', 'rules'] => () => HabitRulesPage(scope: scope),
+      ['', 'habits', 'batch'] => () => HabitBatchPage(scope: scope),
       ['', 'settings', 'studio'] => () => HabitStudioPage(scope: scope),
       ['', 'settings', 'widgets'] => () => HabitWidgetsPage(scope: scope),
       ['', 'settings', 'notifications'] => () => HabitNotificationSettingsPage(
@@ -585,7 +621,7 @@ class _HabitAppState extends State<HabitApp> with WidgetsBindingObserver {
 
   @override
   Widget build(BuildContext context) => ListenableBuilder(
-    listenable: c,
+    listenable: c.appearance,
     builder: (context, _) => HandyApp(
       brand: habitIdentity,
       themeOverride: habitTheme,
@@ -615,10 +651,14 @@ class _HabitAppState extends State<HabitApp> with WidgetsBindingObserver {
   Widget _styled(Widget child) => Builder(
     builder: (context) {
       final pro = LifetimeScope.maybeOf(context)?.pro == true;
+      c.automationAllowed = pro;
       if (_widgetPro != pro) {
         _widgetPro = pro;
         WidgetsBinding.instance.addPostFrameCallback((_) {
-          if (mounted) _sync();
+          if (mounted) {
+            _sync();
+            if (pro && c.state != null) _evaluateRules();
+          }
         });
       }
       return Theme(

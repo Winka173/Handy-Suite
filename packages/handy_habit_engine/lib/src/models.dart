@@ -553,6 +553,10 @@ class RoutineSession {
   );
 }
 
+// Weak identity cache: every field and nested payload is immutable. New imported
+// instances validate fully; validated snapshots never need the same scan twice.
+final _validatedHabitStates = Expando<bool>();
+
 class HabitState {
   final int revision;
   final List<HabitOperation> operations;
@@ -615,11 +619,10 @@ class HabitState {
   int get weekStart => settings['weekStart'] as int? ?? 1;
   int get backfill => settings['backfill'] as int? ?? 90;
   int get dayBoundaryMinutes => settings['dayBoundaryMinutes'] as int? ?? 0;
-  Json toJson() => {
+  Json metadataJson() => {
     'app': 'handy-habit',
     'schema': habitSchema,
     'revision': revision,
-    'operations': operations.map((o) => o.toJson()).toList(),
     'trash': trash.map((t) => t.toJson()).toList(),
     'tombstones': tombstones,
     'clockPolicies': clockPolicies,
@@ -628,28 +631,115 @@ class HabitState {
       'habits': habits.map((h) => h.id).toList(),
       'routines': routines.map((r) => r.id).toList(),
     },
-    'habits': habits.map((e) => e.toJson()).toList(),
-    'events': events.map((e) => e.toJson()).toList(),
-    'routines': routines.map((e) => e.toJson()).toList(),
-    'sessions': sessions.map((e) => e.toJson()).toList(),
     'pauses': pauses.map((e) => e.toJson()).toList(),
     'moods': moods.map((e) => e.toJson()).toList(),
     'settings': settings,
   };
+  Json toJson() => {
+    ...metadataJson(),
+    'operations': operations.map((o) => o.toJson()).toList(),
+    'habits': habits.map((e) => e.toJson()).toList(),
+    'events': events.map((e) => e.toJson()).toList(),
+    'routines': routines.map((e) => e.toJson()).toList(),
+    'sessions': sessions.map((e) => e.toJson()).toList(),
+  };
+  HabitState withEvents(List<HabitEvent> values) => _copy(events: values);
+  HabitState withLedger(List<HabitOperation> values, String? batch) {
+    final s = HabitState(
+      revision: revision,
+      operations: values,
+      trash: trash,
+      tombstones: tombstones,
+      clockPolicies: clockPolicies,
+      undoBatch: batch,
+      habits: habits,
+      events: events,
+      routines: routines,
+      sessions: sessions,
+      pauses: pauses,
+      moods: moods,
+      settings: settings,
+    );
+    if (_validatedHabitStates[this] == true &&
+        values.length >= operations.length &&
+        operations.indexed.every((e) => identical(e.$2, values[e.$1]))) {
+      // Appending verified operations cannot invalidate immutable domain rows.
+      // Replacements/redactions still take the full validation path below.
+      validateOperations(s.operations);
+      _validatedHabitStates[s] = true;
+    } else {
+      s.validate();
+    }
+    return s;
+  }
+
+  HabitState _copy({List<HabitEvent>? events}) => HabitState(
+    revision: revision,
+    operations: operations,
+    trash: trash,
+    tombstones: tombstones,
+    clockPolicies: clockPolicies,
+    undoBatch: undoBatch,
+    habits: habits,
+    events: events ?? this.events,
+    routines: routines,
+    sessions: sessions,
+    pauses: pauses,
+    moods: moods,
+    settings: settings,
+  );
   HabitState copy(Json c) {
-    final j = {...toJson(), ...c};
-    j['entityOrder'] = {
-      ...toJson()['entityOrder'] as Map,
-      for (final kind in ['habits', 'routines'])
-        if (c.containsKey(kind))
-          kind: [for (final row in objects(c[kind])) row['id']],
-    };
-    return HabitState.fromJson(j);
+    final result = HabitState(
+      revision: c.containsKey('revision') ? integer(c['revision']) : revision,
+      operations: c.containsKey('operations')
+          ? objects(c['operations']).map(HabitOperation.fromJson).toList()
+          : operations,
+      trash: c.containsKey('trash')
+          ? objects(c['trash']).map(HabitTrash.fromJson).toList()
+          : trash,
+      tombstones: c.containsKey('tombstones')
+          ? objects(c['tombstones'])
+          : tombstones,
+      clockPolicies: c.containsKey('clockPolicies')
+          ? objects(c['clockPolicies'])
+          : clockPolicies,
+      undoBatch: c.containsKey('undoBatch')
+          ? c['undoBatch'] as String?
+          : undoBatch,
+      habits: c.containsKey('habits')
+          ? objects(c['habits']).map(Habit.fromJson).toList()
+          : habits,
+      events: c.containsKey('events')
+          ? objects(c['events']).map(HabitEvent.fromJson).toList()
+          : events,
+      routines: c.containsKey('routines')
+          ? objects(c['routines']).map(Routine.fromJson).toList()
+          : routines,
+      sessions: c.containsKey('sessions')
+          ? objects(c['sessions']).map(RoutineSession.fromJson).toList()
+          : sessions,
+      pauses: c.containsKey('pauses')
+          ? objects(c['pauses']).map(Pause.fromJson).toList()
+          : pauses,
+      moods: c.containsKey('moods')
+          ? objects(c['moods']).map(MoodEntry.fromJson).toList()
+          : moods,
+      settings: c.containsKey('settings')
+          ? Map<String, dynamic>.from(c['settings'] as Map)
+          : settings,
+    );
+    if (_validatedHabitStates[this] == true &&
+        c.keys.every((k) => k == 'revision' || k == 'undoBatch')) {
+      _validatedHabitStates[result] = true;
+    } else {
+      result.validate();
+    }
+    return result;
   }
 
   factory HabitState.fromJson(Json j) {
     if (j['app'] != 'handy-habit' ||
-        ![1, 2, 3, 4, 5, 6, 7, 8].contains(j['schema']) ||
+        ![1, 2, 3, 4, 5, 6, 7, 8, 9].contains(j['schema']) ||
         j['schema'] == 1 && j['pauses'] != null) {
       throw const FormatException('Unsupported Habit backup/schema');
     }
@@ -677,6 +767,8 @@ class HabitState {
     return s;
   }
   void validate() {
+    if (_validatedHabitStates[this] == true) return;
+    validateConvenience(settings);
     location(zone);
     integer(dayBoundaryMinutes, max: 1439);
     validateOperations(operations);
@@ -784,19 +876,22 @@ class HabitState {
       throw const FormatException('Invalid day total');
     // Binary contributions keep their independent IDs across devices. The
     // index caps their projection at one completion, preserving provenance.
-    for (final h in habits.where((h) => h.type == 'binary')) {
-      for (final d
-          in events.where((e) => e.habit == h.id).map((e) => e.day).toSet()) {
-        final entries = events.where((e) => e.habit == h.id && e.day == d);
-        if (entries.fold(0, (n, e) => n + e.value) > 1000 &&
-            entries.any(
-              (e) => !operations.any(
-                (o) =>
-                    o.kind == 'events' &&
-                    o.entity == e.id &&
-                    _same(o.after, e.toJson()),
-              ),
-            )) {
+    final overflowing = totals.keys
+        .where(
+          (k) =>
+              totals[k]! > 1000 &&
+              byId[k.substring(0, k.lastIndexOf(':'))]?.type == 'binary',
+        )
+        .toSet();
+    if (overflowing.isNotEmpty) {
+      final contributions = <String, List<Json?>>{};
+      for (final o in operations.where((o) => o.kind == 'events')) {
+        contributions.putIfAbsent(o.entity, () => []).add(o.after);
+      }
+      for (final e in events) {
+        if (overflowing.contains('${e.habit}:${e.day}') &&
+            !(contributions[e.id]?.any((row) => _same(row, e.toJson())) ??
+                false)) {
           throw const FormatException(
             'Binary progress requires independent causal contributions',
           );
@@ -838,6 +933,7 @@ class HabitState {
               : routines.any((v) => v.id == r.target)))
         throw const FormatException('Invalid reminder reference or ID');
     }
+    _validatedHabitStates[this] = true;
   }
 
   void validateMapping(RoutineStep step) {

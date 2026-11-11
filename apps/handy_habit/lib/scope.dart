@@ -7,6 +7,7 @@ import 'controller.dart';
 import 'reminders.dart';
 import 'run_notice.dart';
 import 'sync/drive_sync.dart';
+import 'sync/folder_sync.dart';
 
 /// What every Habit screen shares: the state, the adapters, the clock and
 /// the area on screen.
@@ -20,6 +21,7 @@ class HabitScope {
   /// Automatic backups to a folder; null in tests that do not need them.
   final HandyAutoBackup? autoBackup;
   final HabitDriveSync? drive;
+  final HabitFolderSync? folder;
 
   /// Today, Habits, Routines or Insights.
   final area = ValueNotifier(0);
@@ -33,11 +35,20 @@ class HabitScope {
     required this.clock,
     this.autoBackup,
     this.drive,
+    this.folder,
   });
 
   HabitState get state => controller.state!;
   String get today => habitDayAt(state, clock());
-  HabitIndex get index => HabitIndex.of(state);
+  HabitState? _indexed;
+  HabitIndex? _index;
+  HabitIndex get index {
+    if (!identical(_indexed, state)) {
+      _indexed = state;
+      _index = HabitIndex.of(state);
+    }
+    return _index!;
+  }
 
   /// The hour of the day where the data's time zone is.
   int get hour => tz.TZDateTime.from(clock(), location(state.zone)).hour;

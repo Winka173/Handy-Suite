@@ -260,6 +260,9 @@ class HabitDriveSync extends ChangeNotifier {
       });
       state = pending > 0 ? DriveSyncState.pending : DriveSyncState.synced;
       if (pending > 0) _schedule();
+    } on HabitSyncCapacity {
+      state = DriveSyncState.error;
+      errorCode = 'capacity';
     } on NewerHabitSync {
       state = DriveSyncState.newerRemote;
       errorCode = 'newer';

@@ -2,6 +2,12 @@ part of '../handy_habit_engine.dart';
 
 const habitSyncRoot = 'handy-habit';
 const habitSyncVersion = 1;
+
+class HabitSyncCapacity extends FormatException {
+  const HabitSyncCapacity()
+    : super('This history exceeds sync capacity; local data is preserved');
+}
+
 const _syncKinds = [
   'habits',
   'events',
@@ -22,6 +28,8 @@ bool _syncedOperation(HabitOperation o) => _syncKinds.contains(o.kind);
 /// Seed pre-ledger rows once, with deterministic identities. Existing edits use
 /// their original before-image, never a later materialized snapshot as a seed.
 HabitState prepareHabitSync(HabitState s) {
+  if (s.events.length > 200000 || s.operations.length > 200000)
+    throw const HabitSyncCapacity();
   final ops = s.operations.toList();
   final histories = <String, List<HabitOperation>>{};
   for (final o in ops) {
@@ -58,6 +66,7 @@ HabitState prepareHabitSync(HabitState s) {
       );
     }
   }
+  if (ops.length > 200000) throw const HabitSyncCapacity();
   return s.copy({
     'operations': unionOperations(
       ops,
@@ -462,6 +471,7 @@ Uint8List encodeHabitSync(HabitState state) {
     state,
   ).operations.where(_syncedOperation).map((o) => o.toJson()).toList();
   final payload = _canonical(ops), bytes = utf8.encode(payload);
+  if (bytes.length > backupLimit - 4096) throw const HabitSyncCapacity();
   return Uint8List.fromList(
     utf8.encode(
       _canonical({
@@ -562,8 +572,7 @@ Future<HabitSyncResult> syncHabitOnce({
     merged = mergeHabitStates(merged, state, base: base);
   }
   final bytes = encodeHabitSync(merged);
-  if (bytes.length > backupLimit)
-    throw const FormatException('Sync exceeds 30MB; local data is safe');
+  if (bytes.length > backupLimit) throw const HabitSyncCapacity();
   final hash = sha256.convert(bytes).toString();
   await remote.put('$habitSyncRoot/commits/$device-$hash.json', bytes);
   // Immutable per-device version receipt replaces a shared mutable lock file:

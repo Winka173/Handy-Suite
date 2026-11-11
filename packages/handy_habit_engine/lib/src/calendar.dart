@@ -140,10 +140,13 @@ class HabitIndex {
         t.entity: t.localDay,
     };
   void capBinary(Iterable<Habit> habits) {
-    for (final h in habits.where((h) => h.type == 'binary')) {
-      for (final key in totals.keys.where((k) => k.startsWith('${h.id}:'))) {
+    final binary = habits
+        .where((h) => h.type == 'binary')
+        .map((h) => h.id)
+        .toSet();
+    for (final key in totals.keys) {
+      if (binary.contains(key.substring(0, key.lastIndexOf(':'))))
         totals[key] = min(1000, totals[key]!);
-      }
     }
   }
 
@@ -311,22 +314,21 @@ HabitState record(
       throw const FormatException('Conflicting event ID');
     return state;
   }
-  final h = state.habits.firstWhere((h) => h.id == event.habit),
-      index = HabitIndex(state.events);
+  final h = state.habits.firstWhere((h) => h.id == event.habit);
+  final currentValue = state.events
+      .where((e) => e.habit == event.habit && e.day == event.day)
+      .fold(0, (n, e) => n + e.value);
   if (h.archived ||
       event.day.compareTo(today) > 0 ||
       date(today).difference(date(event.day)).inDays > state.backfill)
     throw const FormatException('Outside editable check-in window');
   if (!h.isNegative &&
       !allowExtra &&
-      index.value(h.id, event.day) >=
-          (scheduleOn(h, event.day)?.target ?? 1000))
+      currentValue >= (scheduleOn(h, event.day)?.target ?? 1000))
     return state;
   return recordDayIntent(
     state,
-    state.copy({
-      'events': [...state.events.map((e) => e.toJson()), event.toJson()],
-    }),
+    state.withEvents([...state.events, event]),
     event.habit,
     event.day,
     'addDelta',

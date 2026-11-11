@@ -304,6 +304,10 @@ Future<String?> importHabits(BuildContext context, HabitScope scope) async {
       'settings': {
         ...imported.settings,
         'notifications': false,
+        'convenienceRules': [
+          for (final r in convenienceRules(imported))
+            {...r.toJson(), 'enabled': false},
+        ],
         'reminders': [
           for (final r in objects(imported.settings['reminders'] ?? []))
             {...r, 'enabled': false},

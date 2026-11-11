@@ -168,3 +168,17 @@ Drive define compiles. Review: [R22_REVIEW](R22_REVIEW.md); artifacts under
 `apps/handy_habit/build/run14` (index, six summary sheets, raw rasters, PDFs, logs).
 No device evidence: supervisor owns notification permission/reboot/exact/battery/delivery,
 Windows/iOS notices and Android launcher placement/resize/theme/refresh/quick check-in.
+
+## Run15 / R23–R26 — 2026-11-11
+
+App287/engine201 host tests pass, including deterministic rule effects, separate
+Undo for simultaneous rules, automatic save errors, schema8 ZIP migration,
+typed storage capacity refusal, WAL process termination and folder publication.
+Both analyzers clean; scoped format verification includes lib/test/tool.
+Render24 matrix cases /216 PNGs; performance4 widgets and durable1 host test
+pass separately. [Review](R23_R26_REVIEW.md), [host numbers/limits](PERFORMANCE.md).
+APK command with `HANDY_DRIVE_SYNC=true` reached debug signing but failed on
+access denied to `debug.keystore.lock`, including a fresh workspace Android home;
+no current APK success, install or device check claimed. R26 remains partial.
+Browser delta transactions are source/analyzer checked; actual IndexedDB runtime,
+two-PC cloud-folder behavior and release/device timing remain supervisor gates.
