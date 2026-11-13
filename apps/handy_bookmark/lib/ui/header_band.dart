@@ -17,20 +17,25 @@ class HeaderBand extends StatelessWidget {
   /// Lay the action beside the title (a wide screen).
   final bool across;
   final double titleSize;
+
+  /// Icon buttons at the title's right (the phone's Search and Settings),
+  /// drawn in the band's ink.
+  final List<Widget> trailing;
   const HeaderBand({
     super.key,
     required this.title,
     required this.counts,
     this.action,
     this.across = false,
-    this.titleSize = 30,
+    this.titleSize = BookmarkType.page,
+    this.trailing = const [],
   });
 
   @override
   Widget build(BuildContext context) {
     final p = BookmarkPalette.of(context);
     final theme = Theme.of(context);
-    final head = Column(
+    final name = Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       mainAxisSize: MainAxisSize.min,
       children: [
@@ -38,7 +43,7 @@ class HeaderBand extends StatelessWidget {
           header: true,
           child: Text(
             title,
-            maxLines: 2,
+            maxLines: across ? 1 : 2,
             overflow: TextOverflow.ellipsis,
             style: bookmarkSerif(
               context,
@@ -47,25 +52,48 @@ class HeaderBand extends StatelessWidget {
           ),
         ),
         if (counts.isNotEmpty) ...[
-          const SizedBox(height: 4),
+          const SizedBox(height: HandySpace.xs),
           Text.rich(
             TextSpan(children: counts),
             key: const Key('home-subtitle'),
+            maxLines: across ? 1 : 2,
+            overflow: TextOverflow.ellipsis,
             style: theme.textTheme.bodyMedium?.copyWith(color: p.bandSub),
           ),
         ],
       ],
     );
+    final head = trailing.isEmpty
+        ? name
+        : Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(child: name),
+              // The band's own buttons: white marks, a white focus ring.
+              IconButtonTheme(
+                data: IconButtonThemeData(
+                  style: IconButton.styleFrom(
+                    foregroundColor: p.bandInk,
+                    focusColor: p.bandInk.withValues(alpha: .24),
+                    hoverColor: p.bandInk.withValues(alpha: .12),
+                    highlightColor: p.bandInk.withValues(alpha: .18),
+                    minimumSize: const Size(48, 48),
+                  ),
+                ),
+                child: Row(mainAxisSize: MainAxisSize.min, children: trailing),
+              ),
+            ],
+          );
     return Material(
       key: const Key('header-band'),
       color: p.band,
       borderRadius: BorderRadius.circular(BookmarkRadii.focus),
       child: Padding(
         padding: EdgeInsets.fromLTRB(
-          across ? 24 : 18,
-          across ? 18 : 16,
-          across ? 18 : 16,
-          across ? 18 : 16,
+          across ? HandySpace.xl : HandySpace.l,
+          trailing.isEmpty ? HandySpace.l : HandySpace.m,
+          trailing.isEmpty ? HandySpace.l : HandySpace.s,
+          HandySpace.l,
         ),
         child: across
             ? Row(
@@ -81,7 +109,16 @@ class HeaderBand extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   head,
-                  if (action != null) ...[const SizedBox(height: 14), action!],
+                  if (action != null) ...[
+                    const SizedBox(height: HandySpace.m),
+                    // The buttons above sit 8 from the edge; the row, 16.
+                    Padding(
+                      padding: EdgeInsets.only(
+                        right: trailing.isEmpty ? 0 : HandySpace.s,
+                      ),
+                      child: action!,
+                    ),
+                  ],
                 ],
               ),
       ),

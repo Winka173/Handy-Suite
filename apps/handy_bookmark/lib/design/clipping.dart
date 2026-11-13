@@ -84,28 +84,21 @@ class _Band extends CustomPainter {
 /// width.
 ButtonStyle sheetButtonStyle(BuildContext context) => FilledButton.styleFrom(
   minimumSize: const Size(double.infinity, 56),
-  textStyle: Theme.of(
-    context,
-  ).textTheme.labelLarge?.copyWith(fontSize: 17, fontWeight: FontWeight.w600),
-  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+  textStyle: Theme.of(context).textTheme.labelLarge?.copyWith(
+    fontSize: BookmarkType.lead,
+    fontWeight: FontWeight.w600,
+  ),
+  shape: RoundedRectangleBorder(
+    borderRadius: BorderRadius.circular(BookmarkRadii.item),
+  ),
 );
 
-/// Where a save came from, by name in its colour (never a logo): the
-/// platform, "Picture" for a picture, else the site.
+/// Where a save came from, by name (never a logo, never the platform's
+/// own colour: the page keeps to its five): the platform, "Picture" for
+/// a picture, else the site.
 class SourceTag extends StatelessWidget {
   final Bookmark bookmark;
   const SourceTag(this.bookmark, {super.key});
-
-  static Color colorOf(Bookmark b) => switch (b.platform) {
-    'tiktok' || 'x' || 'threads' => const Color(0xFF111111),
-    'facebook' => const Color(0xFF1877F2),
-    'youtube' => const Color(0xFFD9251D),
-    'instagram' => const Color(0xFFC13584),
-    'reddit' => const Color(0xFFD93A00),
-    'pinterest' => const Color(0xFFBD081C),
-    'spotify' => const Color(0xFF1C7C45),
-    _ => const Color(0xFF5B5E63),
-  };
 
   @override
   Widget build(BuildContext context) {
@@ -115,20 +108,21 @@ class SourceTag extends StatelessWidget {
         : sourceName(b.platform).isNotEmpty
         ? sourceName(b.platform)
         : b.sourceDomain;
+    final scheme = Theme.of(context).colorScheme;
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
       decoration: BoxDecoration(
-        color: colorOf(b),
-        borderRadius: BorderRadius.circular(999),
+        color: scheme.inverseSurface,
+        borderRadius: BorderRadius.circular(BookmarkRadii.chip),
       ),
       child: Text(
         name,
         maxLines: 1,
         overflow: TextOverflow.ellipsis,
-        style: const TextStyle(
-          color: Colors.white,
-          fontSize: 11,
-          fontWeight: FontWeight.w700,
+        style: TextStyle(
+          color: scheme.onInverseSurface,
+          fontSize: BookmarkType.meta,
+          fontWeight: FontWeight.w600,
           height: 1.2,
         ),
       ),

@@ -1,6 +1,7 @@
 import 'package:handy_bookmark_engine/handy_bookmark_engine.dart';
 import 'package:handy_ui/kit.dart';
 import '../bookmark/remind_sheet.dart';
+import '../design/theme.dart';
 
 /// The moment a save is waiting to be read, when that is still ahead.
 DateTime? readLaterAt(Bookmark b, DateTime now) {
@@ -29,11 +30,8 @@ class ReadLaterRibbon extends StatelessWidget {
         label: label,
         child: CustomPaint(
           size: small ? const Size(12, 22) : const Size(16, 30),
-          painter: _Ribbon(
-            Theme.of(context).brightness == Brightness.dark
-                ? const Color(0xFFE6B44F)
-                : const Color(0xFFD9A23A),
-          ),
+          // The palette's gold: the same as the Save action.
+          painter: _Ribbon(BookmarkPalette.of(context).gold),
         ),
       ),
     );

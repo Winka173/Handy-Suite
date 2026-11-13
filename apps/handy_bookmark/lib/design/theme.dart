@@ -1,5 +1,22 @@
 import 'package:handy_ui/kit.dart';
 
+/// Handy Bookmark's design tokens (2026-11-13 audit). Everything on
+/// screen is built from these and nothing else:
+///
+/// * **Five key colours** per theme: ground, surface, ink, teal (the band,
+///   every action, selection) and gold (the one Save action, the
+///   read-later ribbon). Greys and tints are steps between two of them;
+///   red and amber appear only as a state (error, warning). A collection's
+///   own colour is the person's data and shows as a dot, never as chrome.
+/// * **Spacing** on the kit's 4-point scale: 4, 8, 12, 16, 24, 32.
+/// * **Type**: one face, five sizes (13.5, 15.5, 17, 21, 28) and three
+///   weights (400, 600, 700).
+/// * **Corners**: 8 (pictures), 12 (controls, rows), 20 (panels, sheets),
+///   and the full pill for chips.
+///
+/// Every text pair reaches 4.5:1 and every control edge 3:1 (WCAG 2.2 AA;
+/// `test/tokens_test.dart` measures them).
+///
 /// Warm Modern Library: Handy Bookmark's own palette, shapes and type,
 /// laid over the kit theme so the kit's behaviour (spacing, motion,
 /// accessibility) stays and only this app's look changes.
@@ -61,17 +78,17 @@ class BookmarkPalette extends ThemeExtension<BookmarkPalette> {
     surface: Color(0xFFFFFFFF),
     raised: Color(0xFFE6EDED),
     sunk: Color(0xFFDDE6E6),
-    primary: Color(0xFF0E7490),
-    pressed: Color(0xFF0F4B54),
+    primary: Color(0xFF0F4B54),
+    pressed: Color(0xFF0B373E),
     tint: Color(0xFFD4EBEE),
     onPrimary: Color(0xFFFFFFFF),
     ink: Color(0xFF0B1213),
     muted: Color(0xFF38423F),
     line: Color(0xFFDCE3E3),
-    control: Color(0xFFC9D2D3),
-    sage: Color(0xFF557A66),
-    sageTint: Color(0xFFE3EDE4),
-    warm: Color(0xFFC97A5B),
+    control: Color(0xFF6E7B7C),
+    sage: Color(0xFF0F4B54),
+    sageTint: Color(0xFFD4EBEE),
+    warm: Color(0xFFE0A93B),
     danger: Color(0xFFB03A36),
     dangerTint: Color(0xFFF8E4E1),
     warning: Color(0xFF8A5A14),
@@ -90,10 +107,10 @@ class BookmarkPalette extends ThemeExtension<BookmarkPalette> {
     ink: Color(0xFFF5F5F5),
     muted: Color(0xFFBCC1C4),
     line: Color(0xFF2C2F31),
-    control: Color(0xFF3A3D40),
-    sage: Color(0xFF9CC2AC),
-    sageTint: Color(0xFF263A31),
-    warm: Color(0xFFE2A188),
+    control: Color(0xFF7D8588),
+    sage: Color(0xFF7CC8D8),
+    sageTint: Color(0xFF1F3A40),
+    warm: Color(0xFFE6B44F),
     danger: Color(0xFFF0A29C),
     dangerTint: Color(0xFF3F2624),
     warning: Color(0xFFE8C07A),
@@ -119,18 +136,27 @@ class BookmarkPalette extends ThemeExtension<BookmarkPalette> {
       other == null || t < .5 ? this : other;
 }
 
+/// The five type sizes; nothing on screen is set at any other.
+abstract final class BookmarkType {
+  static const meta = 13.5;
+  static const body = 15.5;
+  static const lead = 17.0;
+  static const section = 21.0;
+  static const page = 28.0;
+}
+
 /// Corners step down from the largest surface to the smallest control.
 abstract final class BookmarkRadii {
   static const chip = 999.0;
   static const field = 12.0;
   static const button = 12.0;
-  static const thumb = 10.0;
-  static const item = 14.0;
+  static const thumb = 8.0;
+  static const item = 12.0;
   static const panel = 20.0;
   static const collection = 20.0;
-  static const focus = 22.0;
-  static const dialog = 22.0;
-  static const sheet = 26.0;
+  static const focus = 20.0;
+  static const dialog = 20.0;
+  static const sheet = 20.0;
 }
 
 /// The display face for a few moments (the library's name, an item's
@@ -199,27 +225,33 @@ ThemeData bookmarkTheme(ThemeData base, [BookmarkPalette? palette]) {
   // secondary never under 13.5, section titles 21 bold.
   final textTheme = text.copyWith(
     headlineSmall: text.headlineSmall?.copyWith(
-      fontSize: 28,
+      fontSize: BookmarkType.page,
       fontWeight: FontWeight.w700,
       letterSpacing: -.4,
       height: 1.2,
     ),
     titleLarge: text.titleLarge?.copyWith(
-      fontSize: 21,
+      fontSize: BookmarkType.section,
       fontWeight: FontWeight.w700,
       letterSpacing: -.2,
     ),
     titleMedium: text.titleMedium?.copyWith(
-      fontSize: 17,
+      fontSize: BookmarkType.lead,
       fontWeight: FontWeight.w600,
     ),
-    titleSmall: text.titleSmall?.copyWith(fontSize: 16),
-    bodyLarge: text.bodyLarge?.copyWith(fontSize: 16.5),
-    bodyMedium: text.bodyMedium?.copyWith(fontSize: 15.5),
-    bodySmall: text.bodySmall?.copyWith(color: p.muted, fontSize: 13.5),
-    labelLarge: text.labelLarge?.copyWith(fontSize: 15),
-    labelMedium: text.labelMedium?.copyWith(fontSize: 13.5),
-    labelSmall: text.labelSmall?.copyWith(fontSize: 12.5),
+    titleSmall: text.titleSmall?.copyWith(
+      fontSize: BookmarkType.body,
+      fontWeight: FontWeight.w600,
+    ),
+    bodyLarge: text.bodyLarge?.copyWith(fontSize: BookmarkType.body),
+    bodyMedium: text.bodyMedium?.copyWith(fontSize: BookmarkType.body),
+    bodySmall: text.bodySmall?.copyWith(
+      color: p.muted,
+      fontSize: BookmarkType.meta,
+    ),
+    labelLarge: text.labelLarge?.copyWith(fontSize: BookmarkType.body),
+    labelMedium: text.labelMedium?.copyWith(fontSize: BookmarkType.meta),
+    labelSmall: text.labelSmall?.copyWith(fontSize: BookmarkType.meta),
   );
   RoundedRectangleBorder round(double r, [BorderSide side = BorderSide.none]) =>
       RoundedRectangleBorder(
@@ -233,10 +265,7 @@ ThemeData bookmarkTheme(ThemeData base, [BookmarkPalette? palette]) {
             ? BorderSide.none
             : BorderSide(color: color, width: width),
       );
-  final button = textTheme.labelLarge?.copyWith(
-    fontSize: 16,
-    fontWeight: FontWeight.w600,
-  );
+  final button = textTheme.labelLarge?.copyWith(fontWeight: FontWeight.w600);
   return base.copyWith(
     colorScheme: scheme,
     textTheme: textTheme,
@@ -253,12 +282,12 @@ ThemeData bookmarkTheme(ThemeData base, [BookmarkPalette? palette]) {
       filled: true,
       fillColor: dark ? p.raised : p.surface,
       contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 15),
-      border: field(p.line, 1),
-      enabledBorder: field(p.line, 1),
+      border: field(p.control, 1),
+      enabledBorder: field(p.control, 1),
       disabledBorder: field(p.line, 1),
-      focusedBorder: field(p.primary),
+      focusedBorder: field(p.primary, 2),
       errorBorder: field(p.danger, 1),
-      focusedErrorBorder: field(p.danger),
+      focusedErrorBorder: field(p.danger, 2),
       hintStyle: TextStyle(color: p.muted, fontWeight: FontWeight.w400),
       prefixIconColor: p.muted,
       suffixIconColor: p.muted,
@@ -282,7 +311,7 @@ ThemeData bookmarkTheme(ThemeData base, [BookmarkPalette? palette]) {
         backgroundColor: p.surface,
         minimumSize: const Size(64, 48),
         padding: const EdgeInsets.symmetric(horizontal: 18),
-        side: BorderSide(color: p.line, width: 1.2),
+        side: BorderSide(color: p.control, width: 1),
         shape: round(BookmarkRadii.button),
         textStyle: button,
       ),
@@ -310,7 +339,7 @@ ThemeData bookmarkTheme(ThemeData base, [BookmarkPalette? palette]) {
       focusElevation: 3,
       hoverElevation: 4,
       highlightElevation: 2,
-      shape: round(18),
+      shape: round(BookmarkRadii.panel),
       extendedTextStyle: button,
     ),
     cardTheme: CardThemeData(
@@ -347,7 +376,7 @@ ThemeData bookmarkTheme(ThemeData base, [BookmarkPalette? palette]) {
     segmentedButtonTheme: SegmentedButtonThemeData(
       style: SegmentedButton.styleFrom(
         shape: const StadiumBorder(),
-        side: BorderSide(color: p.line),
+        side: BorderSide(color: p.control),
         backgroundColor: p.surface,
         selectedBackgroundColor: p.tint,
         selectedForegroundColor: dark ? p.ink : p.pressed,
@@ -370,7 +399,7 @@ ThemeData bookmarkTheme(ThemeData base, [BookmarkPalette? palette]) {
       ),
       checkColor: WidgetStatePropertyAll(p.onPrimary),
       side: BorderSide(color: p.control, width: 1.6),
-      shape: round(6),
+      shape: round(4),
     ),
     radioTheme: RadioThemeData(
       fillColor: WidgetStateProperty.resolveWith(
@@ -384,7 +413,7 @@ ThemeData bookmarkTheme(ThemeData base, [BookmarkPalette? palette]) {
     ),
     snackBarTheme: SnackBarThemeData(
       behavior: SnackBarBehavior.floating,
-      shape: round(16),
+      shape: round(BookmarkRadii.item),
       backgroundColor: scheme.inverseSurface,
       actionTextColor: dark ? p.pressed.withValues(alpha: 1) : p.tint,
       contentTextStyle: textTheme.bodyMedium?.copyWith(
@@ -417,13 +446,13 @@ ThemeData bookmarkTheme(ThemeData base, [BookmarkPalette? palette]) {
       surfaceTintColor: Colors.transparent,
       elevation: 6,
       shadowColor: Colors.black.withValues(alpha: .25),
-      shape: round(16),
+      shape: round(BookmarkRadii.item),
       textStyle: textTheme.bodyMedium,
     ),
     menuTheme: MenuThemeData(
       style: MenuStyle(
         backgroundColor: WidgetStatePropertyAll(dark ? p.raised : p.surface),
-        shape: WidgetStatePropertyAll(round(16)),
+        shape: WidgetStatePropertyAll(round(BookmarkRadii.item)),
       ),
     ),
     tabBarTheme: base.tabBarTheme.copyWith(
@@ -448,7 +477,7 @@ ThemeData bookmarkTheme(ThemeData base, [BookmarkPalette? palette]) {
     tooltipTheme: TooltipThemeData(
       decoration: BoxDecoration(
         color: scheme.inverseSurface,
-        borderRadius: BorderRadius.circular(10),
+        borderRadius: BorderRadius.circular(BookmarkRadii.thumb),
       ),
       textStyle: textTheme.bodySmall?.copyWith(color: scheme.onInverseSurface),
     ),

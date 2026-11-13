@@ -43,18 +43,17 @@ class SourceFace extends StatelessWidget {
   const SourceFace(this.bookmark, {super.key, this.compact = false});
   @override
   Widget build(BuildContext context) {
-    final hue = HandyPalette.of(context, sourceHue(bookmark));
-    final dark = Theme.of(context).brightness == Brightness.dark;
-    final ink = dark ? Color.lerp(hue.mark, Colors.white, .35)! : hue.mark;
+    // One quiet field for every source: the pictures are the colour on
+    // the page, and the source's name stays readable (over 4.5:1).
+    final p = BookmarkPalette.of(context);
+    final ink = p.muted;
     final b = bookmark;
     final source = sourceName(b.platform).isNotEmpty
         ? sourceName(b.platform)
         : b.sourceDomain.replaceFirst(RegExp(r'^www\.'), '');
     return ExcludeSemantics(
       child: ColoredBox(
-        color: dark
-            ? Color.lerp(BookmarkPalette.dark.raised, hue.mark, .22)!
-            : Color.lerp(Colors.white, hue.mark, .13)!,
+        color: p.raised,
         child: LayoutBuilder(
           builder: (context, box) {
             final small = compact || box.maxHeight < 90;
@@ -80,7 +79,7 @@ class SourceFace extends StatelessWidget {
                     overflow: TextOverflow.ellipsis,
                     style: TextStyle(
                       color: ink,
-                      fontSize: 13,
+                      fontSize: BookmarkType.meta,
                       fontWeight: FontWeight.w600,
                     ),
                   ),
@@ -221,7 +220,7 @@ class SectionHead extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     return Padding(
-      padding: const EdgeInsets.only(top: 28, bottom: 12),
+      padding: const EdgeInsets.only(top: HandySpace.xl, bottom: HandySpace.m),
       child: Row(
         crossAxisAlignment: note == null
             ? CrossAxisAlignment.center

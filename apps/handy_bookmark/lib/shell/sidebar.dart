@@ -39,6 +39,8 @@ class BookmarkSidebar extends StatelessWidget {
     final p = BookmarkPalette.of(context);
     final l = scope.library;
     final live = l.bookmarks.where((b) => !b.isArchived).length;
+    // The picked row: the pale tint with the teal's dark as ink.
+    final picked = theme.brightness == Brightness.dark ? p.ink : p.pressed;
     Widget foot(
       Key key,
       IconData icon,
@@ -50,6 +52,7 @@ class BookmarkSidebar extends StatelessWidget {
       child: ListTile(
         key: key,
         dense: true,
+        minTileHeight: 48,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(BookmarkRadii.item),
         ),
@@ -71,7 +74,7 @@ class BookmarkSidebar extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Padding(
-            padding: const EdgeInsets.fromLTRB(20, 18, 16, 16),
+            padding: const EdgeInsets.fromLTRB(20, 16, 16, 12),
             child: Row(
               children: [
                 ClipRRect(
@@ -124,17 +127,18 @@ class BookmarkSidebar extends StatelessWidget {
                       // icons and names line up in one column.
                       padding: const EdgeInsets.symmetric(
                         horizontal: 6,
-                        vertical: 3,
+                        vertical: 1,
                       ),
                       child: ListTile(
                         key: const Key('side-overview'),
                         dense: true,
+                        minTileHeight: 48,
                         contentPadding: const EdgeInsets.symmetric(
                           horizontal: HandySpace.l - 6,
                         ),
                         selected: overview,
-                        selectedTileColor: p.band,
-                        selectedColor: p.bandInk,
+                        selectedTileColor: p.tint,
+                        selectedColor: picked,
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(
                             BookmarkRadii.item,
@@ -143,19 +147,19 @@ class BookmarkSidebar extends StatelessWidget {
                         leading: Icon(
                           Icons.collections_bookmark_outlined,
                           size: 20,
-                          color: overview ? p.bandInk : p.muted,
+                          color: overview ? picked : p.muted,
                         ),
                         title: Text(
                           tr(context, 'Library', 'Thư viện'),
                           style: theme.textTheme.bodyMedium?.copyWith(
                             fontWeight: overview ? FontWeight.w700 : null,
-                            color: overview ? p.bandInk : null,
+                            color: overview ? picked : null,
                           ),
                         ),
                         trailing: Text(
                           formatFigure(context, '$live'),
                           style: theme.textTheme.bodyMedium?.copyWith(
-                            color: overview ? p.bandSub : p.muted,
+                            color: p.muted,
                             fontFeatures: const [FontFeature.tabularFigures()],
                           ),
                         ),

@@ -98,10 +98,18 @@ class CollectionCovers extends StatelessWidget {
             max: cap ?? shelf.length,
             builder: (context, shown) => LayoutBuilder(
               builder: (context, box) {
-                final columns = (box.maxWidth / 170).floor().clamp(
+                // A wide Home has "New collection" in the sidebar, so its
+                // shelf holds collections only and takes as many columns
+                // as it has tiles: the row ends on the page's right edge.
+                final wide = onAll != null && box.maxWidth >= 700;
+                final tiles = shelf.take(shown).length + (wide ? 0 : 1);
+                var columns = (box.maxWidth / 170).floor().clamp(
                   box.maxWidth < 300 ? 1 : 2,
                   limit == null ? 5 : 6,
                 );
+                if (wide && tiles < columns) {
+                  columns = tiles.clamp((box.maxWidth / 300).ceil(), columns);
+                }
                 const gap = HandySpace.m;
                 final width = (box.maxWidth - gap * (columns - 1)) / columns;
                 return Wrap(
@@ -126,12 +134,13 @@ class CollectionCovers extends StatelessWidget {
                           ),
                         ),
                       ),
-                    SizedBox(
-                      width: width,
-                      child: _NewCollectionTile(
-                        onTap: () => scope.editCollection(context),
+                    if (!wide)
+                      SizedBox(
+                        width: width,
+                        child: _NewCollectionTile(
+                          onTap: () => scope.editCollection(context),
+                        ),
                       ),
-                    ),
                   ],
                 );
               },
@@ -178,7 +187,6 @@ class CollectionCover extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
     final pictures = items.where((b) => b.isImage).length;
     final links = items.length - pictures;
     final count = [
@@ -206,10 +214,7 @@ class CollectionCover extends StatelessWidget {
         ? ''
         : tr(context, ', $fresh not opened', ', $fresh mục chưa xem');
     final f = hueField(context, hue);
-    final dark = theme.brightness == Brightness.dark;
-    final paper = dark
-        ? Color.lerp(f.field, Colors.white, .06)!
-        : Color.lerp(f.field, Colors.white, .45)!;
+    final paper = BookmarkPalette.of(context).raised;
     // Up to two saves, pictures first: each shows its picture, or its title
     // set on paper in the tile when it has none; empty, its mark.
     final Widget face = shown.isEmpty
@@ -223,9 +228,34 @@ class CollectionCover extends StatelessWidget {
                 ink: f.ink,
               ),
           ]);
+    return LayoutBuilder(
+      builder: (context, box) => _tile(
+        context,
+        face: face,
+        mark: mark,
+        fresh: fresh,
+        count: count,
+        label: '${collection.name}, $count$freshWords',
+        wide: box.maxWidth >= 240,
+      ),
+    );
+  }
+
+  Widget _tile(
+    BuildContext context, {
+    required Widget face,
+    required CollectionMark? mark,
+    required int fresh,
+    required String count,
+    required String label,
+    required bool wide,
+  }) {
+    final theme = Theme.of(context);
+    final f = hueField(context, hue);
+
     return Semantics(
       button: onOpen != null,
-      label: '${collection.name}, $count$freshWords',
+      label: label,
       excludeSemantics: true,
       child: Material(
         color: f.field,
@@ -242,37 +272,39 @@ class CollectionCover extends StatelessWidget {
               ? null
               : () => showCollectionQuick(context, scope, collection),
           child: Padding(
-            padding: const EdgeInsets.fromLTRB(10, 10, 10, 12),
+            padding: const EdgeInsets.fromLTRB(8, 8, 8, 12),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 AspectRatio(
-                  aspectRatio: 1.55,
+                  // A wide tile's cover is a strip, so four collections
+                  // across do not push the newest saves off the screen.
+                  aspectRatio: wide ? 2.4 : 1.55,
                   child: ClipRRect(
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: BorderRadius.circular(BookmarkRadii.item),
                     child: face,
                   ),
                 ),
-                const SizedBox(height: 10),
+                const SizedBox(height: HandySpace.m),
                 Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 4),
+                  padding: const EdgeInsets.symmetric(horizontal: 2),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
                       Row(
                         children: [
-                          if (mark != null) ...[
-                            CollectionBadge(hue: hue, mark: mark, size: 9),
-                            const SizedBox(width: 6),
-                          ],
+                          // The collection's own colour: its mark, or a dot.
+                          if (mark != null)
+                            CollectionBadge(hue: hue, mark: mark, size: 9)
+                          else
+                            HandyDot(hue, size: 10),
+                          const SizedBox(width: 6),
                           Expanded(
                             child: Text(
                               collection.name,
                               maxLines: 2,
                               overflow: TextOverflow.ellipsis,
                               style: theme.textTheme.titleSmall?.copyWith(
-                                fontSize: 15,
-                                fontWeight: FontWeight.w600,
                                 color: f.ink,
                               ),
                             ),
@@ -286,9 +318,7 @@ class CollectionCover extends StatelessWidget {
                               [if (parent != null) parent!, count].join(' · '),
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
-                              style: theme.textTheme.bodySmall?.copyWith(
-                                color: f.ink.withValues(alpha: .9),
-                              ),
+                              style: theme.textTheme.bodySmall,
                             ),
                           ),
                           if (fresh > 0) ...[
@@ -379,15 +409,12 @@ class _EmptyCover extends StatelessWidget {
   const _EmptyCover({required this.hue, this.mark});
   @override
   Widget build(BuildContext context) {
-    final h = HandyPalette.of(context, hue);
-    final dark = Theme.of(context).brightness == Brightness.dark;
-    final ink = dark ? Color.lerp(h.mark, Colors.white, .35)! : h.mark;
+    final p = BookmarkPalette.of(context);
+    final ink = p.muted;
     return ColoredBox(
-      color: dark
-          ? Color.lerp(BookmarkPalette.dark.raised, h.mark, .22)!
-          : Color.lerp(Colors.white, h.mark, .14)!,
+      color: p.raised,
       child: Padding(
-        padding: const EdgeInsets.all(14),
+        padding: const EdgeInsets.all(HandySpace.m),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -395,7 +422,7 @@ class _EmptyCover extends StatelessWidget {
             switch (mark) {
               EmojiMark(:final emoji) => Text(
                 emoji,
-                style: const TextStyle(fontSize: 34, height: 1),
+                style: const TextStyle(fontSize: BookmarkType.page, height: 1),
               ),
               IconMark(:final icon) => Icon(icon, color: ink, size: 30),
               null => Icon(Icons.folder_outlined, color: ink, size: 22),
@@ -407,7 +434,7 @@ class _EmptyCover extends StatelessWidget {
                 overflow: TextOverflow.ellipsis,
                 style: TextStyle(
                   color: ink,
-                  fontSize: 13,
+                  fontSize: BookmarkType.meta,
                   fontWeight: FontWeight.w600,
                 ),
               ),
@@ -457,7 +484,7 @@ class _NewCollectionTile extends StatelessWidget {
       color: Colors.transparent,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(BookmarkRadii.collection),
-        side: BorderSide(color: p.control, width: 1.5),
+        side: BorderSide(color: p.control),
       ),
       clipBehavior: Clip.antiAlias,
       child: InkWell(

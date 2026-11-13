@@ -604,7 +604,10 @@ class _DeckButton extends StatelessWidget {
                   child: Center(
                     child: AnimatedOpacity(
                       opacity: dimmed ? .4 : 1,
-                      duration: const Duration(milliseconds: 120),
+                      duration: HandyMotion.of(
+                        context,
+                        const Duration(milliseconds: 120),
+                      ),
                       child: Transform.scale(
                         scale: 1 + .2 * emphasis.clamp(0.0, 1.0),
                         child: Container(

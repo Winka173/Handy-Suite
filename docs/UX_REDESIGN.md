@@ -3989,3 +3989,45 @@ chosen path, local merge status, last merge and local-data-safe error. Primary C
 then explicit Sync now/Turn off. Empty/off, unavailable folder, incomplete cloud download,
 future schema and damaged/conflict-copy states remain honest. A merged local folder never
 claims another computer received it. Same 320–1440 scroll/wrap/a11y/reduced-motion rules as R24.
+
+## Hợp đồng: Handy Bookmark · rà soát thứ bậc, mật độ và WCAG 2.2 AA (2026-11-13)
+
+Chạy lại `design-taste-frontend` (app-screens §2.7, rà soát trên ảnh 1440 và 390) và
+`frontend-ui-engineering`. Giữ hướng 3a của chủ (dải đầu xanh đậm, nút Lưu vàng, chữ lớn);
+không đổi luồng, không đổi dữ liệu.
+
+**Việc và câu hỏi (không đổi):** Home trả lời "Mình đã lưu gì, và link mới nên để đâu?".
+Việc chính: dán link để lưu (dải đầu), xếp mục chưa xếp, mở lại thứ đã lưu.
+
+**Quy chuẩn (mọi màn chỉ dùng các giá trị này, `lib/design/theme.dart`):**
+
+- Màu, tối đa 5 mỗi theme. Sáng: nền `#EEF3F3`, mặt `#FFFFFF`, mực `#0B1213`, xanh
+  `#0F4B54` (dải đầu, mọi nút và lựa chọn), vàng `#E0A93B` (nút Lưu, ruy băng hẹn đọc). Tối:
+  `#121415`, `#1E2123`, `#F5F5F5`, `#7CC8D8`, `#E6B44F`. Xám và tint là bước giữa hai màu
+  trong bộ; đỏ và hổ phách chỉ là trạng thái (lỗi, cảnh báo). Màu của bộ sưu tập là dữ liệu
+  của người dùng: chỉ hiện bằng chấm 10px cạnh tên, không tô ô. Không gradient.
+- Khoảng cách: 4, 8, 12, 16, 24, 32 (`HandySpace`).
+- Chữ: Manrope, 5 cỡ 13,5 / 15,5 / 17 / 21 / 28 (`BookmarkType`), 3 độ đậm 400 / 600 / 700.
+- Bo góc: 8 (ảnh), 12 (nút, ô, dòng), 20 (khối, sheet, hộp thoại), viên thuốc cho chip.
+
+**Bố cục:**
+
+- Điện thoại: bỏ thanh trên; Tìm và Cài đặt nằm trên dải đầu. Hai hàng chờ (chưa xếp, Tập
+  trung) là một thẻ hai dòng. Màn đầu 390×844 thấy dải đầu, hàng chờ, Hẹn đọc và đầu Bộ sưu tập.
+- Desktop ≥1100: thanh bên dòng 48 (cách 50), mục đang chọn là tint nhạt chữ xanh đậm (dải
+  đầu là vùng đậm duy nhất). Hẹn đọc gom theo ngày, một tiêu đề ngày cho cả hàng. Ô bộ sưu
+  tập lấy số cột theo số ô nên hàng kết thúc ở mép phải; bìa dạng dải 2,4:1. Thẻ trong danh
+  sách tối thiểu 200px để tiêu đề đủ hai dòng khi mở cột chi tiết.
+- 700–1100: tên thư viện một dòng, ô dán link co theo chỗ còn lại; hàng chờ dùng thẻ gộp.
+
+**Trợ năng (WCAG 2.2 AA):** mọi cặp chữ ≥4,5:1, viền ô nhập/nút viền ≥3:1
+(`test/tokens_test.dart` đo); viền focus bàn phím 2px xanh + 2px màu mặt quanh mọi điều khiển,
+vẽ một lần ở gốc app (`lib/ui/focus_ring.dart`), chỉ hiện khi dùng bàn phím; ô nhập giữ viền
+2px riêng; nút chỉ có icon đều có tooltip làm nhãn; vùng chạm ≥48; mọi chuyển động qua
+`HandyMotion.of` nên bằng 0 khi hệ thống bật giảm chuyển động.
+
+**Trạng thái:** không đổi (trống, đang tải, lỗi, hết hàng chờ). **Nền tảng:** không đổi; Tab /
+Shift Tab đi qua điều khiển theo thứ tự đọc, Esc bỏ chọn, phím tắt cũ giữ nguyên.
+
+**Loại bỏ:** ô bộ sưu tập tô pastel theo màu, mặt nguồn hồng/xanh, nhãn nguồn theo màu thương
+hiệu, thẻ Tập trung tô màu nguồn, mục thanh bên tô xanh đậm, thanh trên của Home điện thoại.

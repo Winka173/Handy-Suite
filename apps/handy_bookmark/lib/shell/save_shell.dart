@@ -126,8 +126,11 @@ class _SaveShellState extends State<SaveShell> {
           v.selecting ? v.clearSelection() : setState(() => current = null),
     };
     // The same Quick Save row as the phone's Home, on the header band.
+    // Sized from the room beside the sidebar, so the library's name keeps
+    // one line at every width.
+    final room = width - (sideOpen ? 260 : 56) - 2 * HandySpace.xl;
     final saveRow = SizedBox(
-      width: (width * .4).clamp(320, 520),
+      width: (room * .45).clamp(280, 520),
       child: QuickSaveBar(
         scope: scope,
         onBand: true,

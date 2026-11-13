@@ -1,5 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:handy_bookmark_engine/handy_bookmark_engine.dart';
+import 'package:handy_bookmark/design/theme.dart';
 import 'package:handy_ui/kit.dart';
 import 'widget_test.dart' show start, tapKey, OpeningController;
 
@@ -81,8 +82,8 @@ void main() {
     final c = await start(tester, seed: library, size: const Size(1440, 900));
     // The wide screen opens on the Library overview; the list is a tap away.
     await tapKey(tester, 'place-all');
-    // The picked row is the band colour: its name must turn white with
-    // its icon and count, never stay in the page's ink.
+    // The picked row is the pale tint: its name takes the teal's dark
+    // with its icon (the band stays the page's one deep field).
     final name = tester.widget<RichText>(
       find.descendant(
         of: find.byKey(const Key('place-all')),
@@ -91,7 +92,7 @@ void main() {
         ),
       ),
     );
-    expect(name.text.style?.color, const Color(0xFFFFFFFF));
+    expect(name.text.style?.color, BookmarkPalette.light.pressed);
     await tapKey(tester, 'details-${c.library!.bookmarks.first.id}');
     await tapKey(tester, 'item-details');
     await meetsAll(tester, 'wide');

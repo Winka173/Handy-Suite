@@ -438,6 +438,20 @@ void main() {
       }
     });
   }
+  // The keyboard's place: Tab from the top, the focused control ringed.
+  for (final (label, size, tabs) in [
+    ('phone', phone, 2),
+    ('desktop', const Size(1440, 900), 4),
+  ]) {
+    testWidgets('$label keyboard focus', (t) async {
+      await boot(t, size);
+      for (var i = 0; i < tabs; i++) {
+        await t.sendKeyEvent(LogicalKeyboardKey.tab);
+        await t.pumpAndSettle();
+      }
+      await shot(t, '$label-60-focus-ring');
+    });
+  }
   testWidgets('phone share sheet', (t) async {
     // Shared from a video app: the sheet over it, its page already read.
     t.view.physicalSize = phone;

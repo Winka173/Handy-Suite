@@ -274,7 +274,10 @@ class ResultsView extends StatelessWidget {
             // is narrow or the text is large; more as the window widens.
             final scale = MediaQuery.textScalerOf(context).scale(14) / 14;
             const gap = 12.0;
-            final columns = (box.maxWidth / (165 * scale.clamp(1.0, 2.0)))
+            // Wider cards beside the open item, so a title keeps its two
+            // lines instead of ending in an ellipsis after three words.
+            final least = box.maxWidth >= 600 ? 200 : 165;
+            final columns = (box.maxWidth / (least * scale.clamp(1.0, 2.0)))
                 .floor()
                 .clamp(1, 6);
             final width = (box.maxWidth - gap * (columns - 1)) / columns;

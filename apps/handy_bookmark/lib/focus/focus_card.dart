@@ -111,22 +111,14 @@ class FocusCard extends StatelessWidget {
   }
 }
 
-/// The poster's field: [SourceFace]'s pale source colour, a step paler in
-/// light so the large serif reads at full ink.
-Color _posterGround(BuildContext context, Bookmark b) {
-  final hue = HandyPalette.of(context, sourceHue(b));
-  return Theme.of(context).brightness == Brightness.dark
-      ? Color.lerp(BookmarkPalette.dark.surface, hue.mark, .2)!
-      : Color.lerp(Colors.white, hue.mark, .1)!;
-}
+/// The poster's field: the pale teal tint, the same for every source, so
+/// the large title reads at full ink.
+Color _posterGround(BuildContext context, Bookmark b) =>
+    BookmarkPalette.of(context).tint;
 
-/// The source's colour as ink on the poster (as [SourceFace] draws it).
-Color _sourceInk(BuildContext context, Bookmark b) {
-  final hue = HandyPalette.of(context, sourceHue(b));
-  return Theme.of(context).brightness == Brightness.dark
-      ? Color.lerp(hue.mark, Colors.white, .45)!
-      : Color.lerp(hue.mark, Colors.black, .15)!;
-}
+/// The source's name on the poster, in the muted ink (as [SourceFace]).
+Color _sourceInk(BuildContext context, Bookmark b) =>
+    BookmarkPalette.of(context).muted;
 
 String _title(BuildContext context, Bookmark b) => b.title.isNotEmpty
     ? b.title

@@ -117,8 +117,9 @@ class HomeQueues extends StatelessWidget {
       clipBehavior: Clip.antiAlias,
       child: child,
     );
-    // Wide: each queue its own card, side by side with air between.
-    if (across) {
+    // Wide: each queue its own card, side by side with air between;
+    // with less room than two full rows need, the phone's one card.
+    if (across && MediaQuery.sizeOf(context).width >= 1100) {
       return IntrinsicHeight(
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -131,15 +132,25 @@ class HomeQueues extends StatelessWidget {
         ),
       );
     }
+    // A phone: what waits is one card, its rows parted by a hairline, so
+    // the two queues read as one block under the band.
     return HandyReveal(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          for (final (k, w) in rows.indexed) ...[
-            if (k > 0) const SizedBox(height: HandySpace.s),
-            w is _QueueRow ? card(w) : w,
+      child: card(
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            for (final (k, w) in rows.indexed) ...[
+              if (k > 0)
+                Divider(
+                  height: 1,
+                  indent: HandySpace.l,
+                  endIndent: HandySpace.l,
+                  color: p.ink.withValues(alpha: .12),
+                ),
+              w,
+            ],
           ],
-        ],
+        ),
       ),
     );
   }
@@ -176,7 +187,12 @@ class _QueueRow extends StatelessWidget {
       child: InkWell(
         onTap: onTap,
         child: Padding(
-          padding: const EdgeInsets.fromLTRB(14, 14, 16, 14),
+          padding: const EdgeInsets.fromLTRB(
+            HandySpace.m,
+            HandySpace.m,
+            HandySpace.l,
+            HandySpace.m,
+          ),
           child: Row(
             children: [
               SizedBox(
@@ -193,12 +209,14 @@ class _QueueRow extends StatelessWidget {
                           padding: const EdgeInsets.all(2),
                           decoration: BoxDecoration(
                             color: p.tint,
-                            borderRadius: BorderRadius.circular(12),
+                            borderRadius: BorderRadius.circular(
+                              BookmarkRadii.thumb + 2,
+                            ),
                           ),
                           child: ItemPicture(
                             scope.c,
                             b,
-                            radius: 10,
+                            radius: BookmarkRadii.thumb,
                             compact: true,
                           ),
                         ),
@@ -206,21 +224,24 @@ class _QueueRow extends StatelessWidget {
                   ],
                 ),
               ),
-              const SizedBox(width: 12),
+              const SizedBox(width: HandySpace.m),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
                       title,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
                       style: theme.textTheme.titleSmall?.copyWith(
                         fontWeight: FontWeight.w700,
                         color: p.ink,
                       ),
                     ),
-                    const SizedBox(height: 2),
                     Text(
                       subtitle,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                       style: theme.textTheme.bodySmall?.copyWith(
                         color: p.muted,
                       ),

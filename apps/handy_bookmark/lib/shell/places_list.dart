@@ -99,17 +99,21 @@ class PlacesList extends StatelessWidget {
           v.id == id;
       // The chosen place is a rounded pill inset in its row, so the
       // group's hairlines run in the gap and never cross it. In the
-      // sidebar it is the deep band colour with white words.
+      // sidebar it is the pale tint with the teal's dark as ink and a
+      // bolder name: the band stays the one deep field on the page.
       final band = flat && on;
       final bp = BookmarkPalette.of(context);
+      final picked = theme.brightness == Brightness.dark ? bp.ink : bp.pressed;
       return Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
+        padding: EdgeInsets.symmetric(horizontal: 6, vertical: flat ? 1 : 3),
         child: ListTile(
           key: key,
           selected: on,
           dense: flat,
-          selectedTileColor: flat ? bp.band : c.select,
-          selectedColor: flat ? bp.bandInk : theme.colorScheme.onSurface,
+          // The sidebar is a list to scan: 48-point rows (the touch target), 50 apart.
+          minTileHeight: flat ? 48 : null,
+          selectedTileColor: flat ? bp.tint : c.select,
+          selectedColor: flat ? picked : theme.colorScheme.onSurface,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(BookmarkRadii.item),
           ),
@@ -124,7 +128,7 @@ class PlacesList extends StatelessWidget {
                   icon,
                   size: 20,
                   color: band
-                      ? bp.bandInk
+                      ? picked
                       : on
                       ? c.selectInk
                       : c.muted,
@@ -142,7 +146,7 @@ class PlacesList extends StatelessWidget {
             style: flat
                 ? theme.textTheme.bodyMedium?.copyWith(
                     fontWeight: on ? FontWeight.w700 : null,
-                    color: band ? bp.bandInk : null,
+                    color: band ? picked : null,
                   )
                 : null,
           ),
@@ -153,22 +157,11 @@ class PlacesList extends StatelessWidget {
                 Text(
                   '$n',
                   style: theme.textTheme.bodyMedium?.copyWith(
-                    color: band ? bp.bandSub : c.muted,
+                    color: c.muted,
                     fontFeatures: tabular,
                   ),
                 ),
-              if (menu != null)
-                band
-                    // The row's ⋯ in white on the band.
-                    ? Theme(
-                        data: theme.copyWith(
-                          popupMenuTheme: theme.popupMenuTheme.copyWith(
-                            iconColor: bp.bandInk,
-                          ),
-                        ),
-                        child: menu,
-                      )
-                    : menu,
+              if (menu != null) menu,
             ],
           ),
           onTap: onTap ?? () => onPick(place!, id),
@@ -179,7 +172,7 @@ class PlacesList extends StatelessWidget {
     // The sidebar names its groups in a small grey label, as in the mock.
     Widget heading(String text, {Widget? trailing}) => flat
         ? Padding(
-            padding: const EdgeInsets.fromLTRB(16, 16, 4, 0),
+            padding: const EdgeInsets.fromLTRB(16, HandySpace.m, 4, 0),
             child: Row(
               children: [
                 Expanded(
@@ -295,6 +288,13 @@ class PlacesList extends StatelessWidget {
                       indent: depth * 20.0,
                       menu: HandyMenuButton(
                         key: Key('collection-menu-${col.id}'),
+                        // Named for its row, so a screen reader does not
+                        // hear "More" once per collection.
+                        tooltip: tr(
+                          context,
+                          'Options for ${col.name}',
+                          'Tùy chọn cho ${col.name}',
+                        ),
                         items: [
                           HandyMenuItem(
                             Icons.send_rounded,
@@ -382,6 +382,11 @@ class PlacesList extends StatelessWidget {
                         id: s.id,
                         place: Place.smart,
                         menu: HandyMenuButton(
+                          tooltip: tr(
+                            context,
+                            'Options for ${s.name}',
+                            'Tùy chọn cho ${s.name}',
+                          ),
                           items: [
                             HandyMenuItem(
                               Icons.edit_outlined,
@@ -405,6 +410,11 @@ class PlacesList extends StatelessWidget {
                         onTap: () => onSearch(s),
                         menu: HandyMenuButton(
                           key: Key('search-menu-${s.id}'),
+                          tooltip: tr(
+                            context,
+                            'Options for ${s.name}',
+                            'Tùy chọn cho ${s.name}',
+                          ),
                           items: [
                             HandyMenuItem(
                               Icons.edit_outlined,

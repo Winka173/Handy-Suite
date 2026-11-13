@@ -196,7 +196,7 @@ class _SheetState extends State<_Sheet> {
     final snapshot = c.share?.snapshot;
     final locked = snapshot?.locked ?? false;
     return AnimatedPadding(
-      duration: const Duration(milliseconds: 120),
+      duration: HandyMotion.of(context, const Duration(milliseconds: 120)),
       padding: EdgeInsets.only(bottom: MediaQuery.viewInsetsOf(context).bottom),
       child: Material(
         key: const Key('share-sheet'),

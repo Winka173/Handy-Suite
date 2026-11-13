@@ -71,7 +71,12 @@ class SortButton extends StatelessWidget {
                       ? Icon(Icons.check, size: 18, color: c.accent)
                       : null,
                 ),
-                Text(sortName(context, s)),
+                Flexible(
+                  child: Text(
+                    sortName(context, s),
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
               ],
             ),
           ),
@@ -85,10 +90,14 @@ class SortButton extends StatelessWidget {
             children: [
               Icon(Icons.swap_vert, size: 20, color: c.muted),
               const SizedBox(width: HandySpace.xs),
-              Text(
-                sortName(context, now),
-                style: theme.textTheme.labelLarge?.copyWith(
-                  color: theme.colorScheme.onSurface,
+              Flexible(
+                child: Text(
+                  sortName(context, now),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: theme.textTheme.labelLarge?.copyWith(
+                    color: theme.colorScheme.onSurface,
+                  ),
                 ),
               ),
             ],

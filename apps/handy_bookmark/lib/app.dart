@@ -4,6 +4,7 @@ import 'pro/picture_text.dart';
 import 'library/find_page.dart';
 import 'pro/export/export_studio.dart';
 import 'design/theme.dart';
+import 'ui/focus_ring.dart';
 import 'design/looks.dart';
 import 'pro/entitlements.dart';
 import 'pro/explore_pro.dart';
@@ -643,10 +644,13 @@ class _SaveAppState extends State<SaveApp> with WidgetsBindingObserver {
       navigatorKey: navigator,
       onGenerateRoute: _route,
       // The app lock covers everything, sheets and dialogs included.
-      wrap: (context, child) => LockGate(
-        enabled: c.preferences[appLockKey] == true,
-        loaded: c.library != null,
-        child: child,
+      // The keyboard's focus ring is drawn over everything too.
+      wrap: (context, child) => FocusRing(
+        child: LockGate(
+          enabled: c.preferences[appLockKey] == true,
+          loaded: c.library != null,
+          child: child,
+        ),
       ),
       home: p == null
           ? const HandyLoading()

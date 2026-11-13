@@ -7,25 +7,16 @@ import '../ui/read_later_ribbon.dart';
 import '../ui/visual.dart';
 import '../ui/words.dart';
 
-/// A collection's colour as a pale field with the dark of its own hue as
-/// ink (pastel look): light, the hue's tint; dark, the hue sunk into the
-/// surface with a light ink of the same hue.
+/// A collection's tile: the plain surface with the page's ink. The
+/// collection's own colour is the person's data, so it shows as a dot
+/// ([mark]) beside the name and never as the tile's field.
 ({Color field, Color ink, Color mark}) hueField(BuildContext context, int hue) {
-  final h = HandyPalette.of(context, hue);
   final p = BookmarkPalette.of(context);
-  final dark = Theme.of(context).brightness == Brightness.dark;
-  return dark
-      ? (
-          field: Color.lerp(p.surface, h.mark, .32)!,
-          ink: Color.lerp(h.mark, Colors.white, .7)!,
-          mark: h.mark,
-        )
-      : (
-          // Strong contrast: a fuller field and a deeper ink.
-          field: Color.lerp(Colors.white, h.mark, .22)!,
-          ink: Color.lerp(h.mark, Colors.black, .6)!,
-          mark: h.mark,
-        );
+  return (
+    field: p.surface,
+    ink: p.ink,
+    mark: HandyPalette.of(context, hue).mark,
+  );
 }
 
 /// One Home section, straight on the ground (no box around it): its
@@ -43,7 +34,7 @@ class HomePanel extends StatelessWidget {
     required this.child,
     this.count,
     this.action,
-    this.padding = const EdgeInsets.only(top: 20),
+    this.padding = const EdgeInsets.only(top: HandySpace.xl),
   });
   @override
   Widget build(BuildContext context) {
@@ -170,33 +161,41 @@ class ReadLaterShelf extends StatelessWidget {
         count: items.length,
         child: LayoutBuilder(
           builder: (context, box) {
-            const gap = 12.0;
-            final width = (box.maxWidth - 2 * gap) / 3;
-            return Wrap(
-              spacing: gap,
-              runSpacing: gap,
+            // One heading per day, its saves beside each other under it;
+            // the columns share the page's width, so the row ends on the
+            // page's right edge whether it holds one save or three.
+            const gap = HandySpace.m;
+            final days = <String, List<(Bookmark, DateTime)>>{};
+            for (final e in items.take(shown)) {
+              (days[readLaterDay(context, e.$2, at)] ??= []).add(e);
+            }
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                for (final (b, due) in items.take(shown))
-                  SizedBox(
-                    width: width,
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        Padding(
-                          padding: const EdgeInsets.fromLTRB(2, 4, 2, 8),
-                          child: when(due),
-                        ),
-                        _SaveRow(
-                          key: Key('later-${b.id}'),
-                          scope: scope,
-                          bookmark: b,
-                          filled: true,
-                          ribbon: due,
-                          onTap: () => onOpen(b),
+                for (final group in days.values) ...[
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(2, 4, 2, 8),
+                    child: when(group.first.$2),
+                  ),
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      for (final (k, (b, due)) in group.indexed) ...[
+                        if (k > 0) const SizedBox(width: gap),
+                        Expanded(
+                          child: _SaveRow(
+                            key: Key('later-${b.id}'),
+                            scope: scope,
+                            bookmark: b,
+                            filled: true,
+                            ribbon: due,
+                            onTap: () => onOpen(b),
+                          ),
                         ),
                       ],
-                    ),
+                    ],
                   ),
+                ],
               ],
             );
           },
@@ -267,11 +266,12 @@ class FileChip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final p = BookmarkPalette.of(context);
-    final f = collection == null ? null : hueField(context, hue);
-    // A 32 pt chip inside a 48 pt target.
+    // A 32 pt chip inside a 48 pt target; the collection's colour is the
+    // dot before its name.
     return ActionChip(
       onPressed: onTap,
-      backgroundColor: f?.field ?? p.raised,
+      avatar: collection == null ? null : HandyDot(hue, size: 10),
+      backgroundColor: p.raised,
       side: BorderSide.none,
       shape: const StadiumBorder(),
       materialTapTargetSize: MaterialTapTargetSize.padded,
@@ -281,7 +281,7 @@ class FileChip extends StatelessWidget {
         maxLines: 1,
         overflow: TextOverflow.ellipsis,
         style: Theme.of(context).textTheme.labelMedium?.copyWith(
-          color: f?.ink ?? p.ink,
+          color: p.ink,
           fontWeight: FontWeight.w600,
         ),
       ),

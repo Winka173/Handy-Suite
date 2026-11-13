@@ -49,7 +49,6 @@ class SaveHomePage extends StatelessWidget {
     return ListenableBuilder(
       listenable: Listenable.merge([v, scope.c]),
       builder: (context, _) {
-        final theme = Theme.of(context);
         final l = scope.library;
         final empty = l.bookmarks.isEmpty && l.trash.isEmpty;
         var live = 0, unsorted = 0;
@@ -78,106 +77,85 @@ class SaveHomePage extends StatelessWidget {
             TextSpan(text: tr(context, ' to read later', ' hẹn đọc')),
           ],
         ];
+        // No bar above the band: the band is the page's head, and Search
+        // and Settings sit on it, so the first save shows a screen sooner.
         return Scaffold(
-          appBar: AppBar(
-            automaticallyImplyLeading: false,
-            toolbarHeight: 64,
-            titleSpacing: HandySpace.l,
-            title: Row(
-              children: [
-                ClipRRect(
-                  borderRadius: BorderRadius.circular(8),
-                  child: Image.asset(
-                    'assets/icon.png',
-                    width: 28,
-                    height: 28,
-                    excludeFromSemantics: true,
-                  ),
-                ),
-                const SizedBox(width: 10),
-                Flexible(
-                  child: Text(
-                    'Handy Bookmark',
-                    overflow: TextOverflow.ellipsis,
-                    style: theme.textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-            actions: [
-              if (!empty)
-                IconButton(
-                  key: const Key('open-search'),
-                  tooltip: tr(context, 'Search', 'Tìm'),
-                  icon: const Icon(Icons.search_rounded),
-                  onPressed: () => Navigator.pushNamed(context, '/find'),
-                ),
-              IconButton(
-                key: const Key('open-settings'),
-                tooltip: tr(context, 'Settings', 'Cài đặt'),
-                icon: const Icon(Icons.settings_outlined),
-                onPressed: () => Navigator.pushNamed(context, '/settings'),
-              ),
-              const SizedBox(width: HandySpace.s),
-            ],
-          ),
           bottomNavigationBar: v.selecting
               ? BatchBar(scope: scope, onExport: onExport)
               : null,
-          body: ListView(
-            key: const Key('save-home'),
-            padding: const EdgeInsets.fromLTRB(
-              HandySpace.l,
-              HandySpace.xs,
-              HandySpace.l,
-              HandySpace.xxl,
-            ),
-            children: [
-              HeaderBand(
-                title: libraryName(scope.c, context),
-                counts: empty ? const [] : subtitle,
-                action: QuickSaveBar(
-                  scope: scope,
-                  onBand: true,
-                  onMore: () => showSaveSheet(context, scope, onAdd: onAddFrom),
-                ),
+          body: SafeArea(
+            bottom: false,
+            child: ListView(
+              key: const Key('save-home'),
+              padding: const EdgeInsets.fromLTRB(
+                HandySpace.l,
+                HandySpace.s,
+                HandySpace.l,
+                HandySpace.xxl,
               ),
-              const SizedBox(height: HandySpace.m),
-              ShareIssues(controller: scope.c),
-              TaskStrip(
-                tasks: scope.tasks,
-                onBroken: () {
-                  scope.tasks.dismiss();
-                  openPlace(context, Place.broken);
-                },
-              ),
-              if (empty)
-                EmptyLibrary(onPicture: () => scope.addPhoto(context))
-              else ...[
-                // As in the mock: the two queues right under the band,
-                // then what is set to read later.
-                HomeQueues(
-                  scope: scope,
-                  onFocus: () => Navigator.pushNamed(context, '/focus'),
+              children: [
+                HeaderBand(
+                  title: libraryName(scope.c, context),
+                  counts: empty ? const [] : subtitle,
+                  trailing: [
+                    if (!empty)
+                      IconButton(
+                        key: const Key('open-search'),
+                        tooltip: tr(context, 'Search', 'Tìm'),
+                        icon: const Icon(Icons.search_rounded),
+                        onPressed: () => Navigator.pushNamed(context, '/find'),
+                      ),
+                    IconButton(
+                      key: const Key('open-settings'),
+                      tooltip: tr(context, 'Settings', 'Cài đặt'),
+                      icon: const Icon(Icons.settings_outlined),
+                      onPressed: () =>
+                          Navigator.pushNamed(context, '/settings'),
+                    ),
+                  ],
+                  action: QuickSaveBar(
+                    scope: scope,
+                    onBand: true,
+                    onMore: () =>
+                        showSaveSheet(context, scope, onAdd: onAddFrom),
+                  ),
                 ),
-                ReadLaterShelf(scope: scope, onOpen: open),
+                const SizedBox(height: HandySpace.m),
+                ShareIssues(controller: scope.c),
+                TaskStrip(
+                  tasks: scope.tasks,
+                  onBroken: () {
+                    scope.tasks.dismiss();
+                    openPlace(context, Place.broken);
+                  },
+                ),
+                if (empty)
+                  EmptyLibrary(onPicture: () => scope.addPhoto(context))
+                else ...[
+                  // As in the mock: the two queues right under the band,
+                  // then what is set to read later.
+                  HomeQueues(
+                    scope: scope,
+                    onFocus: () => Navigator.pushNamed(context, '/focus'),
+                  ),
+                  ReadLaterShelf(scope: scope, onOpen: open),
+                ],
+                if (!empty || l.collections.isNotEmpty)
+                  CollectionCovers(
+                    scope: scope,
+                    limit: 6,
+                    onAll: () => Navigator.pushNamed(context, '/library'),
+                    onOpen: (col) =>
+                        openPlace(context, Place.collection, col.id),
+                  ),
+                if (!empty)
+                  RecentlySaved(
+                    scope: scope,
+                    onOpen: open,
+                    onAll: () => openPlace(context, Place.all),
+                  ),
               ],
-              if (!empty || l.collections.isNotEmpty)
-                CollectionCovers(
-                  scope: scope,
-                  limit: 6,
-                  onAll: () => Navigator.pushNamed(context, '/library'),
-                  onOpen: (col) => openPlace(context, Place.collection, col.id),
-                ),
-              if (!empty)
-                RecentlySaved(
-                  scope: scope,
-                  onOpen: open,
-                  onAll: () => openPlace(context, Place.all),
-                ),
-            ],
+            ),
           ),
         );
       },
