@@ -35,11 +35,11 @@ class ViewToggle extends StatelessWidget {
               height: 48,
               child: Center(
                 child: Container(
-                  width: 40,
-                  height: 36,
+                  width: 44,
+                  height: 40,
                   decoration: BoxDecoration(
                     color: on ? p.tint : Colors.transparent,
-                    borderRadius: BorderRadius.circular(BookmarkRadii.thumb),
+                    borderRadius: BorderRadius.circular(BookmarkRadii.item),
                   ),
                   child: Icon(
                     asCards ? Icons.grid_view_rounded : Icons.view_list_rounded,
@@ -54,17 +54,12 @@ class ViewToggle extends StatelessWidget {
       );
     }
 
-    return Container(
+    // No frame: two bare icons, the chosen one on a pale pill, so the
+    // switch reads as part of the heading's line and not as a box beside it.
+    return Row(
       key: const Key('view-toggle'),
-      decoration: BoxDecoration(
-        border: Border.all(color: p.control),
-        borderRadius: BorderRadius.circular(BookmarkRadii.item),
-      ),
-      clipBehavior: Clip.antiAlias,
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [side(false), side(true)],
-      ),
+      mainAxisSize: MainAxisSize.min,
+      children: [side(false), side(true)],
     );
   }
 }
