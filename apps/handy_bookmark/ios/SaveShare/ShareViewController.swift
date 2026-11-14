@@ -11,6 +11,7 @@ final class ShareViewController: UIViewController {
     private var parts: [String] = []
     private var pictures: [ShareQueue.Picture] = []
     private var count = 0
+    private var sharedTitle: String?
     private let deliveryID = UUID().uuidString.lowercased()
     private func localized(_ english: String, _ vietnamese: String) -> String {
         Locale.preferredLanguages.first?.hasPrefix("vi") == true ? vietnamese : english
@@ -35,6 +36,13 @@ final class ShareViewController: UIViewController {
         super.viewDidAppear(animated)
         guard !started else { return }; started = true
         let items = extensionContext?.inputItems as? [NSExtensionItem] ?? []
+        // Safari (and most browsers) name the page in the item's title or
+        // content text; kept as the share's title, never fetched.
+        sharedTitle = items.lazy.compactMap { item -> String? in
+            let text = (item.attributedTitle?.string ?? item.attributedContentText?.string)?
+                .trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+            return text.isEmpty || text.lowercased().hasPrefix("http") || text.count > 4096 ? nil : text
+        }.first
         let providers = items.flatMap { $0.attachments ?? [] }.filter {
             $0.hasItemConformingToTypeIdentifier("public.url") || $0.hasItemConformingToTypeIdentifier("public.plain-text")
                 || $0.hasItemConformingToTypeIdentifier(UTType.image.identifier)
@@ -52,7 +60,7 @@ final class ShareViewController: UIViewController {
         if index == providers.count {
             do {
                 guard !failed, !parts.isEmpty || !pictures.isEmpty else { throw ShareQueue.QueueError() }
-                try ShareQueue().enqueue(text: parts.joined(separator: "\n"), title: nil, id: deliveryID, pictures: pictures)
+                try ShareQueue().enqueue(text: parts.joined(separator: "\n"), title: sharedTitle, id: deliveryID, pictures: pictures)
                 finish(true)
             } catch { finish(false) }
             return

@@ -18,6 +18,24 @@ String saveId() => List.generate(
   (_) => Random.secure().nextInt(256),
 ).map((v) => v.toRadixString(16).padLeft(2, '0')).join();
 String saveTime() => DateTime.now().toUtc().toIso8601String();
+
+/// The words a browser shared around one web page's link, as its title:
+/// the text without the link, spaces and separators tidied. Only for plain
+/// web pages: a social app's words ("Check out this video!") are not a title.
+/// Null when nothing is left worth showing.
+String? sharedPageTitle(String text, UrlCandidate link) {
+  if (link.platform != 'web') return null;
+  final rest = text
+      .replaceAll(RegExp(r'''https?://[^\s<>"]+''', caseSensitive: false), ' ')
+      .replaceAll(RegExp(r'\s+'), ' ')
+      .trim()
+      .replaceAll(RegExp(r'^[\s\-–—|:·•,]+|[\s\-–—|:·•,]+$'), '')
+      .trim();
+  if (rest.length < 3 || rest.length > 300) return null;
+  if (!RegExp(r'\p{L}', unicode: true).hasMatch(rest)) return null;
+  return rest;
+}
+
 SaveLibrary _decodeLibrary(Map<String, dynamic> raw) {
   final state = Map<String, dynamic>.from(raw['state'] as Map? ?? {});
   // Schema 1 kept the manual order in preferences; schema 2 in the library,
@@ -226,6 +244,11 @@ class SaveController extends ChangeNotifier {
     try {
       final urls = UrlTools.extract(text);
       if (urls.isEmpty) throw const FormatException('No URL');
+      // A browser that shares "Page title https://…" in one text (Cốc Cốc,
+      // Opera, Samsung Internet) names the page in the words around it.
+      final words = title == null && urls.length == 1
+          ? sharedPageTitle(text, urls.single)
+          : null;
       final saved = <Bookmark>[];
       await update((current) {
         final into = current.collections.any((c) => c.id == collectionId)
@@ -267,10 +290,12 @@ class SaveController extends ChangeNotifier {
                 sourceDomain: u.sourceDomain,
                 title: title?.trim().isNotEmpty == true
                     ? title!.trim()
-                    : u.sourceDomain,
+                    : (words ?? u.sourceDomain),
                 savedAt: now,
                 updatedAt: now,
                 metadataStatus: 'unavailable',
+                // Words around a link stand in until the page's own title
+                // is read ("fallback" gives way to it).
                 metadataSource: title == null ? 'fallback' : 'share',
                 collectionId: into,
               );

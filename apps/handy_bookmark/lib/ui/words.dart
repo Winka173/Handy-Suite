@@ -6,6 +6,7 @@ import '../controller.dart';
 /// A source's name in words, never its logo.
 String sourceName(String platform) => switch (platform) {
   'youtube' => 'YouTube',
+  'youtube_music' => 'YouTube Music',
   'tiktok' => 'TikTok',
   'facebook' => 'Facebook',
   'instagram' => 'Instagram',
@@ -21,6 +22,13 @@ String sourceName(String platform) => switch (platform) {
   'podcast' => 'Podcast',
   'vimeo' => 'Vimeo',
   'maps' => 'Maps',
+  'shopee' => 'Shopee',
+  'shopeefood' => 'ShopeeFood',
+  'foody' => 'Foody',
+  'grab' => 'Grab',
+  'lazada' => 'Lazada',
+  'tiki' => 'Tiki',
+  'amazon' => 'Amazon',
   _ => '',
 };
 

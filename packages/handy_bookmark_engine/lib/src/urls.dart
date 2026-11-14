@@ -39,6 +39,52 @@ class UrlTools {
     'mc_eid',
     'igshid',
   };
+
+  /// Per platform, what its Share button adds to a link (who shared it,
+  /// from which app): dropped when telling whether two links are the same.
+  static const _shareTracking = {
+    'youtube': {'si', 'feature', 'pp'},
+    'youtube_music': {'si', 'feature'},
+    'spotify': {'si', 'nd'},
+    'instagram': {'igsh', 'igshid', 'utm_source'},
+    'threads': {'xmt', 'slof', 'igshid'},
+    'tiktok': {
+      '_r',
+      '_t',
+      'is_from_webapp',
+      'sender_device',
+      'sender_web_id',
+      'share_app_id',
+      'share_link_id',
+      'share_item_id',
+      'u_code',
+      'preview_pb',
+      'timestamp',
+      'user_id',
+      'social_sharing',
+      'refer',
+      'enter_method',
+      'checksum',
+      'tt_from',
+    },
+    'facebook': {'mibextid', 'rdid', 'share_url', 'sfnsn', 'extid', 'ref'},
+    'x': {'s', 't', 'ref_src'},
+    'reddit': {'share_id', 'rdt'},
+    'pinterest': {'invite_code', 'sender', 'sfo', 'mweb_unauth_id'},
+    'shopee': {'sp_atk', 'xptdk', 'smtt', 'uls_trackid', 'mmp_pid'},
+    'shopeefood': {'sp_atk', 'xptdk', 'smtt', 'uls_trackid', 'mmp_pid'},
+    'lazada': {
+      'spm',
+      'laz_trackid',
+      'mkttid',
+      'trafficFrom',
+      'exlaz',
+      'dsource',
+      'scm',
+      'clickTrackInfo',
+    },
+  };
+
   static List<UrlCandidate> extract(String text) {
     if (utf8.encode(text).length > maxInputBytes)
       throw const FormatException('Shared text exceeds 256 KiB');
@@ -114,12 +160,15 @@ class UrlTools {
     final clean = Uri.parse(normalized);
     final bare = host.startsWith('www.') ? host.substring(4) : host;
     var platform = 'web', type = 'link';
-    if ({
-      'youtube.com',
-      'm.youtube.com',
-      'music.youtube.com',
-      'youtu.be',
-    }.contains(bare)) {
+    if (bare == 'music.youtube.com') {
+      platform = 'youtube_music';
+      type = clean.path == '/playlist'
+          ? 'playlist'
+          : clean.path.startsWith('/channel/') ||
+                clean.path.startsWith('/browse/')
+          ? 'profile'
+          : 'audio';
+    } else if ({'youtube.com', 'm.youtube.com', 'youtu.be'}.contains(bare)) {
       platform = 'youtube';
       type = 'video';
       String? video;
@@ -184,9 +233,14 @@ class UrlTools {
     } else if (bare == 'linkedin.com') {
       platform = 'linkedin';
       type = 'post';
-    } else if (bare == 'pinterest.com' || bare == 'pin.it') {
+    } else if (bare == 'pin.it' ||
+        RegExp(
+          r'(^|\.)pinterest\.(com|ca|fr|de|es|it|jp|ph|pt|se|nz|co\.uk|co\.kr|com\.au|com\.mx|vn)$',
+        ).hasMatch(bare)) {
       platform = 'pinterest';
-      type = 'image';
+      type = bare == 'pin.it' || clean.path.contains('/pin/')
+          ? 'image'
+          : 'profile';
     } else if (bare == 'vimeo.com') {
       platform = 'vimeo';
       type = 'video';
@@ -212,7 +266,14 @@ class UrlTools {
     }
     if (domain('spotify.com') || domain('spotify.link')) {
       platform = 'spotify';
-      type = 'audio';
+      final kind = clean.pathSegments
+          .where((s) => !s.startsWith('intl-'))
+          .firstOrNull;
+      type = switch (kind) {
+        'album' || 'playlist' => 'playlist',
+        'artist' || 'user' => 'profile',
+        _ => 'audio',
+      };
     }
     if (domain('soundcloud.com') || domain('on.soundcloud.com')) {
       platform = 'soundcloud';
@@ -258,12 +319,28 @@ class UrlTools {
       'ebay': ['ebay.com', 'ebay.co.uk', 'ebay.de'],
       'aliexpress': ['aliexpress.com', 'aliexpress.us'],
       'taobao': ['taobao.com', 'tmall.com', 'm.tb.cn'],
+      'tiki': ['tiki.vn', 'ti.ki'],
     }.entries) {
       if (entry.value.any(domain)) {
         platform = entry.key;
         type = 'shopping';
         break;
       }
+    }
+    if (domain('shopeefood.vn')) {
+      platform = 'shopeefood';
+      type = 'place';
+    } else if (domain('foody.vn')) {
+      platform = 'foody';
+      type = 'place';
+    } else if (domain('grab.com')) {
+      platform = 'grab';
+      type =
+          bare == 'food.grab.com' ||
+              bare == 'r.grab.com' ||
+              clean.path.contains('/restaurant')
+          ? 'place'
+          : 'link';
     }
     if (domain('stackoverflow.com')) {
       platform = 'stackoverflow';
@@ -289,6 +366,20 @@ class UrlTools {
         clean.path.startsWith('/@') &&
         !clean.path.contains('/video/'))
       type = 'profile';
+    if (_shareTracking[platform] case final drop?) {
+      final c = Uri.parse(canonical);
+      final kept = [
+        for (final part in c.query.split('&'))
+          if (part.isNotEmpty &&
+              !drop.contains(Uri.decodeQueryComponent(part.split('=').first)))
+            part,
+      ].join('&');
+      if (kept != c.query)
+        canonical = c
+            .replace(query: kept)
+            .toString()
+            .replaceFirst(RegExp(r'\?(?=#|$)'), '');
+    }
     final path = clean.path.toLowerCase();
     if (path.endsWith('.pdf')) type = 'document';
     if (RegExp(r'\.(png|jpe?g|gif|webp|avif|svg)$').hasMatch(path))

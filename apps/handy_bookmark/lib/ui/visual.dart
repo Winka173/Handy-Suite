@@ -9,8 +9,16 @@ import 'words.dart';
 /// shop item, a picture, or a plain page.
 IconData kindIcon(Bookmark b) {
   if (b.isImage) return Icons.image_outlined;
+  // Restaurants and food (ShopeeFood, Foody, Grab) look like food, not a
+  // map pin.
+  if ({'shopeefood', 'foody', 'grab'}.contains(b.platform) &&
+      b.contentType == 'place')
+    return Icons.restaurant_outlined;
   return switch (b.contentType) {
     'video' => Icons.play_circle_outline,
+    'audio' => Icons.music_note_outlined,
+    'playlist' => Icons.queue_music_outlined,
+    'shopping' => Icons.shopping_bag_outlined,
     'post' => Icons.chat_bubble_outline,
     'article' => Icons.article_outlined,
     'place' => Icons.place_outlined,

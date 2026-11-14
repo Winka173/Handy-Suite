@@ -168,7 +168,9 @@ void main() {
     },
   );
   test(
-    'known YouTube and social aliases retain time and semantic parameters',
+    'known YouTube and social aliases retain time and semantic parameters; '
+    'the ids a Share button adds (feature=share, s=20) are not part of the '
+    'link (2026-11-14)',
     () {
       expect(
         UrlTools.normalize(
@@ -180,13 +182,13 @@ void main() {
         UrlTools.normalize(
           'https://youtube.com/shorts/abcdefghijk?feature=share',
         ).canonicalUrl,
-        'https://www.youtube.com/watch?v=abcdefghijk&feature=share',
+        'https://www.youtube.com/watch?v=abcdefghijk',
       );
       expect(
         UrlTools.normalize(
           'https://twitter.com/a/status/123?s=20',
         ).canonicalUrl,
-        'https://x.com/a/status/123?s=20',
+        'https://x.com/a/status/123',
       );
       expect(
         UrlTools.normalize(
