@@ -12,6 +12,7 @@ class ViewToggle extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final p = BookmarkPalette.of(context);
+    final dark = Theme.of(context).brightness == Brightness.dark;
     Widget side(bool asCards) {
       final on = cards == asCards;
       final label = asCards
@@ -24,18 +25,27 @@ class ViewToggle extends StatelessWidget {
         excludeSemantics: true,
         child: Tooltip(
           message: label,
-          child: Material(
-            color: on ? p.primary : Colors.transparent,
-            child: InkWell(
-              key: Key(asCards ? 'view-cards' : 'view-rows'),
-              onTap: on ? null : () => onChanged(asCards),
-              child: SizedBox(
-                width: 48,
-                height: 48,
-                child: Icon(
-                  asCards ? Icons.grid_view_rounded : Icons.view_list_rounded,
-                  size: 20,
-                  color: on ? p.onPrimary : p.muted,
+          child: InkWell(
+            key: Key(asCards ? 'view-cards' : 'view-rows'),
+            onTap: on ? null : () => onChanged(asCards),
+            borderRadius: BorderRadius.circular(BookmarkRadii.thumb),
+            // 48 to touch; the filled pill inside is the 36 the eye sees.
+            child: SizedBox(
+              width: 48,
+              height: 48,
+              child: Center(
+                child: Container(
+                  width: 40,
+                  height: 36,
+                  decoration: BoxDecoration(
+                    color: on ? p.tint : Colors.transparent,
+                    borderRadius: BorderRadius.circular(BookmarkRadii.thumb),
+                  ),
+                  child: Icon(
+                    asCards ? Icons.grid_view_rounded : Icons.view_list_rounded,
+                    size: 20,
+                    color: on ? (dark ? p.ink : p.pressed) : p.muted,
+                  ),
                 ),
               ),
             ),

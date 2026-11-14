@@ -83,7 +83,7 @@ Widget itemTitle(
             width: 8,
             height: 8,
             decoration: BoxDecoration(
-              color: BookmarkPalette.of(context).primary,
+              color: BookmarkPalette.of(context).gold,
               shape: BoxShape.circle,
             ),
           ),

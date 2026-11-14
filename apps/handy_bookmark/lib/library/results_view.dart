@@ -192,15 +192,24 @@ class ResultsView extends StatelessWidget {
                     ...tools,
                   ],
                 );
+              // A phone: the switch sits at the name's right, and order,
+              // filter and "…" have the next line to themselves, in words.
+              final toggle = v.place != Place.broken;
               return Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  title,
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Expanded(child: title),
+                      if (toggle) tools.first,
+                    ],
+                  ),
                   const SizedBox(height: HandySpace.xs),
                   Wrap(
                     alignment: WrapAlignment.end,
                     crossAxisAlignment: WrapCrossAlignment.center,
-                    children: tools,
+                    children: tools.skip(toggle ? 1 : 0).toList(),
                   ),
                 ],
               );
