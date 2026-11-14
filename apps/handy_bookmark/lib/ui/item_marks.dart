@@ -104,7 +104,11 @@ class ItemCornerMarks extends StatelessWidget {
     final b = bookmark;
     final p = BookmarkPalette.of(context);
     final check = b.linkCheck;
-    if (check == null || !check.broken) return const SizedBox.shrink();
+    // Only what the check knows: gone, or moved. "Could not tell" (a site
+    // that refuses an automatic check, no connection, a timeout) says
+    // nothing about the page, so a card carries no mark for it.
+    if (check == null || (check.status != 'gone' && check.status != 'moved'))
+      return const SizedBox.shrink();
     final theme = Theme.of(context);
     return Container(
       key: Key('mark-broken-${b.id}'),
@@ -126,9 +130,7 @@ class ItemCornerMarks extends StatelessWidget {
           const SizedBox(width: 4),
           Flexible(
             child: Text(
-              check.status == 'unreachable'
-                  ? tr(context, 'Not reachable', 'Không mở được')
-                  : linkStatusWords(context, check),
+              linkStatusWords(context, check),
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
               style: theme.textTheme.labelMedium?.copyWith(

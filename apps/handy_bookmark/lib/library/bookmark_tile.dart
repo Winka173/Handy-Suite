@@ -17,8 +17,13 @@ class BookmarkTile extends StatelessWidget {
 
   /// Not sorted: its "Put in" before the menu.
   final Widget? putIn;
+
+  /// Say what a check could not tell too (Broken links); elsewhere a row
+  /// carries only a gone or moved mark.
+  final bool explainCheck;
   const BookmarkTile({
     this.putIn,
+    this.explainCheck = false,
     super.key,
     required this.controller,
     required this.bookmark,
@@ -36,7 +41,10 @@ class BookmarkTile extends StatelessWidget {
     final c = HandyColors.of(context);
     final theme = Theme.of(context);
     final check = b.linkCheck;
-    final broken = check != null && check.broken;
+    final broken =
+        check != null &&
+        check.broken &&
+        (check.status != 'unreachable' || explainCheck);
     final meta = [
       sourceLine(b),
       ago(context, b.savedAt),

@@ -332,6 +332,7 @@ class ResultsView extends StatelessWidget {
               BookmarkTile(
                 controller: controller,
                 bookmark: b,
+                explainCheck: v.place == Place.broken,
                 putIn: _putIn(b),
                 selecting: v.selecting,
                 selected: v.selected.contains(b.id),

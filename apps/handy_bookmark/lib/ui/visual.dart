@@ -96,12 +96,11 @@ class SourceFace extends StatelessWidget {
 /// A save's picture: the stored preview of a picture, the page's small
 /// thumbnail for a link, or its [SourceFace]. Only previews are decoded
 /// here, never an original.
-/// The last check found the page gone, or no site answered: shown greyed,
-/// never removed. A moved page still opens, so it is not greyed.
-bool linkDead(Bookmark b) {
-  final s = b.linkCheck?.status;
-  return s == 'gone' || s == 'unreachable';
-}
+/// The last check found the page gone: shown greyed, never removed. A
+/// moved page still opens, and one the check could not judge (a site that
+/// refuses an automatic check, no connection) may be perfectly fine, so
+/// neither is greyed.
+bool linkDead(Bookmark b) => b.linkCheck?.status == 'gone';
 
 const _grey = ColorFilter.matrix([
   0.2126, 0.7152, 0.0722, 0, 0, //
