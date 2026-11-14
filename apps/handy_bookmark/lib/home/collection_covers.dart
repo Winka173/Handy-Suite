@@ -84,7 +84,7 @@ class CollectionCovers extends StatelessWidget {
             child: Align(
               alignment: AlignmentDirectional.centerStart,
               child: SizedBox(
-                width: 180,
+                width: 320,
                 child: _NewCollectionTile(
                   onTap: () => scope.editCollection(context),
                 ),
@@ -136,7 +136,7 @@ class CollectionCovers extends StatelessWidget {
                       ),
                     if (!wide)
                       SizedBox(
-                        width: width,
+                        width: box.maxWidth,
                         child: _NewCollectionTile(
                           onTap: () => scope.editCollection(context),
                         ),
@@ -473,7 +473,8 @@ class _New extends StatelessWidget {
   }
 }
 
-/// The last tile of the grid: make a collection, said in full.
+/// The last line of the shelf: make a collection, said in full. A slim
+/// row across the width, so it never stands alone as a large empty tile.
 class _NewCollectionTile extends StatelessWidget {
   final VoidCallback onTap;
   const _NewCollectionTile({required this.onTap});
@@ -481,62 +482,57 @@ class _NewCollectionTile extends StatelessWidget {
   Widget build(BuildContext context) {
     final p = BookmarkPalette.of(context);
     final theme = Theme.of(context);
+    final ink = theme.brightness == Brightness.dark ? p.primary : p.pressed;
     return Material(
       color: Colors.transparent,
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(BookmarkRadii.collection),
+        borderRadius: BorderRadius.circular(BookmarkRadii.item),
         side: BorderSide(color: p.control),
       ),
       clipBehavior: Clip.antiAlias,
       child: InkWell(
         key: const Key('collection-new'),
         onTap: onTap,
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(10, 10, 10, 12),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              AspectRatio(
-                aspectRatio: 1.55,
-                child: Center(
-                  child: Icon(
-                    Icons.create_new_folder_outlined,
-                    size: 34,
-                    color: theme.brightness == Brightness.dark
-                        ? p.primary
-                        : p.pressed,
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(minHeight: 64),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(
+              horizontal: HandySpace.l,
+              vertical: HandySpace.s,
+            ),
+            child: Row(
+              children: [
+                Icon(Icons.create_new_folder_outlined, size: 26, color: ink),
+                const SizedBox(width: HandySpace.m),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        tr(context, 'New collection', 'Bộ sưu tập mới'),
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: theme.textTheme.titleSmall?.copyWith(
+                          fontWeight: FontWeight.w700,
+                          color: ink,
+                        ),
+                      ),
+                      Text(
+                        tr(
+                          context,
+                          'A name, an icon, a colour',
+                          'Tên, biểu tượng, màu',
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: theme.textTheme.bodySmall,
+                      ),
+                    ],
                   ),
                 ),
-              ),
-              const SizedBox(height: 10),
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 4),
-                child: Text(
-                  tr(context, 'New collection', 'Bộ sưu tập mới'),
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                  style: theme.textTheme.titleSmall?.copyWith(
-                    fontWeight: FontWeight.w700,
-                    color: theme.brightness == Brightness.dark
-                        ? p.primary
-                        : p.pressed,
-                  ),
-                ),
-              ),
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 4),
-                child: Text(
-                  tr(
-                    context,
-                    'A name, an icon, a colour',
-                    'Tên, biểu tượng, màu',
-                  ),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: theme.textTheme.bodySmall,
-                ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),
