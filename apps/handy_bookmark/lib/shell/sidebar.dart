@@ -7,13 +7,17 @@ import '../home/collection_covers.dart';
 import '../home/home_queues.dart';
 import '../home/home_sections.dart';
 import '../home/pastel_blocks.dart';
+import '../library/place_title.dart';
 import '../scope.dart';
 import '../view/library_view.dart';
 import 'places_list.dart';
 
-/// The wide screen's sidebar, as in the chosen mock: the app's name, the
-/// Library overview, every place with its count and the collections with
-/// their colour, then Trash and Settings at the foot.
+/// The wide screen's sidebar: the app's name, the Library overview, the
+/// few places worth a row (Not sorted, Favourites, Not read yet) with
+/// their counts, the collections with their colour and the tags as one
+/// row; then, under a hairline at the foot, the Archive (once it holds
+/// something), Recently Deleted and Settings. Everything is the
+/// overview's See all; Focus opens from the overview's card.
 class BookmarkSidebar extends StatelessWidget {
   final SaveScope scope;
   final bool overview;
@@ -41,23 +45,35 @@ class BookmarkSidebar extends StatelessWidget {
     final live = l.bookmarks.where((b) => !b.isArchived).length;
     // The picked row: the pale tint with the teal's dark as ink.
     final picked = theme.brightness == Brightness.dark ? p.ink : p.pressed;
+    final archived = l.bookmarks.where((b) => b.isArchived).length;
+    final inArchive = !overview && scope.view.place == Place.archive;
     Widget foot(
       Key key,
       IconData icon,
       String label,
       VoidCallback onTap, {
       int? n,
+      bool on = false,
     }) => Padding(
       padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
       child: ListTile(
         key: key,
         dense: true,
         minTileHeight: 48,
+        selected: on,
+        selectedTileColor: p.tint,
+        selectedColor: picked,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(BookmarkRadii.item),
         ),
-        leading: Icon(icon, size: 20, color: p.muted),
-        title: Text(label, style: theme.textTheme.bodyMedium),
+        leading: Icon(icon, size: 20, color: on ? picked : p.muted),
+        title: Text(
+          label,
+          style: theme.textTheme.bodyMedium?.copyWith(
+            fontWeight: on ? FontWeight.w700 : null,
+            color: on ? picked : null,
+          ),
+        ),
         trailing: n == null
             ? null
             : Text(
@@ -171,7 +187,6 @@ class BookmarkSidebar extends StatelessWidget {
                       flat: true,
                       overview: overview,
                       onPick: onPick,
-                      onFocus: () => Navigator.pushNamed(context, '/focus'),
                       onSearch: onSearch,
                     ),
                   ],
@@ -179,6 +194,21 @@ class BookmarkSidebar extends StatelessWidget {
               ),
             ),
           ),
+          Divider(
+            height: HandySpace.l,
+            indent: HandySpace.l,
+            endIndent: HandySpace.l,
+            color: p.line,
+          ),
+          if (archived > 0)
+            foot(
+              const Key('place-archive'),
+              placeIcon(Place.archive),
+              placeTitle(context, l, Place.archive, null),
+              () => onPick(Place.archive),
+              n: archived,
+              on: inArchive,
+            ),
           foot(
             const Key('side-trash'),
             Icons.delete_outline,

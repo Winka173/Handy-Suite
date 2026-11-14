@@ -2,6 +2,7 @@ import 'package:handy_bookmark_engine/handy_bookmark_engine.dart';
 import 'package:handy_ui/kit.dart';
 import '../design/theme.dart';
 import '../scope.dart';
+import 'saved_strip.dart';
 
 /// Saves links the person pasted or typed. The clipboard is read only when
 /// they ask ([fromClipboard]); nothing is fetched. A single link that is
@@ -69,6 +70,7 @@ Future<Bookmark?> saveCapturedLinks(
   void Function(List<Bookmark> saved)? onSavedItems,
 }) async {
   final c = scope.c;
+  final before = {for (final b in scope.library.bookmarks) b.id};
   final found = UrlTools.extract(text);
   if (found.isEmpty) {
     showHandyMessage(
@@ -138,19 +140,12 @@ Future<Bookmark?> saveCapturedLinks(
   if (ok && onSavedItems != null) {
     onSavedItems(saved);
   } else if (ok && context.mounted) {
-    showHandyMessage(
+    showSavedStrip(
       context,
-      saved.length == 1
-          ? tr(
-              context,
-              'Saved. It waits in Not sorted.',
-              'Đã lưu. Link nằm trong Chưa xếp.',
-            )
-          : tr(
-              context,
-              '${saved.length} links saved to Not sorted.',
-              'Đã lưu ${saved.length} link vào Chưa xếp.',
-            ),
+      scope,
+      saved: saved,
+      before: before,
+      into: collectionId,
     );
   }
   return null;

@@ -406,6 +406,7 @@ class SaveController extends ChangeNotifier {
       }
       await store!.putThumbnail(b.id, picture);
       _thumbnails.remove(b.id);
+      _hasThumbnail.remove(b.id);
     }
     changed();
   }
@@ -549,6 +550,7 @@ class SaveController extends ChangeNotifier {
             library!.bookmarks.any((b) => b.id == id)) {
           await store!.putThumbnail(id, thumbnail.bytes!);
           _thumbnails.remove(id);
+          _hasThumbnail.remove(id);
         }
       }
     } catch (_) {
@@ -752,8 +754,21 @@ class SaveController extends ChangeNotifier {
   Future<Uint8List?> thumbnail(String id) {
     if (!_thumbnails.containsKey(id) && _thumbnails.length >= 32)
       _thumbnails.remove(_thumbnails.keys.first);
-    return _thumbnails.putIfAbsent(id, () => store!.thumbnail(id));
+    return _thumbnails.putIfAbsent(
+      id,
+      () => store!.thumbnail(id).then((bytes) {
+        _hasThumbnail[id] = bytes != null;
+        return bytes;
+      }),
+    );
   }
+
+  /// Whether a link's thumbnail was found on this device, once [thumbnail]
+  /// has looked; null before. A thumbnail can exist without its page's
+  /// picture address (one the share sheet showed, or one a friend sent),
+  /// so cards decide by this rather than by the address alone.
+  bool? hasThumbnail(String id) => _hasThumbnail[id];
+  final _hasThumbnail = <String, bool>{};
 
   final _previews = <String, Future<Uint8List?>>{};
 
@@ -847,11 +862,13 @@ class SaveController extends ChangeNotifier {
 
   void thumbnailChanged(String id) {
     _thumbnails.remove(id);
+    _hasThumbnail.remove(id);
     changed();
   }
 
   void clearThumbnailMemory() {
     _thumbnails.clear();
+    _hasThumbnail.clear();
     changed();
   }
 

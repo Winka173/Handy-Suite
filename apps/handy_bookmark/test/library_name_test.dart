@@ -10,8 +10,8 @@ void main() {
   testWidgets('the home names the library and says what waits', (t) async {
     await boot(t);
     expect(find.text('My library'), findsWidgets);
-    // Under the name: how much it holds and how much waits to be sorted.
-    expect(find.text('3 items · 3 not sorted'), findsOneWidget);
+    // Under the name: how much it holds (what waits has its own card).
+    expect(find.text('3 items'), findsOneWidget);
     await tapKey(t, 'open-settings');
     await tapKey(t, 'set-library-name');
     await t.enterText(

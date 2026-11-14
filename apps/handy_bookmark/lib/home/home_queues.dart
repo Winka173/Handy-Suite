@@ -10,9 +10,11 @@ import '../ui/words.dart';
 import '../view/library_view.dart';
 import 'pastel_blocks.dart';
 
-/// Home's one small card of what waits: the saves not sorted yet (Sort
-/// quickly, one at a time) and the saves not opened yet (Focus). A row
-/// shows only when it has something; with nothing at all, one calm line.
+/// Home's one small card of what waits, each row saying its job: the saves
+/// not sorted yet (put them in collections, one at a time) and the sorted
+/// saves not read yet (read them one by one in Focus). A save is counted
+/// once: not sorted comes first. A row shows only when it has something;
+/// with nothing at all, one calm line.
 class HomeQueues extends StatelessWidget {
   final SaveScope scope;
   final VoidCallback onFocus;
@@ -30,12 +32,13 @@ class HomeQueues extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final p = BookmarkPalette.of(context);
+    final l = scope.library;
     List<Bookmark> newest(bool Function(Bookmark) keep) => [
-      for (final b in scope.library.bookmarks)
-        if (!b.isArchived && keep(b)) b,
+      for (final b in l.bookmarks)
+        if (keep(b)) b,
     ]..sort((a, b) => b.savedAt.compareTo(a.savedAt));
-    final unsorted = newest((b) => b.collectionId == null);
-    final waiting = newest((b) => !b.isRead);
+    final unsorted = newest((b) => waitsToSort(l, b));
+    final waiting = newest((b) => waitsInFocus(l, b));
     final calm = Semantics(
       button: true,
       child: InkWell(
@@ -72,8 +75,7 @@ class HomeQueues extends StatelessWidget {
       if (unsorted.isNotEmpty)
         _QueueRow(
           key: const Key('home-quick-sort'),
-          scope: scope,
-          faces: unsorted,
+          icon: Icons.inbox_outlined,
           title: tr(
             context,
             unsorted.length == 1
@@ -83,8 +85,8 @@ class HomeQueues extends StatelessWidget {
           ),
           subtitle: tr(
             context,
-            'Sort quickly, one at a time',
-            'Xếp nhanh, từng mục một',
+            'Put them in collections',
+            'Cho vào bộ sưu tập',
           ),
           onTap: () => showQuickSort(context, scope),
         ),
@@ -93,19 +95,18 @@ class HomeQueues extends StatelessWidget {
       else
         _QueueRow(
           key: const Key('place-focus'),
-          scope: scope,
-          faces: waiting,
+          icon: Icons.auto_stories_outlined,
           title: tr(
             context,
             waiting.length == 1
-                ? '1 thing waiting to revisit'
-                : '${n(waiting.length)} things waiting to revisit',
-            '${n(waiting.length)} mục chờ bạn xem lại',
+                ? '1 save not read yet'
+                : '${n(waiting.length)} saves not read yet',
+            '${n(waiting.length)} mục chưa đọc',
           ),
           subtitle: tr(
             context,
-            'One at a time, in Focus',
-            'Từng mục một, trong Tập trung',
+            'Read them one by one in Focus',
+            'Đọc lần lượt trong Tập trung',
           ),
           onTap: onFocus,
         ),
@@ -156,15 +157,15 @@ class HomeQueues extends StatelessWidget {
   }
 }
 
+/// One queue: an icon for its job in a small surface square, what waits
+/// and what to do, and an arrow.
 class _QueueRow extends StatelessWidget {
-  final SaveScope scope;
-  final List<Bookmark> faces;
+  final IconData icon;
   final String title, subtitle;
   final VoidCallback onTap;
   const _QueueRow({
     super.key,
-    required this.scope,
-    required this.faces,
+    required this.icon,
     required this.title,
     required this.subtitle,
     required this.onTap,
@@ -173,13 +174,7 @@ class _QueueRow extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final p = BookmarkPalette.of(context);
-    // Fewer faces on narrow screens, so the words keep their room.
-    // Pictures first (a source's icon cut by the next face reads as a
-    // stray mark), fewer on narrow screens so the words keep their room.
-    final shown = [
-      ...faces.where(hasPicture),
-      ...faces.where((b) => !hasPicture(b)),
-    ].take(MediaQuery.sizeOf(context).width < 360 ? 1 : 3).toList();
+    final dark = theme.brightness == Brightness.dark;
     return Semantics(
       button: true,
       label: '$title. $subtitle',
@@ -195,34 +190,14 @@ class _QueueRow extends StatelessWidget {
           ),
           child: Row(
             children: [
-              SizedBox(
-                width: 44.0 + 26 * (shown.length - 1),
+              Container(
+                width: 44,
                 height: 44,
-                child: Stack(
-                  children: [
-                    for (final (i, b) in shown.indexed.toList().reversed)
-                      Positioned(
-                        left: 26.0 * i,
-                        child: Container(
-                          width: 44,
-                          height: 44,
-                          padding: const EdgeInsets.all(2),
-                          decoration: BoxDecoration(
-                            color: p.tint,
-                            borderRadius: BorderRadius.circular(
-                              BookmarkRadii.thumb + 2,
-                            ),
-                          ),
-                          child: ItemPicture(
-                            scope.c,
-                            b,
-                            radius: BookmarkRadii.thumb,
-                            compact: true,
-                          ),
-                        ),
-                      ),
-                  ],
+                decoration: BoxDecoration(
+                  color: p.surface,
+                  borderRadius: BorderRadius.circular(BookmarkRadii.thumb),
                 ),
+                child: Icon(icon, color: dark ? p.primary : p.pressed),
               ),
               const SizedBox(width: HandySpace.m),
               Expanded(
@@ -486,7 +461,7 @@ class _QuickSortState extends State<_QuickSort> {
                 Wrap(
                   spacing: 6,
                   children: [
-                    for (final c in usualCollections(l, take: 4))
+                    for (final c in suggestCollections(l, b))
                       FileChip(
                         key: Key('file-${b.id}-${c.id}'),
                         collection: c,

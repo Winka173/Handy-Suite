@@ -5,7 +5,6 @@ import 'package:handy_ui/kit.dart';
 import '../bookmark/add_link.dart';
 import '../bookmark/detail_view.dart';
 import '../home/home_page.dart';
-import '../home/triage_strip.dart';
 import '../home/dateline.dart';
 import '../home/save_sheet.dart';
 import '../home/quick_save.dart';
@@ -15,7 +14,6 @@ import '../scope.dart';
 import '../view/library_view.dart';
 import 'sidebar.dart';
 import '../ui/header_band.dart';
-import '../ui/read_later_ribbon.dart';
 import 'search_box.dart';
 import 'share_issues.dart';
 
@@ -74,28 +72,25 @@ class _SaveShellState extends State<SaveShell> {
     final width = MediaQuery.sizeOf(context).width;
     final side = width >= 1100;
     final v = scope.view;
+    // Just how much the library holds; what waits has its own cards.
     String counts() {
-      final l = scope.library;
-      final now = DateTime.now();
-      var live = 0, unsorted = 0, later = 0;
-      for (final b in l.bookmarks) {
-        if (b.isArchived) continue;
-        live++;
-        if (b.collectionId == null) unsorted++;
-        if (readLaterAt(b, now) != null) later++;
-      }
-      String n(int x) => formatFigure(context, '$x');
-      return [
-        tr(
-          context,
-          live == 1 ? '1 item' : '${n(live)} items',
-          '${n(live)} mục',
-        ),
-        if (unsorted > 0)
-          tr(context, '${n(unsorted)} not sorted', '${n(unsorted)} chưa xếp'),
-        if (later > 0)
-          tr(context, '${n(later)} to read later', '${n(later)} hẹn đọc'),
-      ].join(' · ');
+      final live = scope.library.bookmarks.where((b) => !b.isArchived).length;
+      final n = formatFigure(context, '$live');
+      return tr(context, live == 1 ? '1 item' : '$n items', '$n mục');
+    }
+
+    // Search from anywhere on a wide screen (the button on the band, Ctrl K
+    // or Ctrl F): the overview steps into Everything so the box is there.
+    void search() {
+      if (overview || collections)
+        setState(() {
+          overview = false;
+          collections = false;
+          v.show(Place.all);
+        });
+      WidgetsBinding.instance.addPostFrameCallback(
+        (_) => searchFocus.requestFocus(),
+      );
     }
 
     void pick(Place p, [String? id]) => setState(() {
@@ -114,13 +109,10 @@ class _SaveShellState extends State<SaveShell> {
             add(clipboard: true),
         SingleActivator(LogicalKeyboardKey.keyN, control: !meta, meta: meta):
             add,
-        SingleActivator(
-          LogicalKeyboardKey.keyF,
-          control: !meta,
-          meta: meta,
-        ): width < 700
-            ? () => Navigator.pushNamed(context, '/find')
-            : searchFocus.requestFocus,
+        for (final key in [LogicalKeyboardKey.keyF, LogicalKeyboardKey.keyK])
+          SingleActivator(key, control: !meta, meta: meta): width < 700
+              ? () => Navigator.pushNamed(context, '/find')
+              : search,
       },
       const SingleActivator(LogicalKeyboardKey.escape): () =>
           v.selecting ? v.clearSelection() : setState(() => current = null),
@@ -219,6 +211,18 @@ class _SaveShellState extends State<SaveShell> {
                                   across: true,
                                   title: libraryName(scope.c, context),
                                   counts: [TextSpan(text: counts())],
+                                  trailing: [
+                                    IconButton(
+                                      key: const Key('open-search'),
+                                      tooltip: tr(
+                                        context,
+                                        'Search (Ctrl K)',
+                                        'Tìm (Ctrl K)',
+                                      ),
+                                      icon: const Icon(Icons.search_rounded),
+                                      onPressed: search,
+                                    ),
+                                  ],
                                   action: saveRow,
                                 ),
                               ),
@@ -261,15 +265,6 @@ class _SaveShellState extends State<SaveShell> {
                                   leading: [
                                     SearchBox(view: v, focus: searchFocus),
                                     ShareIssues(controller: scope.c),
-                                    if (v.place == Place.all &&
-                                        v.text.isEmpty &&
-                                        !v.filters.any)
-                                      TriageStrip(
-                                        controller: scope.c,
-                                        onFile: scope.file,
-                                        onOpen: (b) => details(b, side),
-                                        onAll: () => v.show(Place.inbox),
-                                      ),
                                     const SizedBox(height: HandySpace.l),
                                   ],
                                 ),

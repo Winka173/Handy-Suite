@@ -61,6 +61,10 @@ class SheetPlace {
 
   /// Named in this sheet.
   final bool fresh;
+
+  /// The likeliest home for this share (its site is already there, or its
+  /// name is in the title): listed first and said so.
+  final bool suggested;
   const SheetPlace({
     required this.choice,
     required this.name,
@@ -69,6 +73,7 @@ class SheetPlace {
     this.count = 0,
     this.last = 0,
     this.fresh = false,
+    this.suggested = false,
   });
 }
 
@@ -389,12 +394,43 @@ class SheetController extends ChangeNotifier {
           ].reduce((a, b) => a > b ? a : b),
         ),
     ];
-    // Newest first; the tree's order where none is newer (a stable sort).
+    // The likeliest first (the share's site already there, then a word of
+    // the name in its title); then newest; then the tree's order.
+    final u = link;
+    final from = u == null
+        ? ''
+        : sourceKeyOf(platform: u.platform, domain: u.sourceDomain);
+    final about = [
+      page?.title ?? s.title ?? '',
+      u?.sourceDomain ?? '',
+    ].join(' ');
+    int site(SheetPlace p) => p.collection == null || from.isEmpty
+        ? 0
+        : snapshot.sources[p.collection!.id]?[sourceTag(from)] ?? 0;
+    int words(SheetPlace p) => nameMatches(p.name, about);
+    final score = {for (final p in rest) p: (site(p), words(p))};
     final order = {for (var i = 0; i < rest.length; i++) rest[i]: i};
     rest.sort((a, b) {
-      final by = b.last.compareTo(a.last);
-      return by != 0 ? by : order[a]!.compareTo(order[b]!);
+      for (final d in [
+        score[b]!.$1.compareTo(score[a]!.$1),
+        score[b]!.$2.compareTo(score[a]!.$2),
+        b.last.compareTo(a.last),
+      ]) {
+        if (d != 0) return d;
+      }
+      return order[a]!.compareTo(order[b]!);
     });
+    final first = rest.firstOrNull;
+    if (first != null && (score[first]!.$1 > 0 || score[first]!.$2 > 0))
+      rest[0] = SheetPlace(
+        choice: first.choice,
+        name: first.name,
+        collection: first.collection,
+        parent: first.parent,
+        count: first.count,
+        last: first.last,
+        suggested: true,
+      );
     return [...out, ...rest];
   }
 

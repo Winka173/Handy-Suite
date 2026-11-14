@@ -19,26 +19,6 @@ class LibraryPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) => Scaffold(
     appBar: AppBar(
-      actions: [
-        if (scope.library.collections.isNotEmpty)
-          IconButton(
-            key: const Key('collections-send'),
-            tooltip: tr(context, 'Send collections', 'Gửi bộ sưu tập'),
-            onPressed: () => scope.sendCollections(context),
-            icon: const Icon(Icons.send_rounded),
-          ),
-        IconButton(
-          key: const Key('collections-receive'),
-          tooltip: tr(
-            context,
-            'Add collections sent to you',
-            'Thêm bộ sưu tập được gửi cho bạn',
-          ),
-          onPressed: () => scope.importLinks(context),
-          icon: const Icon(Icons.move_to_inbox_outlined),
-        ),
-        const SizedBox(width: HandySpace.s),
-      ],
       title: Semantics(
         header: true,
         child: Text(
@@ -66,6 +46,35 @@ class LibraryPage extends StatelessWidget {
                   HandySpace.xxl,
                 ),
                 children: [
+                  // Sharing with friends in words, as on a wide screen:
+                  // send some collections, add ones sent here.
+                  Wrap(
+                    spacing: HandySpace.s,
+                    runSpacing: HandySpace.s,
+                    children: [
+                      if (scope.library.collections.isNotEmpty)
+                        OutlinedButton.icon(
+                          key: const Key('collections-send'),
+                          onPressed: () => scope.sendCollections(context),
+                          icon: const Icon(Icons.send_rounded, size: 20),
+                          label: Text(
+                            tr(context, 'Send collections', 'Gửi bộ sưu tập'),
+                          ),
+                        ),
+                      OutlinedButton.icon(
+                        key: const Key('collections-receive'),
+                        onPressed: () => scope.importLinks(context),
+                        icon: const Icon(
+                          Icons.move_to_inbox_outlined,
+                          size: 20,
+                        ),
+                        label: Text(
+                          tr(context, 'Receive collections', 'Nhận bộ sưu tập'),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: HandySpace.l),
                   PlacesList(
                     scope: scope,
                     marking: false,

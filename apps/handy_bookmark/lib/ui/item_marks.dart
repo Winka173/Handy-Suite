@@ -13,19 +13,33 @@ bool isNewSave(Bookmark b, DateTime now) {
   return saved != null && now.toUtc().difference(saved).inHours < 48;
 }
 
-/// Small marks before a card's source line: a note, how often it was
-/// opened. Each is an icon with words for screen readers, never colour
-/// alone.
+/// Small marks before a card's source line: the favourite star, a note,
+/// how often it was opened. Each is an icon with words for screen readers,
+/// never colour alone; nothing is laid over the picture.
 List<InlineSpan> itemMarkSpans(BuildContext context, Bookmark b) {
   final p = BookmarkPalette.of(context);
-  WidgetSpan icon(IconData i, String label) => WidgetSpan(
-    alignment: PlaceholderAlignment.middle,
-    child: Padding(
-      padding: const EdgeInsets.only(right: 4),
-      child: Icon(i, size: 15, color: p.muted, semanticLabel: label),
-    ),
-  );
+  WidgetSpan icon(IconData i, String label, {Color? color, Key? key}) =>
+      WidgetSpan(
+        alignment: PlaceholderAlignment.middle,
+        child: Padding(
+          key: key,
+          padding: const EdgeInsets.only(right: 4),
+          child: Icon(
+            i,
+            size: 15,
+            color: color ?? p.muted,
+            semanticLabel: label,
+          ),
+        ),
+      );
   return [
+    if (b.isFavorite)
+      icon(
+        Icons.star_rounded,
+        tr(context, 'Favourite', 'Yêu thích'),
+        color: p.gold,
+        key: Key('mark-favourite-${b.id}'),
+      ),
     if (b.note.trim().isNotEmpty)
       icon(
         Icons.sticky_note_2_outlined,
@@ -38,8 +52,50 @@ List<InlineSpan> itemMarkSpans(BuildContext context, Bookmark b) {
   ];
 }
 
-/// Marks on a card's picture, at its top right: a broken link (in words,
-/// with an icon), New, and the favourite star.
+/// A card's title in [style]; a save not opened yet (saved in the last two
+/// days) has a small dot in the app's hue before it, centred on the first
+/// line, read as "New".
+Widget itemTitle(
+  BuildContext context,
+  Bookmark b, {
+  required TextStyle? style,
+  int maxLines = 2,
+}) {
+  final text = Text(
+    b.title.isEmpty ? b.sourceDomain : b.title,
+    maxLines: maxLines,
+    overflow: TextOverflow.ellipsis,
+    style: style,
+  );
+  if (!isNewSave(b, DateTime.now())) return text;
+  final line = MediaQuery.textScalerOf(
+    context,
+  ).scale((style?.fontSize ?? BookmarkType.body) * (style?.height ?? 1.3));
+  return Row(
+    crossAxisAlignment: CrossAxisAlignment.start,
+    children: [
+      Padding(
+        key: Key('mark-new-${b.id}'),
+        padding: EdgeInsetsDirectional.only(top: (line - 8) / 2, end: 6),
+        child: Semantics(
+          label: tr(context, 'New', 'Mới'),
+          child: Container(
+            width: 8,
+            height: 8,
+            decoration: BoxDecoration(
+              color: BookmarkPalette.of(context).primary,
+              shape: BoxShape.circle,
+            ),
+          ),
+        ),
+      ),
+      Expanded(child: text),
+    ],
+  );
+}
+
+/// The one mark left on a card's picture, at its top right: a broken link,
+/// in words with an icon, since it changes what tapping will do.
 class ItemCornerMarks extends StatelessWidget {
   final Bookmark bookmark;
   const ItemCornerMarks(this.bookmark, {super.key});
@@ -47,82 +103,42 @@ class ItemCornerMarks extends StatelessWidget {
   Widget build(BuildContext context) {
     final b = bookmark;
     final p = BookmarkPalette.of(context);
-    final fresh = isNewSave(b, DateTime.now());
     final check = b.linkCheck;
-    final broken = check != null && check.broken;
-    if (!fresh && !b.isFavorite && !broken) return const SizedBox.shrink();
+    if (check == null || !check.broken) return const SizedBox.shrink();
     final theme = Theme.of(context);
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        if (broken)
-          Flexible(
-            child: Container(
-              key: Key('mark-broken-${b.id}'),
-              padding: const EdgeInsets.fromLTRB(6, 3, 8, 3),
-              decoration: BoxDecoration(
-                color: p.surface,
-                borderRadius: BorderRadius.circular(BookmarkRadii.chip),
-              ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(
-                    check.status == 'moved' ? Icons.turn_right : Icons.link_off,
-                    size: 15,
-                    color: check.status == 'gone'
-                        ? HandyColors.of(context).negative
-                        : p.ink,
-                  ),
-                  const SizedBox(width: 4),
-                  Flexible(
-                    child: Text(
-                      check.status == 'unreachable'
-                          ? tr(context, 'Not reachable', 'Không mở được')
-                          : linkStatusWords(context, check),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: theme.textTheme.labelMedium?.copyWith(
-                        color: p.ink,
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
+    return Container(
+      key: Key('mark-broken-${b.id}'),
+      padding: const EdgeInsets.fromLTRB(6, 3, 8, 3),
+      decoration: BoxDecoration(
+        color: p.surface,
+        borderRadius: BorderRadius.circular(BookmarkRadii.chip),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(
+            check.status == 'moved' ? Icons.turn_right : Icons.link_off,
+            size: 15,
+            color: check.status == 'gone'
+                ? HandyColors.of(context).negative
+                : p.ink,
           ),
-        if (broken && (fresh || b.isFavorite)) const SizedBox(width: 6),
-        if (fresh)
-          Container(
-            key: Key('mark-new-${b.id}'),
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-            decoration: BoxDecoration(
-              color: p.band,
-              borderRadius: BorderRadius.circular(BookmarkRadii.chip),
-            ),
+          const SizedBox(width: 4),
+          Flexible(
             child: Text(
-              tr(context, 'New', 'Mới'),
-              style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                color: p.bandInk,
+              check.status == 'unreachable'
+                  ? tr(context, 'Not reachable', 'Không mở được')
+                  : linkStatusWords(context, check),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: theme.textTheme.labelMedium?.copyWith(
+                color: p.ink,
                 fontWeight: FontWeight.w700,
               ),
             ),
           ),
-        if (fresh && b.isFavorite) const SizedBox(width: 6),
-        if (b.isFavorite)
-          Container(
-            key: Key('mark-favourite-${b.id}'),
-            padding: const EdgeInsets.all(5),
-            decoration: BoxDecoration(color: p.surface, shape: BoxShape.circle),
-            child: Icon(
-              Icons.star_rounded,
-              size: 16,
-              color: p.gold,
-              semanticLabel: tr(context, 'Favourite', 'Yêu thích'),
-            ),
-          ),
-      ],
+        ],
+      ),
     );
   }
 }

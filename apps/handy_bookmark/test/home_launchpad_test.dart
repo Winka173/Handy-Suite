@@ -60,7 +60,7 @@ void main() {
     expect(ys, orderedEquals([...ys]..sort()), reason: 'newest first');
     // Unread and live: site2, site3, site4 (site5 is in Trash, site6 is
     // archived, site0 and site1 were read).
-    expect(find.text('3 things waiting to revisit'), findsOneWidget);
+    expect(find.text('3 saves not read yet'), findsOneWidget);
     await tapKey(t, 'recent-all');
     expect(find.byKey(const Key('save-home')), findsNothing);
   });

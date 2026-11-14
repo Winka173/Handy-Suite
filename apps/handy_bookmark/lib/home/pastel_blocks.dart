@@ -73,7 +73,7 @@ class HomePanel extends StatelessWidget {
                   ConstrainedBox(
                     // At the right edge; it shrinks only when space is short.
                     constraints: BoxConstraints(
-                      maxWidth: MediaQuery.sizeOf(context).width * .45,
+                      maxWidth: MediaQuery.sizeOf(context).width * .6,
                     ),
                     child: action!,
                   ),

@@ -4,8 +4,8 @@ import '../ui/item_marks.dart';
 import '../bookmark/item_menu.dart';
 import '../controller.dart';
 import '../design/theme.dart';
+import '../ui/card_head.dart';
 import '../ui/collection_picker.dart';
-import '../ui/visual.dart';
 import '../ui/words.dart';
 
 /// A save as a gallery card: its picture large (or its source's face),
@@ -17,7 +17,11 @@ class LinkCard extends StatelessWidget {
   final Bookmark bookmark;
   final bool selecting, selected;
   final VoidCallback onOpen, onDetails, onToggle;
+
+  /// Not sorted: its "Put in" beside the menu.
+  final Widget? putIn;
   const LinkCard({
+    this.putIn,
     super.key,
     required this.controller,
     required this.bookmark,
@@ -48,37 +52,35 @@ class LinkCard extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            AspectRatio(
+            CardHead(
+              controller: controller,
+              bookmark: b,
               aspectRatio: 1.28,
-              child: Stack(
-                fit: StackFit.expand,
-                children: [
-                  ItemPicture(controller, b, radius: 0),
-                  if (selecting)
-                    Positioned(
-                      top: 6,
-                      left: 6,
-                      child: badge(
-                        Checkbox(
-                          value: selected,
-                          shape: const CircleBorder(),
-                          onChanged: (_) => onToggle(),
-                        ),
+              overlay: [
+                if (selecting)
+                  Positioned(
+                    top: 6,
+                    left: 6,
+                    child: badge(
+                      Checkbox(
+                        value: selected,
+                        shape: const CircleBorder(),
+                        onChanged: (_) => onToggle(),
                       ),
                     ),
-                  if (!selecting)
-                    Positioned(
-                      top: 8,
-                      left: 8,
-                      right: 8,
-                      // Bounded, so a long broken-link mark shortens.
-                      child: Align(
-                        alignment: AlignmentDirectional.topEnd,
-                        child: ItemCornerMarks(b),
-                      ),
+                  ),
+                if (!selecting)
+                  Positioned(
+                    top: 8,
+                    left: 8,
+                    right: 8,
+                    // Bounded, so a long broken-link mark shortens.
+                    child: Align(
+                      alignment: AlignmentDirectional.topEnd,
+                      child: ItemCornerMarks(b),
                     ),
-                ],
-              ),
+                  ),
+              ],
             ),
             Expanded(
               child: Padding(
@@ -90,10 +92,11 @@ class LinkCard extends StatelessWidget {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(
-                            b.title.isEmpty ? b.sourceDomain : b.title,
-                            maxLines: 2,
-                            overflow: TextOverflow.ellipsis,
+                          // Without a picture the title has the room.
+                          itemTitle(
+                            context,
+                            b,
+                            maxLines: CardHead.pictured(controller, b) ? 2 : 4,
                             style: theme.textTheme.titleSmall?.copyWith(
                               fontWeight: FontWeight.w600,
                               height: 1.28,
@@ -123,10 +126,16 @@ class LinkCard extends StatelessWidget {
                     // corner, nudged up into the padding.
                     Transform.translate(
                       offset: const Offset(0, -6),
-                      child: ItemMenuButton(
-                        bookmark: b,
-                        onDetails: onDetails,
-                        width: 48,
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          ?putIn,
+                          ItemMenuButton(
+                            bookmark: b,
+                            onDetails: onDetails,
+                            width: 48,
+                          ),
+                        ],
                       ),
                     ),
                   ],

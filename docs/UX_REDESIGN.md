@@ -4031,3 +4031,60 @@ Shift Tab đi qua điều khiển theo thứ tự đọc, Esc bỏ chọn, phím
 
 **Loại bỏ:** ô bộ sưu tập tô pastel theo màu, mặt nguồn hồng/xanh, nhãn nguồn theo màu thương
 hiệu, thẻ Tập trung tô màu nguồn, mục thanh bên tô xanh đậm, thanh trên của Home điện thoại.
+
+## Hợp đồng: Handy Bookmark · gọn thanh bên, lưới/danh sách, flow Chưa xếp (2026-11-14)
+
+Giữ UI hiện tại (màu, chữ, dải đầu). Lấy vài chỗ hay từ bản mẫu đơn giản và sửa flow xếp link.
+Chủ app duyệt cả danh sách ngày 2026-11-14.
+
+**Việc của người dùng:** lưu link rồi cất vào đúng bộ sưu tập với ít chạm nhất; tìm lại bằng
+danh sách gọn hoặc lưới ảnh, tùy từng danh sách.
+
+**Flow Chưa xếp.** Chưa xếp là hộp thư đến: mọi link mới vào đây trước; để lại cũng không sao,
+app không nhắc dồn.
+
+- Lưu trong app (ô dán link, nhiều link) giờ hỏi ngay như bảng chia sẻ Android: dải ở chân màn
+  "Đã lưu. Cho vào:" kèm 3 bộ gợi ý và "Khác…", 8 giây; một chạm là xếp, có Hoàn tác; bỏ qua thì
+  link ở lại Chưa xếp. Lưu từ trong một bộ sưu tập thì chỉ báo "Đã lưu vào X".
+- Gợi ý tính trên máy (`suggestCollections` trong engine): bộ đã có link cùng trang/nền tảng,
+  rồi bộ có tên trùng một từ (≥3 chữ, bỏ dấu) với tiêu đề/nguồn/thẻ, rồi bộ dùng nhiều, rồi thứ
+  tự của người dùng. Dùng chung cho dải sau khi lưu, Xếp nhanh, nút "Xếp vào" và bảng chia sẻ
+  (bảng chia sẻ đọc nguồn của từng bộ từ bản tóm tắt, không có link nào trong đó; dòng đầu ghi
+  "Gợi ý").
+- Chỉ còn ba đường xếp sau khi lưu: Xếp nhanh (thẻ trên trang chủ), nút "Xếp vào" trên từng
+  mục trong Chưa xếp, và chọn nhiều để chuyển. Bỏ dải "Mới lưu" có nút "Xếp vào…" ở Tất cả mục.
+- Trang chủ: "N mục chưa xếp · Cho vào bộ sưu tập" và "N mục chưa đọc · Đọc lần lượt trong
+  Tập trung", mỗi dòng một biểu tượng (hộp thư, sách), không còn cụm ảnh xếp chồng. Một mục chỉ
+  đếm một lần: khi đã có bộ sưu tập, mục chưa xếp chờ ở Chưa xếp và Tập trung lấy mục đã xếp mà
+  chưa đọc; chưa có bộ nào thì không có hàng Chưa xếp và Tập trung lấy mọi mục chưa đọc
+  (`waitsToSort` / `waitsInFocus`).
+
+**Thanh bên (desktop ≥700):** Thư viện, Chưa xếp, Yêu thích, Chưa đọc (Link hỏng khi có); Bộ
+sưu tập; một dòng "Thẻ" mở danh sách thẻ (bấm để xem, bút chì để đổi tên); Nâng cao khi có.
+Chân thanh bên, sau một đường mảnh: Lưu trữ (khi có), Thùng rác, Cài đặt. Bỏ Tất cả mục (là
+"Xem tất cả" của Mới lưu) và Tập trung (mở từ thẻ trang chủ). Số 0 không hiện. Nút "…" của bộ
+sưu tập chỉ hiện khi rê chuột hoặc khi Tab tới (vẫn đi tới được bằng bàn phím), chuột phải mở
+nhanh Gửi/Sửa; trên màn cảm ứng giữ như cũ.
+
+**Lưới / danh sách:** nút gạt hai biểu tượng cạnh tiêu đề mỗi danh sách (Mới lưu ở trang chủ,
+từng bộ sưu tập, Chưa xếp, Yêu thích, Chưa đọc, thẻ, kết quả tìm). Mỗi danh sách nhớ riêng (bộ
+sưu tập lưu trên chính nó, nơi cố định lưu `cards:<nơi>`, trang chủ `cards:home`). Link hỏng
+luôn là danh sách. Đang dùng bố cục Pro thì không nút nào sáng; bấm nút nào cũng thoát bố cục
+đó. Dòng "Xem dạng dòng / thẻ" trong menu "…" bị bỏ.
+
+**Thẻ:** trên ảnh chỉ còn nhãn link hỏng. Ngôi sao yêu thích chuyển xuống đầu dòng nguồn. Bỏ
+nhãn "Mới"; mục mới lưu chưa mở có chấm 8px màu chủ đạo trước tiêu đề (đọc là "Mới"). Mục không
+có ảnh: đầu thẻ là dải thấp 56px (biểu tượng loại + tên trang), tiêu đề được tới 4 dòng. Bìa
+bộ sưu tập chỉ dùng ảnh (1 ảnh phủ kín, 2 ảnh chia đôi); không ảnh thì là màu nhạt của bộ với
+biểu tượng ở giữa; không còn ô chữ xám.
+
+**Khác:** dải đầu chỉ ghi "N mục" (hàng chờ đã nằm ngay dưới). Desktop có nút Tìm trên dải đầu,
+Ctrl K hoặc Ctrl F mở ô tìm (từ tổng quan thì chuyển sang Tất cả mục). Trang Thư viện trên điện
+thoại: "Gửi bộ sưu tập" / "Nhận bộ sưu tập" là nút có chữ ở đầu trang; cuối trang luôn có
+Thùng rác, và Lưu trữ khi có.
+
+**Trạng thái:** trống, lỗi, đang tải giữ nguyên. Dải sau khi lưu báo lỗi nếu không chuyển được
+và giữ link ở Chưa xếp. **Nền tảng:** Android/iOS giữ nút "…" luôn hiện; Windows/Web ẩn đến khi
+rê hoặc Tab; phím tắt mới Ctrl K.
+
+**Loại bỏ:** dải TriageStrip, `usualCollections`, nhãn "Mới" và sao trên ảnh, ô chữ trên bìa.

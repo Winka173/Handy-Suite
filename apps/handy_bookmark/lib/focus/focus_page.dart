@@ -6,6 +6,7 @@ import 'package:handy_bookmark_engine/handy_bookmark_engine.dart';
 import 'package:handy_ui/kit.dart';
 import '../design/theme.dart';
 import '../scope.dart';
+import '../view/library_view.dart';
 import 'focus_card.dart';
 
 /// Unread things one at a time, oldest first, as a deck: swipe right (or
@@ -41,7 +42,8 @@ class _FocusPageState extends State<FocusPage>
 
   List<Bookmark> get queue => [
     for (final b in scope.library.bookmarks)
-      if (!b.isRead && !b.isArchived && !skipped.contains(b.id)) b,
+      // As Home counts it: a save not sorted waits under Not sorted.
+      if (waitsInFocus(scope.library, b) && !skipped.contains(b.id)) b,
   ]..sort((a, b) => a.savedAt.compareTo(b.savedAt));
 
   @override

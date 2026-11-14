@@ -80,19 +80,22 @@ void main() {
   testWidgets('wide layout meets guidelines', (tester) async {
     final handle = tester.ensureSemantics();
     final c = await start(tester, seed: library, size: const Size(1440, 900));
-    // The wide screen opens on the Library overview; the list is a tap away.
-    await tapKey(tester, 'place-all');
+    // The wide screen opens on the Library overview; a place is a tap away.
+    await tapKey(tester, 'place-unread');
     // The picked row is the pale tint: its name takes the teal's dark
     // with its icon (the band stays the page's one deep field).
     final name = tester.widget<RichText>(
       find.descendant(
-        of: find.byKey(const Key('place-all')),
+        of: find.byKey(const Key('place-unread')),
         matching: find.byWidgetPredicate(
-          (w) => w is RichText && w.text.toPlainText() == 'Everything',
+          (w) => w is RichText && w.text.toPlainText() == 'Not read yet',
         ),
       ),
     );
     expect(name.text.style?.color, BookmarkPalette.light.pressed);
+    // Everything is the overview's See all (no sidebar row of its own).
+    await tapKey(tester, 'side-overview');
+    await tapKey(tester, 'recent-all');
     await tapKey(tester, 'details-${c.library!.bookmarks.first.id}');
     await tapKey(tester, 'item-details');
     await meetsAll(tester, 'wide');

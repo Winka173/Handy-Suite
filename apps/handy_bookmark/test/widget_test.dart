@@ -119,7 +119,12 @@ void main() {
       expect(store.rows, hasLength(1));
       final id = store.rows.keys.single;
       expect(find.byKey(ValueKey('recent-$id')), findsOneWidget);
-      expect(find.text('1 item · 1 not sorted'), findsOneWidget);
+      expect(find.text('1 item'), findsOneWidget);
+      // The saved line at the foot says where it went, then goes by itself.
+      expect(find.text('Saved to Not sorted.'), findsOneWidget);
+      await tester.pump(const Duration(seconds: 5));
+      await tester.pumpAndSettle();
+      expect(find.byKey(const Key('quick-saved')), findsNothing);
       // The header band is taller now: scroll the card into view.
       await tester.ensureVisible(find.byKey(ValueKey('recent-$id')));
       await tester.pumpAndSettle();
@@ -230,9 +235,9 @@ void main() {
     final c = await start(tester, size: const Size(1440, 900), seed: recipes);
     final id = c.library!.bookmarks.single.id;
     expect(find.byKey(const Key('place-inbox')), findsOneWidget);
-    // It opens on the Library overview; the list is a tap away.
+    // It opens on the Library overview; the list is a tap away (See all).
     expect(find.byKey(const Key('library-overview')), findsOneWidget);
-    await tapKey(tester, 'place-all');
+    await tapKey(tester, 'recent-all');
     expect(find.byKey(const Key('collection-recipes')), findsOneWidget);
     await tapKey(tester, 'details-$id');
     await tapKey(tester, 'item-details');

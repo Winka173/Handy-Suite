@@ -422,7 +422,7 @@ void main() {
       // Wide: the Library overview first, then the list with a save open.
       await shot(t, '$label-1-home');
       if (size.width >= 1100) {
-        await tapKey(t, 'place-all');
+        await tapKey(t, 'recent-all');
         await tapKey(t, 'details-${c.library!.bookmarks.first.id}');
         await tapKey(t, 'item-details');
         await shot(t, '$label-1b-list');
@@ -545,8 +545,7 @@ void main() {
     await boot(t, phone);
     await tapKey(t, 'collection-food');
     await shot(t, 'phone-2-collection');
-    await tapKey(t, 'list-more');
-    await tapKey(t, 'save-view');
+    await tapKey(t, 'view-rows');
     await shot(t, 'phone-3-cards');
   });
   testWidgets('phone detail', (t) async {
@@ -1389,8 +1388,7 @@ void main() {
     await shot(t, 'phone-item-4-row-menu');
     await t.tapAt(const Offset(10, 10));
     await t.pumpAndSettle();
-    await tapKey(t, 'list-more');
-    await tapKey(t, 'save-view');
+    await tapKey(t, 'view-rows');
     await tapKey(t, 'details-${food.first}');
     await shot(t, 'phone-item-5-card-menu');
     debugDisableShadows = true;

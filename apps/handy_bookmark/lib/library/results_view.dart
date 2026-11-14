@@ -18,6 +18,8 @@ import 'filter_sheet.dart';
 import 'link_card.dart';
 import 'place_title.dart';
 import '../design/theme.dart';
+import '../ui/put_in.dart';
+import '../ui/view_toggle.dart';
 import '../ui/visual.dart';
 
 /// The links of the current place, as rows or cards. More load as the end
@@ -58,16 +60,22 @@ class ResultsView extends StatelessWidget {
     return id is String ? id : null;
   }
 
+  /// Each list keeps its own choice: a collection on itself, a fixed place
+  /// (Not sorted, Favourites…) in the app's preferences; else the app's.
   bool get cards {
     final v = view;
     // Broken links stay rows: each says what went wrong.
     if (v.place == Place.broken) return false;
     final own = v.place == Place.collection && v.id != null
         ? v.collectionView(v.id!)['cards']
-        : null;
+        : controller.preferences['cards:${v.place.name}'];
     // Cards unless the person chose rows.
     return own is bool ? own : controller.preferences['cards'] != false;
   }
+
+  /// A Pro layout is showing instead of cards or rows.
+  bool premium(BuildContext context) =>
+      layoutById(layout) != null && hasPro(context);
 
   @override
   Widget build(BuildContext context) => ListenableBuilder(
@@ -77,7 +85,6 @@ class ResultsView extends StatelessWidget {
       final theme = Theme.of(context);
       final c = HandyColors.of(context);
       final rows = v.results;
-      final wide = MediaQuery.sizeOf(context).width >= 600;
       final children = v.place == Place.collection && v.id != null
           ? ([
               for (final c in controller.library!.collections)
@@ -97,8 +104,8 @@ class ResultsView extends StatelessWidget {
           ),
           // On a phone the name gets the whole width and the tools sit
           // under it; on wider screens they share one row.
-          Builder(
-            builder: (context) {
+          LayoutBuilder(
+            builder: (context, box) {
               final tools = _tools(context);
               final title = Row(
                 children: [
@@ -176,7 +183,9 @@ class ResultsView extends StatelessWidget {
                   ),
                 ],
               );
-              if (wide)
+              // Side by side only where the column itself has the room (not
+              // beside the open item on a narrower window).
+              if (box.maxWidth >= 640)
                 return Row(
                   children: [
                     Expanded(child: title),
@@ -296,6 +305,7 @@ class ResultsView extends StatelessWidget {
                 child: LinkCard(
                   controller: controller,
                   bookmark: rows[i],
+                  putIn: _putIn(rows[i]),
                   selected: v.selected.contains(rows[i].id),
                   selecting: v.selecting,
                   onOpen: () => onDetails(rows[i]),
@@ -313,6 +323,7 @@ class ResultsView extends StatelessWidget {
               BookmarkTile(
                 controller: controller,
                 bookmark: b,
+                putIn: _putIn(b),
                 selecting: v.selecting,
                 selected: v.selected.contains(b.id),
                 current: b.id == current,
@@ -357,11 +368,26 @@ class ResultsView extends StatelessWidget {
     },
   );
 
-  /// The order and the filters in words, then everything else for this
-  /// list in one labelled sheet (the "…").
+  /// Not sorted: each save carries its own "Put in" while nothing is
+  /// being selected.
+  Widget? _putIn(Bookmark b) =>
+      view.place == Place.inbox && b.collectionId == null && !view.selecting
+      ? PutIn(controller: controller, bookmark: b, onFile: scope.file)
+      : null;
+
+  /// Rows or cards, the order and the filters in words, then everything
+  /// else for this list in one labelled sheet (the "…").
   List<Widget> _tools(BuildContext context) {
     final v = view;
     return [
+      if (v.place != Place.broken)
+        Padding(
+          padding: const EdgeInsetsDirectional.only(end: HandySpace.xs),
+          child: ViewToggle(
+            cards: premium(context) ? null : cards,
+            onChanged: (asCards) => _chooseLayout(null, asCards: asCards),
+          ),
+        ),
       SortButton(view: v),
       TextButton.icon(
         key: const Key('save-filters'),
@@ -450,14 +476,6 @@ class ResultsView extends StatelessWidget {
                   overflow: TextOverflow.ellipsis,
                   style: bookmarkSerif(sheet, 24),
                 ),
-              ),
-              row(
-                const Key('save-view'),
-                cards ? Icons.view_list_outlined : Icons.grid_view_outlined,
-                cards
-                    ? tr(sheet, 'Show as rows', 'Xem dạng dòng')
-                    : tr(sheet, 'Show as cards', 'Xem dạng thẻ'),
-                (_) => _flipCards(),
               ),
               row(
                 const Key('save-layout'),
@@ -557,14 +575,11 @@ class ResultsView extends StatelessWidget {
         prefs: {
           ...controller.preferences,
           'layout': ?id,
-          if (asCards != null) 'cards': asCards,
+          if (asCards != null) 'cards:${v.place.name}': asCards,
         }..removeWhere((k, val) => k == 'layout' && id == null),
       );
     }
   }
-
-  /// The quick cards/rows switch also leaves any Pro layout.
-  void _flipCards() => _chooseLayout(null, asCards: !cards);
 
   /// What an empty list says: nothing matched, or nothing is here yet.
   Widget _empty(BuildContext context) {

@@ -773,7 +773,11 @@ class _Places extends StatelessWidget {
             title: s.name,
             note: s.fresh && s.count == 0
                 ? tr(context, 'New', 'Mới')
-                : [?s.parent, links(s.count)].join(' · '),
+                : [
+                    if (s.suggested) tr(context, 'Suggested', 'Gợi ý'),
+                    ?s.parent,
+                    links(s.count),
+                  ].join(' · '),
           ),
     ];
 

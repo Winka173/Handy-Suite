@@ -11,7 +11,6 @@ import 'save_sheet.dart';
 import 'empty_library.dart';
 import 'home_sections.dart';
 import '../ui/header_band.dart';
-import '../ui/read_later_ribbon.dart';
 import 'home_queues.dart';
 import 'pastel_blocks.dart';
 import 'quick_save.dart';
@@ -51,31 +50,15 @@ class SaveHomePage extends StatelessWidget {
       builder: (context, _) {
         final l = scope.library;
         final empty = l.bookmarks.isEmpty && l.trash.isEmpty;
-        var live = 0, unsorted = 0;
+        var live = 0;
         for (final b in l.bookmarks) {
-          if (b.isArchived) continue;
-          live++;
-          if (b.collectionId == null) unsorted++;
+          if (!b.isArchived) live++;
         }
-        final now = DateTime.now();
-        final later = l.bookmarks
-            .where((b) => !b.isArchived && readLaterAt(b, now) != null)
-            .length;
-        // "87 items · 4 not sorted · 3 to read later", figures in white.
-        InlineSpan figure(int v) => bandFigure(context, v);
+        // Just how much the library holds: what waits (not sorted, to read
+        // later) has its own cards right under the band.
         final subtitle = <InlineSpan>[
-          figure(live),
+          bandFigure(context, live),
           TextSpan(text: tr(context, live == 1 ? ' item' : ' items', ' mục')),
-          if (unsorted > 0) ...[
-            const TextSpan(text: ' · '),
-            figure(unsorted),
-            TextSpan(text: tr(context, ' not sorted', ' chưa xếp')),
-          ],
-          if (later > 0) ...[
-            const TextSpan(text: ' · '),
-            figure(later),
-            TextSpan(text: tr(context, ' to read later', ' hẹn đọc')),
-          ],
         ];
         // No bar above the band: the band is the page's head, and Search
         // and Settings sit on it, so the first save shows a screen sooner.

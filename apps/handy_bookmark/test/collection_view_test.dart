@@ -1,5 +1,5 @@
 import 'dart:ui' show Size;
-import 'package:flutter/material.dart' show Key, Offset, Text;
+import 'package:flutter/material.dart' show InkWell, Key, Offset;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:handy_bookmark/pro/entitlements.dart';
 import 'package:handy_bookmark/view/library_view.dart';
@@ -96,37 +96,33 @@ void main() {
       size: const Size(1280, 800),
       seed: twoCollections,
     );
-    // The choice is a labelled row in the list's options sheet.
-    Future<String> offered() async {
-      await tapKey(t, 'list-more');
-      final words = find.descendant(
-        of: find.byKey(const Key('save-view')),
-        matching: find.byType(Text),
-      );
-      final text = t.widget<Text>(words.first).data!;
-      await t.tapAt(const Offset(640, 20));
-      await settle(t);
-      return text;
-    }
+    // The choice is the two-button switch beside the list's name; the
+    // chosen one is filled and does nothing when tapped again.
+    bool cards() =>
+        t.widget<InkWell>(find.byKey(const Key('view-cards'))).onTap == null;
 
     await tapKey(t, 'collection-food');
     await settle(t);
     // Cards are the default; rows are the choice to make.
-    expect(await offered(), 'Show as rows');
-    await tapKey(t, 'list-more');
-    await tapKey(t, 'save-view');
+    expect(cards(), isTrue);
+    await tapKey(t, 'view-rows');
     await settle(t);
-    expect(await offered(), 'Show as cards');
+    expect(cards(), isFalse);
     final views = c.preferences['collectionViews'] as Map;
     expect((views['food'] as Map)['cards'], isFalse);
     expect(c.preferences['cards'], isNot(false), reason: 'the app default');
+    // The options sheet no longer repeats it.
+    await tapKey(t, 'list-more');
+    expect(find.byKey(const Key('save-view')), findsNothing);
+    await t.tapAt(const Offset(640, 20));
+    await settle(t);
 
     await tapKey(t, 'collection-trip');
     await settle(t);
-    expect(await offered(), 'Show as rows');
+    expect(cards(), isTrue);
     await tapKey(t, 'collection-food');
     await settle(t);
-    expect(await offered(), 'Show as cards');
+    expect(cards(), isFalse);
   });
 
   testWidgets('a collection opens in the order it was last left in', (t) async {

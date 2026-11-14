@@ -81,7 +81,9 @@ void main() {
       reminders: SaveReminders(),
       tasks: LinkTasks(c),
     );
-    final page = (await t.runAsync(() => scope.sharedPage(['food'])))!;
+    // The store answers on the test's clock and the pictures are cleaned
+    // on a worker in real time, so both are driven until the page is done.
+    final page = await drive(t, scope.sharedPage(['food']));
     expect(page, contains('<title>Món ngon</title>'));
     expect(page, contains('a.com/one'));
     expect(page, isNot(contains('b.org/two')));
@@ -254,4 +256,23 @@ void receiveTests() {
       },
     );
   }
+}
+
+/// Waits for [work] that needs both the test's clock (the store) and real
+/// time (a worker): real time and a frame in turn, at most 10 seconds.
+Future<T> drive<T>(WidgetTester t, Future<T> work) async {
+  late T out;
+  var done = false;
+  work.then((v) {
+    out = v;
+    done = true;
+  });
+  for (var i = 0; i < 500 && !done; i++) {
+    await t.runAsync(
+      () => Future<void>.delayed(const Duration(milliseconds: 20)),
+    );
+    await t.pump();
+  }
+  expect(done, isTrue, reason: 'the work never finished');
+  return out;
 }

@@ -199,35 +199,49 @@ class CollectionCover extends StatelessWidget {
           '$pictures ảnh',
         ),
     ].join(' · ');
-    // The chosen picture alone; else pictures first, since a cover is what
-    // the collection looks like.
-    final shown = cover != null
-        ? [cover!]
-        : [
-            ...items.where(hasPicture),
-            ...items.where((b) => !hasPicture(b)),
-          ].take(3).toList();
+    // The chosen picture alone; else its two newest pictures (one fills
+    // the cover). Titles are never set in the cover: without a picture it
+    // shows the collection's own pale colour and mark. A link's picture is
+    // the thumbnail kept on this device, looked at for the newest eight.
+    final c = scope.c;
+    final recent = items.take(8).toList();
+    final unknown = [
+      for (final b in recent)
+        if (b.media == null && c.hasThumbnail(b.id) == null) b,
+    ];
     final mark = markOf(collection.icon);
     // Not opened yet, as Focus counts them.
     final fresh = items.where((b) => !b.isRead && b.openedCount == 0).length;
     final freshWords = fresh == 0
         ? ''
         : tr(context, ', $fresh not opened', ', $fresh mục chưa xem');
-    final f = hueField(context, hue);
-    final paper = BookmarkPalette.of(context).raised;
-    // Up to two saves, pictures first: each shows its picture, or its title
-    // set on paper in the tile when it has none; empty, its mark.
-    final Widget face = shown.isEmpty
-        ? _EmptyCover(hue: hue, mark: mark)
-        : _mosaic([
-            for (final b in shown.take(2))
-              _CoverCell(
-                controller: scope.c,
-                bookmark: b,
-                paper: paper,
-                ink: f.ink,
-              ),
-          ]);
+    Widget faceOf(bool Function(Bookmark) pictured) {
+      final shown = cover != null
+          ? [cover!]
+          : recent.where(pictured).take(2).toList();
+      return shown.isEmpty
+          ? _EmptyCover(hue: hue, mark: mark, empty: items.isEmpty)
+          : _mosaic([
+              for (final b in shown)
+                _CoverCell(
+                  controller: c,
+                  bookmark: b,
+                  fallback: _EmptyCover(hue: hue, mark: mark, empty: false),
+                ),
+            ]);
+    }
+
+    bool known(Bookmark b) => b.media != null || c.hasThumbnail(b.id) == true;
+    final Widget face = unknown.isEmpty || cover != null
+        ? faceOf(known)
+        : FutureBuilder<void>(
+            future: Future.wait([for (final b in unknown) c.thumbnail(b.id)]),
+            builder: (context, snap) => faceOf(
+              snap.connectionState == ConnectionState.done
+                  ? known
+                  : (b) => known(b) || hasPicture(b),
+            ),
+          );
     return LayoutBuilder(
       builder: (context, box) => _tile(
         context,
@@ -353,95 +367,82 @@ class CollectionCover extends StatelessWidget {
         );
 }
 
-/// One item on a cover: its picture, or its title set in the title face
-/// on paper when it has none (never a letter in a box).
+/// One picture on a cover; while it loads or if it fails, [fallback].
 class _CoverCell extends StatelessWidget {
   final SaveController controller;
   final Bookmark bookmark;
-  final Color paper, ink;
+  final Widget fallback;
   const _CoverCell({
     required this.controller,
     required this.bookmark,
-    required this.paper,
-    required this.ink,
+    required this.fallback,
   });
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
     final b = bookmark;
-    final typeset = Container(
-      color: paper,
-      padding: const EdgeInsets.all(HandySpace.s),
-      alignment: AlignmentDirectional.topStart,
-      child: Text(
-        b.title.isNotEmpty ? b.title : b.sourceDomain,
-        maxLines: 4,
-        overflow: TextOverflow.fade,
-        style: theme.textTheme.bodySmall?.copyWith(
-          color: ink,
-          fontWeight: FontWeight.w600,
-          height: 1.25,
-        ),
-      ),
-    );
     return FutureBuilder<Uint8List?>(
       future: b.media != null
           ? controller.mediaPreview(b.media!.id)
           : controller.thumbnail(b.id),
       builder: (context, snap) => snap.data == null
-          ? typeset
+          ? fallback
           : Image.memory(
               snap.data!,
               fit: BoxFit.cover,
               gaplessPlayback: true,
               excludeFromSemantics: true,
-              errorBuilder: (_, _, _) => typeset,
+              errorBuilder: (_, _, _) => fallback,
             ),
     );
   }
 }
 
-/// A collection with nothing in it yet: its own colour and its mark (or a
-/// folder), so even an empty shelf has a face.
+/// A cover without a picture: the collection's own pale colour with its
+/// mark (or a folder) in the middle; "Nothing here yet" when it is empty.
 class _EmptyCover extends StatelessWidget {
   final int hue;
   final CollectionMark? mark;
-  const _EmptyCover({required this.hue, this.mark});
+  final bool empty;
+  const _EmptyCover({required this.hue, this.mark, required this.empty});
   @override
   Widget build(BuildContext context) {
+    final h = HandyPalette.of(context, hue);
     final p = BookmarkPalette.of(context);
     final ink = p.muted;
-    return ColoredBox(
-      color: p.raised,
-      child: Padding(
-        padding: const EdgeInsets.all(HandySpace.m),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            switch (mark) {
-              EmojiMark(:final emoji) => Text(
-                emoji,
-                style: const TextStyle(fontSize: BookmarkType.page, height: 1),
-              ),
-              IconMark(:final icon) => Icon(icon, color: ink, size: 30),
-              null => Icon(Icons.folder_outlined, color: ink, size: 22),
-            },
-            Flexible(
-              child: Text(
-                tr(context, 'Nothing here yet', 'Chưa có gì'),
-                maxLines: 3,
-                overflow: TextOverflow.ellipsis,
-                style: TextStyle(
-                  color: ink,
-                  fontSize: BookmarkType.meta,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-            ),
-          ],
-        ),
+    final face = switch (mark) {
+      EmojiMark(:final emoji) => Text(
+        emoji,
+        style: const TextStyle(fontSize: BookmarkType.page, height: 1),
       ),
+      IconMark(:final icon) => Icon(icon, color: h.mark, size: 30),
+      null => Icon(Icons.folder_outlined, color: h.mark, size: 28),
+    };
+    return ColoredBox(
+      color: h.tint,
+      child: empty
+          ? Padding(
+              padding: const EdgeInsets.all(HandySpace.m),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  face,
+                  Flexible(
+                    child: Text(
+                      tr(context, 'Nothing here yet', 'Chưa có gì'),
+                      maxLines: 3,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        color: ink,
+                        fontSize: BookmarkType.meta,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            )
+          : Center(child: face),
     );
   }
 }

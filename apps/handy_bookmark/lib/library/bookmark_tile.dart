@@ -14,7 +14,11 @@ class BookmarkTile extends StatelessWidget {
   final Bookmark bookmark;
   final bool selecting, selected, current;
   final VoidCallback onOpen, onDetails, onToggle;
+
+  /// Not sorted: its "Put in" before the menu.
+  final Widget? putIn;
   const BookmarkTile({
+    this.putIn,
     super.key,
     required this.controller,
     required this.bookmark,
@@ -117,6 +121,7 @@ class BookmarkTile extends StatelessWidget {
                 color: c.muted,
                 semanticLabel: tr(context, 'Favourite', 'Yêu thích'),
               ),
+            ?putIn,
             ItemMenuButton(bookmark: b, onDetails: onDetails),
           ],
         ),

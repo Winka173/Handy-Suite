@@ -6,6 +6,18 @@ import '../controller.dart';
 /// A save that can show a picture: its own, or its page's.
 bool hasPicture(Bookmark b) => b.media != null || b.thumbnailUrl != null;
 
+/// Saves wait in one queue only. With collections to sort into, a save
+/// not sorted waits under Not sorted and Focus takes the sorted ones not
+/// read yet; with none, Focus takes every save not read yet.
+bool waitsInFocus(SaveLibrary l, Bookmark b) =>
+    !b.isRead &&
+    !b.isArchived &&
+    (b.collectionId != null || l.collections.isEmpty);
+
+/// Not sorted is a queue only while there is somewhere to sort into.
+bool waitsToSort(SaveLibrary l, Bookmark b) =>
+    !b.isArchived && b.collectionId == null && l.collections.isNotEmpty;
+
 /// Where the person is looking: one of the fixed places, a collection, a
 /// smart collection or a tag. [broken] holds links whose last check found a
 /// problem.

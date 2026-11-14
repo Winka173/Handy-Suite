@@ -1,10 +1,9 @@
 import 'package:handy_bookmark_engine/handy_bookmark_engine.dart';
 import 'package:handy_ui/kit.dart';
 import '../bookmark/add_link.dart';
+import '../bookmark/saved_strip.dart';
 import '../design/theme.dart';
-import '../controller.dart';
 import '../scope.dart';
-import '../ui/collection_picker.dart';
 
 enum _Problem { none, noLink, notWeb, clipboardSeen, clipboardFailed }
 
@@ -107,74 +106,15 @@ class _QuickSaveBarState extends State<QuickSaveBar> {
     }
   }
 
-  /// Saved: where it went, View, and Undo for what is new (to Trash, so
-  /// nothing is ever lost by a quick tap).
-  void _announce(List<Bookmark> saved, Set<String> before) {
-    final fresh = [
-      for (final b in saved)
-        if (!before.contains(b.id)) b.id,
-    ];
-    final first = saved.firstOrNull;
-    final into = widget.collectionId == null
-        ? null
-        : collectionOf(scope.library, widget.collectionId)?.$1.name;
-    final where = into ?? tr(context, 'Not sorted', 'Chưa xếp');
-    final message = fresh.isEmpty
-        ? tr(context, 'Already saved.', 'Đã có sẵn.')
-        : fresh.length == 1
-        ? tr(context, 'Saved to $where.', 'Đã lưu vào $where.')
-        : tr(
-            context,
-            '${fresh.length} links saved to $where.',
-            'Đã lưu ${fresh.length} link vào $where.',
-          );
-    final messenger = ScaffoldMessenger.maybeOf(context);
-    if (messenger == null) return;
-    final theme = Theme.of(context);
-    final nav = Navigator.of(context);
-    messenger
-      ..hideCurrentSnackBar()
-      ..showSnackBar(
-        SnackBar(
-          // Shown long enough to act on, then it goes (with an action
-          // Flutter would keep it until dismissed).
-          persist: false,
-          key: const Key('quick-saved'),
-          content: Row(
-            children: [
-              Expanded(child: Text(message)),
-              if (first != null)
-                TextButton(
-                  key: const Key('quick-view'),
-                  style: TextButton.styleFrom(
-                    foregroundColor:
-                        theme.snackBarTheme.actionTextColor ??
-                        theme.colorScheme.inversePrimary,
-                    // The same weight as Undo beside it.
-                    textStyle:
-                        (theme.snackBarTheme.contentTextStyle ??
-                                theme.textTheme.bodyMedium)
-                            ?.copyWith(fontWeight: FontWeight.w600),
-                  ),
-                  onPressed: () {
-                    messenger.hideCurrentSnackBar();
-                    nav.pushNamed('/bookmark/${first.id}');
-                  },
-                  child: Text(tr(context, 'View', 'Xem')),
-                ),
-            ],
-          ),
-          action: fresh.isEmpty
-              ? null
-              : SnackBarAction(
-                  key: const Key('quick-undo'),
-                  label: tr(context, 'Undo', 'Hoàn tác'),
-                  onPressed: () =>
-                      scope.c.update((l) => moveToTrash(l, fresh, saveTime())),
-                ),
-        ),
-      );
-  }
+  /// Saved: where it went (or where to put it), View, and Undo for what
+  /// is new (to Trash, so nothing is ever lost by a quick tap).
+  void _announce(List<Bookmark> saved, Set<String> before) => showSavedStrip(
+    context,
+    scope,
+    saved: saved,
+    before: before,
+    into: widget.collectionId,
+  );
 
   @override
   Widget build(BuildContext context) {

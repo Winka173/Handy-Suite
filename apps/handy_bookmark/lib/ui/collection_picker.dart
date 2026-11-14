@@ -50,21 +50,6 @@ InlineSpan collectionSpan(BuildContext context, (SaveCollection, int) of) =>
       ],
     );
 
-/// The collections a link most likely belongs to: the most used first.
-List<SaveCollection> usualCollections(SaveLibrary l, {int take = 4}) {
-  final count = <String, int>{};
-  for (final b in l.bookmarks) {
-    if (b.collectionId != null)
-      count[b.collectionId!] = (count[b.collectionId!] ?? 0) + 1;
-  }
-  final list = [...l.collections]
-    ..sort((a, b) {
-      final d = (count[b.id] ?? 0).compareTo(count[a.id] ?? 0);
-      return d != 0 ? d : a.position.compareTo(b.position);
-    });
-  return list.take(take).toList();
-}
-
 /// Asks where to put links. Returns a collection id, '' for "not sorted",
 /// or null when dismissed.
 Future<String?> pickCollection(

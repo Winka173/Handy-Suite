@@ -91,13 +91,28 @@ void main() {
       'place-all',
       'place-favorites',
       'place-unread',
-      'place-archive',
       'collection-food',
       'collection-trip',
       'collection-new',
     ]) {
       expect(find.byKey(Key(key)), findsOneWidget, reason: key);
     }
+    // At the foot, always, as on the wide screen's sidebar; the Archive
+    // only once it holds something.
+    await t.scrollUntilVisible(
+      find.byKey(const Key('place-trash')),
+      300,
+      scrollable: find.byType(Scrollable).last,
+    );
+    expect(find.byKey(const Key('place-archive')), findsNothing);
+    await t.scrollUntilVisible(
+      find.byKey(const Key('collections-receive')),
+      -300,
+      scrollable: find.byType(Scrollable).last,
+    );
+    // Sending and receiving collections say so in words.
+    expect(find.text('Send collections'), findsOneWidget);
+    expect(find.text('Receive collections'), findsOneWidget);
     // Nothing kept by rules or search, and no Pro: no Advanced.
     expect(find.byKey(const Key('library-advanced')), findsNothing);
     await tapKey(t, 'place-all');

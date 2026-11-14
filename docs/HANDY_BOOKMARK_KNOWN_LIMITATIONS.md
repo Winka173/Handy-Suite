@@ -35,6 +35,12 @@
   the choice is queued again and moves the link out of Not sorted (a picture
   share keeps Not sorted). With the app lock on, no collection is listed.
   iOS's Share Extension has no such sheet yet.
+- Collection suggestions (2026-11-14) are worked out on the device only: a
+  collection that already holds links from the same site or platform, then a
+  collection whose name shares a word of three letters or more with the title,
+  then the most used. The share sheet sees only a hash of each collection's
+  sites, never a site or link, so it matches the exact site key only (no
+  partial domains). Nothing is learned from what the person ignores.
 - Native SQLite/FTS is measured; Web search currently reads local records for the
   shared fallback. Large-browser-library startup/memory/frame performance unverified.
 - Backup byte budget is 30MB. Text formats with embedded full-state metadata can

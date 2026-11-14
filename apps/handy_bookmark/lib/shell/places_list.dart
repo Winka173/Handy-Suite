@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:handy_bookmark_engine/handy_bookmark_engine.dart';
 import '../design/theme.dart';
 import '../pro/entitlements.dart';
@@ -16,7 +17,8 @@ import '../view/library_view.dart';
 /// collections as a tree and the tags. Smart collections and saved searches
 /// wait under "Advanced", shown once there is one (or with Pro, where new
 /// smart collections are made). The sidebar on wide screens; the Library
-/// page on a phone.
+/// page on a phone, which ends with the Archive (once it holds something)
+/// and Recently Deleted, as the sidebar's foot does.
 class PlacesList extends StatelessWidget {
   final SaveScope scope;
   final void Function(Place, [String?]) onPick;
@@ -89,6 +91,7 @@ class PlacesList extends StatelessWidget {
       double indent = 0,
       Widget? menu,
       VoidCallback? onTap,
+      VoidCallback? onSecondary,
       int? hue,
     }) {
       final on =
@@ -104,7 +107,12 @@ class PlacesList extends StatelessWidget {
       final band = flat && on;
       final bp = BookmarkPalette.of(context);
       final picked = theme.brightness == Brightness.dark ? bp.ink : bp.pressed;
-      return Padding(
+      // A wide screen with a pointer shows a row's "…" on hover or focus
+      // only, so the names keep their room; touch screens keep it.
+      final hover = flat && menu != null && !_touch;
+      final shownMenu = hover ? null : menu;
+      if (n == 0) n = null;
+      final tile = Padding(
         padding: EdgeInsets.symmetric(horizontal: 6, vertical: flat ? 1 : 3),
         child: ListTile(
           key: key,
@@ -119,7 +127,7 @@ class PlacesList extends StatelessWidget {
           ),
           contentPadding: EdgeInsets.only(
             left: HandySpace.l - 6 + indent,
-            right: menu == null ? HandySpace.l - 6 : HandySpace.xs,
+            right: shownMenu == null ? HandySpace.l - 6 : HandySpace.xs,
           ),
           // A collection shows its colour as a dot where the icon would be;
           // the fixed places keep their grey icons.
@@ -161,12 +169,15 @@ class PlacesList extends StatelessWidget {
                     fontFeatures: tabular,
                   ),
                 ),
-              if (menu != null) menu,
+              ?shownMenu,
             ],
           ),
           onTap: onTap ?? () => onPick(place!, id),
         ),
       );
+      return hover
+          ? _HoverMenu(menu: menu, onSecondary: onSecondary, child: tile)
+          : tile;
     }
 
     // The sidebar names its groups in a small grey label, as in the mock.
@@ -204,12 +215,13 @@ class PlacesList extends StatelessWidget {
       children: [
         group(
           children: [
+            // The sidebar leaves out Everything (the overview's See all)
+            // and keeps the Archive at its foot.
             for (final p in [
               Place.inbox,
-              Place.all,
+              if (!flat) Place.all,
               Place.favorites,
               Place.unread,
-              Place.archive,
               // Only once a check has found something.
               if (count(Place.broken) > 0) Place.broken,
             ])
@@ -226,16 +238,6 @@ class PlacesList extends StatelessWidget {
                 Icons.center_focus_strong_outlined,
                 tr(context, 'Focus', 'Tập trung'),
                 onTap: onFocus,
-              ),
-            // Only while something is waiting there (the sidebar has it at
-            // its foot).
-            if (l.trash.isNotEmpty && !flat)
-              row(
-                const Key('place-trash'),
-                Icons.delete_outline,
-                tr(context, 'Recently Deleted', 'Thùng rác'),
-                n: l.trash.length,
-                onTap: () => Navigator.of(context).pushNamed('/trash'),
               ),
           ],
         ),
@@ -281,6 +283,8 @@ class PlacesList extends StatelessWidget {
                       Key('collection-${col.id}'),
                       Icons.folder,
                       col.name,
+                      onSecondary: () =>
+                          showCollectionQuick(context, scope, col),
                       hue: collectionHue(l, col.id),
                       n: inCollection[col.id] ?? 0,
                       id: col.id,
@@ -327,7 +331,19 @@ class PlacesList extends StatelessWidget {
               ),
             ),
         ],
-        if (l.tags.isNotEmpty) ...[
+        // The sidebar: the tags as one row that opens their list.
+        if (l.tags.isNotEmpty && flat)
+          Padding(
+            padding: const EdgeInsets.only(top: HandySpace.s),
+            child: row(
+              const Key('place-tags'),
+              Icons.tag,
+              tr(context, 'Tags', 'Thẻ'),
+              n: l.tags.length,
+              onTap: () => _tags(context),
+            ),
+          ),
+        if (l.tags.isNotEmpty && !flat) ...[
           heading(tr(context, 'Tags', 'Thẻ')),
           Capped(
             name: 'tags',
@@ -452,7 +468,140 @@ class PlacesList extends StatelessWidget {
             ],
           ),
         ],
+        // The phone's Library ends as the sidebar does: the Archive once
+        // it holds something, and Recently Deleted always.
+        if (!flat) ...[
+          const SizedBox(height: HandySpace.l),
+          group(
+            children: [
+              if (count(Place.archive) > 0)
+                row(
+                  const Key('place-archive'),
+                  placeIcon(Place.archive),
+                  placeTitle(context, l, Place.archive, null),
+                  n: count(Place.archive),
+                  place: Place.archive,
+                ),
+              row(
+                const Key('place-trash'),
+                Icons.delete_outline,
+                tr(context, 'Recently Deleted', 'Thùng rác'),
+                n: l.trash.length,
+                onTap: () => Navigator.of(context).pushNamed('/trash'),
+              ),
+            ],
+          ),
+        ],
       ],
+    );
+  }
+
+  /// Every tag in a sheet: tap one to see its saves, or rename it.
+  Future<void> _tags(BuildContext context) {
+    final l = scope.library;
+    final v = scope.view;
+    return showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      showDragHandle: true,
+      useSafeArea: true,
+      constraints: const BoxConstraints(maxWidth: 480),
+      builder: (sheet) => ListView(
+        key: const Key('tags-sheet'),
+        shrinkWrap: true,
+        padding: const EdgeInsets.only(bottom: HandySpace.l),
+        children: [
+          Padding(
+            padding: const EdgeInsets.fromLTRB(20, 0, 20, HandySpace.s),
+            child: Text(
+              tr(sheet, 'Tags', 'Thẻ'),
+              style: Theme.of(sheet).textTheme.titleLarge,
+            ),
+          ),
+          for (final t in l.tags)
+            ListTile(
+              key: Key('tagplace-$t'),
+              selected: v.place == Place.tag && v.id == t,
+              leading: const Icon(Icons.tag),
+              title: Text(t, maxLines: 1, overflow: TextOverflow.ellipsis),
+              trailing: IconButton(
+                tooltip: tr(sheet, 'Rename #$t', 'Đổi tên #$t'),
+                icon: const Icon(Icons.edit_outlined),
+                onPressed: () {
+                  Navigator.pop(sheet);
+                  scope.renameTag(context, t);
+                },
+              ),
+              onTap: () {
+                Navigator.pop(sheet);
+                onPick(Place.tag, t);
+              },
+            ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Phones and tablets without a pointer keep every row's "…" in view.
+bool get _touch =>
+    !kIsWeb &&
+    (defaultTargetPlatform == TargetPlatform.android ||
+        defaultTargetPlatform == TargetPlatform.iOS);
+
+/// A sidebar row whose "…" shows while the pointer is over the row or
+/// anything in it has keyboard focus (Tab still reaches it), laid over the
+/// row's right end so the name keeps its room. A right-click opens the
+/// collection's quick actions.
+class _HoverMenu extends StatefulWidget {
+  final Widget child;
+  final Widget? menu;
+  final VoidCallback? onSecondary;
+  const _HoverMenu({required this.child, this.menu, this.onSecondary});
+  @override
+  State<_HoverMenu> createState() => _HoverMenuState();
+}
+
+class _HoverMenuState extends State<_HoverMenu> {
+  bool hover = false, focus = false;
+  @override
+  Widget build(BuildContext context) {
+    final shown = hover || focus;
+    final p = BookmarkPalette.of(context);
+    return MouseRegion(
+      onEnter: (_) => setState(() => hover = true),
+      onExit: (_) => setState(() => hover = false),
+      child: Focus(
+        canRequestFocus: false,
+        skipTraversal: true,
+        onFocusChange: (f) => setState(() => focus = f),
+        child: GestureDetector(
+          onSecondaryTap: widget.onSecondary,
+          child: Stack(
+            children: [
+              widget.child,
+              PositionedDirectional(
+                end: 10,
+                top: 0,
+                bottom: 0,
+                child: IgnorePointer(
+                  ignoring: !shown,
+                  child: Opacity(
+                    opacity: shown ? 1 : 0,
+                    child: Center(
+                      child: Material(
+                        color: p.raised,
+                        shape: const CircleBorder(),
+                        child: widget.menu,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 }

@@ -15,3 +15,4 @@ export 'src/sync.dart';
 export 'src/organize.dart';
 export 'src/highlights.dart';
 export 'src/deep_search.dart';
+export 'src/suggest.dart';
